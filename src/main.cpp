@@ -18,8 +18,6 @@
 #include "EGL/eglext.h"
 
 #include "shader.h"
-
-#define INOTIFY_THREAD_SAFE
 #include "inotify-cxx.h"
 
 typedef struct {
@@ -238,39 +236,36 @@ void drawThread() {
     }
 }  
 
-void watchThread(const std::string& _file) {
+void watchThread(const std::string& file) {
+    Inotify notify;
+
+    InotifyWatch watch(file, IN_ALL_EVENTS);
+    notify.Add(watch);
 
     try {
-        Inotify notify;
-
-        InotifyWatch watch(_file, IN_MODIFY);
-        notify.Add(watch);
-        while (true){
+        for (;;) {
             std::cout << "Child: Watching again" << std::endl;
             notify.WaitForEvents();
 
             size_t count = notify.GetEventCount();
-            while (count > 0) {
+            while(count-- > 0) {
                 InotifyEvent event;
                 bool got_event = notify.GetEvent(&event);
 
-                if (got_event) {
+                if(got_event && !(*fragHasChanged)){  
                     std::string mask_str;
                     event.DumpTypes(mask_str);
-
-                    std::cout << "Child: event mask: \"" << mask_str << std::endl;
                     *fragHasChanged = true;
+                    std::cout << "Child: Something have change " << mask_str << std::endl;
                 }
-
-                count--;
             }
         }
     } catch (InotifyException &e) {
-        std::cerr << "Inotify exception occured: " << e.GetMessage() << std::endl;
-    } catch (std::exception &e) {
-        std::cerr << "STL exception occured: " << e.what() << std::endl;
+        cerr << "Inotify exception occured: " << e.GetMessage() << endl;
+    } catch (exception &e) {
+        cerr << "STL exception occured: " << e.what() << endl;
     } catch (...) {
-        std::cerr << "unknown exception occured" << std::endl;
+        cerr << "unknown exception occured" << endl;
     }
 }
 
@@ -329,6 +324,7 @@ int main(int argc, char **argv){
     int shmId = shmget(IPC_PRIVATE, sizeof(bool), 0666);
 
     pid_t pid = fork();
+
     fragHasChanged = (bool *) shmat(shmId, NULL, 0);
 
     switch(pid) {
@@ -339,14 +335,14 @@ int main(int argc, char **argv){
         {
             *fragHasChanged = false;
             watchThread(fragFile);
-            std::cout << "Watch thread shutdown" << std::endl;
         }
         break;
 
-        default: // parent
+        default: 
         {
             init(fragFile);
             drawThread();
+
             kill(pid, SIGKILL);
         }
         break;
