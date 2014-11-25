@@ -216,11 +216,42 @@ _exit:
 //==============================================================================
 
 int main(int argc, char **argv){
-   int terminate = 0;
-   GLfloat cx, cy;
-   bcm_host_init();
 
-   // Clear application state
+    Inotify notify;
+
+    InotifyWatch watch(string(argv[1]), IN_ALL_EVENTS);
+    notify.Add(watch);
+
+    for (;;) {
+            notify.WaitForEvents();
+
+            size_t count = notify.GetEventCount();
+            while (count > 0) {
+                InotifyEvent event;
+                bool got_event = notify.GetEvent(&event);
+
+                if (got_event) {
+                    std::string mask_str;
+                    event.DumpTypes(mask_str);
+
+                    std::string filename = event.GetName();
+
+                    std::cout << "[watch " << watch_dir << "] ";
+                    std::cout << "event mask: \"" << mask_str << "\", ";
+                    std::cout << "filename: \"" << filename << "\"" << std::endl;
+                }
+
+                count--;
+            }
+        }
+
+        return 0;
+
+    int terminate = 0;
+    GLfloat cx, cy;
+    bcm_host_init();
+
+    // Clear application state
     memset( state, 0, sizeof( *state ) );
       
     // Start OGLES
