@@ -239,18 +239,24 @@ void drawThread() {
 void watchThread(const std::string& file) {
     Inotify notify;
 
-    InotifyWatch watch(file, IN_MODIFY);
+    InotifyWatch watch(file, IN_ALL_EVENTS);
     notify.Add(watch);
 
     for (;;) {
         std::cout << "Child: Watching again" << std::endl;
         notify.WaitForEvents();
 
-        if(!(*fragHasChanged)){
-            *fragHasChanged = true;
-            std::cout << "Child: Something have change" << std::endl;
-        } else {
-            std::cout << "Child: should not go there" << std::endl;
+        size_t count = notify.GetEventCount();
+        while(count-- > 0) {
+            InotifyEvent event;
+            bool got_event = notify.GetEvent(&event);
+
+            if(got_event && !(*fragHasChanged)){
+                *fragHasChanged = true;
+                std::cout << "Child: Something have change" << std::endl;
+            } else {
+                std::cout << "Child: should not go there" << std::endl;
+            }
         }
     }
 }
