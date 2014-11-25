@@ -253,7 +253,7 @@ void watchThread(const std::string& file) {
         notify.WaitForEvents();
 
         size_t count = notify.GetEventCount();
-        while (count > 0) {
+        while (count > 0 && !(*fragHasChanged)) {
             InotifyEvent event;
             bool got_event = notify.GetEvent(&event);
 
@@ -326,14 +326,12 @@ int main(int argc, char **argv){
 
     switch(pid) {
         case -1: //error
-
         break;
 
         case 0: // child
         {
             watchThread(fragFile);
         }
-
         break;
 
         default: 
