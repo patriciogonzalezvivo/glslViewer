@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <iostream>
 #include "GLES2/gl2.h"
 
 class Shader {
