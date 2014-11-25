@@ -215,7 +215,7 @@ _exit:
 }     
 
 void drawThread() {
-    while (!terminate){
+    while (1) {
         int x, y, b;
         b = get_mouse(state, &x, &y);
         if (b) break;
@@ -254,7 +254,6 @@ void watchThread(const std::string& file) {
 }
 
 void init(const std::string& fragFile) {
-    int terminate = 0;
     GLfloat cx, cy;
     bcm_host_init();
 
