@@ -238,14 +238,14 @@ void drawThread() {
     }
 }  
 
-void watchThread(const std::string& file) {
+void watchThread(const std::string& _file) {
 
     try {
         Inotify notify;
 
-        InotifyWatch watch(file, IN_MODIFY);
+        InotifyWatch watch(_file, IN_MODIFY);
         notify.Add(watch);
-        for (;;) {
+        while (true){
             std::cout << "Child: Watching again" << std::endl;
             notify.WaitForEvents();
 
@@ -258,9 +258,7 @@ void watchThread(const std::string& file) {
                     std::string mask_str;
                     event.DumpTypes(mask_str);
 
-                    std::string filename = event.GetName();
-                    std::cout << "event mask: \"" << mask_str << "\", ";
-                    std::cout << "filename: \"" << filename << "\"" << std::endl;
+                    std::cout << "Child: event mask: \"" << mask_str << std::endl;
                     *fragHasChanged = true;
                 }
 
@@ -331,7 +329,6 @@ int main(int argc, char **argv){
     int shmId = shmget(IPC_PRIVATE, sizeof(bool), 0666);
 
     pid_t pid = fork();
-
     fragHasChanged = (bool *) shmat(shmId, NULL, 0);
 
     switch(pid) {
@@ -350,7 +347,6 @@ int main(int argc, char **argv){
         {
             init(fragFile);
             drawThread();
-
             kill(pid, SIGKILL);
         }
         break;
