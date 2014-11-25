@@ -237,28 +237,33 @@ void drawThread() {
 }  
 
 void watchThread(const std::string& file) {
-    Inotify notify;
-
-    InotifyWatch watch(file, IN_MODIFY);
-    notify.Add(watch);
 
     try {
+        Inotify notify;
+
+        InotifyWatch watch(watch_dir, IN_ALL_EVENTS);
+        notify.Add(watch);
         for (;;) {
             std::cout << "Child: Watching again" << std::endl;
             notify.WaitForEvents();
 
             size_t count = notify.GetEventCount();
-            while(count-- > 0) {
+            while (count > 0) {
                 InotifyEvent event;
                 bool got_event = notify.GetEvent(&event);
 
-                if(got_event && !(*fragHasChanged)){  
-                    std::string mask_str;
+                if (got_event) {
+                    string mask_str;
                     event.DumpTypes(mask_str);
-                    std::string filename = event.GetName();
-                    *fragHasChanged = true;
-                    std::cout << "Child: Something have change on " << filename << mask_str << std::endl;
+
+                    string filename = event.GetName();
+
+                    std::cout << "[watch " << watch_dir << "] ";
+                    std::cout << "event mask: \"" << mask_str << "\", ";
+                    std::cout << "filename: \"" << filename << "\"" << std::endl;
                 }
+
+                count--;
             }
         }
     } catch (InotifyException &e) {
