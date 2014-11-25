@@ -252,10 +252,10 @@ void watchThread(const std::string& file) {
             bool got_event = notify.GetEvent(&event);
 
             if(got_event && !(*fragHasChanged)){  
-                string mask_str;
+                std::string mask_str;
                 event.DumpTypes(mask_str);
                 *fragHasChanged = true;
-                std::cout << "Child: Something have change" << mask_str << std::endl;
+                std::cout << "Child: Something have change " << mask_str << std::endl;
             }
         }
     }
