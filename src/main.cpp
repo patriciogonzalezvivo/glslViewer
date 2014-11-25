@@ -243,11 +243,14 @@ void watchThread(const std::string& file) {
     notify.Add(watch);
 
     for (;;) {
+        std::cout << "Child: Watching again" << std::endl;
         notify.WaitForEvents();
 
         if(!(*fragHasChanged)){
             *fragHasChanged = true;
             std::cout << "Child: Something have change" << std::endl;
+        } else {
+            std::cout << "Child: should not go there" << std::endl;
         }
     }
 }
