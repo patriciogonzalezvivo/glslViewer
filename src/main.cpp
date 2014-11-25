@@ -46,8 +46,6 @@ std::string vertSource =
 
 static CUBE_STATE_T _state, *state=&_state;
 
-#define check() assert(glGetError() == 0)
-
 static void init_ogl(CUBE_STATE_T *state){
     int32_t success = 0;
     EGLBoolean result;
@@ -79,27 +77,27 @@ static void init_ogl(CUBE_STATE_T *state){
     // get an EGL display connection
     state->display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     assert(state->display!=EGL_NO_DISPLAY);
-    check();
+    
     
     // initialize the EGL display connection
     result = eglInitialize(state->display, NULL, NULL);
     assert(EGL_FALSE != result);
-    check();
+    
     
     // get an appropriate EGL frame buffer configuration
     result = eglChooseConfig(state->display, attribute_list, &config, 1, &num_config);
     assert(EGL_FALSE != result);
-    check();
+    
     
     // get an appropriate EGL frame buffer configuration
     result = eglBindAPI(EGL_OPENGL_ES_API);
     assert(EGL_FALSE != result);
-    check();
+    
     
     // create an EGL rendering context
     state->context = eglCreateContext(state->display, config, EGL_NO_CONTEXT, context_attributes);
     assert(state->context!=EGL_NO_CONTEXT);
-    check();
+    
     
     // create an EGL window surface
     success = graphics_get_display_size(0 /* LCD */, &state->screen_width, &state->screen_height);
@@ -125,22 +123,22 @@ static void init_ogl(CUBE_STATE_T *state){
     nativewindow.width = state->screen_width;
     nativewindow.height = state->screen_height;
     vc_dispmanx_update_submit_sync( dispman_update );
-    check();
+    
     
     state->surface = eglCreateWindowSurface( state->display, config, &nativewindow, NULL );
     assert(state->surface != EGL_NO_SURFACE);
-    check();
+    
     
     // connect the context to the surface
     result = eglMakeCurrent(state->display, state->surface, state->surface, state->context);
     assert(EGL_FALSE != result);
-    check();
+    
     
     // Set background color and clear buffers
     glClearColor(0.15f, 0.25f, 0.35f, 1.0f);
     glClear( GL_COLOR_BUFFER_BIT );
     
-    check();
+    
 }
 
 static bool loadFromPath(const std::string& path, std::string* into) {
@@ -162,40 +160,34 @@ static void draw(CUBE_STATE_T *state, GLfloat cx, GLfloat cy){
 
     if(*fragHasChanged) {
         std::string fragSource;
-        loadFromPath(fragFile, &fragSource);
-        state->shader.detach(GL_FRAGMENT_SHADER | GL_VERTEX_SHADER);
-        state->shader.build(fragSource,vertSource);
-
-        *fragHasChanged = false;
+        if(loadFromPath(fragFile, &fragSource)){
+            state->shader.detach(GL_FRAGMENT_SHADER | GL_VERTEX_SHADER);
+            state->shader.build(fragSource,vertSource);
+            *fragHasChanged = false;
+        }
     }
 
     // Now render to the main frame buffer
     glBindFramebuffer(GL_FRAMEBUFFER,0);
     // Clear the background (not really necessary I suppose)
     glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
-    check();
     
     glBindBuffer(GL_ARRAY_BUFFER, state->buf);
-    check();
     state->shader.use();
-    check();
     
     state->shader.sendUniform("u_time",((float)clock())/CLOCKS_PER_SEC);
     state->shader.sendUniform("u_mouse",cx, cy);
     state->shader.sendUniform("u_resolution",state->screen_width, state->screen_height);
-    check();
+    
     
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-    check();
     
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     
     glFlush();
     glFinish();
-    check();
     
-    eglSwapBuffers(state->display, state->surface);
-    check();
+    eglSwapBuffers(state->display, state->surface); 
 }
 
 static int get_mouse(CUBE_STATE_T *state, int *outx, int *outy){
@@ -256,18 +248,6 @@ void watchThread(const std::string& file) {
         if(!(*fragHasChanged)){
             *fragHasChanged = true;
         }
-
-        // size_t count = notify.GetEventCount();
-        // while (count > 0 && !(*fragHasChanged)) {
-        //     InotifyEvent event;
-        //     bool got_event = notify.GetEvent(&event);
-
-        //     if (got_event) {
-        //         *fragHasChanged = true;
-        //     }
-
-        //     count--;
-        // }
     }
 }
 
@@ -302,11 +282,11 @@ void init(const std::string& fragFile) {
     glClearColor ( 0.0, 1.0, 1.0, 1.0 );
     
     glGenBuffers(1, &state->buf);
-    check();
+    
     
     // Prepare viewport
     glViewport ( 0, 0, state->screen_width, state->screen_height );
-    check();
+    
     
     // Upload vertex data to a buffer
     glBindBuffer(GL_ARRAY_BUFFER, state->buf);
@@ -314,7 +294,7 @@ void init(const std::string& fragFile) {
                  vertex_data, GL_STATIC_DRAW);
     glVertexAttribPointer(posAttribut, 4, GL_FLOAT, 0, 16, 0);
     glEnableVertexAttribArray(posAttribut);
-    check();
+    
 }
  
 //==============================================================================
@@ -335,6 +315,7 @@ int main(int argc, char **argv){
 
         case 0: // child
         {
+            *fragHasChanged = false;
             watchThread(fragFile);
         }
         break;
