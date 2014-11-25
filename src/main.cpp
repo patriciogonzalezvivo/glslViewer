@@ -18,6 +18,8 @@
 #include "EGL/eglext.h"
 
 #include "shader.h"
+
+#define INOTIFY_THREAD_SAFE
 #include "inotify-cxx.h"
 
 typedef struct {
@@ -239,27 +241,27 @@ void drawThread() {
 void watchThread(const std::string& file) {
     Inotify notify;
 
-    InotifyWatch watch(file, IN_ALL_EVENTS);
+    InotifyWatch watch(file, IN_MODIFY);//IN_ALL_EVENTS);
     notify.Add(watch);
 
     for (;;) {
 
         if(!(*fragHasChanged)){
-           std::cout << "Child: Watching again" << std::endl;
-        notify.WaitForEvents();
+            std::cout << "Child: Watching again" << std::endl;
+            notify.WaitForEvents();
 
-        size_t count = notify.GetEventCount();
-        while(count-- > 0) {
-            InotifyEvent event;
-            bool got_event = notify.GetEvent(&event);
+            size_t count = notify.GetEventCount();
+            while(count-- > 0) {
+                InotifyEvent event;
+                bool got_event = notify.GetEvent(&event);
 
-            if(got_event){  
-                std::string mask_str;
-                event.DumpTypes(mask_str);
-                *fragHasChanged = true;
-                std::cout << "Child: Something have change " << mask_str << std::endl;
-            }
-        } 
+                if(got_event){  
+                    std::string mask_str;
+                    event.DumpTypes(mask_str);
+                    *fragHasChanged = true;
+                    std::cout << "Child: Something have change " << mask_str << std::endl;
+                }
+            } 
         }
         
     }
