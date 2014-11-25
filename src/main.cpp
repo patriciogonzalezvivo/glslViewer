@@ -19,7 +19,7 @@
 
 #include "shader.h"
 
-#define INOTIFY_THREAD_SAFE
+// #define INOTIFY_THREAD_SAFE
 #include "inotify-cxx.h"
 
 typedef struct {
