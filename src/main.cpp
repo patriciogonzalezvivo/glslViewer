@@ -18,6 +18,8 @@
 #include "EGL/eglext.h"
 
 #include "shader.h"
+
+#define INOTIFY_THREAD_SAFE
 #include "inotify-cxx.h"
 
 typedef struct {
