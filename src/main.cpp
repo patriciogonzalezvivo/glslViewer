@@ -263,7 +263,7 @@ void watchThread(const std::string& file) {
         }
     } catch (InotifyException &e) {
         std::cerr << "Inotify exception occured: " << e.GetMessage() << std::endl;
-    } catch (exception &e) {
+    } catch (std::exception &e) {
         std::cerr << "STL exception occured: " << e.what() << std::endl;
     } catch (...) {
         std::cerr << "unknown exception occured" << std::endl;
