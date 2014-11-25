@@ -219,7 +219,7 @@ int main(int argc, char **argv){
 
     Inotify notify;
 
-    InotifyWatch watch(string(argv[1]), IN_ALL_EVENTS);
+    InotifyWatch watch(std::string(argv[1]), IN_ALL_EVENTS);
     notify.Add(watch);
 
     for (;;) {
@@ -236,7 +236,7 @@ int main(int argc, char **argv){
 
                     std::string filename = event.GetName();
 
-                    std::cout << "[watch " << watch_dir << "] ";
+                    std::cout << "[watch " << std::string(argv[1]) << "] ";
                     std::cout << "event mask: \"" << mask_str << "\", ";
                     std::cout << "filename: \"" << filename << "\"" << std::endl;
                 }
