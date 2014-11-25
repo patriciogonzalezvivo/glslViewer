@@ -15,6 +15,9 @@
 #include "EGL/egl.h"
 #include "EGL/eglext.h"
 
+#include "shader.h"
+#include "inotify-cxx.h"
+
 typedef struct {
     uint32_t screen_width;
     uint32_t screen_height;
@@ -22,37 +25,16 @@ typedef struct {
     EGLDisplay display;
     EGLSurface surface;
     EGLContext context;
-    
-    GLuint verbose;
-    GLuint vshader;
-    GLuint fshader;
-    GLuint program;
+
     GLuint buf;
-    
-    GLuint attr_pos;
-    GLuint unif_mouse;
-    GLuint unif_resolution;
-    GLuint unif_time;
-    
+
+    Shader shader;
+
 } CUBE_STATE_T;
 
 static CUBE_STATE_T _state, *state=&_state;
 
 #define check() assert(glGetError() == 0)
-
-static void showlog(GLint shader){
-    // Prints the compile log for a shader
-    char log[1024];
-    glGetShaderInfoLog(shader,sizeof log,NULL,log);
-    printf("%d:shader:\n%s\n", shader, log);
-}
-
-static void showprogramlog(GLint shader){
-    // Prints the information log for a program object
-    char log[1024];
-    glGetProgramInfoLog(shader,sizeof log,NULL,log);
-    printf("%d:program:\n%s\n", shader, log);
-}
 
 static void init_ogl(CUBE_STATE_T *state){
     int32_t success = 0;
@@ -164,79 +146,6 @@ static bool loadFromPath(const std::string& path, std::string* into) {
     return true;
 }
 
-static void init_shaders(CUBE_STATE_T *state, const std::string &_frag_shader_path) {
-    static const GLfloat vertex_data[] = {
-        -1.0,-1.0,1.0,1.0,
-        1.0,-1.0,1.0,1.0,
-        1.0,1.0,1.0,1.0,
-        -1.0,1.0,1.0,1.0
-    };
-    
-    const GLchar *vshader_source =
-    "attribute vec4 a_position;"
-    "varying vec2 v_texcoord;"
-    "void main(void) {"
-    "    gl_Position = a_position;"
-    "    v_texcoord = a_position.xy*0.5+0.5;"
-    "}";
-    
-    std::string fragSource;
-    if(!loadFromPath(_frag_shader_path, &fragSource)) {
-        return;
-    }
-    
-    const GLchar *fshader_source = (const GLchar*) fragSource.c_str();
-    
-    state->vshader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(state->vshader, 1, &vshader_source, 0);
-    glCompileShader(state->vshader);
-    check();
-    
-    if (state->verbose)
-        showlog(state->vshader);
-    
-    state->fshader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(state->fshader, 1, &fshader_source, 0);
-    glCompileShader(state->fshader);
-    check();
-    
-    if (state->verbose)
-        showlog(state->fshader);
-    
-    state->program = glCreateProgram();
-    glAttachShader(state->program, state->vshader);
-    glAttachShader(state->program, state->fshader);
-    glLinkProgram(state->program);
-    check();
-    
-    if (state->verbose)
-        showprogramlog(state->program);
-    
-    state->attr_pos = glGetAttribLocation(state->program, "a_position");
-    state->unif_mouse = glGetUniformLocation(state->program, "u_mouse");
-    state->unif_resolution = glGetUniformLocation(state->program, "u_resolution");
-    state->unif_time = glGetUniformLocation(state->program, "u_time");
-    check();
-    
-    glClearColor ( 0.0, 1.0, 1.0, 1.0 );
-    
-    glGenBuffers(1, &state->buf);
-    
-    check();
-    
-    // Prepare viewport
-    glViewport ( 0, 0, state->screen_width, state->screen_height );
-    check();
-    
-    // Upload vertex data to a buffer
-    glBindBuffer(GL_ARRAY_BUFFER, state->buf);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_data),
-                 vertex_data, GL_STATIC_DRAW);
-    glVertexAttribPointer(state->attr_pos, 4, GL_FLOAT, 0, 16, 0);
-    glEnableVertexAttribArray(state->attr_pos);
-    check();
-}
-
 static void draw(CUBE_STATE_T *state, GLfloat cx, GLfloat cy){
     // Now render to the main frame buffer
     glBindFramebuffer(GL_FRAMEBUFFER,0);
@@ -246,19 +155,15 @@ static void draw(CUBE_STATE_T *state, GLfloat cx, GLfloat cy){
     
     glBindBuffer(GL_ARRAY_BUFFER, state->buf);
     check();
-    glUseProgram ( state->program );
+    state->shader.use();
     check();
     
-    glUniform1f(state->unif_time, ((float)clock())/CLOCKS_PER_SEC );
-    glUniform2f(state->unif_mouse, cx, cy);
-    glUniform2f(state->unif_resolution, state->screen_width, state->screen_height);
+    state->shader.sendUniform("u_time",((float)clock())/CLOCKS_PER_SEC);
+    state->shader.sendUniform("u_mouse",cx, cy);
+    state->shader.sendUniform("u_resolution",state->screen_width, state->screen_height);
+    check();
     
-    // glUniform4f(state->unif_color, 0.5, 0.5, 0.8, 1.0);
-    
-    // glUniform1i(state->unif_tex, 0); // I don't really understand this part, perhaps it relates to active texture?
-    // check();
-    
-    glDrawArrays ( GL_TRIANGLE_FAN, 0, 4 );
+    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
     check();
     
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -316,18 +221,60 @@ int main(int argc, char **argv){
    bcm_host_init();
 
    // Clear application state
-   memset( state, 0, sizeof( *state ) );
+    memset( state, 0, sizeof( *state ) );
       
-   // Start OGLES
-   init_ogl(state);
-    init_shaders(state, std::string(argv[1]) );
+    // Start OGLES
+    init_ogl(state);
+    // init_shaders(state, std::string(argv[1]) );
+
+    //  Build shader;
+    //
+    std::string fragSource;
+    std::string vertSource =
+    "attribute vec4 a_position;"
+    "varying vec2 v_texcoord;"
+    "void main(void) {"
+    "    gl_Position = a_position;"
+    "    v_texcoord = a_position.xy*0.5+0.5;"
+    "}";
+    if(!loadFromPath(_frag_shader_path, &fragSource)) {
+        return;
+    }
+    state->shader.build(fragSource,vertSource);
+
+    //  Make Quad
+    //
+    static const GLfloat vertex_data[] = {
+        -1.0,-1.0,1.0,1.0,
+        1.0,-1.0,1.0,1.0,
+        1.0,1.0,1.0,1.0,
+        -1.0,1.0,1.0,1.0
+    };
+    GLint posAttribut = state->shader.getAttribLocation("a_position");
    
-   while (!terminate){
-      int x, y, b;
-      b = get_mouse(state, &x, &y);
-      if (b) break;
-      draw(state, x, y);
-   }
-   return 0;
+    glClearColor ( 0.0, 1.0, 1.0, 1.0 );
+    
+    glGenBuffers(1, &state->buf);
+    check();
+    
+    // Prepare viewport
+    glViewport ( 0, 0, state->screen_width, state->screen_height );
+    check();
+    
+    // Upload vertex data to a buffer
+    glBindBuffer(GL_ARRAY_BUFFER, state->buf);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_data),
+                 vertex_data, GL_STATIC_DRAW);
+    glVertexAttribPointer(posAttribut, 4, GL_FLOAT, 0, 16, 0);
+    glEnableVertexAttribArray(posAttribut);
+    check();
+
+    while (!terminate){
+        int x, y, b;
+        b = get_mouse(state, &x, &y);
+        if (b) break;
+        draw(state, x, y);
+    }
+    return 0;
 }
 
