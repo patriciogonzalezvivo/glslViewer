@@ -241,7 +241,7 @@ void watchThread(const std::string& file) {
     try {
         Inotify notify;
 
-        InotifyWatch watch(file, IN_ALL_EVENTS);
+        InotifyWatch watch(file, IN_MODIFY);
         notify.Add(watch);
         for (;;) {
             std::cout << "Child: Watching again" << std::endl;
