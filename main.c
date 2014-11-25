@@ -8,6 +8,8 @@
 
 #include "bcm_host.h"
 
+#include "utils.h"
+
 #include "GLES2/gl2.h"
 #include "EGL/egl.h"
 #include "EGL/eglext.h"
@@ -23,16 +25,11 @@ typedef struct {
    GLuint verbose;
    GLuint vshader;
    GLuint fshader;
-   GLuint mshader;
    GLuint program;
-   GLuint program2;
-   GLuint tex_fb;
-   GLuint tex;
    GLuint buf;
-// julia attribs
-   GLuint unif_color, attr_vertex, unif_scale, unif_offset, unif_tex, unif_centre; 
-// mandelbrot attribs
-   GLuint attr_vertex2, unif_scale2, unif_offset2, unif_centre2;
+
+   GLuint attr_pos; 
+
 } CUBE_STATE_T;
 
 static CUBE_STATE_T _state, *state=&_state;
@@ -52,18 +49,7 @@ static void showprogramlog(GLint shader){
    glGetProgramInfoLog(shader,sizeof log,NULL,log);
    printf("%d:program:\n%s\n", shader, log);
 }
-    
-/***********************************************************
- * Name: init_ogl
- *
- * Arguments:
- *       CUBE_STATE_T *state - holds OGLES model info
- *
- * Description: Sets the display, OpenGL|ES context and screen stuff
- *
- * Returns: void
- *
- ***********************************************************/
+
 static void init_ogl(CUBE_STATE_T *state){
    int32_t success = 0;
    EGLBoolean result;
@@ -170,87 +156,20 @@ static void init_shaders(CUBE_STATE_T *state) {
         -1.0,1.0,1.0,1.0
    };
    const GLchar *vshader_source =
-              "attribute vec4 vertex;"
-              "varying vec2 tcoord;"
+              "attribute vec4 a_position;"
+              "varying vec2 v_texcoord;"
               "void main(void) {"
-              " vec4 pos = vertex;"
-              " gl_Position = pos;"
-              " tcoord = vertex.xy*0.5+0.5;"
+              "    gl_Position = a_position;"
+              "    v_texcoord = a_position.xy*0.5+0.5;"
               "}";
       
-   //Mandelbrot
-   const GLchar *mandelbrot_fshader_source =
-"uniform vec4 color;"
-"uniform vec2 scale;"
-"uniform vec2 centre;"
-"varying vec2 tcoord;"
-"void main(void) {"
-"  float intensity;"
-"  vec4 color2;"
-"  float cr=(gl_FragCoord.x-centre.x)*scale.x;"
-"  float ci=(gl_FragCoord.y-centre.y)*scale.y;"
-"  float ar=cr;"
-"  float ai=ci;"
-"  float tr,ti;"
-"  float col=0.0;"
-"  float p=0.0;"
-"  int i=0;"
-"  for(int i2=1;i2<16;i2++)"
-"  {"
-"    tr=ar*ar-ai*ai+cr;"
-"    ti=2.0*ar*ai+ci;"
-"    p=tr*tr+ti*ti;"
-"    ar=tr;"
-"    ai=ti;"
-"    if (p>16.0)"
-"    {"
-"      i=i2;"
-"      break;"
-"    }"
-"  }"
-"  color2 = vec4(float(i)*0.0625,0,0,1);"
-"  gl_FragColor = color2;"
-"}";
+  std::string fragSource;
 
-   // Julia
-   const GLchar *julia_fshader_source =
-"uniform vec4 color;"
-"uniform vec2 scale;"
-"uniform vec2 centre;"
-"uniform vec2 offset;"
-"varying vec2 tcoord;"
-"uniform sampler2D tex;"
-"void main(void) {"
-"  float intensity;"
-"  vec4 color2;"
-"  float ar=(gl_FragCoord.x-centre.x)*scale.x;"
-"  float ai=(gl_FragCoord.y-centre.y)*scale.y;"
-"  float cr=(offset.x-centre.x)*scale.x;"
-"  float ci=(offset.y-centre.y)*scale.y;"
-"  float tr,ti;"
-"  float col=0.0;"
-"  float p=0.0;"
-"  int i=0;"
-"  vec2 t2;"
-"  t2.x=tcoord.x+(offset.x-centre.x)*(0.5/centre.y);"
-"  t2.y=tcoord.y+(offset.y-centre.y)*(0.5/centre.x);"
-"  for(int i2=1;i2<16;i2++)"
-"  {"
-"    tr=ar*ar-ai*ai+cr;"
-"    ti=2.0*ar*ai+ci;"
-"    p=tr*tr+ti*ti;"
-"    ar=tr;"
-"    ai=ti;"
-"    if (p>16.0)"
-"    {"
-"      i=i2;"
-"      break;"
-"    }"
-"  }"
-"  color2 = vec4(0,float(i)*0.0625,0,1);"
-"  color2 = color2+texture2D(tex,t2);"
-"  gl_FragColor = color2;"
-"}";
+  if(!loadFromPath("test.frag", &fragSource)) {
+      return;
+    }
+
+    const GLchar *fshader_source = (const GLchar*) fragSource.c_str();
 
         state->vshader = glCreateShader(GL_VERTEX_SHADER);
         glShaderSource(state->vshader, 1, &vshader_source, 0);
@@ -261,22 +180,13 @@ static void init_shaders(CUBE_STATE_T *state) {
             showlog(state->vshader);
             
         state->fshader = glCreateShader(GL_FRAGMENT_SHADER);
-        glShaderSource(state->fshader, 1, &julia_fshader_source, 0);
+        glShaderSource(state->fshader, 1, &fshader_source, 0);
         glCompileShader(state->fshader);
         check();
 
         if (state->verbose)
             showlog(state->fshader);
 
-        state->mshader = glCreateShader(GL_FRAGMENT_SHADER);
-        glShaderSource(state->mshader, 1, &mandelbrot_fshader_source, 0);
-        glCompileShader(state->mshader);
-        check();
-
-        if (state->verbose)
-            showlog(state->mshader);
-
-        // julia 
         state->program = glCreateProgram();
         glAttachShader(state->program, state->vshader);
         glAttachShader(state->program, state->fshader);
@@ -286,27 +196,7 @@ static void init_shaders(CUBE_STATE_T *state) {
         if (state->verbose)
             showprogramlog(state->program);
             
-        state->attr_vertex = glGetAttribLocation(state->program, "vertex");
-        state->unif_color  = glGetUniformLocation(state->program, "color");
-        state->unif_scale  = glGetUniformLocation(state->program, "scale");
-        state->unif_offset = glGetUniformLocation(state->program, "offset");
-        state->unif_tex    = glGetUniformLocation(state->program, "tex");       
-        state->unif_centre = glGetUniformLocation(state->program, "centre");
-
-        // mandelbrot
-        state->program2 = glCreateProgram();
-        glAttachShader(state->program2, state->vshader);
-        glAttachShader(state->program2, state->mshader);
-        glLinkProgram(state->program2);
-        check();
-
-        if (state->verbose)
-            showprogramlog(state->program2);
-            
-        state->attr_vertex2 = glGetAttribLocation(state->program2, "vertex");
-        state->unif_scale2  = glGetUniformLocation(state->program2, "scale");
-        state->unif_offset2 = glGetUniformLocation(state->program2, "offset");
-        state->unif_centre2 = glGetUniformLocation(state->program2, "centre");
+        state->attr_pos = glGetAttribLocation(state->program, "a_position");
         check();
    
         glClearColor ( 0.0, 1.0, 1.0, 1.0 );
@@ -315,26 +205,6 @@ static void init_shaders(CUBE_STATE_T *state) {
 
         check();
 
-        // Prepare a texture image
-        glGenTextures(1, &state->tex);
-        check();
-        glBindTexture(GL_TEXTURE_2D,state->tex);
-        check();
-        // glActiveTexture(0)
-        glTexImage2D(GL_TEXTURE_2D,0,GL_RGB,state->screen_width,state->screen_height,0,GL_RGB,GL_UNSIGNED_SHORT_5_6_5,0);
-        check();
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        check();
-        // Prepare a framebuffer for rendering
-        glGenFramebuffers(1,&state->tex_fb);
-        check();
-        glBindFramebuffer(GL_FRAMEBUFFER,state->tex_fb);
-        check();
-        glFramebufferTexture2D(GL_FRAMEBUFFER,GL_COLOR_ATTACHMENT0,GL_TEXTURE_2D,state->tex,0);
-        check();
-        glBindFramebuffer(GL_FRAMEBUFFER,0);
-        check();
         // Prepare viewport
         glViewport ( 0, 0, state->screen_width, state->screen_height );
         check();
@@ -343,33 +213,12 @@ static void init_shaders(CUBE_STATE_T *state) {
         glBindBuffer(GL_ARRAY_BUFFER, state->buf);
         glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_data),
                              vertex_data, GL_STATIC_DRAW);
-        glVertexAttribPointer(state->attr_vertex, 4, GL_FLOAT, 0, 16, 0);
-        glEnableVertexAttribArray(state->attr_vertex);
-        check();
-}
-
-
-static void draw_mandelbrot_to_texture(CUBE_STATE_T *state, GLfloat cx, GLfloat cy, GLfloat scale){
-        // Draw the mandelbrot to a texture
-        glBindFramebuffer(GL_FRAMEBUFFER,state->tex_fb);
-        check();
-        glBindBuffer(GL_ARRAY_BUFFER, state->buf);
-        
-        glUseProgram ( state->program2 );
-        check();
-
-        glUniform2f(state->unif_scale2, scale, scale);
-        glUniform2f(state->unif_centre2, cx, cy);
-        check();
-        glDrawArrays ( GL_TRIANGLE_FAN, 0, 4 );
-        check();
-               
-        glFlush();
-        glFinish();
+        glVertexAttribPointer(state->attr_pos, 4, GL_FLOAT, 0, 16, 0);
+        glEnableVertexAttribArray(state->attr_pos);
         check();
 }
         
-static void draw_triangles(CUBE_STATE_T *state, GLfloat cx, GLfloat cy, GLfloat scale, GLfloat x, GLfloat y){
+static void draw(CUBE_STATE_T *state, GLfloat cx, GLfloat cy){
         // Now render to the main frame buffer
         glBindFramebuffer(GL_FRAMEBUFFER,0);
         // Clear the background (not really necessary I suppose)
@@ -380,14 +229,10 @@ static void draw_triangles(CUBE_STATE_T *state, GLfloat cx, GLfloat cy, GLfloat 
         check();
         glUseProgram ( state->program );
         check();
-        glBindTexture(GL_TEXTURE_2D,state->tex);
-        check();
-        glUniform4f(state->unif_color, 0.5, 0.5, 0.8, 1.0);
-        glUniform2f(state->unif_scale, scale, scale);
-        glUniform2f(state->unif_offset, x, y);
-        glUniform2f(state->unif_centre, cx, cy);
-        glUniform1i(state->unif_tex, 0); // I don't really understand this part, perhaps it relates to active texture?
-        check();
+        // glUniform4f(state->unif_color, 0.5, 0.5, 0.8, 1.0);
+        // glUniform2f(state->unif_scale, scale, scale);
+        // glUniform1i(state->unif_tex, 0); // I don't really understand this part, perhaps it relates to active texture?
+        // check();
         
         glDrawArrays ( GL_TRIANGLE_FAN, 0, 4 );
         check();
@@ -455,13 +300,11 @@ int main (){
    cx = state->screen_width/2;
    cy = state->screen_height/2;
 
-   draw_mandelbrot_to_texture(state, cx, cy, 0.003);
-   while (!terminate)
-   {
+   while (!terminate){
       int x, y, b;
       b = get_mouse(state, &x, &y);
       if (b) break;
-      draw_triangles(state, cx, cy, 0.003, x, y);
+      draw(state, x, y);
    }
    return 0;
 }
