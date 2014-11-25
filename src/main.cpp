@@ -237,7 +237,7 @@ int main(int argc, char **argv){
     "    gl_Position = a_position;"
     "    v_texcoord = a_position.xy*0.5+0.5;"
     "}";
-    if(!loadFromPath(std::string(arg[1]), &fragSource)) {
+    if(!loadFromPath(std::string(argv[1]), &fragSource)) {
         return;
     }
     state->shader.build(fragSource,vertSource);

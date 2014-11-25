@@ -27,6 +27,7 @@ LDFLAGS+=-L$(SDKSTAGE)/opt/vc/lib/ \
 all: $(EXE)
 
 %.o: %.cpp
+	@echo $@
 	$(CXX) $(CFLAGS) $(INCLUDES) -g -c $< -o $@ -Wno-deprecated-declarations
 
 $(EXE): $(OBJECTS) $(HEADERS)
