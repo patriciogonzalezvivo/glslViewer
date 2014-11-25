@@ -239,7 +239,7 @@ void drawThread() {
 void watchThread(const std::string& file) {
     Inotify notify;
 
-    InotifyWatch watch(file, IN_ALL_EVENTS);
+    InotifyWatch watch(file, IN_MODIFY);
     notify.Add(watch);
 
     try {
@@ -255,8 +255,9 @@ void watchThread(const std::string& file) {
                 if(got_event && !(*fragHasChanged)){  
                     std::string mask_str;
                     event.DumpTypes(mask_str);
+                    std::string filename = event.GetName();
                     *fragHasChanged = true;
-                    std::cout << "Child: Something have change " << mask_str << std::endl;
+                    std::cout << "Child: Something have change on " << filename << mask_str << std::endl;
                 }
             }
         }
@@ -335,10 +336,11 @@ int main(int argc, char **argv){
         {
             *fragHasChanged = false;
             watchThread(fragFile);
+            std::cout << "Watch thread shutdown" << std::endl;
         }
         break;
 
-        default: 
+        default: // parent
         {
             init(fragFile);
             drawThread();
