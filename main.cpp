@@ -320,7 +320,7 @@ int main(int argc, char **argv){
       
    // Start OGLES
    init_ogl(state);
-   init_shaders(state, string(argv[1]) );
+    init_shaders(state, std::string(argv[1]) );
    
    while (!terminate){
       int x, y, b;
