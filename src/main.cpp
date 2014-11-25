@@ -242,30 +242,22 @@ void watchThread(const std::string& file) {
     InotifyWatch watch(file, IN_ALL_EVENTS);
     notify.Add(watch);
 
-    try {
-        for (;;) {
-            std::cout << "Child: Watching again" << std::endl;
-            notify.WaitForEvents();
+    for (;;) {
+        std::cout << "Child: Watching again" << std::endl;
+        notify.WaitForEvents();
 
-            size_t count = notify.GetEventCount();
-            while(count-- > 0) {
-                InotifyEvent event;
-                bool got_event = notify.GetEvent(&event);
+        size_t count = notify.GetEventCount();
+        while(count-- > 0) {
+            InotifyEvent event;
+            bool got_event = notify.GetEvent(&event);
 
-                if(got_event && !(*fragHasChanged)){  
-                    std::string mask_str;
-                    event.DumpTypes(mask_str);
-                    *fragHasChanged = true;
-                    std::cout << "Child: Something have change " << mask_str << std::endl;
-                }
+            if(got_event && !(*fragHasChanged)){  
+                std::string mask_str;
+                event.DumpTypes(mask_str);
+                *fragHasChanged = true;
+                std::cout << "Child: Something have change " << mask_str << std::endl;
             }
         }
-    } catch (InotifyException &e) {
-        cerr << "Inotify exception occured: " << e.GetMessage() << endl;
-    } catch (exception &e) {
-        cerr << "STL exception occured: " << e.what() << endl;
-    } catch (...) {
-        cerr << "unknown exception occured" << endl;
     }
 }
 
