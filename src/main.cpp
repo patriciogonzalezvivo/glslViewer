@@ -243,7 +243,9 @@ void watchThread(const std::string& file) {
     notify.Add(watch);
 
     for (;;) {
-        std::cout << "Child: Watching again" << std::endl;
+
+        if(!(*fragHasChanged)){
+           std::cout << "Child: Watching again" << std::endl;
         notify.WaitForEvents();
 
         size_t count = notify.GetEventCount();
@@ -251,13 +253,15 @@ void watchThread(const std::string& file) {
             InotifyEvent event;
             bool got_event = notify.GetEvent(&event);
 
-            if(got_event && !(*fragHasChanged)){  
+            if(got_event){  
                 std::string mask_str;
                 event.DumpTypes(mask_str);
                 *fragHasChanged = true;
                 std::cout << "Child: Something have change " << mask_str << std::endl;
             }
+        } 
         }
+        
     }
 }
 
