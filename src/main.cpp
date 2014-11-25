@@ -259,9 +259,9 @@ void watchThread(const std::string& file) {
                     std::string filename = event.GetName();
                     std::cout << "event mask: \"" << mask_str << "\", ";
                     std::cout << "filename: \"" << filename << "\"" << std::endl;
-                    if(mask_str == "IN_MODIFY") {
+                    /*if(mask_str == "IN_MODIFY") {
                         *fragHasChanged = true;
-                    }
+                    }*/
                 }
 
                 count--;
