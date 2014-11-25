@@ -8,6 +8,7 @@
 #include <fstream>
 #include <iostream>
 #include <time.h>
+#include <unistd.h>
 
 #include "bcm_host.h"
 
@@ -211,42 +212,48 @@ _exit:
    if (outx) *outx = x;
    if (outy) *outy = y;
    return 0;
-}       
- 
-//==============================================================================
+}     
 
-int main(int argc, char **argv){
+void drawThread() {
+    while (!terminate){
+        int x, y, b;
+        b = get_mouse(state, &x, &y);
+        if (b) break;
+        draw(state, x, y);
+    }
+}  
 
+void watchThread(const std::string& file) {
     Inotify notify;
 
-    InotifyWatch watch(std::string(argv[1]), IN_ALL_EVENTS);
+    InotifyWatch watch(file, IN_MODIFY);
     notify.Add(watch);
 
     for (;;) {
-            notify.WaitForEvents();
+        notify.WaitForEvents();
 
-            size_t count = notify.GetEventCount();
-            while (count > 0) {
-                InotifyEvent event;
-                bool got_event = notify.GetEvent(&event);
+        size_t count = notify.GetEventCount();
+        while (count > 0) {
+            InotifyEvent event;
+            bool got_event = notify.GetEvent(&event);
 
-                if (got_event) {
-                    std::string mask_str;
-                    event.DumpTypes(mask_str);
+            if (got_event) {
+                std::string mask_str;
+                event.DumpTypes(mask_str);
 
-                    std::string filename = event.GetName();
+                std::string filename = event.GetName();
 
-                    std::cout << "[watch " << std::string(argv[1]) << "] ";
-                    std::cout << "event mask: \"" << mask_str << "\", ";
-                    std::cout << "filename: \"" << filename << "\"" << std::endl;
-                }
-
-                count--;
+                std::cout << "[watch " << file << "] ";
+                std::cout << "event mask: \"" << mask_str << "\", ";
+                std::cout << "filename: \"" << filename << "\"" << endl;
             }
+
+            count--;
         }
+    }
+}
 
-        return 0;
-
+void init(const std::string& fragFile) {
     int terminate = 0;
     GLfloat cx, cy;
     bcm_host_init();
@@ -256,7 +263,6 @@ int main(int argc, char **argv){
       
     // Start OGLES
     init_ogl(state);
-    // init_shaders(state, std::string(argv[1]) );
 
     //  Build shader;
     //
@@ -268,7 +274,7 @@ int main(int argc, char **argv){
     "    gl_Position = a_position;"
     "    v_texcoord = a_position.xy*0.5+0.5;"
     "}";
-    if(!loadFromPath(std::string(argv[1]), &fragSource)) {
+    if(!loadFromPath(fragFile, &fragSource)) {
         return;
     }
     state->shader.build(fragSource,vertSource);
@@ -299,13 +305,36 @@ int main(int argc, char **argv){
     glVertexAttribPointer(posAttribut, 4, GL_FLOAT, 0, 16, 0);
     glEnableVertexAttribArray(posAttribut);
     check();
+}
+ 
+//==============================================================================
 
-    while (!terminate){
-        int x, y, b;
-        b = get_mouse(state, &x, &y);
-        if (b) break;
-        draw(state, x, y);
+int main(int argc, char **argv){
+    
+    std::string fragFile(argv[1]);
+
+    pid_t pid = fork();
+
+    switch(pid) {
+        case -1: //error
+
+        break;
+
+        case 0: // child
+        {
+            watchThread(fragFile);
+        }
+
+        break;
+
+        default: 
+        {
+            init(fragFile);
+            drawThread();
+        }
+        break;
     }
+
     return 0;
 }
 
