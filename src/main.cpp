@@ -251,11 +251,11 @@ void watchThread(const std::string& file) {
             InotifyEvent event;
             bool got_event = notify.GetEvent(&event);
 
-            if(got_event && !(*fragHasChanged)){
+            if(got_event && !(*fragHasChanged)){  
+                string mask_str;
+                event.DumpTypes(mask_str);
                 *fragHasChanged = true;
-                std::cout << "Child: Something have change" << std::endl;
-            } else {
-                std::cout << "Child: should not go there" << std::endl;
+                std::cout << "Child: Something have change" << mask_str << std::endl;
             }
         }
     }
