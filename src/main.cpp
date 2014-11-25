@@ -163,6 +163,7 @@ static void draw(CUBE_STATE_T *state, GLfloat cx, GLfloat cy){
     if(*fragHasChanged) {
         std::string fragSource;
         loadFromPath(fragFile, &fragSource);
+        state->shader.detach(GL_FRAGMENT_SHADER | GL_VERTEX_SHADER);
         state->shader.build(fragSource,vertSource);
 
         *fragHasChanged = false;
@@ -252,17 +253,21 @@ void watchThread(const std::string& file) {
     for (;;) {
         notify.WaitForEvents();
 
-        size_t count = notify.GetEventCount();
-        while (count > 0 && !(*fragHasChanged)) {
-            InotifyEvent event;
-            bool got_event = notify.GetEvent(&event);
-
-            if (got_event) {
-                *fragHasChanged = true;
-            }
-
-            count--;
+        if(!(*fragHasChanged)){
+            *fragHasChanged = true;
         }
+
+        // size_t count = notify.GetEventCount();
+        // while (count > 0 && !(*fragHasChanged)) {
+        //     InotifyEvent event;
+        //     bool got_event = notify.GetEvent(&event);
+
+        //     if (got_event) {
+        //         *fragHasChanged = true;
+        //     }
+
+        //     count--;
+        // }
     }
 }
 
