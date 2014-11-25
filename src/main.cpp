@@ -244,27 +244,29 @@ void watchThread(const std::string& file) {
         InotifyWatch watch(file, IN_ALL_EVENTS);
         notify.Add(watch);
         for (;;) {
-            std::cout << "Child: Watching again" << std::endl;
-            notify.WaitForEvents();
+            if(!fragHasChanged) {
+                std::cout << "Child: Watching again" << std::endl;
+                notify.WaitForEvents();
 
-            size_t count = notify.GetEventCount();
-            while (count > 0) {
-                InotifyEvent event;
-                bool got_event = notify.GetEvent(&event);
+                size_t count = notify.GetEventCount();
+                while (count > 0) {
+                    InotifyEvent event;
+                    bool got_event = notify.GetEvent(&event);
 
-                if (got_event) {
-                    std::string mask_str;
-                    event.DumpTypes(mask_str);
+                    if (got_event) {
+                        std::string mask_str;
+                        event.DumpTypes(mask_str);
 
-                    std::string filename = event.GetName();
-                    std::cout << "event mask: \"" << mask_str << "\", ";
-                    std::cout << "filename: \"" << filename << "\"" << std::endl;
-                    /*if(mask_str == "IN_MODIFY") {
-                        *fragHasChanged = true;
-                    }*/
+                        std::string filename = event.GetName();
+                        std::cout << "event mask: \"" << mask_str << "\", ";
+                        std::cout << "filename: \"" << filename << "\"" << std::endl;
+                        if(mask_str == "IN_MODIFY") {
+                            *fragHasChanged = true;
+                        }
+                    }
+
+                    count--;
                 }
-
-                count--;
             }
         }
     } catch (InotifyException &e) {
@@ -340,7 +342,6 @@ int main(int argc, char **argv){
 
         case 0: // child
         {
-            *fragHasChanged = false;
             watchThread(fragFile);
             std::cout << "Watch thread shutdown" << std::endl;
         }
@@ -348,6 +349,7 @@ int main(int argc, char **argv){
 
         default: // parent
         {
+            *fragHasChanged = true;
             init(fragFile);
             drawThread();
 
