@@ -9,6 +9,7 @@
 #include <iostream>
 #include <time.h>
 #include <unistd.h>
+#include <sys/shm.h>
 
 #include "bcm_host.h"
 
@@ -32,6 +33,16 @@ typedef struct {
     Shader shader;
 
 } CUBE_STATE_T;
+
+bool* fragHasChanged;
+std::string fragFile;
+std::string vertSource =
+"attribute vec4 a_position;"
+"varying vec2 v_texcoord;"
+"void main(void) {"
+"    gl_Position = a_position;"
+"    v_texcoord = a_position.xy*0.5+0.5;"
+"}";
 
 static CUBE_STATE_T _state, *state=&_state;
 
@@ -148,6 +159,15 @@ static bool loadFromPath(const std::string& path, std::string* into) {
 }
 
 static void draw(CUBE_STATE_T *state, GLfloat cx, GLfloat cy){
+
+    if(*fragHasChanged) {
+        std::string fragSource;
+        loadFromPath(fragFile, &fragSource);
+        state->shader.build(fragSource,vertSource);
+
+        *fragHasChanged = false;
+    }
+
     // Now render to the main frame buffer
     glBindFramebuffer(GL_FRAMEBUFFER,0);
     // Clear the background (not really necessary I suppose)
@@ -238,14 +258,7 @@ void watchThread(const std::string& file) {
             bool got_event = notify.GetEvent(&event);
 
             if (got_event) {
-                std::string mask_str;
-                event.DumpTypes(mask_str);
-
-                std::string filename = event.GetName();
-
-                std::cout << "[watch " << file << "] ";
-                std::cout << "event mask: \"" << mask_str << "\", ";
-                std::cout << "filename: \"" << filename << "\"" << std::endl;
+                *fragHasChanged = true;
             }
 
             count--;
@@ -266,13 +279,6 @@ void init(const std::string& fragFile) {
     //  Build shader;
     //
     std::string fragSource;
-    std::string vertSource =
-    "attribute vec4 a_position;"
-    "varying vec2 v_texcoord;"
-    "void main(void) {"
-    "    gl_Position = a_position;"
-    "    v_texcoord = a_position.xy*0.5+0.5;"
-    "}";
     if(!loadFromPath(fragFile, &fragSource)) {
         return;
     }
@@ -310,9 +316,13 @@ void init(const std::string& fragFile) {
 
 int main(int argc, char **argv){
     
-    std::string fragFile(argv[1]);
+    fragFile = std::string(argv[1]);
+
+    int shmId = shmget(IPC_PRIVATE, sizeof(bool), 0666);
 
     pid_t pid = fork();
+
+    fragHasChanged = (bool *) shmat(shmId, NULL, 0);
 
     switch(pid) {
         case -1: //error
@@ -330,9 +340,13 @@ int main(int argc, char **argv){
         {
             init(fragFile);
             drawThread();
+
+            kill(pid, SIGKILL);
         }
         break;
     }
+
+    shmctl(shmId, IPC_RMID, NULL);
 
     return 0;
 }
