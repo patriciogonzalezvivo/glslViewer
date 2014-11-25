@@ -241,7 +241,7 @@ void watchThread(const std::string& file) {
     try {
         Inotify notify;
 
-        InotifyWatch watch(watch_dir, IN_ALL_EVENTS);
+        InotifyWatch watch(file, IN_ALL_EVENTS);
         notify.Add(watch);
         for (;;) {
             std::cout << "Child: Watching again" << std::endl;
@@ -253,12 +253,10 @@ void watchThread(const std::string& file) {
                 bool got_event = notify.GetEvent(&event);
 
                 if (got_event) {
-                    string mask_str;
+                    std::string mask_str;
                     event.DumpTypes(mask_str);
 
-                    string filename = event.GetName();
-
-                    std::cout << "[watch " << watch_dir << "] ";
+                    std::string filename = event.GetName();
                     std::cout << "event mask: \"" << mask_str << "\", ";
                     std::cout << "filename: \"" << filename << "\"" << std::endl;
                 }
