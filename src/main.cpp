@@ -245,7 +245,7 @@ void watchThread(const std::string& file) {
 
                 std::cout << "[watch " << file << "] ";
                 std::cout << "event mask: \"" << mask_str << "\", ";
-                std::cout << "filename: \"" << filename << "\"" << endl;
+                std::cout << "filename: \"" << filename << "\"" << std::endl;
             }
 
             count--;
