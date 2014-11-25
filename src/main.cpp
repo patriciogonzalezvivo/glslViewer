@@ -164,6 +164,7 @@ static void draw(CUBE_STATE_T *state, GLfloat cx, GLfloat cy){
             state->shader.detach(GL_FRAGMENT_SHADER | GL_VERTEX_SHADER);
             state->shader.build(fragSource,vertSource);
             *fragHasChanged = false;
+            std::cout << "Parent: reloading shader" << std::endl;
         }
     }
 
@@ -178,7 +179,6 @@ static void draw(CUBE_STATE_T *state, GLfloat cx, GLfloat cy){
     state->shader.sendUniform("u_time",((float)clock())/CLOCKS_PER_SEC);
     state->shader.sendUniform("u_mouse",cx, cy);
     state->shader.sendUniform("u_resolution",state->screen_width, state->screen_height);
-    
     
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
     
@@ -247,6 +247,7 @@ void watchThread(const std::string& file) {
 
         if(!(*fragHasChanged)){
             *fragHasChanged = true;
+            std::cout << "Child: Something have change" << std::endl;
         }
     }
 }
