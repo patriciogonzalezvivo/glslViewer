@@ -1,14 +1,7 @@
 #pragma once
 
-<<<<<<< HEAD
 #include <string>
 #include "GLES2/gl2.h"
-=======
-#include "graphics.h"
-#include "log.h"
-#include "utils.h"
-#include <string>
->>>>>>> ef2b9b39945e772e655c23b7184312a9d6713c33
 
 class Shader {
 
@@ -31,11 +24,6 @@ public:
 
     void detach(GLenum type);
 
-<<<<<<< HEAD
-=======
-    Log* log;
-
->>>>>>> ef2b9b39945e772e655c23b7184312a9d6713c33
 private:
     GLuint program;
     GLuint fragmentShader;

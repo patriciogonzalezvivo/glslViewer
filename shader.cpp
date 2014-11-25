@@ -48,11 +48,6 @@ GLuint Shader::link() {
         printInfoLog(program);
         glDeleteProgram(program);
         return 0;
-<<<<<<< HEAD
-=======
-    } else {
-        log->clear();
->>>>>>> ef2b9b39945e772e655c23b7184312a9d6713c33
     }
 
     return program;
@@ -87,13 +82,7 @@ GLuint Shader::compileShader(const std::string& src, GLenum type) {
         printInfoLog(shader);
 		glDeleteShader(shader);
 		return 0;
-<<<<<<< HEAD
 	}
-=======
-	} else {
-        log->clear();
-    }
->>>>>>> ef2b9b39945e772e655c23b7184312a9d6713c33
 
 	return shader;
 }
@@ -141,11 +130,6 @@ void Shader::printInfoLog(GLuint shader) {
 
         std::cerr << info << std::endl;
 
-<<<<<<< HEAD
-=======
-        *log << info;
-
->>>>>>> ef2b9b39945e772e655c23b7184312a9d6713c33
         delete[] info;
     }
 }
