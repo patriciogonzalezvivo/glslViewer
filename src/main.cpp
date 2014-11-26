@@ -191,7 +191,6 @@ static void draw(CUBE_STATE_T *state){
     // Clear the background (not really necessary I suppose)
     glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
     
-    
     shader.use();
     shader.sendUniform("u_time", ((float)clock())/CLOCKS_PER_SEC);
     shader.sendUniform("u_mouse", state->mouse_x, state->mouse_y);
@@ -261,9 +260,16 @@ void drawThread() {
 }  
 
 void watchThread(const std::string& _file) {
-    Inotify notify;
+    
+    unsigned found =_file.find_last_of("/\\");
 
-    InotifyWatch watch(".", IN_MODIFY);//IN_ALL_EVENTS);
+    std::string folder = str.substr(0,found);
+    std::string file = str.substr(found+1);
+
+    std::cout << "Watching on folder " << folder << " for file " << file << std::endl;
+
+    Inotify notify;
+    InotifyWatch watch(folder, IN_MODIFY);//IN_ALL_EVENTS);
     notify.Add(watch);
 
     for (;;) {
@@ -281,7 +287,7 @@ void watchThread(const std::string& _file) {
                     event.DumpTypes(mask_str);
                     std::string filename = event.GetName();
                     std::cout << "Child: " << filename << " have change " << mask_str << std::endl;
-                    if (filename == _file){
+                    if (filename == file){
                         *fragHasChanged = true;
                     }
                 }
