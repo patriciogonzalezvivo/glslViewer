@@ -36,4 +36,8 @@ $(EXE): $(OBJECTS) $(HEADERS)
 clean:
 	@rm -rvf $(EXE) src/*.o
 
+install:
+	cp $(EXE) /usr/local/bin
 
+uninstall:
+	rm /usr/local/bin/$(EXE)

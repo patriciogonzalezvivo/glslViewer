@@ -269,6 +269,7 @@ void watchThread(const std::string& _file) {
     if(folder == file){
         folder = ".";
     }
+    
     std::cout << "Watching on folder " << folder << " for file " << file << std::endl;
 
 
