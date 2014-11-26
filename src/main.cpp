@@ -266,7 +266,11 @@ void watchThread(const std::string& _file) {
     std::string folder = _file.substr(0,found);
     std::string file = _file.substr(found+1);
 
+    if(folder == file){
+        folder = ".";
+    }
     std::cout << "Watching on folder " << folder << " for file " << file << std::endl;
+
 
     Inotify notify;
     InotifyWatch watch(folder, IN_MODIFY);//IN_ALL_EVENTS);
