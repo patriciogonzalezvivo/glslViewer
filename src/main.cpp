@@ -272,7 +272,6 @@ void watchThread(const std::string& _file) {
     
     std::cout << "Watching on folder " << folder << " for file " << file << std::endl;
 
-
     Inotify notify;
     InotifyWatch watch(folder, IN_MODIFY);//IN_ALL_EVENTS);
     notify.Add(watch);
@@ -291,7 +290,7 @@ void watchThread(const std::string& _file) {
                     std::string mask_str;
                     event.DumpTypes(mask_str);
                     std::string filename = event.GetName();
-                    std::cout << "Child: " << filename << " have change " << mask_str << std::endl;
+                    //std::cout << "Child: " << filename << " have change " << mask_str << std::endl;
                     if (filename == file){
                         *fragHasChanged = true;
                     }

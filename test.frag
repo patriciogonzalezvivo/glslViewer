@@ -1,3 +1,7 @@
+#ifdef GL_ES
+precision mediump float;
+#endif
+
 uniform float u_time;
 uniform vec2 u_resolution;
 uniform vec2 u_mouse;
@@ -5,10 +9,18 @@ uniform vec2 u_mouse;
 varying vec2 v_texcoord;
 
 void main(void) {
-	vec3 color;
+	vec3 color = vec3(abs(sin(u_time)),
+			abs(sin(u_time*0.5)),
+			0.1);
 
-	color.r = u_mouse.x/u_resolution.x;
-	color.g = u_mouse.y/u_resolution.y;
+	float rel = u_resolution.x/u_resolution.y;
+	vec2 grid = fract(vec2(v_texcoord.x*rel,v_texcoord.y)*10.);
+
+	float lineWith = 0.01;
+	if (grid.x < lineWith || grid.y < lineWith){
+		color.x += cos(smoothstep(0.,lineWith,grid.x));
+		color.y += cos(smoothstep(0.,lineWith,grid.y));
+	}
 
 	gl_FragColor.rgb = color;
 	gl_FragColor.a = 1.0;
