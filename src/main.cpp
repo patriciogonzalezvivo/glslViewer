@@ -17,6 +17,7 @@
 #include "EGL/egl.h"
 #include "EGL/eglext.h"
 
+#include "utils.h"
 #include "shader.h"
 
 #include "inotify-cxx.h"
@@ -142,21 +143,6 @@ static void init_ogl(CUBE_STATE_T *state){
     glClear( GL_COLOR_BUFFER_BIT );
 }
 
-static bool loadFromPath(const std::string& path, std::string* into) {
-    std::ifstream file;
-    std::string buffer;
-    
-    file.open(path.c_str());
-    if(!file.is_open()) return false;
-    while(!file.eof()) {
-        getline(file, buffer);
-        (*into) += buffer + "\n";
-    }
-    
-    file.close();
-    return true;
-}
-
 void setup(CUBE_STATE_T *state) {
     //  Build shader;
     //
@@ -191,7 +177,6 @@ void setup(CUBE_STATE_T *state) {
 }
 
 static void draw(CUBE_STATE_T *state){
-
     if(*fragHasChanged) {
         std::string fragSource;
         if(loadFromPath(fragFile, &fragSource)){
@@ -211,9 +196,7 @@ static void draw(CUBE_STATE_T *state){
     shader.sendUniform("u_time", ((float)clock())/CLOCKS_PER_SEC);
     shader.sendUniform("u_mouse", state->mouse_x, state->mouse_y);
     shader.sendUniform("u_resolution",state->screen_width, state->screen_height);
-    
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-    
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     
     glFlush();
