@@ -19,7 +19,6 @@
 
 #include "shader.h"
 
-// #define INOTIFY_THREAD_SAFE
 #include "inotify-cxx.h"
 
 typedef struct {
@@ -238,16 +237,15 @@ void drawThread() {
     }
 }  
 
-void watchThread(const std::string& file) {
+void watchThread(const std::string& _file) {
     Inotify notify;
 
-    InotifyWatch watch(file, IN_MODIFY);//IN_ALL_EVENTS);
+    InotifyWatch watch(".", IN_MODIFY);//IN_ALL_EVENTS);
     notify.Add(watch);
 
     for (;;) {
 
         if(!(*fragHasChanged)){
-            std::cout << "Child: Watching again" << std::endl;
             notify.WaitForEvents();
 
             size_t count = notify.GetEventCount();
@@ -258,12 +256,14 @@ void watchThread(const std::string& file) {
                 if(got_event){  
                     std::string mask_str;
                     event.DumpTypes(mask_str);
-                    *fragHasChanged = true;
-                    std::cout << "Child: Something have change " << mask_str << std::endl;
+                    std::string filename = event.GetName();
+                    std::cout << "Child: " << filename << " have change " << mask_str << std::endl;
+                    if (filename == _file){
+                        *fragHasChanged = true;
+                    }
                 }
             } 
         }
-        
     }
 }
 
