@@ -24,6 +24,10 @@
 typedef struct {
     uint32_t screen_width;
     uint32_t screen_height;
+
+    int mouse_x;
+    int mouse_y;
+
     // OpenGL|ES objects
     EGLDisplay display;
     EGLSurface surface;
@@ -31,9 +35,8 @@ typedef struct {
 
     GLuint buf;
 
-    Shader shader;
-
 } CUBE_STATE_T;
+static CUBE_STATE_T _state, *state=&_state;
 
 bool* fragHasChanged;
 std::string fragFile;
@@ -45,7 +48,7 @@ std::string vertSource =
 "    v_texcoord = a_position.xy*0.5+0.5;"
 "}";
 
-static CUBE_STATE_T _state, *state=&_state;
+Shader shader;
 
 static void init_ogl(CUBE_STATE_T *state){
     int32_t success = 0;
@@ -134,12 +137,9 @@ static void init_ogl(CUBE_STATE_T *state){
     result = eglMakeCurrent(state->display, state->surface, state->surface, state->context);
     assert(EGL_FALSE != result);
     
-    
     // Set background color and clear buffers
     glClearColor(0.15f, 0.25f, 0.35f, 1.0f);
     glClear( GL_COLOR_BUFFER_BIT );
-    
-    
 }
 
 static bool loadFromPath(const std::string& path, std::string* into) {
@@ -157,7 +157,7 @@ static bool loadFromPath(const std::string& path, std::string* into) {
     return true;
 }
 
-static void draw(CUBE_STATE_T *state, GLfloat cx, GLfloat cy){
+static void draw(CUBE_STATE_T *state){
 
     if(*fragHasChanged) {
         std::string fragSource;
@@ -165,7 +165,6 @@ static void draw(CUBE_STATE_T *state, GLfloat cx, GLfloat cy){
             state->shader.detach(GL_FRAGMENT_SHADER | GL_VERTEX_SHADER);
             state->shader.build(fragSource,vertSource);
             *fragHasChanged = false;
-            std::cout << "Parent: reloading shader" << std::endl;
         }
     }
 
@@ -177,8 +176,8 @@ static void draw(CUBE_STATE_T *state, GLfloat cx, GLfloat cy){
     glBindBuffer(GL_ARRAY_BUFFER, state->buf);
     state->shader.use();
     
-    state->shader.sendUniform("u_time",((float)clock())/CLOCKS_PER_SEC);
-    state->shader.sendUniform("u_mouse",cx, cy);
+    state->shader.sendUniform("u_time", ((float)clock())/CLOCKS_PER_SEC);
+    state->shader.sendUniform("u_mouse", state->mouse_x, state_mouse_y);
     state->shader.sendUniform("u_resolution",state->screen_width, state->screen_height);
     
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
@@ -191,10 +190,10 @@ static void draw(CUBE_STATE_T *state, GLfloat cx, GLfloat cy){
     eglSwapBuffers(state->display, state->surface); 
 }
 
-static int get_mouse(CUBE_STATE_T *state, int *outx, int *outy){
+static int get_mouse(CUBE_STATE_T *state){
     static int fd = -1;
     const int width=state->screen_width, height=state->screen_height;
-    static int x=800, y=400;
+    static int x=width, y=height;
     const int XSIGN = 1<<4, YSIGN = 1<<5;
     if (fd<0) {
        fd = open("/dev/input/mouse0",O_RDONLY|O_NONBLOCK);
@@ -222,18 +221,18 @@ static int get_mouse(CUBE_STATE_T *state, int *outx, int *outy){
         if (x>width) x=width;
         if (y>height) y=height;
    }
+
 _exit:
-   if (outx) *outx = x;
-   if (outy) *outy = y;
+   state->mouse_x = x;
+   state->mouse_y = y;
    return 0;
 }     
 
 void drawThread() {
+    setup();
     while (1) {
-        int x, y, b;
-        b = get_mouse(state, &x, &y);
-        if (b) break;
-        draw(state, x, y);
+        if (get_mouse(state)) break;
+        draw(state);
     }
 }  
 
@@ -267,8 +266,7 @@ void watchThread(const std::string& _file) {
     }
 }
 
-void init(const std::string& fragFile) {
-    GLfloat cx, cy;
+void setup() {
     bcm_host_init();
 
     // Clear application state
@@ -299,7 +297,6 @@ void init(const std::string& fragFile) {
     
     glGenBuffers(1, &state->buf);
     
-    
     // Prepare viewport
     glViewport ( 0, 0, state->screen_width, state->screen_height );
     
@@ -316,13 +313,10 @@ void init(const std::string& fragFile) {
 //==============================================================================
 
 int main(int argc, char **argv){
-    
     fragFile = std::string(argv[1]);
 
     int shmId = shmget(IPC_PRIVATE, sizeof(bool), 0666);
-
     pid_t pid = fork();
-
     fragHasChanged = (bool *) shmat(shmId, NULL, 0);
 
     switch(pid) {
@@ -338,7 +332,6 @@ int main(int argc, char **argv){
 
         default: 
         {
-            init(fragFile);
             drawThread();
 
             kill(pid, SIGKILL);
@@ -347,7 +340,6 @@ int main(int argc, char **argv){
     }
 
     shmctl(shmId, IPC_RMID, NULL);
-
     return 0;
 }
 
