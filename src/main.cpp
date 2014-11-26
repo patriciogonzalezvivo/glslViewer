@@ -261,10 +261,10 @@ void drawThread() {
 
 void watchThread(const std::string& _file) {
     
-    unsigned found =_file.find_last_of("/\\");
+    unsigned found = _file.find_last_of("/\\");
 
-    std::string folder = str.substr(0,found);
-    std::string file = str.substr(found+1);
+    std::string folder = _file.substr(0,found);
+    std::string file = _file.substr(found+1);
 
     std::cout << "Watching on folder " << folder << " for file " << file << std::endl;
 
