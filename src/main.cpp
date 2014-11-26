@@ -34,8 +34,6 @@ typedef struct {
     EGLSurface surface;
     EGLContext context;
 
-    GLuint buf;
-
 } CUBE_STATE_T;
 static CUBE_STATE_T _state, *state=&_state;
 
@@ -48,6 +46,8 @@ std::string vertSource =
 "    gl_Position = a_position;"
 "    v_texcoord = a_position.xy*0.5+0.5;"
 "}";
+
+GLuint quadBuffer;
 
 Shader shader;
 
@@ -163,13 +163,13 @@ void setup(CUBE_STATE_T *state) {
     GLint posAttribut = shader.getAttribLocation("a_position");
    
     glClearColor ( 0.0, 1.0, 1.0, 1.0 );
-    glGenBuffers(1, &state->buf);
+    glGenBuffers(1, &quadBuffer);
     
     // Prepare viewport
     glViewport( 0, 0, state->screen_width, state->screen_height );
     
     // Upload vertex data to a buffer
-    glBindBuffer(GL_ARRAY_BUFFER, state->buf);
+    glBindBuffer(GL_ARRAY_BUFFER, quadBuffer);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_data),
                  vertex_data, GL_STATIC_DRAW);
     glVertexAttribPointer(posAttribut, 4, GL_FLOAT, 0, 16, 0);
@@ -191,7 +191,7 @@ static void draw(CUBE_STATE_T *state){
     // Clear the background (not really necessary I suppose)
     glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
     
-    glBindBuffer(GL_ARRAY_BUFFER, state->buf);
+    glBindBuffer(GL_ARRAY_BUFFER, quadBuffer);
     shader.use();
     shader.sendUniform("u_time", ((float)clock())/CLOCKS_PER_SEC);
     shader.sendUniform("u_mouse", state->mouse_x, state->mouse_y);
