@@ -1,6 +1,6 @@
 ## piFrag
 
-A live GLSL Fragment render for live coding with the RaspberryPi.
+A live GLSL Fragment render for live coding with the RaspberryPi inspired on [Karim’s fragTool](https://github.com/karimnaaji/fragtool)
 
 ### Install
 
@@ -29,5 +29,6 @@ vim ~/piFrag/test.frag
 
 ## Authors
 
-[Patricio Gonzalez Vivo](http://patriciogonzalezvivo.com/)
-[Karim Naaji](http://karim.naaji.fr/)
+* [Patricio Gonzalez Vivo](http://patriciogonzalezvivo.com/)
+
+* [Karim Naaji](http://karim.naaji.fr/)
