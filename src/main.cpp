@@ -162,8 +162,8 @@ static void draw(CUBE_STATE_T *state){
     if(*fragHasChanged) {
         std::string fragSource;
         if(loadFromPath(fragFile, &fragSource)){
-            state->shader.detach(GL_FRAGMENT_SHADER | GL_VERTEX_SHADER);
-            state->shader.build(fragSource,vertSource);
+            shader.detach(GL_FRAGMENT_SHADER | GL_VERTEX_SHADER);
+            shader.build(fragSource,vertSource);
             *fragHasChanged = false;
         }
     }
@@ -174,11 +174,11 @@ static void draw(CUBE_STATE_T *state){
     glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
     
     glBindBuffer(GL_ARRAY_BUFFER, state->buf);
-    state->shader.use();
+    shader.use();
     
-    state->shader.sendUniform("u_time", ((float)clock())/CLOCKS_PER_SEC);
-    state->shader.sendUniform("u_mouse", state->mouse_x, state_mouse_y);
-    state->shader.sendUniform("u_resolution",state->screen_width, state->screen_height);
+    shader.sendUniform("u_time", ((float)clock())/CLOCKS_PER_SEC);
+    shader.sendUniform("u_mouse", state->mouse_x, state_mouse_y);
+    shader.sendUniform("u_resolution",state->screen_width, state->screen_height);
     
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
     
@@ -281,7 +281,7 @@ void setup() {
     if(!loadFromPath(fragFile, &fragSource)) {
         return;
     }
-    state->shader.build(fragSource,vertSource);
+    shader.build(fragSource,vertSource);
 
     //  Make Quad
     //
@@ -291,7 +291,7 @@ void setup() {
         1.0,1.0,1.0,1.0,
         -1.0,1.0,1.0,1.0
     };
-    GLint posAttribut = state->shader.getAttribLocation("a_position");
+    GLint posAttribut = shader.getAttribLocation("a_position");
    
     glClearColor ( 0.0, 1.0, 1.0, 1.0 );
     
