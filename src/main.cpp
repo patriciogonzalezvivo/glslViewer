@@ -157,6 +157,39 @@ static bool loadFromPath(const std::string& path, std::string* into) {
     return true;
 }
 
+void setup(CUBE_STATE_T *state) {
+    //  Build shader;
+    //
+    std::string fragSource;
+    if(!loadFromPath(fragFile, &fragSource)) {
+        return;
+    }
+    shader.build(fragSource,vertSource);
+
+    //  Make Quad
+    //
+    static const GLfloat vertex_data[] = {
+        -1.0,-1.0,1.0,1.0,
+        1.0,-1.0,1.0,1.0,
+        1.0,1.0,1.0,1.0,
+        -1.0,1.0,1.0,1.0
+    };
+    GLint posAttribut = shader.getAttribLocation("a_position");
+   
+    glClearColor ( 0.0, 1.0, 1.0, 1.0 );
+    glGenBuffers(1, &state->buf);
+    
+    // Prepare viewport
+    glViewport( 0, 0, state->screen_width, state->screen_height );
+    
+    // Upload vertex data to a buffer
+    glBindBuffer(GL_ARRAY_BUFFER, state->buf);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_data),
+                 vertex_data, GL_STATIC_DRAW);
+    glVertexAttribPointer(posAttribut, 4, GL_FLOAT, 0, 16, 0);
+    glEnableVertexAttribArray(posAttribut);  
+}
+
 static void draw(CUBE_STATE_T *state){
 
     if(*fragHasChanged) {
@@ -175,7 +208,6 @@ static void draw(CUBE_STATE_T *state){
     
     glBindBuffer(GL_ARRAY_BUFFER, state->buf);
     shader.use();
-    
     shader.sendUniform("u_time", ((float)clock())/CLOCKS_PER_SEC);
     shader.sendUniform("u_mouse", state->mouse_x, state->mouse_y);
     shader.sendUniform("u_resolution",state->screen_width, state->screen_height);
@@ -229,7 +261,15 @@ _exit:
 }     
 
 void drawThread() {
-    setup();
+    bcm_host_init();
+
+    // Clear application state
+    memset( state, 0, sizeof( *state ) );
+      
+    // Start OGLES
+    init_ogl(state);
+
+    setup(state);
     while (1) {
         if (get_mouse(state)) break;
         draw(state);
@@ -264,50 +304,6 @@ void watchThread(const std::string& _file) {
             } 
         }
     }
-}
-
-void setup() {
-    bcm_host_init();
-
-    // Clear application state
-    memset( state, 0, sizeof( *state ) );
-      
-    // Start OGLES
-    init_ogl(state);
-
-    //  Build shader;
-    //
-    std::string fragSource;
-    if(!loadFromPath(fragFile, &fragSource)) {
-        return;
-    }
-    shader.build(fragSource,vertSource);
-
-    //  Make Quad
-    //
-    static const GLfloat vertex_data[] = {
-        -1.0,-1.0,1.0,1.0,
-        1.0,-1.0,1.0,1.0,
-        1.0,1.0,1.0,1.0,
-        -1.0,1.0,1.0,1.0
-    };
-    GLint posAttribut = shader.getAttribLocation("a_position");
-   
-    glClearColor ( 0.0, 1.0, 1.0, 1.0 );
-    
-    glGenBuffers(1, &state->buf);
-    
-    // Prepare viewport
-    glViewport ( 0, 0, state->screen_width, state->screen_height );
-    
-    
-    // Upload vertex data to a buffer
-    glBindBuffer(GL_ARRAY_BUFFER, state->buf);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_data),
-                 vertex_data, GL_STATIC_DRAW);
-    glVertexAttribPointer(posAttribut, 4, GL_FLOAT, 0, 16, 0);
-    glEnableVertexAttribArray(posAttribut);
-    
 }
  
 //==============================================================================
