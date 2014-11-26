@@ -177,7 +177,7 @@ static void draw(CUBE_STATE_T *state){
     shader.use();
     
     shader.sendUniform("u_time", ((float)clock())/CLOCKS_PER_SEC);
-    shader.sendUniform("u_mouse", state->mouse_x, state_mouse_y);
+    shader.sendUniform("u_mouse", state->mouse_x, state->mouse_y);
     shader.sendUniform("u_resolution",state->screen_width, state->screen_height);
     
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
