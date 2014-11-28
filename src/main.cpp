@@ -1,15 +1,6 @@
-#include <stdio.h>
 #include <fcntl.h>
-#include <stdlib.h>
-#include <string.h>
-#include <math.h>
 #include <assert.h>
-#include <unistd.h>
-#include <fstream>
-#include <iostream>
 #include <time.h>
-#include <unistd.h>
-#include <sys/shm.h>
 
 #include "bcm_host.h"
 
