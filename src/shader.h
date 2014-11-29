@@ -23,6 +23,7 @@ public:
 
     void sendUniform(const std::string& name, float x);
     void sendUniform(const std::string& name, float x, float y);
+    void sendUniform(const std::string& name, float x, float y, float z);
 
     void detach(GLenum type);
 

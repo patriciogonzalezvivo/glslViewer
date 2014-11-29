@@ -120,6 +120,11 @@ void Shader::sendUniform(const std::string& name, float x, float y) {
 	}
 }
 
+void Shader::sendUniform(const std::string& name, float x, float y, float z) {
+	if(isInUse()) {
+		glUniform3f(getUniformLocation(name), x, y, z);
+	}
+}
 void Shader::printInfoLog(GLuint shader) {
 		
 	char log[1024];
