@@ -9,25 +9,37 @@ uniform vec2 u_mouse;
 varying vec2 v_texcoord;
 
 void main(void) {
-	vec3 color = vec3(abs(sin(u_time)),
-			abs(sin(u_time*0.5)),
-			0.1);
+	float rel = u_resolution.x/u_resolution.y;
+	vec2 st = vec2(v_texcoord.x*rel,v_texcoord.y);
+	
+	vec3 color = vec3(abs(cos(u_time*10.0))*st.x,
+			abs(sin(u_time*7.0)),
+			abs(-cos(u_time*11.0))*st.y);
 
-	float dist = distance(abs(u_mouse/u_resolution),v_texcoord);
-	if(dist < 10.0){
-		color.r = dist/10.0;
+	// Mouse
+	//
+	float rad = 0.01;
+	vec2 mouse = vec2(u_mouse.x*rel,u_mouse.y)/u_resolution;
+	vec2 diff = mouse-st;
+	float dist = length(diff);
+	if(dist < rad){
+		float lineWidth = 0.0006;
+		if(abs(diff.x) < lineWidth || abs(diff.y) < lineWidth+0.00005 ){
+			color += vec3(1.0);
+		}
+		//float pct = pow(dist/rad,2.0);
+		//color.rgb += vec3(1.0-pct);
 	}
 
 	// Grid
-	//
-	float rel = u_resolution.x/u_resolution.y;	
-	vec2 grid = fract(vec2(v_texcoord.x*rel,v_texcoord.y)*10.);
-	float lineWith = 0.0155555;
+	//	
+	float lineWith = 0.012;
+	vec2 grid = fract(st*10.);
 	if (grid.x < lineWith || grid.y < lineWith){
-		color.x += cos(smoothstep(0.,lineWith,grid.x));
-		color.y += cos(smoothstep(0.,lineWith,grid.y));
+		color.x += smoothstep(0.0,lineWith,grid.x);
+		color.y += smoothstep(0.0,lineWith,grid.y);
 	}
 
 	gl_FragColor.rgb = color;
-	gl_FragColor.a = 1.0;
+	gl_FragColor.a = 0.2;
 }

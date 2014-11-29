@@ -1,4 +1,5 @@
 #include "shader.h"
+#include <stdio.h>
 
 Shader::Shader() {
 
@@ -23,7 +24,7 @@ bool Shader::build(const std::string& fragmentSrc, const std::string& vertexSrc)
 		return false;
 	}
 
-	if(link()) {
+	if ( link() ) {
     		glDeleteShader(vertexShader);
     		glDeleteShader(fragmentShader);
 	} else {
@@ -79,7 +80,7 @@ GLuint Shader::compileShader(const std::string& src, GLenum type) {
 	glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
 
 	if(!status) {
-        printInfoLog(shader);
+        	printInfoLog(shader);
 		glDeleteShader(shader);
 		return 0;
 	}
@@ -120,6 +121,11 @@ void Shader::sendUniform(const std::string& name, float x, float y) {
 }
 
 void Shader::printInfoLog(GLuint shader) {
+		
+	char log[1024];
+	glGetShaderInfoLog(shader,sizeof log, NULL, log);
+	printf("%d:shader:\n%s\n",shader,log);
+	
 	GLint length = 0;
 	glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &length);
 	

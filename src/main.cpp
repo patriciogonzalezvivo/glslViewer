@@ -193,7 +193,7 @@ static void draw(CUBE_STATE_T *state, int mouseX, int mouseY){
 static int get_mouse(CUBE_STATE_T *state, int *outx, int *outy){
     static int fd = -1;
     const int width=state->screen_width, height=state->screen_height;
-    static int x=800, y=400;
+    static int x=width, y=height;
     const int XSIGN = 1<<4, YSIGN = 1<<5;
     if (fd<0) {
        fd = open("/dev/input/mouse0",O_RDONLY|O_NONBLOCK);
@@ -238,9 +238,11 @@ void drawThread() {
     init_ogl(state);
 
     setup(state);
+
     while (1) {
-	int x,y,b;
-	b = get_mouse(state, &x, &y);
+	int x,y;
+	int b = get_mouse(state, &x, &y);
+	//std::cout << x << "," << y << std::endl;
         //if (b) break;
         draw(state, x, y);
     }
@@ -257,10 +259,10 @@ void watchThread(const std::string& _file) {
         folder = ".";
     }
     
-    std::cout << "Watching on folder " << folder << " for file " << file << std::endl;
+    //std::cout << "Watching on folder " << folder << " for file " << file << std::endl;
 
     Inotify notify;
-    InotifyWatch watch(folder, IN_MODIFY);//IN_ALL_EVENTS);
+    InotifyWatch watch(folder, IN_MODIFY);
     notify.Add(watch);
 
     for (;;) {
