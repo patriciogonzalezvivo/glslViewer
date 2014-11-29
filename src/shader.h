@@ -2,13 +2,14 @@
 
 #include <string>
 #include <iostream>
+
 #include "GLES2/gl2.h"
 
 class Shader {
 
 public:
     Shader();
-    ~Shader();
+    virtual ~Shader();
 
     const GLuint getProgram() const { return program; };
     const GLuint getFragmentShader() const { return fragmentShader; };
@@ -26,13 +27,13 @@ public:
     void detach(GLenum type);
 
 private:
-    GLuint program;
-    GLuint fragmentShader;
-    GLuint vertexShader;
 
     GLuint link();
     GLuint compileShader(const std::string& src, GLenum type);
     GLint getUniformLocation(const std::string& uniformName) const;
     void printInfoLog(GLuint shader);
     
+    GLuint program;
+    GLuint fragmentShader;
+    GLuint vertexShader;
 };

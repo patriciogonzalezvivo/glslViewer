@@ -13,10 +13,16 @@ void main(void) {
 			abs(sin(u_time*0.5)),
 			0.1);
 
-	float rel = u_resolution.x/u_resolution.y;
-	vec2 grid = fract(vec2(v_texcoord.x*rel,v_texcoord.y)*10.);
+	float dist = distance(abs(u_mouse/u_resolution),v_texcoord);
+	if(dist < 10.0){
+		color.r = dist/10.0;
+	}
 
-	float lineWith = 0.01;
+	// Grid
+	//
+	float rel = u_resolution.x/u_resolution.y;	
+	vec2 grid = fract(vec2(v_texcoord.x*rel,v_texcoord.y)*10.);
+	float lineWith = 0.0155555;
 	if (grid.x < lineWith || grid.y < lineWith){
 		color.x += cos(smoothstep(0.,lineWith,grid.x));
 		color.y += cos(smoothstep(0.,lineWith,grid.y));

@@ -1,6 +1,7 @@
 #include <fcntl.h>
 #include <assert.h>
 #include <time.h>
+#include <sys/shm.h>
 
 #include "bcm_host.h"
 
@@ -16,9 +17,6 @@
 typedef struct {
     uint32_t screen_width;
     uint32_t screen_height;
-
-    int mouse_x;
-    int mouse_y;
 
     // OpenGL|ES objects
     EGLDisplay display;
@@ -74,21 +72,17 @@ static void init_ogl(CUBE_STATE_T *state){
     state->display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     assert(state->display!=EGL_NO_DISPLAY);
     
-    
     // initialize the EGL display connection
     result = eglInitialize(state->display, NULL, NULL);
     assert(EGL_FALSE != result);
-    
     
     // get an appropriate EGL frame buffer configuration
     result = eglChooseConfig(state->display, attribute_list, &config, 1, &num_config);
     assert(EGL_FALSE != result);
     
-    
     // get an appropriate EGL frame buffer configuration
     result = eglBindAPI(EGL_OPENGL_ES_API);
     assert(EGL_FALSE != result);
-    
     
     // create an EGL rendering context
     state->context = eglCreateContext(state->display, config, EGL_NO_CONTEXT, context_attributes);
@@ -167,7 +161,7 @@ void setup(CUBE_STATE_T *state) {
     glEnableVertexAttribArray(posAttribut);  
 }
 
-static void draw(CUBE_STATE_T *state){
+static void draw(CUBE_STATE_T *state, int mouseX, int mouseY){
     if(*fragHasChanged) {
         std::string fragSource;
         if(loadFromPath(fragFile, &fragSource)){
@@ -184,7 +178,7 @@ static void draw(CUBE_STATE_T *state){
     
     shader.use();
     shader.sendUniform("u_time", ((float)clock())/CLOCKS_PER_SEC);
-    shader.sendUniform("u_mouse", state->mouse_x, state->mouse_y);
+    shader.sendUniform("u_mouse", mouseX, mouseY);
     shader.sendUniform("u_resolution",state->screen_width, state->screen_height);
     glBindBuffer(GL_ARRAY_BUFFER, quadBuffer);
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
@@ -196,10 +190,10 @@ static void draw(CUBE_STATE_T *state){
     eglSwapBuffers(state->display, state->surface); 
 }
 
-static int get_mouse(CUBE_STATE_T *state){
+static int get_mouse(CUBE_STATE_T *state, int *outx, int *outy){
     static int fd = -1;
     const int width=state->screen_width, height=state->screen_height;
-    static int x=width, y=height;
+    static int x=800, y=400;
     const int XSIGN = 1<<4, YSIGN = 1<<5;
     if (fd<0) {
        fd = open("/dev/input/mouse0",O_RDONLY|O_NONBLOCK);
@@ -229,8 +223,8 @@ static int get_mouse(CUBE_STATE_T *state){
    }
 
 _exit:
-   state->mouse_x = x;
-   state->mouse_y = y;
+   if (outx) *outx = x;
+   if (outy) *outy = y;
    return 0;
 }     
 
@@ -245,8 +239,10 @@ void drawThread() {
 
     setup(state);
     while (1) {
-        if (get_mouse(state)) break;
-        draw(state);
+	int x,y,b;
+	b = get_mouse(state, &x, &y);
+        //if (b) break;
+        draw(state, x, y);
     }
 }  
 

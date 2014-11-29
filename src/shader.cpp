@@ -24,8 +24,8 @@ bool Shader::build(const std::string& fragmentSrc, const std::string& vertexSrc)
 	}
 
 	if(link()) {
-    	glDeleteShader(vertexShader);
-    	glDeleteShader(fragmentShader);
+    		glDeleteShader(vertexShader);
+    		glDeleteShader(fragmentShader);
 	} else {
 		return false;
 	}
@@ -38,19 +38,19 @@ GLuint Shader::link() {
 
 	glAttachShader(program, vertexShader);
 	glAttachShader(program, fragmentShader);
-
-    glLinkProgram(program);
-
-    GLint linkStatus;
-    glGetProgramiv(program, GL_LINK_STATUS, &linkStatus);
-
-    if(!linkStatus) {
-        printInfoLog(program);
-        glDeleteProgram(program);
-        return 0;
-    }
-
-    return program;
+	
+	glLinkProgram(program);
+	GLint linkStatus;
+	
+	glGetProgramiv(program, GL_LINK_STATUS, &linkStatus);
+	
+	if(!linkStatus) {
+        	printInfoLog(program);
+        	glDeleteProgram(program);
+        	return 0;
+	}
+	
+	return program;
 }
 
 const GLint Shader::getAttribLocation(const std::string& attribute) {
@@ -58,8 +58,8 @@ const GLint Shader::getAttribLocation(const std::string& attribute) {
 }
 
 void Shader::use() const {
-    if(!isInUse()) {
-    	glUseProgram(getProgram());
+	if(!isInUse()) {
+		glUseProgram(getProgram());
 	}
 }
 
@@ -120,16 +120,13 @@ void Shader::sendUniform(const std::string& name, float x, float y) {
 }
 
 void Shader::printInfoLog(GLuint shader) {
-    GLint length = 0;
-    glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &length);
-
-    if(length > 1) {
-        char* info = new char[length];
-
-        glGetShaderInfoLog(shader, length, NULL, info);
-
-        std::cerr << info << std::endl;
-
-        delete[] info;
-    }
+	GLint length = 0;
+	glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &length);
+	
+	if(length > 1) {
+		char* info = new char[length];
+		glGetShaderInfoLog(shader, length, NULL, info);
+		std::cerr << info << std::endl;
+		delete[] info;
+	}
 }
