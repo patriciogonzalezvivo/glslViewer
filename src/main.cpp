@@ -62,10 +62,7 @@ static void draw(){
             *fragHasChanged = false;
         }
     }
-
-    // Clear the background (not really necessary I suppose)
-    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
-    
+ 
     shader.use();
     shader.sendUniform("u_time", ((float)clock())/CLOCKS_PER_SEC);
     shader.sendUniform("u_mouse", state->mouse_x, state->mouse_y);
@@ -78,13 +75,20 @@ static void draw(){
 void drawThread() {
      
     // Start OGLES
-    init_ogl();
+    initOpenGL();
 
+	// Setup
     setup();
-    while (true) {
-        get_mouse();
-        draw();
 
+	// Clear the background (not really necessary I suppose)
+    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+    
+    while (true) {
+		// Update
+        updateMouse();
+
+		// Draw
+        draw();
 		eglSwapBuffers(state->display, state->surface); 
     }
 }  

@@ -8,6 +8,8 @@ uniform vec2 u_mouse;
 
 varying vec2 v_texcoord;
 
+#include "shapes.glsl"
+
 void main(void) {
 	float rel = u_resolution.x/u_resolution.y;
 	vec2 st = vec2(v_texcoord.x*rel,v_texcoord.y);
@@ -16,29 +18,11 @@ void main(void) {
 			abs(sin(u_time*7.0)),
 			abs(-cos(u_time*11.0))*st.y);
 
-	// Mouse
-	//
-	float rad = 0.01;
-	vec2 mouse = vec2(u_mouse.x*rel,u_mouse.y)/u_resolution;
-	vec2 diff = mouse-st;
-	float dist = length(diff);
-	if(dist < rad){
-		float lineWidth = 0.0006;
-		if(abs(diff.x) < lineWidth || abs(diff.y) < lineWidth+0.00005 ){
-			color += vec3(1.0);
-		}
-		//float pct = pow(dist/rad,2.0);
-		//color.rgb += vec3(1.0-pct);
-	}
+	color += grid(0.03,20.0,st).rgb*0.25;
+	color += grid(0.012,10.0,st).rgb*0.5;
 
-	// Grid
-	//	
-	float lineWith = 0.012;
-	vec2 grid = fract(st*10.);
-	if (grid.x < lineWith || grid.y < lineWith){
-		color.x += smoothstep(0.0,lineWith,grid.x);
-		color.y += smoothstep(0.0,lineWith,grid.y);
-	}
+	vec2 mouse = vec2(u_mouse.x*rel,u_mouse.y)/u_resolution;
+	color += cross(0.0006,0.01,mouse-st).rgb;
 
 	gl_FragColor.rgb = color;
 	gl_FragColor.a = 0.2;
