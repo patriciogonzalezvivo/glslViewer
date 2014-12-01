@@ -1,6 +1,7 @@
 #include <fcntl.h>
 #include <assert.h>
 #include <time.h>
+#include <sys/time.h>
 #include <sys/shm.h>
 
 #include "gl.h"
@@ -22,9 +23,17 @@ std::string vertSource =
 GLuint quadBuffer;
 Shader shader;
 
+struct timeval tv;
+unsigned long long timeStart;
+
 //============================================================================
 
 void setup() {
+
+	gettimeofday(&tv, NULL);
+	timeStart = (unsigned long long)(tv.tv_sec) * 1000 +
+				(unsigned long long)(tv.tv_usec) / 1000; 
+	
     //  Build shader;
     //
     std::string fragSource;
@@ -63,9 +72,16 @@ static void draw(){
             *fragHasChanged = false;
         }
     }
- 
+
+	gettimeofday(&tv, NULL);
+
+	unsigned long long timeNow = 	(unsigned long long)(tv.tv_sec) * 1000 +
+				    				(unsigned long long)(tv.tv_usec) / 1000;
+
+ 	float time = (timeNow - timeStart)*0.001;
+
     shader.use();
-    shader.sendUniform("u_time", ((float)clock())/CLOCKS_PER_SEC);
+    shader.sendUniform("u_time", time);
     shader.sendUniform("u_mouse", state->mouse_x, state->mouse_y);
     shader.sendUniform("u_resolution",state->screen_width, state->screen_height);
     glBindBuffer(GL_ARRAY_BUFFER, quadBuffer);
