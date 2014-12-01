@@ -20,12 +20,24 @@ Run the app:
 piFrag ~/piFrag/test.frag
 ```
 
-Login remotely using ssh to your raspberryPi and live-code with your favorite editor:
+If you set alpha value to 0.3 (```glFragColor.a = 0.3;```) you can se through the console and from another terminal edit your shader with you favorite editor:
+
+```
+vim ~/piFrag/test.frag
+```
+
+In the test fragment shader we have hook it up to the X mouse position so you can take a look while you work on it.
+
+Or you can login remotely using ssh to your raspberryPi and live-code with your favorite editor:
 
 ```
 ssh pi@raspberrypi.local
 vim ~/piFrag/test.frag
 ```
+
+### Inject other files
+
+You can include other GLSL code using a traditional ```#include “file.glsl”``` macro. Check the example.
 
 ## Authors
 
