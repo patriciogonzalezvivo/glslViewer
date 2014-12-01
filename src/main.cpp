@@ -20,8 +20,9 @@ std::string vertSource =
 "}";
 
 GLuint quadBuffer;
-
 Shader shader;
+
+//============================================================================
 
 void setup() {
     //  Build shader;
@@ -93,6 +94,8 @@ void drawThread() {
     }
 }  
 
+//============================================================================
+
 void watchThread(const std::string& _file) {
     
     unsigned found = _file.find_last_of("/\\");
@@ -136,6 +139,13 @@ void watchThread(const std::string& _file) {
 //============================================================================
 
 int main(int argc, char **argv){
+
+	if(argc < 2){
+		std::cerr << "GLSL render that updates changes instantly.\n";
+		std::cerr << "Usage: " << argv[0] << " shader.frag\n";
+
+		return EXIT_FAILURE;
+	}
 
 	// Get path
 	//
