@@ -32,7 +32,6 @@ private:
     GLuint link();
     GLuint compileShader(const std::string& src, GLenum type);
     GLint getUniformLocation(const std::string& uniformName) const;
-    void printInfoLog(GLuint shader);
     
     GLuint program;
     GLuint fragmentShader;

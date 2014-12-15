@@ -1,5 +1,6 @@
 #include "shader.h"
 #include <stdio.h>
+#include <vector>
 
 Shader::Shader() {
 
@@ -38,19 +39,24 @@ GLuint Shader::link() {
 	program = glCreateProgram();
 
 	glAttachShader(program, vertexShader);
-	glAttachShader(program, fragmentShader);
-	
+	glAttachShader(program, fragmentShader);	
 	glLinkProgram(program);
-	GLint linkStatus;
+
+	GLint isLinked;
+	glGetProgramiv(program, GL_LINK_STATUS, &isLinked);
 	
-	glGetProgramiv(program, GL_LINK_STATUS, &linkStatus);
-	
-	if(!linkStatus) {
-        	printInfoLog(program);
-        	glDeleteProgram(program);
-        	return 0;
+	if (isLinked == GL_FALSE) {
+		GLint infoLength = 0;
+		glGetProgramiv(program, GL_INFO_LOG_LENGTH, &infoLength);
+		if (infoLength > 1) {
+			std::vector<GLchar> infoLog(infoLength);
+			glGetProgramInfoLog(program, infoLength, NULL, &infoLog[0]);
+			printf("Error linking program:\n%s\n", &infoLog[0]);
+		}
+		glDeleteProgram(program);
+		return 0;
 	}
-	
+
 	return program;
 }
 
@@ -71,16 +77,24 @@ bool Shader::isInUse() const {
 }
 
 GLuint Shader::compileShader(const std::string& src, GLenum type) {
-	GLint status;
+
 	GLuint shader = glCreateShader(type);
 	const GLchar* source = (const GLchar*) src.c_str();
 
 	glShaderSource(shader, 1, &source, NULL);
 	glCompileShader(shader);
-	glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
+	
+	GLint isCompiled;
+	glGetShaderiv(shader, GL_COMPILE_STATUS, &isCompiled);
 
-	if(!status) {
-        	printInfoLog(shader);
+	if (isCompiled == GL_FALSE) {
+		GLint infoLength = 0;
+		glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &infoLength);
+		if (infoLength > 1) {
+			std::vector<GLchar> infoLog(infoLength);
+			glGetShaderInfoLog(shader, infoLength, NULL, &infoLog[0]);
+		    printf("Error compiling shader:\n%s\n", &infoLog[0]);
+		}
 		glDeleteShader(shader);
 		return 0;
 	}
@@ -125,19 +139,4 @@ void Shader::sendUniform(const std::string& name, float x, float y, float z) {
 		glUniform3f(getUniformLocation(name), x, y, z);
 	}
 }
-void Shader::printInfoLog(GLuint shader) {
-		
-	char log[1024];
-	glGetShaderInfoLog(shader,sizeof log, NULL, log);
-	printf("%d:shader:\n%s\n",shader,log);
-	
-	GLint length = 0;
-	glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &length);
-	
-	if(length > 1) {
-		char* info = new char[length];
-		glGetShaderInfoLog(shader, length, NULL, info);
-		std::cerr << info << std::endl;
-		delete[] info;
-	}
-}
+
