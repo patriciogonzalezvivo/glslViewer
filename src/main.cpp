@@ -8,8 +8,6 @@
 #include "gl.h"
 #include "utils.h"
 #include "shader.h"
-
-#include "omx_image.h"
 #include "texture.h"
 
 bool* fragHasChanged;
@@ -18,7 +16,7 @@ std::string vertSource =
 "attribute vec4 a_position;"
 "varying vec2 v_texcoord;"
 "void main(void) {"
-"    gl_Position = a_position;"
+"    gl_Position = a_position*0.5;"
 "    v_texcoord = a_position.xy*0.5+0.5;"
 "}";
 
@@ -54,9 +52,10 @@ void setup() {
         1.0,1.0,1.0,1.0,
         -1.0,1.0,1.0,1.0
     };
+
     GLint posAttribut = shader.getAttribLocation("a_position");
    
-    glClearColor ( 0.0, 1.0, 1.0, 1.0 );
+    glClearColor(0.0, 1.0, 1.0, 1.0 );
     glGenBuffers(1, &quadBuffer);
     
 	// Upload vertex data to a buffer
@@ -68,6 +67,12 @@ void setup() {
 }
 
 static void draw(){
+
+    // GLenum error = glGetError();
+    // if(error != GL_NO_ERROR){
+    //     std::cerr << "Error: " << error << std::endl;
+    // }
+
     if(*fragHasChanged) {
         std::string fragSource;
         if(loadFromPath(fragFile, &fragSource)){
@@ -89,7 +94,7 @@ static void draw(){
     shader.sendUniform("u_mouse", state->mouse_x, state->mouse_y);
     shader.sendUniform("u_resolution",state->screen_width, state->screen_height);
 
-    int index = 0;
+    unsigned int index = 0;
     for (std::map<std::string,Texture*>::iterator it = textures.begin(); it!=textures.end(); ++it) {
         shader.sendUniform(it->first,it->second,index);
         index++;
@@ -101,15 +106,6 @@ static void draw(){
 }
 
 void drawThread() {
-     
-    // Start OGLES
-    initOpenGL();
-
-	// Setup
-    setup();
-
-	// Clear the background (not really necessary I suppose)
-    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
     
     while (true) {
 		// Update
@@ -209,13 +205,24 @@ int main(int argc, char **argv){
 
         default: 
         {
-            //Load the rest of the resources
+
+            // Start OGLES
+            initOpenGL();
+
+            // Setup
+            setup();
+
+            // Clear the background (not really necessary I suppose)
+            glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+
+            //Load the the resources (textures)
             for (int i=2; i<argc ; i++){
                 if (std::string(argv[i]).find("-") == 0){
                     std::string parameterPair = std::string(argv[i]).substr(std::string(argv[i]).find_last_of('-')+1);
                     std::vector<std::string> parameter = splitString(parameterPair,"=");
                     if(parameter.size()==2){
                         Texture* tex = new Texture();
+
                         if( tex->load(parameter[1]) ){
                             textures[parameter[0]] = tex;
                         }

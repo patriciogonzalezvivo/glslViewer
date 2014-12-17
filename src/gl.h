@@ -5,9 +5,9 @@
 
 #include "bcm_host.h"
 
-#include "GLES2/gl2.h"
-#include "EGL/egl.h"
-#include "EGL/eglext.h"
+#include <EGL/egl.h>
+#include <GLES2/gl2.h>
+#include <GLES2/gl2ext.h>
 
 typedef struct {
     uint32_t screen_width;
@@ -25,10 +25,6 @@ typedef struct {
 } CUBE_STATE_T;
 
 static CUBE_STATE_T _state, *state=&_state;
-
-//  OpenMAX Error
-static int error_state;
-static int error_timeout;
 
 static void initOpenGL(){
     bcm_host_init();
@@ -100,9 +96,10 @@ static void initOpenGL(){
     
     dispman_display = vc_dispmanx_display_open( 0 /* LCD */);
     dispman_update = vc_dispmanx_update_start( 0 );
+
     dispman_element = vc_dispmanx_element_add ( dispman_update, dispman_display,
                                                0/*layer*/, &dst_rect, 0/*src*/,
-                                               &src_rect, DISPMANX_PROTECTION_NONE, 0 /*alpha*/, 0/*clamp*/, 0/*transform*/);
+                                               &src_rect, DISPMANX_PROTECTION_NONE, 0 /*alpha*/, 0/*clamp*/, (DISPMANX_TRANSFORM_T)0/*transform*/);
     
     nativewindow.element = dispman_element;
     nativewindow.width = state->screen_width;
@@ -129,7 +126,7 @@ static void initOpenGL(){
 static void updateMouse(){
     static int fd = -1;
     const int width=state->screen_width, height=state->screen_height;
-    static int x=width, y=height;
+    static int x=width/2, y=height/2;
     const int XSIGN = 1<<4, YSIGN = 1<<5;
     if (fd<0) {
        fd = open("/dev/input/mouse0",O_RDONLY|O_NONBLOCK);

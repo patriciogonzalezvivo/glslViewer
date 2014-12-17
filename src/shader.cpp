@@ -1,6 +1,8 @@
 #include "shader.h"
+
 #include <stdio.h>
 #include <vector>
+#include <iostream>
 
 Shader::Shader():m_program(0),m_fragmentShader(0),m_vertexShader(0){
 
@@ -111,7 +113,11 @@ void Shader::detach(GLenum _type) {
 }
 
 GLint Shader::getUniformLocation(const std::string& _uniformName) const {
-	return glGetUniformLocation(m_program, _uniformName.c_str());;
+	GLint loc = glGetUniformLocation(m_program, _uniformName.c_str());
+	if(loc == -1){
+		// std::cerr << "Uniform " << _uniformName << " not found" << std::endl;
+	}
+	return loc;
 }
 
 void Shader::sendUniform(const std::string& _name, float _x) {
@@ -135,12 +141,11 @@ void Shader::sendUniform(const std::string& _name, float _x, float _y, float _z)
 	}
 }
 
-void Shader::sendUniform(const std::string& _name, const Texture* _tex, int _texLoc){
+void Shader::sendUniform(const std::string& _name, const Texture* _tex, unsigned int _texLoc){
 	if(isInUse()) {
+		// glUniform1i(getUniformLocation(_name), _texLoc);
 		glActiveTexture(GL_TEXTURE0 + _texLoc);
 		glBindTexture(GL_TEXTURE_2D, _tex->getId());
 		glUniform1i(getUniformLocation(_name), _texLoc);
-		// std::cout << "Uniform " << _name << ": sampler2D " << std::endl;
-		glActiveTexture(GL_TEXTURE0);
 	}
 }

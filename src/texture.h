@@ -1,9 +1,9 @@
 #pragma once
 
 #include <string>
-#include <pthread.h>
 
-#include "gl.h"
+#include <GLES2/gl2.h>
+#include <GLES2/gl2ext.h>
 
 class Texture {
 public:
@@ -21,9 +21,11 @@ public:
 	void unbind();
 
 protected:
+	void	glHandleError();
 
-	int m_width;
-	int m_height;
+	unsigned int	m_width;
+	unsigned int	m_height;
+	unsigned int 	m_bpp;
 
 	GLuint 	m_id;
 };

@@ -6,10 +6,6 @@
 #include <fstream>
 #include <vector>
 
-static std::string getExtention(const std::string _path){
-    return _path.substr(_path.find_last_of('.'));
-}
-
 /*  Return a vector of string from a _source string splits it using a delimiter */
 static std::vector<std::string> splitString(const std::string& _source, const std::string& _delimiter = "", bool _ignoreEmpty = false) {
     std::vector<std::string> result;
