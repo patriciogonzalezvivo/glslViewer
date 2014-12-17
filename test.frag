@@ -28,5 +28,5 @@ void main(void) {
 	//color += vec3(circle(mouse-st,0.02,0.002));
 
 	gl_FragColor.rgb = color;
-	gl_FragColor.a = mouse.x;
+	gl_FragColor.a = 1.0;//mouse.x;
 }

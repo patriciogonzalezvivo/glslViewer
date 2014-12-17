@@ -3,7 +3,8 @@
 #include <string>
 #include <iostream>
 
-#include "GLES2/gl2.h"
+#include "gl.h"
+#include "texture.h"
 
 class Shader {
 
@@ -11,29 +12,29 @@ public:
     Shader();
     virtual ~Shader();
 
-    const GLuint getProgram() const { return program; };
-    const GLuint getFragmentShader() const { return fragmentShader; };
-    const GLuint getVertexShader() const { return vertexShader; };
+    const   GLuint getProgram() const { return m_program; };
+    const   GLuint getFragmentShader() const { return m_fragmentShader; };
+    const   GLuint getVertexShader() const { return m_vertexShader; };
 
-    void use() const;
-    bool isInUse() const;
+    void    use() const;
+    bool    isInUse() const;
 
-    const GLint getAttribLocation(const std::string& attribute);
-    bool build(const std::string& fragmentSrc, const std::string& vertexSrc);
+    const   GLint getAttribLocation(const std::string& _attribute);
+    bool    load(const std::string& _fragmentSrc, const std::string& _vertexSrc);
 
-    void sendUniform(const std::string& name, float x);
-    void sendUniform(const std::string& name, float x, float y);
-    void sendUniform(const std::string& name, float x, float y, float z);
+    void    sendUniform(const std::string& _name, float _x);
+    void    sendUniform(const std::string& _name, float _x, float _y);
+    void    sendUniform(const std::string& _name, float _x, float _y, float _z);
+    void    sendUniform(const std::string& _name, const Texture* _tex, int _texLoc);
 
-    void detach(GLenum type);
+    void    detach(GLenum type);
 
 private:
 
-    GLuint link();
-    GLuint compileShader(const std::string& src, GLenum type);
-    GLint getUniformLocation(const std::string& uniformName) const;
+    GLuint  compileShader(const std::string& _src, GLenum _type);
+    GLint   getUniformLocation(const std::string& _uniformName) const;
     
-    GLuint program;
-    GLuint fragmentShader;
-    GLuint vertexShader;
+    GLuint  m_program;
+    GLuint  m_fragmentShader;
+    GLuint  m_vertexShader;
 };

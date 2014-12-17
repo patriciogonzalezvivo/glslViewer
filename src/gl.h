@@ -1,5 +1,8 @@
 #pragma once
 
+#include <assert.h>
+#include <fcntl.h>
+
 #include "bcm_host.h"
 
 #include "GLES2/gl2.h"
@@ -22,6 +25,10 @@ typedef struct {
 } CUBE_STATE_T;
 
 static CUBE_STATE_T _state, *state=&_state;
+
+//  OpenMAX Error
+static int error_state;
+static int error_timeout;
 
 static void initOpenGL(){
     bcm_host_init();
@@ -54,6 +61,7 @@ static void initOpenGL(){
         EGL_CONTEXT_CLIENT_VERSION, 2,
         EGL_NONE
     };
+
     EGLConfig config;
     
     // get an EGL display connection
@@ -111,6 +119,7 @@ static void initOpenGL(){
     
     // Set background color and clear buffers
     glClearColor(0.15f, 0.25f, 0.35f, 1.0f);
+
     glClear( GL_COLOR_BUFFER_BIT );
 
 	// Prepare viewport

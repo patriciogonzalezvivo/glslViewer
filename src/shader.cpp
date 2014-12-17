@@ -2,66 +2,59 @@
 #include <stdio.h>
 #include <vector>
 
-Shader::Shader() {
+Shader::Shader():m_program(0),m_fragmentShader(0),m_vertexShader(0){
 
 }
 
 Shader::~Shader() {
-    glDeleteProgram(program);
+    glDeleteProgram(m_program);
 }
 
-bool Shader::build(const std::string& fragmentSrc, const std::string& vertexSrc) {
-	vertexShader = compileShader(vertexSrc, GL_VERTEX_SHADER);
+bool Shader::load(const std::string& _fragmentSrc, const std::string& _vertexSrc) {
+	m_vertexShader = compileShader(_vertexSrc, GL_VERTEX_SHADER);
 
-	if(!vertexShader) {
-		glDeleteShader(vertexShader);
+	if(!m_vertexShader) {
+		glDeleteShader(m_vertexShader);
+		std::cout << "Error loading vertex shader src" << std::endl;
 		return false;
 	}
 
-	fragmentShader = compileShader(fragmentSrc, GL_FRAGMENT_SHADER);
+	m_fragmentShader = compileShader(_fragmentSrc, GL_FRAGMENT_SHADER);
 
-	if(!fragmentShader) {
-		glDeleteShader(fragmentShader);
+	if(!m_fragmentShader) {
+		std::cout << "Error loading fragment shader src" << std::endl;
+		glDeleteShader(m_fragmentShader);
 		return false;
 	}
 
-	if ( link() ) {
-    		glDeleteShader(vertexShader);
-    		glDeleteShader(fragmentShader);
-	} else {
-		return false;
-	}
+	m_program = glCreateProgram();
 
-	return true;
-}
-
-GLuint Shader::link() {
-	program = glCreateProgram();
-
-	glAttachShader(program, vertexShader);
-	glAttachShader(program, fragmentShader);	
-	glLinkProgram(program);
+	glAttachShader(m_program, m_vertexShader);
+	glAttachShader(m_program, m_fragmentShader);	
+	glLinkProgram(m_program);
 
 	GLint isLinked;
-	glGetProgramiv(program, GL_LINK_STATUS, &isLinked);
+	glGetProgramiv(m_program, GL_LINK_STATUS, &isLinked);
 	
 	if (isLinked == GL_FALSE) {
 		GLint infoLength = 0;
-		glGetProgramiv(program, GL_INFO_LOG_LENGTH, &infoLength);
+		glGetProgramiv(m_program, GL_INFO_LOG_LENGTH, &infoLength);
 		if (infoLength > 1) {
 			std::vector<GLchar> infoLog(infoLength);
-			glGetProgramInfoLog(program, infoLength, NULL, &infoLog[0]);
-			printf("Error linking program:\n%s\n", &infoLog[0]);
+			glGetProgramInfoLog(m_program, infoLength, NULL, &infoLog[0]);
+			printf("Error linking m_program:\n%s\n", &infoLog[0]);
 		}
-		glDeleteProgram(program);
-		return 0;
+		glDeleteProgram(m_program);
+		return false;
+	} else {
+		// glDeleteShader(m_vertexShader);
+    	// glDeleteShader(m_fragmentShader);
+    	return true;
 	}
-
-	return program;
 }
 
-const GLint Shader::getAttribLocation(const std::string& attribute) {
-	return glGetAttribLocation(program, attribute.c_str());
+const GLint Shader::getAttribLocation(const std::string& _attribute) {
+	return glGetAttribLocation(m_program, _attribute.c_str());
 }
 
 void Shader::use() const {
@@ -76,10 +69,10 @@ bool Shader::isInUse() const {
 	return (getProgram() == (GLuint)currentProgram);
 }
 
-GLuint Shader::compileShader(const std::string& src, GLenum type) {
+GLuint Shader::compileShader(const std::string& _src, GLenum _type) {
 
-	GLuint shader = glCreateShader(type);
-	const GLchar* source = (const GLchar*) src.c_str();
+	GLuint shader = glCreateShader(_type);
+	const GLchar* source = (const GLchar*) _src.c_str();
 
 	glShaderSource(shader, 1, &source, NULL);
 	glCompileShader(shader);
@@ -102,41 +95,52 @@ GLuint Shader::compileShader(const std::string& src, GLenum type) {
 	return shader;
 }
 
-void Shader::detach(GLenum type) {
-	bool vert = (GL_VERTEX_SHADER & type) == GL_VERTEX_SHADER;
-	bool frag = (GL_FRAGMENT_SHADER & type) == GL_FRAGMENT_SHADER;
+void Shader::detach(GLenum _type) {
+	bool vert = (GL_VERTEX_SHADER & _type) == GL_VERTEX_SHADER;
+	bool frag = (GL_FRAGMENT_SHADER & _type) == GL_FRAGMENT_SHADER;
 	
 	if(vert) {
-		glDeleteShader(vertexShader);
-		glDetachShader(vertexShader, GL_VERTEX_SHADER);
+		glDeleteShader(m_vertexShader);
+		glDetachShader(m_vertexShader, GL_VERTEX_SHADER);
 	}
 
 	if(frag) {
-		glDeleteShader(fragmentShader);
-		glDetachShader(fragmentShader, GL_FRAGMENT_SHADER);
+		glDeleteShader(m_fragmentShader);
+		glDetachShader(m_fragmentShader, GL_FRAGMENT_SHADER);
 	}
 }
 
-GLint Shader::getUniformLocation(const std::string& uniformName) const {
-	GLint uniform = glGetUniformLocation(program, uniformName.c_str());
-	return uniform;
+GLint Shader::getUniformLocation(const std::string& _uniformName) const {
+	return glGetUniformLocation(m_program, _uniformName.c_str());;
 }
 
-void Shader::sendUniform(const std::string& name, float x) {
+void Shader::sendUniform(const std::string& _name, float _x) {
 	if(isInUse()) {
-		glUniform1f(getUniformLocation(name), x);
+		glUniform1f(getUniformLocation(_name), _x);
+		// std::cout << "Uniform " << _name << ": float(" << _x << ")" << std::endl;
 	}
 }
 
-void Shader::sendUniform(const std::string& name, float x, float y) {
+void Shader::sendUniform(const std::string& _name, float _x, float _y) {
 	if(isInUse()) {
-		glUniform2f(getUniformLocation(name), x, y);
+		glUniform2f(getUniformLocation(_name), _x, _y);
+		// std::cout << "Uniform " << _name << ": vec2(" << _x << "," << _y << ")" << std::endl;
 	}
 }
 
-void Shader::sendUniform(const std::string& name, float x, float y, float z) {
+void Shader::sendUniform(const std::string& _name, float _x, float _y, float _z) {
 	if(isInUse()) {
-		glUniform3f(getUniformLocation(name), x, y, z);
+		glUniform3f(getUniformLocation(_name), _x, _y, _z);
+		// std::cout << "Uniform " << _name << ": vec3(" << _x << "," << _y << "," << _z <<")" << std::endl;
 	}
 }
 
+void Shader::sendUniform(const std::string& _name, const Texture* _tex, int _texLoc){
+	if(isInUse()) {
+		glActiveTexture(GL_TEXTURE0 + _texLoc);
+		glBindTexture(GL_TEXTURE_2D, _tex->getId());
+		glUniform1i(getUniformLocation(_name), _texLoc);
+		// std::cout << "Uniform " << _name << ": sampler2D " << std::endl;
+		glActiveTexture(GL_TEXTURE0);
+	}
+}

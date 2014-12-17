@@ -1,14 +1,16 @@
-#include <fcntl.h>
-#include <assert.h>
 #include <time.h>
 #include <sys/time.h>
 #include <sys/shm.h>
+#include <map>
+
+#include "inotify-cxx.h"
 
 #include "gl.h"
 #include "utils.h"
 #include "shader.h"
 
-#include "inotify-cxx.h"
+#include "omx_image.h"
+#include "texture.h"
 
 bool* fragHasChanged;
 std::string fragFile;
@@ -22,7 +24,9 @@ std::string vertSource =
 
 GLuint quadBuffer;
 Shader shader;
+std::map<std::string,Texture*> textures;
 
+//  Time
 struct timeval tv;
 unsigned long long timeStart;
 
@@ -40,7 +44,7 @@ void setup() {
     if(!loadFromPath(fragFile, &fragSource)) {
         return;
     }
-    shader.build(fragSource,vertSource);
+    shader.load(fragSource,vertSource);
 
     //  Make Quad
     //
@@ -68,7 +72,7 @@ static void draw(){
         std::string fragSource;
         if(loadFromPath(fragFile, &fragSource)){
             shader.detach(GL_FRAGMENT_SHADER | GL_VERTEX_SHADER);
-            shader.build(fragSource,vertSource);
+            shader.load(fragSource,vertSource);
             *fragHasChanged = false;
         }
     }
@@ -84,6 +88,13 @@ static void draw(){
     shader.sendUniform("u_time", time);
     shader.sendUniform("u_mouse", state->mouse_x, state->mouse_y);
     shader.sendUniform("u_resolution",state->screen_width, state->screen_height);
+
+    int index = 0;
+    for (std::map<std::string,Texture*>::iterator it = textures.begin(); it!=textures.end(); ++it) {
+        shader.sendUniform(it->first,it->second,index);
+        index++;
+    }
+
     glBindBuffer(GL_ARRAY_BUFFER, quadBuffer);
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -109,6 +120,20 @@ void drawThread() {
 		eglSwapBuffers(state->display, state->surface); 
     }
 }  
+
+static void exit_func(void){
+   // clear screen
+   glClear( GL_COLOR_BUFFER_BIT );
+   eglSwapBuffers(state->display, state->surface);
+
+   // Release OpenGL resources
+   eglMakeCurrent( state->display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT );
+   eglDestroySurface( state->display, state->surface );
+   eglDestroyContext( state->display, state->context );
+   eglTerminate( state->display );
+
+   printf("\nOpenGL Closed\n");
+} // exit_func()
 
 //============================================================================
 
@@ -158,13 +183,11 @@ int main(int argc, char **argv){
 
 	if(argc < 2){
 		std::cerr << "GLSL render that updates changes instantly.\n";
-		std::cerr << "Usage: " << argv[0] << " shader.frag\n";
+		std::cerr << "Usage: " << argv[0] << " shader.frag [--textureNameA=texture.png] [--textureNameB=texture.jpg]\n";
 
 		return EXIT_FAILURE;
 	}
 
-	// Get path
-	//
     fragFile = std::string(argv[1]);
 
     // Fork process with a shared variable
@@ -186,8 +209,26 @@ int main(int argc, char **argv){
 
         default: 
         {
+            //Load the rest of the resources
+            for (int i=2; i<argc ; i++){
+                if (std::string(argv[i]).find("-") == 0){
+                    std::string parameterPair = std::string(argv[i]).substr(std::string(argv[i]).find_last_of('-')+1);
+                    std::vector<std::string> parameter = splitString(parameterPair,"=");
+                    if(parameter.size()==2){
+                        Texture* tex = new Texture();
+                        if( tex->load(parameter[1]) ){
+                            textures[parameter[0]] = tex;
+                        }
+                    }
+                }
+            }
+
+            // Render Loop
             drawThread();
+
+            //  Kill the iNotify watcher once you finish
             kill(pid, SIGKILL);
+            exit_func();
         }
         break;
     }

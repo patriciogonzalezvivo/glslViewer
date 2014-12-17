@@ -1,9 +1,37 @@
 #pragma once
 
+#include <algorithm>
 #include <iostream>
 #include <string>
 #include <fstream>
 #include <vector>
+
+static std::string getExtention(const std::string _path){
+    return _path.substr(_path.find_last_of('.'));
+}
+
+/*  Return a vector of string from a _source string splits it using a delimiter */
+static std::vector<std::string> splitString(const std::string& _source, const std::string& _delimiter = "", bool _ignoreEmpty = false) {
+    std::vector<std::string> result;
+    if (_delimiter.empty()) {
+        result.push_back(_source);
+        return result;
+    }
+    std::string::const_iterator substart = _source.begin(), subend;
+    while (true) {
+        subend = search(substart, _source.end(), _delimiter.begin(), _delimiter.end());
+        std::string sub(substart, subend);
+        
+        if (!_ignoreEmpty || !sub.empty()) {
+            result.push_back(sub);
+        }
+        if (subend == _source.end()) {
+            break;
+        }
+        substart = subend + _delimiter.size();
+    }
+    return result;
+}
 
 static bool loadFromPath(const std::string& path, std::string* into) {
     std::ifstream file;
