@@ -91,12 +91,13 @@ static void draw(){
 
     shader.use();
     shader.sendUniform("u_time", time);
-    shader.sendUniform("u_mouse", state->mouse_x, state->mouse_y);
+    shader.sendUniform("u_mouse", mouse.x, mouse.y);
     shader.sendUniform("u_resolution",state->screen_width, state->screen_height);
 
     unsigned int index = 0;
     for (std::map<std::string,Texture*>::iterator it = textures.begin(); it!=textures.end(); ++it) {
         shader.sendUniform(it->first,it->second,index);
+        shader.sendUniform(it->first+"Resolution",it->second->getWidth(),it->second->getHeight());
         index++;
     }
 
@@ -104,18 +105,6 @@ static void draw(){
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
-
-void drawThread() {
-    
-    while (true) {
-		// Update
-        updateMouse();
-
-		// Draw
-        draw();
-		eglSwapBuffers(state->display, state->surface); 
-    }
-}  
 
 static void exit_func(void){
    // clear screen
@@ -179,7 +168,7 @@ int main(int argc, char **argv){
 
 	if(argc < 2){
 		std::cerr << "GLSL render that updates changes instantly.\n";
-		std::cerr << "Usage: " << argv[0] << " shader.frag [--textureNameA=texture.png] [--textureNameB=texture.jpg]\n";
+		std::cerr << "Usage: " << argv[0] << " shader.frag [--textureNameA texture.png] [--textureNameB=texture.jpg]\n";
 
 		return EXIT_FAILURE;
 	}
@@ -209,12 +198,6 @@ int main(int argc, char **argv){
             // Start OGLES
             initOpenGL();
 
-            // Setup
-            setup();
-
-            // Clear the background (not really necessary I suppose)
-            glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
-
             //Load the the resources (textures)
             for (int i=2; i<argc ; i++){
                 if (std::string(argv[i]).find("-") == 0){
@@ -222,16 +205,34 @@ int main(int argc, char **argv){
                     std::vector<std::string> parameter = splitString(parameterPair,"=");
                     if(parameter.size()==2){
                         Texture* tex = new Texture();
-
                         if( tex->load(parameter[1]) ){
                             textures[parameter[0]] = tex;
+                        }
+                    } else if(parameter.size() < 2 && parameterPair.size() > 0){
+                        Texture* tex = new Texture();
+                        i++;
+                        if( tex->load(std::string(argv[i])) ){
+                            textures[parameterPair] = tex;
                         }
                     }
                 }
             }
 
+            // Setup
+            setup();
+
+            // Clear the background (not really necessary I suppose)
+            glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+
             // Render Loop
-            drawThread();
+            while (true) {
+                // Update
+                updateMouse();
+
+                // Draw
+                draw();
+                eglSwapBuffers(state->display, state->surface); 
+            }
 
             //  Kill the iNotify watcher once you finish
             kill(pid, SIGKILL);

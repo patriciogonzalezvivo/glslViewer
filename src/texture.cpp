@@ -4,11 +4,8 @@
 #include <string.h>
 #include <iostream>
 
-// #define USE_SOIL
-#ifdef USE_SOIL
-#include <SOIL/SOIL.h>
-#else
-#include <FreeImage.h>
+#include <FreeImage.h>		//	FreeImage type is GL_BGR
+#include <GLES2/gl2ext.h>	//	Need for GL_BGRA_EXT
 
 // static variable for freeImage initialization:
 void InitFreeImage(bool deinit=false){
@@ -23,7 +20,6 @@ void InitFreeImage(bool deinit=false){
 		FreeImage_DeInitialise();
 	}
 }
-#endif
 
 Texture::Texture():m_width(0),m_height(0),m_bpp(0),m_id(0){
 }
@@ -33,19 +29,6 @@ Texture::~Texture(){
 }
 
 bool Texture::load(const std::string& _path){
-
-#ifdef USE_SOIL
-	m_id = SOIL_load_OGL_texture(	_path.c_str(),
-									SOIL_LOAD_AUTO,
-									SOIL_CREATE_NEW_ID,
-									SOIL_FLAG_MIPMAPS 
-								);
-	if( 0 == m_id ){
-      printf( "SOIL loading error: '%s' '%s'\n", SOIL_last_result(), _path.c_str() );
-    } else {
-      glEnable(GL_TEXTURE_2D);
-    } 
-#else
 
 	InitFreeImage();
 
@@ -90,11 +73,12 @@ bool Texture::load(const std::string& _path){
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_BGRA_EXT, m_width, m_height, 0, GL_BGRA_EXT, GL_UNSIGNED_BYTE, (void*)FreeImage_GetBits(pImage));
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    // unbind();
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
 	FreeImage_Unload(dib);
-#endif
+
+	unbind();
 
 	return true;
 }

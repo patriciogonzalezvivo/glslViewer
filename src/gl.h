@@ -3,6 +3,8 @@
 #include <assert.h>
 #include <fcntl.h>
 
+#include <iostream> 
+
 #include "bcm_host.h"
 
 #include <EGL/egl.h>
@@ -25,6 +27,16 @@ typedef struct {
 } CUBE_STATE_T;
 
 static CUBE_STATE_T _state, *state=&_state;
+
+typedef struct Mouse {
+    Mouse():x(0),y(0),button(0){};
+    
+    float   x,y;
+    float   velX,velY;
+    int     button;
+};
+
+static Mouse mouse;
 
 static void initOpenGL(){
     bcm_host_init();
@@ -123,43 +135,56 @@ static void initOpenGL(){
     glViewport( 0, 0, state->screen_width, state->screen_height );
 }
 
-static void updateMouse(){
+static bool updateMouse(){
     static int fd = -1;
     const int width=state->screen_width, height=state->screen_height;
-    static int x=width/2, y=height/2;
+    //static int x=width, y=height;
     const int XSIGN = 1<<4, YSIGN = 1<<5;
     if (fd<0) {
-       fd = open("/dev/input/mouse0",O_RDONLY|O_NONBLOCK);
+        fd = open("/dev/input/mouse0",O_RDONLY|O_NONBLOCK);
     }
     if (fd>=0) {
+        
+        // Set values to 0
+        mouse.velX=0;
+        mouse.velY=0;
+        
+        // Extract values from driver
         struct {char buttons, dx, dy; } m;
         while (1) {
-           int bytes = read(fd, &m, sizeof m);
-           if (bytes < (int)sizeof m) goto _exit;
-           if (m.buttons&8) {
-              break; // This bit should always be set
-           }
-           read(fd, &m, 1); // Try to sync up again
+            int bytes = read(fd, &m, sizeof m);
+            
+            if (bytes < (int)sizeof m) {
+                return false;
+            } else if (m.buttons&8) {
+                break; // This bit should always be set
+            }
+            
+            read(fd, &m, 1); // Try to sync up again
         }
-        if (m.buttons&3){
-	    state->mouse_b = m.buttons&3;
-	    return;
-	}
-        x+=m.dx;
-        y+=m.dy;
-        if (m.buttons&XSIGN)
-           x-=256;
-        if (m.buttons&YSIGN)
-           y-=256;
-        if (x<0) x=0;
-        if (y<0) y=0;
-        if (x>width) x=width;
-        if (y>height) y=height;
-   }
-
-_exit:
-   state->mouse_x = x;
-   state->mouse_y = y;
-   state->mouse_b = 0;
-   return;
+        
+        // Set button value
+        if (m.buttons&3)
+            mouse.button = m.buttons&3;
+        else
+            mouse.button = 0;
+        
+        // Set deltas
+        mouse.velX=m.dx;
+        mouse.velY=m.dy;
+        if (m.buttons&XSIGN) mouse.velX-=256;
+        if (m.buttons&YSIGN) mouse.velY-=256;
+        
+        // Add movement
+        mouse.x+=mouse.velX;
+        mouse.y+=mouse.velY;
+        
+        // Clamp values
+        if (mouse.x<0) mouse.x=0;
+        if (mouse.y<0) mouse.y=0;
+        if (mouse.x>width) mouse.x=width;
+        if (mouse.y>height) mouse.y=height;
+        return true;
+    }
+    return false;
 }

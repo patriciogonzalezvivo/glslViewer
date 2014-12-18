@@ -3,7 +3,6 @@
 #include <string>
 
 #include <GLES2/gl2.h>
-#include <GLES2/gl2ext.h>
 
 class Texture {
 public:
@@ -14,7 +13,7 @@ public:
 
 	const GLuint getId() const { return m_id; };
 	
-	int	getWidht() const { return m_width; };
+	int	getWidth() const { return m_width; };
 	int	getHeight() const { return m_height; };
 
 	void bind();

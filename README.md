@@ -4,7 +4,12 @@ A live GLSL Fragment render for live coding with the RaspberryPi inspired on [Ka
 
 ### Install
 
+Install FreeImage libraries, download the code, compile and install
+
 ```
+sudo apt-get update
+sudo apt-get update
+sudo apt-get install libfreeimage3-dev
 cd ~ 
 git clone http://github.com/patriciogonzalezvivo/piFrag
 cd piFrag
@@ -33,6 +38,14 @@ Or you can login remotely using ssh to your raspberryPi and live-code with your 
 ```
 ssh pi@raspberrypi.local
 vim ~/piFrag/test.frag
+```
+
+### Loading texture uniforms
+
+You can load any image formats suported by FreeImage libraries. Set the uniform name as an argument followed with the file name and the app will load it for you. For example, the ```uniform sampled2D tex0;``` is defined in this way:
+
+```
+piFrag test.frag -tex0 test.png
 ```
 
 ### Inject other files

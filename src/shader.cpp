@@ -1,8 +1,6 @@
 #include "shader.h"
 
-#include <stdio.h>
-#include <vector>
-#include <iostream>
+#include "utils.h"
 
 Shader::Shader():m_program(0),m_fragmentShader(0),m_vertexShader(0){
 
@@ -44,13 +42,20 @@ bool Shader::load(const std::string& _fragmentSrc, const std::string& _vertexSrc
 		if (infoLength > 1) {
 			std::vector<GLchar> infoLog(infoLength);
 			glGetProgramInfoLog(m_program, infoLength, NULL, &infoLog[0]);
-			printf("Error linking m_program:\n%s\n", &infoLog[0]);
+			std::string error(infoLog.begin(),infoLog.end());
+			// printf("Error linking shader:\n%s\n", error);
+			std::cerr << "Error linking shader: " << error << std::endl;
+
+			std::size_t start = error.find("line ")+5;
+			std::size_t end = error.find_last_of(")");
+			std::string lineNum = error.substr(start,end-start);
+			std::cerr << (unsigned)getInt(lineNum) << ": " << getLineNumber(_fragmentSrc,(unsigned)getInt(lineNum)) << std::endl;
 		}
 		glDeleteProgram(m_program);
 		return false;
 	} else {
-		// glDeleteShader(m_vertexShader);
-    	// glDeleteShader(m_fragmentShader);
+		glDeleteShader(m_vertexShader);
+    	glDeleteShader(m_fragmentShader);
     	return true;
 	}
 }
@@ -143,7 +148,6 @@ void Shader::sendUniform(const std::string& _name, float _x, float _y, float _z)
 
 void Shader::sendUniform(const std::string& _name, const Texture* _tex, unsigned int _texLoc){
 	if(isInUse()) {
-		// glUniform1i(getUniformLocation(_name), _texLoc);
 		glActiveTexture(GL_TEXTURE0 + _texLoc);
 		glBindTexture(GL_TEXTURE_2D, _tex->getId());
 		glUniform1i(getUniformLocation(_name), _texLoc);

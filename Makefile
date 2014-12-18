@@ -10,12 +10,12 @@ INCLUDES+=	-I$(SDKSTAGE)/opt/vc/include/ \
 			-Isrc/
 
 CFLAGS+=-Wall -g \
-		-Wno-psabi -fpermissive \
-		-lfreeimage
+		-Wno-psabi -fpermissive
 
 LDFLAGS+=	-L$(SDKSTAGE)/opt/vc/lib/ \
 			-lGLESv2 -lEGL \
-			-lopenmaxil -lbcm_host -lSOIL
+			-lbcm_host \
+			-lfreeimage
 
 all: $(EXE)
 
