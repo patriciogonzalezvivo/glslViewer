@@ -1,6 +1,6 @@
 #include "vertexLayout.h"
 
-std::unordered_map<GLint, GLuint> VertexLayout::s_enabledAttribs = std::unordered_map<GLint, GLuint>();
+std::map<GLint, GLuint> VertexLayout::s_enabledAttribs = std::map<GLint, GLuint>();
 
 VertexLayout::VertexLayout(std::vector<VertexAttrib> _attribs) : m_attribs(_attribs) {
 
@@ -35,39 +35,30 @@ VertexLayout::VertexLayout(std::vector<VertexAttrib> _attribs) : m_attribs(_attr
 }
 
 VertexLayout::~VertexLayout() {
-
     m_attribs.clear();
-
 }
 
 void VertexLayout::enable(const Shader* _program) {
-
-    GLuint glProgram = _program->getGlProgram();
+    GLuint glProgram = _program->getProgram();
 
     // Enable all attributes for this layout
     for (int i = 0; i < m_attribs.size(); i++) {
-
         GLint location = _program->getAttribLocation(m_attribs[i].name);
-
         if (location != -1) {
             glEnableVertexAttribArray(location);
             glVertexAttribPointer(location, m_attribs[i].size, m_attribs[i].type, m_attribs[i].normalized, m_stride, m_attribs[i].offset);
             s_enabledAttribs[location] = glProgram; // Track currently enabled attribs by the program to which they are bound
         }
-
     }
 
     // Disable previously bound and now-unneeded attributes
-    for (auto& locationProgramPair : s_enabledAttribs) {
-
-        const GLint& location = locationProgramPair.first;
-        GLuint& boundProgram = locationProgramPair.second;
+    for (std::map<GLint, GLuint>::iterator it=s_enabledAttribs.begin(); it!=s_enabledAttribs.end(); ++it){
+        const GLint& location = it->first;
+        GLuint& boundProgram = it->second;
 
         if (boundProgram != glProgram && boundProgram != 0) {
             glDisableVertexAttribArray(location);
             boundProgram = 0;
         }
-
     }
-
 }

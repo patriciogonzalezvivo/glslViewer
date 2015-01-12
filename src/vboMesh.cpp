@@ -1,11 +1,9 @@
 #include "vboMesh.h"
-#include "platform.h"
+#include <iostream>
 
 #define MAX_INDEX_VALUE 65535 // Maximum value of GLushort
 
-std::unordered_set<VboMesh*> VboMesh::s_managedVBOs;
-
-VboMesh::VboMesh(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode) : m_vertexLayout(_vertexLayout) {
+VboMesh::VboMesh(VertexLayout* _vertexLayout, GLenum _drawMode) : m_vertexLayout(_vertexLayout) {
 
     m_glVertexBuffer = 0;
     m_glIndexBuffer = 0;
@@ -42,7 +40,7 @@ VboMesh::~VboMesh() {
 
 }
 
-void VboMesh::setVertexLayout(std::shared_ptr<VertexLayout> _vertexLayout) {
+void VboMesh::setVertexLayout(VertexLayout* _vertexLayout) {
     m_vertexLayout = _vertexLayout;
 }
 
@@ -58,7 +56,7 @@ void VboMesh::setDrawMode(GLenum _drawMode) {
             m_drawMode = _drawMode;
             break;
         default:
-            logMsg("%s\n","Invalid draw mode for mesh! Defaulting to GL_TRIANGLES");
+            std::cout << "Invalid draw mode for mesh! Defaulting to GL_TRIANGLES" << std::endl;
             m_drawMode = GL_TRIANGLES;
     }
 }
@@ -72,7 +70,7 @@ void VboMesh::addVertex(GLbyte* _vertex) {
 void VboMesh::addVertices(GLbyte* _vertices, int _nVertices) {
 
     if (m_isUploaded) {
-        logMsg("%s\n", "VboMesh cannot add vertices after upload!");
+        std::cout << "VboMesh cannot add vertices after upload!" << std::endl;
         return;
     }
     
@@ -80,7 +78,7 @@ void VboMesh::addVertices(GLbyte* _vertices, int _nVertices) {
     int indexSpace = MAX_INDEX_VALUE - m_nVertices;
     if (_nVertices > indexSpace) {
         _nVertices = indexSpace;
-        logMsg("WARNING: Tried to add more vertices than available in index space\n");
+        std::cout << "WARNING: Tried to add more vertices than available in index space" << std::endl;
     }
 
     int vertexBytes = m_vertexLayout->getStride() * _nVertices;
@@ -173,35 +171,4 @@ void VboMesh::draw(const std::shared_ptr<ShaderProgram> _shader) {
         glDrawArrays(m_drawMode, 0, m_nVertices);
     }
 
-}
-
-void VboMesh::addManagedVBO(VboMesh* _vbo) {
-    s_managedVBOs.insert(_vbo);
-}
-
-void VboMesh::removeManagedVBO(VboMesh* _vbo) {
-    s_managedVBOs.erase(_vbo);
-}
-
-void VboMesh::invalidateAllVBOs() {
-    
-    for (auto vbo : s_managedVBOs) {
-        
-        // Only uploaded buffers need to be invalidated
-        if (vbo->m_isUploaded) {
-            
-            vbo->m_isUploaded = false;
-            
-            vbo->m_glVertexBuffer = 0;
-            vbo->m_glIndexBuffer = 0;
-        }
-        
-
-        // TODO: For now, we retain copies of the vertex and index data in CPU memory to allow VBOs
-        // to easily rebuild themselves after GL context loss. For optimizing memory usage (and for
-        // other reasons) we'll want to change this in the future. This probably means going back to
-        // data sources and styles to rebuild the vertex data.
-        
-    }
-    
 }

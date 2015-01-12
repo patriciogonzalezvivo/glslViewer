@@ -1,8 +1,6 @@
 #pragma once
 
 #include <vector>
-#include <memory>
-#include <unordered_set>
 
 #include "gl.h"
 #include "vertexLayout.h"
@@ -19,13 +17,13 @@ public:
      * Creates a VboMesh for vertex data arranged in the structure described by _vertexLayout to be drawn
      * using the OpenGL primitive type _drawMode
      */
-    VboMesh(std::shared_ptr<VertexLayout> _vertexlayout, GLenum _drawMode = GL_TRIANGLES);
+    VboMesh(VertexLayout* _vertexlayout, GLenum _drawMode = GL_TRIANGLES);
     VboMesh();
     
     /*
      * Set Vertex Layout for the vboMesh object
      */
-    void setVertexLayout(std::shared_ptr<VertexLayout> _vertexLayout);
+    void setVertexLayout(VertexLayout* _vertexLayout);
 
     /*
      * Set Draw mode for the vboMesh object
@@ -74,30 +72,20 @@ public:
      * Renders the geometry in this mesh using the ShaderProgram _shader; if geometry has not already
      * been uploaded it will be uploaded at this point
      */
-    void draw(const std::shared_ptr<ShaderProgram> _shader);
-    
-    static void addManagedVBO(VboMesh* _vbo);
-    
-    static void removeManagedVBO(VboMesh* _vbo);
-    
-    static void invalidateAllVBOs();
+    void draw(const Shader* _shader);
 
 private:
-
-    static std::unordered_set<VboMesh*> s_managedVBOs;
     
-    std::shared_ptr<VertexLayout> m_vertexLayout;
-    
+    VertexLayout*       m_vertexLayout;
     std::vector<GLbyte> m_vertexData; // Raw interleaved vertex data in the format specified by the vertex layout
-    int m_nVertices;
-    GLuint m_glVertexBuffer;
+    int     m_nVertices;
+    GLuint  m_glVertexBuffer;
 
-    std::vector<GLushort> m_indices;
-    int m_nIndices;
-    GLuint m_glIndexBuffer;
+    std::vector<GLushort>   m_indices;
+    int     m_nIndices;
+    GLuint  m_glIndexBuffer;
+    GLenum  m_drawMode;
 
-    GLenum m_drawMode;
-
-    bool m_isUploaded;
+    bool    m_isUploaded;
 
 };
