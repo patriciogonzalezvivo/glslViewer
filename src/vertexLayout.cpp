@@ -1,0 +1,73 @@
+#include "vertexLayout.h"
+
+std::unordered_map<GLint, GLuint> VertexLayout::s_enabledAttribs = std::unordered_map<GLint, GLuint>();
+
+VertexLayout::VertexLayout(std::vector<VertexAttrib> _attribs) : m_attribs(_attribs) {
+
+    m_stride = 0; 
+
+    for (int i = 0; i < m_attribs.size(); i++) {
+
+        // Set the offset of this vertex attribute: The stride at this point denotes the number
+        // of bytes into the vertex by which this attribute is offset, but we must cast the number
+        // as a void* to use with glVertexAttribPointer; We use reinterpret_cast to avoid warnings
+        m_attribs[i].offset = reinterpret_cast<void*>(m_stride);
+
+        GLint byteSize = m_attribs[i].size;
+
+        switch (m_attribs[i].type) {
+            case GL_FLOAT:
+            case GL_INT:
+            case GL_UNSIGNED_INT:
+                byteSize *= 4; // 4 bytes for floats, ints, and uints
+                break;
+            case GL_SHORT:
+            case GL_UNSIGNED_SHORT:
+                byteSize *= 2; // 2 bytes for shorts and ushorts
+                break;
+        }
+
+        m_stride += byteSize;
+
+        // TODO: Automatically add padding or warn if attributes are not byte-aligned
+
+    }
+}
+
+VertexLayout::~VertexLayout() {
+
+    m_attribs.clear();
+
+}
+
+void VertexLayout::enable(const Shader* _program) {
+
+    GLuint glProgram = _program->getGlProgram();
+
+    // Enable all attributes for this layout
+    for (int i = 0; i < m_attribs.size(); i++) {
+
+        GLint location = _program->getAttribLocation(m_attribs[i].name);
+
+        if (location != -1) {
+            glEnableVertexAttribArray(location);
+            glVertexAttribPointer(location, m_attribs[i].size, m_attribs[i].type, m_attribs[i].normalized, m_stride, m_attribs[i].offset);
+            s_enabledAttribs[location] = glProgram; // Track currently enabled attribs by the program to which they are bound
+        }
+
+    }
+
+    // Disable previously bound and now-unneeded attributes
+    for (auto& locationProgramPair : s_enabledAttribs) {
+
+        const GLint& location = locationProgramPair.first;
+        GLuint& boundProgram = locationProgramPair.second;
+
+        if (boundProgram != glProgram && boundProgram != 0) {
+            glDisableVertexAttribArray(location);
+            boundProgram = 0;
+        }
+
+    }
+
+}
