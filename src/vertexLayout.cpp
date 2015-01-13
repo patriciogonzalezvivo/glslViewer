@@ -6,7 +6,7 @@ VertexLayout::VertexLayout(std::vector<VertexAttrib> _attribs) : m_attribs(_attr
 
     m_stride = 0; 
 
-    for (int i = 0; i < m_attribs.size(); i++) {
+    for (unsigned int i = 0; i < m_attribs.size(); i++) {
 
         // Set the offset of this vertex attribute: The stride at this point denotes the number
         // of bytes into the vertex by which this attribute is offset, but we must cast the number
@@ -42,8 +42,8 @@ void VertexLayout::enable(const Shader* _program) {
     GLuint glProgram = _program->getProgram();
 
     // Enable all attributes for this layout
-    for (int i = 0; i < m_attribs.size(); i++) {
-        GLint location = _program->getAttribLocation(m_attribs[i].name);
+    for (unsigned int i = 0; i < m_attribs.size(); i++) {
+        const GLint location = _program->getAttribLocation(m_attribs[i].name);
         if (location != -1) {
             glEnableVertexAttribArray(location);
             glVertexAttribPointer(location, m_attribs[i].size, m_attribs[i].type, m_attribs[i].normalized, m_stride, m_attribs[i].offset);

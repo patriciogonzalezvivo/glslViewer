@@ -8,7 +8,6 @@
 #include "shader.h"
 
 class VertexLayout {
-    
 public:
 
     struct VertexAttrib {

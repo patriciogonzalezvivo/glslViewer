@@ -19,7 +19,7 @@ public:
     void    use() const;
     bool    isInUse() const;
 
-    const   GLint getAttribLocation(const std::string& _attribute);
+    const   GLint getAttribLocation(const std::string& _attribute) const;
     bool    load(const std::string& _fragmentSrc, const std::string& _vertexSrc);
 
     void    sendUniform(const std::string& _name, float _x);

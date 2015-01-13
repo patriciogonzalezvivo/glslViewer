@@ -60,7 +60,7 @@ bool Shader::load(const std::string& _fragmentSrc, const std::string& _vertexSrc
 	}
 }
 
-const GLint Shader::getAttribLocation(const std::string& _attribute) {
+const GLint Shader::getAttribLocation(const std::string& _attribute) const {
 	return glGetAttribLocation(m_program, _attribute.c_str());
 }
 

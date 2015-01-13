@@ -2,7 +2,7 @@
 
 #include <vector>
 
-#include "gl.h"
+#include <GLES2/gl2.h>
 #include "vertexLayout.h"
 
 /*

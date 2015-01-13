@@ -13,8 +13,6 @@ VboMesh::VboMesh(VertexLayout* _vertexLayout, GLenum _drawMode) : m_vertexLayout
     m_isUploaded = false;
 
     setDrawMode(_drawMode);
-    
-    addManagedVBO(this);
 }
 
 VboMesh::VboMesh() {
@@ -24,8 +22,6 @@ VboMesh::VboMesh() {
     m_nIndices = 0;
 
     m_isUploaded = false;
-    
-    addManagedVBO(this);
 }
 
 VboMesh::~VboMesh() {
@@ -35,9 +31,6 @@ VboMesh::~VboMesh() {
     
     m_vertexData.clear();
     m_indices.clear();
-    
-    removeManagedVBO(this);
-
 }
 
 void VboMesh::setVertexLayout(VertexLayout* _vertexLayout) {
@@ -96,12 +89,12 @@ void VboMesh::addIndex(GLushort* _index) {
 void VboMesh::addIndices(GLushort* _indices, int _nIndices) {
     
     if (m_isUploaded) {
-        logMsg("%s\n", "VboMesh cannot add indices after upload!");
+        std::cout << "VboMesh cannot add indices after upload!" << std::endl;
         return;
     }
     
     if (m_nVertices >= MAX_INDEX_VALUE) {
-        logMsg("WARNING: Vertex buffer full, not adding indices\n");
+        std::cout << "WARNING: Vertex buffer full, not adding indices" << std::endl;
         return;
     }
 
@@ -142,7 +135,7 @@ void VboMesh::upload() {
 
 }
 
-void VboMesh::draw(const std::shared_ptr<ShaderProgram> _shader) {
+void VboMesh::draw(const Shader* _shader) {
 
     // Ensure that geometry is buffered into GPU
     if (!m_isUploaded) {

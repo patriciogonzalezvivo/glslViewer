@@ -17,7 +17,9 @@ void main(void) {
 	float rel = u_resolution.x/u_resolution.y;
 	vec2 st = vec2(v_texcoord.x*rel,v_texcoord.y);
 
-	vec4 color = texture2D(tex0,v_texcoord);
+	float scale = 1.0;
+	float texRel = tex0Resolution.x/tex0Resolution.y;
+	vec4 color = texture2D(tex0,st*vec2(1.,texRel) );
 
 	color += vec4(grid(st,10.0,0.02)*0.25);
 
