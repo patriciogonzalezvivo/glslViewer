@@ -1,13 +1,3 @@
-#ifdef GL_ES
-precision mediump float;
-#endif
-
-uniform float u_time;
-uniform vec2 u_resolution;
-uniform vec2 u_mouse;
-
-varying vec2 v_texcoord;
-
 #include "shapes.glsl"
 #include "noise.glsl"
 
