@@ -28,7 +28,7 @@ typedef struct {
 
 static CUBE_STATE_T _state, *state=&_state;
 
-typedef struct Mouse {
+typedef struct Mouse{
     Mouse():x(0),y(0),button(0){};
     
     float   x,y;
@@ -109,7 +109,7 @@ static void initOpenGL(){
     dispman_display = vc_dispmanx_display_open( 0 /* LCD */);
     dispman_update = vc_dispmanx_update_start( 0 );
 
-    dispman_element = vc_dispmanx_element_add ( dispman_update, dispman_display,
+    dispman_element = vc_dispmanx_element_add( dispman_update, dispman_display,
                                                0/*layer*/, &dst_rect, 0/*src*/,
                                                &src_rect, DISPMANX_PROTECTION_NONE, 0 /*alpha*/, 0/*clamp*/, (DISPMANX_TRANSFORM_T)0/*transform*/);
     
@@ -127,7 +127,8 @@ static void initOpenGL(){
     assert(EGL_FALSE != result);
     
     // Set background color and clear buffers
-    glClearColor(0.15f, 0.25f, 0.35f, 1.0f);
+    // glClearColor(0.15f, 0.25f, 0.35f, 1.0f);
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
     glClear( GL_COLOR_BUFFER_BIT );
 

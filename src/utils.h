@@ -10,9 +10,48 @@
 #include <cctype>
 #include <iomanip>
 #include <algorithm>
+#include <math.h>
 
+#ifndef FLT_EPSILON
+#define FLT_EPSILON 1.19209290E-07F
+#endif
+
+#ifndef MIN
+#define MIN(x,y) (((x) < (y)) ? (x) : (y))
+#endif
+
+#ifndef MAX
+#define MAX(x,y) (((x) > (y)) ? (x) : (y))
+#endif
+
+#ifndef CLAMP
+#define CLAMP(val,min,max) ((val) < (min) ? (min) : ((val > max) ? (max) : (val)))
+#endif
+
+#ifndef ABS
+#define ABS(x) (((x) < 0) ? -(x) : (x))
+#endif
 
 //---------------------------------------- Conversions
+
+inline float mapValue(const float &value, const float &inputMin, const float &inputMax, const float &outputMin, const float &outputMax, bool clamp = true ) {
+    if (fabs(inputMin - inputMax) < FLT_EPSILON){
+        return outputMin;
+    } else {
+        float outVal = ((value - inputMin) / (inputMax - inputMin) * (outputMax - outputMin) + outputMin);
+        
+        if( clamp ){
+            if(outputMax < outputMin){
+                if( outVal < outputMax )outVal = outputMax;
+                else if( outVal > outputMin )outVal = outputMin;
+            }else{
+                if( outVal > outputMax )outVal = outputMax;
+                else if( outVal < outputMin )outVal = outputMin;
+            }
+        }
+        return outVal;
+    }
+}
 
 /*  Transform the string into lower letters */
 inline void toLower( std::string &_str ){
@@ -148,27 +187,27 @@ static std::string getLineNumber(const std::string& _source, unsigned _lineNumbe
 }
 
 /*  Return a vector of string from a _source string splits it using a delimiter */
-static std::vector<std::string> splitString(const std::string& _source, const std::string& _delimiter = "", bool _ignoreEmpty = false) {
-    std::vector<std::string> result;
-    if (_delimiter.empty()) {
-        result.push_back(_source);
-        return result;
-    }
-    std::string::const_iterator substart = _source.begin(), subend;
-    while (true) {
-        subend = search(substart, _source.end(), _delimiter.begin(), _delimiter.end());
-        std::string sub(substart, subend);
+// static std::vector<std::string> splitString(const std::string& _source, const std::string& _delimiter = "", bool _ignoreEmpty = false) {
+//     std::vector<std::string> result;
+//     if (_delimiter.empty()) {
+//         result.push_back(_source);
+//         return result;
+//     }
+//     std::string::const_iterator substart = _source.begin(), subend;
+//     while (true) {
+//         subend = search(substart, _source.end(), _delimiter.begin(), _delimiter.end());
+//         std::string sub(substart, subend);
         
-        if (!_ignoreEmpty || !sub.empty()) {
-            result.push_back(sub);
-        }
-        if (subend == _source.end()) {
-            break;
-        }
-        substart = subend + _delimiter.size();
-    }
-    return result;
-}
+//         if (!_ignoreEmpty || !sub.empty()) {
+//             result.push_back(sub);
+//         }
+//         if (subend == _source.end()) {
+//             break;
+//         }
+//         substart = subend + _delimiter.size();
+//     }
+//     return result;
+// }
 
 //----------------------------------------  String I/O
 

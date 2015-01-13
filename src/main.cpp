@@ -8,21 +8,36 @@
 #include "gl.h"
 #include "utils.h"
 #include "shader.h"
+#include "vertexLayout.h"
+#include "vboMesh.h"
 #include "texture.h"
 
 bool* fragHasChanged;
 std::string fragFile;
 std::string vertSource =
 "attribute vec4 a_position;"
+"attribute vec2 a_texcoord;"
 "varying vec2 v_texcoord;"
 "void main(void) {"
 "    gl_Position = a_position*0.5;"
-"    v_texcoord = a_position.xy*0.5+0.5;"
+"    v_texcoord = a_texcoord;"
 "}";
 
-GLuint quadBuffer;
+
 Shader shader;
 std::map<std::string,Texture*> textures;
+
+struct PosUvVertex {
+    // Position Data
+    GLfloat pos_x;
+    GLfloat pos_y;
+    GLfloat pos_z;
+    // UV Data
+    GLfloat texcoord_x;
+    GLfloat texcoord_y;
+};
+
+VboMesh* mesh;
 
 //  Time
 struct timeval tv;
@@ -30,7 +45,7 @@ unsigned long long timeStart;
 
 //============================================================================
 
-void setup() {
+void setup(float _x, float _y, float _w, float _h) {
 
 	gettimeofday(&tv, NULL);
 	timeStart = (unsigned long long)(tv.tv_sec) * 1000 +
@@ -44,29 +59,33 @@ void setup() {
     }
     shader.load(fragSource,vertSource);
 
-    //  Make Quad
-    //
-    static const GLfloat vertex_data[] = {
-        -1.0,-1.0,1.0,1.0,
-        1.0,-1.0,1.0,1.0,
-        1.0,1.0,1.0,1.0,
-        -1.0,1.0,1.0,1.0
-    };
+    std::vector<VertexLayout::VertexAttrib> attribs;
+    attribs.push_back({"a_position", 3, GL_FLOAT, false, 0});
+    attribs.push_back({"a_texcoord", 2, GL_FLOAT, false, 0});
+    VertexLayout* vertexLayout = new VertexLayout(attribs);
 
-    GLint posAttribut = shader.getAttribLocation("a_position");
-   
-    glClearColor(0.0, 1.0, 1.0, 1.0 );
-    glGenBuffers(1, &quadBuffer);
+    std::vector<PosUvVertex> vertices;
+    std::vector<GLushort> indices;
+
+    float x = mapValue(_x,0,state->screen_width,-1,1);
+    float y = mapValue(_y,0,state->screen_height,-1,1);
+    float w = mapValue(_w,0,state->screen_width,0,2);
+    float h = mapValue(_h,0,state->screen_height,0,2);
+
+    vertices.push_back({ x, y, 1.0, 0.0, 0.0 });
+    vertices.push_back({ x+w, y, 1.0, 1.0, 0.0 });
+    vertices.push_back({ x+w, y+h, 1.0, 1.0, 1.0 });
+    vertices.push_back({ x, y+h, 1.0, 0.0, 1.0 });
     
-	// Upload vertex data to a buffer
-    glBindBuffer(GL_ARRAY_BUFFER, quadBuffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_data),
-                 vertex_data, GL_STATIC_DRAW);
-    glVertexAttribPointer(posAttribut, 4, GL_FLOAT, 0, 16, 0);
-    glEnableVertexAttribArray(posAttribut);  
+    indices.push_back(0); indices.push_back(1); indices.push_back(2);
+    indices.push_back(2); indices.push_back(3); indices.push_back(0);
+
+    mesh = new VboMesh(vertexLayout);
+    mesh->addVertices((GLbyte*)vertices.data(), vertices.size());
+    mesh->addIndices(indices.data(), indices.size());
 }
 
-static void draw(){
+static void draw(float _x, float _y, float _w, float _h){
 
     // GLenum error = glGetError();
     // if(error != GL_NO_ERROR){
@@ -92,7 +111,12 @@ static void draw(){
     shader.use();
     shader.sendUniform("u_time", time);
     shader.sendUniform("u_mouse", mouse.x, mouse.y);
-    shader.sendUniform("u_resolution",state->screen_width, state->screen_height);
+    shader.sendUniform("u_resolution",_w, _h);
+    
+    // ShaderToy Specs
+    shader.sendUniform("iGlobalTime", time);
+    shader.sendUniform("iMouse", mouse.x, mouse.y, (float)mouse.button);
+    shader.sendUniform("iResolution",_w, _h);
 
     unsigned int index = 0;
     for (std::map<std::string,Texture*>::iterator it = textures.begin(); it!=textures.end(); ++it) {
@@ -101,9 +125,7 @@ static void draw(){
         index++;
     }
 
-    glBindBuffer(GL_ARRAY_BUFFER, quadBuffer);
-    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    mesh->draw(&shader);
 }
 
 static void exit_func(void){
@@ -117,6 +139,7 @@ static void exit_func(void){
    eglDestroyContext( state->display, state->context );
    eglTerminate( state->display );
 
+   delete mesh;
    printf("\nOpenGL Closed\n");
 } // exit_func()
 
@@ -198,31 +221,48 @@ int main(int argc, char **argv){
             // Start OGLES
             initOpenGL();
 
+            float x = 0;
+            float y = 0;
+            float w = state->screen_width;
+            float h = state->screen_height;
+
             //Load the the resources (textures)
-            for (int i=2; i<argc ; i++){
-                if (std::string(argv[i]).find("-") == 0){
+            for (int i = 2; i < argc ; i++){
+
+                if ( std::string(argv[i]) == "-x" ){
+                    i++;
+                    x = getInt(std::string(argv[i]));
+                } else if ( std::string(argv[i]) == "-y" ){
+                    i++;
+                    y = getInt(std::string(argv[i]));
+                } else if ( std::string(argv[i]) == "-w" || std::string(argv[i]) == "--width" ){
+                    i++;
+                    w = getInt(std::string(argv[i]));
+                } else if ( std::string(argv[i]) == "-h" || std::string(argv[i]) == "--height"){
+                    i++;
+                    h = getInt(std::string(argv[i]));
+                } else if ( std::string(argv[i]) == "-s" || std::string(argv[i]) == "--square"){
+                    if(state->screen_width > state->screen_height){
+                        x = state->screen_width*0.5-state->screen_height*0.5;
+                    } else {
+                        y = state->screen_height*0.5-state->screen_width*0.5;
+                    }
+                    w = h = MIN(state->screen_width,state->screen_height);
+                } else if (std::string(argv[i]).find("-") == 0){
                     std::string parameterPair = std::string(argv[i]).substr(std::string(argv[i]).find_last_of('-')+1);
-                    std::vector<std::string> parameter = splitString(parameterPair,"=");
-                    if(parameter.size()==2){
-                        Texture* tex = new Texture();
-                        if( tex->load(parameter[1]) ){
-                            textures[parameter[0]] = tex;
-                        }
-                    } else if(parameter.size() < 2 && parameterPair.size() > 0){
-                        Texture* tex = new Texture();
-                        i++;
-                        if( tex->load(std::string(argv[i])) ){
-                            textures[parameterPair] = tex;
-                        }
+                    i++;
+                    Texture* tex = new Texture();
+                    if( tex->load(std::string(argv[i])) ){
+                        textures[parameterPair] = tex;
                     }
                 }
             }
 
             // Setup
-            setup();
+            setup(x,y,w,h);
 
             // Clear the background (not really necessary I suppose)
-            glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
             // Render Loop
             while (true) {
@@ -230,7 +270,7 @@ int main(int argc, char **argv){
                 updateMouse();
 
                 // Draw
-                draw();
+                draw(x,y,w,h);
                 eglSwapBuffers(state->display, state->surface); 
             }
 

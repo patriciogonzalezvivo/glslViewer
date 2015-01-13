@@ -9,7 +9,7 @@ INCLUDES+=	-I$(SDKSTAGE)/opt/vc/include/ \
 			-I$(SDKSTAGE)/opt/vc/include/interface/vmcs_host/linux \
 			-Isrc/
 
-CFLAGS+=-Wall -g \
+CFLAGS+=-Wall -g -std=c++0x\
 		-Wno-psabi -fpermissive
 
 LDFLAGS+=	-L$(SDKSTAGE)/opt/vc/lib/ \
