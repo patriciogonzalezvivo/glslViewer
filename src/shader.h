@@ -25,6 +25,7 @@ public:
     void    sendUniform(const std::string& _name, float _x);
     void    sendUniform(const std::string& _name, float _x, float _y);
     void    sendUniform(const std::string& _name, float _x, float _y, float _z);
+    void    sendUniform(const std::string& _name, float _x, float _y, float _z, float _w);
     void    sendUniform(const std::string& _name, const Texture* _tex, unsigned int _texLoc);
 
     void    detach(GLenum type);

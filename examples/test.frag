@@ -1,17 +1,7 @@
-#ifdef GL_ES
-precision mediump float;
-#endif
+#include "shapes.glsl"
 
 uniform sampler2D tex0;
 uniform vec2 tex0Resolution;
-
-uniform float u_time;
-uniform vec2 u_resolution;
-uniform vec2 u_mouse;
-
-varying vec2 v_texcoord;
-
-#include "shapes.glsl"
 
 void main(void) {
 	float rel = u_resolution.x/u_resolution.y;
@@ -28,5 +18,4 @@ void main(void) {
 	color += vec4(box(mouse-st,abs(sin(u_time))*0.1,0.0015));
 
 	gl_FragColor = color;
-	// gl_FragColor.a *= mouse.x;
 }

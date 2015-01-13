@@ -146,6 +146,13 @@ void Shader::sendUniform(const std::string& _name, float _x, float _y, float _z)
 	}
 }
 
+void Shader::sendUniform(const std::string& _name, float _x, float _y, float _z, float _w) {
+	if(isInUse()) {
+		glUniform4f(getUniformLocation(_name), _x, _y, _z, _w);
+		// std::cout << "Uniform " << _name << ": vec3(" << _x << "," << _y << "," << _z <<")" << std::endl;
+	}
+}
+
 void Shader::sendUniform(const std::string& _name, const Texture* _tex, unsigned int _texLoc){
 	if(isInUse()) {
 		glActiveTexture(GL_TEXTURE0 + _texLoc);

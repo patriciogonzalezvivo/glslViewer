@@ -14,14 +14,26 @@
 
 bool* fragHasChanged;
 std::string fragFile;
+std::string fragHeader =
+// "#ifdef GL_ES\n"
+// "precision mediump float;\n"
+// "#endif\n"
+"uniform float u_time;\n"
+"uniform float iGlobalTime;\n"
+"uniform vec2 u_mouse;\n"
+"uniform vec4 iMouse;\n"
+"uniform vec2 u_resolution;\n"
+"uniform vec3 iResolution;\n"
+"varying vec2 v_texcoord;\n";
+
 std::string vertSource =
-"attribute vec4 a_position;"
-"attribute vec2 a_texcoord;"
-"varying vec2 v_texcoord;"
-"void main(void) {"
-"    gl_Position = a_position*0.5;"
-"    v_texcoord = a_texcoord;"
-"}";
+"attribute vec4 a_position;\n"
+"attribute vec2 a_texcoord;\n"
+"varying vec2 v_texcoord;\n"
+"void main(void) {\n"
+"    gl_Position = a_position*0.5;\n"
+"    v_texcoord = a_texcoord;\n"
+"}\n";
 
 
 Shader shader;
@@ -57,7 +69,7 @@ void setup(float _x, float _y, float _w, float _h) {
     if(!loadFromPath(fragFile, &fragSource)) {
         return;
     }
-    shader.load(fragSource,vertSource);
+    shader.load(fragHeader+fragSource,vertSource);
 
     std::vector<VertexLayout::VertexAttrib> attribs;
     attribs.push_back({"a_position", 3, GL_FLOAT, false, 0});
@@ -96,7 +108,7 @@ static void draw(float _x, float _y, float _w, float _h){
         std::string fragSource;
         if(loadFromPath(fragFile, &fragSource)){
             shader.detach(GL_FRAGMENT_SHADER | GL_VERTEX_SHADER);
-            shader.load(fragSource,vertSource);
+            shader.load(fragHeader+fragSource,vertSource);
             *fragHasChanged = false;
         }
     }
@@ -115,8 +127,8 @@ static void draw(float _x, float _y, float _w, float _h){
     
     // ShaderToy Specs
     shader.sendUniform("iGlobalTime", time);
-    shader.sendUniform("iMouse", mouse.x, mouse.y, (float)mouse.button);
-    shader.sendUniform("iResolution",_w, _h);
+    shader.sendUniform("iMouse", mouse.x, mouse.y, (mouse.button==1)?1.0:0.0, (mouse.button==2)?1.0:0.0);
+    shader.sendUniform("iResolution",_w, _h, 0.0f);
 
     unsigned int index = 0;
     for (std::map<std::string,Texture*>::iterator it = textures.begin(); it!=textures.end(); ++it) {
