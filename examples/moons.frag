@@ -1,8 +1,8 @@
 #include "math.glsl"
 
 const float antialias = 0.01;
-const float speedR = 0.2;
-const float speedA = 0.0;
+const float speedR = -0.2;
+const float speedA = -0.2;
 const float size = 1.1;
 
 float circle(vec2 _st, float _size, float _antialias){
@@ -21,7 +21,7 @@ void main(){
 	float radius = log(length(toExtreme))+iGlobalTime*speedR;
 	float angle = (PI+atan(toExtreme.y,toExtreme.x))/TWO_PI+iGlobalTime*speedA;
 
-	radius += angle*(PHI-1.0);
+	radius += angle*(1.0-PHI);
 	vec2 grid = vec2(	fract(angle*10.*size),
 					 	fract(radius*1.5*size) );
 
