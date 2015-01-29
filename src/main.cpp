@@ -25,6 +25,7 @@ std::string fragHeader =
 "uniform vec2 u_resolution;\n"
 "uniform vec3 iResolution;\n"
 "varying vec2 v_texcoord;\n";
+bool fragAutoHeader = false;
 
 std::string vertSource =
 "attribute vec4 a_position;\n"
@@ -108,7 +109,11 @@ static void draw(float _x, float _y, float _w, float _h){
         std::string fragSource;
         if(loadFromPath(fragFile, &fragSource)){
             shader.detach(GL_FRAGMENT_SHADER | GL_VERTEX_SHADER);
-            shader.load(fragHeader+fragSource,vertSource);
+            if(fragAutoHeader){
+                shader.load(fragHeader+fragSource,vertSource);
+            } else {
+                shader.load(fragSource,vertSource);
+            }
             *fragHasChanged = false;
         }
     }
@@ -241,7 +246,9 @@ int main(int argc, char **argv){
             //Load the the resources (textures)
             for (int i = 2; i < argc ; i++){
 
-                if ( std::string(argv[i]) == "-x" ){
+                if ( std::string(argv[i]) == "-u" ){
+                    fragAutoHeader = true;
+                } else if ( std::string(argv[i]) == "-x" ){
                     i++;
                     x = getInt(std::string(argv[i]));
                 } else if ( std::string(argv[i]) == "-y" ){
