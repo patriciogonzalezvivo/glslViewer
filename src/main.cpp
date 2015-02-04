@@ -15,9 +15,9 @@
 bool* fragHasChanged;
 std::string fragFile;
 std::string fragHeader =
-// "#ifdef GL_ES\n"
-// "precision mediump float;\n"
-// "#endif\n"
+"#ifdef GL_ES\n"
+"precision mediump float;\n"
+"#endif\n"
 "uniform float u_time;\n"
 "uniform float iGlobalTime;\n"
 "uniform vec2 u_mouse;\n"
@@ -70,7 +70,12 @@ void setup(float _x, float _y, float _w, float _h) {
     if(!loadFromPath(fragFile, &fragSource)) {
         return;
     }
-    shader.load(fragHeader+fragSource,vertSource);
+   
+    if(fragAutoHeader){
+        shader.load(fragHeader+fragSource,vertSource);
+    } else {
+        shader.load(fragSource,vertSource);
+    }
 
     std::vector<VertexLayout::VertexAttrib> attribs;
     attribs.push_back({"a_position", 3, GL_FLOAT, false, 0});
