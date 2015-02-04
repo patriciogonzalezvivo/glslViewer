@@ -1,3 +1,5 @@
+![00](images/00.gif)
+
 ## piFrag
 
 PiFrag is a RaspberryPi console-based live-coding tool that renders GLSL Fragment shaders and updates them each time the file change. Let's you inject other shaders, textures and some basic mouse events. Using the opacity of the out put you can combine multiple instances of this program and be creative using layers.
@@ -8,7 +10,7 @@ Install FreeImage libraries, download the code, compile and install.
 
 ```
 sudo apt-get update
-sudo apt-get update
+sudo apt-get upgrade
 sudo apt-get install libfreeimage3-dev
 cd ~ 
 git clone http://github.com/patriciogonzalezvivo/piFrag
@@ -22,13 +24,13 @@ sudo make install
 Run the app:
 
 ```
-piFrag ~/piFrag/examples/test.frag
+piFrag test.frag
 ```
 
 If you set alpha value to 0.3 (```glFragColor.a = 0.3;```) you can se through the console and from another terminal edit your shader with you favorite editor:
 
 ```
-vim ~/piFrag/examples/test.frag
+vim test.frag
 ```
 
 In the test fragment shader we have hook it up to the X mouse position so you can take a look while you work on it.
@@ -37,7 +39,7 @@ Or you can login remotely using ssh to your raspberryPi and live-code with your 
 
 ```
 ssh pi@raspberrypi.local
-vim ~/piFrag/examples/test.frag
+vim test.frag
 ```
 
 ### Pre-Define Uniforms
@@ -57,8 +59,7 @@ Shaders are cross compatible with the webGL shaders from [ShaderToy](http://www.
 You can load any image formats suported by FreeImage libraries. Set the uniform name as an argument followed with the file name and the app will load it for you. For example, the ```uniform sampled2D tex0;``` is defined in this way:
 
 ```
-cd ~/piFrag/examples/
-piFrag test.frag --tex0 test.png
+piFrag test.frag --tex test.png
 ```
 
 ### Others arguments
