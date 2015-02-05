@@ -49,8 +49,8 @@ void main (void) {
 	}
 	
 	//	Add a mouse pointer
-	vec2 mouse = vec2(u_mouse.x*aspect,u_mouse.y)/u_resolution;
-	color += vec3( rect(mouse-st, vec2(0.04,0.01)) + rect(mouse-st, vec2(0.01,0.04)) );
+	vec2 mouse = st-vec2(u_mouse.x*aspect,u_mouse.y)/u_resolution+vec2(0.5);
+	color += vec3( rect(mouse, vec2(0.02,0.005)) + rect(mouse, vec2(0.005,0.02)) );
 
 	//	Assign the resultant color
 	gl_FragColor = vec4(color,1.0);
