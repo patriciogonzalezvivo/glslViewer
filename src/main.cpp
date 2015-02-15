@@ -217,14 +217,22 @@ void watchThread(const std::string& _file) {
 
 int main(int argc, char **argv){
 
-	if(argc < 2){
+    fragFile = "none";
+
+    for (int i = 1; i < argc ; i++){
+        if ( std::string(argv[i]).find(".frag") != std::string::npos) {
+            fragFile = std::string(argv[i]);
+            break;
+        }
+    }
+
+    if(argc < 2 || fragFile == "none"){
 		std::cerr << "GLSL render that updates changes instantly.\n";
-		std::cerr << "Usage: " << argv[0] << " shader.frag [--textureNameA texture.png] [--textureNameB=texture.jpg]\n";
+		std::cerr << "Usage: " << argv[0] << " shader.frag [-textureNameA texture.png] [-l] [-s] [-x x] [-y y] [-w width] [-height]\n";
 
 		return EXIT_FAILURE;
 	}
 
-    fragFile = std::string(argv[1]);
 
     // Fork process with a shared variable
     //
@@ -310,7 +318,7 @@ int main(int argc, char **argv){
             uint32_t h = state->screen_height;
 
             //Setup
-            for (int i = 2; i < argc ; i++){
+            for (int i = 1; i < argc ; i++){
 
                 if ( std::string(argv[i]) == "-u" ) {
                     fragAutoHeader = true;
@@ -387,7 +395,7 @@ int main(int argc, char **argv){
             glViewport(0, 0, w, h );
 
             //Load the the resources (textures)
-            for (int i = 2; i < argc ; i++){
+            for (int i = 1; i < argc ; i++){
                 if (std::string(argv[i]) == "-x" || 
                     std::string(argv[i]) == "-y" || 
                     std::string(argv[i]) == "-w" || 

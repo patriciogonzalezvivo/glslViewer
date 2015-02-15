@@ -42,8 +42,10 @@ void main (void) {
 	float imgAspect = texResolution.x/texResolution.y;
 	vec4 img = texture2D(tex,st*vec2(1.,imgAspect)+vec2(0.0,-0.1));
 
-	color = mix(color,img.rgb,img.a);
-	
+    if ( texResolution != vec2(0.0) ){
+	    color = mix(color,img.rgb,img.a);
+    }
+
 	//	Add a mouse cursor
 	vec2 mousePos = st-vec2(u_mouse.x*aspect,u_mouse.y)/u_resolution+vec2(0.5);
 	color += vec3( rect(mousePos, vec2(0.03,0.005)) + rect(mousePos, vec2(0.005,0.03)) );
