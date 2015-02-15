@@ -74,7 +74,9 @@ Beside for texture uniforms other arguments can be add to ```piFrag``` to change
 
 * ```-h [pixels]``` or ```--height [pixels]``` set the height of the billboard
 
-* ```-s``` Squared Billboard
+* ```-s``` or ```--squared``` to set a squared billboard
+
+* ```-l``` or ```--live-coding``` to draw a 500x500 billboard on the top right coorner of the screen that let you see the code and the shader at the same time
 
 ### Inject other files
 

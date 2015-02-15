@@ -32,7 +32,7 @@ void main (void) {
 
 	//	Adjust aspect ratio
     float aspect = u_resolution.x/u_resolution.y;
-    st.x -= (u_resolution.x-u_resolution.y)/u_resolution.x;
+    //st.x -= (u_resolution.x-u_resolution.y)/u_resolution.x;
     st.x *= aspect;
 
     //	Set default color
@@ -56,5 +56,5 @@ void main (void) {
 	gl_FragColor = vec4(color,1.0);
 
 	//	Make the side of the screen transparent to see your terminal
-	gl_FragColor.a = (st.x < 0. || st.x >= 1.0)? 0.0:1.0;
+	//gl_FragColor.a = (st.x < 0. || st.x >= 1.0)? 0.0:1.0;
 }

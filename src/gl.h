@@ -95,7 +95,7 @@ static void initOpenGL(){
     // create an EGL window surface
     success = graphics_get_display_size(0 /* LCD */, &state->screen_width, &state->screen_height);
     assert( success >= 0 );
-    
+
     dst_rect.x = 0;
     dst_rect.y = 0;
     dst_rect.width = state->screen_width;
@@ -118,22 +118,13 @@ static void initOpenGL(){
     nativewindow.height = state->screen_height;
     vc_dispmanx_update_submit_sync( dispman_update );
     
-    
     state->surface = eglCreateWindowSurface( state->display, config, &nativewindow, NULL );
     assert(state->surface != EGL_NO_SURFACE);
      
     // connect the context to the surface
     result = eglMakeCurrent(state->display, state->surface, state->surface, state->context);
     assert(EGL_FALSE != result);
-    
-    // Set background color and clear buffers
-    // glClearColor(0.15f, 0.25f, 0.35f, 1.0f);
-    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
-    glClear( GL_COLOR_BUFFER_BIT );
-
-	// Prepare viewport
-    glViewport( 0, 0, state->screen_width, state->screen_height );
 }
 
 static bool updateMouse(){
