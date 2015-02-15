@@ -11,7 +11,7 @@ Install FreeImage libraries, download the code, compile and install.
 ```
 sudo apt-get update
 sudo apt-get upgrade
-sudo apt-get install libfreeimage ibfreeimage3-dev
+sudo apt-get install libfreeimage libfreeimage-dev ibfreeimage3-dev
 cd ~ 
 git clone http://github.com/patriciogonzalezvivo/piFrag
 cd piFrag
