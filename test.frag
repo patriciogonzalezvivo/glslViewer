@@ -29,32 +29,25 @@ float rect (vec2 _position, vec2 _size) {
 
 void main (void) {
 	vec2 st = gl_FragCoord.xy/u_resolution.xy;
+    vec3 color = vec3(0.0);
 
 	//	Adjust aspect ratio
     float aspect = u_resolution.x/u_resolution.y;
-    //st.x -= (u_resolution.x-u_resolution.y)/u_resolution.x;
     st.x *= aspect;
 
-    //	Set default color
-	vec3 color = vec3(st.x, st.y, (1.0+sin(u_time))*0.5);
+    //  Map the red and green channels to the X and Y values
+	color = vec3(st.x, st.y, (1.0+sin(u_time))*0.5);
 
-	//	Load image with proper aspect
+	//	Load image and fix their aspect ratio
 	float imgAspect = texResolution.x/texResolution.y;
 	vec4 img = texture2D(tex,st*vec2(1.,imgAspect)+vec2(0.0,-0.1));
 
-	if ( texResolution != vec2(0.0) ) {
-		// 	Blend the image to the default color 
-		//	acording to the image alpha value
-		color = mix(color,img.rgb,img.a);
-	}
+	color = mix(color,img.rgb,img.a);
 	
-	//	Add a mouse pointer
-	vec2 mouse = st-vec2(u_mouse.x*aspect,u_mouse.y)/u_resolution+vec2(0.5);
-	color += vec3( rect(mouse, vec2(0.02,0.005)) + rect(mouse, vec2(0.005,0.02)) );
+	//	Add a mouse cursor
+	vec2 mousePos = st-vec2(u_mouse.x*aspect,u_mouse.y)/u_resolution+vec2(0.5);
+	color += vec3( rect(mousePos, vec2(0.03,0.005)) + rect(mousePos, vec2(0.005,0.03)) );
 
 	//	Assign the resultant color
 	gl_FragColor = vec4(color,1.0);
-
-	//	Make the side of the screen transparent to see your terminal
-	//gl_FragColor.a = (st.x < 0. || st.x >= 1.0)? 0.0:1.0;
 }
