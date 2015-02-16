@@ -44,7 +44,7 @@ vim test.frag
 
 ### Pre-Define Uniforms
 
-Shaders are cross compatible with the webGL shaders from [ShaderToy](http://www.shadertoy.com) for that the following uniforms are pre-define
+Shaders are cross compatible with the webGL shaders from [ShaderToy](http://www.shadertoy.com) for that the following uniforms are pre-define and can be add to the shader with the ```-u``` argument
 
 * ```iGlobalTime``` (```float```) or ```u_time``` (```float```): shader playback time (in seconds)
 
@@ -74,7 +74,15 @@ Beside for texture uniforms other arguments can be add to ```piFrag``` to change
 
 * ```-h [pixels]``` or ```--height [pixels]``` set the height of the billboard
 
-* ```-s``` or ```--squared``` to set a squared billboard
+* ```-s [seconds]``` exit app after a specific amount of seconds
+
+* ```-o [filename]``` save the viewport to a image file before exit
+
+* ```-d``` or ```--dither``` dither the image before exit
+
+* ```-u``` add pre-defined uniforms to the top of the shader
+
+* ```--squared``` to set a squared billboard
 
 * ```-l``` or ```--live-coding``` to draw a 500x500 billboard on the top right coorner of the screen that let you see the code and the shader at the same time
 

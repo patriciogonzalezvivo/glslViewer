@@ -3,6 +3,7 @@
 #include <sys/shm.h>
 #include <map>
 
+#include <FreeImage.h>
 #include "inotify-cxx.h"
 
 #include "gl.h"
@@ -11,6 +12,8 @@
 #include "vertexLayout.h"
 #include "vboMesh.h"
 #include "texture.h"
+
+#include <GLES2/gl2ext.h>
 
 bool* fragHasChanged;
 std::string fragFile;
@@ -54,6 +57,9 @@ VboMesh* canvas;
 //  Time
 struct timeval tv;
 unsigned long long timeStart;
+unsigned long long timeNow;
+float timeSec = 0.0f;
+float timeLimit = 0.0f;
 
 //============================================================================
 
@@ -131,18 +137,18 @@ static void draw(float _w, float _h){
 
 	gettimeofday(&tv, NULL);
 
-	unsigned long long timeNow = 	(unsigned long long)(tv.tv_sec) * 1000 +
-				    				(unsigned long long)(tv.tv_usec) / 1000;
+	timeNow = 	(unsigned long long)(tv.tv_sec) * 1000 +
+				(unsigned long long)(tv.tv_usec) / 1000;
 
- 	float time = (timeNow - timeStart)*0.001;
+ 	timeSec = (timeNow - timeStart)*0.001;
 
     shader.use();
-    shader.sendUniform("u_time", time);
+    shader.sendUniform("u_time", timeSec);
     shader.sendUniform("u_mouse", mouse.x, mouse.y);
     shader.sendUniform("u_resolution",_w, _h);
     
     // ShaderToy Specs
-    shader.sendUniform("iGlobalTime", time);
+    shader.sendUniform("iGlobalTime", timeSec);
     shader.sendUniform("iMouse", mouse.x, mouse.y, (mouse.button==1)?1.0:0.0, (mouse.button==2)?1.0:0.0);
     shader.sendUniform("iResolution",_w, _h, 0.0f);
 
@@ -317,11 +323,24 @@ int main(int argc, char **argv){
             uint32_t w = state->screen_width;
             uint32_t h = state->screen_height;
 
+            std::string outputFile = "";
+            bool bDither = false;
+
             //Setup
             for (int i = 1; i < argc ; i++){
 
                 if ( std::string(argv[i]) == "-u" ) {
                     fragAutoHeader = true;
+                } else if ( std::string(argv[i]) == "-d" || 
+                            std::string(argv[i]) == "--dither" ) {
+                    bDither = true;
+                } else if ( std::string(argv[i]) == "-s" ||
+                            std::string(argv[i]) == "--sec") {
+                    i++;
+                    timeLimit = getFloat(std::string(argv[i]));
+                } else if ( std::string(argv[i]) == "-o" ){
+                    i++;
+                    outputFile = std::string(argv[i]);
                 } else if ( std::string(argv[i]) == "-x" ) {
                     i++;
                     x = getInt(std::string(argv[i]));
@@ -336,25 +355,18 @@ int main(int argc, char **argv){
                             std::string(argv[i]) == "--height") {
                     i++;
                     h = getInt(std::string(argv[i]));
-                } 
-                
-                
-                if ( std::string(argv[i]) == "-s" || 
-                            std::string(argv[i]) == "--square") {
+                } else if ( std::string(argv[i]) == "--square") {
                     if (state->screen_width > state->screen_height) {
                         x = state->screen_width/2-state->screen_height/2;
                     } else {
                         y = state->screen_height/2-state->screen_width/2;
                     }
                     w = h = MIN(state->screen_width,state->screen_height);
-                } 
-                
-                if ( std::string(argv[i]) == "-l" || 
+                } else if ( std::string(argv[i]) == "-l" || 
                             std::string(argv[i]) == "--life-coding" ){
                     x = w-500;
                     w = h = 500;
                 }
-
             }
 
             dst_rect.x = x;
@@ -401,10 +413,14 @@ int main(int argc, char **argv){
                     std::string(argv[i]) == "-w" || 
                     std::string(argv[i]) == "--width" || 
                     std::string(argv[i]) == "-h" || 
-                    std::string(argv[i]) == "--height") {
+                    std::string(argv[i]) == "--height" ||
+                    std::string(argv[i]) == "-o" ||
+                    std::string(argv[i]) == "-s" || 
+                    std::string(argv[i]) == "--sec") {
                     i++;
-                } else if ( std::string(argv[i]) == "-u" || 
-                            std::string(argv[i]) == "-s" || 
+                } else if ( std::string(argv[i]) == "-u" ||
+                            std::string(argv[i]) == "-d" || 
+                            std::string(argv[i]) == "--dither" || 
                             std::string(argv[i]) == "--square" ||
                             std::string(argv[i]) == "-l" || 
                             std::string(argv[i]) == "--life-coding"  ) {
@@ -422,21 +438,71 @@ int main(int argc, char **argv){
             // Setup
             setup();
            
-            //glEnable(GL_BLEND);
-            //glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
              
             // Clear the background
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+            
+            bool bPlay = true;
             // Render Loop
-            while (true) {
+            while (bPlay) {
                 // Update
                 updateMouse();
                 
                 // Draw
                 draw(w,h);
-
+                
                 eglSwapBuffers(state->display, state->surface); 
+
+                if (timeLimit > 0.0 && timeSec > timeLimit){
+
+                    if(outputFile != ""){
+                        FreeImage_Initialise();
+                        FREE_IMAGE_FORMAT fif = FIF_PNG;//FreeImage_GetFileType(outputFile.c_str());
+
+                        if (fif != FIF_UNKNOWN){
+                            BYTE* pixels = new BYTE[w*h*4];
+                            glReadPixels(0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+                            
+                            int bpp = 32;
+                            int pitch = ((((bpp * w) + 31) / 32) * 4);
+                            
+                            // FIBITMAP* bmp = FreeImage_AllocateT(FIT_RGBA16,w,h,bpp); 
+                            // BYTE* bmpBits = FreeImage_GetBits(bmp);
+                            // if (bmpBits != NULL) {
+                            //     int srcStride = pitch;
+                            //     int dstStride = FreeImage_GetPitch(bmp);
+                            //     BYTE* src = pixels;
+                            //     BYTE* dst = bmpBits;
+                            //     for(int i = 0; i < h; i++){
+                            //         memcpy(dst, src, srcStride);
+                            //         src += srcStride;
+                            //         dst += dstStride;
+                            //     }
+                            // }
+
+                            FIBITMAP* bmp = FreeImage_ConvertFromRawBits(pixels, w, h, pitch, bpp, FI_RGBA_BLUE_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_RED_MASK, false);
+                            
+                            if(bDither){
+                                FIBITMAP* dither = FreeImage_Dither(bmp,FID_FS);
+                                FreeImage_Save(fif,dither,outputFile.c_str());
+                                if (dither != NULL){
+                                    FreeImage_Unload(dither);
+                                }
+                            } else {
+                                FreeImage_Save(fif,bmp,outputFile.c_str());
+                            }
+                            
+                            if (bmp != NULL){
+                                FreeImage_Unload(bmp);
+                            }
+                        }
+                    }
+                    
+                    bPlay = false;
+                }
+
             }
 
             //  Kill the iNotify watcher once you finish
