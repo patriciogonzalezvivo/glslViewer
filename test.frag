@@ -7,15 +7,10 @@ uniform float u_time;
 uniform vec2 u_mouse;
 uniform vec2 u_resolution;
 
-//	ShaderToy default uniforms
-uniform float iGlobalTime;
-uniform vec4 iMouse;
-uniform vec3 iResolution;
-
-//	Automatically add uniforms when you do:
+//	Automatically send uniforms to the argument call. Ex.:
 //
 //	$ piFrag test.frag -tex test.png
-//
+//: 
 uniform sampler2D tex;
 uniform vec2 texResolution;
 

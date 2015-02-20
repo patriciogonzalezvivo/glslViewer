@@ -1,10 +1,10 @@
 #include <time.h>
 #include <sys/time.h>
 #include <sys/shm.h>
+#include <sys/stat.h> 
 #include <map>
 
 #include <FreeImage.h>
-#include "inotify-cxx.h"
 
 #include "gl.h"
 #include "utils.h"
@@ -279,41 +279,25 @@ void renderThread(int argc, char **argv) {
 //  Watching Thread
 //============================================================================
 void watchThread(const std::string& _file) {
-    
-    unsigned found = _file.find_last_of("/\\");
 
-    std::string folder = _file.substr(0,found);
-    std::string file = _file.substr(found+1);
-
-    if(folder == file){
-        folder = ".";
+    struct stat st;
+    int ierr = stat(_file.c_str(), &st);
+    if (ierr != 0) {
+            std::cerr << "Error watching file " << _file << std::endl;
+            return;
     }
-    
-    //std::cout << "Watching on " << folder << " for " << file << std::endl;
-
-    Inotify notify;
-    InotifyWatch watch(folder, IN_MODIFY);
-    notify.Add(watch);
-
-    for (;;) {
+    int date = st.st_mtime;
+    while(1){
         if(!(*fragHasChanged)){
-            notify.WaitForEvents();
 
-            size_t count = notify.GetEventCount();
-            while(count-- > 0) {
-                InotifyEvent event;
-                bool got_event = notify.GetEvent(&event);
-
-                if(got_event){  
-                    std::string mask_str;
-                    event.DumpTypes(mask_str);
-                    std::string filename = event.GetName();
-                    //std::cout << "Child: " << filename << " change " << mask_str << std::endl;
-                    if (filename == file){
-                        *fragHasChanged = true;
-                    }
-                }
-            } 
+            ierr = stat(_file.c_str(), &st);
+            int newdate = st.st_mtime;
+            usleep(500000);
+            if (newdate!=date){
+                // std::cout << "Reloading " << _file << std::endl;
+                *fragHasChanged = true;
+                date = newdate;
+            }
         }
     }
 }
