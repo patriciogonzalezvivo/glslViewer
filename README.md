@@ -1,23 +1,23 @@
-![00](images/00.gif)
+## glslViewer
 
-## piFrag
+Is console-based live-coding tool that renders GLSL Fragment shaders and update them every time they change that runs on RaspberryPi and MacOS. It handles for you the injection of subshaders, textures and other uniforms such as time, resolution and mouse position. Is en escential a console version of [ShaderToy](https://www.shadertoy.com/)
 
-PiFrag is a RaspberryPi console-based live-coding tool that renders GLSL Fragment shaders and updates them each time the file change. Let's you inject other shaders, textures and some basic mouse events. Using the opacity of the out put you can combine multiple instances of this program and be creative using layers.
-
-### Install
+### Installing in RaspberryPi
 
 Install FreeImage libraries, download the code, compile and install.
 
 ```
 sudo apt-get update
 sudo apt-get upgrade
-sudo apt-get install libfreeimage libfreeimage-dev ibfreeimage3-dev
+sudo apt-get install libfreeimage
 cd ~ 
-git clone http://github.com/patriciogonzalezvivo/piFrag
-cd piFrag
+git clone http://github.com/patriciogonzalezvivo/glslViewer
+cd glslViewer
 make
 sudo make install
 ```
+
+### Installing in Mac OSX
 
 ```
 brew update
@@ -32,7 +32,7 @@ brew install glfw3
 Run the app:
 
 ```
-piFrag test.frag
+glslViewer test.frag
 ```
 
 If you set alpha value to 0.3 (```glFragColor.a = 0.3;```) you can se through the console and from another terminal edit your shader with you favorite editor:
@@ -54,25 +54,25 @@ vim test.frag
 
 Shaders are cross compatible with the webGL shaders from [ShaderToy](http://www.shadertoy.com) for that the following uniforms are pre-define and can be add to the shader with the ```-u``` argument
 
-* ```iGlobalTime``` (```float```) or ```u_time``` (```float```): shader playback time (in seconds)
+* ```u_time``` (```float```) or ```iGlobalTime``` (```float```) : shader playback time (in seconds)
 
-* ```iResolution``` (```vec3```) or ```u_resolution``` (```vec2```): viewport resolution (in pixels)
+* ```u_resolution``` (```vec2```) or ```iResolution``` (```vec3```): viewport resolution (in pixels)
 
-* ```iMouse``` (```vec4```) or ```u_mouse``` (```vec2```): mouse pixel coords (xy: pos, zw: buttons)
+* ```u_mouse``` (```vec2```) or ```iMouse``` (```vec4```): mouse pixel coords (xy: pos, zw: buttons)
 
 * ```v_texcoord``` (```vec2```): UV of the billboard ( normalized )
 
-### Loading texture uniforms
+### Dynamic uniforms: textures
 
 You can load any image formats suported by FreeImage libraries. Set the uniform name as an argument followed with the file name and the app will load it for you. For example, the ```uniform sampled2D tex0;``` is defined in this way:
 
 ```
-piFrag test.frag --tex test.png
+glslViewer test.frag --tex test.png
 ```
 
 ### Others arguments
 
-Beside for texture uniforms other arguments can be add to ```piFrag``` to change it setup.
+Beside for texture uniforms other arguments can be add to ```glslViewer``` to change it setup.
 
 * ```-x [pixels]``` set the X position of the billboard on the screen
 
@@ -102,6 +102,6 @@ You can include other GLSL code using a traditional ```#include “file.glsl”`
 
 * [Patricio Gonzalez Vivo](http://patriciogonzalezvivo.com/)
 
-* [Inspired on Karim’s fragTool](https://github.com/karimnaaji/fragtool). 
+* [Karim Naaji](https://github.com/karimnaaji/fragtool). 
 
 

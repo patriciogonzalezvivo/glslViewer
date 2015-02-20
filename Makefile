@@ -1,4 +1,4 @@
-EXE = piFrag
+EXE = glslViewer
 
 CXX=g++
 SOURCES := $(wildcard src/*.cpp)
