@@ -25,6 +25,11 @@ brew upgrade
 brew install freeimage 
 brew tap homebrew/versions
 brew install glfw3
+cd ~ 
+git clone http://github.com/patriciogonzalezvivo/glslViewer
+cd glslViewer
+make
+sudo make install
 ```
 
 ### Use
