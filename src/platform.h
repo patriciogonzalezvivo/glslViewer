@@ -128,7 +128,7 @@ void initGL(int argc, char **argv){
     EGLBoolean result;
     EGLint num_config;
 
-    static EGL_DISPMANX_viewport_T nativeviewport;
+    static EGL_DISPMANX_WINDOW_T nativeviewport;
 
     DISPMANX_ELEMENT_HANDLE_T dispman_element;
     DISPMANX_DISPLAY_HANDLE_T dispman_display;
@@ -141,7 +141,7 @@ void initGL(int argc, char **argv){
         EGL_GREEN_SIZE, 8,
         EGL_BLUE_SIZE, 8,
         EGL_ALPHA_SIZE, 8,
-        EGL_SURFACE_TYPE, EGL_viewport_BIT,
+        EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
         EGL_NONE
     };
 
@@ -233,7 +233,7 @@ void initGL(int argc, char **argv){
     nativeviewport.height = viewport.height;
     vc_dispmanx_update_submit_sync( dispman_update );
 
-    state->surface = eglCreateviewportSurface( state->display, config, &nativeviewport, NULL );
+    state->surface = eglCreateWindowSurface( state->display, config, &nativeviewport, NULL );
     assert(state->surface != EGL_NO_SURFACE);
 
     // connect the context to the surface
