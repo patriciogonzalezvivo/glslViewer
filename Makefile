@@ -4,19 +4,29 @@ SOURCES := $(wildcard src/*.cpp)
 HEADERS := $(wildcard src/*.h)
 OBJECTS := $(SOURCES:.cpp=.o)
 
-INCLUDES+=	-I$(SDKSTAGE)/opt/vc/include/ \
+UNAME := $(shell uname -s)
+
+INCLUDES +=	-Isrc/
+
+CFLAGS += -Wall -g -std=c++0x -Wno-psabi -fpermissive
+
+LDFLAGS += -lfreeimage
+
+ifeq ($(UNAME), Linux)
+CFLAGS += -DPLATFORM_RPI
+
+INCLUDES += -I$(SDKSTAGE)/opt/vc/include/ \
 			-I$(SDKSTAGE)/opt/vc/include/interface/vcos/pthreads \
-			-I$(SDKSTAGE)/opt/vc/include/interface/vmcs_host/linux \
-			-Isrc/
+			-I$(SDKSTAGE)/opt/vc/include/interface/vmcs_host/linux 
 
-CFLAGS+=-Wall -g -std=c++0x\
-		-Wno-psabi -fpermissive
-		-DPLATFORM_RPI
-
-LDFLAGS+=	-L$(SDKSTAGE)/opt/vc/lib/ \
+LDFLAGS += -L$(SDKSTAGE)/opt/vc/lib/ \
 			-lGLESv2 -lEGL \
-			-lbcm_host \
-			-lfreeimage
+			-lbcm_host
+endif
+
+ifeq ($(UNAME_S),Darwin)
+CFLAGS += -DPLATFORM_OSX
+endif
 
 all: $(EXE)
 
