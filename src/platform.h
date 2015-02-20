@@ -25,9 +25,15 @@ typedef struct {
 static Viewport viewport;
 
 void resizeGL(int _newWidth, int _newHeight){
+#ifdef RETINA_DISPLAY
+    viewport.width = _newWidth * 2.0;
+    viewport.height = _newHeight * 2.0;
+#else 
     viewport.width = _newWidth;
     viewport.height = _newHeight;
-    glViewport(0, 0, viewport.width, viewport.height);    
+#endif
+
+    glViewport(0, 0, viewport.width, viewport.height);
 }
 
 #ifdef PLATFORM_OSX
@@ -51,6 +57,31 @@ void handleKeypress(GLFWwindow* _window, int _key, int _scancode, int _action, i
 
 void handleResize(GLFWwindow* _window, int _w, int _h) {
     resizeGL(_w, _h);
+}
+
+void handleCursor(GLFWwindow* _window, double x, double y) {
+
+#ifdef RETINA_DISPLAY
+    x *= 2.0;
+    y *= 2.0;
+#endif 
+
+    mouse.velX = x - mouse.x;
+    mouse.velY = (viewport.height - y) - mouse.y;
+    mouse.x = x;
+    mouse.y = viewport.height - y;
+
+    int action = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1);
+    if (action == GLFW_PRESS) {
+        mouse.button = 1;
+    } else {
+        mouse.button = 0;
+    }
+
+    if (mouse.x < 0) mouse.x=0;
+    if (mouse.y < 0) mouse.y=0;
+    if (mouse.x > viewport.width) mouse.x = viewport.width;
+    if (mouse.y > viewport.height) mouse.y = viewport.height;
 }
 
 void initGL(int argc, char **argv){
@@ -83,6 +114,7 @@ void initGL(int argc, char **argv){
 
     glfwSetWindowSizeCallback(window, handleResize);
     glfwSetKeyCallback(window, handleKeypress);
+    glfwSetCursorPosCallback(window, handleCursor);
 }
 
 bool isGL(){

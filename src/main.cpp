@@ -257,6 +257,7 @@ void renderThread(int argc, char **argv) {
         // Draw
         draw();
         
+        // Swap the buffers
         renderGL();
 
         if( keypress == 'q' || keypress == 's'){
