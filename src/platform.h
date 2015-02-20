@@ -80,10 +80,48 @@ void handleCursor(GLFWwindow* _window, double x, double y) {
 
 void initGL(int argc, char **argv){
 
+    const GLFWvidmode * mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+    int screen_width = 500;
+    int screen_height = 500;
+
+    if( mode != NULL){
+        screen_width = mode->width/2.;
+        screen_height = mode->height/2.;
+    }
+    
     viewport.x = 0;
     viewport.y = 0;
-    viewport.width = 500;
-    viewport.height = 500;
+    viewport.width = screen_width;
+    viewport.height = screen_height;
+
+    for (int i = 1; i < argc ; i++){
+        if ( std::string(argv[i]) == "-x" ) {
+            i++;
+            viewport.x = getInt(std::string(argv[i]));
+        } else if ( std::string(argv[i]) == "-y" ) {
+            i++;
+            viewport.y = getInt(std::string(argv[i]));
+        } else if ( std::string(argv[i]) == "-w" || 
+                    std::string(argv[i]) == "--width" ) {
+            i++;
+            viewport.width = getInt(std::string(argv[i]));
+        } else if ( std::string(argv[i]) == "-h" || 
+                    std::string(argv[i]) == "--height") {
+            i++;
+            viewport.height = getInt(std::string(argv[i]));
+        } else if ( std::string(argv[i]) == "--square") {
+            if (screen_width > screen_height) {
+                viewport.x = screen_width/2-screen_height/2;
+            } else {
+                viewport.y = screen_height/2-screen_width/2;
+            }
+            viewport.width = viewport.height = MIN(screen_width,screen_height);
+        } else if ( std::string(argv[i]) == "-l" || 
+                    std::string(argv[i]) == "--life-coding" ){
+            viewport.x = viewport.width-500;
+            viewport.width = viewport.height = 500;
+        }
+    }
 
     if(!glfwInit()) {
         handleError("GLFW init failed", -1);

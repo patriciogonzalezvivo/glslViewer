@@ -22,6 +22,8 @@ bool Texture::load(const std::string& _path){
     loadPixels((unsigned char*)FreeImage_GetBits(image),width,height);
 
     FreeImage_Unload(image);
+
+    return true;
 }
 
 bool Texture::loadPixels(unsigned char* _pixels, int _width, int _height){
@@ -37,7 +39,7 @@ bool Texture::loadPixels(unsigned char* _pixels, int _width, int _height){
 #ifdef PLATFORM_RPI
     glTexImage2D(GL_TEXTURE_2D, 0, GL_BGRA_EXT, m_width, m_height, 0, GL_BGRA_EXT, GL_UNSIGNED_BYTE, _pixels);
 #else
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_width, m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, _pixels);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_width, m_height, 0, GL_BGRA_EXT, GL_UNSIGNED_BYTE, _pixels);
 #endif
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
