@@ -2,6 +2,8 @@
 #include <sys/time.h>
 #include <sys/shm.h>
 #include <sys/stat.h> 
+#include <unistd.h>
+#include <signal.h>
 #include <map>
 
 #include <FreeImage.h>
@@ -139,12 +141,12 @@ void draw(){
     shader.use();
     shader.sendUniform("u_time", timeSec);
     shader.sendUniform("u_mouse", mouse.x, mouse.y);
-    shader.sendUniform("u_resolution",window.width, window.height);
+    shader.sendUniform("u_resolution",viewport.width, viewport.height);
     
     // ShaderToy Specs
     shader.sendUniform("iGlobalTime", timeSec);
     shader.sendUniform("iMouse", mouse.x, mouse.y, (mouse.button==1)?1.0:0.0, (mouse.button==2)?1.0:0.0);
-    shader.sendUniform("iResolution",window.width, window.height, 0.0f);
+    shader.sendUniform("iResolution",viewport.width, viewport.height, 0.0f);
 
     unsigned int index = 0;
     for (std::map<std::string,Texture*>::iterator it = textures.begin(); it!=textures.end(); ++it) {
@@ -176,7 +178,8 @@ void renderThread(int argc, char **argv) {
     // Prepare viewport
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glClear(GL_COLOR_BUFFER_BIT );
-    glViewport(0, 0, window.width, window.height);
+    
+    resizeGL(viewport.width, viewport.height);
 
     // Setup
     setup();
@@ -245,10 +248,12 @@ void renderThread(int argc, char **argv) {
 
     bool bPlay = true;
     // Render Loop
-    while (bPlay) {
+    while (isGL() && bPlay) {
         // Update
         updateGL();
         
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
         // Draw
         draw();
         
@@ -258,15 +263,15 @@ void renderThread(int argc, char **argv) {
             std::cout << std::endl;
 
             if (ditherOutputFile != "") {
-                unsigned char* pixels = new unsigned char[window.width*window.height*4];
-                glReadPixels(0, 0, window.width, window.height, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-                Texture::savePixels(ditherOutputFile, pixels, window.width, window.height, true );
+                unsigned char* pixels = new unsigned char[viewport.width*viewport.height*4];
+                glReadPixels(0, 0, viewport.width, viewport.height, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+                Texture::savePixels(ditherOutputFile, pixels, viewport.width, viewport.height, true );
             }
 
             if (outputFile != "") {
-                unsigned char* pixels = new unsigned char[window.width*window.height*4];
-                glReadPixels(0, 0, window.width, window.height, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-                Texture::savePixels(outputFile, pixels, window.width, window.height, false );
+                unsigned char* pixels = new unsigned char[viewport.width*viewport.height*4];
+                glReadPixels(0, 0, viewport.width, viewport.height, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+                Texture::savePixels(outputFile, pixels, viewport.width, viewport.height, false );
             }
         }
 

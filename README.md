@@ -19,6 +19,14 @@ make
 sudo make install
 ```
 
+```
+brew update
+brew upgrade
+brew install freeimage 
+brew tap homebrew/versions
+brew install glfw3
+```
+
 ### Use
 
 Run the app:

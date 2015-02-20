@@ -22,8 +22,87 @@ typedef struct {
     uint32_t x, y, width, height;
 } Viewport;
 
-static Viewport window;
+static Viewport viewport;
 
+void resizeGL(int _newWidth, int _newHeight){
+    viewport.width = _newWidth;
+    viewport.height = _newHeight;
+    glViewport(0, 0, viewport.width, viewport.height);    
+}
+
+#ifdef PLATFORM_OSX
+static GLFWwindow* window;
+
+void handleError(const std::string& _message, int _exitStatus) {
+    std::cerr << "ABORT: "<< _message << std::endl;
+    exit(_exitStatus);
+    // exit_func();
+}
+
+void handleKeypress(GLFWwindow* _window, int _key, int _scancode, int _action, int _mods) {
+    switch (_key) {
+        case 256: // ESC
+            glfwSetWindowShouldClose(window, GL_TRUE);
+            break;
+        default:
+            keypress = _key;
+    }
+}
+
+void handleResize(GLFWwindow* _window, int _w, int _h) {
+    resizeGL(_w, _h);
+}
+
+void initGL(int argc, char **argv){
+
+    viewport.x = 0;
+    viewport.y = 0;
+    viewport.width = 800;
+    viewport.height = 600;
+
+    if(!glfwInit()) {
+        handleError("GLFW init failed", -1);
+    }
+
+    window = glfwCreateWindow(viewport.width, viewport.height, "piFrag", NULL, NULL);
+
+    if(!window) {
+        glfwTerminate();
+        handleError("GLFW create window failed", -1);
+    }
+
+    glfwMakeContextCurrent(window);
+
+    // glewExperimental = GL_TRUE;
+    GLenum err = glewInit();
+
+    if(err != GLEW_OK) {
+        std::cerr << glewGetErrorString(err) << std::endl;
+        handleError("GlEW init failed", -1);
+    }
+
+    glfwSetWindowSizeCallback(window, handleResize);
+    glfwSetKeyCallback(window, handleKeypress);
+}
+
+bool isGL(){
+    return !glfwWindowShouldClose(window);
+}
+
+void updateGL(){
+    glfwPollEvents();
+}
+
+void renderGL(){
+    glfwSwapBuffers(window);
+}
+
+void closeGL(){
+    glfwTerminate();
+}
+#endif
+
+#ifdef PLATFORM_RPI
 // OPENGL on RASPBERRYPI
 //----------------------------------------------------
 typedef struct {
@@ -49,7 +128,7 @@ void initGL(int argc, char **argv){
     EGLBoolean result;
     EGLint num_config;
 
-    static EGL_DISPMANX_WINDOW_T nativewindow;
+    static EGL_DISPMANX_viewport_T nativeviewport;
 
     DISPMANX_ELEMENT_HANDLE_T dispman_element;
     DISPMANX_DISPLAY_HANDLE_T dispman_display;
@@ -62,7 +141,7 @@ void initGL(int argc, char **argv){
         EGL_GREEN_SIZE, 8,
         EGL_BLUE_SIZE, 8,
         EGL_ALPHA_SIZE, 8,
-        EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+        EGL_SURFACE_TYPE, EGL_viewport_BIT,
         EGL_NONE
     };
 
@@ -93,54 +172,54 @@ void initGL(int argc, char **argv){
     state->context = eglCreateContext(state->display, config, EGL_NO_CONTEXT, context_attributes);
     assert(state->context!=EGL_NO_CONTEXT);
 
-    // create an EGL window surface
+    // create an EGL viewport surface
     success = graphics_get_display_size(0 /* LCD */, &state->screen_width, &state->screen_height);
     assert( success >= 0 );
 
-    window.x = 0;
-    window.y = 0;
-    window.width = state->screen_width;
-    window.height = state->screen_height;
+    viewport.x = 0;
+    viewport.y = 0;
+    viewport.width = state->screen_width;
+    viewport.height = state->screen_height;
 
     //Setup
     for (int i = 1; i < argc ; i++){
         if ( std::string(argv[i]) == "-x" ) {
             i++;
-            window.x = getInt(std::string(argv[i]));
+            viewport.x = getInt(std::string(argv[i]));
         } else if ( std::string(argv[i]) == "-y" ) {
             i++;
-            window.y = getInt(std::string(argv[i]));
+            viewport.y = getInt(std::string(argv[i]));
         } else if ( std::string(argv[i]) == "-w" || 
                     std::string(argv[i]) == "--width" ) {
             i++;
-            window.width = getInt(std::string(argv[i]));
+            viewport.width = getInt(std::string(argv[i]));
         } else if ( std::string(argv[i]) == "-h" || 
                     std::string(argv[i]) == "--height") {
             i++;
-            window.height = getInt(std::string(argv[i]));
+            viewport.height = getInt(std::string(argv[i]));
         } else if ( std::string(argv[i]) == "--square") {
             if (state->screen_width > state->screen_height) {
-                window.x = state->screen_width/2-state->screen_height/2;
+                viewport.x = state->screen_width/2-state->screen_height/2;
             } else {
-                window.y = state->screen_height/2-state->screen_width/2;
+                viewport.y = state->screen_height/2-state->screen_width/2;
             }
-            window.width = window.height = MIN(state->screen_width,state->screen_height);
+            viewport.width = viewport.height = MIN(state->screen_width,state->screen_height);
         } else if ( std::string(argv[i]) == "-l" || 
                     std::string(argv[i]) == "--life-coding" ){
-            window.x = window.width-500;
-            window.width = window.height = 500;
+            viewport.x = viewport.width-500;
+            viewport.width = viewport.height = 500;
         }
     }
 
-    dst_rect.x = window.x;
-    dst_rect.y = window.y;
-    dst_rect.width = window.width;
-    dst_rect.height = window.height;
+    dst_rect.x = viewport.x;
+    dst_rect.y = viewport.y;
+    dst_rect.width = viewport.width;
+    dst_rect.height = viewport.height;
 
     src_rect.x = 0;
     src_rect.y = 0;
-    src_rect.width = window.width << 16;
-    src_rect.height = window.height << 16;
+    src_rect.width = viewport.width << 16;
+    src_rect.height = viewport.height << 16;
 
     dispman_display = vc_dispmanx_display_open( 0 /* LCD */);
     dispman_update = vc_dispmanx_update_start( 0 );
@@ -149,19 +228,23 @@ void initGL(int argc, char **argv){
                                        0/*layer*/, &dst_rect, 0/*src*/,
                                        &src_rect, DISPMANX_PROTECTION_NONE, 0 /*alpha*/, 0/*clamp*/, (DISPMANX_TRANSFORM_T)0/*transform*/);
 
-    nativewindow.element = dispman_element;
-    nativewindow.width = window.width;
-    nativewindow.height = window.height;
+    nativeviewport.element = dispman_element;
+    nativeviewport.width = viewport.width;
+    nativeviewport.height = viewport.height;
     vc_dispmanx_update_submit_sync( dispman_update );
 
-    state->surface = eglCreateWindowSurface( state->display, config, &nativewindow, NULL );
+    state->surface = eglCreateviewportSurface( state->display, config, &nativeviewport, NULL );
     assert(state->surface != EGL_NO_SURFACE);
 
     // connect the context to the surface
     result = eglMakeCurrent(state->display, state->surface, state->surface, state->context);
     assert(EGL_FALSE != result);
 
-    printf("OpenGL Initialize at %i,%i,%i,%i\n",window.x,window.y,window.width,window.height);
+    printf("OpenGL Initialize at %i,%i,%i,%i\n",viewport.x,viewport.y,viewport.width,viewport.height);
+}
+
+bool isGL(){
+    return true;
 }
 
 bool updateMouse(){
@@ -210,8 +293,8 @@ bool updateMouse(){
         // Clamp values
         if (mouse.x < 0) mouse.x=0;
         if (mouse.y < 0) mouse.y=0;
-        if (mouse.x > window.width) mouse.x = window.width;
-        if (mouse.y > window.height) mouse.y = window.height;
+        if (mouse.x > viewport.width) mouse.x = viewport.width;
+        if (mouse.y > viewport.height) mouse.y = viewport.height;
         return true;
     }
     return false;
@@ -260,3 +343,4 @@ void closeGL(){
 
     printf("\nOpenGL Closed\n");
 }
+#endif

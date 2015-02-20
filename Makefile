@@ -1,5 +1,6 @@
 EXE = piFrag
 
+CXX=g++
 SOURCES := $(wildcard src/*.cpp)
 HEADERS := $(wildcard src/*.h)
 OBJECTS := $(SOURCES:.cpp=.o)
@@ -8,12 +9,12 @@ UNAME := $(shell uname -s)
 
 INCLUDES +=	-Isrc/
 
-CFLAGS += -Wall -g -std=c++0x -Wno-psabi -fpermissive
+CFLAGS += -Wall -g -std=c++0x -fpermissive
 
 LDFLAGS += -lfreeimage
 
 ifeq ($(UNAME), Linux)
-CFLAGS += -DPLATFORM_RPI
+CFLAGS += -DPLATFORM_RPI -Wno-psabi
 
 INCLUDES += -I$(SDKSTAGE)/opt/vc/include/ \
 			-I$(SDKSTAGE)/opt/vc/include/interface/vcos/pthreads \
@@ -24,8 +25,10 @@ LDFLAGS += -L$(SDKSTAGE)/opt/vc/lib/ \
 			-lbcm_host
 endif
 
-ifeq ($(UNAME_S),Darwin)
-CFLAGS += -DPLATFORM_OSX
+ifeq ($(UNAME),Darwin)
+CFLAGS += -DPLATFORM_OSX -stdlib=libc++ $(shell pkg-config --cflags glfw3 glew)
+LDFLAGS += $(shell pkg-config --libs glfw3 glew)
+ARCH = -arch x86_64
 endif
 
 all: $(EXE)
@@ -34,8 +37,15 @@ all: $(EXE)
 	@echo $@
 	$(CXX) $(CFLAGS) $(INCLUDES) -g -c $< -o $@ -Wno-deprecated-declarations
 
+ifeq ($(UNAME), Linux)
 $(EXE): $(OBJECTS) $(HEADERS)
 	$(CXX) -o $@ -Wl,--whole-archive $(OBJECTS) $(LDFLAGS) -lfreeimage -Wl,--no-whole-archive -rdynamic
+endif
+
+ifeq ($(UNAME),Darwin)
+$(EXE): $(OBJECTS) $(HEADERS)
+	$(CXX) $(CFLAGS) $(OBJECTS) $(LDFLAGS) -stdlib=libc++ -dynamiclib -o $@
+endif
 
 clean:
 	@rm -rvf $(EXE) src/*.o

@@ -211,7 +211,7 @@ static std::string getLineNumber(const std::string& _source, unsigned _lineNumbe
 
 //----------------------------------------  String I/O
 
-static bool loadFromPath(const std::string& path, std::string* into) {
+static inline bool loadFromPath(const std::string& path, std::string* into) {
     std::ifstream file;
     std::string buffer;
 

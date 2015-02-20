@@ -1,9 +1,8 @@
 #pragma once
 
 #ifdef PLATFORM_OSX
+#include <GL/glew.h>
 #include <GLFW/glfw3.h>
-#define glClearDepthf glClearDepth
-#define glDepthRangef glDepthRange
 #endif
 
 #ifdef PLATFORM_RPI
