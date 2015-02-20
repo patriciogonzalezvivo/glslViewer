@@ -1,6 +1,6 @@
 ## glslViewer
 
-Is console-based live-coding tool that renders GLSL Fragment shaders and update them every time they change that runs on RaspberryPi and MacOS. It handles for you the injection of subshaders, textures and other uniforms such as time, resolution and mouse position. Is en escential a console version of [ShaderToy](https://www.shadertoy.com/)
+Is console-based live-coding tool that renders GLSL Fragment shaders and update them every time they change that runs on RaspberryPi and MacOS. It handles for you the injection of sub-programs, textures and other uniforms such as time, resolution and mouse position. Is en essential a console version of [ShaderToy](https://www.shadertoy.com/)
 
 ### Installing in RaspberryPi
 
@@ -81,7 +81,7 @@ Beside for texture uniforms other arguments can be add to ```glslViewer``` to ch
 
 * ```-x [pixels]``` set the X position of the billboard on the screen
 
-* ```-y [pixels]``` set yhe Y position of the billboard on the screen
+* ```-y [pixels]``` set the Y position of the billboard on the screen
 
 * ```-w [pixels]``` or ```--width [pixels]```  set the width of the billboard
 
@@ -93,11 +93,11 @@ Beside for texture uniforms other arguments can be add to ```glslViewer``` to ch
 
 * ```-d``` or ```--dither``` dither the image before exit
 
-* ```-u``` add pre-defined uniforms to the top of the shader
+* ```-u``` add pre-defined uniforms to the top of the shader so that you can run [ShaderToy](https://www.shadertoy.com/) shader directly. 
 
 * ```--squared``` to set a squared billboard
 
-* ```-l``` or ```--live-coding``` to draw a 500x500 billboard on the top right coorner of the screen that let you see the code and the shader at the same time
+* ```-l``` or ```--live-coding``` to draw a 500x500 billboard on the top right corner of the screen that let you see the code and the shader at the same time
 
 ### Inject other files
 
