@@ -106,7 +106,7 @@ void setup() {
     if(!loadFromPath(fragFile, &fragSource)) {
         return;
     }
-   
+
     if(fragAutoHeader){
         shader.load(fragHeader+fragSource,vertSource);
     } else {
@@ -209,6 +209,7 @@ void renderThread(int argc, char **argv) {
 
         } else if ( std::string(argv[i]) == "-u" ) {
             fragAutoHeader = true;
+            *fragHasChanged = true;
 
             std::cout << "The following code is added at the top of " << fragFile << std::endl;
             std::cout << fragHeader << std::endl;
