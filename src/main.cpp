@@ -6,7 +6,7 @@
 
 #include <FreeImage.h>
 
-#include "gl.h"
+#include "platform.h"
 #include "utils.h"
 #include "shader.h"
 #include "vertexLayout.h"

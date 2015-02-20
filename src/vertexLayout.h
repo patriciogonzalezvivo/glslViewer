@@ -3,8 +3,7 @@
 #include <vector>
 #include <map>
 
-// #include "gl.h"
-#include <GLES2/gl2.h>
+#include "gl.h"
 #include "shader.h"
 
 class VertexLayout {

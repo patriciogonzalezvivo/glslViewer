@@ -5,7 +5,7 @@
 #include <iostream>
 
 #include <FreeImage.h>      //  FreeImage type is GL_BGR
-#include <GLES2/gl2ext.h>   //  Need for GL_BGRA_EXT
+#include "gl.h"
 
 // static variable for freeImage initialization:
 void InitFreeImage(bool deinit=false){
