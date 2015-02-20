@@ -56,12 +56,13 @@ void saveImage(const std::string& _path, unsigned char * _pixels, int _width, in
     InitFreeImage();
 
     FREE_IMAGE_FORMAT fif = FIF_PNG;//FreeImage_GetFileType(_path.c_str());
+
     // if (fif != FIF_UNKNOWN)
     {
         int bpp = 32;
         int pitch = ((((bpp * _width) + 31) / 32) * 4);
         
-        FIBITMAP* bmp = FreeImage_ConvertFromRawBits(_pixels, _width, _height, pitch, bpp, FI_RGBA_BLUE_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_RED_MASK, false);
+        FIBITMAP* bmp = FreeImage_ConvertFromRawBits(_pixels, _width, _height, pitch, bpp, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK, false);
         
         if(_dither){
             FIBITMAP* ditherImg = FreeImage_Dither(bmp,FID_FS);

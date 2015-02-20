@@ -260,12 +260,17 @@ void renderThread(int argc, char **argv) {
         // Swap the buffers
         renderGL();
 
-        if( keypress == 'q' || keypress == 's'){
+        if(keypress != 0){
+            std::cout << keypress << std::endl;
+        }
+
+        if( keypress == 'q' || keypress == 81 || 
+            keypress == 's' || keypress == 83 ){
             std::cout << std::endl;
 
             if (ditherOutputFile != "") {
                 unsigned char* pixels = new unsigned char[viewport.width*viewport.height*4];
-                glReadPixels(0, 0, viewport.width, viewport.height, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+                glReadPixels(0, 0, viewport.width, viewport.height, GL_BGRA_EXT, GL_UNSIGNED_BYTE, pixels);
                 Texture::savePixels(ditherOutputFile, pixels, viewport.width, viewport.height, true );
             }
 
@@ -276,9 +281,12 @@ void renderThread(int argc, char **argv) {
             }
         }
 
-        if ((timeLimit > 0.0 && timeSec > timeLimit) || keypress == 'q' ){
+        if ((timeLimit > 0.0 && timeSec > timeLimit) || 
+            keypress == 'q' || keypress == 81 ){
             bPlay = false;
         }
+
+        keypress = 0;
     }
 }
 

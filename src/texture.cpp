@@ -49,10 +49,12 @@ bool Texture::save(const std::string& _path){
     //  TODO:
     //          - implement this correctly for textures
     //
+
+    bind();
     unsigned char* pixels = new unsigned char[m_width*m_height*4];
     glReadPixels(0, 0, m_width, m_height, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-
     savePixels(_path, pixels, m_width, m_height);
+    unbind();
 }
 
 bool Texture::savePixels(const std::string& _path, unsigned char* _pixels, int _width, int _height, bool _dither) {

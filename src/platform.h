@@ -46,12 +46,12 @@ void handleError(const std::string& _message, int _exitStatus) {
 }
 
 void handleKeypress(GLFWwindow* _window, int _key, int _scancode, int _action, int _mods) {
+    keypress = _key;
+
     switch (_key) {
         case 256: // ESC
             glfwSetWindowShouldClose(window, GL_TRUE);
             break;
-        default:
-            keypress = _key;
     }
 }
 
@@ -88,8 +88,8 @@ void initGL(int argc, char **argv){
 
     viewport.x = 0;
     viewport.y = 0;
-    viewport.width = 800;
-    viewport.height = 600;
+    viewport.width = 500;
+    viewport.height = 500;
 
     if(!glfwInit()) {
         handleError("GLFW init failed", -1);
