@@ -39,17 +39,25 @@ FIBITMAP* loadImage(std::string _path){
         return NULL;
     }
 
-    if(FreeImage_FIFSupportsReading(fif)) // Check if the plugin has reading capabilities and load the file
-      dib = FreeImage_Load(fif, _path.c_str()); 
+    if(FreeImage_FIFSupportsReading(fif)){
+        // Check if the plugin has reading capabilities and load the file
+        dib = FreeImage_Load(fif, _path.c_str());
+        std::cout << "Texture: loading " << _path << std::endl;
+    }  
+
     if(!dib){
         std::cerr << "Texture: unhable to open" << std::endl;
         return NULL;
     }
 
+#ifdef PLATFORM_RPI
     FIBITMAP *image = FreeImage_ConvertTo32Bits(dib);
     FreeImage_Unload(dib);
-
     return image;
+#else
+    return dib;
+#endif
+    
 }
 
 void saveImage(const std::string& _path, unsigned char * _pixels, int _width, int _height, bool _dither = false) {

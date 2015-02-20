@@ -20,6 +20,7 @@ bool Texture::load(const std::string& _path){
 	} 
 
     loadPixels((unsigned char*)FreeImage_GetBits(image),width,height);
+
     FreeImage_Unload(image);
 }
 
@@ -32,8 +33,13 @@ bool Texture::loadPixels(unsigned char* _pixels, int _width, int _height){
     // Generate an OpenGL texture ID for this texture
     glGenTextures(1, &m_id);
     glBindTexture(GL_TEXTURE_2D, m_id); 
-    
+
+#ifdef PLATFORM_RPI
     glTexImage2D(GL_TEXTURE_2D, 0, GL_BGRA_EXT, m_width, m_height, 0, GL_BGRA_EXT, GL_UNSIGNED_BYTE, _pixels);
+#else
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_width, m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, _pixels);
+#endif
+
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -45,11 +51,6 @@ bool Texture::loadPixels(unsigned char* _pixels, int _width, int _height){
 }
 
 bool Texture::save(const std::string& _path){
-
-    //  TODO:
-    //          - implement this correctly for textures
-    //
-
     bind();
     unsigned char* pixels = new unsigned char[m_width*m_height*4];
     glReadPixels(0, 0, m_width, m_height, GL_RGBA, GL_UNSIGNED_BYTE, pixels);

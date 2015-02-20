@@ -260,28 +260,27 @@ void renderThread(int argc, char **argv) {
         // Swap the buffers
         renderGL();
 
-        if( keypress == 'q' || keypress == 's' ){
+        if( keypress == 'q' || keypress == 'Q' ||
+            keypress == 's' || keypress == 'S' ){
             std::cout << std::endl;
 
             if (ditherOutputFile != "") {
                 unsigned char* pixels = new unsigned char[viewport.width*viewport.height*4];
-                glReadPixels(0, 0, viewport.width, viewport.height, GL_BGRA_EXT, GL_UNSIGNED_BYTE, pixels);
+                glReadPixels(0, 0, viewport.width, viewport.height, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
                 Texture::savePixels(ditherOutputFile, pixels, viewport.width, viewport.height, true );
             }
 
             if (outputFile != "") {
                 unsigned char* pixels = new unsigned char[viewport.width*viewport.height*4];
-                glReadPixels(0, 0, viewport.width, viewport.height, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+                glReadPixels(0, 0, viewport.width, viewport.height, GL_BGRA_EXT, GL_UNSIGNED_BYTE, pixels);
                 Texture::savePixels(outputFile, pixels, viewport.width, viewport.height, false );
             }
         }
 
         if ((timeLimit > 0.0 && timeSec > timeLimit) || 
-            keypress == 'q'){
+            keypress == 'q' || keypress == 'Q'){
             bPlay = false;
         }
-
-        keypress = 0;
     }
 }
 

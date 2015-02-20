@@ -16,7 +16,7 @@ typedef struct Mouse{
     int     button;
 };
 static Mouse mouse;
-static int keypress;
+static unsigned char keypress;
 
 typedef struct {
     uint32_t x, y, width, height;
@@ -40,7 +40,7 @@ void handleError(const std::string& _message, int _exitStatus) {
 }
 
 void handleKeypress(GLFWwindow* _window, int _key, int _scancode, int _action, int _mods) {
-    keypress = (char)_key;
+    keypress = _key;
 
     switch (_key) {
         case 256: // ESC
@@ -54,6 +54,11 @@ void handleResize(GLFWwindow* _window, int _w, int _h) {
 }
 
 void handleCursor(GLFWwindow* _window, double x, double y) {
+
+#ifdef RETINA_DISPLAY
+    x *= 2.0;
+    y *= 2.0; 
+#endif 
 
     mouse.velX = x - mouse.x;
     mouse.velY = (viewport.height - y) - mouse.y;
@@ -115,6 +120,7 @@ bool isGL(){
 }
 
 void updateGL(){
+    keypress = 0;
     glfwPollEvents();
 }
 
