@@ -11,6 +11,7 @@ INCLUDES+=	-I$(SDKSTAGE)/opt/vc/include/ \
 
 CFLAGS+=-Wall -g -std=c++0x\
 		-Wno-psabi -fpermissive
+		-DPLATFORM_RPI
 
 LDFLAGS+=	-L$(SDKSTAGE)/opt/vc/lib/ \
 			-lGLESv2 -lEGL \
