@@ -260,12 +260,7 @@ void renderThread(int argc, char **argv) {
         // Swap the buffers
         renderGL();
 
-        if(keypress != 0){
-            std::cout << keypress << std::endl;
-        }
-
-        if( keypress == 'q' || keypress == 81 || 
-            keypress == 's' || keypress == 83 ){
+        if( keypress == 'q' || keypress == 's' ){
             std::cout << std::endl;
 
             if (ditherOutputFile != "") {
@@ -282,7 +277,7 @@ void renderThread(int argc, char **argv) {
         }
 
         if ((timeLimit > 0.0 && timeSec > timeLimit) || 
-            keypress == 'q' || keypress == 81 ){
+            keypress == 'q'){
             bPlay = false;
         }
 

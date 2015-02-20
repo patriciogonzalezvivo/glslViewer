@@ -25,14 +25,8 @@ typedef struct {
 static Viewport viewport;
 
 void resizeGL(int _newWidth, int _newHeight){
-#ifdef RETINA_DISPLAY
-    viewport.width = _newWidth * 2.0;
-    viewport.height = _newHeight * 2.0;
-#else 
     viewport.width = _newWidth;
     viewport.height = _newHeight;
-#endif
-
     glViewport(0, 0, viewport.width, viewport.height);
 }
 
@@ -46,7 +40,7 @@ void handleError(const std::string& _message, int _exitStatus) {
 }
 
 void handleKeypress(GLFWwindow* _window, int _key, int _scancode, int _action, int _mods) {
-    keypress = _key;
+    keypress = (char)_key;
 
     switch (_key) {
         case 256: // ESC
@@ -60,11 +54,6 @@ void handleResize(GLFWwindow* _window, int _w, int _h) {
 }
 
 void handleCursor(GLFWwindow* _window, double x, double y) {
-
-#ifdef RETINA_DISPLAY
-    x *= 2.0;
-    y *= 2.0;
-#endif 
 
     mouse.velX = x - mouse.x;
     mouse.velY = (viewport.height - y) - mouse.y;
@@ -95,7 +84,11 @@ void initGL(int argc, char **argv){
         handleError("GLFW init failed", -1);
     }
 
+#ifdef RETINA_DISPLAY
+    window = glfwCreateWindow(viewport.width/2, viewport.height/2, "piFrag", NULL, NULL);
+#else 
     window = glfwCreateWindow(viewport.width, viewport.height, "piFrag", NULL, NULL);
+#endif
 
     if(!window) {
         glfwTerminate();
