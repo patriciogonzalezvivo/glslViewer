@@ -69,10 +69,16 @@ Shaders are cross compatible with the webGL shaders from [ShaderToy](http://www.
 
 ### Dynamic uniforms: textures
 
-You can load any image formats suported by FreeImage libraries. Set the uniform name as an argument followed with the file name and the app will load it for you. For example, the ```uniform sampled2D tex0;``` is defined in this way:
+You can load any image suported by FreeImage libraries, tehy will be load automatically and asign a uniform name acording to the order they are pass as arguments: ```u_tex0```, ```u_tex1```, etc. Together with that a resolution ```vec2``` uniform will be pass to: ```u_tex0Resolution```, ```u_tex1Resolution```, etc. 
 
 ```
-glslViewer test.frag --tex test.png
+glslViewer test.frag test.png
+```
+
+Also you can name texture uniforms as you want by assigning it to an argument before the image file For example, the ```uniform sampled2D iChannel;``` and  ```uniform vec2 iChannelResolution;``` is defined in this way:
+
+```
+glslViewer test.frag -iChannel test.png
 ```
 
 ### Others arguments

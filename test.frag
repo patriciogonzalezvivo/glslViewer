@@ -9,10 +9,14 @@ uniform vec2 u_resolution;
 
 //	Automatically send uniforms to the argument call. Ex.:
 //
-//	$ piFrag test.frag -tex test.png
-//: 
-uniform sampler2D tex;
-uniform vec2 texResolution;
+//	$ piFrag test.frag -u_tex0 test.png
+// 
+//  or the name set automatically by:
+//
+//  $ piFrag test.frag test.png
+//
+uniform sampler2D u_tex0;
+uniform vec2 u_tex0Resolution;
 
 //	Simple function that draws a rectangular shape
 float rect (vec2 _position, vec2 _size) {
@@ -34,10 +38,10 @@ void main (void) {
 	color = vec3(st.x, st.y, (1.0+sin(u_time))*0.5);
 
 	//	Load image and fix their aspect ratio
-	float imgAspect = texResolution.x/texResolution.y;
-	vec4 img = texture2D(tex,st*vec2(1.,imgAspect)+vec2(0.0,-0.1));
+	float imgAspect = u_tex0Resolution.x/u_tex0Resolution.y;
+	vec4 img = texture2D(u_tex0,st*vec2(1.,imgAspect)+vec2(0.0,-0.1));
 
-    if ( texResolution != vec2(0.0) ){
+    if ( u_tex0Resolution != vec2(0.0) ){
 	    color = mix(color,img.rgb,img.a);
     }
 
