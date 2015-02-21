@@ -26,9 +26,9 @@ LDFLAGS += -L$(SDKSTAGE)/opt/vc/lib/ \
 endif
 
 ifeq ($(UNAME),Darwin)
-CFLAGS += -DRETINA_DISPLAY -DPLATFORM_OSX -stdlib=libc++ $(shell pkg-config --cflags glfw3 glew)
+CFLAGS += -DPLATFORM_OSX -stdlib=libc++ $(shell pkg-config --cflags glfw3) -I/usr/local/include/
 INCLUDES += -I//Library/Frameworks/GLUI.framework
-LDFLAGS += -framework OpenGL $(shell pkg-config --libs glfw3 glew)
+LDFLAGS += -framework OpenGL $(shell pkg-config --libs glfw3) -L/usr/local/lib/
 ARCH = -arch x86_64
 endif
 

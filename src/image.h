@@ -60,7 +60,7 @@ FIBITMAP* loadImage(std::string _path){
 #endif
 }
 
-void saveImage(const std::string& _path, unsigned char * _pixels, int _width, int _height, bool _dither = false) {
+bool saveImage(const std::string& _path, unsigned char * _pixels, int _width, int _height, bool _dither = false) {
     InitFreeImage();
 
     FREE_IMAGE_FORMAT fif = FIF_PNG;//FreeImage_GetFileType(_path.c_str());
@@ -84,8 +84,9 @@ void saveImage(const std::string& _path, unsigned char * _pixels, int _width, in
 
         if (bmp != NULL){
             FreeImage_Unload(bmp);
+            return true;
+        } else {
+            return false;
         }
     }
-
-    std::cout << "Saving image to " << _path << std::endl;
 }

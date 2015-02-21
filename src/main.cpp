@@ -191,6 +191,7 @@ void renderThread(int argc, char **argv) {
     // Clear the background
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    int textureCounter = 0;
     std::string outputFile = "";
     std::string ditherOutputFile = "";
 
@@ -239,11 +240,27 @@ void renderThread(int argc, char **argv) {
             Texture* tex = new Texture();
             if( tex->load(std::string(argv[i])) ){
                 textures[parameterPair] = tex;
-                std::cout << "Loading " << std::string(argv[i]) << " uniforms are pass at: " << std::endl;
+                std::cout << "Loading " << std::string(argv[i]) << " as the following uniform: " << std::endl;
                 std::cout << "    uniform sampler2D u_" << parameterPair  << "; // loaded"<< std::endl;
                 std::cout << "    uniform vec2 u_" << parameterPair  << "Resolution;"<< std::endl;
             }
 
+        } else if ( std::string(argv[i]).find(".png") != std::string::npos ||
+                    std::string(argv[i]).find(".PNG") != std::string::npos ||
+                    std::string(argv[i]).find(".jpg") != std::string::npos ||
+                    std::string(argv[i]).find(".JPG") != std::string::npos || 
+                    std::string(argv[i]).find(".jpeg") != std::string::npos ||
+                    std::string(argv[i]).find(".JPEG") != std::string::npos ) {
+
+            Texture* tex = new Texture();
+            if( tex->load(std::string(argv[i])) ){
+                std::string name = "u_tex"+getString(textureCounter);
+                textures[name] = tex;
+                std::cout << "Loading " << std::string(argv[i]) << " as the following uniform: " << std::endl;
+                std::cout << "    uniform sampler2D " << name  << "; // loaded"<< std::endl;
+                std::cout << "    uniform vec2 " << name  << "Resolution;"<< std::endl;
+                textureCounter++;
+            }
         }
     }
 

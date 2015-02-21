@@ -1,8 +1,9 @@
 #pragma once
 
 #ifdef PLATFORM_OSX
-#include <GL/glew.h>
 #include <GLFW/glfw3.h>
+#include <OpenGL/gl.h>
+#include <OpenGL/glext.h>
 #endif
 
 #ifdef PLATFORM_RPI

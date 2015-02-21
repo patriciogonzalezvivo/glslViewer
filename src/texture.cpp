@@ -1,14 +1,14 @@
 #include "texture.h"
 #include "image.h"
 
-Texture::Texture():m_width(0),m_height(0),m_bpp(0),m_id(0){
+Texture::Texture():m_width(0),m_height(0),m_bpp(0),m_id(0) {
 }
 
-Texture::~Texture(){
+Texture::~Texture() {
 	glDeleteTextures(1, &m_id);
 }
 
-bool Texture::load(const std::string& _path){
+bool Texture::load(const std::string& _path) {
 	FIBITMAP *image = loadImage(_path);
     int width = FreeImage_GetWidth(image);
 	int height = FreeImage_GetHeight(image);
@@ -26,7 +26,7 @@ bool Texture::load(const std::string& _path){
     return true;
 }
 
-bool Texture::loadPixels(unsigned char* _pixels, int _width, int _height){
+bool Texture::loadPixels(unsigned char* _pixels, int _width, int _height) {
     m_width = _width;
     m_height = _height;
 
@@ -52,23 +52,25 @@ bool Texture::loadPixels(unsigned char* _pixels, int _width, int _height){
     return true;
 }
 
-bool Texture::save(const std::string& _path){
+bool Texture::save(const std::string& _path) {
     bind();
     unsigned char* pixels = new unsigned char[m_width*m_height*4];
     glReadPixels(0, 0, m_width, m_height, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-    savePixels(_path, pixels, m_width, m_height);
+    bool rta = savePixels(_path, pixels, m_width, m_height);
     unbind();
+
+    return rta;
 }
 
 bool Texture::savePixels(const std::string& _path, unsigned char* _pixels, int _width, int _height, bool _dither) {
-    saveImage(_path, _pixels, _width, _height, _dither);
+    return saveImage(_path, _pixels, _width, _height, _dither);
 }
 
-void Texture::bind(){
+void Texture::bind() {
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, m_id);
 }
 
-void Texture::unbind(){
+void Texture::unbind() {
 	glBindTexture(GL_TEXTURE_2D, 0);
 }

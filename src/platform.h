@@ -8,20 +8,18 @@
 #include "gl.h"
 #include "utils.h"
 
-typedef struct Mouse{
-    Mouse():x(0),y(0),button(0){};
-    
+typedef struct {
     float   x,y;
     float   velX,velY;
     int     button;
-};
+} Mouse;
+
 static Mouse mouse;
 static unsigned char keypress;
 
 typedef struct {
     uint32_t x, y, width, height;
 } Viewport;
-
 static Viewport viewport;
 
 void resizeGL(int _newWidth, int _newHeight){
@@ -32,11 +30,11 @@ void resizeGL(int _newWidth, int _newHeight){
 
 #ifdef PLATFORM_OSX
 static GLFWwindow* window;
+static float dpiScale = 1.0;
 
 void handleError(const std::string& _message, int _exitStatus) {
     std::cerr << "ABORT: "<< _message << std::endl;
     exit(_exitStatus);
-    // exit_func();
 }
 
 void handleKeypress(GLFWwindow* _window, int _key, int _scancode, int _action, int _mods) {
@@ -49,19 +47,21 @@ void handleKeypress(GLFWwindow* _window, int _key, int _scancode, int _action, i
     }
 }
 
+void fixDpiScale(){
+    int window_width, window_height, framebuffer_width, framebuffer_height;
+    glfwGetWindowSize(window, &window_width, &window_height);
+    glfwGetFramebufferSize(window, &framebuffer_width, &framebuffer_height);
+    dpiScale = framebuffer_width/window_width;
+}
+
 void handleResize(GLFWwindow* _window, int _w, int _h) {
-#ifdef RETINA_DISPLAY
-    resizeGL(_w*2., _h*2.);
-#else
-    resizeGL(_w,_h);
-#endif
+    fixDpiScale();
+    resizeGL(_w*dpiScale,_h*dpiScale);
 }
 
 void handleCursor(GLFWwindow* _window, double x, double y) {
-#ifdef RETINA_DISPLAY
-    x *= 2.0;
-    y *= 2.0; 
-#endif 
+    x *= dpiScale;
+    y *= dpiScale;
 
     mouse.velX = x - mouse.x;
     mouse.velY = (viewport.height - y) - mouse.y;
@@ -103,26 +103,18 @@ void initGL(int argc, char **argv){
         handleError("GLFW init failed", -1);
     }
 
-#ifdef RETINA_DISPLAY
-    window = glfwCreateWindow(viewport.width/2, viewport.height/2, "glslViewer", NULL, NULL);
-#else 
     window = glfwCreateWindow(viewport.width, viewport.height, "glslViewer", NULL, NULL);
-#endif
 
     if(!window) {
         glfwTerminate();
         handleError("GLFW create window failed", -1);
     }
 
+    fixDpiScale();
+    viewport.width *= dpiScale;
+    viewport.height *= dpiScale;
+
     glfwMakeContextCurrent(window);
-
-    // glewExperimental = GL_TRUE;
-    GLenum err = glewInit();
-
-    if(err != GLEW_OK) {
-        std::cerr << glewGetErrorString(err) << std::endl;
-        handleError("GlEW init failed", -1);
-    }
 
     glfwSetWindowSizeCallback(window, handleResize);
     glfwSetKeyCallback(window, handleKeypress);
@@ -148,6 +140,7 @@ void closeGL(){
 #endif
 
 #ifdef PLATFORM_RPI
+
 // OPENGL on RASPBERRYPI
 //----------------------------------------------------
 typedef struct {

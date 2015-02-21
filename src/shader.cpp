@@ -10,6 +10,30 @@ Shader::~Shader() {
     glDeleteProgram(m_program);
 }
 
+std::string getLineNumber(const std::string& _source, unsigned _lineNumber){
+    std::string delimiter = "\n";
+    std::string::const_iterator substart = _source.begin(), subend;
+
+    unsigned index = 1;
+    while (true) {
+        subend = search(substart, _source.end(), delimiter.begin(), delimiter.end());
+        std::string sub(substart, subend);
+        
+        if (index == _lineNumber) {
+            return sub;
+        }
+        index++;
+
+        if (subend == _source.end()) {
+            break;
+        }
+
+        substart = subend + delimiter.size();
+    }
+
+    return "NOT FOUND";
+}
+
 bool Shader::load(const std::string& _fragmentSrc, const std::string& _vertexSrc) {
 	m_vertexShader = compileShader(_vertexSrc, GL_VERTEX_SHADER);
 

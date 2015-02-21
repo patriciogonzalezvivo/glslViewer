@@ -13,7 +13,7 @@ public:
 	bool loadPixels(unsigned char* _pixels, int _width, int _height);
 
 	bool save(const std::string& _path);
-	static	bool savePixels(const std::string& _path, unsigned char* _pixels, int _width, int _height, bool _dither = false);
+	static bool savePixels(const std::string& _path, unsigned char* _pixels, int _width, int _height, bool _dither = false);
 
 	const GLuint getId() const { return m_id; };
 	

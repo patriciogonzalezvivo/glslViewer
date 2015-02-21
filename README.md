@@ -14,7 +14,7 @@ cd ~
 git clone http://github.com/patriciogonzalezvivo/glslViewer
 cd glslViewer
 make
-sudo make install
+make install
 ```
 
 ### Installing in Mac OSX
@@ -29,7 +29,7 @@ cd ~
 git clone http://github.com/patriciogonzalezvivo/glslViewer
 cd glslViewer
 make
-sudo make install
+make install
 ```
 
 ### Use
