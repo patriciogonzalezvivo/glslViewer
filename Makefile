@@ -18,7 +18,8 @@ CFLAGS += -DPLATFORM_RPI -Wno-psabi
 
 INCLUDES += -I$(SDKSTAGE)/opt/vc/include/ \
 			-I$(SDKSTAGE)/opt/vc/include/interface/vcos/pthreads \
-			-I$(SDKSTAGE)/opt/vc/include/interface/vmcs_host/linux 
+			-I$(SDKSTAGE)/opt/vc/include/interface/vmcs_host/linux \
+			-I/usr/include/jsoncpp/
 
 LDFLAGS += -L$(SDKSTAGE)/opt/vc/lib/ \
 			-lGLESv2 -lEGL \

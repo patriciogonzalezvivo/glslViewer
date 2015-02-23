@@ -9,7 +9,7 @@ Install FreeImage libraries, download the code, compile and install.
 ```
 sudo apt-get update
 sudo apt-get upgrade
-sudo apt-get install libfreeimage
+sudo apt-get install libfreeimage libfreeimage-dev libjsoncpp-dev libcurl3
 cd ~ 
 git clone http://github.com/patriciogonzalezvivo/glslViewer
 cd glslViewer
@@ -24,7 +24,7 @@ brew update
 brew upgrade
 brew install freeimage 
 brew tap homebrew/versions
-brew install glfw3
+brew install glfw3 jsoncpp
 cd ~ 
 git clone http://github.com/patriciogonzalezvivo/glslViewer
 cd glslViewer
