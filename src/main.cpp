@@ -278,9 +278,9 @@ void renderThread(int argc, char **argv) {
         // Swap the buffers
         renderGL();
 
-        if( keypress == 'q' || keypress == 'Q' ||
+        if( (timeLimit > 0.0 && timeSec > timeLimit) ||
+            keypress == 'q' || keypress == 'Q' ||
             keypress == 's' || keypress == 'S' ){
-            std::cout << std::endl;
 
             if (ditherOutputFile != "") {
                 unsigned char* pixels = new unsigned char[viewport.width*viewport.height*4];
