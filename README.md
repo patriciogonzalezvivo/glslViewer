@@ -1,5 +1,7 @@
 ## glslViewer
 
+![img](imgs/00.gif)
+
 Is console-based live-coding tool that renders GLSL Fragment shaders and update them every time they change that runs on RaspberryPi and MacOS. It handles for you the injection of sub-programs, textures and other uniforms such as time, resolution and mouse position. Is en essential a console version of [ShaderToy](https://www.shadertoy.com/)
 
 ### Installing in RaspberryPi
