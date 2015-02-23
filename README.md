@@ -1,6 +1,8 @@
+![img](imgs/00.gif)
+
 ## glslViewer
 
-Is console-based live-coding tool that renders GLSL Fragment shaders and update them every time they change that runs on RaspberryPi and MacOS. It handles for you the injection of sub-programs, textures and other uniforms such as time, resolution and mouse position. Is en essential a console version of [ShaderToy](https://www.shadertoy.com/)
+Live-coding tool that renders GLSL Fragment shaders and update them every time they change and runs directly from the console of your RaspberryPi or MacOS. It handles for you the injection of sub-programs, textures and other uniforms such as time, resolution and mouse position. Is en essential a console version of [ShaderToy](https://www.shadertoy.com/)
 
 ### Installing in RaspberryPi
 
@@ -9,7 +11,7 @@ Install FreeImage libraries, download the code, compile and install.
 ```
 sudo apt-get update
 sudo apt-get upgrade
-sudo apt-get install libfreeimage
+sudo apt-get install libfreeimage libfreeimage-dev libjsoncpp-dev libcurl3
 cd ~ 
 git clone http://github.com/patriciogonzalezvivo/glslViewer
 cd glslViewer
@@ -24,7 +26,7 @@ brew update
 brew upgrade
 brew install freeimage 
 brew tap homebrew/versions
-brew install glfw3
+brew install glfw3 jsoncpp
 cd ~ 
 git clone http://github.com/patriciogonzalezvivo/glslViewer
 cd glslViewer
