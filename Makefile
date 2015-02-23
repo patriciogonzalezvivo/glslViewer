@@ -19,12 +19,12 @@ CFLAGS += -DPLATFORM_RPI -Wno-psabi
 INCLUDES += -I$(SDKSTAGE)/opt/vc/include/ \
 			-I$(SDKSTAGE)/opt/vc/include/interface/vcos/pthreads \
 			-I$(SDKSTAGE)/opt/vc/include/interface/vmcs_host/linux \
-			$(shell pkg-config --cflags glfw3 libcurl jsoncpp)
+			$(shell pkg-config --cflags libcurl jsoncpp)
 
 LDFLAGS += -L$(SDKSTAGE)/opt/vc/lib/ \
 			-lGLESv2 -lEGL \
 			-lbcm_host \
-			$(shell pkg-config --libs glfw3 libcurl jsoncpp)
+			$(shell pkg-config --libs libcurl jsoncpp)
 endif
 
 ifeq ($(UNAME),Darwin)
