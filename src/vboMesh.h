@@ -17,9 +17,14 @@ public:
      * Creates a VboMesh for vertex data arranged in the structure described by _vertexLayout to be drawn
      * using the OpenGL primitive type _drawMode
      */
-    VboMesh(VertexLayout* _vertexlayout, GLenum _drawMode = GL_TRIANGLES);
     VboMesh();
+    VboMesh(VertexLayout* _vertexlayout, GLenum _drawMode = GL_TRIANGLES);
     
+    /*
+     * Destructs this VboMesh and releases all associated OpenGL resources
+     */
+    virtual ~VboMesh();
+
     /*
      * Set Vertex Layout for the vboMesh object
      */
@@ -30,11 +35,7 @@ public:
      */
     void setDrawMode(GLenum _drawMode = GL_TRIANGLES);
 
-    /*
-     * Destructs this VboMesh and releases all associated OpenGL resources
-     */
-    virtual ~VboMesh();
-
+    
     /*
      * Adds a single vertex to the mesh; _vertex must be a pointer to the beginning of a vertex structured
      * according to the VertexLayout associated with this mesh

@@ -21,8 +21,10 @@ bool Texture::load(const std::string& _path) {
 
     loadPixels((unsigned char*)FreeImage_GetBits(image),width,height);
 
-    FreeImage_Unload(image);
-
+    if (image != NULL) {
+        FreeImage_Unload(image);
+    }
+    
     return true;
 }
 

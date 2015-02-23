@@ -50,14 +50,10 @@ FIBITMAP* loadImage(std::string _path){
         return NULL;
     }
 
-#ifdef PLATFORM_RPI
     FIBITMAP *image = FreeImage_ConvertTo32Bits(dib);
     FreeImage_Unload(dib);
 
     return image;
-#else
-    return dib;
-#endif
 }
 
 bool saveImage(const std::string& _path, unsigned char * _pixels, int _width, int _height, bool _dither = false) {

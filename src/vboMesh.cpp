@@ -25,12 +25,15 @@ VboMesh::VboMesh() {
 }
 
 VboMesh::~VboMesh() {
-
     glDeleteBuffers(1, &m_glVertexBuffer);
     glDeleteBuffers(1, &m_glIndexBuffer);
     
     m_vertexData.clear();
     m_indices.clear();
+
+    if (m_vertexLayout != NULL){
+        delete m_vertexLayout;
+    }
 }
 
 void VboMesh::setVertexLayout(VertexLayout* _vertexLayout) {

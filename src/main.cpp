@@ -166,12 +166,12 @@ void exit_func(void){
     closeGL();
 
     // delete resources
-    delete mesh;
     for (std::map<std::string,Texture*>::iterator i = textures.begin(); i != textures.end(); ++i) {
         delete i->second;
         i->second = NULL;
     }
     textures.clear();
+    delete mesh;
 }
 
 void renderThread(int argc, char **argv) {
@@ -228,7 +228,7 @@ void renderThread(int argc, char **argv) {
             std::cout << "Will exit in " << timeLimit << " seconds." << std::endl;
 
         } else if ( std::string(argv[i]) == "-o" ){
-
+            
             i++;
             outputFile = std::string(argv[i]);
             std::cout << "Will save screenshot to " << outputFile  << " on exit."<< std::endl;
