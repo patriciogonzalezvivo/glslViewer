@@ -15,15 +15,12 @@
 #include "vboMesh.h"
 #include "texture.h"
 
-#include "shadertoy.h"
-
 // Global varialbes
 //============================================================================
 //
 
 bool* fragHasChanged;
 std::string fragFile = "none";
-std::string fragShaderId = "none";
 std::string fragHeader =
 "#ifdef GL_ES\n"
 "precision mediump float;\n"
@@ -106,11 +103,7 @@ void setup() {
 
     //  Build shader;
     //
-    if (fragShaderId != "none") {
-        std::string str = getShaderToy(fragShaderId);
-        shader.load(fragHeader+str,vertSource);
-
-    } else if (fragFile != "none") {
+    if (fragFile != "none") {
         std::string fragSource;
         if(!loadFromPath(fragFile, &fragSource)) {
             return;
@@ -128,7 +121,7 @@ void setup() {
 
 void draw(){
 
-    if(fragFile != "none" && *fragHasChanged) {
+    if(*fragHasChanged) {
         std::string fragSource;
         if(loadFromPath(fragFile, &fragSource)){
             shader.detach(GL_FRAGMENT_SHADER | GL_VERTEX_SHADER);
@@ -212,9 +205,7 @@ void renderThread(int argc, char **argv) {
             std::string(argv[i]) == "-w" || 
             std::string(argv[i]) == "--width" || 
             std::string(argv[i]) == "-h" || 
-            std::string(argv[i]) == "--height" || 
-            std::string(argv[i]) == "-i" ||
-            std::string(argv[i]) == "--id" ) {
+            std::string(argv[i]) == "--height" ) {
             i++;
         } else if ( std::string(argv[i]) == "--square" ||
                     std::string(argv[i]) == "-l" || 
@@ -317,28 +308,25 @@ void renderThread(int argc, char **argv) {
 //  Watching Thread
 //============================================================================
 void watchThread(const std::string& _file) {
+    struct stat st;
+    int ierr = stat(_file.c_str(), &st);
+    if (ierr != 0) {
+            std::cerr << "Error watching file " << _file << std::endl;
+            return;
+    }
+    int date = st.st_mtime;
+    while(1){
+        if(!(*fragHasChanged)){
 
-    if ( _file != "none" ){
-        struct stat st;
-        int ierr = stat(_file.c_str(), &st);
-        if (ierr != 0) {
-                std::cerr << "Error watching file " << _file << std::endl;
-                return;
-        }
-        int date = st.st_mtime;
-        while(1){
-            if(!(*fragHasChanged)){
-
-                ierr = stat(_file.c_str(), &st);
-                int newdate = st.st_mtime;
-                usleep(500000);
-                if (newdate!=date){
-                    // std::cout << "Reloading " << _file << std::endl;
-                    *fragHasChanged = true;
-                    date = newdate;
-                }
+            ierr = stat(_file.c_str(), &st);
+            int newdate = st.st_mtime;
+            usleep(500000);
+            if (newdate!=date){
+                // std::cout << "Reloading " << _file << std::endl;
+                *fragHasChanged = true;
+                date = newdate;
             }
-        }   
+        }
     }
 }
  
@@ -350,68 +338,48 @@ int main(int argc, char **argv){
         if ( std::string(argv[i]).find(".frag") != std::string::npos) {
             fragFile = std::string(argv[i]);
             break;
-        } else if ( std::string(argv[i]) == "-i" ||
-                    std::string(argv[i]) == "--id" ) {
-            i++;
-            fragShaderId = std::string(argv[i]);
-            std::cout << "Downloading the shader " << fragShaderId << " from shaderToy." << std::endl;
-
         }
     }
 
-    if(argc < 2 || (fragFile == "none" && fragShaderId == "none")) {
+    if(argc < 2 || fragFile == "none" ) {
 		std::cerr << "GLSL render that updates changes instantly.\n";
 		std::cerr << "Usage: " << argv[0] << " shader.frag [-textureNameA texture.png] [-x x] [-y y] [-w width] [-h height] [-l/--livecoding] [--square] [-s seconds] [-o screenshot.png] [-d ditheredScreenshot.png]\n";
 
 		return EXIT_FAILURE;
 	}
 
+    // Fork process with a shared variable
+    //
+    int shmId = shmget(IPC_PRIVATE, sizeof(bool), 0666);
+    pid_t pid = fork();
+    fragHasChanged = (bool *) shmat(shmId, NULL, 0);
 
-    if (fragShaderId != "none") {
+    switch(pid) {
+        case -1: //error
+        break;
 
-        // Initialize openGL context
-        initGL(argc,argv);
-
-        // OpenGL Render Loop
-        renderThread(argc,argv);
-        
-        exit_func();
-
-    } else {
-        // Fork process with a shared variable
-        //
-        int shmId = shmget(IPC_PRIVATE, sizeof(bool), 0666);
-        pid_t pid = fork();
-        fragHasChanged = (bool *) shmat(shmId, NULL, 0);
-
-        switch(pid) {
-            case -1: //error
-            break;
-
-            case 0: // child
-            {
-                *fragHasChanged = false;
-                watchThread(fragFile);
-            }
-            break;
-
-            default: 
-            {
-                // Initialize openGL context
-                initGL(argc,argv);
-
-                // OpenGL Render Loop
-                renderThread(argc,argv);
-                
-                //  Kill the iNotify watcher once you finish
-                kill(pid, SIGKILL);
-                exit_func();
-            }
-            break;
+        case 0: // child
+        {
+            *fragHasChanged = false;
+            watchThread(fragFile);
         }
+        break;
 
-        shmctl(shmId, IPC_RMID, NULL);
+        default: 
+        {
+            // Initialize openGL context
+            initGL(argc,argv);
+
+            // OpenGL Render Loop
+            renderThread(argc,argv);
+            
+            //  Kill the iNotify watcher once you finish
+            kill(pid, SIGKILL);
+            exit_func();
+        }
+        break;
     }
     
+    shmctl(shmId, IPC_RMID, NULL);
     return 0;
 }
