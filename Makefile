@@ -44,7 +44,7 @@ LDFLAGS += $(shell pkg-config --libs glfw3 glu gl x11 xrandr xi xxf86vm xcursor 
 else ifeq ($(PLATFORM),OSX)
 CFLAGS += -DPLATFORM_OSX -stdlib=libc++ $(shell pkg-config --cflags glfw3) -I/usr/local/include/
 INCLUDES += -I//Library/Frameworks/GLUI.framework
-LDFLAGS += -framework OpenGL $(shell pkg-config --libs glfw3) -L/usr/local/lib/
+LDFLAGS += -framework OpenGL -framework Cocoa -framework CoreVideo -framework IOKit $(shell pkg-config --libs glfw3) -L/usr/local/lib/
 ARCH = -arch x86_64
 endif
 
