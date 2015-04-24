@@ -1,4 +1,8 @@
+
+
 ## glslViewer
+
+![](http://patriciogonzalezvivo.com/images/glslViewer.gif)
 
 Live-coding tool that renders GLSL Fragment shaders and update them every time they change and runs directly from the console. It handles for you the injection of sub-programs, textures and other uniforms such as time, resolution and mouse position.
 
