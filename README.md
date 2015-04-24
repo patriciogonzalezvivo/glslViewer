@@ -55,56 +55,49 @@ make install
 
 ### Use
 
-Run the app:
+1. Run the app:
 
 ```
 glslViewer test.frag
 ```
 
-If you set alpha value to 0.3 (```glFragColor.a = 0.3;```) you can se through the console and from another terminal edit your shader with you favorite editor:
+2. Edit the shader with your favorite text editor. 
 
 ```
 vim test.frag
 ```
 
-In the test fragment shader we have hook it up to the X mouse position so you can take a look while you work on it.
+**Note**: In RaspberryPi you can avoid taking over the screen by using the ```-l``` or ```--live-coding``` flags so you can see the console. Also you can edit the shader file through ssh/sftp.
 
-Or you can login remotely using ssh to your raspberryPi and live-code with your favorite editor:
-
-```
-ssh pi@raspberrypi.local
-vim test.frag
-```
-
-### Pre-Define Uniforms
+### Pre-Define Uniforms and Varyings
 
 Shaders are cross compatible with the webGL shaders from [ShaderToy](http://www.shadertoy.com) for that the following uniforms are pre-define and can be add to the shader with the ```-u``` argument
 
-* ```u_time``` (```float```) or ```iGlobalTime``` (```float```) : shader playback time (in seconds)
+* ```uniform float u_time;```: shader playback time (in seconds)
 
-* ```u_resolution``` (```vec2```) or ```iResolution``` (```vec3```): viewport resolution (in pixels)
+* ```uniform vec2 u_resolution;```: viewport resolution (in pixels)
 
-* ```u_mouse``` (```vec2```) or ```iMouse``` (```vec4```): mouse pixel coords (xy: pos, zw: buttons)
+* ```uniform vec2 u_mouse;```: mouse pixel coords (xy: pos, zw: buttons)
 
-* ```v_texcoord``` (```vec2```): UV of the billboard ( normalized )
+* ```varying vec2 v_texcoord```: UV of the billboard ( normalized )
 
 ### Dynamic uniforms: textures
 
-You can load any image suported by FreeImage libraries, tehy will be load automatically and asign a uniform name acording to the order they are pass as arguments: ```u_tex0```, ```u_tex1```, etc. Together with that a resolution ```vec2``` uniform will be pass to: ```u_tex0Resolution```, ```u_tex1Resolution```, etc. 
+You can load any image suported by FreeImage libraries, they will be automatically loaded and asigned to an uniform name acording to the order they are pass as arguments: ex. ```u_tex0```, ```u_tex1```, etc. Also the resolution will be assigned to ```vec2``` uniform acording the texture uniforma name: ex. ```u_tex0Resolution```, ```u_tex1Resolution```, etc. 
 
 ```
 glslViewer test.frag test.png
 ```
 
-Also you can name texture uniforms as you want by assigning it to an argument before the image file For example, the ```uniform sampled2D iChannel;``` and  ```uniform vec2 iChannelResolution;``` is defined in this way:
+In case you want to assign customs names to your textures uniforms you must specify the name with a flag before the texture file. For example to pass the following uniforms ```uniform sampled2D imageExample;``` and  ```uniform vec2 imageExampleResolution;``` is defined in this way:
 
 ```
-glslViewer test.frag -iChannel test.png
+glslViewer shader.frag -imageExample image.png
 ```
 
 ### Others arguments
 
-Beside for texture uniforms other arguments can be add to ```glslViewer``` to change it setup.
+Beside for texture uniforms other arguments can be add to ```glslViewer```:
 
 * ```-x [pixels]``` set the X position of the billboard on the screen
 
@@ -120,8 +113,6 @@ Beside for texture uniforms other arguments can be add to ```glslViewer``` to ch
 
 * ```-d``` or ```--dither``` dither the image before exit
 
-* ```-u``` add pre-defined uniforms to the top of the shader so that you can run [ShaderToy](https://www.shadertoy.com/) shader directly. 
-
 * ```--squared``` to set a squared billboard
 
 * ```-l``` or ```--live-coding``` to draw a 500x500 billboard on the top right corner of the screen that let you see the code and the shader at the same time
@@ -129,11 +120,3 @@ Beside for texture uniforms other arguments can be add to ```glslViewer``` to ch
 ### Inject other files
 
 You can include other GLSL code using a traditional ```#include “file.glsl”``` macro. Note: included files are not under watch so changes will not take effect until the main file is save.
-
-## Authors
-
-* [Patricio Gonzalez Vivo](http://patriciogonzalezvivo.com/)
-
-* [Karim Naaji](https://github.com/karimnaaji/fragtool). 
-
-
