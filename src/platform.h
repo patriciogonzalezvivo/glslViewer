@@ -28,120 +28,9 @@ void resizeGL(int _newWidth, int _newHeight){
     glViewport(0, 0, viewport.width, viewport.height);
 }
 
-#ifdef PLATFORM_OSX
-static GLFWwindow* window;
-static float dpiScale = 1.0;
-
-void handleError(const std::string& _message, int _exitStatus) {
-    std::cerr << "ABORT: "<< _message << std::endl;
-    exit(_exitStatus);
-}
-
-void handleKeypress(GLFWwindow* _window, int _key, int _scancode, int _action, int _mods) {
-    keypress = _key;
-
-    switch (_key) {
-        case 256: // ESC
-            glfwSetWindowShouldClose(window, GL_TRUE);
-            break;
-    }
-}
-
-void fixDpiScale(){
-    int window_width, window_height, framebuffer_width, framebuffer_height;
-    glfwGetWindowSize(window, &window_width, &window_height);
-    glfwGetFramebufferSize(window, &framebuffer_width, &framebuffer_height);
-    dpiScale = framebuffer_width/window_width;
-}
-
-void handleResize(GLFWwindow* _window, int _w, int _h) {
-    fixDpiScale();
-    resizeGL(_w*dpiScale,_h*dpiScale);
-}
-
-void handleCursor(GLFWwindow* _window, double x, double y) {
-    x *= dpiScale;
-    y *= dpiScale;
-
-    mouse.velX = x - mouse.x;
-    mouse.velY = (viewport.height - y) - mouse.y;
-    mouse.x = x;
-    mouse.y = viewport.height - y;
-
-    int action = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1);
-    if (action == GLFW_PRESS) {
-        mouse.button = 1;
-    } else {
-        mouse.button = 0;
-    }
-
-    if (mouse.x < 0) mouse.x=0;
-    if (mouse.y < 0) mouse.y=0;
-    if (mouse.x > viewport.width) mouse.x = viewport.width;
-    if (mouse.y > viewport.height) mouse.y = viewport.height;
-}
-
-void initGL(int argc, char **argv){
-    viewport.x = 0;
-    viewport.y = 0;
-    viewport.width = 500;
-    viewport.height = 500;
-
-    for (int i = 1; i < argc ; i++){
-        if ( std::string(argv[i]) == "-w" || 
-             std::string(argv[i]) == "--width" ) {
-            i++;
-            viewport.width = getInt(std::string(argv[i]));
-        } else if ( std::string(argv[i]) == "-h" || 
-                    std::string(argv[i]) == "--height") {
-            i++;
-            viewport.height = getInt(std::string(argv[i]));
-        }
-    }
-
-    if(!glfwInit()) {
-        handleError("GLFW init failed", -1);
-    }
-
-    window = glfwCreateWindow(viewport.width, viewport.height, "glslViewer", NULL, NULL);
-
-    if(!window) {
-        glfwTerminate();
-        handleError("GLFW create window failed", -1);
-    }
-
-    fixDpiScale();
-    viewport.width *= dpiScale;
-    viewport.height *= dpiScale;
-
-    glfwMakeContextCurrent(window);
-
-    glfwSetWindowSizeCallback(window, handleResize);
-    glfwSetKeyCallback(window, handleKeypress);
-    glfwSetCursorPosCallback(window, handleCursor);
-}
-
-bool isGL(){
-    return !glfwWindowShouldClose(window);
-}
-
-void updateGL(){
-    keypress = 0;
-    glfwPollEvents();
-}
-
-void renderGL(){
-    glfwSwapBuffers(window);
-}
-
-void closeGL(){
-    glfwTerminate();
-}
-#endif
-
 #ifdef PLATFORM_RPI
 
-// OPENGL on RASPBERRYPI
+// OPENGL through BREADCOM GPU on RASPBERRYPI
 //----------------------------------------------------
 typedef struct {
     uint32_t screen_width;
@@ -380,5 +269,119 @@ void closeGL(){
     eglTerminate( state->display );
 
     printf("\nOpenGL Closed\n");
+}
+
+#else  // PLATFORM_LINUX || PLATFORM_OSX
+
+// OPENGL through GLFW on LINUX and OSX
+//----------------------------------------------------
+
+static GLFWwindow* window;
+static float dpiScale = 1.0;
+
+void handleError(const std::string& _message, int _exitStatus) {
+    std::cerr << "ABORT: "<< _message << std::endl;
+    exit(_exitStatus);
+}
+
+void handleKeypress(GLFWwindow* _window, int _key, int _scancode, int _action, int _mods) {
+    keypress = _key;
+
+    switch (_key) {
+        case 256: // ESC
+            glfwSetWindowShouldClose(window, GL_TRUE);
+            break;
+    }
+}
+
+void fixDpiScale(){
+    int window_width, window_height, framebuffer_width, framebuffer_height;
+    glfwGetWindowSize(window, &window_width, &window_height);
+    glfwGetFramebufferSize(window, &framebuffer_width, &framebuffer_height);
+    dpiScale = framebuffer_width/window_width;
+}
+
+void handleResize(GLFWwindow* _window, int _w, int _h) {
+    fixDpiScale();
+    resizeGL(_w*dpiScale,_h*dpiScale);
+}
+
+void handleCursor(GLFWwindow* _window, double x, double y) {
+    x *= dpiScale;
+    y *= dpiScale;
+
+    mouse.velX = x - mouse.x;
+    mouse.velY = (viewport.height - y) - mouse.y;
+    mouse.x = x;
+    mouse.y = viewport.height - y;
+
+    int action = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1);
+    if (action == GLFW_PRESS) {
+        mouse.button = 1;
+    } else {
+        mouse.button = 0;
+    }
+
+    if (mouse.x < 0) mouse.x=0;
+    if (mouse.y < 0) mouse.y=0;
+    if (mouse.x > viewport.width) mouse.x = viewport.width;
+    if (mouse.y > viewport.height) mouse.y = viewport.height;
+}
+
+void initGL(int argc, char **argv){
+    viewport.x = 0;
+    viewport.y = 0;
+    viewport.width = 500;
+    viewport.height = 500;
+
+    for (int i = 1; i < argc ; i++){
+        if ( std::string(argv[i]) == "-w" || 
+             std::string(argv[i]) == "--width" ) {
+            i++;
+            viewport.width = getInt(std::string(argv[i]));
+        } else if ( std::string(argv[i]) == "-h" || 
+                    std::string(argv[i]) == "--height") {
+            i++;
+            viewport.height = getInt(std::string(argv[i]));
+        }
+    }
+
+    if(!glfwInit()) {
+        handleError("GLFW init failed", -1);
+    }
+
+    window = glfwCreateWindow(viewport.width, viewport.height, "glslViewer", NULL, NULL);
+
+    if(!window) {
+        glfwTerminate();
+        handleError("GLFW create window failed", -1);
+    }
+
+    fixDpiScale();
+    viewport.width *= dpiScale;
+    viewport.height *= dpiScale;
+
+    glfwMakeContextCurrent(window);
+
+    glfwSetWindowSizeCallback(window, handleResize);
+    glfwSetKeyCallback(window, handleKeypress);
+    glfwSetCursorPosCallback(window, handleCursor);
+}
+
+bool isGL(){
+    return !glfwWindowShouldClose(window);
+}
+
+void updateGL(){
+    keypress = 0;
+    glfwPollEvents();
+}
+
+void renderGL(){
+    glfwSwapBuffers(window);
+}
+
+void closeGL(){
+    glfwTerminate();
 }
 #endif

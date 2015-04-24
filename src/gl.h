@@ -6,6 +6,11 @@
 #include <OpenGL/glext.h>
 #endif
 
+#ifdef PLATFORM_LINUX
+#define GL_GLEXT_PROTOTYPES
+#include <GLFW/glfw3.h>
+#endif
+
 #ifdef PLATFORM_RPI
 #include "bcm_host.h"
 
