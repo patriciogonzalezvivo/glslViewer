@@ -26,11 +26,8 @@ std::string fragHeader =
 "precision mediump float;\n"
 "#endif\n"
 "uniform float u_time;\n"
-"uniform float iGlobalTime;\n"
 "uniform vec2 u_mouse;\n"
-"uniform vec4 iMouse;\n"
 "uniform vec2 u_resolution;\n"
-"uniform vec3 iResolution;\n"
 "varying vec2 v_texcoord;\n";
 bool fragAutoHeader = false;
 
@@ -145,11 +142,6 @@ void draw(){
     shader.sendUniform("u_time", timeSec);
     shader.sendUniform("u_mouse", mouse.x, mouse.y);
     shader.sendUniform("u_resolution",viewport.width, viewport.height);
-    
-    // ShaderToy Specs
-    shader.sendUniform("iGlobalTime", timeSec);
-    shader.sendUniform("iMouse", mouse.x, mouse.y, (mouse.button==1)?1.0:0.0, (mouse.button==2)?1.0:0.0);
-    shader.sendUniform("iResolution",viewport.width, viewport.height, 0.0f);
 
     unsigned int index = 0;
     for (std::map<std::string,Texture*>::iterator it = textures.begin(); it!=textures.end(); ++it) {
@@ -343,7 +335,7 @@ int main(int argc, char **argv){
 
     if(argc < 2 || fragFile == "none" ) {
 		std::cerr << "GLSL render that updates changes instantly.\n";
-		std::cerr << "Usage: " << argv[0] << " shader.frag [-textureNameA texture.png] [-x x] [-y y] [-w width] [-h height] [-l/--livecoding] [--square] [-s seconds] [-o screenshot.png] [-d ditheredScreenshot.png]\n";
+		std::cerr << "Usage: " << argv[0] << " shader.frag [texture.png] [-textureNameA texture.png] [-u] [-x x] [-y y] [-w width] [-h height] [-l/--livecoding] [--square] [-s seconds] [-o screenshot.png] [-d ditheredScreenshot.png]\n";
 
 		return EXIT_FAILURE;
 	}

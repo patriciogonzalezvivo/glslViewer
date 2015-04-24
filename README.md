@@ -117,6 +117,19 @@ Beside for texture uniforms other arguments can be add to ```glslViewer```:
 
 * ```-l``` or ```--live-coding``` to draw a 500x500 billboard on the top right corner of the screen that let you see the code and the shader at the same time
 
+* ```-u``` inject the following header with the default uniforms to the loaded shader file.
+
+```glsl
+#ifdef GL_ES
+precision mediump float;
+#endif
+
+uniform float u_time;
+uniform vec2 u_mouse;
+uniform vec2 u_resolution;
+varying vec2 v_texcoord;
+```
+
 ### Inject other files
 
 You can include other GLSL code using a traditional ```#include “file.glsl”``` macro. Note: included files are not under watch so changes will not take effect until the main file is save.
