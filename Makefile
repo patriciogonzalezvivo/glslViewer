@@ -15,12 +15,12 @@ CFLAGS += -Wall -g -std=c++0x -fpermissive
 
 LDFLAGS += -lfreeimage
 
-ifeq ($(UNAME),Darwin)
-PLATFORM=OSX 
+ifeq ($(UNAME), Darwin)
+PLATFORM = OSX
 else ifeq ($(MACHINE),i686)
 PLATFORM = LINUX
 else ifeq ($(MACHINE),x86_64)
-PLATFORM = LINUX 
+PLATFORM = LINUX
 endif
 
 ifeq ($(PLATFORM),RPI)
@@ -57,14 +57,10 @@ all: $(EXE)
 ifeq ($(PLATFORM), RPI)
 $(EXE): $(OBJECTS) $(HEADERS)
 	$(CXX) -o $@ -Wl,--whole-archive $(OBJECTS) $(LDFLAGS) -Wl,--no-whole-archive -rdynamic
-endif
-
-ifeq ($(PLATFORM), LINUX)
+else ifeq ($(PLATFORM), LINUX)
 $(EXE): $(OBJECTS) $(HEADERS)
 	$(CXX) -o $@ -Wl,--whole-archive $(OBJECTS) $(LDFLAGS) -Wl,--no-whole-archive -rdynamic
-endif
-
-ifeq ($(PLATFORM),OSX)
+else ifeq ($(PLATFORM),OSX)
 $(EXE): $(OBJECTS) $(HEADERS)
 	$(CXX) $(CFLAGS) $(OBJECTS) $(LDFLAGS) -o $@
 endif
