@@ -2,6 +2,27 @@
 
 Live-coding tool that renders GLSL Fragment shaders and update them every time they change and runs directly from the console of your RaspberryPi or MacOS. It handles for you the injection of sub-programs, textures and other uniforms such as time, resolution and mouse position.
 
+### Installing in Ubuntu
+
+[Install GLFW](http://www.glfw.org/docs/latest/compile.html#compile_deps_x11) then install FreeImage libraries, download the code, compile and install.
+
+```
+sudo apt-get update
+sudo apt-get upgrade
+sudo apt-get install git-core cmake xorg-dev libglu1-mesa-dev
+cd ~ 
+git clone git@github.com:glfw/glfw.git
+cd glfw
+cmake .
+make
+make install
+sudo apt-get install libfreeimage-dev
+git clone http://github.com/patriciogonzalezvivo/glslViewer
+cd glslViewer
+make
+make install
+```
+
 ### Installing in RaspberryPi
 
 Install FreeImage libraries, download the code, compile and install.
