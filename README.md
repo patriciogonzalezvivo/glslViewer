@@ -19,12 +19,12 @@ git clone git@github.com:glfw/glfw.git
 cd glfw
 cmake .
 make
-make install
+sudo make install
 sudo apt-get install libfreeimage-dev
 git clone http://github.com/patriciogonzalezvivo/glslViewer
 cd glslViewer
 make
-make install
+sudo make install
 ```
 
 ### Installing in RaspberryPi
@@ -39,7 +39,7 @@ cd ~
 git clone http://github.com/patriciogonzalezvivo/glslViewer
 cd glslViewer
 make
-make install
+sudo make install
 ```
 
 ### Installing in Mac OSX
@@ -137,3 +137,11 @@ varying vec2 v_texcoord;
 ### Inject other files
 
 You can include other GLSL code using a traditional ```#include “file.glsl”``` macro. Note: included files are not under watch so changes will not take effect until the main file is save.
+
+## Author
+
+[Patricio Gonzalez Vivo](http://https://twitter.com/patriciogv): [github](https://github.com/patriciogonzalezvivo) | [twitter](http://https://twitter.com/patriciogv) | [website](http://patricio.io)
+
+## Acknowledgements
+
+Inspired by [Karim’s Naaki](http://karim.naaji.fr/) [fragTool](https://github.com/karimnaaji/fragtool)
