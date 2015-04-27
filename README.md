@@ -1,10 +1,10 @@
-
-
-## glslViewer
+#glslViewer
 
 ![](http://patriciogonzalezvivo.com/images/glslViewer.gif)
 
 Live-coding tool that renders GLSL Fragment shaders and update them every time they change and runs directly from the console. It handles for you the injection of sub-programs, textures and other uniforms such as time, resolution and mouse position.
+
+## Install
 
 ### Installing in Ubuntu
 
@@ -57,7 +57,7 @@ make
 make install
 ```
 
-### Use
+## Use
 
 1. Run the app:
 
@@ -73,7 +73,7 @@ vim test.frag
 
 **Note**: In RaspberryPi you can avoid taking over the screen by using the ```-l``` or ```--live-coding``` flags so you can see the console. Also you can edit the shader file through ssh/sftp.
 
-If you use [Sublime Text 2](http://www.sublimetext.com/2) you can use [this plugin](https://packagecontrol.io/packages/glslViewer).
+**Note**: In Linux and MacOS you can use this [Sublime Text 2 plugin](https://packagecontrol.io/packages/glslViewer) to live code your shaders.
 
 ### Pre-Define Uniforms and Varyings
 
