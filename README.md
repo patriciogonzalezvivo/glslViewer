@@ -75,7 +75,7 @@ vim test.frag
 
 **Note**: In Linux and MacOS you can use this [Sublime Text 2 plugin](https://packagecontrol.io/packages/glslViewer) to live code your shaders.
 
-### Pre-Define Uniforms and Varyings
+### Pre-Define ```uniforms``` and ```varyings```
 
 Shaders are cross compatible with the webGL shaders from [ShaderToy](http://www.shadertoy.com) for that the following uniforms are pre-define and can be add to the shader with the ```-u``` argument
 
@@ -87,7 +87,7 @@ Shaders are cross compatible with the webGL shaders from [ShaderToy](http://www.
 
 * ```varying vec2 v_texcoord```: UV of the billboard ( normalized )
 
-### Dynamic uniforms: textures
+### Textures
 
 You can load any image suported by FreeImage libraries, they will be automatically loaded and asigned to an uniform name acording to the order they are pass as arguments: ex. ```u_tex0```, ```u_tex1```, etc. Also the resolution will be assigned to ```vec2``` uniform acording the texture uniforma name: ex. ```u_tex0Resolution```, ```u_tex1Resolution```, etc. 
 
