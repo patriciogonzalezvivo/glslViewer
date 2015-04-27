@@ -73,6 +73,8 @@ vim test.frag
 
 **Note**: In RaspberryPi you can avoid taking over the screen by using the ```-l``` or ```--live-coding``` flags so you can see the console. Also you can edit the shader file through ssh/sftp.
 
+If you use [Sublime Text 2](http://www.sublimetext.com/2) you can use [this plugin](https://packagecontrol.io/packages/glslViewer).
+
 ### Pre-Define Uniforms and Varyings
 
 Shaders are cross compatible with the webGL shaders from [ShaderToy](http://www.shadertoy.com) for that the following uniforms are pre-define and can be add to the shader with the ```-u``` argument
