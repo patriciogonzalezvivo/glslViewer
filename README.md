@@ -6,13 +6,6 @@
 
 Live-coding tool that renders GLSL Fragment shaders and update them every time they change and runs directly from the console. It handles for you the injection of sub-programs, textures and other uniforms such as time, resolution and mouse position.
 
-<form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top">
-<input type="hidden" name="cmd" value="_s-xclick">
-<input type="hidden" name="hosted_button_id" value="4BQMKQJDQ9XH6">
-<input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_donate_LG.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!">
-<img alt="" border="0" src="https://www.paypalobjects.com/en_US/i/scr/pixel.gif" width="1" height="1">
-</form>
-
 ### Installing in Ubuntu
 
 [Install GLFW](http://www.glfw.org/docs/latest/compile.html#compile_deps_x11) then install FreeImage libraries, download the code, compile and install.
@@ -154,3 +147,10 @@ You can include other GLSL code using a traditional ```#include “file.glsl”`
 ## Acknowledgements
 
 Inspired by [Karim’s Naaki](http://karim.naaji.fr/) [fragTool](https://github.com/karimnaaji/fragtool)
+
+<form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top">
+<input type="hidden" name="cmd" value="_s-xclick">
+<input type="hidden" name="hosted_button_id" value="4BQMKQJDQ9XH6">
+<input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_donate_LG.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!">
+<img alt="" border="0" src="https://www.paypalobjects.com/en_US/i/scr/pixel.gif" width="1" height="1">
+</form>
