@@ -73,7 +73,10 @@ vim test.frag
 
 **Note**: In RaspberryPi you can avoid taking over the screen by using the ```-l``` or ```--live-coding``` flags so you can see the console. Also you can edit the shader file through ssh/sftp.
 
-**Note**: In Linux and MacOS you can use this [Sublime Text 2 plugin](https://packagecontrol.io/packages/glslViewer) to live code your shaders.
+**Note**: Depending which is your favorite text editor you can choose one of the following plugins to run ```glslViewer```:
+
+* [Sublime Text 2 plugin](https://packagecontrol.io/packages/glslViewer) (Linux/MacOS from desktop)
+* [Vim plugin](https://github.com/patriciogonzalezvivo/vim-glslViewer) (RaspberryPi from console or Linux/MacOS from desktop)
 
 ### Pre-Define ```uniforms``` and ```varyings```
 
