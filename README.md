@@ -2,6 +2,10 @@
 
 ![](http://patriciogonzalezvivo.com/images/glslViewer.gif)
 
+<div style="float: right;">
+[![](https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=B5FSVSHGEATCG)
+</div>
+
 Live-coding tool that renders GLSL Fragment shaders and update them every time they change and runs directly from the console. It handles for you the injection of sub-programs, textures and other uniforms such as time, resolution and mouse position.
 
 ## Install
