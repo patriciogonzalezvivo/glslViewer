@@ -6,32 +6,32 @@
 #include "vertexLayout.h"
 
 /*
- * VboMesh - Drawable collection of geometry contained in a vertex buffer and (optionally) an index buffer
+ * Vbo - Drawable collection of geometry contained in a vertex buffer and (optionally) an index buffer
  */
 
-class VboMesh {
+class Vbo {
 
 public:
 
     /*
-     * Creates a VboMesh for vertex data arranged in the structure described by _vertexLayout to be drawn
+     * Creates a Vbo for vertex data arranged in the structure described by _vertexLayout to be drawn
      * using the OpenGL primitive type _drawMode
      */
-    VboMesh();
-    VboMesh(VertexLayout* _vertexlayout, GLenum _drawMode = GL_TRIANGLES);
+    Vbo();
+    Vbo(VertexLayout* _vertexlayout, GLenum _drawMode = GL_TRIANGLES);
     
     /*
-     * Destructs this VboMesh and releases all associated OpenGL resources
+     * Destructs this Vbo and releases all associated OpenGL resources
      */
-    virtual ~VboMesh();
+    virtual ~Vbo();
 
     /*
-     * Set Vertex Layout for the vboMesh object
+     * Set Vertex Layout for the Vbo object
      */
     void setVertexLayout(VertexLayout* _vertexLayout);
 
     /*
-     * Set Draw mode for the vboMesh object
+     * Set Draw mode for the Vbo object
      */
     void setDrawMode(GLenum _drawMode = GL_TRIANGLES);
 

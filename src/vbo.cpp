@@ -1,9 +1,9 @@
-#include "vboMesh.h"
+#include "vbo.h"
 #include <iostream>
 
 #define MAX_INDEX_VALUE 65535 // Maximum value of GLushort
 
-VboMesh::VboMesh(VertexLayout* _vertexLayout, GLenum _drawMode) : m_vertexLayout(_vertexLayout) {
+Vbo::Vbo(VertexLayout* _vertexLayout, GLenum _drawMode) : m_vertexLayout(_vertexLayout) {
 
     m_glVertexBuffer = 0;
     m_glIndexBuffer = 0;
@@ -15,7 +15,7 @@ VboMesh::VboMesh(VertexLayout* _vertexLayout, GLenum _drawMode) : m_vertexLayout
     setDrawMode(_drawMode);
 }
 
-VboMesh::VboMesh() {
+Vbo::Vbo() {
     m_glVertexBuffer = 0;
     m_glIndexBuffer = 0;
     m_nVertices = 0;
@@ -24,7 +24,7 @@ VboMesh::VboMesh() {
     m_isUploaded = false;
 }
 
-VboMesh::~VboMesh() {
+Vbo::~Vbo() {
     glDeleteBuffers(1, &m_glVertexBuffer);
     glDeleteBuffers(1, &m_glIndexBuffer);
     
@@ -36,11 +36,11 @@ VboMesh::~VboMesh() {
     }
 }
 
-void VboMesh::setVertexLayout(VertexLayout* _vertexLayout) {
+void Vbo::setVertexLayout(VertexLayout* _vertexLayout) {
     m_vertexLayout = _vertexLayout;
 }
 
-void VboMesh::setDrawMode(GLenum _drawMode) {
+void Vbo::setDrawMode(GLenum _drawMode) {
     switch (_drawMode) {
         case GL_POINTS:
         case GL_LINE_STRIP:
@@ -57,16 +57,16 @@ void VboMesh::setDrawMode(GLenum _drawMode) {
     }
 }
 
-void VboMesh::addVertex(GLbyte* _vertex) {
+void Vbo::addVertex(GLbyte* _vertex) {
 
     addVertices(_vertex, 1);
 
 }
 
-void VboMesh::addVertices(GLbyte* _vertices, int _nVertices) {
+void Vbo::addVertices(GLbyte* _vertices, int _nVertices) {
 
     if (m_isUploaded) {
-        std::cout << "VboMesh cannot add vertices after upload!" << std::endl;
+        std::cout << "Vbo cannot add vertices after upload!" << std::endl;
         return;
     }
     
@@ -83,16 +83,16 @@ void VboMesh::addVertices(GLbyte* _vertices, int _nVertices) {
 
 }
 
-void VboMesh::addIndex(GLushort* _index) {
+void Vbo::addIndex(GLushort* _index) {
 
     addIndices(_index, 1);
 
 }
 
-void VboMesh::addIndices(GLushort* _indices, int _nIndices) {
+void Vbo::addIndices(GLushort* _indices, int _nIndices) {
     
     if (m_isUploaded) {
-        std::cout << "VboMesh cannot add indices after upload!" << std::endl;
+        std::cout << "Vbo cannot add indices after upload!" << std::endl;
         return;
     }
     
@@ -106,7 +106,7 @@ void VboMesh::addIndices(GLushort* _indices, int _nIndices) {
 
 }
 
-void VboMesh::upload() {
+void Vbo::upload() {
     
     if (m_nVertices > 0) {
         // Generate vertex buffer, if needed
@@ -138,7 +138,7 @@ void VboMesh::upload() {
 
 }
 
-void VboMesh::draw(const Shader* _shader) {
+void Vbo::draw(const Shader* _shader) {
 
     // Ensure that geometry is buffered into GPU
     if (!m_isUploaded) {
