@@ -4,6 +4,9 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb_image_write.h"
+
 Texture::Texture():m_path(""),m_width(0),m_height(0),m_id(0) {
 }
 
@@ -12,30 +15,6 @@ Texture::~Texture() {
 }
 
 bool Texture::load(const std::string& _path) {
-	// FIBITMAP *image = loadImage(_path);
- //    int width = FreeImage_GetWidth(image);
-	// int height = FreeImage_GetHeight(image);
-
-	// // If somehow one of these failed (they shouldn't), return failure
-	// if(image == NULL || width == 0 || height == 0){
-	// 	std::cerr << "Texture: something went wrong" << std::endl;
-	// 	return false; 
-	// } 
-
- //    if (m_id != 0){
- //        glDeleteTextures(1, &m_id);
- //    }
-
- //    loadPixels((unsigned char*)FreeImage_GetBits(image),width,height);
-
- //    if (image != NULL) {
- //        FreeImage_Unload(image);
- //    }
-    
-    // FILE *file = fopen(_path.c_str(), "rb");
-    // if (!file)
-    //     return 0;
-
     stbi_set_flip_vertically_on_load(true);
     int comp;
     unsigned char* pixels = stbi_load(_path.c_str(), &m_width, &m_height, &comp, STBI_rgb_alpha);
@@ -83,8 +62,30 @@ bool Texture::load(unsigned char* _pixels, int _width, int _height) {
 //     return rta;
 // }
 
-bool Texture::savePixels(const std::string& _path, unsigned char* _pixels, int _width, int _height, bool _dither) {
-    return saveImage(_path, _pixels, _width, _height, _dither);
+bool Texture::savePixels(const std::string& _path, unsigned char* _pixels, int _width, int _height) {
+
+    // Flip the image on Y
+    int w = _width, h = _height;
+    int depth = 4;
+    unsigned char *result = new unsigned char[w*h*depth];
+    memcpy(result, _pixels, w*h*depth);
+    int row,col,z;
+    stbi_uc temp;
+
+    for (row = 0; row < (h>>1); row++) {
+     for (col = 0; col < w; col++) {
+        for (z = 0; z < depth; z++) {
+           temp = result[(row * w + col) * depth + z];
+           result[(row * w + col) * depth + z] = result[((h - row - 1) * w + col) * depth + z];
+           result[((h - row - 1) * w + col) * depth + z] = temp;
+        }
+     }
+    }
+
+    stbi_write_png(_path.c_str(), _width, _height, 4, result, _width * 4);
+    delete [] result;
+    
+    return true;
 }
 
 void Texture::bind() {

@@ -12,7 +12,7 @@ public:
 	bool load(const std::string& _filepath);
 	bool load(unsigned char* _pixels, int _width, int _height);
 
-	static bool savePixels(const std::string& _path, unsigned char* _pixels, int _width, int _height, bool _dither = false);
+	static bool savePixels(const std::string& _path, unsigned char* _pixels, int _width, int _height);
 
 	const GLuint getId() const { return m_id; };
 	std::string	 getFilePath() const { return m_path; };
@@ -29,7 +29,7 @@ public:
 
 protected:
 	void	glHandleError();
-	
+
 	std::string		m_path;
 
 	int	m_width;
