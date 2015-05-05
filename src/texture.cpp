@@ -1,7 +1,7 @@
 #include "texture.h"
 #include "image.h"
 
-Texture::Texture():m_width(0),m_height(0),m_bpp(0),m_id(0) {
+Texture::Texture():m_path(""),m_width(0),m_height(0),m_bpp(0),m_id(0) {
 }
 
 Texture::~Texture() {
@@ -19,12 +19,17 @@ bool Texture::load(const std::string& _path) {
 		return false; 
 	} 
 
+    if (m_id != 0){
+        glDeleteTextures(1, &m_id);
+    }
+    
     loadPixels((unsigned char*)FreeImage_GetBits(image),width,height);
 
     if (image != NULL) {
         FreeImage_Unload(image);
     }
     
+    m_path = _path;
     return true;
 }
 

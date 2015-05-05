@@ -19,10 +19,10 @@ uniform sampler2D u_tex0;
 uniform vec2 u_tex0Resolution;
 
 //	Simple function that draws a rectangular shape
-float rect (vec2 _position, vec2 _size) {
-  _size = vec2(0.5)-_size*0.5;
-  vec2 uv = smoothstep(_size,_size+vec2(0.0001),_position);
-  uv *= smoothstep(_size,_size+vec2(0.0001),vec2(1.0)-_position);
+float rect (vec2 pos, vec2 size) {
+  size = vec2(0.5)-size*0.5;
+  vec2 uv = smoothstep(size,size+vec2(0.0001),pos);
+  uv *= smoothstep(size,size+vec2(0.0001),vec2(1.0)-pos);
   return uv.x*uv.y;
 }
 

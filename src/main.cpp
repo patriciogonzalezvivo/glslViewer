@@ -12,25 +12,31 @@
 #include "utils.h"
 #include "shader.h"
 #include "vertexLayout.h"
-#include "vboMesh.h"
+#include "vbo.h"
 #include "texture.h"
 
-// Global varialbes
+// GLOBAL VARIABLES
 //============================================================================
 //
 
-bool* fragHasChanged;
-std::string fragFile = "none";
-std::string fragHeader =
-"#ifdef GL_ES\n"
-"precision mediump float;\n"
-"#endif\n"
-"uniform float u_time;\n"
-"uniform vec2 u_mouse;\n"
-"uniform vec2 u_resolution;\n"
-"varying vec2 v_texcoord;\n";
-bool fragAutoHeader = false;
+//  List of FILES to watch and the variable to communicate that between process
+struct WatchFile {
+    std::string type;
+    std::string path;
+    int lastChange;
+};
+std::vector<WatchFile> files;
+int* iHasChanged;
 
+bool haveExt(const std::string& file, const std::string& ext){
+    return file.find(ext) != std::string::npos;
+}
+
+//  SHADER
+Shader shader;
+int iFrag = -1;
+std::string fragSource = "";
+int iVert = -1;
 std::string vertSource =
 "attribute vec4 a_position;\n"
 "attribute vec2 a_texcoord;\n"
@@ -40,11 +46,12 @@ std::string vertSource =
 "    v_texcoord = a_texcoord;\n"
 "}\n";
 
-Shader shader;
-VboMesh* mesh;
+//  ASSETS
+Vbo* mesh;
+int iGeom = -1;
 std::map<std::string,Texture*> textures;
 
-//  Time
+//  TIME
 struct timeval tv;
 unsigned long long timeStart;
 unsigned long long timeNow;
@@ -53,7 +60,7 @@ float timeLimit = 0.0f;
 
 // Billboard
 //============================================================================
-VboMesh* rect (float _x, float _y, float _w, float _h) {
+Vbo* rect (float _x, float _y, float _w, float _h) {
     std::vector<VertexLayout::VertexAttrib> attribs;
     attribs.push_back({"a_position", 3, GL_FLOAT, false, 0});
     attribs.push_back({"a_texcoord", 2, GL_FLOAT, false, 0});
@@ -83,7 +90,7 @@ VboMesh* rect (float _x, float _y, float _w, float _h) {
     indices.push_back(0); indices.push_back(1); indices.push_back(2);
     indices.push_back(2); indices.push_back(3); indices.push_back(0);
 
-    VboMesh* tmpMesh = new VboMesh(vertexLayout);
+    Vbo* tmpMesh = new Vbo(vertexLayout);
     tmpMesh->addVertices((GLbyte*)vertices.data(), vertices.size());
     tmpMesh->addIndices(indices.data(), indices.size());
 
@@ -100,36 +107,66 @@ void setup() {
 
     //  Build shader;
     //
-    if (fragFile != "none") {
-        std::string fragSource;
-        if(!loadFromPath(fragFile, &fragSource)) {
+    if ( iFrag != -1 ) {
+        fragSource = "";
+        if(!loadFromPath(files[iFrag].path, &fragSource)) {
             return;
         }
-
-        if(fragAutoHeader){
-            shader.load(fragHeader+fragSource,vertSource);
-        } else {
-            shader.load(fragSource,vertSource);
+        if ( iVert != -1 ) {
+            vertSource = "";
+            if(!loadFromPath(files[iVert].path, &vertSource)) {
+                return;
+            }
         }
+        shader.load(fragSource,vertSource);
     } 
     
-    mesh = rect(0.0,0.0,1.0,1.0);
+    //  Load Geometry
+    //
+    if ( iGeom == -1){
+        mesh = rect(0.0,0.0,1.0,1.0);
+    } else {
+        // TODO: 
+    }
+}
+
+void checkChanges(){
+    if(*iHasChanged != -1) {
+
+        std::string type = files[*iHasChanged].type;
+        std::string path = files[*iHasChanged].path;
+
+        if ( type == "fragment" ){
+            fragSource = "";
+            if(loadFromPath(path, &fragSource)){
+                shader.detach(GL_FRAGMENT_SHADER | GL_VERTEX_SHADER);
+                shader.load(fragSource,vertSource);
+            }
+        } else if ( type == "vertex" ){
+            vertSource = "";
+            if(loadFromPath(path, &vertSource)){
+                shader.detach(GL_FRAGMENT_SHADER | GL_VERTEX_SHADER);
+                shader.load(fragSource,vertSource);
+            }
+        } else if ( type == "geometry" ){
+            // TODO
+        } else if ( type == "image" ){
+            for (std::map<std::string,Texture*>::iterator it = textures.begin(); it!=textures.end(); ++it) {
+                if ( path == it->second->getFilePath() ){
+                    it->second->load(path);
+                    break;
+                }
+            }
+        }
+    
+        *iHasChanged = -1;
+    }
 }
 
 void draw(){
 
-    if(*fragHasChanged) {
-        std::string fragSource;
-        if(loadFromPath(fragFile, &fragSource)){
-            shader.detach(GL_FRAGMENT_SHADER | GL_VERTEX_SHADER);
-            if(fragAutoHeader){
-                shader.load(fragHeader+fragSource,vertSource);
-            } else {
-                shader.load(fragSource,vertSource);
-            }
-            *fragHasChanged = false;
-        }
-    }
+    // Something change??
+    checkChanges();
 
 	gettimeofday(&tv, NULL);
 
@@ -192,66 +229,53 @@ void renderThread(int argc, char **argv) {
 
     //Load the the resources (textures)
     for (int i = 1; i < argc ; i++){
-        if (std::string(argv[i]) == "-x" || 
-            std::string(argv[i]) == "-y" || 
-            std::string(argv[i]) == "-w" || 
-            std::string(argv[i]) == "--width" || 
-            std::string(argv[i]) == "-h" || 
-            std::string(argv[i]) == "--height" ) {
+        std::string argument = std::string(argv[i]);
+
+        if (argument == "-x" || argument == "-y" || 
+            argument == "-w" || argument == "--width" || 
+            argument == "-h" || argument == "--height" ) {
             i++;
-        } else if ( std::string(argv[i]) == "--square" ||
-                    std::string(argv[i]) == "-l" || 
-                    std::string(argv[i]) == "--life-coding"  ) {
+        } else if ( argument == "--square" ||
+                    argument == "-l" || 
+                    argument == "--life-coding"  ) {
 
-        } else if ( std::string(argv[i]) == "-u" ) {
-            fragAutoHeader = true;
-            *fragHasChanged = true;
-
-            std::cout << "The following code is added at the top of " << fragFile << std::endl;
-            std::cout << fragHeader << std::endl;
-
-        } else if ( std::string(argv[i]) == "-d" || 
-                    std::string(argv[i]) == "--dither" ) {
+        } else if ( argument == "-d" || argument == "--dither" ) {
             i++;
-            ditherOutputFile = std::string(argv[i]);
+            ditherOutputFile = argument;
             std::cout << "Will save dither screenshot to " << ditherOutputFile << " on exit." << std::endl;
 
-        } else if ( std::string(argv[i]) == "-s" ||
-                    std::string(argv[i]) == "--sec") {
+        } else if ( argument == "-s" || argument == "--sec") {
             i++;
-            timeLimit = getFloat(std::string(argv[i]));
+            timeLimit = getFloat(argument);
             std::cout << "Will exit in " << timeLimit << " seconds." << std::endl;
 
-        } else if ( std::string(argv[i]) == "-o" ){
+        } else if ( argument == "-o" ){
             
             i++;
-            outputFile = std::string(argv[i]);
+            outputFile = argument;
             std::cout << "Will save screenshot to " << outputFile  << " on exit."<< std::endl;
 
-        } else if (std::string(argv[i]).find("-") == 0) {
+        } else if (argument.find("-") == 0) {
 
-            std::string parameterPair = std::string(argv[i]).substr(std::string(argv[i]).find_last_of('-')+1);
+            std::string parameterPair = argument.substr(argument.find_last_of('-')+1);
             i++;
             Texture* tex = new Texture();
-            if( tex->load(std::string(argv[i])) ){
+            if( tex->load(argument) ){
                 textures[parameterPair] = tex;
-                std::cout << "Loading " << std::string(argv[i]) << " as the following uniform: " << std::endl;
+                std::cout << "Loading " << argument << " as the following uniform: " << std::endl;
                 std::cout << "    uniform sampler2D u_" << parameterPair  << "; // loaded"<< std::endl;
                 std::cout << "    uniform vec2 u_" << parameterPair  << "Resolution;"<< std::endl;
             }
 
-        } else if ( std::string(argv[i]).find(".png") != std::string::npos ||
-                    std::string(argv[i]).find(".PNG") != std::string::npos ||
-                    std::string(argv[i]).find(".jpg") != std::string::npos ||
-                    std::string(argv[i]).find(".JPG") != std::string::npos || 
-                    std::string(argv[i]).find(".jpeg") != std::string::npos ||
-                    std::string(argv[i]).find(".JPEG") != std::string::npos ) {
+        } else if ( haveExt(argument,".png") || haveExt(argument,".PNG") ||
+                    haveExt(argument,".jpg") || haveExt(argument,".JPG") || 
+                    haveExt(argument,".jpeg") || haveExt(argument,".JPEG") ) {
 
             Texture* tex = new Texture();
-            if( tex->load(std::string(argv[i])) ){
+            if( tex->load(argument) ){
                 std::string name = "u_tex"+getString(textureCounter);
                 textures[name] = tex;
-                std::cout << "Loading " << std::string(argv[i]) << " as the following uniform: " << std::endl;
+                std::cout << "Loading " << argument << " as the following uniform: " << std::endl;
                 std::cout << "    uniform sampler2D " << name  << "; // loaded"<< std::endl;
                 std::cout << "    uniform vec2 " << name  << "Resolution;"<< std::endl;
                 textureCounter++;
@@ -299,44 +323,88 @@ void renderThread(int argc, char **argv) {
 
 //  Watching Thread
 //============================================================================
-void watchThread(const std::string& _file) {
+void watchThread() {
     struct stat st;
-    int ierr = stat(_file.c_str(), &st);
-    if (ierr != 0) {
-            std::cerr << "Error watching file " << _file << std::endl;
-            return;
-    }
-    int date = st.st_mtime;
     while(1){
-        if(!(*fragHasChanged)){
-
-            ierr = stat(_file.c_str(), &st);
-            int newdate = st.st_mtime;
-            usleep(500000);
-            if (newdate!=date){
-                // std::cout << "Reloading " << _file << std::endl;
-                *fragHasChanged = true;
-                date = newdate;
+        for(int i = 0; i < files.size(); i++){
+            if( *iHasChanged == -1 ){
+                int ierr = stat(files[i].path.c_str(), &st);
+                int date = st.st_mtime;
+                if (date != files[i].lastChange ){
+                    *iHasChanged = i;
+                    files[i].lastChange = date;
+                }
+                usleep(500000);
             }
         }
     }
 }
- 
+
 // Main program
 //============================================================================
 int main(int argc, char **argv){
 
+    // Load files to watch
+    struct stat st;
     for (int i = 1; i < argc ; i++){
-        if ( std::string(argv[i]).find(".frag") != std::string::npos) {
-            fragFile = std::string(argv[i]);
-            break;
+        std::string argument = std::string(argv[i]);
+
+        if ( iFrag == -1 && haveExt(argument,".frag") || haveExt(argument,".fs") ) {
+            int ierr = stat(argument.c_str(), &st);
+            if (ierr != 0) {
+                    std::cerr << "Error watching file " << argv[i] << std::endl;
+            } else {
+                WatchFile file;
+                file.type = "fragment";
+                file.path = argument;
+                file.lastChange = st.st_mtime;
+                files.push_back(file);
+                iFrag = files.size()-1;
+            }
+        } else if ( iVert == -1 && haveExt(argument,".vert") || haveExt(argument,".vs") ) {
+            int ierr = stat(argument.c_str(), &st);
+            if (ierr != 0) {
+                    std::cerr << "Error watching file " << argument << std::endl;
+            } else {
+                WatchFile file;
+                file.type = "vertex";
+                file.path = argument;
+                file.lastChange = st.st_mtime;
+                files.push_back(file);
+                iVert = files.size()-1;
+            }
+        } else if ( iGeom == -1 && haveExt(argument,".ply") ) {
+            int ierr = stat(argument.c_str(), &st);
+            if (ierr != 0) {
+                    std::cerr << "Error watching file " << argument << std::endl;
+            } else {
+                WatchFile file;
+                file.type = "geometry";
+                file.path = argument;
+                file.lastChange = st.st_mtime;
+                files.push_back(file);
+                iGeom = files.size()-1;
+            }
+        } else if ( haveExt(argument,".png") || haveExt(argument,".PNG") ||
+                    haveExt(argument,".jpg") || haveExt(argument,".JPG") || 
+                    haveExt(argument,".jpeg") || haveExt(argument,".JPEG") ){
+            int ierr = stat(argument.c_str(), &st);
+            if (ierr != 0) {
+                    std::cerr << "Error watching file " << argument << std::endl;
+            } else {
+                WatchFile file;
+                file.type = "image";
+                file.path = argument;
+                file.lastChange = st.st_mtime;
+                files.push_back(file);
+            }
         }
     }
 
-    if(argc < 2 || fragFile == "none" ) {
+    // If no shader
+    if( iFrag == -1 ) {
 		std::cerr << "GLSL render that updates changes instantly.\n";
 		std::cerr << "Usage: " << argv[0] << " shader.frag [texture.png] [-textureNameA texture.png] [-u] [-x x] [-y y] [-w width] [-h height] [-l/--livecoding] [--square] [-s seconds] [-o screenshot.png] [-d ditheredScreenshot.png]\n";
-
 		return EXIT_FAILURE;
 	}
 
@@ -344,7 +412,7 @@ int main(int argc, char **argv){
     //
     int shmId = shmget(IPC_PRIVATE, sizeof(bool), 0666);
     pid_t pid = fork();
-    fragHasChanged = (bool *) shmat(shmId, NULL, 0);
+    iHasChanged = (int *) shmat(shmId, NULL, 0);
 
     switch(pid) {
         case -1: //error
@@ -352,8 +420,8 @@ int main(int argc, char **argv){
 
         case 0: // child
         {
-            *fragHasChanged = false;
-            watchThread(fragFile);
+            *iHasChanged = -1;
+            watchThread();
         }
         break;
 
