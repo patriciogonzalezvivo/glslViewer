@@ -16,7 +16,8 @@ public:
 	static bool savePixels(const std::string& _path, unsigned char* _pixels, int _width, int _height, bool _dither = false);
 
 	const GLuint getId() const { return m_id; };
-	
+	std::string	 getFilePath() const { return m_path; };
+
 	int	getWidth() const { return m_width; };
 	int	getHeight() const { return m_height; };
 
@@ -25,6 +26,8 @@ public:
 
 protected:
 	void	glHandleError();
+
+	std::string		m_path;
 
 	unsigned int	m_width;
 	unsigned int	m_height;

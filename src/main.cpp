@@ -151,7 +151,12 @@ void checkChanges(){
         } else if ( type == "geometry" ){
             // TODO
         } else if ( type == "image" ){
-            // TODO
+            for (std::map<std::string,Texture*>::iterator it = textures.begin(); it!=textures.end(); ++it) {
+                if ( path == it->second->getFilePath() ){
+                    it->second->load(path);
+                    break;
+                }
+            }
         }
     
         *iHasChanged = -1;
