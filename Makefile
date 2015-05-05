@@ -13,7 +13,7 @@ INCLUDES +=	-Isrc/ -Iinclude/std/
 
 CFLAGS += -Wall -g -std=c++0x -fpermissive
 
-LDFLAGS += -lfreeimage
+# LDFLAGS = 
 
 ifeq ($(UNAME), Darwin)
 PLATFORM = OSX
