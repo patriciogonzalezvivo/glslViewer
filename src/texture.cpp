@@ -1,10 +1,10 @@
 #include "texture.h"
 
 #define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
+#include "std/stb_image.h"
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "stb_image_write.h"
+#include "std/stb_image_write.h"
 
 Texture::Texture():m_path(""),m_width(0),m_height(0),m_id(0) {
 }
