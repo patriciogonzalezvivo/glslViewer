@@ -6,7 +6,7 @@
 #include <signal.h>
 #include <map>
 
-#include <FreeImage.h>
+// #include <FreeImage.h>
 
 #include "platform.h"
 #include "utils.h"

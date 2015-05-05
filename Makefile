@@ -9,7 +9,7 @@ UNAME := $(shell uname -s)
 MACHINE := $(shell uname -m)
 PLATFORM = RPI
 
-INCLUDES +=	-Isrc/
+INCLUDES +=	-Isrc/ -Iinclude/std/
 
 CFLAGS += -Wall -g -std=c++0x -fpermissive
 
