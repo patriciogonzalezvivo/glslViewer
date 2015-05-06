@@ -149,38 +149,56 @@ GLint Shader::getUniformLocation(const std::string& _uniformName) const {
 	return loc;
 }
 
-void Shader::sendUniform(const std::string& _name, float _x) {
+void Shader::setUniform(const std::string& _name, float _x) {
 	if(isInUse()) {
 		glUniform1f(getUniformLocation(_name), _x);
 		// std::cout << "Uniform " << _name << ": float(" << _x << ")" << std::endl;
 	}
 }
 
-void Shader::sendUniform(const std::string& _name, float _x, float _y) {
+void Shader::setUniform(const std::string& _name, float _x, float _y) {
 	if(isInUse()) {
 		glUniform2f(getUniformLocation(_name), _x, _y);
 		// std::cout << "Uniform " << _name << ": vec2(" << _x << "," << _y << ")" << std::endl;
 	}
 }
 
-void Shader::sendUniform(const std::string& _name, float _x, float _y, float _z) {
+void Shader::setUniform(const std::string& _name, float _x, float _y, float _z) {
 	if(isInUse()) {
 		glUniform3f(getUniformLocation(_name), _x, _y, _z);
 		// std::cout << "Uniform " << _name << ": vec3(" << _x << "," << _y << "," << _z <<")" << std::endl;
 	}
 }
 
-void Shader::sendUniform(const std::string& _name, float _x, float _y, float _z, float _w) {
+void Shader::setUniform(const std::string& _name, float _x, float _y, float _z, float _w) {
 	if(isInUse()) {
 		glUniform4f(getUniformLocation(_name), _x, _y, _z, _w);
 		// std::cout << "Uniform " << _name << ": vec3(" << _x << "," << _y << "," << _z <<")" << std::endl;
 	}
 }
 
-void Shader::sendUniform(const std::string& _name, const Texture* _tex, unsigned int _texLoc){
+void Shader::setUniform(const std::string& _name, const Texture* _tex, unsigned int _texLoc){
 	if(isInUse()) {
 		glActiveTexture(GL_TEXTURE0 + _texLoc);
 		glBindTexture(GL_TEXTURE_2D, _tex->getId());
 		glUniform1i(getUniformLocation(_name), _texLoc);
+	}
+}
+
+void Shader::setUniform(const std::string& _name, const glm::mat2& _value, bool _transpose){
+    if(isInUse()) {
+    	glUniformMatrix2fv(getUniformLocation(_name), 1, _transpose, &_value[0][0]);
+	}
+}
+
+void Shader::setUniform(const std::string& _name, const glm::mat3& _value, bool _transpose){
+	if(isInUse()) {
+    	glUniformMatrix3fv(getUniformLocation(_name), 1, _transpose, &_value[0][0]);
+	}
+}
+
+void Shader::setUniform(const std::string& _name, const glm::mat4& _value, bool _transpose){
+	if(isInUse()) {
+    	glUniformMatrix4fv(getUniformLocation(_name), 1, _transpose, &_value[0][0]);
 	}
 }

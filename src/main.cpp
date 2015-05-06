@@ -6,9 +6,17 @@
 #include <signal.h>
 #include <map>
 
+#include <glm/glm.hpp>
+#include <glm/gtx/transform.hpp>
+#include <glm/gtc/quaternion.hpp>
+#include <glm/gtx/quaternion.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 #include "platform.h"
 #include "utils.h"
 #include "shader.h"
+#include "camera.h"
 #include "vbo.h"
 #include "texture.h"
 #include "mesh.h"
@@ -39,6 +47,9 @@ std::string vertSource =
 "    gl_Position = a_position*0.5;\n"
 "    v_texcoord = a_texcoord;\n"
 "}\n";
+
+//  CAMERA
+Camera cam;
 
 //  ASSETS
 Vbo* mesh;
@@ -100,7 +111,9 @@ void setup() {
     if ( iGeom == -1){
         mesh = rect(0.0,0.0,1.0,1.0);
     } else {
-        // TODO: 
+        Mesh geom;
+        geom.load(files[iGeom].path);
+        mesh = geom.getVbo();
     }
 }
 
@@ -150,14 +163,32 @@ void draw(){
     timeSec = (timeNow - timeStart)*0.001;
 
     shader.use();
-    shader.sendUniform("u_time", timeSec);
-    shader.sendUniform("u_mouse", mouse.x, mouse.y);
-    shader.sendUniform("u_resolution",viewport.width, viewport.height);
+    shader.setUniform("u_time", timeSec);
+    shader.setUniform("u_mouse", mouse.x, mouse.y);
+    shader.setUniform("u_resolution",viewport.width, viewport.height);
+
+    double aspect = double(viewport.width) / double(viewport.height);
+    glm::mat4 projection_matrix = glm::perspective(45.f, 4.f / 3.f, 0.1f, 100.f);
+
+    glm::vec3 camera_position = glm::vec3(0.f, 1.f, 5.f);
+    glm::vec3 camera_target = glm::vec3(0.f, 0.f, 0.f);
+    glm::vec3 camera_up_vector = glm::vec3(0.f, 1.f, 0.f);
+
+    glm::mat4 view_matrix = glm::lookAt(
+        camera_position,
+        camera_target,
+        camera_up_vector
+    );
+
+    glm::mat4 model_matrix = glm::mat4(1.f);
+    glm::mat4 mvp = projection_matrix * view_matrix * model_matrix;
+
+    shader.setUniform("u_modelViewProjectionMatrix", mvp);
 
     unsigned int index = 0;
     for (std::map<std::string,Texture*>::iterator it = textures.begin(); it!=textures.end(); ++it) {
-        shader.sendUniform(it->first,it->second,index);
-        shader.sendUniform(it->first+"Resolution",it->second->getWidth(),it->second->getHeight());
+        shader.setUniform(it->first,it->second,index);
+        shader.setUniform(it->first+"Resolution",it->second->getWidth(),it->second->getHeight());
         index++;
     }
 
