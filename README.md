@@ -61,13 +61,17 @@ make install
 
 In the most simple scenario you just want to load a fragment shader. For that you need to:
 
-1. Run the app passing the shader as an argument
+* Run the app passing the shader as an argument
 
-    glslViewer test.frag
+```bash
+glslViewer test.frag
+```
 
-2. Then edit the shader with your favorite text editor. 
+* Then edit the shader with your favorite text editor. 
 
-    vim test.frag
+```bash
+vim test.frag
+```
 
 **Note**: In RaspberryPi you can avoid taking over the screen by using the ```-l``` or ```--live-coding``` flags so you can see the console. Also you can edit the shader file through ssh/sftp.
 
@@ -93,13 +97,13 @@ You can also load both fragments and vertex shaders.
 
 You can load PNGs and JPEGs images to a shader. They will be automatically loaded and asigned to an uniform name acording to the order they are pass as arguments: ex. ```u_tex0```, ```u_tex1```, etc. Also the resolution will be assigned to ```vec2``` uniform acording the texture uniforma name: ex. ```u_tex0Resolution```, ```u_tex1Resolution```, etc. 
 
-```
+```bash
 glslViewer test.frag test.png
 ```
 
 In case you want to assign customs names to your textures uniforms you must specify the name with a flag before the texture file. For example to pass the following uniforms ```uniform sampled2D imageExample;``` and  ```uniform vec2 imageExampleResolution;``` is defined in this way:
 
-```
+```bash
 glslViewer shader.frag -imageExample image.png
 ```
 
