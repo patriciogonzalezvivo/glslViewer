@@ -9,9 +9,9 @@
 #include "platform.h"
 #include "utils.h"
 #include "shader.h"
-#include "vertexLayout.h"
 #include "vbo.h"
 #include "texture.h"
+#include "mesh.h"
 
 // GLOBAL VARIABLES
 //============================================================================
@@ -25,10 +25,6 @@ struct WatchFile {
 };
 std::vector<WatchFile> files;
 int* iHasChanged;
-
-bool haveExt(const std::string& file, const std::string& ext){
-    return file.find("."+ext) != std::string::npos;
-}
 
 //  SHADER
 Shader shader;
@@ -59,40 +55,20 @@ float timeLimit = 0.0f;
 // Billboard
 //============================================================================
 Vbo* rect (float _x, float _y, float _w, float _h) {
-    std::vector<VertexLayout::VertexAttrib> attribs;
-    attribs.push_back({"a_position", 3, GL_FLOAT, false, 0});
-    attribs.push_back({"a_texcoord", 2, GL_FLOAT, false, 0});
-    VertexLayout* vertexLayout = new VertexLayout(attribs);
-
-    struct PosUvVertex {
-        GLfloat pos_x;
-        GLfloat pos_y;
-        GLfloat pos_z;
-        GLfloat texcoord_x;
-        GLfloat texcoord_y;
-    };
-
-    std::vector<PosUvVertex> vertices;
-    std::vector<GLushort> indices;
-
     float x = _x-1.0f;
     float y = _y-1.0f;
     float w = _w*2.0f;
     float h = _h*2.0f;
 
-    vertices.push_back({ x, y, 1.0, 0.0, 0.0 });
-    vertices.push_back({ x+w, y, 1.0, 1.0, 0.0 });
-    vertices.push_back({ x+w, y+h, 1.0, 1.0, 1.0 });
-    vertices.push_back({ x, y+h, 1.0, 0.0, 1.0 });
-    
-    indices.push_back(0); indices.push_back(1); indices.push_back(2);
-    indices.push_back(2); indices.push_back(3); indices.push_back(0);
+    Mesh mesh;
+    mesh.addVertex(glm::vec3(x, y, 1.0));       mesh.addTexCoord(glm::vec2(0.0, 0.0));
+    mesh.addVertex(glm::vec3(x+w, y, 1.0));     mesh.addTexCoord(glm::vec2(1.0, 0.0));
+    mesh.addVertex(glm::vec3(x+w, y+h, 1.0));   mesh.addTexCoord(glm::vec2(1.0, 1.0));
+    mesh.addVertex(glm::vec3(x, y+h, 1.0));     mesh.addTexCoord(glm::vec2(0.0, 1.0));
+    mesh.addIndex(0);   mesh.addIndex(1);   mesh.addIndex(2);
+    mesh.addIndex(2);   mesh.addIndex(3);   mesh.addIndex(0);
 
-    Vbo* tmpMesh = new Vbo(vertexLayout);
-    tmpMesh->addVertices((GLbyte*)vertices.data(), vertices.size());
-    tmpMesh->addIndices(indices.data(), indices.size());
-
-    return tmpMesh;
+    return mesh.getVbo();
 }
 
 // Rendering Thread
