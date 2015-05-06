@@ -55,6 +55,7 @@ Camera cam;
 Vbo* mesh;
 int iGeom = -1;
 std::map<std::string,Texture*> textures;
+std::string outputFile = "";
 
 //  TIME
 struct timeval tv;
@@ -84,6 +85,80 @@ Vbo* rect (float _x, float _y, float _w, float _h) {
 
 // Rendering Thread
 //============================================================================
+void onFileChange(){
+    std::string type = files[*iHasChanged].type;
+    std::string path = files[*iHasChanged].path;
+
+    if ( type == "fragment" ){
+        fragSource = "";
+        if(loadFromPath(path, &fragSource)){
+            shader.detach(GL_FRAGMENT_SHADER | GL_VERTEX_SHADER);
+            shader.load(fragSource,vertSource);
+        }
+    } else if ( type == "vertex" ){
+        vertSource = "";
+        if(loadFromPath(path, &vertSource)){
+            shader.detach(GL_FRAGMENT_SHADER | GL_VERTEX_SHADER);
+            shader.load(fragSource,vertSource);
+        }
+    } else if ( type == "geometry" ){
+        // TODO
+    } else if ( type == "image" ){
+        for (std::map<std::string,Texture*>::iterator it = textures.begin(); it!=textures.end(); ++it) {
+            if ( path == it->second->getFilePath() ){
+                it->second->load(path);
+                break;
+            }
+        }
+    }   
+}
+
+void onKeyPress(int _key) {
+    if( _key == 'q' || _key == 'Q' || _key == 's' || _key == 'S' ){
+        if (outputFile != "") {
+            unsigned char* pixels = new unsigned char[viewport.width*viewport.height*4];
+            glReadPixels(0, 0, viewport.width, viewport.height, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+            Texture::savePixels(outputFile, pixels, viewport.width, viewport.height);
+        }
+    }
+
+    if ( _key == 'q' || _key == 'Q'){
+        bPlay = false;
+    }
+}
+
+void onMouseMove() {
+
+}
+
+void onMouseClick() {
+
+}
+
+void onMouseDrag() {
+
+}
+
+void onViewportResize(int _newWidth, int _newHeight) {
+    resizeViewport(_newWidth,_newHeight); 
+}
+
+void onExit() {
+    // clear screen
+    glClear( GL_COLOR_BUFFER_BIT );
+
+    // close openGL instance
+    closeGL();
+
+    // DELETE RESOURCES
+    for (std::map<std::string,Texture*>::iterator i = textures.begin(); i != textures.end(); ++i) {
+        delete i->second;
+        i->second = NULL;
+    }
+    textures.clear();
+    delete mesh;
+}
+
 void setup() {
 
     gettimeofday(&tv, NULL);
@@ -117,45 +192,15 @@ void setup() {
     }
 }
 
-void checkChanges(){
-    if(*iHasChanged != -1) {
-
-        std::string type = files[*iHasChanged].type;
-        std::string path = files[*iHasChanged].path;
-
-        if ( type == "fragment" ){
-            fragSource = "";
-            if(loadFromPath(path, &fragSource)){
-                shader.detach(GL_FRAGMENT_SHADER | GL_VERTEX_SHADER);
-                shader.load(fragSource,vertSource);
-            }
-        } else if ( type == "vertex" ){
-            vertSource = "";
-            if(loadFromPath(path, &vertSource)){
-                shader.detach(GL_FRAGMENT_SHADER | GL_VERTEX_SHADER);
-                shader.load(fragSource,vertSource);
-            }
-        } else if ( type == "geometry" ){
-            // TODO
-        } else if ( type == "image" ){
-            for (std::map<std::string,Texture*>::iterator it = textures.begin(); it!=textures.end(); ++it) {
-                if ( path == it->second->getFilePath() ){
-                    it->second->load(path);
-                    break;
-                }
-            }
-        }
-    
-        *iHasChanged = -1;
-    }
-}
-
 void draw(){
 
     // Something change??
-    checkChanges();
+    if(*iHasChanged != -1) {
+        onFileChange();
+        *iHasChanged = -1;
+    }
 
-	gettimeofday(&tv, NULL);
+    gettimeofday(&tv, NULL);
 
     timeNow =   (unsigned long long)(tv.tv_sec) * 1000 +
                 (unsigned long long)(tv.tv_usec) / 1000;
@@ -195,28 +240,12 @@ void draw(){
     mesh->draw(&shader);
 }
 
-void exit_func(void){
-    // clear screen
-    glClear( GL_COLOR_BUFFER_BIT );
-
-    // close openGL instance
-    closeGL();
-
-    // delete resources
-    for (std::map<std::string,Texture*>::iterator i = textures.begin(); i != textures.end(); ++i) {
-        delete i->second;
-        i->second = NULL;
-    }
-    textures.clear();
-    delete mesh;
-}
-
 void renderThread(int argc, char **argv) {
     // Prepare viewport
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glClear(GL_COLOR_BUFFER_BIT );
     
-    resizeGL(viewport.width, viewport.height);
+    resizeViewport(viewport.width, viewport.height);
 
     // Setup
     setup();
@@ -229,7 +258,6 @@ void renderThread(int argc, char **argv) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     int textureCounter = 0;
-    std::string outputFile = "";
 
     //Load the the resources (textures)
     for (int i = 1; i < argc ; i++){
@@ -287,7 +315,6 @@ void renderThread(int argc, char **argv) {
         }
     }
 
-    bool bPlay = true;
     // Render Loop
     while (isGL() && bPlay) {
         // Update
@@ -301,19 +328,8 @@ void renderThread(int argc, char **argv) {
         // Swap the buffers
         renderGL();
 
-        if( (timeLimit > 0.0 && timeSec > timeLimit) ||
-            keypress == 'q' || keypress == 'Q' ||
-            keypress == 's' || keypress == 'S' ){
-
-            if (outputFile != "") {
-                unsigned char* pixels = new unsigned char[viewport.width*viewport.height*4];
-                glReadPixels(0, 0, viewport.width, viewport.height, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-                Texture::savePixels(outputFile, pixels, viewport.width, viewport.height);
-            }
-        }
-
-        if ((timeLimit > 0.0 && timeSec > timeLimit) || 
-            keypress == 'q' || keypress == 'Q'){
+        if ( timeLimit > 0.0 && timeSec > timeLimit ) {
+            onKeyPress('s');
             bPlay = false;
         }
     }
@@ -347,7 +363,7 @@ int main(int argc, char **argv){
     for (int i = 1; i < argc ; i++){
         std::string argument = std::string(argv[i]);
 
-        if ( iFrag == -1 && haveExt(argument,"frag") || haveExt(argument,"fs") ) {
+        if ( iFrag == -1 && ( haveExt(argument,"frag") || haveExt(argument,"fs") ) ) {
             int ierr = stat(argument.c_str(), &st);
             if (ierr != 0) {
                     std::cerr << "Error watching file " << argv[i] << std::endl;
@@ -359,7 +375,7 @@ int main(int argc, char **argv){
                 files.push_back(file);
                 iFrag = files.size()-1;
             }
-        } else if ( iVert == -1 && haveExt(argument,"vert") || haveExt(argument,"vs") ) {
+        } else if ( iVert == -1 && ( haveExt(argument,"vert") || haveExt(argument,"vs") ) ) {
             int ierr = stat(argument.c_str(), &st);
             if (ierr != 0) {
                     std::cerr << "Error watching file " << argument << std::endl;
@@ -433,7 +449,7 @@ int main(int argc, char **argv){
             
             //  Kill the iNotify watcher once you finish
             kill(pid, SIGKILL);
-            exit_func();
+            onExit();
         }
         break;
     }
