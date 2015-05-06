@@ -13,20 +13,28 @@ typedef struct {
     float   velX,velY;
     int     button;
 } Mouse;
-
 static Mouse mouse;
-static unsigned char keypress;
+static unsigned char keyPressed;
 
 typedef struct {
     uint32_t x, y, width, height;
 } Viewport;
 static Viewport viewport;
 
-void resizeGL(int _newWidth, int _newHeight){
-    viewport.width = _newWidth;
-    viewport.height = _newHeight;
+// Define events
+void onKeyPress(int _key);
+void onMouseMove();
+void onMouseClick();
+void onMouseDrag();
+void onViewportResize(int _width, int _height);
+
+void resizeViewport(int _width, int _height) {
+    viewport.width = _width;
+    viewport.height = _height;
     glViewport(0, 0, viewport.width, viewport.height);
 }
+
+bool bPlay = true;
 
 #ifdef PLATFORM_RPI
 
@@ -202,8 +210,9 @@ bool updateMouse(){
         }
         
         // Set button value
-        if (m.buttons&3)
-            mouse.button = m.buttons&3;
+        int button = m.buttons&3;
+        if (button)
+            mouse.button = button;
         else
             mouse.button = 0;
         
@@ -222,6 +231,23 @@ bool updateMouse(){
         if (mouse.y < 0) mouse.y=0;
         if (mouse.x > viewport.width) mouse.x = viewport.width;
         if (mouse.y > viewport.height) mouse.y = viewport.height;
+
+        // Lunch events
+        if(mouse.button == 0 && button != mouse.button){
+            mouse.button = button;
+            onMouseClick();
+        } else {
+            mouse.button = button;
+        }
+
+        if(mouse.velX != 0.0 || mouse.velY != 0.0){
+            if (button != 0) {
+                onMouseDrag();
+            } else {
+                onMouseMove();
+            }
+        }  
+
         return true;
     }
     return false;
@@ -252,7 +278,16 @@ int getkey() {
 
 void updateGL(){
     updateMouse();
-    keypress = getkey();
+
+    int key = getkey();
+    if ( key != 0 && key != keyPressed ){
+        keyPressed = key;
+        onKeyPress(key);
+    } else {
+        keyPressed = -1;
+    }
+
+    
 }
 
 void renderGL(){
@@ -285,11 +320,11 @@ void handleError(const std::string& _message, int _exitStatus) {
 }
 
 void handleKeypress(GLFWwindow* _window, int _key, int _scancode, int _action, int _mods) {
-    keypress = _key;
+    onKeyPress(_key);
 
     switch (_key) {
         case 256: // ESC
-            glfwSetWindowShouldClose(window, GL_TRUE);
+            bPlay = false;
             break;
     }
 }
@@ -303,10 +338,12 @@ void fixDpiScale(){
 
 void handleResize(GLFWwindow* _window, int _w, int _h) {
     fixDpiScale();
-    resizeGL(_w*dpiScale,_h*dpiScale);
+    onViewportResize(_w*dpiScale,_h*dpiScale);
 }
 
 void handleCursor(GLFWwindow* _window, double x, double y) {
+
+    // Update stuff
     x *= dpiScale;
     y *= dpiScale;
 
@@ -315,17 +352,36 @@ void handleCursor(GLFWwindow* _window, double x, double y) {
     mouse.x = x;
     mouse.y = viewport.height - y;
 
-    int action = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1);
-    if (action == GLFW_PRESS) {
-        mouse.button = 1;
-    } else {
-        mouse.button = 0;
-    }
-
     if (mouse.x < 0) mouse.x=0;
     if (mouse.y < 0) mouse.y=0;
     if (mouse.x > viewport.width) mouse.x = viewport.width;
     if (mouse.y > viewport.height) mouse.y = viewport.height;
+
+    int action1 = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1);
+    int action2 = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_2);
+    int button = 0;
+
+    if (action1 == GLFW_PRESS) {
+        button = 1;
+    } else if (action2 == GLFW_PRESS) {
+        button = 2;
+    }
+
+    // Lunch events
+    if(mouse.button == 0 && button != mouse.button){
+        mouse.button = button;
+        onMouseClick();
+    } else {
+        mouse.button = button;
+    }
+
+    if(mouse.velX != 0.0 || mouse.velY != 0.0){
+        if (button != 0) {
+            onMouseDrag();
+        } else {
+            onMouseMove();
+        }
+    }    
 }
 
 void initGL(int argc, char **argv){
@@ -373,7 +429,7 @@ bool isGL(){
 }
 
 void updateGL(){
-    keypress = 0;
+    keyPressed = -1;
     glfwPollEvents();
 }
 
@@ -382,6 +438,7 @@ void renderGL(){
 }
 
 void closeGL(){
+    glfwSetWindowShouldClose(window, GL_TRUE);
     glfwTerminate();
 }
 #endif
