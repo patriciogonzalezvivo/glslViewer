@@ -125,6 +125,20 @@ void onKeyPress(int _key) {
     if ( _key == 'q' || _key == 'Q'){
         bPlay = false;
     }
+
+    if ( _key == 'i' ){
+        cam.moveTo(CameraDirection::UP);
+    } else if ( _key == 'm' ){
+        cam.moveTo(CameraDirection::DOWN);
+    } else if ( _key == 'j' ){
+        cam.moveTo(CameraDirection::LEFT);
+    } else if ( _key == 'k' ){
+        cam.moveTo(CameraDirection::RIGHT);
+    } else if ( _key == 'o' ){
+        cam.moveTo(CameraDirection::FORWARD);
+    } else if ( _key == 'l' ){
+        cam.moveTo(CameraDirection::BACK);
+    }
 }
 
 void onMouseMove() {
@@ -136,11 +150,20 @@ void onMouseClick() {
 }
 
 void onMouseDrag() {
-
+    if (mouse.button == 1){
+        cam.headTo(.08f * mouse.velX);
+        cam.pitchTo(.08f * mouse.velY);
+    } else {
+        float dist = cam.getDistance();
+        dist *= std::abs((float)mouse.velY)*.08f;
+        cam.setDistance(dist);
+    }
+    
 }
 
 void onViewportResize(int _newWidth, int _newHeight) {
-    resizeViewport(_newWidth,_newHeight); 
+    resizeViewport(_newWidth,_newHeight);
+    cam.setViewport(viewport.width,viewport.height);
 }
 
 void onExit() {
@@ -190,6 +213,9 @@ void setup() {
         geom.load(files[iGeom].path);
         mesh = geom.getVbo();
     }
+
+    cam.setViewport(viewport.width,viewport.height);
+    cam.update();
 }
 
 void draw(){
@@ -212,21 +238,9 @@ void draw(){
     shader.setUniform("u_mouse", mouse.x, mouse.y);
     shader.setUniform("u_resolution",viewport.width, viewport.height);
 
-    double aspect = double(viewport.width) / double(viewport.height);
-    glm::mat4 projection_matrix = glm::perspective(45.f, 4.f / 3.f, 0.1f, 100.f);
-
-    glm::vec3 camera_position = glm::vec3(0.f, 1.f, 5.f);
-    glm::vec3 camera_target = glm::vec3(0.f, 0.f, 0.f);
-    glm::vec3 camera_up_vector = glm::vec3(0.f, 1.f, 0.f);
-
-    glm::mat4 view_matrix = glm::lookAt(
-        camera_position,
-        camera_target,
-        camera_up_vector
-    );
-
-    glm::mat4 model_matrix = glm::mat4(1.f);
-    glm::mat4 mvp = projection_matrix * view_matrix * model_matrix;
+    // glm::mat4 model_matrix = glm::mat4(1.f);
+    cam.update();
+    glm::mat4 mvp = cam.getProjectionViewMatrix();// * model_matrix;
 
     shader.setUniform("u_modelViewProjectionMatrix", mvp);
 
