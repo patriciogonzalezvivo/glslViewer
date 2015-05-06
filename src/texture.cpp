@@ -21,6 +21,9 @@ bool Texture::load(const std::string& _path) {
     load(pixels, m_width, m_height);
     stbi_image_free(pixels);
 
+    // TODO: 
+    //      - on Rpi should use openMAX
+
     m_path = _path;
     return true;
 }
@@ -31,8 +34,11 @@ bool Texture::load(unsigned char* _pixels, int _width, int _height) {
 
     glEnable(GL_TEXTURE_2D);
 
-    // Generate an OpenGL texture ID for this texture
-    glGenTextures(1, &m_id);
+    if(m_id == 0){
+        // Generate an OpenGL texture ID for this texture
+        glGenTextures(1, &m_id);
+    }
+    
     glBindTexture(GL_TEXTURE_2D, m_id); 
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -40,11 +46,7 @@ bool Texture::load(unsigned char* _pixels, int _width, int _height) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-#ifdef PLATFORM_RPI
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_BGRA_EXT, m_width, m_height, 0, GL_BGRA_EXT, GL_UNSIGNED_BYTE, _pixels);
-#else
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_width, m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, _pixels);
-#endif
 
     unbind();
 
@@ -63,24 +65,25 @@ bool Texture::load(unsigned char* _pixels, int _width, int _height) {
 
 bool Texture::savePixels(const std::string& _path, unsigned char* _pixels, int _width, int _height) {
 
+    // TODO: 
+    //      - on Rpi should use openMAX
+    
     // Flip the image on Y
-    int w = _width, h = _height;
     int depth = 4;
-    unsigned char *result = new unsigned char[w*h*depth];
-    memcpy(result, _pixels, w*h*depth);
+    unsigned char *result = new unsigned char[_width*_height*depth];
+    memcpy(result, _pixels, _width*_height*depth);
     int row,col,z;
     stbi_uc temp;
 
-    for (row = 0; row < (h>>1); row++) {
-     for (col = 0; col < w; col++) {
+    for (row = 0; row < (_height>>1); row++) {
+     for (col = 0; col < _width; col++) {
         for (z = 0; z < depth; z++) {
-           temp = result[(row * w + col) * depth + z];
-           result[(row * w + col) * depth + z] = result[((h - row - 1) * w + col) * depth + z];
-           result[((h - row - 1) * w + col) * depth + z] = temp;
+           temp = result[(row * _width + col) * depth + z];
+           result[(row * _width + col) * depth + z] = result[((_height - row - 1) * _width + col) * depth + z];
+           result[((_height - row - 1) * _width + col) * depth + z] = temp;
         }
      }
     }
-
     stbi_write_png(_path.c_str(), _width, _height, 4, result, _width * 4);
     delete [] result;
     
