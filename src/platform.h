@@ -22,10 +22,11 @@ typedef struct {
 static Viewport viewport;
 
 // Define events
-void onKey(int _key);
+void onKeyPress(int _key);
 void onMouseMove();
 void onMouseClick();
 void onMouseDrag();
+void onViewportResize(int _width, int _height);
 
 void resizeViewport(int _width, int _height) {
     viewport.width = _width;
@@ -280,7 +281,7 @@ void updateGL(){
 
     int key = getkey();
     if ( key == keyPressed ){
-        onKey(key);
+        onKeyPress(key);
     } else {
         keyPressed = -1;
     }
@@ -316,7 +317,7 @@ void handleError(const std::string& _message, int _exitStatus) {
 }
 
 void handleKeypress(GLFWwindow* _window, int _key, int _scancode, int _action, int _mods) {
-    onKey(_key)
+    onKeyPress(_key);
 
     switch (_key) {
         case 256: // ESC
