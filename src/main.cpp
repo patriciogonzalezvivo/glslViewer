@@ -6,8 +6,6 @@
 #include <signal.h>
 #include <map>
 
-#include <FreeImage.h>
-
 #include "platform.h"
 #include "utils.h"
 #include "shader.h"
@@ -29,7 +27,7 @@ std::vector<WatchFile> files;
 int* iHasChanged;
 
 bool haveExt(const std::string& file, const std::string& ext){
-    return file.find(ext) != std::string::npos;
+    return file.find("."+ext) != std::string::npos;
 }
 
 //  SHADER
@@ -225,7 +223,6 @@ void renderThread(int argc, char **argv) {
 
     int textureCounter = 0;
     std::string outputFile = "";
-    std::string ditherOutputFile = "";
 
     //Load the the resources (textures)
     for (int i = 1; i < argc ; i++){
@@ -239,26 +236,26 @@ void renderThread(int argc, char **argv) {
                     argument == "-l" || 
                     argument == "--life-coding"  ) {
 
-        } else if ( argument == "-d" || argument == "--dither" ) {
-            i++;
-            ditherOutputFile = argument;
-            std::cout << "Will save dither screenshot to " << ditherOutputFile << " on exit." << std::endl;
-
         } else if ( argument == "-s" || argument == "--sec") {
             i++;
             timeLimit = getFloat(argument);
             std::cout << "Will exit in " << timeLimit << " seconds." << std::endl;
 
         } else if ( argument == "-o" ){
-            
             i++;
-            outputFile = argument;
-            std::cout << "Will save screenshot to " << outputFile  << " on exit."<< std::endl;
+            argument = std::string(argv[i]);
+            if( haveExt(argument,"png") ){
+                outputFile = argument;
+                std::cout << "Will save screenshot to " << outputFile  << " on exit." << std::endl; 
+            } else {
+                std::cout << "At the moment screenshots only support PNG formats" << std::endl;
+            }
 
         } else if (argument.find("-") == 0) {
-
             std::string parameterPair = argument.substr(argument.find_last_of('-')+1);
+
             i++;
+            argument = std::string(argv[i]);
             Texture* tex = new Texture();
             if( tex->load(argument) ){
                 textures[parameterPair] = tex;
@@ -267,9 +264,9 @@ void renderThread(int argc, char **argv) {
                 std::cout << "    uniform vec2 u_" << parameterPair  << "Resolution;"<< std::endl;
             }
 
-        } else if ( haveExt(argument,".png") || haveExt(argument,".PNG") ||
-                    haveExt(argument,".jpg") || haveExt(argument,".JPG") || 
-                    haveExt(argument,".jpeg") || haveExt(argument,".JPEG") ) {
+        } else if ( haveExt(argument,"png") || haveExt(argument,"PNG") ||
+                    haveExt(argument,"jpg") || haveExt(argument,"JPG") || 
+                    haveExt(argument,"jpeg") || haveExt(argument,"JPEG") ) {
 
             Texture* tex = new Texture();
             if( tex->load(argument) ){
@@ -301,16 +298,10 @@ void renderThread(int argc, char **argv) {
             keypress == 'q' || keypress == 'Q' ||
             keypress == 's' || keypress == 'S' ){
 
-            if (ditherOutputFile != "") {
-                unsigned char* pixels = new unsigned char[viewport.width*viewport.height*4];
-                glReadPixels(0, 0, viewport.width, viewport.height, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-                Texture::savePixels(ditherOutputFile, pixels, viewport.width, viewport.height, true );
-            }
-
             if (outputFile != "") {
                 unsigned char* pixels = new unsigned char[viewport.width*viewport.height*4];
-                glReadPixels(0, 0, viewport.width, viewport.height, GL_BGRA_EXT, GL_UNSIGNED_BYTE, pixels);
-                Texture::savePixels(outputFile, pixels, viewport.width, viewport.height, false );
+                glReadPixels(0, 0, viewport.width, viewport.height, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+                Texture::savePixels(outputFile, pixels, viewport.width, viewport.height);
             }
         }
 
@@ -349,7 +340,7 @@ int main(int argc, char **argv){
     for (int i = 1; i < argc ; i++){
         std::string argument = std::string(argv[i]);
 
-        if ( iFrag == -1 && haveExt(argument,".frag") || haveExt(argument,".fs") ) {
+        if ( iFrag == -1 && haveExt(argument,"frag") || haveExt(argument,"fs") ) {
             int ierr = stat(argument.c_str(), &st);
             if (ierr != 0) {
                     std::cerr << "Error watching file " << argv[i] << std::endl;
@@ -361,7 +352,7 @@ int main(int argc, char **argv){
                 files.push_back(file);
                 iFrag = files.size()-1;
             }
-        } else if ( iVert == -1 && haveExt(argument,".vert") || haveExt(argument,".vs") ) {
+        } else if ( iVert == -1 && haveExt(argument,"vert") || haveExt(argument,"vs") ) {
             int ierr = stat(argument.c_str(), &st);
             if (ierr != 0) {
                     std::cerr << "Error watching file " << argument << std::endl;
@@ -373,7 +364,7 @@ int main(int argc, char **argv){
                 files.push_back(file);
                 iVert = files.size()-1;
             }
-        } else if ( iGeom == -1 && haveExt(argument,".ply") ) {
+        } else if ( iGeom == -1 && haveExt(argument,"ply") ) {
             int ierr = stat(argument.c_str(), &st);
             if (ierr != 0) {
                     std::cerr << "Error watching file " << argument << std::endl;
@@ -385,12 +376,12 @@ int main(int argc, char **argv){
                 files.push_back(file);
                 iGeom = files.size()-1;
             }
-        } else if ( haveExt(argument,".png") || haveExt(argument,".PNG") ||
-                    haveExt(argument,".jpg") || haveExt(argument,".JPG") || 
-                    haveExt(argument,".jpeg") || haveExt(argument,".JPEG") ){
+        } else if ( haveExt(argument,"png") || haveExt(argument,"PNG") ||
+                    haveExt(argument,"jpg") || haveExt(argument,"JPG") || 
+                    haveExt(argument,"jpeg") || haveExt(argument,"JPEG") ){
             int ierr = stat(argument.c_str(), &st);
             if (ierr != 0) {
-                    std::cerr << "Error watching file " << argument << std::endl;
+                    // std::cerr << "Error watching file " << argument << std::endl;
             } else {
                 WatchFile file;
                 file.type = "image";
@@ -404,7 +395,7 @@ int main(int argc, char **argv){
     // If no shader
     if( iFrag == -1 ) {
 		std::cerr << "GLSL render that updates changes instantly.\n";
-		std::cerr << "Usage: " << argv[0] << " shader.frag [texture.png] [-textureNameA texture.png] [-u] [-x x] [-y y] [-w width] [-h height] [-l/--livecoding] [--square] [-s seconds] [-o screenshot.png] [-d ditheredScreenshot.png]\n";
+		std::cerr << "Usage: " << argv[0] << " shader.frag [texture.(png\\jpg)] [-textureNameA texture.png] [-u] [-x x] [-y y] [-w width] [-h height] [-l/--livecoding] [--square] [-s seconds] [-o screenshot.png]\n";
 		return EXIT_FAILURE;
 	}
 
