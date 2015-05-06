@@ -280,11 +280,14 @@ void updateGL(){
     updateMouse();
 
     int key = getkey();
-    if ( key == keyPressed ){
+    if ( key != 0 && key != keyPressed ){
+        keyPressed = key;
         onKeyPress(key);
     } else {
         keyPressed = -1;
     }
+
+    
 }
 
 void renderGL(){
