@@ -79,7 +79,9 @@ vim test.frag
 
 You can also load both fragments and vertex shaders.
 
-    glslViewer test.frag test.vert 
+```bash
+glslViewer test.frag test.vert 
+```
 
 **Note**: All this files will be updated inmediatly if they change.
 
