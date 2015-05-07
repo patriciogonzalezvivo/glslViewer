@@ -259,6 +259,7 @@ bool Mesh::load(const std::string& _file) {
         std::cout << "ERROR glMesh, can not load  " << _file << std::endl;
         return false;
     }
+    return false;
 }
 
 void Mesh::setDrawMode(GLenum _drawMode) {
@@ -515,7 +516,6 @@ Vbo* Mesh::getVbo(){
     }
 
     tmpMesh->addVertices((GLbyte*)data.data(), data.size());
-    tmpMesh->addIndices(m_indices.data(), m_indices.size());
 
     if(m_indices.size()>0){
         tmpMesh->addIndices(m_indices.data(), m_indices.size());

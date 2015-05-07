@@ -6,17 +6,10 @@
 #include <signal.h>
 #include <map>
 
-#include <glm/glm.hpp>
-#include <glm/gtx/transform.hpp>
-#include <glm/gtc/quaternion.hpp>
-#include <glm/gtx/quaternion.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
-
 #include "platform.h"
 #include "utils.h"
 #include "shader.h"
-#include "camera.h"
+#include "easyCam.h"
 #include "vbo.h"
 #include "texture.h"
 #include "mesh.h"
@@ -40,16 +33,28 @@ int iFrag = -1;
 std::string fragSource = "";
 int iVert = -1;
 std::string vertSource =
+"uniform mat4 u_modelViewProjectionMatrix;\n"
+"uniform float u_time;\n"
+"uniform vec2 u_mouse;\n"
+"uniform vec2 u_resolution;\n"
 "attribute vec4 a_position;\n"
+"attribute vec4 a_color;\n"
+"attribute vec3 a_normal;\n"
 "attribute vec2 a_texcoord;\n"
+"varying vec4 v_position;\n"
+"varying vec4 v_color;\n"
+"varying vec3 v_normal;\n"
 "varying vec2 v_texcoord;\n"
 "void main(void) {\n"
-"    gl_Position = a_position*0.5;\n"
+"    v_position = a_position;\n"
+"    gl_Position = v_position;\n"
+"    v_color = a_color;\n"
+"    v_normal = a_normal;\n"
 "    v_texcoord = a_texcoord;\n"
 "}\n";
 
 //  CAMERA
-Camera cam;
+EasyCam cam;
 
 //  ASSETS
 Vbo* mesh;
@@ -73,10 +78,26 @@ Vbo* rect (float _x, float _y, float _w, float _h) {
     float h = _h*2.0f;
 
     Mesh mesh;
-    mesh.addVertex(glm::vec3(x, y, 1.0));       mesh.addTexCoord(glm::vec2(0.0, 0.0));
-    mesh.addVertex(glm::vec3(x+w, y, 1.0));     mesh.addTexCoord(glm::vec2(1.0, 0.0));
-    mesh.addVertex(glm::vec3(x+w, y+h, 1.0));   mesh.addTexCoord(glm::vec2(1.0, 1.0));
-    mesh.addVertex(glm::vec3(x, y+h, 1.0));     mesh.addTexCoord(glm::vec2(0.0, 1.0));
+    mesh.addVertex(glm::vec3(x, y, 0.0));
+    mesh.addColor(glm::vec4(1.0));
+    mesh.addNormal(glm::vec3(0.0, 0.0, 1.0));
+    mesh.addTexCoord(glm::vec2(0.0, 0.0));
+
+    mesh.addVertex(glm::vec3(x+w, y, 0.0));
+    mesh.addColor(glm::vec4(1.0));
+    mesh.addNormal(glm::vec3(0.0, 0.0, 1.0));
+    mesh.addTexCoord(glm::vec2(1.0, 0.0));
+
+    mesh.addVertex(glm::vec3(x+w, y+h, 0.0));
+    mesh.addColor(glm::vec4(1.0));
+    mesh.addNormal(glm::vec3(0.0, 0.0, 1.0));
+    mesh.addTexCoord(glm::vec2(1.0, 1.0));
+
+    mesh.addVertex(glm::vec3(x, y+h, 0.0));
+    mesh.addColor(glm::vec4(1.0));
+    mesh.addNormal(glm::vec3(0.0, 0.0, 1.0));
+    mesh.addTexCoord(glm::vec2(0.0, 1.0));
+
     mesh.addIndex(0);   mesh.addIndex(1);   mesh.addIndex(2);
     mesh.addIndex(2);   mesh.addIndex(3);   mesh.addIndex(0);
 
@@ -125,20 +146,6 @@ void onKeyPress(int _key) {
     if ( _key == 'q' || _key == 'Q'){
         bPlay = false;
     }
-
-    if ( _key == 'i' ){
-        cam.moveTo(CameraDirection::UP);
-    } else if ( _key == 'm' ){
-        cam.moveTo(CameraDirection::DOWN);
-    } else if ( _key == 'j' ){
-        cam.moveTo(CameraDirection::LEFT);
-    } else if ( _key == 'k' ){
-        cam.moveTo(CameraDirection::RIGHT);
-    } else if ( _key == 'o' ){
-        cam.moveTo(CameraDirection::FORWARD);
-    } else if ( _key == 'l' ){
-        cam.moveTo(CameraDirection::BACK);
-    }
 }
 
 void onMouseMove() {
@@ -151,12 +158,24 @@ void onMouseClick() {
 
 void onMouseDrag() {
     if (mouse.button == 1){
-        cam.headTo(.08f * mouse.velX);
-        cam.pitchTo(.08f * mouse.velY);
+
+        float dist = cam.getDistance();
+        // glm::vec3 pos = cam.getPosition();
+        // float lat = 89.999-glm::degrees(atan2(pos.z,sqrt(pos.x*pos.x+pos.y*pos.y)));
+        // float lon = glm::degrees(atan2(pos.y,pos.x));
+        // lat += 0.0005f*mouse.velX;
+        // lon += 0.0005f*mouse.velY;
+        // cam.orbit(lat, lon, dist);
+
+        cam.orbit(  90.0-180.0*(mouse.x/viewport.width), 
+                    90.0-180.0*(mouse.y/viewport.height), dist);
+
+        cam.lookAt(glm::vec3(0.0));
+
     } else {
         float dist = cam.getDistance();
-        dist *= std::abs((float)mouse.velY)*.08f;
-        cam.setDistance(dist);
+        cam.setDistance(dist+(-.008f * (float)mouse.velY));
+        cam.lookAt(glm::vec3(0.0));
     }
     
 }
@@ -210,12 +229,21 @@ void setup() {
         mesh = rect(0.0,0.0,1.0,1.0);
     } else {
         Mesh geom;
+        geom.setDrawMode(GL_TRIANGLES);
         geom.load(files[iGeom].path);
+        std::cout << "vertices: " << geom.getVertices().size() << std::endl;
+        std::cout << "colors: " << geom.getColors().size() << std::endl;
+        std::cout << "normals: " << geom.getNormals().size() << std::endl;
+        std::cout << "textcoords: " << geom.getTexCoords().size() << std::endl;
+        std::cout << "indices: " << geom.getIndices().size() << std::endl;
         mesh = geom.getVbo();
+
+        std::cout << "vertices: " << mesh->numVertices() << std::endl;
+        std::cout << "indices: " << mesh->numIndices() << std::endl;
     }
 
     cam.setViewport(viewport.width,viewport.height);
-    cam.update();
+    cam.setPosition(glm::vec3(0.0,0.0,-3.));
 }
 
 void draw(){
@@ -239,7 +267,6 @@ void draw(){
     shader.setUniform("u_resolution",viewport.width, viewport.height);
 
     // glm::mat4 model_matrix = glm::mat4(1.f);
-    cam.update();
     glm::mat4 mvp = cam.getProjectionViewMatrix();// * model_matrix;
 
     shader.setUniform("u_modelViewProjectionMatrix", mvp);
@@ -356,7 +383,7 @@ void watchThread() {
     while(1){
         for(int i = 0; i < files.size(); i++){
             if( *iHasChanged == -1 ){
-                int ierr = stat(files[i].path.c_str(), &st);
+                stat(files[i].path.c_str(), &st);
                 int date = st.st_mtime;
                 if (date != files[i].lastChange ){
                     *iHasChanged = i;

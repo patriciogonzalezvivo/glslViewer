@@ -55,5 +55,6 @@ void main (void) {
 	color += vec3( rect(mousePos, vec2(0.03,0.005)) + rect(mousePos, vec2(0.005,0.03)) );
 
 	//	Assign the resultant color
+    // color = vec3(1.0);
 	gl_FragColor = vec4(color,1.0);
 }
