@@ -11,7 +11,28 @@
 #include <iomanip>
 #include <algorithm>
 #include <math.h>
+
 #include "glm/glm.hpp"
+
+#ifndef PI
+#define PI       3.14159265358979323846
+#endif
+
+#ifndef TWO_PI
+#define TWO_PI   6.28318530717958647693
+#endif
+
+#ifndef FOUR_PI
+#define FOUR_PI 12.56637061435917295385
+#endif
+
+#ifndef HALF_PI
+#define HALF_PI  1.57079632679489661923
+#endif
+
+#ifndef QUARTER_PI
+#define QUARTER_PI 0.785398163
+#endif
 
 #ifndef FLT_EPSILON
 #define FLT_EPSILON 1.19209290E-07F
@@ -32,6 +53,11 @@
 #ifndef ABS
 #define ABS(x) (((x) < 0) ? -(x) : (x))
 #endif
+
+//---------------------------------------- Geom
+
+void wrapRad(double &_angle);
+glm::vec3 getCentroid(const std::vector<glm::vec3> &_pts);
 
 //---------------------------------------- Conversions
 
@@ -267,6 +293,21 @@ inline std::string toString(const glm::vec4 &_vec, char _sep = ','){
     return strStream.str();
 }
 
+//-------------------------------------------------- << and >>
+
+inline std::ostream& operator<<(std::ostream& os, const glm::vec3& vec) {
+    os << vec.x << ", " << vec.y << ", " << vec.z;
+    return os;
+}
+
+inline std::istream& operator>>(std::istream& is, glm::vec3& vec) {
+    is >> vec.x;
+    is.ignore(2);
+    is >> vec.y;
+    is.ignore(2);
+    is >> vec.z;
+    return is;
+}
 
 //----------------------------------------  String I/O
 

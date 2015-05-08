@@ -9,7 +9,7 @@
 #include "platform.h"
 #include "utils.h"
 #include "shader.h"
-#include "easyCam.h"
+#include "camera.h"
 #include "vbo.h"
 #include "texture.h"
 #include "mesh.h"
@@ -46,19 +46,18 @@ std::string vertSource =
 "varying vec3 v_normal;\n"
 "varying vec2 v_texcoord;\n"
 "void main(void) {\n"
-"    v_position = a_position;\n"
+"    v_position = u_modelViewProjectionMatrix * a_position;\n"
 "    gl_Position = v_position;\n"
-"    v_color = a_color;\n"
-"    v_normal = a_normal;\n"
-"    v_texcoord = a_texcoord;\n"
 "}\n";
 
 //  CAMERA
-EasyCam cam;
+Camera cam;
 
 //  ASSETS
-Vbo* mesh;
+Vbo* vbo;
 int iGeom = -1;
+glm::mat4 model_matrix = glm::mat4(1.);
+
 std::map<std::string,Texture*> textures;
 std::string outputFile = "";
 
@@ -100,6 +99,8 @@ Vbo* rect (float _x, float _y, float _w, float _h) {
 
     mesh.addIndex(0);   mesh.addIndex(1);   mesh.addIndex(2);
     mesh.addIndex(2);   mesh.addIndex(3);   mesh.addIndex(0);
+
+    mesh.save("rect.ply");
 
     return mesh.getVbo();
 }
@@ -159,7 +160,7 @@ void onMouseClick() {
 void onMouseDrag() {
     if (mouse.button == 1){
 
-        float dist = cam.getDistance();
+        float dist = glm::length(cam.getPosition());
         // glm::vec3 pos = cam.getPosition();
         // float lat = 89.999-glm::degrees(atan2(pos.z,sqrt(pos.x*pos.x+pos.y*pos.y)));
         // float lon = glm::degrees(atan2(pos.y,pos.x));
@@ -173,9 +174,13 @@ void onMouseDrag() {
         cam.lookAt(glm::vec3(0.0));
 
     } else {
-        float dist = cam.getDistance();
-        cam.setDistance(dist+(-.008f * (float)mouse.velY));
-        cam.lookAt(glm::vec3(0.0));
+        float dist = glm::length(cam.getPosition());
+        if(dist > 0.0f){
+            dist += (-.008f * (float)mouse.velY);
+            cam.setPosition( -dist * cam.getZAxis() );
+            cam.lookAt(glm::vec3(0.0));
+        }
+        
     }
     
 }
@@ -198,7 +203,7 @@ void onExit() {
         i->second = NULL;
     }
     textures.clear();
-    delete mesh;
+    delete vbo;
 }
 
 void setup() {
@@ -225,21 +230,16 @@ void setup() {
     
     //  Load Geometry
     //
-    if ( iGeom == -1){
-        mesh = rect(0.0,0.0,1.0,1.0);
+    if ( iGeom == -1 ){
+        vbo = rect(0.0,0.0,1.0,1.0);
     } else {
-        Mesh geom;
-        geom.setDrawMode(GL_TRIANGLES);
-        geom.load(files[iGeom].path);
-        std::cout << "vertices: " << geom.getVertices().size() << std::endl;
-        std::cout << "colors: " << geom.getColors().size() << std::endl;
-        std::cout << "normals: " << geom.getNormals().size() << std::endl;
-        std::cout << "textcoords: " << geom.getTexCoords().size() << std::endl;
-        std::cout << "indices: " << geom.getIndices().size() << std::endl;
-        mesh = geom.getVbo();
+        glEnable(GL_DEPTH_TEST);
+        Mesh model;
+        model.load(files[iGeom].path);
+        vbo = model.getVbo();
+        glm::vec3 toCentroid = getCentroid(model.getVertices());
 
-        std::cout << "vertices: " << mesh->numVertices() << std::endl;
-        std::cout << "indices: " << mesh->numIndices() << std::endl;
+        model_matrix = glm::translate(-toCentroid);
     }
 
     cam.setViewport(viewport.width,viewport.height);
@@ -266,9 +266,10 @@ void draw(){
     shader.setUniform("u_mouse", mouse.x, mouse.y);
     shader.setUniform("u_resolution",viewport.width, viewport.height);
 
-    // glm::mat4 model_matrix = glm::mat4(1.f);
-    glm::mat4 mvp = cam.getProjectionViewMatrix();// * model_matrix;
-
+    glm::mat4 mvp = glm::mat4(1.);
+    if (iGeom != -1) {
+        mvp = cam.getProjectionViewMatrix() * model_matrix;
+    }
     shader.setUniform("u_modelViewProjectionMatrix", mvp);
 
     unsigned int index = 0;
@@ -278,7 +279,7 @@ void draw(){
         index++;
     }
 
-    mesh->draw(&shader);
+    vbo->draw(&shader);
 }
 
 void renderThread(int argc, char **argv) {

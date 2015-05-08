@@ -14,9 +14,9 @@ attribute vec3 a_normal;
 attribute vec2 a_texcoord;
 
 varying vec4 v_position;
-varying vec4 v_color;
+// varying vec4 v_color;
 varying vec3 v_normal;
-varying vec2 v_texcoord;
+// varying vec2 v_texcoord;
 
 void main(void) {
 
@@ -24,7 +24,7 @@ void main(void) {
     // v_position = a_position;
     gl_Position = v_position;
 
-    v_color = a_color;
+    // v_color = a_color;
     v_normal = a_normal;
-    v_texcoord = a_texcoord;
+    // v_texcoord = a_texcoord;
 }
