@@ -57,6 +57,8 @@
 //---------------------------------------- Geom
 
 void wrapRad(double &_angle);
+void wrapDeg(float &_angle);
+
 glm::vec3 getCentroid(const std::vector<glm::vec3> &_pts);
 
 //---------------------------------------- Conversions

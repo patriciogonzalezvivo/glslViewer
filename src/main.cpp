@@ -52,6 +52,8 @@ std::string vertSource =
 
 //  CAMERA
 Camera cam;
+float lat = 0.0;
+float lon = 0.0;;
 
 //  ASSETS
 Vbo* vbo;
@@ -168,10 +170,16 @@ void onMouseDrag() {
         // lon += 0.0005f*mouse.velY;
         // cam.orbit(lat, lon, dist);
 
-        cam.orbit(  90.0-180.0*(mouse.x/viewport.width), 
-                    90.0-180.0*(mouse.y/viewport.height), dist);
-
+        lat -= mouse.velX;
+        lon -= mouse.velY*0.5;
+        // wrapDeg(lat);
+        // wrapDeg(lon);
+        cam.orbit(lat,lon,dist);
         cam.lookAt(glm::vec3(0.0));
+
+        // cam.orbit(  (90.0-180.0*(mouse.x/viewport.width))*2.0, 
+        //             (90.0-180.0*(mouse.y/viewport.height)), dist);
+        // cam.lookAt(glm::vec3(0.0));
 
     } else {
         float dist = glm::length(cam.getPosition());

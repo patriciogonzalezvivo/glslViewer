@@ -3,9 +3,7 @@
 #include "glm/gtx/matrix_decompose.hpp"
 #include "glm/gtc/matrix_access.hpp"
 
-#ifndef CLAMP
-#define CLAMP(val,min,max) ((val) < (min) ? (min) : ((val > max) ? (max) : (val)))
-#endif
+#include "utils.h"
 
 Node::Node() {
     setPosition(glm::vec3(0.0));
@@ -159,11 +157,30 @@ void Node::lookAt(const glm::vec3& _lookAtPosition, glm::vec3 _upVector ) {
     setOrientation(glm::toQuat(m));
 }
 
-void Node::orbit(float _longitude, float _latitude, float _radius, const glm::vec3& _centerPoint) {
+void Node::orbit(float _lat, float _lon, float _radius, const glm::vec3& _centerPoint) {
     glm::vec3 p = glm::vec3(0.0, 0.0, _radius);
-    _latitude = CLAMP(_latitude, -89.0, 89.0);
-    glm::quat lat = glm::angleAxis(glm::radians(_latitude), glm::vec3(1.0, 0.0, 0.0));
-    glm::quat lon = glm::angleAxis(glm::radians(_longitude), glm::vec3(0.0, 1.0, 0.0));
+    
+    
+    float newLat = glm::degrees(atan(sin(glm::rad(_lat))/fmod( cos(glm::rad(_lat)),PI)));
+    wrapDeg(_lat);
+    wrapDeg(_lon);
+    // std::cout << " Lon: " << _lon << std::endl;
+    // std::cout << " Lat: " << _lat << std::endl;
+    // if (abs(_lon)>=90.0){
+    //     std::cout << "---> Lon > +/-90" << std::endl; 
+    //     if (_lon<-90) {
+    //         // _lon -= 180.0;/
+    //         // _lat += 180.0;
+    //     } else if (_lon>90) {
+    //         // _lon += 180.0;
+    //         // _lat += 180.0;
+    //     }
+    //     std::cout << "     Lon: " << _lon << std::endl;
+    //     std::cout << "     Lat: " << _lat << std::endl;
+    // }
+    
+    glm::quat lat = glm::angleAxis(glm::radians(_lon), glm::vec3(1.0, 0.0, 0.0));
+    glm::quat lon = glm::angleAxis(glm::radians(newLat), glm::vec3(0.0, 1.0, 0.0));
     p = lat * p;
     p = lon * p;
     p += _centerPoint;
