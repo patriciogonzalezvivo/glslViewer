@@ -159,28 +159,11 @@ void Node::lookAt(const glm::vec3& _lookAtPosition, glm::vec3 _upVector ) {
 
 void Node::orbit(float _lat, float _lon, float _radius, const glm::vec3& _centerPoint) {
     glm::vec3 p = glm::vec3(0.0, 0.0, _radius);
-    
-    
-    float newLat = glm::degrees(atan(sin(glm::rad(_lat))/fmod( cos(glm::rad(_lat)),PI)));
-    wrapDeg(_lat);
-    wrapDeg(_lon);
-    // std::cout << " Lon: " << _lon << std::endl;
-    // std::cout << " Lat: " << _lat << std::endl;
-    // if (abs(_lon)>=90.0){
-    //     std::cout << "---> Lon > +/-90" << std::endl; 
-    //     if (_lon<-90) {
-    //         // _lon -= 180.0;/
-    //         // _lat += 180.0;
-    //     } else if (_lon>90) {
-    //         // _lon += 180.0;
-    //         // _lat += 180.0;
-    //     }
-    //     std::cout << "     Lon: " << _lon << std::endl;
-    //     std::cout << "     Lat: " << _lat << std::endl;
-    // }
+
+    _lon = CLAMP(_lon,-89.9,89.9);
     
     glm::quat lat = glm::angleAxis(glm::radians(_lon), glm::vec3(1.0, 0.0, 0.0));
-    glm::quat lon = glm::angleAxis(glm::radians(newLat), glm::vec3(0.0, 1.0, 0.0));
+    glm::quat lon = glm::angleAxis(glm::radians(_lat), glm::vec3(0.0, 1.0, 0.0));
     p = lat * p;
     p = lon * p;
     p += _centerPoint;

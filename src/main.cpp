@@ -161,26 +161,11 @@ void onMouseClick() {
 
 void onMouseDrag() {
     if (mouse.button == 1){
-
         float dist = glm::length(cam.getPosition());
-        // glm::vec3 pos = cam.getPosition();
-        // float lat = 89.999-glm::degrees(atan2(pos.z,sqrt(pos.x*pos.x+pos.y*pos.y)));
-        // float lon = glm::degrees(atan2(pos.y,pos.x));
-        // lat += 0.0005f*mouse.velX;
-        // lon += 0.0005f*mouse.velY;
-        // cam.orbit(lat, lon, dist);
-
         lat -= mouse.velX;
         lon -= mouse.velY*0.5;
-        // wrapDeg(lat);
-        // wrapDeg(lon);
         cam.orbit(lat,lon,dist);
         cam.lookAt(glm::vec3(0.0));
-
-        // cam.orbit(  (90.0-180.0*(mouse.x/viewport.width))*2.0, 
-        //             (90.0-180.0*(mouse.y/viewport.height)), dist);
-        // cam.lookAt(glm::vec3(0.0));
-
     } else {
         float dist = glm::length(cam.getPosition());
         if(dist > 0.0f){
