@@ -26,7 +26,7 @@ PLATFORM = LINUX
 endif
 
 ifeq ($(PLATFORM),RPI)
-CFLAGS += -DPLATFORM_RPI -Wno-psabi
+CFLAGS += -DGLM_FORCE_CXX98 -DPLATFORM_RPI -Wno-psabi
 
 INCLUDES += -I$(SDKSTAGE)/opt/vc/include/ \
 			-I$(SDKSTAGE)/opt/vc/include/interface/vcos/pthreads \
