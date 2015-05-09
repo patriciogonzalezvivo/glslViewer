@@ -48,7 +48,9 @@ std::string vertSource =
 "void main(void) {\n"
 "    v_position = u_modelViewProjectionMatrix * a_position;\n"
 "    gl_Position = v_position;\n"
-//"    v_normal = a_normal;\n"
+"    v_color = a_color;\n"
+"    v_normal = a_normal;\n"
+"    v_texcoord = a_texcoord;\n"
 "}\n";
 
 //  CAMERA
