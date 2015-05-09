@@ -192,7 +192,7 @@ bool Mesh::load(const std::string& _file) {
                     }
                     
                     currentVertex++;
-                    if(currentVertex==vertices.size()){
+                    if((uint)currentVertex==vertices.size()){
                         if(orderVertices<orderIndices){
                             state = Faces;
                         }else{
@@ -220,7 +220,7 @@ bool Mesh::load(const std::string& _file) {
                     indices[currentFace*3+2] = i;
                     
                     currentFace++;
-                    if(currentFace==indices.size()/3){
+                    if((uint)currentFace==indices.size()/3){
                         if(orderVertices<orderIndices){
                             state = Vertices;
                         }else{
@@ -307,7 +307,7 @@ bool Mesh::save(const std::string& _file, bool _useBinary) {
         
         os << "end_header" << std::endl;
         
-        for(int i = 0; i < getVertices().size(); i++){
+        for(uint i = 0; i < getVertices().size(); i++){
             if(_useBinary) {
                 os.write((char*) &getVertices()[i], sizeof(glm::vec3));
             } else {
@@ -344,7 +344,7 @@ bool Mesh::save(const std::string& _file, bool _useBinary) {
         }
         
         if(getIndices().size()) {
-            for(int i = 0; i < getIndices().size(); i += faceSize) {
+            for(uint i = 0; i < getIndices().size(); i += faceSize) {
                 if(_useBinary) {
                     os.write((char*) &faceSize, sizeof(unsigned char));
                     for(int j = 0; j < faceSize; j++) {
@@ -356,8 +356,8 @@ bool Mesh::save(const std::string& _file, bool _useBinary) {
                 }
             }
         } else if(getDrawMode() == GL_TRIANGLES) {
-            for(int i = 0; i < getVertices().size(); i += faceSize) {
-                int indices[] = {i, i + 1, i + 2};
+            for(uint i = 0; i < getVertices().size(); i += faceSize) {
+                uint indices[] = {i, i + 1, i + 2};
                 if(_useBinary) {
                     os.write((char*) &faceSize, sizeof(unsigned char));
                     for(int j = 0; j < faceSize; j++) {
@@ -381,7 +381,7 @@ void Mesh::setDrawMode(GLenum _drawMode) {
 
 void Mesh::setColor(const glm::vec4 &_color) {
     m_colors.clear();
-    for (int i = 0; i < m_vertices.size(); i++) {
+    for (uint i = 0; i < m_vertices.size(); i++) {
         m_colors.push_back(_color);
     }
 }
@@ -454,7 +454,7 @@ void Mesh::add(const Mesh &_mesh){
     addNormals(_mesh.getNormals());
     addTexCoords(_mesh.getTexCoords());
     
-    for (int i = 0; i < _mesh.getIndices().size(); i++) {
+    for (uint i = 0; i < _mesh.getIndices().size(); i++) {
         addIndex(indexOffset+_mesh.getIndices()[i]);
     }
 }
@@ -608,7 +608,7 @@ Vbo* Mesh::getVbo() {
     Vbo* tmpMesh = new Vbo(vertexLayout);
 
     std::vector<GLfloat> data;
-    for(int i = 0; i < m_vertices.size(); i++){ 
+    for(uint i = 0; i < m_vertices.size(); i++){ 
         data.push_back(m_vertices[i].x);
         data.push_back(m_vertices[i].y);
         data.push_back(m_vertices[i].z);

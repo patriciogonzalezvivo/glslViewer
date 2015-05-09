@@ -53,8 +53,8 @@ std::string vertSource =
 
 //  CAMERA
 Camera cam;
-float lat = 0.0;
-float lon = 0.0;;
+float lat = 180.0;
+float lon = 0.0;
 
 //  ASSETS
 Vbo* vbo;
@@ -169,8 +169,8 @@ void onMouseDrag() {
         cam.lookAt(glm::vec3(0.0));
     } else {
         float dist = glm::length(cam.getPosition());
+        dist += (-.008f * (float)mouse.velY);
         if(dist > 0.0f){
-            dist += (-.008f * (float)mouse.velY);
             cam.setPosition( -dist * cam.getZAxis() );
             cam.lookAt(glm::vec3(0.0));
         }
@@ -376,7 +376,7 @@ void renderThread(int argc, char **argv) {
 void watchThread() {
     struct stat st;
     while(1){
-        for(int i = 0; i < files.size(); i++){
+        for(uint i = 0; i < files.size(); i++){
             if( *iHasChanged == -1 ){
                 stat(files[i].path.c_str(), &st);
                 int date = st.st_mtime;
