@@ -21,10 +21,9 @@ varying vec2 v_texcoord;
 void main(void) {
 
     v_position = u_modelViewProjectionMatrix * a_position;
-    v_position = a_position;
     gl_Position = v_position;
 
-    v_color = a_color;
+    // v_color = a_color;
     v_normal = a_normal;
-    v_texcoord = a_texcoord;
+    // v_texcoord = a_texcoord;
 }
