@@ -9,9 +9,10 @@
 #include "platform.h"
 #include "utils.h"
 #include "shader.h"
-#include "vertexLayout.h"
+#include "camera.h"
 #include "vbo.h"
 #include "texture.h"
+#include "mesh.h"
 
 // GLOBAL VARIABLES
 //============================================================================
@@ -26,27 +27,40 @@ struct WatchFile {
 std::vector<WatchFile> files;
 int* iHasChanged;
 
-bool haveExt(const std::string& file, const std::string& ext){
-    return file.find("."+ext) != std::string::npos;
-}
-
 //  SHADER
 Shader shader;
 int iFrag = -1;
 std::string fragSource = "";
 int iVert = -1;
 std::string vertSource =
+"uniform mat4 u_modelViewProjectionMatrix;\n"
+"uniform float u_time;\n"
+"uniform vec2 u_mouse;\n"
+"uniform vec2 u_resolution;\n"
 "attribute vec4 a_position;\n"
+"attribute vec4 a_color;\n"
+"attribute vec3 a_normal;\n"
 "attribute vec2 a_texcoord;\n"
+"varying vec4 v_position;\n"
+"varying vec4 v_color;\n"
+"varying vec3 v_normal;\n"
 "varying vec2 v_texcoord;\n"
 "void main(void) {\n"
-"    gl_Position = a_position*0.5;\n"
-"    v_texcoord = a_texcoord;\n"
+"    v_position = u_modelViewProjectionMatrix * a_position;\n"
+"    gl_Position = v_position;\n"
+//"    v_normal = a_normal;\n"
 "}\n";
 
+//  CAMERA
+Camera cam;
+float lat = 180.0;
+float lon = 0.0;
+
 //  ASSETS
-Vbo* mesh;
+Vbo* vbo;
 int iGeom = -1;
+glm::mat4 model_matrix = glm::mat4(1.);
+
 std::map<std::string,Texture*> textures;
 std::string outputFile = "";
 
@@ -60,40 +74,38 @@ float timeLimit = 0.0f;
 // Billboard
 //============================================================================
 Vbo* rect (float _x, float _y, float _w, float _h) {
-    std::vector<VertexLayout::VertexAttrib> attribs;
-    attribs.push_back({"a_position", 3, GL_FLOAT, false, 0});
-    attribs.push_back({"a_texcoord", 2, GL_FLOAT, false, 0});
-    VertexLayout* vertexLayout = new VertexLayout(attribs);
-
-    struct PosUvVertex {
-        GLfloat pos_x;
-        GLfloat pos_y;
-        GLfloat pos_z;
-        GLfloat texcoord_x;
-        GLfloat texcoord_y;
-    };
-
-    std::vector<PosUvVertex> vertices;
-    std::vector<GLushort> indices;
-
     float x = _x-1.0f;
     float y = _y-1.0f;
     float w = _w*2.0f;
     float h = _h*2.0f;
 
-    vertices.push_back({ x, y, 1.0, 0.0, 0.0 });
-    vertices.push_back({ x+w, y, 1.0, 1.0, 0.0 });
-    vertices.push_back({ x+w, y+h, 1.0, 1.0, 1.0 });
-    vertices.push_back({ x, y+h, 1.0, 0.0, 1.0 });
-    
-    indices.push_back(0); indices.push_back(1); indices.push_back(2);
-    indices.push_back(2); indices.push_back(3); indices.push_back(0);
+    Mesh mesh;
+    mesh.addVertex(glm::vec3(x, y, 0.0));
+    mesh.addColor(glm::vec4(1.0));
+    mesh.addNormal(glm::vec3(0.0, 0.0, 1.0));
+    mesh.addTexCoord(glm::vec2(0.0, 0.0));
 
-    Vbo* tmpMesh = new Vbo(vertexLayout);
-    tmpMesh->addVertices((GLbyte*)vertices.data(), vertices.size());
-    tmpMesh->addIndices(indices.data(), indices.size());
+    mesh.addVertex(glm::vec3(x+w, y, 0.0));
+    mesh.addColor(glm::vec4(1.0));
+    mesh.addNormal(glm::vec3(0.0, 0.0, 1.0));
+    mesh.addTexCoord(glm::vec2(1.0, 0.0));
 
-    return tmpMesh;
+    mesh.addVertex(glm::vec3(x+w, y+h, 0.0));
+    mesh.addColor(glm::vec4(1.0));
+    mesh.addNormal(glm::vec3(0.0, 0.0, 1.0));
+    mesh.addTexCoord(glm::vec2(1.0, 1.0));
+
+    mesh.addVertex(glm::vec3(x, y+h, 0.0));
+    mesh.addColor(glm::vec4(1.0));
+    mesh.addNormal(glm::vec3(0.0, 0.0, 1.0));
+    mesh.addTexCoord(glm::vec2(0.0, 1.0));
+
+    mesh.addIndex(0);   mesh.addIndex(1);   mesh.addIndex(2);
+    mesh.addIndex(2);   mesh.addIndex(3);   mesh.addIndex(0);
+
+    mesh.save("rect.ply");
+
+    return mesh.getVbo();
 }
 
 // Rendering Thread
@@ -149,11 +161,27 @@ void onMouseClick() {
 }
 
 void onMouseDrag() {
-
+    if (mouse.button == 1){
+        float dist = glm::length(cam.getPosition());
+        lat -= mouse.velX;
+        lon -= mouse.velY*0.5;
+        cam.orbit(lat,lon,dist);
+        cam.lookAt(glm::vec3(0.0));
+    } else {
+        float dist = glm::length(cam.getPosition());
+        dist += (-.008f * (float)mouse.velY);
+        if(dist > 0.0f){
+            cam.setPosition( -dist * cam.getZAxis() );
+            cam.lookAt(glm::vec3(0.0));
+        }
+        
+    }
+    
 }
 
 void onViewportResize(int _newWidth, int _newHeight) {
-    resizeViewport(_newWidth,_newHeight); 
+    resizeViewport(_newWidth,_newHeight);
+    cam.setViewport(viewport.width,viewport.height);
 }
 
 void onExit() {
@@ -169,7 +197,7 @@ void onExit() {
         i->second = NULL;
     }
     textures.clear();
-    delete mesh;
+    delete vbo;
 }
 
 void setup() {
@@ -196,11 +224,20 @@ void setup() {
     
     //  Load Geometry
     //
-    if ( iGeom == -1){
-        mesh = rect(0.0,0.0,1.0,1.0);
+    if ( iGeom == -1 ){
+        vbo = rect(0.0,0.0,1.0,1.0);
     } else {
-        // TODO: 
+        glEnable(GL_DEPTH_TEST);
+        Mesh model;
+        model.load(files[iGeom].path);
+        vbo = model.getVbo();
+        glm::vec3 toCentroid = getCentroid(model.getVertices());
+
+        model_matrix = glm::translate(-toCentroid);
     }
+
+    cam.setViewport(viewport.width,viewport.height);
+    cam.setPosition(glm::vec3(0.0,0.0,-3.));
 }
 
 void draw(){
@@ -219,18 +256,24 @@ void draw(){
     timeSec = (timeNow - timeStart)*0.001;
 
     shader.use();
-    shader.sendUniform("u_time", timeSec);
-    shader.sendUniform("u_mouse", mouse.x, mouse.y);
-    shader.sendUniform("u_resolution",viewport.width, viewport.height);
+    shader.setUniform("u_time", timeSec);
+    shader.setUniform("u_mouse", mouse.x, mouse.y);
+    shader.setUniform("u_resolution",viewport.width, viewport.height);
+
+    glm::mat4 mvp = glm::mat4(1.);
+    if (iGeom != -1) {
+        mvp = cam.getProjectionViewMatrix() * model_matrix;
+    }
+    shader.setUniform("u_modelViewProjectionMatrix", mvp);
 
     unsigned int index = 0;
     for (std::map<std::string,Texture*>::iterator it = textures.begin(); it!=textures.end(); ++it) {
-        shader.sendUniform(it->first,it->second,index);
-        shader.sendUniform(it->first+"Resolution",it->second->getWidth(),it->second->getHeight());
+        shader.setUniform(it->first,it->second,index);
+        shader.setUniform(it->first+"Resolution",it->second->getWidth(),it->second->getHeight());
         index++;
     }
 
-    mesh->draw(&shader);
+    vbo->draw(&shader);
 }
 
 void renderThread(int argc, char **argv) {
@@ -333,9 +376,9 @@ void renderThread(int argc, char **argv) {
 void watchThread() {
     struct stat st;
     while(1){
-        for(int i = 0; i < files.size(); i++){
+        for(uint i = 0; i < files.size(); i++){
             if( *iHasChanged == -1 ){
-                int ierr = stat(files[i].path.c_str(), &st);
+                stat(files[i].path.c_str(), &st);
                 int date = st.st_mtime;
                 if (date != files[i].lastChange ){
                     *iHasChanged = i;

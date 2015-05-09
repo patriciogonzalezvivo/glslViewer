@@ -72,14 +72,13 @@ void Vbo::addVertices(GLbyte* _vertices, int _nVertices) {
     
     // Only add up to 65535 vertices, any more will overflow our 16-bit indices
     int indexSpace = MAX_INDEX_VALUE - m_nVertices;
-    if (_nVertices > indexSpace) {
-        _nVertices = indexSpace;
+    if (_nVertices / m_vertexLayout->getStride() > indexSpace) {
+        _nVertices = indexSpace * m_vertexLayout->getStride();
         std::cout << "WARNING: Tried to add more vertices than available in index space" << std::endl;
     }
 
-    int vertexBytes = m_vertexLayout->getStride() * _nVertices;
-    m_vertexData.insert(m_vertexData.end(), _vertices, _vertices + vertexBytes);
-    m_nVertices += _nVertices;
+    m_vertexData.insert(m_vertexData.end(), _vertices, _vertices + _nVertices * sizeof(GL_FLOAT));
+    m_nVertices += _nVertices / m_vertexLayout->getStride();
 
 }
 
