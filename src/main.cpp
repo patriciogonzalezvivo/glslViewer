@@ -104,9 +104,7 @@ Vbo* rect (float _x, float _y, float _w, float _h) {
 
     mesh.addIndex(0);   mesh.addIndex(1);   mesh.addIndex(2);
     mesh.addIndex(2);   mesh.addIndex(3);   mesh.addIndex(0);
-
-    mesh.save("rect.ply");
-
+    
     return mesh.getVbo();
 }
 
