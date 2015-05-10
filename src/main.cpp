@@ -234,7 +234,7 @@ void setup() {
         model.load(files[iGeom].path);
         vbo = model.getVbo();
         glm::vec3 toCentroid = getCentroid(model.getVertices());
-
+        // model_matrix = glm::scale(glm::vec3(0.001));
         model_matrix = glm::translate(-toCentroid);
     }
 
@@ -264,6 +264,13 @@ void draw(){
 
     glm::mat4 mvp = glm::mat4(1.);
     if (iGeom != -1) {
+        shader.setUniform("u_eye", -cam.getPosition());
+        shader.setUniform("u_normalMatrix", cam.getNormalMatrix());
+
+        shader.setUniform("u_modelMatrix", model_matrix);
+        shader.setUniform("u_viewMatrix", cam.getViewMatrix());
+        shader.setUniform("u_projectionMatrix", cam.getProjectionMatrix());
+        
         mvp = cam.getProjectionViewMatrix() * model_matrix;
     }
     shader.setUniform("u_modelViewProjectionMatrix", mvp);
@@ -425,7 +432,9 @@ int main(int argc, char **argv){
                 files.push_back(file);
                 iVert = files.size()-1;
             }
-        } else if ( iGeom == -1 && haveExt(argument,"ply") ) {
+        } else if ( iGeom == -1 && 
+                    ( haveExt(argument,"ply") || haveExt(argument,"PLY") ||
+                      haveExt(argument,"obj") || haveExt(argument,"OBJ") ) ) {
             int ierr = stat(argument.c_str(), &st);
             if (ierr != 0) {
                     std::cerr << "Error watching file " << argument << std::endl;

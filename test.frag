@@ -44,7 +44,7 @@ void main (void) {
 
 	//	Load image and fix their aspect ratio
 	float imgAspect = u_tex0Resolution.x/u_tex0Resolution.y;
-	vec4 img = texture2D(u_tex0,st*vec2(1.,imgAspect)+vec2(0.0,-0.1));
+	vec4 img = texture2D(u_tex0,st*vec2(1.,imgAspect));
 
     if ( u_tex0Resolution != vec2(0.0) ){
 	    color = mix(color,img.rgb,img.a);

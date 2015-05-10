@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <string>
 #include <map>
 
 #include "gl.h"
@@ -23,7 +24,9 @@ public:
 
     void enable(const Shader* _program);
 
-    GLint getStride() const { return m_stride; };
+    GLint       getStride() const { return m_stride; };
+    std::string getDefaultVertShader();
+    std::string getDefaultFragShader();
 
 private:
 

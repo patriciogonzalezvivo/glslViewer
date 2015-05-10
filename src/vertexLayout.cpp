@@ -1,4 +1,5 @@
 #include "vertexLayout.h"
+#include "utils.h"
 
 std::map<GLint, GLuint> VertexLayout::s_enabledAttribs = std::map<GLint, GLuint>();
 
@@ -61,4 +62,45 @@ void VertexLayout::enable(const Shader* _program) {
             boundProgram = 0;
         }
     }
+}
+
+std::string VertexLayout::getDefaultVertShader(){
+    std::string rta = 
+"#ifdef GL_ES\n"
+"precision mediump float;\n"
+"#endif\n";
+
+    rta +=
+"uniform mat4 u_modelViewProjectionMatrix;\n"
+"uniform float u_time;\n"
+"uniform vec2 u_mouse;\n"
+"uniform vec2 u_resolution;\n";
+
+    for ( uint i = 0; i < m_attribs.size(); i++ ){
+        rta += "attribute vec" + getString(m_attribs[i].size) + " " + m_attribs[i].name + ";\n";
+    }
+
+    rta +=
+"varying vec4 v_position;\n"
+"varying vec4 v_color;\n"
+"varying vec3 v_normal;\n"
+"varying vec2 v_texcoord;\n"
+"void main(void) {\n";
+
+    rta +=
+"    v_position = u_modelViewProjectionMatrix * a_position;\n"
+"    gl_Position = v_position;\n"
+"    v_color = a_color;\n"
+"    v_normal = a_normal;\n"
+"    v_texcoord = a_texcoord;\n";
+
+    rta +=  "}\n";
+
+    return rta;
+}
+
+std::string VertexLayout::getDefaultFragShader(){
+    std::string rta;
+
+    return rta;
 }

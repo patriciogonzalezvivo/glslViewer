@@ -4,6 +4,8 @@
 #include "utils.h"
 #include "vertexLayout.h"
 
+#include "tinyobjloader/tiny_obj_loader.h"
+
 Mesh::Mesh():m_drawMode(GL_TRIANGLES) {
     
 }
@@ -17,7 +19,7 @@ Mesh::~Mesh(){
 }
 
 bool Mesh::load(const std::string& _file) {
-    if ( haveExt(_file,"ply") ){
+    if ( haveExt(_file,"ply") || haveExt(_file,"PLY") ){
         std::fstream is(_file.c_str(), std::ios::in);
         if(is.is_open()){
             
@@ -258,6 +260,46 @@ bool Mesh::load(const std::string& _file) {
         is.close();
         std::cout << "ERROR glMesh, can not load  " << _file << std::endl;
         return false;
+    } else if ( haveExt(_file,"obj") || haveExt(_file,"OBJ") ) {
+        std::vector<tinyobj::shape_t> shapes;
+        std::vector<tinyobj::material_t> materials;
+        std::string err = tinyobj::LoadObj(shapes, materials, _file.c_str(), NULL);
+        if (!err.empty()) {
+            std::cerr << err << std::endl;
+            return false;
+        }
+
+        for (size_t i = 0; i < shapes.size(); i++) {
+            if ((shapes[i].mesh.positions.size() % 3) == 0) {
+                for (size_t v = 0; v < shapes[i].mesh.positions.size() / 3; v++) {
+                    addVertex(glm::vec3(shapes[i].mesh.positions[3*v+0],
+                                        shapes[i].mesh.positions[3*v+1],
+                                        shapes[i].mesh.positions[3*v+2]));
+                }
+            }
+            
+            if ( (shapes[i].mesh.normals.size() % 3) == 0) {
+                for (size_t v = 0; v < shapes[i].mesh.normals.size() / 3; v++) {
+                    addNormal(glm::vec3(shapes[i].mesh.normals[3*v+0],
+                                        shapes[i].mesh.normals[3*v+1],
+                                        shapes[i].mesh.normals[3*v+2]));
+                }
+            } 
+
+            if ( (shapes[i].mesh.texcoords.size() % 2) == 0) {
+                for (size_t v = 0; v < shapes[i].mesh.texcoords.size() / 2; v++) {
+                    addTexCoord(glm::vec2(  shapes[i].mesh.texcoords[2*v+0],
+                                            shapes[i].mesh.texcoords[2*v+1] ));
+                }
+            } 
+            
+            if ( (shapes[i].mesh.indices.size() % 3) == 0) {
+                for (size_t f = 0; f < shapes[i].mesh.indices.size() / 3; f++) {
+                    addTriangle(shapes[i].mesh.indices[3*f+0], shapes[i].mesh.indices[3*f+1],shapes[i].mesh.indices[3*f+2]);
+                }
+            }
+            
+        }
     }
     return false;
 }

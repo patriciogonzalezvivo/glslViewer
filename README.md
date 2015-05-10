@@ -77,13 +77,13 @@ vim test.frag
 
 **Note**: On Linux and MacOS you may used to edit your shaders with Sublime Text 2, if thats your case you should try this [Sublime Text 2 plugin that lunch glslViewer every time you open a shader](https://packagecontrol.io/packages/glslViewer).
 
-You can also load both fragments and vertex shaders.
+### Loading Vertex shaders and geometries
+
+You can also load both fragments and vertex shaders. Of course modifing a vertex shader makes no sense unless you load an interesting geometry. That's why ```glslViewer``` is can load ```.ply``` files. Try doing:
 
 ```bash
-glslViewer test.frag test.vert 
+glslViewer bunny.frag bunny.vert bunny.ply
 ```
-
-**Note**: All this files will be updated inmediatly if they change.
 
 ### Pre-Define ```uniforms``` and ```varyings```
 
@@ -139,11 +139,4 @@ You can include other GLSL code using a traditional ```#include “file.glsl”`
 
 ## Acknowledgements
 
-Inspired by [Karim’s Naaki](http://karim.naaji.fr/) [fragTool](https://github.com/karimnaaji/fragtool)
-
-<form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top" style="float: right;">
-<input type="hidden" name="cmd" value="_s-xclick">
-<input type="hidden" name="hosted_button_id" value="4BQMKQJDQ9XH6">
-<input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_donate_LG.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!">
-<img alt="" border="0" src="https://www.paypalobjects.com/en_US/i/scr/pixel.gif" width="1" height="1">
-</form>
+Inspired by [Karim’s Naaki](http://karim.naaji.fr/) [fragTool](https://github.com/karimnaaji/fragtool).
