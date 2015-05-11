@@ -202,6 +202,9 @@ void onExit() {
 
 void setup() {
 
+    glEnable(GL_DEPTH_TEST);
+    glFrontFace(GL_CCW);
+    
     gettimeofday(&tv, NULL);
     timeStart = (unsigned long long)(tv.tv_sec) * 1000 +
                 (unsigned long long)(tv.tv_usec) / 1000; 
@@ -227,7 +230,6 @@ void setup() {
     if ( iGeom == -1 ){
         vbo = rect(0.0,0.0,1.0,1.0);
     } else {
-        glEnable(GL_DEPTH_TEST);
         Mesh model;
         model.load(files[iGeom].path);
         vbo = model.getVbo();

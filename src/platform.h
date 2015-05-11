@@ -77,6 +77,7 @@ void initGL(int argc, char **argv){
         EGL_BLUE_SIZE, 8,
         EGL_ALPHA_SIZE, 8,
         EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+        EGL_DEPTH_SIZE, 16,
         EGL_NONE
     };
 
