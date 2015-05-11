@@ -28,10 +28,11 @@ void onMouseClick();
 void onMouseDrag();
 void onViewportResize(int _width, int _height);
 
-void resizeViewport(int _width, int _height) {
+void resizeViewport(uint _width, uint _height) {
     viewport.width = _width;
     viewport.height = _height;
     glViewport(0, 0, viewport.width, viewport.height);
+    onViewportResize(viewport.width, viewport.height);
 }
 
 bool bPlay = true;
@@ -183,7 +184,7 @@ bool isGL(){
     return true;
 }
 
-bool updateMouse(){
+bool getMouse(){
     static int fd = -1;
 
     const int XSIGN = 1<<4, YSIGN = 1<<5;
@@ -254,7 +255,7 @@ bool updateMouse(){
     return false;
 }
 
-int getkey() {
+int getKey() {
     int character;
     struct termios orig_term_attr;
     struct termios new_term_attr;
@@ -278,17 +279,15 @@ int getkey() {
 }
 
 void updateGL(){
-    updateMouse();
+    getMouse();
 
-    int key = getkey();
+    int key = getKey();
     if ( key != 0 && key != keyPressed ){
         keyPressed = key;
         onKeyPress(key);
     } else {
         keyPressed = -1;
-    }
-
-    
+    }    
 }
 
 void renderGL(){
@@ -339,7 +338,7 @@ void fixDpiScale(){
 
 void handleResize(GLFWwindow* _window, int _w, int _h) {
     fixDpiScale();
-    onViewportResize(_w*dpiScale,_h*dpiScale);
+    resizeViewport(_w*dpiScale,_h*dpiScale);
 }
 
 void handleCursor(GLFWwindow* _window, double x, double y) {
@@ -417,6 +416,7 @@ void initGL(int argc, char **argv){
     fixDpiScale();
     viewport.width *= dpiScale;
     viewport.height *= dpiScale;
+    resizeViewport(viewport.width,viewport.height);
 
     glfwMakeContextCurrent(window);
 
