@@ -10,10 +10,7 @@ MACHINE := $(shell uname -m)
 PLATFORM = RPI
 
 INCLUDES +=	-Isrc/ -Iinclude/
-
 CFLAGS += -Wall -g -std=c++0x -fpermissive
-
-# LDFLAGS = 
 
 ifeq ($(UNAME), Darwin)
 PLATFORM = OSX
@@ -35,15 +32,13 @@ INCLUDES += -I$(SDKSTAGE)/opt/vc/include/ \
 LDFLAGS += -L$(SDKSTAGE)/opt/vc/lib/ \
 			-lGLESv2 -lEGL \
 			-lbcm_host \
-
 else ifeq ($(PLATFORM),LINUX)
 CFLAGS += -DPLATFORM_LINUX $(shell pkg-config --cflags glfw3 glu gl) 
 LDFLAGS += $(shell pkg-config --libs glfw3 glu gl x11 xrandr xi xxf86vm xcursor xinerama xrender xext xdamage) -lpthread 
-
 else ifeq ($(PLATFORM),OSX)
-CFLAGS += -DPLATFORM_OSX -stdlib=libc++ $(shell pkg-config --cflags glfw3) -I/usr/local/include/
-INCLUDES += -I//Library/Frameworks/GLUI.framework
-LDFLAGS += -framework OpenGL -framework Cocoa -framework CoreVideo -framework IOKit $(shell pkg-config --libs glfw3) -L/usr/local/lib/
+CFLAGS += -DPLATFORM_OSX -stdlib=libc++ 
+INCLUDES += $(shell pkg-config --cflags glfw3) -I/usr/local/include/ -I//Library/Frameworks/GLUI.framework
+LDFLAGS += -framework OpenGL -framework Cocoa -framework CoreVideo -framework IOKit $(shell pkg-config --libs glfw3)
 ARCH = -arch x86_64
 endif
 
