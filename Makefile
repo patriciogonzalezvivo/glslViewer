@@ -34,7 +34,7 @@ INCLUDES += -I$(SDKSTAGE)/opt/vc/include/ \
 
 LDFLAGS += -L$(SDKSTAGE)/opt/vc/lib/ \
 			-lGLESv2 -lEGL \
-			-lbcm_host \
+			-lbcm_host
 
 else ifeq ($(PLATFORM),LINUX)
 CFLAGS += -DPLATFORM_LINUX $(shell pkg-config --cflags glfw3 glu gl) 
