@@ -17,6 +17,7 @@
 // GLOBAL VARIABLES
 //============================================================================
 //
+bool bPlay = true;
 
 //  List of FILES to watch and the variable to communicate that between process
 struct WatchFile {
@@ -209,6 +210,7 @@ int main(int argc, char **argv){
             // Initialize openGL context
             initGL(argc,argv);
 
+            resizeGL();
             // OpenGL Render Loop
             renderThread(argc,argv);
             
@@ -249,7 +251,7 @@ void renderThread(int argc, char **argv) {
     
     // Setup
     setup();
-    resizeViewport(viewport.width, viewport.height);
+    resizeGL(viewport.width, viewport.height);
 
     // Turn on Alpha blending
     glEnable(GL_BLEND);
