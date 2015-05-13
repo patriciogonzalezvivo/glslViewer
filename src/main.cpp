@@ -6,7 +6,7 @@
 #include <signal.h>
 #include <map>
 
-#include "platform.h"
+#include "context.h"
 #include "utils.h"
 #include "shader.h"
 #include "camera.h"
@@ -17,7 +17,7 @@
 // GLOBAL VARIABLES
 //============================================================================
 //
-bool bPlay = true;
+static bool bPlay = true;
 
 //  List of FILES to watch and the variable to communicate that between process
 struct WatchFile {
@@ -210,7 +210,6 @@ int main(int argc, char **argv){
             // Initialize openGL context
             initGL(argc,argv);
 
-            resizeGL();
             // OpenGL Render Loop
             renderThread(argc,argv);
             
@@ -251,7 +250,7 @@ void renderThread(int argc, char **argv) {
     
     // Setup
     setup();
-    resizeGL(viewport.width, viewport.height);
+    // setWindowSize(viewport.width, viewport.height);
 
     // Turn on Alpha blending
     glEnable(GL_BLEND);
@@ -339,7 +338,6 @@ void renderThread(int argc, char **argv) {
 }
 
 void setup() {
-
     glEnable(GL_DEPTH_TEST);
     glFrontFace(GL_CCW);
     
@@ -375,8 +373,9 @@ void setup() {
         // model_matrix = glm::scale(glm::vec3(0.001));
         model_matrix = glm::translate(-toCentroid);
     }
+    
+    cam.setViewport(getWindowWidth(),getWindowHeight());
 
-    cam.setViewport(viewport.width,viewport.height);
     cam.setPosition(glm::vec3(0.0,0.0,-3.));
 }
 
@@ -397,8 +396,8 @@ void draw(){
 
     shader.use();
     shader.setUniform("u_time", timeSec);
-    shader.setUniform("u_mouse", mouse.x, mouse.y);
-    shader.setUniform("u_resolution",viewport.width, viewport.height);
+    shader.setUniform("u_mouse", getMouseX(), getMouseY());
+    shader.setUniform("u_resolution",getWindowWidth(), getWindowHeight());
 
     glm::mat4 mvp = glm::mat4(1.);
     if (iGeom != -1) {
@@ -456,9 +455,9 @@ void onFileChange(){
 void onKeyPress(int _key) {
     if( _key == 'q' || _key == 'Q' || _key == 's' || _key == 'S' ){
         if (outputFile != "") {
-            unsigned char* pixels = new unsigned char[viewport.width*viewport.height*4];
-            glReadPixels(0, 0, viewport.width, viewport.height, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-            Texture::savePixels(outputFile, pixels, viewport.width, viewport.height);
+            unsigned char* pixels = new unsigned char[getWindowWidth()*getWindowHeight()*4];
+            glReadPixels(0, 0, getWindowWidth(), getWindowHeight(), GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+            Texture::savePixels(outputFile, pixels, getWindowWidth(), getWindowHeight());
         }
     }
 
@@ -467,24 +466,24 @@ void onKeyPress(int _key) {
     }
 }
 
-void onMouseMove() {
+void onMouseMove(float _x, float _y) {
 
 }
 
-void onMouseClick() {
+void onMouseClick(float _x, float _y, int _button) {
 
 }
 
-void onMouseDrag() {
-    if (mouse.button == 1){
+void onMouseDrag(float _x, float _y, int _button) {
+    if (_button == 1){
         float dist = glm::length(cam.getPosition());
-        lat -= mouse.velX;
-        lon -= mouse.velY*0.5;
+        lat -= getMouseVelX();
+        lon -= getMouseVelY()*0.5;
         cam.orbit(lat,lon,dist);
         cam.lookAt(glm::vec3(0.0));
     } else {
         float dist = glm::length(cam.getPosition());
-        dist += (-.008f * (float)mouse.velY);
+        dist += (-.008f * getMouseVelY());
         if(dist > 0.0f){
             cam.setPosition( -dist * cam.getZAxis() );
             cam.lookAt(glm::vec3(0.0));
