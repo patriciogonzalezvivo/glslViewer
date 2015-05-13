@@ -1,12 +1,30 @@
-#pragma once
+#include "context.h"
 
 #include <assert.h>
 #include <fcntl.h>
 #include <iostream>
 #include <termios.h>
 
-#include "gl.h"
 #include "utils.h"
+
+#ifdef PLATFORM_RPI
+typedef struct {
+    uint32_t screen_width;
+    uint32_t screen_height;
+    EGLDisplay display;
+    EGLSurface surface;
+    EGLContext context;
+} CUBE_STATE_T;
+static CUBE_STATE_T _state, *state=&_state;
+#else
+static GLFWwindow* window;
+static float dpiScale = 1.0;
+#endif
+
+typedef struct {
+    uint32_t x, y, width, height;
+} Viewport;
+static Viewport viewport;
 
 typedef struct {
     float   x,y;
@@ -16,42 +34,10 @@ typedef struct {
 static Mouse mouse;
 static unsigned char keyPressed;
 
-typedef struct {
-    uint32_t x, y, width, height;
-} Viewport;
-static Viewport viewport;
-
-// Define events
-void onKeyPress(int _key);
-void onMouseMove();
-void onMouseClick();
-void onMouseDrag();
-void onViewportResize(int _width, int _height);
-
-void resizeViewport(uint _width, uint _height) {
-    viewport.width = _width;
-    viewport.height = _height;
-    glViewport(0, 0, viewport.width, viewport.height);
-    onViewportResize(viewport.width, viewport.height);
-}
-
-bool bPlay = true;
-
-#ifdef PLATFORM_RPI
 
 // OPENGL through BREADCOM GPU on RASPBERRYPI
 //----------------------------------------------------
-typedef struct {
-    uint32_t screen_width;
-    uint32_t screen_height;
-
-    EGLDisplay display;
-    EGLSurface surface;
-    EGLContext context;
-
-} CUBE_STATE_T;
-static CUBE_STATE_T _state, *state=&_state;
-
+#ifdef PLATFORM_RPI
 void initGL(int argc, char **argv){
 
     // Start OpenGL ES
@@ -177,7 +163,7 @@ void initGL(int argc, char **argv){
     result = eglMakeCurrent(state->display, state->surface, state->surface, state->context);
     assert(EGL_FALSE != result);
 
-    printf("OpenGL Initialize at %i,%i,%i,%i\n",viewport.x,viewport.y,viewport.width,viewport.height);
+    ///printf("OpenGL Initialize at %i,%i,%i,%i\n",viewport.x,viewport.y,viewport.width,viewport.height);
 }
 
 bool isGL(){
@@ -237,16 +223,16 @@ bool getMouse(){
         // Lunch events
         if(mouse.button == 0 && button != mouse.button){
             mouse.button = button;
-            onMouseClick();
+            onMouseClick(mouse.x,mouse.y,mouse.button);
         } else {
             mouse.button = button;
         }
 
         if(mouse.velX != 0.0 || mouse.velY != 0.0){
             if (button != 0) {
-                onMouseDrag();
+                onMouseDrag(mouse.x,mouse.y,mouse.button);
             } else {
-                onMouseMove();
+                onMouseMove(mouse.x,mouse.y);
             }
         }  
 
@@ -285,9 +271,7 @@ void updateGL(){
     if ( key != 0 && key != keyPressed ){
         keyPressed = key;
         onKeyPress(key);
-    } else {
-        keyPressed = -1;
-    }    
+    }  
 }
 
 void renderGL(){
@@ -303,17 +287,13 @@ void closeGL(){
     eglDestroyContext( state->display, state->context );
     eglTerminate( state->display );
 
-    printf("\nOpenGL Closed\n");
+    // printf("\nOpenGL Closed\n");
 }
 
 #else  // PLATFORM_LINUX || PLATFORM_OSX
 
 // OPENGL through GLFW on LINUX and OSX
 //----------------------------------------------------
-
-static GLFWwindow* window;
-static float dpiScale = 1.0;
-
 void handleError(const std::string& _message, int _exitStatus) {
     std::cerr << "ABORT: "<< _message << std::endl;
     exit(_exitStatus);
@@ -321,12 +301,6 @@ void handleError(const std::string& _message, int _exitStatus) {
 
 void handleKeypress(GLFWwindow* _window, int _key, int _scancode, int _action, int _mods) {
     onKeyPress(_key);
-
-    switch (_key) {
-        case 256: // ESC
-            bPlay = false;
-            break;
-    }
 }
 
 void fixDpiScale(){
@@ -338,7 +312,7 @@ void fixDpiScale(){
 
 void handleResize(GLFWwindow* _window, int _w, int _h) {
     fixDpiScale();
-    resizeViewport(_w*dpiScale,_h*dpiScale);
+    setWindowSize(_w*dpiScale,_h*dpiScale);
 }
 
 void handleCursor(GLFWwindow* _window, double x, double y) {
@@ -370,16 +344,16 @@ void handleCursor(GLFWwindow* _window, double x, double y) {
     // Lunch events
     if(mouse.button == 0 && button != mouse.button){
         mouse.button = button;
-        onMouseClick();
+        onMouseClick(mouse.x,mouse.y,mouse.button);
     } else {
         mouse.button = button;
     }
 
     if(mouse.velX != 0.0 || mouse.velY != 0.0){
         if (button != 0) {
-            onMouseDrag();
+            onMouseDrag(mouse.x,mouse.y,mouse.button);
         } else {
-            onMouseMove();
+            onMouseMove(mouse.x,mouse.y);
         }
     }    
 }
@@ -416,7 +390,7 @@ void initGL(int argc, char **argv){
     fixDpiScale();
     viewport.width *= dpiScale;
     viewport.height *= dpiScale;
-    resizeViewport(viewport.width,viewport.height);
+    setWindowSize(viewport.width,viewport.height);
 
     glfwMakeContextCurrent(window);
 
@@ -443,3 +417,42 @@ void closeGL(){
     glfwTerminate();
 }
 #endif
+
+void setWindowSize(int _width, int _height) {
+    viewport.width = _width;
+    viewport.height = _height;
+    glViewport(0, 0, viewport.width, viewport.height);
+    onViewportResize(viewport.width, viewport.height);
+}
+
+int getWindowWidth(){
+    return viewport.width;
+}
+
+int getWindowHeight(){
+    return viewport.height;
+}
+
+float getMouseX(){
+    return mouse.x;
+}
+
+float getMouseY(){
+    return mouse.y;
+}
+
+int getMouseButton(){
+    return mouse.button;
+}
+
+float getMouseVelX(){
+    return mouse.velX;
+}
+
+float getMouseVelY(){
+    return mouse.velY;
+}
+
+unsigned char getKeyPressed(){
+    return keyPressed;
+}
