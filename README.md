@@ -79,6 +79,8 @@ vim test.frag
 
 ### Loading Vertex shaders and geometries
 
+![](http://patriciogonzalezvivo.com/images/glslViewer-3D.gif)
+
 You can also load both fragments and vertex shaders. Of course modifing a vertex shader makes no sense unless you load an interesting geometry. That's why ```glslViewer``` is can load ```.ply``` files. Try doing:
 
 ```bash
