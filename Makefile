@@ -9,7 +9,7 @@ UNAME := $(shell uname -s)
 MACHINE := $(shell uname -m)
 PLATFORM = RPI
 
-INCLUDES +=	-Isrc/ -Iinclude/
+INCLUDES +=	-Isrc/ -Iinclude/ -03
 CFLAGS += -Wall -g -std=c++0x -fpermissive
 
 ifeq ($(UNAME), Darwin)
