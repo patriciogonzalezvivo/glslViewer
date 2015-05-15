@@ -1,6 +1,6 @@
 #pragma once
 
-#include "gl.h"
+#include "gl/gl.h"
 
 // GL Context
 void initGL(int argc, char **argv);

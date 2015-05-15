@@ -62,6 +62,7 @@ public:
     void addIndices(GLushort* _indices, int _nIndices);
 
     int numIndices() const { return m_indices.size(); };
+    VertexLayout* getVertexLayout() { return m_vertexLayout; };
 
     /*
      * Copies all added vertices and indices into OpenGL buffer objects; After geometry is uploaded,
