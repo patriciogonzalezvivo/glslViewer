@@ -14,6 +14,8 @@
 #include "3d/camera.h"
 #include "types/shapes.h"
 
+#include "ui/cursor.h"
+
 // GLOBAL VARIABLES
 //============================================================================
 //
@@ -48,6 +50,9 @@ glm::mat4 model_matrix = glm::mat4(1.);
 std::map<std::string,Texture*> textures;
 std::string outputFile = "";
 
+//  CURSOR
+Cursor cursor;
+
 //  TIME
 struct timeval tv;
 unsigned long long timeStart;
@@ -70,7 +75,7 @@ int main(int argc, char **argv){
 
     // Load files to watch
     struct stat st;
-    for (int i = 1; i < argc ; i++){
+    for (uint i = 1; i < argc ; i++){
         std::string argument = std::string(argv[i]);
 
         if ( iFrag == -1 && ( haveExt(argument,"frag") || haveExt(argument,"fs") ) ) {
@@ -206,7 +211,7 @@ void renderThread(int argc, char **argv) {
     int textureCounter = 0;
 
     //Load the the resources (textures)
-    for (int i = 1; i < argc ; i++){
+    for (uint i = 1; i < argc ; i++){
         std::string argument = std::string(argv[i]);
 
         if (argument == "-x" || argument == "-y" || 
@@ -324,7 +329,7 @@ void setup() {
     cam.setViewport(getWindowWidth(),getWindowHeight());
     cam.setPosition(glm::vec3(0.0,0.0,-3.));
 
-    
+    cursor.init();
 }
 
 void draw(){
@@ -368,6 +373,9 @@ void draw(){
     }
 
     vbo->draw(&shader);
+
+    cursor.draw();
+
 }
 
 // Rendering Thread

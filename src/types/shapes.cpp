@@ -57,8 +57,8 @@ Mesh rect (const Rectangle &_rect){
     mesh.addNormal(glm::vec3(0.0, 0.0, 1.0));
     mesh.addTexCoord(glm::vec2(0.0, 1.0));
 
-    mesh.addIndex(0);   mesh.addIndex(1);   mesh.addIndex(2);
-    mesh.addIndex(2);   mesh.addIndex(3);   mesh.addIndex(0);
+    mesh.addIndex(2);   mesh.addIndex(1);   mesh.addIndex(0);
+    mesh.addIndex(0);   mesh.addIndex(3);   mesh.addIndex(2);
     
     return mesh;
 }
@@ -111,6 +111,21 @@ Mesh cross (const glm::vec3 &_pos, float _width) {
     return mesh;
 }
 
+void drawCross(const glm::vec3 &_pos, const float &_width ){
+    glm::ivec3 linePoints[4] = {glm::ivec3(_pos.x,_pos.y,_pos.z),
+        glm::ivec3(_pos.x,_pos.y,_pos.z),
+        glm::ivec3(_pos.x,_pos.y,_pos.z),
+        glm::ivec3(_pos.x,_pos.y,_pos.z) };
+    linePoints[0].x -= _width;
+    linePoints[1].x += _width;
+    linePoints[2].y -= _width;
+    linePoints[3].y += _width;
+    
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glVertexPointer(2, GL_INT, sizeof(glm::ivec3), &linePoints[0].x);
+    glDrawArrays(GL_LINES, 0, 4);
+}
+
 Mesh line (const glm::vec3 &_a, const glm::vec3 &_b) {
     glm::vec3 linePoints[2];
     linePoints[0] = glm::vec3(_a.x,_a.y,_a.z);
@@ -126,58 +141,5 @@ Mesh polyline (const std::vector<glm::vec3> &_pts ) {
 	Mesh mesh;
     mesh.addVertices(_pts);
     mesh.setDrawMode(GL_LINE_STRIP);
-    return mesh;
-}
-
-Mesh wireframe (const Mesh &_mesh) {
-	Mesh mesh;
-	std::vector<glm::ivec3> triangles = _mesh.getTriangles();
-
-	mesh.setDrawMode(GL_LINES);    
-    for (int i = 0; i < triangles.size(); i++) {
-
-    	mesh.addVertex( _mesh.getVertices()[triangles[i].x] );
-        mesh.addVertex( _mesh.getVertices()[triangles[i].y] );
-        
-        mesh.addVertex( _mesh.getVertices()[triangles[i].y] );
-        mesh.addVertex( _mesh.getVertices()[triangles[i].z] );
-        
-        mesh.addVertex( _mesh.getVertices()[triangles[i].z] );
-        mesh.addVertex( _mesh.getVertices()[triangles[i].x] );
-
-        if (_mesh.getColors().size() > 0){
-        	mesh.addColor( _mesh.getColors()[triangles[i].x] );
-	        mesh.addColor( _mesh.getColors()[triangles[i].y] );
-	        
-	        mesh.addColor( _mesh.getColors()[triangles[i].y] );
-	        mesh.addColor( _mesh.getColors()[triangles[i].z] );
-	        
-	        mesh.addColor( _mesh.getColors()[triangles[i].z] );
-	        mesh.addColor( _mesh.getColors()[triangles[i].x] );
-        }
-
-        if (_mesh.getNormals().size() > 0){
-        	mesh.addNormal( _mesh.getNormals()[triangles[i].x] );
-	        mesh.addNormal( _mesh.getNormals()[triangles[i].y] );
-	        
-	        mesh.addNormal( _mesh.getNormals()[triangles[i].y] );
-	        mesh.addNormal( _mesh.getNormals()[triangles[i].z] );
-	        
-	        mesh.addNormal( _mesh.getNormals()[triangles[i].z] );
-	        mesh.addNormal( _mesh.getNormals()[triangles[i].x] );
-        }
-
-        if (_mesh.getTexCoords().size() > 0){
-        	mesh.addTexCoord( _mesh.getTexCoords()[triangles[i].x] );
-	        mesh.addTexCoord( _mesh.getTexCoords()[triangles[i].y] );
-	        
-	        mesh.addTexCoord( _mesh.getTexCoords()[triangles[i].y] );
-	        mesh.addTexCoord( _mesh.getTexCoords()[triangles[i].z] );
-	        
-	        mesh.addTexCoord( _mesh.getTexCoords()[triangles[i].z] );
-	        mesh.addTexCoord( _mesh.getTexCoords()[triangles[i].x] );
-        }
-    }
-
     return mesh;
 }
