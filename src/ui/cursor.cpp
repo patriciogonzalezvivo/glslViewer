@@ -15,7 +15,10 @@ Cursor::~Cursor(){
 }
 
 void Cursor::init(){
-	m_vbo = cross(glm::vec3(0.,0.,0.1), 10.).getVbo();
+	m_vbo = cross(glm::vec3(0.,0.,0.1), 10.).getVbo(); 
+	// Mesh mesh = rectCorners(Rectangle(-50.,-50.,100.,100.),10.);
+	// mesh.add(cross(glm::vec3(0.,0.,0.1), 10.));
+	// m_vbo = mesh.getVbo(); 
 
 	std::string vert =
 "#ifdef GL_ES\n"

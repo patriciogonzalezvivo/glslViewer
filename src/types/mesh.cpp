@@ -675,8 +675,13 @@ Vbo* Mesh::getVbo() {
     tmpMesh->addVertices((GLbyte*)data.data(), data.size());
 
     if(getIndices().size()==0){
-        if ( getDrawMode() == GL_LINES ){
+        if ( getDrawMode() == GL_LINES ) {
             for (uint i = 0; i < getVertices().size(); i++){
+                addIndex(i);
+            }
+        } else if ( getDrawMode() == GL_LINE_STRIP ) {
+            for (uint i = 1; i < getVertices().size(); i++){
+                addIndex(i-1);
                 addIndex(i);
             }
         }

@@ -67,7 +67,7 @@ Mesh rectBorders(const Rectangle &_rect){
     glm::vec3 linePoints[5] = {_rect.getTopLeft(), _rect.getTopRight(), _rect.getBottomRight(), _rect.getBottomLeft(), _rect.getTopLeft()};
     
     Mesh mesh;
-    mesh.addVertices(linePoints,4);
+    mesh.addVertices(linePoints,5);
     mesh.setDrawMode(GL_LINE_STRIP);
     return mesh;
 }
@@ -110,21 +110,6 @@ Mesh cross (const glm::vec3 &_pos, float _width) {
     mesh.addVertices(linePoints,4);
     mesh.setDrawMode(GL_LINES);
     return mesh;
-}
-
-void drawCross(const glm::vec3 &_pos, const float &_width ){
-    glm::ivec3 linePoints[4] = {glm::ivec3(_pos.x,_pos.y,_pos.z),
-        glm::ivec3(_pos.x,_pos.y,_pos.z),
-        glm::ivec3(_pos.x,_pos.y,_pos.z),
-        glm::ivec3(_pos.x,_pos.y,_pos.z) };
-    linePoints[0].x -= _width;
-    linePoints[1].x += _width;
-    linePoints[2].y -= _width;
-    linePoints[3].y += _width;
-
-    glEnableClientState(GL_VERTEX_ARRAY);
-    glVertexPointer(2, GL_INT, sizeof(glm::ivec3), &linePoints[0].x);
-    glDrawArrays(GL_LINES, 0, 4);
 }
 
 Mesh line (const glm::vec3 &_a, const glm::vec3 &_b) {
