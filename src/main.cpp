@@ -1,5 +1,3 @@
-#include <time.h>
-#include <sys/time.h>
 #include <sys/shm.h>
 #include <sys/stat.h> 
 #include <unistd.h>
@@ -53,11 +51,7 @@ std::string outputFile = "";
 //  CURSOR
 Cursor cursor;
 
-//  TIME
-struct timeval tv;
-unsigned long long timeStart;
-unsigned long long timeNow;
-float timeSec = 0.0f;
+//  Time limit
 float timeLimit = 0.0f;
 
 //================================================================= Functions
@@ -279,7 +273,7 @@ void renderThread(int argc, char **argv) {
         // Swap the buffers
         renderGL();
 
-        if ( timeLimit > 0.0 && timeSec > timeLimit ) {
+        if ( timeLimit > 0.0 && getTime() > timeLimit ) {
             onKeyPress('s');
             bPlay = false;
         }
@@ -290,10 +284,6 @@ void setup() {
     glEnable(GL_DEPTH_TEST);
     glFrontFace(GL_CCW);
     
-    gettimeofday(&tv, NULL);
-    timeStart = (unsigned long long)(tv.tv_sec) * 1000 +
-                (unsigned long long)(tv.tv_usec) / 1000; 
-
     //  Load Geometry
     //
     if ( iGeom == -1 ){
@@ -340,15 +330,8 @@ void draw(){
         *iHasChanged = -1;
     }
 
-    gettimeofday(&tv, NULL);
-
-    timeNow =   (unsigned long long)(tv.tv_sec) * 1000 +
-                (unsigned long long)(tv.tv_usec) / 1000;
-
-    timeSec = (timeNow - timeStart)*0.001;
-
     shader.use();
-    shader.setUniform("u_time", timeSec);
+    shader.setUniform("u_time", getTime());
     shader.setUniform("u_mouse", getMouseX(), getMouseY());
     shader.setUniform("u_resolution",getWindowWidth(), getWindowHeight());
 

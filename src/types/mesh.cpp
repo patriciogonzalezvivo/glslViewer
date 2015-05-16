@@ -648,7 +648,7 @@ Vbo* Mesh::getVbo() {
 
     VertexLayout* vertexLayout = new VertexLayout(attribs);
     Vbo* tmpMesh = new Vbo(vertexLayout);
-    tmpMesh->setDrawMode(m_drawMode);
+    tmpMesh->setDrawMode(getDrawMode());
 
     std::vector<GLfloat> data;
     for(uint i = 0; i < m_vertices.size(); i++){ 
@@ -674,11 +674,15 @@ Vbo* Mesh::getVbo() {
 
     tmpMesh->addVertices((GLbyte*)data.data(), data.size());
 
-    if(getIndices().size()>0){
-        tmpMesh->addIndices(m_indices.data(), m_indices.size());
-    } else {
-        tmpMesh->setDrawMode(getDrawMode());
+    if(getIndices().size()==0){
+        if ( getDrawMode() == GL_LINES ){
+            for (uint i = 0; i < getVertices().size(); i++){
+                addIndex(i);
+            }
+        }
     }
+
+    tmpMesh->addIndices(m_indices.data(), m_indices.size());
 
     return tmpMesh;
 }

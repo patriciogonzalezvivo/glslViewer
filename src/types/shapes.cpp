@@ -91,6 +91,7 @@ Mesh rectCorners(const Rectangle &_rect, float _width ){
     
     Mesh mesh;
     mesh.addVertices(linePoints,16);
+
     mesh.setDrawMode(GL_LINES);
     return mesh;
 }
@@ -120,7 +121,7 @@ void drawCross(const glm::vec3 &_pos, const float &_width ){
     linePoints[1].x += _width;
     linePoints[2].y -= _width;
     linePoints[3].y += _width;
-    
+
     glEnableClientState(GL_VERTEX_ARRAY);
     glVertexPointer(2, GL_INT, sizeof(glm::ivec3), &linePoints[0].x);
     glDrawArrays(GL_LINES, 0, 4);
