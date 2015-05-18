@@ -177,8 +177,8 @@ void initGL(int argc, char **argv){
                                        &src_rect, DISPMANX_PROTECTION_NONE, 0 /*alpha*/, 0/*clamp*/, (DISPMANX_TRANSFORM_T)0/*transform*/);
 
     nativeviewport.element = dispman_element;
-    nativeviewport.z = viewport.z;
-    nativeviewport.w = viewport.w;
+    nativeviewport.width = viewport.z;
+    nativeviewport.height = viewport.w;
     vc_dispmanx_update_submit_sync( dispman_update );
 
     state->surface = eglCreateWindowSurface( state->display, config, &nativeviewport, NULL );
