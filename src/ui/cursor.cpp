@@ -60,6 +60,7 @@ void main(void) {
 
 void Cursor::draw(){
 
+#ifndef PLATFORM_RPI
 	glPolygonOffset(-1.0f, -1.0f);      // Shift depth values
     glEnable(GL_POLYGON_OFFSET_LINE);
 
@@ -70,6 +71,7 @@ void Cursor::draw(){
     glEnable(GL_LINE_SMOOTH);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+ #endif
 
 	m_shader.use();
 	m_shader.setUniform("u_mouse", getMouseX(), getMouseY());
@@ -77,9 +79,11 @@ void Cursor::draw(){
 	m_shader.setUniform("u_modelViewProjectionMatrix", getOrthoMatrix());
 	m_vbo->draw(&m_shader);
 
+#ifndef PLATFORM_RPI
 	// glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	glDisable(GL_POLYGON_OFFSET_LINE);
     glLineWidth(1.0f);
     glDisable(GL_BLEND);
     glDisable(GL_LINE_SMOOTH);
+#endif
 }
