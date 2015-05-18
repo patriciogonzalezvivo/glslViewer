@@ -672,7 +672,7 @@ Vbo* Mesh::getVbo() {
         }
     }
 
-    tmpMesh->addVertices((GLbyte*)data.data(), data.size());
+    tmpMesh->addVertices((GLbyte*)data.data(), m_vertices.size());
 
     if(getIndices().size()==0){
         if ( getDrawMode() == GL_LINES ) {

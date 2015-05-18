@@ -1,27 +1,11 @@
 #include "vbo.h"
 #include <iostream>
 
-#define MAX_INDEX_VALUE 65535 // Maximum value of GLushort
-
-Vbo::Vbo(VertexLayout* _vertexLayout, GLenum _drawMode) : m_vertexLayout(_vertexLayout) {
-
-    m_glVertexBuffer = 0;
-    m_glIndexBuffer = 0;
-    m_nVertices = 0;
-    m_nIndices = 0;
-
-    m_isUploaded = false;
-
+Vbo::Vbo(VertexLayout* _vertexLayout, GLenum _drawMode) : m_vertexLayout(_vertexLayout), m_glVertexBuffer(0), m_nVertices(0), m_glIndexBuffer(0), m_nIndices(0), m_isUploaded(false) {
     setDrawMode(_drawMode);
 }
 
-Vbo::Vbo() {
-    m_glVertexBuffer = 0;
-    m_glIndexBuffer = 0;
-    m_nVertices = 0;
-    m_nIndices = 0;
-
-    m_isUploaded = false;
+Vbo::Vbo() : m_vertexLayout(NULL), m_glVertexBuffer(0), m_nVertices(0), m_glIndexBuffer(0), m_nIndices(0), m_isUploaded(false) {
 }
 
 Vbo::~Vbo() {
@@ -37,6 +21,9 @@ Vbo::~Vbo() {
 }
 
 void Vbo::setVertexLayout(VertexLayout* _vertexLayout) {
+    if (m_vertexLayout != NULL){
+        delete m_vertexLayout;
+    }
     m_vertexLayout = _vertexLayout;
 }
 
@@ -58,13 +45,10 @@ void Vbo::setDrawMode(GLenum _drawMode) {
 }
 
 void Vbo::addVertex(GLbyte* _vertex) {
-
     addVertices(_vertex, 1);
-
 }
 
 void Vbo::addVertices(GLbyte* _vertices, int _nVertices) {
-
     if (m_isUploaded) {
         std::cout << "Vbo cannot add vertices after upload!" << std::endl;
         return;
@@ -72,24 +56,21 @@ void Vbo::addVertices(GLbyte* _vertices, int _nVertices) {
     
     // Only add up to 65535 vertices, any more will overflow our 16-bit indices
     int indexSpace = MAX_INDEX_VALUE - m_nVertices;
-    if (_nVertices / m_vertexLayout->getStride() > indexSpace) {
-        _nVertices = indexSpace * m_vertexLayout->getStride();
+    if (_nVertices > indexSpace) {
+        _nVertices = indexSpace;
         std::cout << "WARNING: Tried to add more vertices than available in index space" << std::endl;
     }
 
-    m_vertexData.insert(m_vertexData.end(), _vertices, _vertices + _nVertices * sizeof(GL_FLOAT));
-    m_nVertices += _nVertices / m_vertexLayout->getStride();
-
+    int vertexBytes = m_vertexLayout->getStride() * _nVertices;
+    m_vertexData.insert(m_vertexData.end(), _vertices, _vertices + vertexBytes);
+    m_nVertices += _nVertices;
 }
 
 void Vbo::addIndex(GLushort* _index) {
-
     addIndices(_index, 1);
-
 }
 
 void Vbo::addIndices(GLushort* _indices, int _nIndices) {
-    
     if (m_isUploaded) {
         std::cout << "Vbo cannot add indices after upload!" << std::endl;
         return;
@@ -102,11 +83,9 @@ void Vbo::addIndices(GLushort* _indices, int _nIndices) {
 
     m_indices.insert(m_indices.end(), _indices, _indices + _nIndices);
     m_nIndices += _nIndices;
-
 }
 
 void Vbo::upload() {
-    
     if (m_nVertices > 0) {
         // Generate vertex buffer, if needed
         if (m_glVertexBuffer == 0) {
@@ -129,12 +108,10 @@ void Vbo::upload() {
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_indices.size() * sizeof(GLushort), m_indices.data(), GL_STATIC_DRAW);
     }
 
-    // Retaining CPU buffers for now
-    //m_vertexData.clear();
-    //m_indices.clear();
+    m_vertexData.clear();
+    m_indices.clear();
 
     m_isUploaded = true;
-
 }
 
 void Vbo::draw(const Shader* _shader) {
@@ -165,5 +142,4 @@ void Vbo::draw(const Shader* _shader) {
     } else if (m_nVertices > 0) {
         glDrawArrays(m_drawMode, 0, m_nVertices);
     }
-
 }

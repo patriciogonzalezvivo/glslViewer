@@ -50,6 +50,7 @@ std::string outputFile = "";
 
 //  CURSOR
 Cursor cursor;
+bool bCursor = false;
 
 //  Time limit
 float timeLimit = 0.0f;
@@ -216,6 +217,9 @@ void renderThread(int argc, char **argv) {
                     argument == "-l" || 
                     argument == "--life-coding"  ) {
 
+        } else if ( argument == "-m" ) {
+            bCursor = true;
+            cursor.init();
         } else if ( argument == "-s" || argument == "--sec") {
             i++;
             timeLimit = getFloat(argument);
@@ -318,8 +322,6 @@ void setup() {
     
     cam.setViewport(getWindowWidth(),getWindowHeight());
     cam.setPosition(glm::vec3(0.0,0.0,-3.));
-
-    cursor.init();
 }
 
 void draw(){
@@ -357,8 +359,9 @@ void draw(){
 
     vbo->draw(&shader);
 
-    cursor.draw();
-
+    if(bCursor){
+        cursor.draw();
+    }
 }
 
 // Rendering Thread
