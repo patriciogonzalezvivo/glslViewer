@@ -188,6 +188,8 @@ void initGL(int argc, char **argv){
     result = eglMakeCurrent(state->display, state->surface, state->surface, state->context);
     assert(EGL_FALSE != result);
 
+    setWindowSize(viewport.z,viewport.w);
+
     ///printf("OpenGL Initialize at %i,%i,%i,%i\n",viewport.x,viewport.y,viewport.z,viewport.w);
     initTime();
 }
