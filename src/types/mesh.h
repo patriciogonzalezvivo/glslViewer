@@ -5,7 +5,7 @@
 
 #include "glm/glm.hpp"
 
-#include "vbo.h"
+#include "../gl/vbo.h"
 
 class Mesh {
 public:

@@ -2,7 +2,7 @@
 
 #include <iostream>
 #include "utils.h"
-#include "vertexLayout.h"
+#include "gl/vertexLayout.h"
 
 #include "tinyobjloader/tiny_obj_loader.h"
 
@@ -622,32 +622,33 @@ Vbo* Mesh::getVbo() {
     // Create Vertex Layout
     //
     std::vector<VertexLayout::VertexAttrib> attribs;
-    attribs.push_back({"a_position", 3, GL_FLOAT, false, 0});
+    attribs.push_back({"position", 3, GL_FLOAT, POSITION_ATTRIBUTE, false, 0});
     int  nBits = 3; 
 
     bool bColor = false;
     if (getColors().size() > 0 && getColors().size() == m_vertices.size()){
-        attribs.push_back({"a_color", 4, GL_FLOAT, false, 0});
+        attribs.push_back({"color", 4, GL_FLOAT, COLOR_ATTRIBUTE, false, 0});
         bColor = true;
         nBits += 4;
     }
 
     bool bNormals = false;
     if (getNormals().size() > 0 && getNormals().size() == m_vertices.size()){
-        attribs.push_back({"a_normal", 3, GL_FLOAT, false, 0});
+        attribs.push_back({"normal", 3, GL_FLOAT, NORMAL_ATTRIBUTE, false, 0});
         bNormals = true;
         nBits += 3;
     }
 
     bool bTexCoords = false;
     if (getTexCoords().size() > 0 && getTexCoords().size() == m_vertices.size()){
-        attribs.push_back({"a_texcoord", 2, GL_FLOAT, false, 0});
+        attribs.push_back({"texcoord", 2, GL_FLOAT, TEXCOORD_ATTRIBUTE, false, 0});
         bTexCoords = true;
         nBits += 2;
     }
 
     VertexLayout* vertexLayout = new VertexLayout(attribs);
     Vbo* tmpMesh = new Vbo(vertexLayout);
+    tmpMesh->setDrawMode(getDrawMode());
 
     std::vector<GLfloat> data;
     for(uint i = 0; i < m_vertices.size(); i++){ 
@@ -671,13 +672,22 @@ Vbo* Mesh::getVbo() {
         }
     }
 
-    tmpMesh->addVertices((GLbyte*)data.data(), data.size());
+    tmpMesh->addVertices((GLbyte*)data.data(), m_vertices.size());
 
-    if(getIndices().size()>0){
-        tmpMesh->addIndices(m_indices.data(), m_indices.size());
-    } else {
-        tmpMesh->setDrawMode(getDrawMode());
+    if(getIndices().size()==0){
+        if ( getDrawMode() == GL_LINES ) {
+            for (uint i = 0; i < getVertices().size(); i++){
+                addIndex(i);
+            }
+        } else if ( getDrawMode() == GL_LINE_STRIP ) {
+            for (uint i = 1; i < getVertices().size(); i++){
+                addIndex(i-1);
+                addIndex(i);
+            }
+        }
     }
+
+    tmpMesh->addIndices(m_indices.data(), m_indices.size());
 
     return tmpMesh;
 }

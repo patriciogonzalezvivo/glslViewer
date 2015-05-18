@@ -56,10 +56,22 @@
 
 //---------------------------------------- Geom
 
+int signValue(float _n);
+
 void wrapRad(double &_angle);
 void wrapDeg(float &_angle);
 
+void scale(glm::vec3 &_vec, float _length);
+glm::vec3 getScaled(const glm::vec3 &_vec, float _length);
+
+float getArea(const std::vector<glm::vec3> &_pts);
 glm::vec3 getCentroid(const std::vector<glm::vec3> &_pts);
+
+void simplify(std::vector<glm::vec3> &_pts, float _tolerance=0.3f);
+std::vector<glm::vec3> getSimplify(const std::vector<glm::vec3> &_pts, float _tolerance=0.3f);
+
+std::vector<glm::vec3> getConvexHull(std::vector<glm::vec3> &_pts);
+std::vector<glm::vec3> getConvexHull(const std::vector<glm::vec3> &_pts);
 
 //---------------------------------------- Conversions
 

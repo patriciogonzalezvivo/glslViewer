@@ -7,6 +7,14 @@
 #include "gl.h"
 #include "shader.h"
 
+enum AttrType {
+    POSITION_ATTRIBUTE,
+    COLOR_ATTRIBUTE,
+    NORMAL_ATTRIBUTE,
+    TEXCOORD_ATTRIBUTE,
+    OTHER_ATTRIBUTE
+};
+
 class VertexLayout {
 public:
 
@@ -14,17 +22,18 @@ public:
         std::string name;
         GLint size;
         GLenum type;
+        AttrType attrType;
         GLboolean normalized;
         GLvoid* offset; // Can be left as zero; value is overwritten in constructor of VertexLayout
     };
 
     VertexLayout(std::vector<VertexAttrib> _attribs);
-
     virtual ~VertexLayout();
 
-    void enable(const Shader* _program);
+    void        enable(const Shader* _program);
 
     GLint       getStride() const { return m_stride; };
+
     std::string getDefaultVertShader();
     std::string getDefaultFragShader();
 
@@ -34,5 +43,10 @@ private:
 
     std::vector<VertexAttrib> m_attribs;
     GLint m_stride;
+
+    int m_positionAttribIndex;
+    int m_colorAttribIndex;
+    int m_normalAttribIndex;
+    int m_texCoordAttribIndex;
 
 };

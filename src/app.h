@@ -1,28 +1,41 @@
 #pragma once
 
-#include "gl.h"
+#include "gl/gl.h"
+#include "glm/glm.hpp"
 
-// GL Context
+//	GL Context
+//----------------------------------------------
 void initGL(int argc, char **argv);
 bool isGL();
 void updateGL();
 void renderGL();
 void closeGL();
 
-// SET
+//	SET
+//----------------------------------------------
 void setWindowSize(int _width, int _height);
 
-// GET
+//	GET
+//----------------------------------------------
 int getWindowWidth();
 int getWindowHeight();
+glm::ivec4 getViewPort();
+glm::mat4 getOrthoMatrix();
+
+float getTime();
+
 float getMouseX();
 float getMouseY();
-int getMouseButton();
+glm::vec2 getMousePosition();
 float getMouseVelX();
 float getMouseVelY();
+glm::vec2 getMouseVelocity();
+int getMouseButton();
+
 unsigned char getKeyPressed();
 
 // EVENTS
+//----------------------------------------------
 void onKeyPress(int _key);
 void onMouseMove(float _x, float _y);
 void onMouseClick(float _x, float _y, int _button);

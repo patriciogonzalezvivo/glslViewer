@@ -1,9 +1,13 @@
-#include "context.h"
+#include "app.h"
 
+#include <time.h>
+#include <sys/time.h>
 #include <assert.h>
 #include <fcntl.h>
 #include <iostream>
 #include <termios.h>
+
+#include "glm/gtc/matrix_transform.hpp"
 
 #include "utils.h"
 
@@ -21,10 +25,8 @@ static GLFWwindow* window;
 static float dpiScale = 1.0;
 #endif
 
-typedef struct {
-    uint32_t x, y, width, height;
-} Viewport;
-static Viewport viewport;
+static glm::ivec4 viewport;
+static glm::mat4 orthoMatrix;
 
 typedef struct {
     float   x,y;
@@ -34,6 +36,29 @@ typedef struct {
 static Mouse mouse;
 static unsigned char keyPressed;
 
+// TIME
+//----------------------------------------------------
+struct timeval tv;
+unsigned long long timeStart;
+float timeSec = 0.0f;
+
+void initTime() {
+    gettimeofday(&tv, NULL);
+    timeStart = (unsigned long long)(tv.tv_sec) * 1000 +
+                (unsigned long long)(tv.tv_usec) / 1000; 
+}
+
+void updateTime() {
+    gettimeofday(&tv, NULL);
+    unsigned long long timeNow =    (unsigned long long)(tv.tv_sec) * 1000 +
+                                    (unsigned long long)(tv.tv_usec) / 1000;
+
+    timeSec = (timeNow - timeStart)*0.001;
+}
+
+float getTime() {
+    return timeSec;
+}
 
 // OPENGL through BREADCOM GPU on RASPBERRYPI
 //----------------------------------------------------
@@ -101,8 +126,8 @@ void initGL(int argc, char **argv){
 
     viewport.x = 0;
     viewport.y = 0;
-    viewport.width = state->screen_width;
-    viewport.height = state->screen_height;
+    viewport.z = state->screen_width;
+    viewport.w = state->screen_height;
 
     //Setup
     for (int i = 1; i < argc ; i++){
@@ -115,34 +140,34 @@ void initGL(int argc, char **argv){
         } else if ( std::string(argv[i]) == "-w" || 
                     std::string(argv[i]) == "--width" ) {
             i++;
-            viewport.width = getInt(std::string(argv[i]));
+            viewport.z = getInt(std::string(argv[i]));
         } else if ( std::string(argv[i]) == "-h" || 
                     std::string(argv[i]) == "--height") {
             i++;
-            viewport.height = getInt(std::string(argv[i]));
+            viewport.w = getInt(std::string(argv[i]));
         } else if ( std::string(argv[i]) == "--square") {
             if (state->screen_width > state->screen_height) {
                 viewport.x = state->screen_width/2-state->screen_height/2;
             } else {
                 viewport.y = state->screen_height/2-state->screen_width/2;
             }
-            viewport.width = viewport.height = MIN(state->screen_width,state->screen_height);
+            viewport.z = viewport.w = MIN(state->screen_width,state->screen_height);
         } else if ( std::string(argv[i]) == "-l" || 
                     std::string(argv[i]) == "--life-coding" ){
-            viewport.x = viewport.width-500;
-            viewport.width = viewport.height = 500;
+            viewport.x = viewport.z-500;
+            viewport.z = viewport.w = 500;
         }
     }
 
     dst_rect.x = viewport.x;
     dst_rect.y = viewport.y;
-    dst_rect.width = viewport.width;
-    dst_rect.height = viewport.height;
+    dst_rect.width = viewport.z;
+    dst_rect.height = viewport.w;
 
     src_rect.x = 0;
     src_rect.y = 0;
-    src_rect.width = viewport.width << 16;
-    src_rect.height = viewport.height << 16;
+    src_rect.width = viewport.z << 16;
+    src_rect.height = viewport.w << 16;
 
     dispman_display = vc_dispmanx_display_open( 0 /* LCD */);
     dispman_update = vc_dispmanx_update_start( 0 );
@@ -152,8 +177,8 @@ void initGL(int argc, char **argv){
                                        &src_rect, DISPMANX_PROTECTION_NONE, 0 /*alpha*/, 0/*clamp*/, (DISPMANX_TRANSFORM_T)0/*transform*/);
 
     nativeviewport.element = dispman_element;
-    nativeviewport.width = viewport.width;
-    nativeviewport.height = viewport.height;
+    nativeviewport.z = viewport.z;
+    nativeviewport.w = viewport.w;
     vc_dispmanx_update_submit_sync( dispman_update );
 
     state->surface = eglCreateWindowSurface( state->display, config, &nativeviewport, NULL );
@@ -163,7 +188,8 @@ void initGL(int argc, char **argv){
     result = eglMakeCurrent(state->display, state->surface, state->surface, state->context);
     assert(EGL_FALSE != result);
 
-    ///printf("OpenGL Initialize at %i,%i,%i,%i\n",viewport.x,viewport.y,viewport.width,viewport.height);
+    ///printf("OpenGL Initialize at %i,%i,%i,%i\n",viewport.x,viewport.y,viewport.z,viewport.w);
+    initTime();
 }
 
 bool isGL(){
@@ -217,8 +243,8 @@ bool getMouse(){
         // Clamp values
         if (mouse.x < 0) mouse.x=0;
         if (mouse.y < 0) mouse.y=0;
-        if (mouse.x > viewport.width) mouse.x = viewport.width;
-        if (mouse.y > viewport.height) mouse.y = viewport.height;
+        if (mouse.x > viewport.z) mouse.x = viewport.z;
+        if (mouse.y > viewport.w) mouse.y = viewport.w;
 
         // Lunch events
         if(mouse.button == 0 && button != mouse.button){
@@ -265,6 +291,7 @@ int getKey() {
 }
 
 void updateGL(){
+    updateTime();
     getMouse();
 
     int key = getKey();
@@ -322,14 +349,14 @@ void handleCursor(GLFWwindow* _window, double x, double y) {
     y *= dpiScale;
 
     mouse.velX = x - mouse.x;
-    mouse.velY = (viewport.height - y) - mouse.y;
+    mouse.velY = (viewport.w - y) - mouse.y;
     mouse.x = x;
-    mouse.y = viewport.height - y;
+    mouse.y = viewport.w - y;
 
     if (mouse.x < 0) mouse.x=0;
     if (mouse.y < 0) mouse.y=0;
-    if (mouse.x > viewport.width) mouse.x = viewport.width;
-    if (mouse.y > viewport.height) mouse.y = viewport.height;
+    if (mouse.x > viewport.z) mouse.x = viewport.z;
+    if (mouse.y > viewport.w) mouse.y = viewport.w;
 
     int action1 = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1);
     int action2 = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_2);
@@ -361,18 +388,18 @@ void handleCursor(GLFWwindow* _window, double x, double y) {
 void initGL(int argc, char **argv){
     viewport.x = 0;
     viewport.y = 0;
-    viewport.width = 500;
-    viewport.height = 500;
+    viewport.z = 500;
+    viewport.w = 500;
 
     for (int i = 1; i < argc ; i++){
         if ( std::string(argv[i]) == "-w" || 
              std::string(argv[i]) == "--width" ) {
             i++;
-            viewport.width = getInt(std::string(argv[i]));
+            viewport.z = getInt(std::string(argv[i]));
         } else if ( std::string(argv[i]) == "-h" || 
                     std::string(argv[i]) == "--height") {
             i++;
-            viewport.height = getInt(std::string(argv[i]));
+            viewport.w = getInt(std::string(argv[i]));
         }
     }
 
@@ -380,7 +407,7 @@ void initGL(int argc, char **argv){
         handleError("GLFW init failed", -1);
     }
 
-    window = glfwCreateWindow(viewport.width, viewport.height, "glslViewer", NULL, NULL);
+    window = glfwCreateWindow(viewport.z, viewport.w, "glslViewer", NULL, NULL);
 
     if(!window) {
         glfwTerminate();
@@ -388,15 +415,17 @@ void initGL(int argc, char **argv){
     }
 
     fixDpiScale();
-    viewport.width *= dpiScale;
-    viewport.height *= dpiScale;
-    setWindowSize(viewport.width,viewport.height);
+    viewport.z *= dpiScale;
+    viewport.w *= dpiScale;
+    setWindowSize(viewport.z,viewport.w);
 
     glfwMakeContextCurrent(window);
 
     glfwSetWindowSizeCallback(window, handleResize);
     glfwSetKeyCallback(window, handleKeypress);
     glfwSetCursorPosCallback(window, handleCursor);
+
+    initTime();
 }
 
 bool isGL(){
@@ -404,6 +433,7 @@ bool isGL(){
 }
 
 void updateGL(){
+    updateTime();
     keyPressed = -1;
     glfwPollEvents();
 }
@@ -419,18 +449,24 @@ void closeGL(){
 #endif
 
 void setWindowSize(int _width, int _height) {
-    viewport.width = _width;
-    viewport.height = _height;
-    glViewport(0, 0, viewport.width, viewport.height);
-    onViewportResize(viewport.width, viewport.height);
+    viewport.z = _width;
+    viewport.w = _height;
+    glViewport((float)viewport.x, (float)viewport.y, (float)viewport.z, (float)viewport.w);
+    orthoMatrix = glm::ortho((float)viewport.x, (float)viewport.z, (float)viewport.y, (float)viewport.w);
+
+    onViewportResize(viewport.z, viewport.w);
 }
 
 int getWindowWidth(){
-    return viewport.width;
+    return viewport.z;
 }
 
 int getWindowHeight(){
-    return viewport.height;
+    return viewport.w;
+}
+
+glm::mat4 getOrthoMatrix(){
+    return orthoMatrix;
 }
 
 float getMouseX(){
@@ -441,8 +477,8 @@ float getMouseY(){
     return mouse.y;
 }
 
-int getMouseButton(){
-    return mouse.button;
+glm::vec2 getMousePosition() {
+    return glm::vec2(mouse.x,mouse.y);
 }
 
 float getMouseVelX(){
@@ -451,6 +487,14 @@ float getMouseVelX(){
 
 float getMouseVelY(){
     return mouse.velY;
+}
+
+glm::vec2 getMouseVelocity() {
+    return glm::vec2(mouse.velX,mouse.velY);
+}
+
+int getMouseButton(){
+    return mouse.button;
 }
 
 unsigned char getKeyPressed(){

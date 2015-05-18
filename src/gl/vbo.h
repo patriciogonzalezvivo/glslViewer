@@ -5,24 +5,17 @@
 #include "gl.h"
 #include "vertexLayout.h"
 
+#define MAX_INDEX_VALUE 65535
+
 /*
  * Vbo - Drawable collection of geometry contained in a vertex buffer and (optionally) an index buffer
  */
 
-class Vbo {
-
+class Vbo { 
 public:
 
-    /*
-     * Creates a Vbo for vertex data arranged in the structure described by _vertexLayout to be drawn
-     * using the OpenGL primitive type _drawMode
-     */
     Vbo();
     Vbo(VertexLayout* _vertexlayout, GLenum _drawMode = GL_TRIANGLES);
-    
-    /*
-     * Destructs this Vbo and releases all associated OpenGL resources
-     */
     virtual ~Vbo();
 
     /*
@@ -48,8 +41,6 @@ public:
      */
     void addVertices(GLbyte* _vertices, int _nVertices);
 
-    int numVertices() const { return m_nVertices; };
-
     /*
      * Adds a single index to the mesh; indices are unsigned shorts
      */
@@ -62,6 +53,8 @@ public:
     void addIndices(GLushort* _indices, int _nIndices);
 
     int numIndices() const { return m_indices.size(); };
+    int numVertices() const { return m_nVertices; };
+    VertexLayout* getVertexLayout() { return m_vertexLayout; };
 
     /*
      * Copies all added vertices and indices into OpenGL buffer objects; After geometry is uploaded,
@@ -77,16 +70,17 @@ public:
 
 private:
     
-    VertexLayout*       m_vertexLayout;
-    std::vector<GLbyte> m_vertexData; // Raw interleaved vertex data in the format specified by the vertex layout
-    int     m_nVertices;
-    GLuint  m_glVertexBuffer;
+    VertexLayout* m_vertexLayout;
 
-    std::vector<GLushort>   m_indices;
-    int     m_nIndices;
+    std::vector<GLbyte> m_vertexData;
+    GLuint  m_glVertexBuffer;
+    int     m_nVertices;
+
+    std::vector<GLushort> m_indices;
     GLuint  m_glIndexBuffer;
+    int     m_nIndices;
+
     GLenum  m_drawMode;
 
     bool    m_isUploaded;
-
 };

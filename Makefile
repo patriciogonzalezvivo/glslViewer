@@ -1,8 +1,8 @@
 EXE = glslViewer
 
 CXX = g++
-SOURCES := include/tinyobjloader/tiny_obj_loader.cc $(wildcard src/*.cpp)
-HEADERS := include/tinyobjloader/tiny_obj_loader.h $(wildcard src/*.h)
+SOURCES := $(wildcard include/*/*.cc) $(wildcard src/*.cpp) $(wildcard src/*/*.cpp)
+HEADERS := $(wildcard include/*/*.h) $(wildcard src/*.h) $(wildcard src/*.h) $(wildcard src/*/*.h)
 OBJECTS := $(SOURCES:.cpp=.o)
 
 UNAME := $(shell uname -s)
@@ -64,7 +64,7 @@ $(EXE): $(OBJECTS) $(HEADERS)
 endif
 
 clean:
-	@rm -rvf $(EXE) src/*.o include/tinyobjloader/*.o *.dSYM
+	@rm -rvf $(EXE) src/*.o src/*/*.o include/*/*.o *.dSYM
 
 install:
 	@cp $(EXE) /usr/local/bin

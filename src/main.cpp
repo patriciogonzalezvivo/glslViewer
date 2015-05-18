@@ -1,18 +1,18 @@
-#include <time.h>
-#include <sys/time.h>
 #include <sys/shm.h>
 #include <sys/stat.h> 
 #include <unistd.h>
 #include <signal.h>
 #include <map>
 
-#include "context.h"
+#include "app.h"
 #include "utils.h"
-#include "shader.h"
-#include "camera.h"
-#include "vbo.h"
-#include "texture.h"
-#include "mesh.h"
+#include "gl/shader.h"
+#include "gl/vbo.h"
+#include "gl/texture.h"
+#include "3d/camera.h"
+#include "types/shapes.h"
+
+#include "ui/cursor.h"
 
 // GLOBAL VARIABLES
 //============================================================================
@@ -33,26 +33,7 @@ Shader shader;
 int iFrag = -1;
 std::string fragSource = "";
 int iVert = -1;
-std::string vertSource =
-"uniform mat4 u_modelViewProjectionMatrix;\n"
-"uniform float u_time;\n"
-"uniform vec2 u_mouse;\n"
-"uniform vec2 u_resolution;\n"
-"attribute vec4 a_position;\n"
-"attribute vec4 a_color;\n"
-"attribute vec3 a_normal;\n"
-"attribute vec2 a_texcoord;\n"
-"varying vec4 v_position;\n"
-"varying vec4 v_color;\n"
-"varying vec3 v_normal;\n"
-"varying vec2 v_texcoord;\n"
-"void main(void) {\n"
-"    v_position = u_modelViewProjectionMatrix * a_position;\n"
-"    gl_Position = v_position;\n"
-// "    v_color = a_color;\n"
-"    v_normal = a_normal;\n"
-// "    v_texcoord = a_texcoord;\n"
-"}\n";
+std::string vertSource = "";
 
 //  CAMERA
 Camera cam;
@@ -67,47 +48,12 @@ glm::mat4 model_matrix = glm::mat4(1.);
 std::map<std::string,Texture*> textures;
 std::string outputFile = "";
 
-//  TIME
-struct timeval tv;
-unsigned long long timeStart;
-unsigned long long timeNow;
-float timeSec = 0.0f;
+//  CURSOR
+Cursor cursor;
+bool bCursor = false;
+
+//  Time limit
 float timeLimit = 0.0f;
-
-// Billboard
-//============================================================================
-Vbo* rect (float _x, float _y, float _w, float _h) {
-    float x = _x-1.0f;
-    float y = _y-1.0f;
-    float w = _w*2.0f;
-    float h = _h*2.0f;
-
-    Mesh mesh;
-    mesh.addVertex(glm::vec3(x, y, 0.0));
-    mesh.addColor(glm::vec4(1.0));
-    mesh.addNormal(glm::vec3(0.0, 0.0, 1.0));
-    mesh.addTexCoord(glm::vec2(0.0, 0.0));
-
-    mesh.addVertex(glm::vec3(x+w, y, 0.0));
-    mesh.addColor(glm::vec4(1.0));
-    mesh.addNormal(glm::vec3(0.0, 0.0, 1.0));
-    mesh.addTexCoord(glm::vec2(1.0, 0.0));
-
-    mesh.addVertex(glm::vec3(x+w, y+h, 0.0));
-    mesh.addColor(glm::vec4(1.0));
-    mesh.addNormal(glm::vec3(0.0, 0.0, 1.0));
-    mesh.addTexCoord(glm::vec2(1.0, 1.0));
-
-    mesh.addVertex(glm::vec3(x, y+h, 0.0));
-    mesh.addColor(glm::vec4(1.0));
-    mesh.addNormal(glm::vec3(0.0, 0.0, 1.0));
-    mesh.addTexCoord(glm::vec2(0.0, 1.0));
-
-    mesh.addIndex(0);   mesh.addIndex(1);   mesh.addIndex(2);
-    mesh.addIndex(2);   mesh.addIndex(3);   mesh.addIndex(0);
-    
-    return mesh.getVbo();
-}
 
 //================================================================= Functions
 void watchThread();
@@ -124,7 +70,7 @@ int main(int argc, char **argv){
 
     // Load files to watch
     struct stat st;
-    for (int i = 1; i < argc ; i++){
+    for (uint i = 1; i < argc ; i++){
         std::string argument = std::string(argv[i]);
 
         if ( iFrag == -1 && ( haveExt(argument,"frag") || haveExt(argument,"fs") ) ) {
@@ -182,9 +128,8 @@ int main(int argc, char **argv){
     }
 
     // If no shader
-    if( iFrag == -1 ) {
-        std::cerr << "GLSL render that updates changes instantly.\n";
-        std::cerr << "Usage: " << argv[0] << " shader.frag [texture.(png\\jpg)] [-textureNameA texture.png] [-u] [-x x] [-y y] [-w width] [-h height] [-l/--livecoding] [--square] [-s seconds] [-o screenshot.png]\n";
+    if( iFrag == -1 && iVert == -1 && iGeom == -1) {
+        std::cerr << "Usage: " << argv[0] << " shader.frag [shader.vert] [mesh.(obj/.ply)] [texture.(png/jpg)] [-textureNameA texture.(png/jpg)] [-u] [-x x] [-y y] [-w width] [-h height] [-l/--livecoding] [--square] [-s seconds] [-o screenshot.png]\n";
         return EXIT_FAILURE;
     }
 
@@ -250,7 +195,6 @@ void renderThread(int argc, char **argv) {
     
     // Setup
     setup();
-    // setWindowSize(viewport.width, viewport.height);
 
     // Turn on Alpha blending
     glEnable(GL_BLEND);
@@ -262,7 +206,7 @@ void renderThread(int argc, char **argv) {
     int textureCounter = 0;
 
     //Load the the resources (textures)
-    for (int i = 1; i < argc ; i++){
+    for (uint i = 1; i < argc ; i++){
         std::string argument = std::string(argv[i]);
 
         if (argument == "-x" || argument == "-y" || 
@@ -273,6 +217,9 @@ void renderThread(int argc, char **argv) {
                     argument == "-l" || 
                     argument == "--life-coding"  ) {
 
+        } else if ( argument == "-m" ) {
+            bCursor = true;
+            cursor.init();
         } else if ( argument == "-s" || argument == "--sec") {
             i++;
             timeLimit = getFloat(argument);
@@ -330,7 +277,7 @@ void renderThread(int argc, char **argv) {
         // Swap the buffers
         renderGL();
 
-        if ( timeLimit > 0.0 && timeSec > timeLimit ) {
+        if ( timeLimit > 0.0 && getTime() > timeLimit ) {
             onKeyPress('s');
             bPlay = false;
         }
@@ -341,30 +288,10 @@ void setup() {
     glEnable(GL_DEPTH_TEST);
     glFrontFace(GL_CCW);
     
-    gettimeofday(&tv, NULL);
-    timeStart = (unsigned long long)(tv.tv_sec) * 1000 +
-                (unsigned long long)(tv.tv_usec) / 1000; 
-
-    //  Build shader;
-    //
-    if ( iFrag != -1 ) {
-        fragSource = "";
-        if(!loadFromPath(files[iFrag].path, &fragSource)) {
-            return;
-        }
-        if ( iVert != -1 ) {
-            vertSource = "";
-            if(!loadFromPath(files[iVert].path, &vertSource)) {
-                return;
-            }
-        }
-        shader.load(fragSource,vertSource);
-    } 
-    
     //  Load Geometry
     //
     if ( iGeom == -1 ){
-        vbo = rect(0.0,0.0,1.0,1.0);
+        vbo = rect(0.0,0.0,1.0,1.0).getVbo();
     } else {
         Mesh model;
         model.load(files[iGeom].path);
@@ -373,9 +300,27 @@ void setup() {
         // model_matrix = glm::scale(glm::vec3(0.001));
         model_matrix = glm::translate(-toCentroid);
     }
+
+    //  Build shader;
+    //
+    if ( iFrag != -1 ) {
+        fragSource = "";
+        if(!loadFromPath(files[iFrag].path, &fragSource)) {
+            return;
+        }
+    } else {
+        fragSource = vbo->getVertexLayout()->getDefaultFragShader();
+    }
+
+    if ( iVert != -1 ) {
+        vertSource = "";
+        loadFromPath(files[iVert].path, &vertSource);
+    } else {
+        vertSource = vbo->getVertexLayout()->getDefaultVertShader();
+    }    
+    shader.load(fragSource,vertSource);
     
     cam.setViewport(getWindowWidth(),getWindowHeight());
-
     cam.setPosition(glm::vec3(0.0,0.0,-3.));
 }
 
@@ -387,15 +332,8 @@ void draw(){
         *iHasChanged = -1;
     }
 
-    gettimeofday(&tv, NULL);
-
-    timeNow =   (unsigned long long)(tv.tv_sec) * 1000 +
-                (unsigned long long)(tv.tv_usec) / 1000;
-
-    timeSec = (timeNow - timeStart)*0.001;
-
     shader.use();
-    shader.setUniform("u_time", timeSec);
+    shader.setUniform("u_time", getTime());
     shader.setUniform("u_mouse", getMouseX(), getMouseY());
     shader.setUniform("u_resolution",getWindowWidth(), getWindowHeight());
 
@@ -420,6 +358,10 @@ void draw(){
     }
 
     vbo->draw(&shader);
+
+    if(bCursor){
+        cursor.draw();
+    }
 }
 
 // Rendering Thread
