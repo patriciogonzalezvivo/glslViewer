@@ -3,6 +3,7 @@
 #include "types/shapes.h"
 #include "types/rectangle.h"
 #include "app.h"
+#include "utils.h"
 
 #define STRINGIFY(A) #A
 
@@ -39,6 +40,7 @@ varying vec4 v_position;
 
 void main(void) {
 	v_position = vec4(u_mouse.x,u_mouse.y,0.0,0.0) + a_position;
+    v_position.xy = (v_position.xy/u_resolution-0.5)*2.0;
 	v_color = a_color;
 	gl_Position = u_modelViewProjectionMatrix * v_position;
 }
@@ -63,18 +65,19 @@ void Cursor::draw(){
 #ifndef PLATFORM_RPI
 	glPolygonOffset(-1.0f, -1.0f);      // Shift depth values
     glEnable(GL_POLYGON_OFFSET_LINE);
+    glEnable(GL_LINE_SMOOTH);
+ #endif
 
 	glLineWidth(2.0f);
 	// glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
 	// // Draw lines antialiased
-    glEnable(GL_LINE_SMOOTH);
+    
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
- #endif
 
 	m_shader.use();
-	m_shader.setUniform("u_mouse", getMouseX(), getMouseY());
+    m_shader.setUniform("u_mouse", getMouseX(), getMouseY());
 	m_shader.setUniform("u_resolution", getWindowWidth(), getWindowHeight());
 	m_shader.setUniform("u_modelViewProjectionMatrix", getOrthoMatrix());
 	m_vbo->draw(&m_shader);
@@ -82,8 +85,10 @@ void Cursor::draw(){
 #ifndef PLATFORM_RPI
 	// glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	glDisable(GL_POLYGON_OFFSET_LINE);
-    glLineWidth(1.0f);
-    glDisable(GL_BLEND);
     glDisable(GL_LINE_SMOOTH);
 #endif
+    glLineWidth(1.0f);
+    glDisable(GL_BLEND);
+    
+
 }

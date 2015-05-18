@@ -101,6 +101,7 @@ Mesh cross (const glm::vec3 &_pos, float _width) {
         glm::vec3(_pos.x,_pos.y,_pos.z),
         glm::vec3(_pos.x,_pos.y,_pos.z),
         glm::vec3(_pos.x,_pos.y,_pos.z) };
+
     linePoints[0].x -= _width;
     linePoints[1].x += _width;
     linePoints[2].y -= _width;
