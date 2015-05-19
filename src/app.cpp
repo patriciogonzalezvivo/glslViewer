@@ -20,21 +20,21 @@ EGLContext context;
 
 #else
 
-GLFWwindow* window;
-float dpiScale = 1.0;
+static GLFWwindow* window;
+static float dpiScale = 1.0;
 
 #endif
 
-glm::ivec4 viewport;
-glm::mat4 orthoMatrix;
+static glm::ivec4 viewport;
+static glm::mat4 orthoMatrix;
 
 typedef struct {
     float   x,y;
     float   velX,velY;
     int     button;
 } Mouse;
-Mouse mouse;
-unsigned char keyPressed;
+static Mouse mouse;
+static unsigned char keyPressed;
 
 // TIME
 //----------------------------------------------------
