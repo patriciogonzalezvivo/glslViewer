@@ -12,17 +12,17 @@
 #include "utils.h"
 
 #ifdef PLATFORM_RPI
-typedef struct {
-    uint32_t screen_width;
-    uint32_t screen_height;
-    EGLDisplay display;
-    EGLSurface surface;
-    EGLContext context;
-} CUBE_STATE_T;
-static CUBE_STATE_T _state, *state=&_state;
+
+#define check() assert(glGetError() == 0)
+EGLDisplay display;
+EGLSurface surface;
+EGLContext context;
+
 #else
+
 static GLFWwindow* window;
 static float dpiScale = 1.0;
+
 #endif
 
 static glm::ivec4 viewport;
@@ -69,8 +69,6 @@ void initGL(int argc, char **argv){
     bcm_host_init();
 
     // Clear application state
-    memset( state, 0, sizeof( *state ) );
-
     int32_t success = 0;
     EGLBoolean result;
     EGLint num_config;
@@ -82,6 +80,9 @@ void initGL(int argc, char **argv){
     DISPMANX_UPDATE_HANDLE_T dispman_update;
     VC_RECT_T dst_rect;
     VC_RECT_T src_rect;
+
+    uint32_t screen_width;
+    uint32_t screen_height;
 
     static const EGLint attribute_list[] = {
         EGL_RED_SIZE, 8,
@@ -101,35 +102,41 @@ void initGL(int argc, char **argv){
     EGLConfig config;
 
     // get an EGL display connection
-    state->display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
-    assert(state->display!=EGL_NO_DISPLAY);
+    display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+    assert(display!=EGL_NO_DISPLAY);
+    check();
 
     // initialize the EGL display connection
-    result = eglInitialize(state->display, NULL, NULL);
+    result = eglInitialize(display, NULL, NULL);
     assert(EGL_FALSE != result);
+    check();
 
     // get an appropriate EGL frame buffer configuration
-    result = eglChooseConfig(state->display, attribute_list, &config, 1, &num_config);
+    result = eglChooseConfig(display, attribute_list, &config, 1, &num_config);
     assert(EGL_FALSE != result);
+    check();
 
     // get an appropriate EGL frame buffer configuration
     result = eglBindAPI(EGL_OPENGL_ES_API);
     assert(EGL_FALSE != result);
+    check();
 
     // create an EGL rendering context
-    state->context = eglCreateContext(state->display, config, EGL_NO_CONTEXT, context_attributes);
-    assert(state->context!=EGL_NO_CONTEXT);
+    context = eglCreateContext(display, config, EGL_NO_CONTEXT, context_attributes);
+    assert(context!=EGL_NO_CONTEXT);
+    check();
 
     // create an EGL viewport surface
-    success = graphics_get_display_size(0 /* LCD */, &state->screen_width, &state->screen_height);
+    success = graphics_get_display_size(0 /* LCD */, &screen_width, &screen_height);
     assert( success >= 0 );
 
+    //  Initially the viewport is for all the screen
     viewport.x = 0;
     viewport.y = 0;
-    viewport.z = state->screen_width;
-    viewport.w = state->screen_height;
+    viewport.z = screen_width;
+    viewport.w = screen_height;
 
-    //Setup
+    //  Adjust the viewport acording to the passed argument
     for (int i = 1; i < argc ; i++){
         if ( std::string(argv[i]) == "-x" ) {
             i++;
@@ -146,12 +153,12 @@ void initGL(int argc, char **argv){
             i++;
             viewport.w = getInt(std::string(argv[i]));
         } else if ( std::string(argv[i]) == "--square") {
-            if (state->screen_width > state->screen_height) {
-                viewport.x = state->screen_width/2-state->screen_height/2;
+            if (screen_width > screen_height) {
+                viewport.x = screen_width/2-screen_height/2;
             } else {
-                viewport.y = state->screen_height/2-state->screen_width/2;
+                viewport.y = screen_height/2-screen_width/2;
             }
-            viewport.z = viewport.w = MIN(state->screen_width,state->screen_height);
+            viewport.z = viewport.w = MIN(screen_width,screen_height);
         } else if ( std::string(argv[i]) == "-l" || 
                     std::string(argv[i]) == "--life-coding" ){
             viewport.x = viewport.z-500;
@@ -181,12 +188,23 @@ void initGL(int argc, char **argv){
     nativeviewport.height = viewport.w;
     vc_dispmanx_update_submit_sync( dispman_update );
 
-    state->surface = eglCreateWindowSurface( state->display, config, &nativeviewport, NULL );
-    assert(state->surface != EGL_NO_SURFACE);
+    check();
+
+    surface = eglCreateWindowSurface( display, config, &nativeviewport, NULL );
+    assert(surface != EGL_NO_SURFACE);
+    check();
 
     // connect the context to the surface
-    result = eglMakeCurrent(state->display, state->surface, state->surface, state->context);
+    result = eglMakeCurrent(display, surface, surface, context);
     assert(EGL_FALSE != result);
+    check();
+
+    // Set background color and clear buffers
+    // glClearColor(0.15f, 0.25f, 0.35f, 1.0f);
+    // glClear( GL_COLOR_BUFFER_BIT );
+
+    setWindowSize(viewport.z,viewport.w);
+    check();
 
     ///printf("OpenGL Initialize at %i,%i,%i,%i\n",viewport.x,viewport.y,viewport.z,viewport.w);
     initTime();
@@ -302,17 +320,17 @@ void updateGL(){
 }
 
 void renderGL(){
-    eglSwapBuffers(state->display, state->surface);
+    eglSwapBuffers(display, surface);
 }
 
 void closeGL(){
-    eglSwapBuffers(state->display, state->surface);
+    eglSwapBuffers(display, surface);
 
     // Release OpenGL resources
-    eglMakeCurrent( state->display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT );
-    eglDestroySurface( state->display, state->surface );
-    eglDestroyContext( state->display, state->context );
-    eglTerminate( state->display );
+    eglMakeCurrent( display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT );
+    eglDestroySurface( display, surface );
+    eglDestroyContext( display, context );
+    eglTerminate( display );
 
     // printf("\nOpenGL Closed\n");
 }

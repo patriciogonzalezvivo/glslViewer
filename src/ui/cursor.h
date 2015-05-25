@@ -12,6 +12,6 @@ public:
 	void draw();
 
 private:
-	Vbo* m_vbo;
-	Shader m_shader;
+    Vbo* m_vbo;
+    Shader m_shader;
 };
