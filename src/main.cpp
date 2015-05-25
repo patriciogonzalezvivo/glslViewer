@@ -222,9 +222,9 @@ void renderThread(int argc, char **argv) {
             cursor.init();
         } else if ( argument == "-s" || argument == "--sec") {
             i++;
+            argument = std::string(argv[i]);
             timeLimit = getFloat(argument);
             std::cout << "Will exit in " << timeLimit << " seconds." << std::endl;
-
         } else if ( argument == "-o" ){
             i++;
             argument = std::string(argv[i]);
