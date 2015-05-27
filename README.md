@@ -17,7 +17,7 @@ sudo apt-get update
 sudo apt-get upgrade
 sudo apt-get install git-core cmake xorg-dev libglu1-mesa-dev
 cd ~ 
-git clone git@github.com:glfw/glfw.git
+git clone https://github.com/glfw/glfw.git
 cd glfw
 cmake .
 make
