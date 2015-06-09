@@ -1,5 +1,3 @@
-// #pragma once
-
 #ifdef PLATFORM_OSX
 #include <GLFW/glfw3.h>
 #include <OpenGL/gl.h>
