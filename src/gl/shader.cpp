@@ -7,7 +7,9 @@ Shader::Shader():m_program(0),m_fragmentShader(0),m_vertexShader(0){
 }
 
 Shader::~Shader() {
-    glDeleteProgram(m_program);
+	if (m_program != 0) {			// Avoid crash when no command line arguments supplied
+    	glDeleteProgram(m_program);
+    }
 }
 
 std::string getLineNumber(const std::string& _source, unsigned _lineNumber){
