@@ -525,7 +525,8 @@ void closeGL(){
 void setWindowSize(int _width, int _height) {
     viewport.z = _width;
     viewport.w = _height;
-    glViewport((float)viewport.x, (float)viewport.y, (float)viewport.z, (float)viewport.w);
+    //glViewport((float)viewport.x, (float)viewport.y, (float)viewport.z, (float)viewport.w);
+    glViewport(0.0,0.0,(float)viewport.z,(float)viewport.w);
     orthoMatrix = glm::ortho((float)viewport.x, (float)viewport.z, (float)viewport.y, (float)viewport.w);
 
     onViewportResize(viewport.z, viewport.w);
