@@ -19,7 +19,7 @@ else ifeq ($(MACHINE),i686)
 PLATFORM = LINUX
 
 else ifeq ($(MACHINE),x86_64)
-PLATFORM = LINUX64
+PLATFORM = LINUX
 
 endif
 
@@ -36,10 +36,6 @@ LDFLAGS += -L$(SDKSTAGE)/opt/vc/lib/ \
 
 else ifeq ($(PLATFORM),LINUX)
 CFLAGS += -DPLATFORM_LINUX $(shell pkg-config --cflags glfw3 glu gl) 
-LDFLAGS += $(shell pkg-config --libs glfw3 glu gl x11 xrandr xi xxf86vm xcursor xinerama xrender xext xdamage) -lpthread 
-
-else ifeq ($(PLATFORM),LINUX64)
-CFLAGS += -DPLATFORM_LINUX $(shell pkg-config --cflags glfw3 glu gl)
 LDFLAGS += $(shell pkg-config --libs glfw3 glu gl x11 xrandr xi xxf86vm xcursor xinerama xrender xext xdamage) -lpthread -ldl 
 
 else ifeq ($(PLATFORM),OSX)
