@@ -19,7 +19,8 @@ else ifeq ($(MACHINE),i686)
 PLATFORM = LINUX
 
 else ifeq ($(MACHINE),x86_64)
-PLATFORM = LINUX
+PLATFORM = LINUX64
+
 endif
 
 ifeq ($(PLATFORM),RPI)
@@ -37,12 +38,17 @@ else ifeq ($(PLATFORM),LINUX)
 CFLAGS += -DPLATFORM_LINUX $(shell pkg-config --cflags glfw3 glu gl) 
 LDFLAGS += $(shell pkg-config --libs glfw3 glu gl x11 xrandr xi xxf86vm xcursor xinerama xrender xext xdamage) -lpthread 
 
+else ifeq ($(PLATFORM),LINUX64)
+CFLAGS += -DPLATFORM_LINUX $(shell pkg-config --cflags glfw3 glu gl)
+LDFLAGS += $(shell pkg-config --libs glfw3 glu gl x11 xrandr xi xxf86vm xcursor xinerama xrender xext xdamage) -lpthread -ldl 
+
 else ifeq ($(PLATFORM),OSX)
 CXX = /usr/bin/clang++
 ARCH = -arch x86_64
 CFLAGS += $(ARCH) -DPLATFORM_OSX -stdlib=libc++ $(shell pkg-config --cflags glfw3)
 INCLUDES += -I/Library/Frameworks/GLUI.framework
 LDFLAGS += $(ARCH) -framework OpenGL -framework Cocoa -framework CoreVideo -framework IOKit $(shell pkg-config --libs glfw3)
+
 endif
 
 all: $(EXE)
