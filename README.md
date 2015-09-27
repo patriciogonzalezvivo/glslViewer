@@ -57,6 +57,15 @@ make
 make install
 ```
 
+If glfw3 was installed before, after running the code above, remove glfw3 and try:
+
+```
+brew install glfw3 pkg-config
+export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig
+make
+make install
+```
+
 ## Use
 
 In the most simple scenario you just want to load a fragment shader. For that you need to:
