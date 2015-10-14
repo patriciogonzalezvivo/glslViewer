@@ -269,8 +269,8 @@ void renderThread(int argc, char **argv) {
             if( tex->load(argument) ){
                 textures[parameterPair] = tex;
                 std::cout << "Loading " << argument << " as the following uniform: " << std::endl;
-                std::cout << "    uniform sampler2D u_" << parameterPair  << "; // loaded"<< std::endl;
-                std::cout << "    uniform vec2 u_" << parameterPair  << "Resolution;"<< std::endl;
+                std::cout << "    uniform sampler2D " << parameterPair  << "; // loaded"<< std::endl;
+                std::cout << "    uniform vec2 " << parameterPair  << "Resolution;"<< std::endl;
             }
 
         } else if ( haveExt(argument,"png") || haveExt(argument,"PNG") ||
