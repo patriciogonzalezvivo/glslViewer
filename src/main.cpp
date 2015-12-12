@@ -310,6 +310,7 @@ void renderThread(int argc, char **argv) {
 }
 
 void setup() {
+    glfwSwapInterval(1);
     glEnable(GL_DEPTH_TEST);
     glFrontFace(GL_CCW);
     
