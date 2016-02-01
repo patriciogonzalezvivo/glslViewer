@@ -499,6 +499,7 @@ void initGL(int argc, char **argv){
     glfwSetKeyCallback(window, handleKeypress);
     glfwSetCursorPosCallback(window, handleCursor);
 
+    glfwSwapInterval(1);
     initTime();
 }
 

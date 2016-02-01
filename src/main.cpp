@@ -216,7 +216,7 @@ void watchThread() {
 void renderThread(int argc, char **argv) {
     // Prepare viewport
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-    glClear(GL_COLOR_BUFFER_BIT );
+    glClear(GL_COLOR_BUFFER_BIT);
     
     // Setup
     setup();
@@ -310,7 +310,6 @@ void renderThread(int argc, char **argv) {
 }
 
 void setup() {
-    glfwSwapInterval(1);
     glEnable(GL_DEPTH_TEST);
     glFrontFace(GL_CCW);
     
