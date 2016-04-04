@@ -85,6 +85,10 @@ float getTime() {
     return timeSec;
 }
 
+//--------------- App Title --------------------------
+const std::string appTitle = "glslViewer";
+//----------------------------------------------------
+
 // OPENGL through BREADCOM GPU on RASPBERRYPI
 //----------------------------------------------------
 #ifdef PLATFORM_RPI
@@ -459,6 +463,25 @@ void handleCursor(GLFWwindow* _window, double x, double y) {
     }    
 }
 
+//---------------------- FPS Counter --------------------------
+void FPS_Counter() {
+    static double prev_sec = glfwGetTime ();
+    static int frame_count;
+    double curr_sec = glfwGetTime ();
+    double elapsed_sec = curr_sec - prev_sec;
+    if (elapsed_sec > 0.25) {
+        prev_sec = curr_sec;
+        double fps = (double)frame_count / elapsed_sec;
+        char t[128];
+        sprintf (t, "glslViewer :..: FPS:%.0f",fps);
+        glfwSetWindowTitle ( window,t);
+        frame_count = 0;
+    }
+    frame_count++;
+}
+//-------------------------------------------------------------
+
+
 void initGL(int argc, char **argv){
     viewport.x = 0;
     viewport.y = 0;
@@ -481,8 +504,9 @@ void initGL(int argc, char **argv){
         handleError("GLFW init failed", -1);
     }
 
-    window = glfwCreateWindow(viewport.z, viewport.w, "glslViewer", NULL, NULL);
-
+    //window = glfwCreateWindow(viewport.z, viewport.w, "glslViewer", NULL, NULL);
+    window = glfwCreateWindow(viewport.z, viewport.w, appTitle.c_str(), NULL, NULL);
+    
     if(!window) {
         glfwTerminate();
         handleError("GLFW create window failed", -1);
@@ -504,6 +528,7 @@ void initGL(int argc, char **argv){
 }
 
 bool isGL(){
+    FPS_Counter();
     return !glfwWindowShouldClose(window);
 }
 
