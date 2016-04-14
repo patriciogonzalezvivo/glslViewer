@@ -428,7 +428,7 @@ void onKeyPress(int _key) {
         }
     }
 
-    if ( _key == 'q' || _key == 'Q'){
+    if ( _key == 'q' || _key == 'Q' || _key == GLFW_KEY_ESCAPE){
         bPlay = false;
     }
 }
