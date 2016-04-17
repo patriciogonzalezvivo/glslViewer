@@ -427,10 +427,17 @@ void onKeyPress(int _key) {
             Texture::savePixels(outputFile, pixels, getWindowWidth(), getWindowHeight());
         }
     }
-
+    
+#ifdef PLATFORM_RPI
+    _key = getchar();
+    if (_key == 27) {
+        bPlay = false;
+    }
+#else
     if ( _key == 'q' || _key == 'Q' || _key == GLFW_KEY_ESCAPE){
         bPlay = false;
     }
+#endif
 }
 
 void onMouseMove(float _x, float _y) {
