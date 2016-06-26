@@ -71,6 +71,8 @@ clean:
 
 install:
 	@cp $(EXE) /usr/local/bin
+	@cp glslLoader /usr/local/bin
 
 uninstall:
 	@rm /usr/local/bin/$(EXE)
+	@rm /usr/local/bin/glslLoader
