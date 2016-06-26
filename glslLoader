@@ -2,7 +2,7 @@
 
 import sys, urllib, os, re
 
-COMMAND='./glslViewer'
+COMMAND='glslViewer'
 SHADER_PATH = '';
 
 if len(sys.argv) > 1:
