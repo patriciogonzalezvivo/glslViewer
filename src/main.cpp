@@ -34,6 +34,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "gl/shader.h"
 #include "gl/vbo.h"
 #include "gl/texture.h"
+#include "gl/fbo.h"
 #include "gl/pingpong.h"
 #include "3d/camera.h"
 #include "types/shapes.h"
@@ -70,10 +71,15 @@ float lon = 0.0;
 Vbo* vbo;
 int iGeom = -1;
 glm::mat4 model_matrix = glm::mat4(1.);
-
-std::map<std::string,Texture*> textures;
-PingPong buffer;
 std::string outputFile = "";
+
+// Textures
+std::map<std::string,Texture*> textures;
+
+// Backbuffer
+PingPong buffer;
+Vbo* buffer_vbo;
+Shader buffer_shader;
 
 //  CURSOR
 Cursor cursor;
@@ -350,8 +356,32 @@ void setup() {
     cam.setViewport(getWindowWidth(), getWindowHeight());
     cam.setPosition(glm::vec3(0.0,0.0,-3.));
 
-    pingpong.resize(getWindowWidth(), getWindowHeight());
-    pingpong.clear();
+    buffer.allocate(getWindowWidth(), getWindowHeight());
+    buffer.clear();
+
+    buffer_vbo = rect(0.0,0.0,1.0,1.0).getVbo();
+    std::string buffer_vert = "#ifdef GL_ES\n\
+precision mediump float;\n\
+#endif\n\
+\n\
+uniform mat4 u_modelViewProjectionMatrix;\n\
+attribute vec4 a_position;\n\
+\n\
+void main(void) {\n\
+    gl_Position = u_modelViewProjectionMatrix * a_position;\n\
+}";
+
+std::string buffer_frag = "#ifdef GL_ES\n\
+precision mediump float;\n\
+#endif\n\
+\n\
+uniform sampler2D u_tex0;\n\
+uniform vec2 u_resolution;\n\
+\n\
+void main() {\n\
+    gl_FragColor = texture2D(u_tex0,gl_FragCoord.xy / u_resolution.xy);\n\
+}";
+    buffer_shader.load(buffer_frag, buffer_vert);
 }
 
 void draw(){
@@ -362,7 +392,7 @@ void draw(){
         *iHasChanged = -1;
     }
 
-    pingpong.dst->bind();
+    buffer.src->bind();
 
     shader.use();
     shader.setUniform("u_time", getTime());
@@ -389,12 +419,20 @@ void draw(){
         index++;
     }
 
-    shader.setUniform("u_backbuffer", *(pingpong.src));
+    shader.setUniform("u_backbuffer", buffer.dst, index++);
 
     vbo->draw(&shader);
 
-    pingpong.dst->unbind();
-    pingpong.swap();
+    buffer.src->unbind();
+
+    buffer.swap();
+
+    glUseProgram(0);
+    buffer_shader.use();
+    buffer_shader.setUniform("u_resolution",getWindowWidth(), getWindowHeight());
+    buffer_shader.setUniform("u_modelViewProjectionMatrix", mvp);
+    buffer_shader.setUniform("u_tex0", buffer.dst, index++);
+    buffer_vbo->draw(&buffer_shader);
 
     if(bCursor){
         cursor.draw();

@@ -1,7 +1,15 @@
 #include "fbo.h"
 #include <iostream>
+#include "types/shapes.h"
 
-Fbo::Fbo():m_width(0), m_height(0), m_id(0), m_color_texture(0), m_depth_texture(0) {
+Fbo::Fbo():m_width(0), m_height(0) {
+}
+
+Fbo::~Fbo() {
+    glDeleteFramebuffers(1, &m_id);
+}
+
+void Fbo::allocate(const unsigned int _width, const unsigned int _height) {
     // Create a frame buffer
     glGenFramebuffers(1, &m_id);
 
@@ -10,18 +18,7 @@ Fbo::Fbo():m_width(0), m_height(0), m_id(0), m_color_texture(0), m_depth_texture
 
     // Create a texture to hold the depth buffer
     glGenTextures(1, &m_depth_texture);
-}
 
-Fbo::Fbo(unsigned int _width, unsigned int _height):Fbo() {
-    // Allocate Textures
-    resize(_width,_height);
-}
-
-Fbo::~Fbo() {
-    glDeleteFramebuffers(1, &m_id);
-}
-
-void Fbo::resize(const unsigned int _width, const unsigned int _height) {
     m_width = _width;
     m_height = _height;
 
@@ -65,22 +62,15 @@ void Fbo::resize(const unsigned int _width, const unsigned int _height) {
 void Fbo::bind() {
     glGetIntegerv(GL_FRAMEBUFFER_BINDING, (GLint *)&m_old_fbo_id);
     glBindFramebuffer(GL_FRAMEBUFFER, m_id);
-    m_binded = true;
 }
 
 void Fbo::unbind() {
-    m_binded = false;
     glBindFramebuffer(GL_FRAMEBUFFER, m_old_fbo_id);
 }
 
 void Fbo::clear(float _alpha) {
-    if (!m_binded) {
-        bind();
-        glClearColor(0.0f, 0.0f, 0.0f, _alpha);
-        glClear(GL_COLOR_BUFFER_BIT);
-        unbind();
-    } else {
-        glClearColor(0.0f, 0.0f, 0.0f, _alpha);
-        glClear(GL_COLOR_BUFFER_BIT);
-    }
+    bind();
+    glClearColor(0.0f, 0.0f, 0.0f, _alpha);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    unbind();
 }

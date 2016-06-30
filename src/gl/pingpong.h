@@ -7,9 +7,9 @@ public:
     PingPong();
     virtual ~PingPong();
 
-    virtual void resize(int _width, int _height);
-    virtual void swap();
-    virtual void clear(float _alpha = 0.0);
+    void allocate(int _width, int _height);
+    void swap();
+    void clear(float _alpha = 0.0);
     
     Fbo& operator[](int n){ return m_fbos[n]; }
 
