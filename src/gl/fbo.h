@@ -16,6 +16,8 @@ public:
     void bind();
     void unbind();
 
+    void clear (float _alpha);
+
 protected:
     unsigned int m_width;
     unsigned int m_height;
@@ -25,4 +27,6 @@ protected:
 
     GLuint  m_color_texture;
     GLuint  m_depth_texture;
+
+    bool    m_binded;
 };

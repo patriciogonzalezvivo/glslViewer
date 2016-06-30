@@ -65,8 +65,22 @@ void Fbo::resize(const unsigned int _width, const unsigned int _height) {
 void Fbo::bind() {
     glGetIntegerv(GL_FRAMEBUFFER_BINDING, (GLint *)&m_old_fbo_id);
     glBindFramebuffer(GL_FRAMEBUFFER, m_id);
+    m_binded = true;
 }
 
 void Fbo::unbind() {
+    m_binded = false;
     glBindFramebuffer(GL_FRAMEBUFFER, m_old_fbo_id);
+}
+
+void Fbo::clear(float _alpha) {
+    if (!m_binded) {
+        bind();
+        glClearColor(0.0f, 0.0f, 0.0f, _alpha);
+        glClear(GL_COLOR_BUFFER_BIT);
+        unbind();
+    } else {
+        glClearColor(0.0f, 0.0f, 0.0f, _alpha);
+        glClear(GL_COLOR_BUFFER_BIT);
+    }
 }
