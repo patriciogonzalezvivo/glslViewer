@@ -34,6 +34,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "gl/shader.h"
 #include "gl/vbo.h"
 #include "gl/texture.h"
+#include "gl/pingpong.h"
 #include "3d/camera.h"
 #include "types/shapes.h"
 
@@ -71,6 +72,7 @@ int iGeom = -1;
 glm::mat4 model_matrix = glm::mat4(1.);
 
 std::map<std::string,Texture*> textures;
+PingPong buffer;
 std::string outputFile = "";
 
 //  CURSOR
@@ -345,8 +347,11 @@ void setup() {
     }    
     shader.load(fragSource,vertSource);
     
-    cam.setViewport(getWindowWidth(),getWindowHeight());
+    cam.setViewport(getWindowWidth(), getWindowHeight());
     cam.setPosition(glm::vec3(0.0,0.0,-3.));
+
+    pingpong.resize(getWindowWidth(), getWindowHeight());
+    pingpong.clear();
 }
 
 void draw(){
@@ -356,6 +361,8 @@ void draw(){
         onFileChange();
         *iHasChanged = -1;
     }
+
+    pingpong.dst->bind();
 
     shader.use();
     shader.setUniform("u_time", getTime());
@@ -382,7 +389,12 @@ void draw(){
         index++;
     }
 
+    shader.setUniform("u_backbuffer", *(pingpong.src));
+
     vbo->draw(&shader);
+
+    pingpong.dst->unbind();
+    pingpong.swap();
 
     if(bCursor){
         cursor.draw();
