@@ -6,6 +6,7 @@
 #include "glm/glm.hpp"
 
 #include "texture.h"
+#include "fbo.h"
 
 class Shader {
 
@@ -28,6 +29,7 @@ public:
     void    setUniform(const std::string& _name, float _x, float _y, float _z);
     void    setUniform(const std::string& _name, float _x, float _y, float _z, float _w);
     void    setUniform(const std::string& _name, const Texture* _tex, unsigned int _texLoc);
+    void    setUniform(const std::string& _name, const Fbo* _fbo, unsigned int _texLoc);
 
     void    setUniform(const std::string& _name, const glm::vec2& _value){ setUniform(_name,_value.x,_value.y); }
     void    setUniform(const std::string& _name, const glm::vec3& _value){ setUniform(_name,_value.x,_value.y,_value.z); }

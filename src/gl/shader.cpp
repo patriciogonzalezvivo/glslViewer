@@ -187,6 +187,14 @@ void Shader::setUniform(const std::string& _name, const Texture* _tex, unsigned 
 	}
 }
 
+void Shader::setUniform(const std::string& _name, const Fbo* _fbo, unsigned int _texLoc){
+	if(isInUse()) {
+		glActiveTexture(GL_TEXTURE0 + _texLoc);
+		glBindTexture(GL_TEXTURE_2D, _fbo->getTextureId());
+		glUniform1i(getUniformLocation(_name), _texLoc);
+	}
+}
+
 void Shader::setUniform(const std::string& _name, const glm::mat2& _value, bool _transpose){
     if(isInUse()) {
     	glUniformMatrix2fv(getUniformLocation(_name), 1, _transpose, &_value[0][0]);

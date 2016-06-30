@@ -9,6 +9,7 @@ public:
     virtual ~Fbo();
 
     const GLuint getId() const { return m_id; };
+    const GLuint getTextureId() const { return m_color_texture; };
 
     void resize(const unsigned int _width, const unsigned int _height);
 

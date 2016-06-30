@@ -377,7 +377,7 @@ void draw(){
 
     unsigned int index = 0;
     for (std::map<std::string,Texture*>::iterator it = textures.begin(); it!=textures.end(); ++it) {
-        shader.setUniform(it->first,it->second,index);
+        shader.setUniform(it->first, it->second,index);
         shader.setUniform(it->first+"Resolution",it->second->getWidth(),it->second->getHeight());
         index++;
     }
