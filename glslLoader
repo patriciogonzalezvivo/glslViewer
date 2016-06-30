@@ -3,7 +3,10 @@
 import sys, urllib, os, re
 
 COMMAND='glslViewer'
-SHADER_PATH = '';
+SHADER_PATH = ''
+
+TMP_DIR = '/tmp/'
+TMP_SHD = TMP_DIR + 'shader.frag'
 
 if len(sys.argv) > 1:
     SHADER_PATH = sys.argv[1]
@@ -16,8 +19,8 @@ if SHADER_PATH.isdigit():
 
 if SHADER_PATH.startswith('http'):
     http = urllib.URLopener()
-    http.retrieve(SHADER_PATH, 'shader.frag')
-    SHADER_PATH='shader.frag'
+    http.retrieve(SHADER_PATH, TMP_SHD)
+    SHADER_PATH=TMP_SHD
 
 COMMAND += ' ' + SHADER_PATH
 counter=0
@@ -28,11 +31,11 @@ with open(SHADER_PATH) as f:
             uniform = result.group(1)
             url = result.group(2)
             ext = os.path.splitext(url)[1]
-            img = str(counter) + ext
+            img_path = TMP_DIR + str(counter) + ext
             print counter,uniform,url,ext
             http = urllib.URLopener()
-            http.retrieve(url, img)
-            COMMAND += ' -' + uniform + ' ' + img
+            http.retrieve(url, img_path)
+            COMMAND += ' -' + uniform + ' ' + img_path
             counter += 1
 
 print COMMAND
