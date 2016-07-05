@@ -71,8 +71,8 @@ void Fbo::bind() {
     if (!m_binded) {
         glGetIntegerv(GL_FRAMEBUFFER_BINDING, (GLint *)&m_old_fbo_id);
         glBindFramebuffer(GL_FRAMEBUFFER, m_id);
-        glViewport(0,0, m_width, m_height);
-        glClearColor(0, 0, 0, 1.0f);
+        glViewport(0.0f, 0.0f, m_width, m_height);
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         m_binded = true;
     }
