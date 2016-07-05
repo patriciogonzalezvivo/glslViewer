@@ -266,7 +266,7 @@ void initGL(int argc, char **argv){
     // glClear( GL_COLOR_BUFFER_BIT );
 
     setWindowSize(viewport.z,viewport.w);
-    check();
+    //check();
 
     ///printf("OpenGL Initialize at %i,%i,%i,%i\n",viewport.x,viewport.y,viewport.z,viewport.w);
     initTime();
