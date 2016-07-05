@@ -1,7 +1,7 @@
 #include "fbo.h"
 #include <iostream>
 
-Fbo::Fbo():m_id(0), m_texture(0), m_depth_texture(0), m_width(0), m_height(0), m_allocated(false), m_binded(false) {
+Fbo::Fbo():m_id(0), m_old_fbo_id(0), m_texture(0), m_depth_texture(0), m_width(0), m_height(0), m_allocated(false), m_binded(false) {
 
 }
 

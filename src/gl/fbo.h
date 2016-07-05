@@ -17,14 +17,14 @@ public:
     void unbind();
 
 protected:
-    unsigned int m_width;
-    unsigned int m_height;
-
     GLuint  m_id;
     GLuint  m_old_fbo_id;
 
     GLuint  m_texture;
     GLuint  m_depth_texture;
+
+    unsigned int m_width;
+    unsigned int m_height;
 
     bool    m_allocated;
     bool    m_binded;
