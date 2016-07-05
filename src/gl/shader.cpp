@@ -1,5 +1,7 @@
 #include "shader.h"
 
+#include <string>
+#include <regex>
 #include "utils.h"
 
 Shader::Shader():m_program(0),m_fragmentShader(0),m_vertexShader(0){
@@ -103,7 +105,6 @@ bool Shader::isInUse() const {
 }
 
 GLuint Shader::compileShader(const std::string& _src, GLenum _type) {
-
 	GLuint shader = glCreateShader(_type);
 	const GLchar* source = (const GLchar*) _src.c_str();
 
@@ -192,6 +193,10 @@ void Shader::setUniform(const std::string& _name, const Fbo* _fbo, unsigned int 
 		glActiveTexture(GL_TEXTURE0 + _texLoc);
 		glBindTexture(GL_TEXTURE_2D, _fbo->getTextureId());
 		glUniform1i(getUniformLocation(_name), _texLoc);
+		_texLoc++;
+		glActiveTexture(GL_TEXTURE0 + _texLoc);
+		glBindTexture(GL_TEXTURE_2D, _fbo->getDepthTextureId());
+		glUniform1i(getUniformLocation(_name+"Depth"), _texLoc);
 	}
 }
 

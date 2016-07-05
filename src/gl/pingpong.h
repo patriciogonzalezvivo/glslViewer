@@ -9,7 +9,6 @@ public:
 
     void allocate(int _width, int _height);
     void swap();
-    void clear(float _alpha = 0.0);
     
     Fbo& operator[](int n){ return m_fbos[n]; }
 

@@ -212,7 +212,7 @@ void watchThread() {
                 stat(files[i].path.c_str(), &st);
                 int date = st.st_mtime;
                 if (date != files[i].lastChange ){
-                    *iHasChanged = i;
+                    *iHasChanged = i; 
                     files[i].lastChange = date;
                 }
                 usleep(500000);
@@ -357,29 +357,32 @@ void setup() {
     cam.setPosition(glm::vec3(0.0,0.0,-3.));
 
     buffer.allocate(getWindowWidth(), getWindowHeight());
-    buffer.clear();
 
     buffer_vbo = rect(0.0,0.0,1.0,1.0).getVbo();
     std::string buffer_vert = "#ifdef GL_ES\n\
 precision mediump float;\n\
 #endif\n\
 \n\
-uniform mat4 u_modelViewProjectionMatrix;\n\
 attribute vec4 a_position;\n\
 \n\
 void main(void) {\n\
-    gl_Position = u_modelViewProjectionMatrix * a_position;\n\
+    gl_Position = a_position;\n\
 }";
 
 std::string buffer_frag = "#ifdef GL_ES\n\
 precision mediump float;\n\
 #endif\n\
 \n\
-uniform sampler2D u_tex0;\n\
+uniform sampler2D u_buffer;\n\
+uniform sampler2D u_bufferDepth;\n\
 uniform vec2 u_resolution;\n\
 \n\
 void main() {\n\
-    gl_FragColor = texture2D(u_tex0,gl_FragCoord.xy / u_resolution.xy);\n\
+    vec2 st = gl_FragCoord.xy/u_resolution.xy;\n\
+    // if (st.x < .5)\n\
+        gl_FragColor = texture2D(u_buffer, st);\n\
+    // else\n\
+        // gl_FragColor = texture2D(u_bufferDepth, st);\n\
 }";
     buffer_shader.load(buffer_frag, buffer_vert);
 }
@@ -392,6 +395,7 @@ void draw(){
         *iHasChanged = -1;
     }
 
+    buffer.swap();
     buffer.src->bind();
 
     shader.use();
@@ -419,19 +423,16 @@ void draw(){
         index++;
     }
 
-    shader.setUniform("u_backbuffer", buffer.dst, index++);
+    shader.setUniform("u_backbuffer", buffer.dst, index);
 
     vbo->draw(&shader);
 
     buffer.src->unbind();
-
-    buffer.swap();
-
-    glUseProgram(0);
+    
     buffer_shader.use();
     buffer_shader.setUniform("u_resolution",getWindowWidth(), getWindowHeight());
     buffer_shader.setUniform("u_modelViewProjectionMatrix", mvp);
-    buffer_shader.setUniform("u_tex0", buffer.dst, index++);
+    buffer_shader.setUniform("u_buffer", buffer.src, index++);
     buffer_vbo->draw(&buffer_shader);
 
     if(bCursor){
@@ -510,6 +511,7 @@ void onMouseDrag(float _x, float _y, int _button) {
 
 void onViewportResize(int _newWidth, int _newHeight) {
     cam.setViewport(_newWidth,_newHeight);
+    buffer.allocate(_newWidth,_newHeight);
 }
 
 void onExit() {
