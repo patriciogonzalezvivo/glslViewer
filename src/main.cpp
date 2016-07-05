@@ -395,14 +395,20 @@ void draw(){
         *iHasChanged = -1;
     }
 
-    buffer.swap();
-    buffer.src->bind();
-
+    if (shader.needBackbuffer()) {
+        buffer.swap();
+        buffer.src->bind();
+    }
+    
     shader.use();
-    shader.setUniform("u_time", getTime());
-    shader.setUniform("u_mouse", getMouseX(), getMouseY());
     shader.setUniform("u_resolution",getWindowWidth(), getWindowHeight());
-
+    if (shader.needTime()) {
+        shader.setUniform("u_time", getTime());
+    }
+    if (shader.needMouse()) {
+        shader.setUniform("u_mouse", getMouseX(), getMouseY());
+    }
+    
     glm::mat4 mvp = glm::mat4(1.);
     if (iGeom != -1) {
         shader.setUniform("u_eye", -cam.getPosition());
@@ -423,17 +429,21 @@ void draw(){
         index++;
     }
 
-    shader.setUniform("u_backbuffer", buffer.dst, index);
+    if (shader.needBackbuffer()) {
+        shader.setUniform("u_backbuffer", buffer.dst, index);
+    }
 
     vbo->draw(&shader);
 
-    buffer.src->unbind();
-    
-    buffer_shader.use();
-    buffer_shader.setUniform("u_resolution",getWindowWidth(), getWindowHeight());
-    buffer_shader.setUniform("u_modelViewProjectionMatrix", mvp);
-    buffer_shader.setUniform("u_buffer", buffer.src, index++);
-    buffer_vbo->draw(&buffer_shader);
+    if (shader.needBackbuffer()) {
+        buffer.src->unbind();
+        
+        buffer_shader.use();
+        buffer_shader.setUniform("u_resolution",getWindowWidth(), getWindowHeight());
+        buffer_shader.setUniform("u_modelViewProjectionMatrix", mvp);
+        buffer_shader.setUniform("u_buffer", buffer.src, index++);
+        buffer_vbo->draw(&buffer_shader);
+    }
 
     if(bCursor){
         cursor.draw();
