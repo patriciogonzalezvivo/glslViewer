@@ -405,6 +405,12 @@ void draw(){
     if (shader.needTime()) {
         shader.setUniform("u_time", getTime());
     }
+    if (shader.needDelta()) {
+        shader.setUniform("u_delta", getDelta());
+    }
+    if (shader.needDate()) {
+        shader.setUniform("u_date", getDate());
+    }
     if (shader.needMouse()) {
         shader.setUniform("u_mouse", getMouseX(), getMouseY());
     }

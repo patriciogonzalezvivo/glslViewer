@@ -3,7 +3,7 @@
 #include <regex>
 #include "utils.h"
 
-Shader::Shader():m_program(0),m_fragmentShader(0),m_vertexShader(0), m_backbuffer(0), m_time(0), m_mouse(0) {
+Shader::Shader():m_program(0),m_fragmentShader(0),m_vertexShader(0), m_backbuffer(0), m_time(false), m_delta(false), m_date(false), m_mouse(false) {
 
 }
 
@@ -54,8 +54,10 @@ bool Shader::load(const std::string& _fragmentSrc, const std::string& _vertexSrc
         return false;
     } else {
         m_backbuffer = std::regex_search(_fragmentSrc, std::regex("u_backbuffer"));
-        m_mouse = std::regex_search(_fragmentSrc, std::regex("u_mouse"));
         m_time = std::regex_search(_fragmentSrc, std::regex("u_time"));
+        m_delta = std::regex_search(_fragmentSrc, std::regex("u_delta"));
+        m_date = std::regex_search(_fragmentSrc, std::regex("u_date"));
+        m_mouse = std::regex_search(_fragmentSrc, std::regex("u_mouse"));
     }
 
     m_program = glCreateProgram();

@@ -64,12 +64,14 @@ static unsigned char keyPressed;
 // TIME
 //----------------------------------------------------
 struct timeval tv;
-unsigned long long timeStart;
-float timeSec = 0.0f;
+unsigned long long timeLoad;
+unsigned long long timePrev;
+float fTime = 0.0f;
+float fDelta = 0.0f;
 
 void initTime() {
     gettimeofday(&tv, NULL);
-    timeStart = (unsigned long long)(tv.tv_sec) * 1000 +
+    timeLoad = (unsigned long long)(tv.tv_sec) * 1000 +
                 (unsigned long long)(tv.tv_usec) / 1000; 
 }
 
@@ -78,11 +80,27 @@ void updateTime() {
     unsigned long long timeNow =    (unsigned long long)(tv.tv_sec) * 1000 +
                                     (unsigned long long)(tv.tv_usec) / 1000;
 
-    timeSec = (timeNow - timeStart)*0.001;
+    fTime = (timeNow - timeLoad)*0.001;
+    fDelta = (timeNow - timePrev)*0.001;
+    timePrev = timeNow;
 }
 
 float getTime() {
-    return timeSec;
+    return fTime;
+}
+
+float getDelta() {
+    return fDelta;
+}
+
+glm::vec4 getDate() {
+    gettimeofday(&tv, NULL);
+    struct tm      *tm;
+    tm = localtime(&tv.tv_sec);
+    return glm::vec4(tm->tm_year,
+                     tm->tm_mon,
+                     tm->tm_mday,
+                     tm->tm_hour*3600.0f+tm->tm_min*46.0f+tm->tm_sec);
 }
 
 //--------------- App Title --------------------------

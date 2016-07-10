@@ -20,6 +20,8 @@ public:
 
     const   bool    needBackbuffer() const { return m_backbuffer; };
     const   bool    needTime() const { return m_time; };
+    const   bool    needDelta() const { return m_delta; };
+    const   bool    needDate() const { return m_date; };
     const   bool    needMouse() const { return m_mouse; };
 
     void    use() const;
@@ -56,5 +58,7 @@ private:
 
     bool    m_backbuffer;
     bool    m_time;
+    bool    m_delta;
+    bool    m_date;
     bool    m_mouse;
 };

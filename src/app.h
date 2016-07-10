@@ -48,6 +48,8 @@ glm::ivec4 getViewPort();
 glm::mat4 getOrthoMatrix();
 
 float getTime();
+float getDelta();
+glm::vec4 getDate();
 
 float getMouseX();
 float getMouseY();
