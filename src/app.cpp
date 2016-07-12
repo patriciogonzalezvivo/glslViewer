@@ -97,7 +97,6 @@ glm::vec4 getDate() {
     gettimeofday(&tv, NULL);
     struct tm      *tm;
     tm = localtime(&tv.tv_sec);
-    std::cout << tv.tv_usec*0.000001 << std::endl;
     return glm::vec4(tm->tm_year,
                      tm->tm_mon,
                      tm->tm_mday,
