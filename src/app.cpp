@@ -523,7 +523,13 @@ void initGL(int argc, char **argv){
     if(!glfwInit()) {
         handleError("GLFW init failed", -1);
     }
-
+    
+    // Always on Top
+    //glfwWindowHint(GLFW_FLOATING, GL_TRUE);
+    // Optional
+    //glfwWindowHint(GLFW_FOCUSED, GL_FALSE);
+    
+    
     //window = glfwCreateWindow(viewport.z, viewport.w, "glslViewer", NULL, NULL);
     window = glfwCreateWindow(viewport.z, viewport.w, appTitle.c_str(), NULL, NULL);
     
