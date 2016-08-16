@@ -29,7 +29,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <map>
 #include <thread>
 #include <mutex>
-#include <atomic>
 #include <iostream>
 
 #include "app.h"
@@ -48,7 +47,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // GLOBAL VARIABLES
 //============================================================================
 //
-std::atomic<bool> bRun(true);
+static bool bRun = true;
 
 //  List of FILES to watch and the variable to communicate that between process
 struct WatchFile {
@@ -203,7 +202,7 @@ int main(int argc, char **argv){
 //============================================================================
 void fileWatcherThread() {
     struct stat st;
-    while (bRun.load()) {
+    while (bRun) {
         for (uint i = 0; i < files.size(); i++) {
             if (fileChanged == -1) {
                 stat(files[i].path.c_str(), &st);
@@ -223,15 +222,10 @@ void fileWatcherThread() {
 void cinWatcherThread() {
     std::string line;
 
-    while (bRun.load() && std::getline(std::cin, line)) {
-        if (line == "q" || line == "quit" || line == "exit") {
-            bRun.store(false);
-        }
-        else {
-            uniformsMutex.lock();
-            parseUniforms(line, &uniforms);
-            uniformsMutex.unlock();
-        }
+    while (bRun && std::getline(std::cin, line)) {
+        uniformsMutex.lock();
+        parseUniforms(line, &uniforms);
+        uniformsMutex.unlock();
     }
 }
 
@@ -317,7 +311,7 @@ void renderThread(int argc, char **argv) {
     }
 
     // Render Loop
-    while (isGL() && bRun.load()) {
+    while (isGL() && bRun) {
         // Update
         updateGL();
         
@@ -339,13 +333,13 @@ void renderThread(int argc, char **argv) {
 
         if (timeLimit > 0.0 && getTime() > timeLimit) {
             onKeyPress('s');
-            bRun.store(false);
+            bRun = false;
         }
     }
 
     // If is terminated by the windows manager, turn bRun off so the fileWatcher can stop
     if (!isGL()) {
-        bRun.store(false);
+        bRun = false;
     }
 
     onExit();
@@ -534,7 +528,7 @@ void onKeyPress(int _key) {
     }
 
     if ( _key == 'q' || _key == 'Q'){
-        bRun.store(false);
+        bRun = false;
     }
 }
 
