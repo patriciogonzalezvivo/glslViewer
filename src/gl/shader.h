@@ -34,6 +34,9 @@ public:
     void    setUniform(const std::string& _name, float _x, float _y);
     void    setUniform(const std::string& _name, float _x, float _y, float _z);
     void    setUniform(const std::string& _name, float _x, float _y, float _z, float _w);
+
+    void    setUniform(const std::string& _name, const float *_array, unsigned int _size);
+
     void    setUniform(const std::string& _name, const Texture* _tex, unsigned int _texLoc);
     void    setUniform(const std::string& _name, const Fbo* _fbo, unsigned int _texLoc);
 

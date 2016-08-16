@@ -157,6 +157,27 @@ GLint Shader::getUniformLocation(const std::string& _uniformName) const {
     return loc;
 }
 
+void Shader::setUniform(const std::string& _name, const float *_array, unsigned int _size) {
+    GLint loc = getUniformLocation(_name); 
+    if(isInUse()) {
+        if (_size == 1) {
+            glUniform1f(loc, _array[0]);
+        }
+        else if (_size == 2) {
+            glUniform2f(loc, _array[0], _array[1]);
+        }
+        else if (_size == 3) {
+            glUniform3f(loc, _array[0], _array[1], _array[2]);
+        }
+        else if (_size == 4) {
+            glUniform4f(loc, _array[0], _array[1], _array[2], _array[2]);
+        }
+        else {
+            std::cout << "Passing matrix uniform as array, not supported yet" << std::endl;
+        }
+    }
+}
+
 void Shader::setUniform(const std::string& _name, float _x) {
     if(isInUse()) {
         glUniform1f(getUniformLocation(_name), _x);

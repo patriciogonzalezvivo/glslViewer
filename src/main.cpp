@@ -23,14 +23,13 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-// #include <sys/shm.h>
 #include <sys/stat.h> 
 #include <unistd.h>
-// #include <signal.h>
 
 #include <map>
 #include <thread>
 #include <mutex>
+#include <iostream>
 
 #include "app.h"
 #include "utils.h"
@@ -39,6 +38,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "gl/texture.h"
 #include "gl/fbo.h"
 #include "gl/pingpong.h"
+#include "gl/uniform.h"
 #include "3d/camera.h"
 #include "types/shapes.h"
 
@@ -56,8 +56,11 @@ struct WatchFile {
     int lastChange;
 };
 std::vector<WatchFile> files;
+std::mutex filesMutex;
 int fileChanged;
-std::mutex fileMutex;
+
+UniformList uniforms;
+std::mutex uniformsMutex;
 
 //  SHADER
 Shader shader;
@@ -95,6 +98,8 @@ float timeLimit = 0.0f;
 //================================================================= Functions
 void fileWatcherThread();
 void onFileChange(int index);
+
+void cinWatcherThread();
 
 void renderThread(int argc, char **argv);
 void setup();
@@ -178,10 +183,17 @@ int main(int argc, char **argv){
 
     fileChanged = -1;
     std::thread fileWatcher(&fileWatcherThread);
+    std::thread cinWatcher(&cinWatcherThread);
 
     // OpenGL Render Loop
     renderThread(argc,argv);
+
+    // Wait for watchers to end
     fileWatcher.join();
+
+    // Force cinWatcher to finish (because is waiting for input)
+    pthread_t handler = cinWatcher.native_handle();
+    pthread_cancel(handler);
 
     exit(0);
 }
@@ -196,18 +208,34 @@ void fileWatcherThread() {
                 stat(files[i].path.c_str(), &st);
                 int date = st.st_mtime;
                 if (date != files[i].lastChange ) {
-                    fileMutex.lock();
+                    filesMutex.lock();
                     fileChanged = i; 
                     files[i].lastChange = date;
-                    fileMutex.unlock();
+                    filesMutex.unlock();
                 }
                 usleep(500000);
             }
         }
     }
-    std::cout << "End fileWatcherThread" << std::endl;
 }
 
+void cinWatcherThread() {
+    std::string line;
+
+    while (bRun.load() && std::getline(std::cin, line)) {
+        if (line == "q" || line == "quit" || line == "exit") {
+            bRun.store(false);
+        }
+        else {
+            uniformsMutex.lock();
+            parseUniforms(line, &uniforms);
+            uniformsMutex.unlock();
+        }
+    }
+}
+
+//  MAIN RENDER Thread (needs a GL context)
+//============================================================================
 void renderThread(int argc, char **argv) {
     // Initialize openGL context
     initGL(argc,argv);
@@ -297,9 +325,9 @@ void renderThread(int argc, char **argv) {
         // Something change??
         if (fileChanged != -1) {
             onFileChange(fileChanged);
-            fileMutex.lock();
+            filesMutex.lock();
             fileChanged = -1;
-            fileMutex.unlock();
+            filesMutex.unlock();
         }
 
         // Draw
@@ -320,8 +348,6 @@ void renderThread(int argc, char **argv) {
     }
 
     onExit();
-
-    std::cout << "End renderThread" << std::endl;
 }
 
 void setup() {
@@ -405,6 +431,8 @@ void draw() {
     }
     
     shader.use();
+
+    // Pass uniforms
     shader.setUniform("u_resolution",getWindowWidth(), getWindowHeight());
     if (shader.needTime()) {
         shader.setUniform("u_time", getTime());
@@ -419,6 +447,10 @@ void draw() {
         shader.setUniform("u_mouse", getMouseX(), getMouseY());
     }
     
+    for (UniformList::iterator it=uniforms.begin(); it!=uniforms.end(); ++it) {
+        shader.setUniform(it->first, it->second.value, it->second.size);
+    }
+
     glm::mat4 mvp = glm::mat4(1.);
     if (iGeom != -1) {
         shader.setUniform("u_eye", -cam.getPosition());
@@ -432,6 +464,7 @@ void draw() {
     }
     shader.setUniform("u_modelViewProjectionMatrix", mvp);
 
+    // Pass Textures Uniforms
     unsigned int index = 0;
     for (std::map<std::string,Texture*>::iterator it = textures.begin(); it!=textures.end(); ++it) {
         shader.setUniform(it->first, it->second, index);
