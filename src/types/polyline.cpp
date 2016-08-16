@@ -33,7 +33,7 @@ Polyline::Polyline():m_centroid(0.0,0.0,0.0),m_bChange(true){
 }
 
 Polyline::Polyline(const Polyline &_poly):m_centroid(0.0,0.0,0.0),m_bChange(true){
-    for (uint i = 0; i < _poly.size(); i++) {
+    for (int i = 0; i < _poly.size(); i++) {
         add(_poly[i]);
     }
 }
@@ -43,7 +43,7 @@ Polyline::Polyline(const std::vector<glm::vec3> & _points):m_centroid(0.0,0.0,0.
 }
 
 Polyline::Polyline(const Rectangle &_rect, float _radiants){
-    if(_radiants == 0){
+    if (_radiants == 0) {
         add(_rect.getTopLeft());
         add(_rect.getTopRight());
         add(_rect.getBottomRight());

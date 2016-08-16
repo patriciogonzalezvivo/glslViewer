@@ -29,6 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <map>
 #include <thread>
 #include <mutex>
+#include <atomic>
 #include <iostream>
 
 #include "app.h"
@@ -112,7 +113,7 @@ int main(int argc, char **argv){
 
     // Load files to watch
     struct stat st;
-    for (uint i = 1; i < argc ; i++) {
+    for (int i = 1; i < argc ; i++) {
         std::string argument = std::string(argv[i]);
 
         if (iFrag == -1 && (haveExt(argument,"frag") || haveExt(argument,"fs"))) {
@@ -257,7 +258,7 @@ void renderThread(int argc, char **argv) {
     int textureCounter = 0;
 
     //Load the the resources (textures)
-    for (uint i = 1; i < argc ; i++){
+    for (int i = 1; i < argc ; i++){
         std::string argument = std::string(argv[i]);
 
         if (argument == "-x" || argument == "-y" || 
