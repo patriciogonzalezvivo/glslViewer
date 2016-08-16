@@ -222,7 +222,7 @@ void fileWatcherThread() {
 void cinWatcherThread() {
     std::string line;
 
-    while (bRun && std::getline(std::cin, line)) {
+    while (std::getline(std::cin, line)) {
         uniformsMutex.lock();
         parseUniforms(line, &uniforms);
         uniformsMutex.unlock();
