@@ -10,7 +10,7 @@ MACHINE := $(shell uname -m)
 PLATFORM = RPI
 
 INCLUDES +=	-Isrc/ -Iinclude/
-CFLAGS += -Wall -O3 -std=c++0x -fpermissive
+CFLAGS += -Wall -O3 -std=c++11 -fpermissive
 
 ifeq ($(UNAME), Darwin)
 PLATFORM = OSX
