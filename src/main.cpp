@@ -23,11 +23,14 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <sys/shm.h>
+// #include <sys/shm.h>
 #include <sys/stat.h> 
 #include <unistd.h>
-#include <signal.h>
+// #include <signal.h>
+
 #include <map>
+#include <thread>
+#include <mutex>
 
 #include "app.h"
 #include "utils.h"
@@ -44,7 +47,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // GLOBAL VARIABLES
 //============================================================================
 //
-static bool bPlay = true;
+std::atomic<bool> bRun(true);
 
 //  List of FILES to watch and the variable to communicate that between process
 struct WatchFile {
@@ -53,7 +56,8 @@ struct WatchFile {
     int lastChange;
 };
 std::vector<WatchFile> files;
-int* iHasChanged;
+int fileChanged;
+std::mutex fileMutex;
 
 //  SHADER
 Shader shader;
@@ -89,8 +93,8 @@ bool bCursor = false;
 float timeLimit = 0.0f;
 
 //================================================================= Functions
-void watchThread();
-void onFileChange();
+void fileWatcherThread();
+void onFileChange(int index);
 
 void renderThread(int argc, char **argv);
 void setup();
@@ -103,14 +107,15 @@ int main(int argc, char **argv){
 
     // Load files to watch
     struct stat st;
-    for (uint i = 1; i < argc ; i++){
+    for (uint i = 1; i < argc ; i++) {
         std::string argument = std::string(argv[i]);
 
-        if ( iFrag == -1 && ( haveExt(argument,"frag") || haveExt(argument,"fs") ) ) {
+        if (iFrag == -1 && (haveExt(argument,"frag") || haveExt(argument,"fs"))) {
             int ierr = stat(argument.c_str(), &st);
             if (ierr != 0) {
                     std::cerr << "Error watching file " << argv[i] << std::endl;
-            } else {
+            }
+            else {
                 WatchFile file;
                 file.type = "fragment";
                 file.path = argument;
@@ -118,7 +123,8 @@ int main(int argc, char **argv){
                 files.push_back(file);
                 iFrag = files.size()-1;
             }
-        } else if ( iVert == -1 && ( haveExt(argument,"vert") || haveExt(argument,"vs") ) ) {
+        }
+        else if ( iVert == -1 && ( haveExt(argument,"vert") || haveExt(argument,"vs") ) ) {
             int ierr = stat(argument.c_str(), &st);
             if (ierr != 0) {
                     std::cerr << "Error watching file " << argument << std::endl;
@@ -130,13 +136,15 @@ int main(int argc, char **argv){
                 files.push_back(file);
                 iVert = files.size()-1;
             }
-        } else if ( iGeom == -1 && 
-                    ( haveExt(argument,"ply") || haveExt(argument,"PLY") ||
-                      haveExt(argument,"obj") || haveExt(argument,"OBJ") ) ) {
+        }
+        else if (iGeom == -1 && 
+                 (haveExt(argument,"ply") || haveExt(argument,"PLY") ||
+                  haveExt(argument,"obj") || haveExt(argument,"OBJ"))) {
             int ierr = stat(argument.c_str(), &st);
             if (ierr != 0) {
                     std::cerr << "Error watching file " << argument << std::endl;
-            } else {
+            }
+            else {
                 WatchFile file;
                 file.type = "geometry";
                 file.path = argument;
@@ -144,13 +152,15 @@ int main(int argc, char **argv){
                 files.push_back(file);
                 iGeom = files.size()-1;
             }
-        } else if ( haveExt(argument,"png") || haveExt(argument,"PNG") ||
-                    haveExt(argument,"jpg") || haveExt(argument,"JPG") || 
-                    haveExt(argument,"jpeg") || haveExt(argument,"JPEG") ){
+        }
+        else if (haveExt(argument,"png") || haveExt(argument,"PNG") ||
+                 haveExt(argument,"jpg") || haveExt(argument,"JPG") || 
+                 haveExt(argument,"jpeg") || haveExt(argument,"JPEG")) {
             int ierr = stat(argument.c_str(), &st);
             if (ierr != 0) {
                     // std::cerr << "Error watching file " << argument << std::endl;
-            } else {
+            }
+            else {
                 WatchFile file;
                 file.type = "image";
                 file.path = argument;
@@ -161,67 +171,47 @@ int main(int argc, char **argv){
     }
 
     // If no shader
-    if( iFrag == -1 && iVert == -1 && iGeom == -1) {
+    if (iFrag == -1 && iVert == -1 && iGeom == -1) {
         std::cerr << "Usage: " << argv[0] << " shader.frag [shader.vert] [mesh.(obj/.ply)] [texture.(png/jpg)] [-textureNameA texture.(png/jpg)] [-u] [-x x] [-y y] [-w width] [-h height] [-l/--livecoding] [--square] [-s seconds] [-o screenshot.png]\n";
-        return EXIT_FAILURE;
+        exit(EXIT_FAILURE);
     }
 
-    // Fork process with a shared variable
-    //
-    int shmId = shmget(IPC_PRIVATE, sizeof(bool), 0666);
-    pid_t pid = fork();
-    iHasChanged = (int *) shmat(shmId, NULL, 0);
+    fileChanged = -1;
+    std::thread fileWatcher(&fileWatcherThread);
 
-    switch(pid) {
-        case -1: //error
-        break;
+    // OpenGL Render Loop
+    renderThread(argc,argv);
+    fileWatcher.join();
 
-        case 0: // child
-        {
-            *iHasChanged = -1;
-            watchThread();
-        }
-        break;
-
-        default: 
-        {
-            // Initialize openGL context
-            initGL(argc,argv);
-
-            // OpenGL Render Loop
-            renderThread(argc,argv);
-            
-            //  Kill the iNotify watcher once you finish
-            kill(pid, SIGKILL);
-            onExit();
-        }
-        break;
-    }
-    
-    shmctl(shmId, IPC_RMID, NULL);
-    return 0;
+    exit(0);
 }
 
 //  Watching Thread
 //============================================================================
-void watchThread() {
+void fileWatcherThread() {
     struct stat st;
-    while(1){
-        for(uint i = 0; i < files.size(); i++){
-            if( *iHasChanged == -1 ){
+    while (bRun.load()) {
+        for (uint i = 0; i < files.size(); i++) {
+            if (fileChanged == -1) {
                 stat(files[i].path.c_str(), &st);
                 int date = st.st_mtime;
-                if (date != files[i].lastChange ){
-                    *iHasChanged = i; 
+                if (date != files[i].lastChange ) {
+                    fileMutex.lock();
+                    fileChanged = i; 
                     files[i].lastChange = date;
+                    fileMutex.unlock();
                 }
                 usleep(500000);
             }
         }
     }
+    std::cout << "End fileWatcherThread" << std::endl;
 }
 
 void renderThread(int argc, char **argv) {
+    // Initialize openGL context
+    initGL(argc,argv);
+
     // Prepare viewport
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glClear(GL_COLOR_BUFFER_BIT);
@@ -298,11 +288,19 @@ void renderThread(int argc, char **argv) {
     }
 
     // Render Loop
-    while (isGL() && bPlay) {
+    while (isGL() && bRun.load()) {
         // Update
         updateGL();
         
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        // Something change??
+        if (fileChanged != -1) {
+            onFileChange(fileChanged);
+            fileMutex.lock();
+            fileChanged = -1;
+            fileMutex.unlock();
+        }
 
         // Draw
         draw();
@@ -310,11 +308,20 @@ void renderThread(int argc, char **argv) {
         // Swap the buffers
         renderGL();
 
-        if ( timeLimit > 0.0 && getTime() > timeLimit ) {
+        if (timeLimit > 0.0 && getTime() > timeLimit) {
             onKeyPress('s');
-            bPlay = false;
+            bRun.store(false);
         }
     }
+
+    // If is terminated by the windows manager, turn bRun off so the fileWatcher can stop
+    if (!isGL()) {
+        bRun.store(false);
+    }
+
+    onExit();
+
+    std::cout << "End renderThread" << std::endl;
 }
 
 void setup() {
@@ -323,9 +330,10 @@ void setup() {
     
     //  Load Geometry
     //
-    if ( iGeom == -1 ){
+    if (iGeom == -1){
         vbo = rect(0.0,0.0,1.0,1.0).getVbo();
-    } else {
+    }
+    else {
         Mesh model;
         model.load(files[iGeom].path);
         vbo = model.getVbo();
@@ -336,21 +344,24 @@ void setup() {
 
     //  Build shader;
     //
-    if ( iFrag != -1 ) {
+    if (iFrag != -1) {
         fragSource = "";
         if(!loadFromPath(files[iFrag].path, &fragSource)) {
             return;
         }
-    } else {
+    }
+    else {
         fragSource = vbo->getVertexLayout()->getDefaultFragShader();
     }
 
-    if ( iVert != -1 ) {
+    if (iVert != -1) {
         vertSource = "";
         loadFromPath(files[iVert].path, &vertSource);
-    } else {
+    }
+    else {
         vertSource = vbo->getVertexLayout()->getDefaultVertShader();
     }    
+
     shader.load(fragSource,vertSource);
     
     cam.setViewport(getWindowWidth(), getWindowHeight());
@@ -387,14 +398,7 @@ void main() {\n\
     buffer_shader.load(buffer_frag, buffer_vert);
 }
 
-void draw(){
-
-    // Something change??
-    if(*iHasChanged != -1) {
-        onFileChange();
-        *iHasChanged = -1;
-    }
-
+void draw() {
     if (shader.needBackbuffer()) {
         buffer.swap();
         buffer.src->bind();
@@ -458,27 +462,27 @@ void draw(){
 
 // Rendering Thread
 //============================================================================
-void onFileChange(){
-    std::string type = files[*iHasChanged].type;
-    std::string path = files[*iHasChanged].path;
+void onFileChange(int index) {
+    std::string type = files[index].type;
+    std::string path = files[index].path;
 
-    if ( type == "fragment" ){
+    if (type == "fragment") {
         fragSource = "";
-        if(loadFromPath(path, &fragSource)){
+        if (loadFromPath(path, &fragSource)) {
             shader.detach(GL_FRAGMENT_SHADER | GL_VERTEX_SHADER);
             shader.load(fragSource,vertSource);
         }
-    } else if ( type == "vertex" ){
+    } else if (type == "vertex") {
         vertSource = "";
-        if(loadFromPath(path, &vertSource)){
+        if (loadFromPath(path, &vertSource)) {
             shader.detach(GL_FRAGMENT_SHADER | GL_VERTEX_SHADER);
             shader.load(fragSource,vertSource);
         }
-    } else if ( type == "geometry" ){
+    } else if (type == "geometry") {
         // TODO
-    } else if ( type == "image" ){
+    } else if (type == "image") {
         for (std::map<std::string,Texture*>::iterator it = textures.begin(); it!=textures.end(); ++it) {
-            if ( path == it->second->getFilePath() ){
+            if (path == it->second->getFilePath()) {
                 it->second->load(path);
                 break;
             }
@@ -496,7 +500,7 @@ void onKeyPress(int _key) {
     }
 
     if ( _key == 'q' || _key == 'Q'){
-        bPlay = false;
+        bRun.store(false);
     }
 }
 
