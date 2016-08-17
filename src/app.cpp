@@ -19,8 +19,7 @@ static Mouse mouse;
 static glm::ivec4 viewport;
 static double fTime = 0.0f;
 static double fDelta = 0.0f;
-static float pixelDensity = 1.0;
-static unsigned char keyPressed;
+static bool bBcm = false;
 
 #ifdef PLATFORM_RPI
 #include <assert.h>
@@ -45,6 +44,8 @@ unsigned long long timePrev;
 // OSX/Linux globals
 //----------------------------------------------------
 static GLFWwindow* window;
+static float pixelDensity = 1.0;
+
 void handleKeypress(GLFWwindow* _window, int _key, int _scancode, int _action, int _mods) {
     onKeyPress(_key);
 }
@@ -64,8 +65,8 @@ void handleCursor(GLFWwindow* _window, double x, double y) {
     mouse.x = x;
     mouse.y = viewport.w - y;
 
-    if (mouse.x < 0) mouse.x=0;
-    if (mouse.y < 0) mouse.y=0;
+    if (mouse.x < 0) mouse.x = 0;
+    if (mouse.y < 0) mouse.y = 0;
     if (mouse.x > viewport.z) mouse.x = viewport.z;
     if (mouse.y > viewport.w) mouse.y = viewport.w;
 
@@ -73,26 +74,21 @@ void handleCursor(GLFWwindow* _window, double x, double y) {
     int action2 = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_2);
     int button = 0;
 
-    if (action1 == GLFW_PRESS) {
-        button = 1;
-    } else if (action2 == GLFW_PRESS) {
-        button = 2;
-    }
+    if (action1 == GLFW_PRESS) button = 1;
+    else if (action2 == GLFW_PRESS) button = 2;
 
     // Lunch events
-    if(mouse.button == 0 && button != mouse.button){
+    if (mouse.button == 0 && button != mouse.button) {
         mouse.button = button;
         onMouseClick(mouse.x,mouse.y,mouse.button);
-    } else {
+    } 
+    else {
         mouse.button = button;
     }
 
-    if(mouse.velX != 0.0 || mouse.velY != 0.0){
-        if (button != 0) {
-            onMouseDrag(mouse.x,mouse.y,mouse.button);
-        } else {
-            onMouseMove(mouse.x,mouse.y);
-        }
+    if (mouse.velX != 0.0 || mouse.velY != 0.0) {
+        if (button != 0) onMouseDrag(mouse.x,mouse.y,mouse.button);
+        else onMouseMove(mouse.x,mouse.y);
     }    
 }
 #endif
@@ -108,10 +104,12 @@ void initGL (glm::ivec4 &_viewport) {
                     (unsigned long long)(tv.tv_usec) / 1000; 
 
         // Start OpenGL ES
-        bcm_host_init();
+        if (!bBcm) {
+            bcm_host_init();
+            bBcm = true;
+        }
 
         // Clear application state
-        int32_t success = 0;
         EGLBoolean result;
         EGLint num_config;
 
@@ -287,7 +285,7 @@ void updateGL(){
                 int bytes = read(fd, &m, sizeof m);
                 
                 if (bytes < (int)sizeof m) {
-                    return false;
+                    return;
                 } else if (m.buttons&8) {
                     break; // This bit should always be set
                 }
@@ -297,10 +295,8 @@ void updateGL(){
             
             // Set button value
             int button = m.buttons&3;
-            if (button)
-                mouse.button = button;
-            else
-                mouse.button = 0;
+            if (button) mouse.button = button;
+            else mouse.button = 0;
             
             // Set deltas
             mouse.velX=m.dx;
@@ -319,19 +315,17 @@ void updateGL(){
             if (mouse.y > viewport.w) mouse.y = viewport.w;
 
             // Lunch events
-            if(mouse.button == 0 && button != mouse.button){
+            if (mouse.button == 0 && button != mouse.button) {
                 mouse.button = button;
-                onMouseClick(mouse.x,mouse.y,mouse.button);
-            } else {
+                onMouseClick(mouse.x, mouse.y, mouse.button);
+            } 
+            else {
                 mouse.button = button;
             }
 
-            if(mouse.velX != 0.0 || mouse.velY != 0.0){
-                if (button != 0) {
-                    onMouseDrag(mouse.x,mouse.y,mouse.button);
-                } else {
-                    onMouseMove(mouse.x,mouse.y);
-                }
+            if (mouse.velX != 0.0 || mouse.velY != 0.0) {
+                if (button != 0) onMouseDrag(mouse.x, mouse.y, mouse.button);
+                else onMouseMove(mouse.x, mouse.y);
             }
         }
     #else
@@ -371,8 +365,7 @@ void closeGL(){
 void setWindowSize(int _width, int _height) {
     viewport.z = _width;
     viewport.w = _height;
-    //glViewport((float)viewport.x, (float)viewport.y, (float)viewport.z, (float)viewport.w);
-    glViewport(0.0,0.0,(float)viewport.z,(float)viewport.w);
+    glViewport(0.0, 0.0, (float)viewport.z, (float)viewport.w);
     orthoMatrix = glm::ortho((float)viewport.x, (float)viewport.z, (float)viewport.y, (float)viewport.w);
 
     onViewportResize(viewport.z, viewport.w);
@@ -382,24 +375,36 @@ glm::ivec2 getScreenSize() {
     glm::ivec2 screen;
     
     #ifdef PLATFORM_RPI
-    // RPI
-    uint32_t screen_width;
-    uint32_t screen_height;
-    int32_t success = graphics_get_display_size(0 /* LCD */, &screen.x, &screen.y);
-    assert(success >= 0);
+        // RASPBERRYPI
+        
+        if (!bBcm) {
+            bcm_host_init();
+            bBcm = true;
+        }
+        uint32_t screen_width;
+        uint32_t screen_height;
+        int32_t success = graphics_get_display_size(0 /* LCD */, &screen_width, &screen_height);
+        assert(success >= 0);
+        screen = glm::ivec2(screen_width, screen_height);
     #else
-    // OSX/Linux
-    glfwGetMonitorPhysicalSize(glfwGetPrimaryMonitor(), &screen.x, &screen.y);
+        // OSX/Linux
+        glfwGetMonitorPhysicalSize(glfwGetPrimaryMonitor(), &screen.x, &screen.y);
     #endif
 
     return screen;
 }
 
 float getPixelDensity() {
-    int window_width, window_height, framebuffer_width, framebuffer_height;
-    glfwGetWindowSize(window, &window_width, &window_height);
-    glfwGetFramebufferSize(window, &framebuffer_width, &framebuffer_height);
-    return framebuffer_width/window_width;
+    #ifdef PLATFORM_RPI
+        // RASPBERRYPI
+        return 1.;
+    #else
+        // OSX/LINUX
+        int window_width, window_height, framebuffer_width, framebuffer_height;
+        glfwGetWindowSize(window, &window_width, &window_height);
+        glfwGetFramebufferSize(window, &framebuffer_width, &framebuffer_height);
+        return framebuffer_width/window_width;
+    #endif
 }
 
 int getWindowWidth() {

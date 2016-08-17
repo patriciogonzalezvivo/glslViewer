@@ -341,9 +341,14 @@ void cinWatcherThread() {
     std::string line;
 
     while (std::getline(std::cin, line)) {
-        uniformsMutex.lock();
-        parseUniforms(line, &uniforms);
-        uniformsMutex.unlock();
+        if (line == "q" || line == "quit" || line == "exit") {
+            bRun.store(false);
+        }
+        else {
+            uniformsMutex.lock();
+            parseUniforms(line, &uniforms);
+            uniformsMutex.unlock();
+        }
     }
 }
 
