@@ -1,28 +1,3 @@
-/*
-Copyright (c) 2014, Patricio Gonzalez Vivo
-All rights reserved.
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
-    * Redistributions of source code must retain the above copyright
-      notice, this list of conditions and the following disclaimer.
-    * Redistributions in binary form must reproduce the above copyright
-      notice, this list of conditions and the following disclaimer in the
-      documentation and/or other materials provided with the distribution.
-    * Neither the name of the copyright holder nor the
-      names of its contributors may be used to endorse or promote products
-      derived from this software without specific prior written permission.
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY
-DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
-
 #include "polyline.h"
 
 #include "polarPoint.h"
@@ -33,7 +8,7 @@ Polyline::Polyline():m_centroid(0.0,0.0,0.0),m_bChange(true){
 }
 
 Polyline::Polyline(const Polyline &_poly):m_centroid(0.0,0.0,0.0),m_bChange(true){
-    for (uint i = 0; i < _poly.size(); i++) {
+    for (int i = 0; i < _poly.size(); i++) {
         add(_poly[i]);
     }
 }
@@ -43,7 +18,7 @@ Polyline::Polyline(const std::vector<glm::vec3> & _points):m_centroid(0.0,0.0,0.
 }
 
 Polyline::Polyline(const Rectangle &_rect, float _radiants){
-    if(_radiants == 0){
+    if (_radiants == 0) {
         add(_rect.getTopLeft());
         add(_rect.getTopRight());
         add(_rect.getBottomRight());
@@ -91,7 +66,7 @@ void Polyline::add(const std::vector<glm::vec3> & _points){
 }
 
 void Polyline::add(const glm::vec3* verts, int numverts) {
-    for (uint i = 0 ; i < numverts ; i++) {
+    for (int i = 0 ; i < numverts ; i++) {
         add(verts[i]);
     }
 }
@@ -176,7 +151,7 @@ bool Polyline::isInside(float _x, float _y){
 	int N = size();
     
 	p1 = m_points[0];
-	for (uint i=1;i<=N;i++) {
+	for (int i=1; i<=N; i++) {
 		p2 = m_points[i % N];
 		if (_y > MIN(p1.y,p2.y)) {
             if (_y <= MAX(p1.y,p2.y)) {

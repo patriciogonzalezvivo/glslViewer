@@ -10,7 +10,7 @@ MACHINE := $(shell uname -m)
 PLATFORM = RPI
 
 INCLUDES +=	-Isrc/ -Iinclude/
-CFLAGS += -Wall -O3 -std=c++0x -fpermissive
+CFLAGS += -Wall -O3 -std=c++11 -fpermissive
 
 ifeq ($(UNAME), Darwin)
 PLATFORM = OSX
@@ -24,7 +24,7 @@ PLATFORM = LINUX
 endif
 
 ifeq ($(PLATFORM),RPI)
-CFLAGS += -DGLM_FORCE_CXX98 -DPLATFORM_RPI 
+CFLAGS += -DGLM_FORCE_CXX98 -DPLATFORM_RPI -fno-strict-aliasing 
 
 INCLUDES += -I$(SDKSTAGE)/opt/vc/include/ \
 			-I$(SDKSTAGE)/opt/vc/include/interface/vcos/pthreads \
@@ -32,7 +32,8 @@ INCLUDES += -I$(SDKSTAGE)/opt/vc/include/ \
 
 LDFLAGS += -L$(SDKSTAGE)/opt/vc/lib/ \
 			-lGLESv2 -lEGL \
-			-lbcm_host
+			-lbcm_host \
+			-lpthread
 
 else ifeq ($(PLATFORM),LINUX)
 CFLAGS += -DPLATFORM_LINUX $(shell pkg-config --cflags glfw3 glu gl) 
