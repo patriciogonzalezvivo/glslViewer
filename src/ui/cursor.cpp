@@ -5,7 +5,9 @@
 #include "app.h"
 #include "utils.h"
 
+#ifndef STRINGIFY
 #define STRINGIFY(A) #A
+#endif
 
 Cursor::Cursor(): m_vbo(NULL) {
 
