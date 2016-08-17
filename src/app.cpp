@@ -44,21 +44,21 @@ static bool bBcm = false;
 // OSX/Linux globals
 //----------------------------------------------------
 static GLFWwindow* window;
-static float pixelDensity = 1.0;
+static float devicePixelRatio = 1.0;
 
 void handleKeypress(GLFWwindow* _window, int _key, int _scancode, int _action, int _mods) {
     onKeyPress(_key);
 }
 
 void handleResize(GLFWwindow* _window, int _w, int _h) {
-    pixelDensity = getPixelDensity();
-    setWindowSize(_w*pixelDensity,_h*pixelDensity);
+    devicePixelRatio = getDevicePixelRatio();
+    setWindowSize(_w*devicePixelRatio,_h*devicePixelRatio);
 }
 
 void handleCursor(GLFWwindow* _window, double x, double y) {
     // Update stuff
-    x *= pixelDensity;
-    y *= pixelDensity;
+    x *= devicePixelRatio;
+    y *= devicePixelRatio;
 
     mouse.velX = x - mouse.x;
     mouse.velY = (viewport.w - y) - mouse.y;
@@ -215,8 +215,8 @@ void initGL (glm::ivec4 &_viewport) {
             exit(-1);
         }
 
-        pixelDensity = getPixelDensity();
-        setWindowSize(_viewport.z*pixelDensity, _viewport.w*pixelDensity);
+        devicePixelRatio = getDevicePixelRatio();
+        setWindowSize(_viewport.z*devicePixelRatio, _viewport.w*devicePixelRatio);
 
         glfwMakeContextCurrent(window);
 
@@ -393,7 +393,7 @@ glm::ivec2 getScreenSize() {
     return screen;
 }
 
-float getPixelDensity() {
+float getDevicePixelRatio() {
     #ifdef PLATFORM_RPI
         // RASPBERRYPI
         return 1.;

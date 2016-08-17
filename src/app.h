@@ -18,7 +18,7 @@ void setWindowSize(int _width, int _height);
 //	GET
 //----------------------------------------------
 glm::ivec2 getScreenSize();
-float getPixelDensity();
+float getDevicePixelRatio();
 
 int getWindowWidth();
 int getWindowHeight();
