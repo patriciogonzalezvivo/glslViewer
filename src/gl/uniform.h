@@ -1,4 +1,3 @@
-// cin with strings
 #include <string>
 #include <map>
 
