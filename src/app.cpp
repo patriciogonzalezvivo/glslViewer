@@ -45,52 +45,6 @@ static bool bBcm = false;
 //----------------------------------------------------
 static GLFWwindow* window;
 static float devicePixelRatio = 1.0;
-
-void handleKeypress(GLFWwindow* _window, int _key, int _scancode, int _action, int _mods) {
-    onKeyPress(_key);
-}
-
-void handleResize(GLFWwindow* _window, int _w, int _h) {
-    devicePixelRatio = getDevicePixelRatio();
-    setWindowSize(_w*devicePixelRatio,_h*devicePixelRatio);
-}
-
-void handleCursor(GLFWwindow* _window, double x, double y) {
-    // Update stuff
-    x *= devicePixelRatio;
-    y *= devicePixelRatio;
-
-    mouse.velX = x - mouse.x;
-    mouse.velY = (viewport.w - y) - mouse.y;
-    mouse.x = x;
-    mouse.y = viewport.w - y;
-
-    if (mouse.x < 0) mouse.x = 0;
-    if (mouse.y < 0) mouse.y = 0;
-    if (mouse.x > viewport.z) mouse.x = viewport.z;
-    if (mouse.y > viewport.w) mouse.y = viewport.w;
-
-    int action1 = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1);
-    int action2 = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_2);
-    int button = 0;
-
-    if (action1 == GLFW_PRESS) button = 1;
-    else if (action2 == GLFW_PRESS) button = 2;
-
-    // Lunch events
-    if (mouse.button == 0 && button != mouse.button) {
-        mouse.button = button;
-        onMouseClick(mouse.x,mouse.y,mouse.button);
-    } 
-    else {
-        mouse.button = button;
-    }
-
-    if (mouse.velX != 0.0 || mouse.velY != 0.0) {
-        if (button != 0) onMouseDrag(mouse.x,mouse.y,mouse.button);
-        else onMouseMove(mouse.x,mouse.y);
-    }    
-}
 #endif
 
 void initGL (glm::ivec4 &_viewport) {
@@ -219,10 +173,51 @@ void initGL (glm::ivec4 &_viewport) {
         setWindowSize(_viewport.z*devicePixelRatio, _viewport.w*devicePixelRatio);
 
         glfwMakeContextCurrent(window);
+        glfwSetWindowSizeCallback(window, [](GLFWwindow* _window, int _w, int _h) {
+            devicePixelRatio = getDevicePixelRatio();
+            setWindowSize(_w*devicePixelRatio,_h*devicePixelRatio);
+        });
 
-        glfwSetWindowSizeCallback(window, handleResize);
-        glfwSetKeyCallback(window, handleKeypress);
-        glfwSetCursorPosCallback(window, handleCursor);
+        glfwSetKeyCallback(window, [](GLFWwindow* _window, int _key, int _scancode, int _action, int _mods) {
+            onKeyPress(_key);
+        });
+
+        glfwSetCursorPosCallback(window, [](GLFWwindow* _window, double x, double y) {
+            // Update stuff
+            x *= devicePixelRatio;
+            y *= devicePixelRatio;
+
+            mouse.velX = x - mouse.x;
+            mouse.velY = (viewport.w - y) - mouse.y;
+            mouse.x = x;
+            mouse.y = viewport.w - y;
+
+            if (mouse.x < 0) mouse.x = 0;
+            if (mouse.y < 0) mouse.y = 0;
+            if (mouse.x > viewport.z) mouse.x = viewport.z;
+            if (mouse.y > viewport.w) mouse.y = viewport.w;
+
+            int action1 = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1);
+            int action2 = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_2);
+            int button = 0;
+
+            if (action1 == GLFW_PRESS) button = 1;
+            else if (action2 == GLFW_PRESS) button = 2;
+
+            // Lunch events
+            if (mouse.button == 0 && button != mouse.button) {
+                mouse.button = button;
+                onMouseClick(mouse.x,mouse.y,mouse.button);
+            } 
+            else {
+                mouse.button = button;
+            }
+
+            if (mouse.velX != 0.0 || mouse.velY != 0.0) {
+                if (button != 0) onMouseDrag(mouse.x,mouse.y,mouse.button);
+                else onMouseMove(mouse.x,mouse.y);
+            }    
+        });
 
         glfwSwapInterval(1);
     #endif
