@@ -87,7 +87,7 @@ std::vector<glm::vec3> getConvexHull(std::vector<glm::vec3> &pts){
     hull.push_back(pts.at(0));
     hull.push_back(pts.at(1));
     
-    int currentPoint = 2;
+    uint currentPoint = 2;
     int direction = 1;
     
     for (int i=0; i<3000; i++) { //max 1000 tries

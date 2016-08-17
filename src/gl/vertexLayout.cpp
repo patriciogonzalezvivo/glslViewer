@@ -89,9 +89,9 @@ std::string VertexLayout::getDefaultVertShader() {
 "uniform vec2 u_resolution;\n"
 "\n";
 
-    for ( uint i = 0; i < m_attribs.size(); i++ ){
+    for (uint i = 0; i < m_attribs.size(); i++) {
         int size = m_attribs[i].size;
-        if (m_positionAttribIndex == i){
+        if (m_positionAttribIndex == i) {
             size = 4;
         }
         rta += "attribute vec" + getString(size) + " a_" + m_attribs[i].name + ";\n";
@@ -102,13 +102,13 @@ std::string VertexLayout::getDefaultVertShader() {
 "void main(void) {\n"
 "\n";
 
-    for ( uint i = 0; i < m_attribs.size(); i++ ){
+    for (uint i = 0; i < m_attribs.size(); i++) {
         rta += "    v_" + m_attribs[i].name + " = a_" + m_attribs[i].name + ";\n";
     }
 
-    if (m_positionAttribIndex != -1 && m_positionAttribIndex < m_attribs.size()){
+    if (m_positionAttribIndex != -1 && m_positionAttribIndex < m_attribs.size()) {
         rta += "    gl_Position = u_modelViewProjectionMatrix * v_" + m_attribs[m_positionAttribIndex].name + ";\n";
-    }
+    } 
     
     rta +=  "}\n";
 
@@ -132,9 +132,9 @@ std::string VertexLayout::getDefaultFragShader() {
 "uniform vec2 u_resolution;\n"
 "\n";
 
-    for ( uint i = 0; i < m_attribs.size(); i++ ){
+    for (uint i = 0; i < m_attribs.size(); i++) {
         int size = m_attribs[i].size;
-        if (m_positionAttribIndex == i){
+        if (m_positionAttribIndex == i) {
             size = 4;
         }
         rta += "varying vec" + getString(size) + " v_" + m_attribs[i].name + ";\n";
@@ -144,13 +144,16 @@ std::string VertexLayout::getDefaultFragShader() {
 "void main(void) {\n"
 "\n";
 
-    if ( m_colorAttribIndex != -1 ){
+    if (m_colorAttribIndex != -1) {
         rta += "    gl_FragColor = v_" + m_attribs[m_colorAttribIndex].name + ";\n";
-    } else if ( m_texCoordAttribIndex != -1 ){
+    }
+    else if ( m_texCoordAttribIndex != -1 ){
         rta += "    gl_FragColor = vec4(vec3(v_" + m_attribs[m_texCoordAttribIndex].name + ",1.0),1.0);\n";
-    } else if ( m_normalAttribIndex != -1 ){
+    }
+    else if ( m_normalAttribIndex != -1 ){
         rta += "    gl_FragColor = vec4(0.5+v_" + m_attribs[m_normalAttribIndex].name + "*0.5,1.0);\n";
-    } else {
+    }
+    else {
         rta += "    gl_FragColor = vec4(1.0);\n";
     }
     

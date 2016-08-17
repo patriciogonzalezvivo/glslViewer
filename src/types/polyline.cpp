@@ -66,7 +66,7 @@ void Polyline::add(const std::vector<glm::vec3> & _points){
 }
 
 void Polyline::add(const glm::vec3* verts, int numverts) {
-    for (uint i = 0 ; i < numverts ; i++) {
+    for (int i = 0 ; i < numverts ; i++) {
         add(verts[i]);
     }
 }
@@ -151,7 +151,7 @@ bool Polyline::isInside(float _x, float _y){
 	int N = size();
     
 	p1 = m_points[0];
-	for (uint i=1;i<=N;i++) {
+	for (int i=1; i<=N; i++) {
 		p2 = m_points[i % N];
 		if (_y > MIN(p1.y,p2.y)) {
             if (_y <= MAX(p1.y,p2.y)) {
