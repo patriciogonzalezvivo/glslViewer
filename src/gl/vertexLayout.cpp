@@ -29,11 +29,14 @@ VertexLayout::VertexLayout(std::vector<VertexAttrib> _attribs) : m_attribs(_attr
 
         if ( m_attribs[i].attrType == POSITION_ATTRIBUTE ){
             m_positionAttribIndex = i;
-        } else if ( m_attribs[i].attrType == COLOR_ATTRIBUTE ){
+        }
+        else if ( m_attribs[i].attrType == COLOR_ATTRIBUTE ){
             m_colorAttribIndex = i;
-        } else if ( m_attribs[i].attrType == NORMAL_ATTRIBUTE ){
+        }
+        else if ( m_attribs[i].attrType == NORMAL_ATTRIBUTE ){
             m_normalAttribIndex = i;
-        } else if ( m_attribs[i].attrType == TEXCOORD_ATTRIBUTE ){
+        }
+        else if ( m_attribs[i].attrType == TEXCOORD_ATTRIBUTE ){
             m_texCoordAttribIndex = i;
         }
 
@@ -91,7 +94,7 @@ std::string VertexLayout::getDefaultVertShader() {
 
     for (uint i = 0; i < m_attribs.size(); i++) {
         int size = m_attribs[i].size;
-        if (m_positionAttribIndex == i) {
+        if (m_positionAttribIndex == int(i)) {
             size = 4;
         }
         rta += "attribute vec" + getString(size) + " a_" + m_attribs[i].name + ";\n";
@@ -106,7 +109,7 @@ std::string VertexLayout::getDefaultVertShader() {
         rta += "    v_" + m_attribs[i].name + " = a_" + m_attribs[i].name + ";\n";
     }
 
-    if (m_positionAttribIndex != -1 && m_positionAttribIndex < m_attribs.size()) {
+    if (m_positionAttribIndex != -1 && m_positionAttribIndex < int(m_attribs.size())) {
         rta += "    gl_Position = u_modelViewProjectionMatrix * v_" + m_attribs[m_positionAttribIndex].name + ";\n";
     } 
     
@@ -134,7 +137,7 @@ std::string VertexLayout::getDefaultFragShader() {
 
     for (uint i = 0; i < m_attribs.size(); i++) {
         int size = m_attribs[i].size;
-        if (m_positionAttribIndex == i) {
+        if (m_positionAttribIndex == int(i)) {
             size = 4;
         }
         rta += "varying vec" + getString(size) + " v_" + m_attribs[i].name + ";\n";
