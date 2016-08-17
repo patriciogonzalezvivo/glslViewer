@@ -19,7 +19,6 @@ static Mouse mouse;
 static glm::ivec4 viewport;
 static double fTime = 0.0f;
 static double fDelta = 0.0f;
-static bool bBcm = false;
 
 #ifdef PLATFORM_RPI
 #include <assert.h>
@@ -39,6 +38,7 @@ EGLContext context;
 
 unsigned long long timeStart;
 unsigned long long timePrev;
+static bool bBcm = false;
 #else
 
 // OSX/Linux globals
@@ -231,7 +231,7 @@ void initGL (glm::ivec4 &_viewport) {
 bool isGL(){
     #ifdef PLATFORM_RPI
         // RASPBERRY_PI
-        return true;
+        return bBcm;
     #else
         // OSX/LINUX
         return !glfwWindowShouldClose(window);
@@ -330,7 +330,6 @@ void updateGL(){
         }
     #else
         // OSX/LINUX
-        keyPressed = -1;
         glfwPollEvents();
     #endif
 }
