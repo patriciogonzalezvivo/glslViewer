@@ -5,13 +5,9 @@ SOURCES := $(wildcard include/*/*.cc) $(wildcard src/*.cpp) $(wildcard src/*/*.c
 HEADERS := $(wildcard include/*/*.h) $(wildcard src/*.h) $(wildcard src/*.h) $(wildcard src/*/*.h)
 OBJECTS := $(SOURCES:.cpp=.o)
 
-UNAME := $(shell uname -s)
-MACHINE := $(shell uname -m)
-
 PLATFORM = $(shell uname)
-ifeq ($(wildcard /etc/os-release),"") 
-	$(. /etc/os-release)
-    PLATFORM =$(shell echo $NAME)
+ifneq ($(wildcard /etc/os-release),"")
+PLATFORM = $(shell . /etc/os-release && echo $$NAME)
 endif
 
 $(info Compiling for ${PLATFORM}) 
@@ -19,7 +15,7 @@ $(info Compiling for ${PLATFORM})
 INCLUDES +=	-Isrc/ -Iinclude/
 CFLAGS += -Wall -O3 -std=c++11 -fpermissive
 
-ifeq ($(PLATFORM),"Raspbian GNU/Linux")
+ifeq ($(PLATFORM),Raspbian GNU/Linux)
 CFLAGS += -DGLM_FORCE_CXX98 -DPLATFORM_RPI -fno-strict-aliasing 
 INCLUDES += -I$(SDKSTAGE)/opt/vc/include/ \
 			-I$(SDKSTAGE)/opt/vc/include/interface/vcos/pthreads \
