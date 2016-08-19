@@ -10,7 +10,7 @@ ifneq ("$(wildcard /etc/os-release)","")
 PLATFORM = $(shell . /etc/os-release && echo $$NAME)
 endif
 
-$(info Compiling for ${PLATFORM}) 
+$(info Platform ${PLATFORM}) 
 
 INCLUDES +=	-Isrc/ -Iinclude/
 CFLAGS += -Wall -O3 -std=c++11 -fpermissive
@@ -44,13 +44,8 @@ all: $(EXE)
 	@echo $@
 	$(CXX) $(CFLAGS) $(INCLUDES) -g -c $< -o $@ -Wno-deprecated-declarations
 
-ifeq ($(PLATFORM),Darwin)
 $(EXE): $(OBJECTS) $(HEADERS)
-	$(CXX) $(CFLAGS) $(OBJECTS) $(LDFLAGS) -o $@
-else
-$(EXE): $(OBJECTS) $(HEADERS)
-	$(CXX) -o $@ -Wl,--whole-archive $(OBJECTS) $(LDFLAGS) -Wl,--no-whole-archive -rdynamic
-endif
+	$(CXX) $(CFLAGS) $(OBJECTS) $(LDFLAGS) -rdynamic -o $@
 
 clean:
 	@rm -rvf $(EXE) src/*.o src/*/*.o include/*/*.o *.dSYM
