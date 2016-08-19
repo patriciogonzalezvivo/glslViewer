@@ -6,7 +6,7 @@ HEADERS := $(wildcard include/*/*.h) $(wildcard src/*.h) $(wildcard src/*.h) $(w
 OBJECTS := $(SOURCES:.cpp=.o)
 
 PLATFORM = $(shell uname)
-ifneq ($(wildcard /etc/os-release),"")
+ifneq ("$(wildcard /etc/os-release)","")
 PLATFORM = $(shell . /etc/os-release && echo $$NAME)
 endif
 
