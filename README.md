@@ -136,8 +136,6 @@ Beside for texture uniforms other arguments can be add to ```glslViewer```:
 
 * ```-o [image.png]``` save the viewport to a image file before
 
-* ```--squared``` to set a squared billboard
-
 * ```-l``` or ```--live-coding``` to draw a 500x500 billboard on the top right corner of the screen that let you see the code and the shader at the same time:
 
 ### Inject other files
