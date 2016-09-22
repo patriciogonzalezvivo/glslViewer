@@ -29,6 +29,8 @@ with open(SHADER_PATH) as f:
         result = re.search('uniform\\s*sampler2D\\s*([\\w]*);\\s*\\/\\/\\s*([\\w|\\:\\/\\/|\\.|\\-|\\_]*)', line, re.M)
         if result:
             uniform = result.group(1)
+            if uniform == "u_backbuffer":
+                continue
             url = result.group(2)
             ext = os.path.splitext(url)[1]
             img_path = TMP_DIR + str(counter) + ext
