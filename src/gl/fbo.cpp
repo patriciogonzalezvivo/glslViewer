@@ -26,21 +26,20 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "fbo.h"
 #include <iostream>
 
-Fbo::Fbo():m_id(0), m_old_fbo_id(0), m_texture(0), m_depth_texture(0), m_width(0), m_height(0), m_allocated(false), m_binded(false) {
-
+Fbo::Fbo():m_id(0), m_old_fbo_id(0), m_texture(0), m_depth_buffer(0), m_width(0), m_height(0), m_allocated(false), m_binded(false) {
 }
 
 Fbo::~Fbo() {
     unbind();
     if (m_allocated) {
         glDeleteTextures(1, &m_texture);
-        glDeleteTextures(1, &m_depth_texture);
+        glDeleteRenderbuffers(1, &m_depth_buffer);
         glDeleteFramebuffers(1, &m_id);
         m_allocated = false;
     }
 }
 
-void Fbo::allocate(const unsigned int _width, const unsigned int _height) {
+void Fbo::allocate(const unsigned int _width, const unsigned int _height, bool _depth) {
     if (!m_allocated) {
         // Create a frame buffer
         glGenFramebuffers(1, &m_id);
@@ -48,57 +47,65 @@ void Fbo::allocate(const unsigned int _width, const unsigned int _height) {
         // Generate a texture to hold the colour buffer
         glGenTextures(1, &m_texture);
 
-        // Create a texture to hold the depth buffer
-        glGenTextures(1, &m_depth_texture);
+        if (_depth) {
+            // Create a texture to hold the depth buffer
+            glGenRenderbuffers(1, &m_depth_buffer);
+        }
     }
-    
-    m_width = _width;
-    m_height = _height;
 
-    // Texture
-    glBindTexture(GL_TEXTURE_2D, m_texture);
-    glTexImage2D(   GL_TEXTURE_2D, 0, GL_RGBA,
-                    m_width, m_height,
-                    0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    // if (m_width != _width || m_height != _height) {
+        m_width = _width;
+        m_height = _height;
 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glBindTexture(GL_TEXTURE_2D, 0);
+        bind();
 
-    // Depth Texture
+        // Color
+        glBindTexture(GL_TEXTURE_2D, m_texture);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_width, m_height,0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 
-    glBindTexture(GL_TEXTURE_2D, m_depth_texture);
-    glTexImage2D(   GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT,
-                    m_width, m_height,
-                    0, GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glBindTexture(GL_TEXTURE_2D, 0);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_texture, 0);
+        
+        // Depth Buffer
+        if (_depth) {
+            glBindRenderbuffer(GL_RENDERBUFFER, m_depth_buffer);
+#ifdef PLATFORM_RPI
+            glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16, m_width, m_height);
+#else  
+            glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, m_width, m_height);
+#endif
+            glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_depth_buffer);
+        }
 
-    // Associate the textures with the FBO
-    bind();
-    glFramebufferTexture2D( GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-                            GL_TEXTURE_2D, m_texture, 0);
-    glFramebufferTexture2D( GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
-                            GL_TEXTURE_2D, m_depth_texture, 0);
-    unbind();
+        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE) {
+            m_allocated = true;
+        }
+        unbind();
 
-    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE) {
-        m_allocated = true;
-    }
+        glBindTexture(GL_TEXTURE_2D, 0);
+        if (_depth){
+            glBindRenderbuffer(GL_RENDERBUFFER, 0);
+        }
+    // }
 }
 
 void Fbo::bind() {
     if (!m_binded) {
         glGetIntegerv(GL_FRAMEBUFFER_BINDING, (GLint *)&m_old_fbo_id);
+
+        glBindTexture(GL_TEXTURE_2D, 0);
+        glEnable(GL_TEXTURE_2D);
         glBindFramebuffer(GL_FRAMEBUFFER, m_id);
         glViewport(0.0f, 0.0f, m_width, m_height);
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        if (m_depth_buffer) {
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        } else {
+            glClear(GL_COLOR_BUFFER_BIT);
+        }
         m_binded = true;
     }
 }

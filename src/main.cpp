@@ -12,7 +12,7 @@
 #include "gl/shader.h"
 #include "gl/vbo.h"
 #include "gl/texture.h"
-#include "gl/fbo.h"
+// #include "gl/fbo.h"
 #include "gl/pingpong.h"
 #include "gl/uniform.h"
 #include "3d/camera.h"
@@ -401,7 +401,7 @@ void setup() {
     cam.setViewport(getWindowWidth(), getWindowHeight());
     cam.setPosition(glm::vec3(0.0,0.0,-3.));
 
-    buffer.allocate(getWindowWidth(), getWindowHeight());
+    buffer.allocate(getWindowWidth(), getWindowHeight(), false);
 
     buffer_vbo = rect(0.0,0.0,1.0,1.0).getVbo();
     std::string buffer_vert = "#ifdef GL_ES\n\
@@ -419,15 +419,11 @@ precision mediump float;\n\
 #endif\n\
 \n\
 uniform sampler2D u_buffer;\n\
-uniform sampler2D u_bufferDepth;\n\
 uniform vec2 u_resolution;\n\
 \n\
 void main() {\n\
     vec2 st = gl_FragCoord.xy/u_resolution.xy;\n\
-    // if (st.x < .5)\n\
-        gl_FragColor = texture2D(u_buffer, st);\n\
-    // else\n\
-        // gl_FragColor = texture2D(u_bufferDepth, st);\n\
+    gl_FragColor = texture2D(u_buffer, st);\n\
 }";
     buffer_shader.load(buffer_frag, buffer_vert);
 
