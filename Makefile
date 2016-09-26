@@ -25,7 +25,7 @@ LDFLAGS += -L$(SDKSTAGE)/opt/vc/lib/ \
 			-lbcm_host \
 			-lpthread
 
-else ifeq ($(PLATFORM),Ubuntu)
+else ifeq ($(shell uname),Linux)
 CFLAGS += -DPLATFORM_LINUX $(shell pkg-config --cflags glfw3 glu gl) 
 LDFLAGS += $(shell pkg-config --libs glfw3 glu gl x11 xrandr xi xxf86vm xcursor xinerama xrender xext xdamage) -lpthread -ldl 
 
