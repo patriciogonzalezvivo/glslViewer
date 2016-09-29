@@ -73,6 +73,7 @@ In the most simple scenario you just want to load a fragment shader. For that yo
 * Run the app passing the shader as an argument
 
 ```bash
+cd examples
 glslViewer test.frag
 ```
 

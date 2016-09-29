@@ -1,4 +1,4 @@
-EXE = glslViewer
+EXE = ./bin/glslViewer
 
 CXX = g++
 SOURCES := $(wildcard include/*/*.cc) $(wildcard src/*.cpp) $(wildcard src/*/*.cpp)
@@ -10,7 +10,7 @@ ifneq ("$(wildcard /etc/os-release)","")
 PLATFORM = $(shell . /etc/os-release && echo $$NAME)
 endif
 
-$(info Platform ${PLATFORM}) 
+#$(info Platform ${PLATFORM}) 
 
 INCLUDES +=	-Isrc/ -Iinclude/
 CFLAGS += -Wall -O3 -std=c++11 -fpermissive
@@ -52,7 +52,7 @@ clean:
 
 install:
 	@cp $(EXE) /usr/local/bin
-	@cp glslLoader /usr/local/bin
+	@cp bin/glslLoader /usr/local/bin
 
 uninstall:
 	@rm /usr/local/bin/$(EXE)
