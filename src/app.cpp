@@ -425,9 +425,9 @@ glm::vec4 getDate() {
     gettimeofday(&tv, NULL);
     struct tm *tm;
     tm = localtime(&tv.tv_sec);
-    // std::cout << "y: " << tm->tm_year+1900 << " m: " << tm->tm_mon+1. << " d: " << tm->tm_mday << " s: " << tm->tm_hour*3600.0f+tm->tm_min*60.0f+tm->tm_sec+tv.tv_usec*0.000001 << std::endl;
+    // std::cout << "y: " << tm->tm_year+1900 << " m: " << tm->tm_mon << " d: " << tm->tm_mday << " s: " << tm->tm_hour*3600.0f+tm->tm_min*60.0f+tm->tm_sec+tv.tv_usec*0.000001 << std::endl;
     return glm::vec4(tm->tm_year+1900,
-                     tm->tm_mon+1.,
+                     tm->tm_mon,
                      tm->tm_mday,
                      tm->tm_hour*3600.0f+tm->tm_min*60.0f+tm->tm_sec+tv.tv_usec*0.000001);
 }
