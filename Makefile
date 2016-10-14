@@ -55,5 +55,5 @@ install:
 	@cp bin/glslLoader /usr/local/bin
 
 uninstall:
-	@rm /usr/local/bin/$(EXE)
+	@rm /usr/local/$(EXE)
 	@rm /usr/local/bin/glslLoader
