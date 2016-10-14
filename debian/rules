@@ -1,7 +1,7 @@
 #!/usr/bin/make -f
 
 %:  
-	dh $@
+	dh $@ --with autotools-dev
 
 override_dh_auto_install:
 	install -D -m 0755 bin/glslViewer $$(pwd)/debian/glslviewer/usr/bin/glslViewer
