@@ -4,5 +4,5 @@
 	dh $@
 
 override_dh_auto_install:
-	install -D -m 0755 bin/glslViewer $$(pwd)/debian/glslviewer/usr/local/bin/glslViewer
-	install -D -m 0755 bin/glslLoader $$(pwd)/debian/glslviewer/usr/local/bin/glslLoader
+	install -D -m 0755 bin/glslViewer $$(pwd)/debian/glslviewer/usr/bin/glslViewer
+	install -D -m 0755 bin/glslLoader $$(pwd)/debian/glslviewer/usr/bin/glslLoader
