@@ -47,8 +47,8 @@ all: $(EXE)
 $(EXE): $(OBJECTS) $(HEADERS)
 	$(CXX) $(CFLAGS) $(OBJECTS) $(LDFLAGS) -rdynamic -o $@
 
-clean:
-	@rm -rvf $(EXE) src/*.o src/*/*.o include/*/*.o *.dSYM
+# clean:
+# 	@rm -rvf $(EXE) src/*.o src/*/*.o include/*/*.o *.dSYM
 
 install:
 	@cp $(EXE) /usr/local/bin
