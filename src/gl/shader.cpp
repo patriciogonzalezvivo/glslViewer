@@ -111,6 +111,7 @@ bool Shader::isInUse() const {
 
 GLuint Shader::compileShader(const std::string& _src, GLenum _type) {
     GLuint shader = glCreateShader(_type);
+
     const GLchar* source = (const GLchar*) _src.c_str();
 
     glShaderSource(shader, 1, &source, NULL);
