@@ -12,7 +12,7 @@ Live-coding console tool that renders GLSL Shaders. Every file you use (frag/ver
 
 You need to [install GLFW](http://www.glfw.org/docs/latest/compile.html#compile_deps_x11) then download the code, compile and install. 
 
-```
+```bash
 sudo apt-get update
 sudo apt-get upgrade
 sudo apt-get install git-core cmake xorg-dev libglu1-mesa-dev
@@ -31,9 +31,15 @@ sudo make install
 
 ### Installing in RaspberryPi
 
-You just need to download the code, compile and install.
+Do:
 
+```bash
+sudo apt-get install glslviewer
 ```
+
+Or if you want to compile the code your self:
+
+```bash
 cd ~ 
 git clone http://github.com/patriciogonzalezvivo/glslViewer
 cd glslViewer
@@ -45,7 +51,7 @@ sudo make install
 
 You need to [install GLFW](http://www.glfw.org), ```pkg-config``` first and then download the code, compile and install.
 
-```
+```bash
 brew update
 brew upgrade
 brew tap homebrew/versions
@@ -59,7 +65,7 @@ make install
 
 If glfw3 was installed before, after running the code above, remove glfw3 and try:
 
-```
+```bash
 brew install glfw3 pkg-config
 export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig
 make
