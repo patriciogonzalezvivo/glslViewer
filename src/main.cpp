@@ -350,6 +350,46 @@ void cinWatcherThread() {
         if (line == "q" || line == "quit" || line == "exit") {
             bRun.store(false);
         }
+        else if (line == "fps") {
+            std::cout << getFPS() << std::endl;
+        }
+        else if (line == "delta") {
+            std::cout << getDelta() << std::endl;
+        }
+        else if (line == "time") {
+            std::cout << getTime() << std::endl;
+        }
+        else if (line == "date") {
+            glm::vec4 date = getDate();
+            std::cout << date.x << ',' << date.y << ',' << date.z << ',' << date.w << std::endl;
+        }
+        else if (line == "window_width") {
+            std::cout << getWindowWidth() << std::endl;
+        }
+        else if (line == "window_height") {
+            std::cout << getWindowHeight() << std::endl;
+        }
+        else if (line == "pixel_density") {
+            std::cout << getPixelDensity() << std::endl;
+        }
+        else if (line == "screen_size") {
+            glm::ivec2 screen_size = getScreenSize();
+            std::cout << screen_size.x << ',' << screen_size.y << std::endl;
+        }
+        else if (line == "viewport") {
+            glm::ivec4 viewport = getViewport();
+            std::cout << viewport.x << ',' << viewport.y << ',' << viewport.z << ',' << viewport.w << std::endl;
+        }
+        else if (line == "mouse_x") {
+            std::cout << getMouseX() << std::endl;
+        }
+        else if (line == "mouse_y") {
+            std::cout << getMouseY() << std::endl;
+        }
+        else if (line == "mouse") {
+            glm::vec2 pos = getMousePosition();
+            std::cout << pos.x << "," << pos.y << std::endl;
+        }
         else {
             uniformsMutex.lock();
             parseUniforms(line, &uniforms);

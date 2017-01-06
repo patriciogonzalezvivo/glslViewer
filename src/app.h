@@ -18,16 +18,17 @@ void setWindowSize(int _width, int _height);
 //	GET
 //----------------------------------------------
 glm::ivec2 getScreenSize();
-float getDevicePixelRatio();
+float getPixelDensity();
 
-int getWindowWidth();
-int getWindowHeight();
 glm::ivec4 getViewport();
 glm::mat4 getOrthoMatrix();
+int getWindowWidth();
+int getWindowHeight();
 
+glm::vec4 getDate();
 double getTime();
 double getDelta();
-glm::vec4 getDate();
+double getFPS();
 
 float getMouseX();
 float getMouseY();

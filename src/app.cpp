@@ -19,6 +19,7 @@ static Mouse mouse;
 static glm::ivec4 viewport;
 static double fTime = 0.0f;
 static double fDelta = 0.0f;
+static double fFPS = 0.0f;
 
 #ifdef PLATFORM_RPI
 #include <assert.h>
@@ -37,7 +38,6 @@ EGLSurface surface;
 EGLContext context;
 
 unsigned long long timeStart;
-unsigned long long timePrev;
 static bool bBcm = false;
 #else
 
@@ -181,12 +181,12 @@ void initGL (glm::ivec4 &_viewport, bool _headless) {
             exit(-1);
         }
 
-        devicePixelRatio = getDevicePixelRatio();
+        devicePixelRatio = getPixelDensity();
         setWindowSize(_viewport.z*devicePixelRatio, _viewport.w*devicePixelRatio);
 
         glfwMakeContextCurrent(window);
         glfwSetWindowSizeCallback(window, [](GLFWwindow* _window, int _w, int _h) {
-            devicePixelRatio = getDevicePixelRatio();
+            devicePixelRatio = getPixelDensity();
             setWindowSize(_w*devicePixelRatio,_h*devicePixelRatio);
         });
 
@@ -253,24 +253,23 @@ void updateGL(){
         gettimeofday(&tv, NULL);
         unsigned long long timeNow =    (unsigned long long)(tv.tv_sec) * 1000 +
                                         (unsigned long long)(tv.tv_usec) / 1000;
-
-        fTime = (timeNow - timeStart)*0.001;
-        fDelta = (timeNow - timePrev)*0.001;
-        timePrev = timeNow;
+        double now = (timeNow - timeStart)*0.001;
     #else
         // OSX/LINUX
         double now = glfwGetTime();
-        fDelta = now - fTime;
-        fTime = now;
-
-        static uint frame_count = 0.;
-        if (fDelta > 0.25) {
-            std::string title = appTitle + ":..: FPS:" + toString(frame_count / fDelta);
-            glfwSetWindowTitle(window, title.c_str());
-            frame_count = 0;
-        }
-        frame_count++;
     #endif
+    fDelta = now - fTime;
+    fTime = now;
+
+    static int frame_count = 0;
+    static double lastTime = 0.0;
+    frame_count++;
+    lastTime += fDelta;
+    if (lastTime >= 1.) {
+        fFPS = double(frame_count);
+        frame_count = 0;
+        lastTime -= 1.;
+    }
 
     // EVENTS
     // --------------------------------------------------------------------
@@ -336,6 +335,9 @@ void updateGL(){
             }
         }
     #else
+        std::string title = appTitle + ":..: FPS:" + toString(fFPS);
+        glfwSetWindowTitle(window, title.c_str());
+
         // OSX/LINUX
         glfwPollEvents();
     #endif
@@ -403,7 +405,7 @@ glm::ivec2 getScreenSize() {
     return screen;
 }
 
-float getDevicePixelRatio() {
+float getPixelDensity() {
     #ifdef PLATFORM_RPI
         // RASPBERRYPI
         return 1.;
@@ -414,6 +416,10 @@ float getDevicePixelRatio() {
         glfwGetFramebufferSize(window, &framebuffer_width, &framebuffer_height);
         return framebuffer_width/window_width;
     #endif
+}
+
+glm::ivec4 getViewport() {
+    return viewport;
 }
 
 int getWindowWidth() {
@@ -428,14 +434,6 @@ glm::mat4 getOrthoMatrix() {
     return orthoMatrix;
 }
 
-double getTime() {
-    return fTime;
-}
-
-double getDelta() {
-    return fDelta;
-}
-
 glm::vec4 getDate() {
     gettimeofday(&tv, NULL);
     struct tm *tm;
@@ -445,6 +443,18 @@ glm::vec4 getDate() {
                      tm->tm_mon,
                      tm->tm_mday,
                      tm->tm_hour*3600.0f+tm->tm_min*60.0f+tm->tm_sec+tv.tv_usec*0.000001);
+}
+
+double getTime() {
+    return fTime;
+}
+
+double getDelta() {
+    return fDelta;
+}
+
+double getFPS() {
+    return fFPS;
 }
 
 float getMouseX(){
