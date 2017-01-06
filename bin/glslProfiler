@@ -20,7 +20,7 @@ class Shader:
     fps = 0
 
     def __init__(self):
-        shader_file = '../examples/test.frag';
+        shader_file = 'test.frag';
         self.process = Popen([self.COMMAND,shader_file], stdin=PIPE, stdout=PIPE, stderr = PIPE, shell=False)
         flags = fcntl(self.process.stdout, F_GETFL) # get current self.process.stdout flags
         fcntl(self.process.stdout, F_SETFL, flags | O_NONBLOCK)
@@ -79,7 +79,7 @@ ax.grid(True)
 ax.set_title("Realtime Waveform Plot")
 ax.set_xlabel("Time")
 ax.set_ylabel("Render Delta")
-ax.axis([0,100,-0.5,0.5])
+ax.axis([0,100,-0.025,0.025])
 line1=ax.plot(xAchse,yAchse,'-')
 
 manager = pylab.get_current_fig_manager()
@@ -104,7 +104,7 @@ def RealtimePloter(arg):
     global values
     CurrentXAxis=pylab.arange(len(values)-100,len(values),1)
     line1[0].set_data(CurrentXAxis,pylab.array(values[-100:]))
-    ax.axis([CurrentXAxis.min(),CurrentXAxis.max(),-.5,.5])
+    ax.axis([CurrentXAxis.min(),CurrentXAxis.max(),-0.025,0.025])
     manager.canvas.draw()
     # manager.show()
 
