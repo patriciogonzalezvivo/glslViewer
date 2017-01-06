@@ -12,7 +12,6 @@
 #include "gl/shader.h"
 #include "gl/vbo.h"
 #include "gl/texture.h"
-// #include "gl/fbo.h"
 #include "gl/pingpong.h"
 #include "gl/uniform.h"
 #include "3d/camera.h"
