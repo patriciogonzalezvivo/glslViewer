@@ -33,6 +33,8 @@ static double fFPS = 0.0f;
 
 // Raspberry globals
 //----------------------------------------------------
+DISPMANX_DISPLAY_HANDLE_T dispman_display;
+
 EGLDisplay display;
 EGLSurface surface;
 EGLContext context;
@@ -128,12 +130,11 @@ void initGL (glm::ivec4 &_viewport, bool _headless) {
         src_rect.height = _viewport.w << 16;
 
         DISPMANX_ELEMENT_HANDLE_T dispman_element;
-        DISPMANX_DISPLAY_HANDLE_T dispman_display;
         DISPMANX_UPDATE_HANDLE_T dispman_update;
 
         if (_headless) {
             DISPMANX_RESOURCE_HANDLE_T dispman_resource;
-            dispman_resource = vc_dispmanx_resource_create(VC_IMAGE_RGBA32, screen_width, screen_height, &dest_image_handle);
+            dispman_resource = vc_dispmanx_resource_create(VC_IMAGE_RGBA32, _viewport.z, _viewport.w, &dest_image_handle);
             dispman_display = vc_dispmanx_display_open_offscreen(dispman_resource, DISPMANX_NO_ROTATE);
         } else {
             dispman_display = vc_dispmanx_display_open(0); // LCD
