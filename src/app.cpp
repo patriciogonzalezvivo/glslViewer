@@ -133,6 +133,7 @@ void initGL (glm::ivec4 &_viewport, bool _headless) {
         DISPMANX_UPDATE_HANDLE_T dispman_update;
 
         if (_headless) {
+            uint32_t dest_image_handle;
             DISPMANX_RESOURCE_HANDLE_T dispman_resource;
             dispman_resource = vc_dispmanx_resource_create(VC_IMAGE_RGBA32, _viewport.z, _viewport.w, &dest_image_handle);
             dispman_display = vc_dispmanx_display_open_offscreen(dispman_resource, DISPMANX_NO_ROTATE);
