@@ -8,8 +8,8 @@ from time import sleep
 from fcntl import fcntl, F_GETFL, F_SETFL
 from os import O_NONBLOCK, read
 
-import numpy as np
-import matplotlib.pyplot as plt
+import pylab
+from pylab import *
 
 class Shader:
     COMMAND='glslViewer'
@@ -63,14 +63,58 @@ class Shader:
                 self.fps = float(answer)
         return self.fps
 
-
 test = Shader()
+# completed = False
+# while not completed:
+#     print 'delta:', test.getDelta()
+#     if test.isFinish():
+#         completed = True
 
-completed = False
-while not completed:
-    print 'time:', test.getDelta()
+xAchse=pylab.arange(0,100,1)
+yAchse=pylab.array([0]*100)
 
+fig = pylab.figure(1)
+ax = fig.add_subplot(111)
+ax.grid(True)
+ax.set_title("Realtime Waveform Plot")
+ax.set_xlabel("Time")
+ax.set_ylabel("Render Delta")
+ax.axis([0,100,-0.5,0.5])
+line1=ax.plot(xAchse,yAchse,'-')
+
+manager = pylab.get_current_fig_manager()
+
+values = []
+values = [0 for x in range(100)]
+
+# completed = False
+# while not completed:
+#     # print 'delta:', test.getDelta()
+#     if test.isFinish():
+#         completed = True
+#         break
+
+def SinwaveformGenerator(arg):
+    global values
     if test.isFinish():
-        completed = True
+        return
+    values.append(test.getDelta())
+
+def RealtimePloter(arg):
+    global values
+    CurrentXAxis=pylab.arange(len(values)-100,len(values),1)
+    line1[0].set_data(CurrentXAxis,pylab.array(values[-100:]))
+    ax.axis([CurrentXAxis.min(),CurrentXAxis.max(),-.5,.5])
+    manager.canvas.draw()
+    # manager.show()
+
+timer = fig.canvas.new_timer(interval=20)
+timer.add_callback(RealtimePloter, ())
+timer2 = fig.canvas.new_timer(interval=20)
+timer2.add_callback(SinwaveformGenerator, ())
+timer.start()
+timer2.start()
+
+pylab.show()
 
 print "Finish"
