@@ -143,7 +143,9 @@ Beside for texture uniforms other arguments can be add to ```glslViewer```:
 
 * ```-o [image.png]``` save the viewport to a image file before
 
-* ```-l``` or ```--live-coding``` to draw a 500x500 billboard on the top right corner of the screen that let you see the code and the shader at the same time:
+* ```-l``` or ```--live-coding``` to draw a 500x500 billboard on the top right corner of the screen that let you see the code and the shader at the same time.
+
+* ```--headless``` headless rendering. Very usefull for making images or benchmarking.
 
 ### Inject other files
 

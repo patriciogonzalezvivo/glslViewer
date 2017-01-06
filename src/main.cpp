@@ -94,6 +94,7 @@ int main(int argc, char **argv){
         windowPosAndSize.w = 500;
     #endif
 
+    bool headless = false;
     for (int i = 1; i < argc ; i++) {
         std::string argument = std::string(argv[i]);
 
@@ -115,6 +116,9 @@ int main(int argc, char **argv){
             i++;
             windowPosAndSize.w = getInt(std::string(argv[i]));
         }
+        else if ( std::string(argv[i]) == "--headless" ) {
+            headless = true;
+        }
         #ifdef PLATFORM_RPI 
         else if ( std::string(argv[i]) == "-l" || 
                     std::string(argv[i]) == "--life-coding" ){
@@ -125,7 +129,7 @@ int main(int argc, char **argv){
     }
 
     // Initialize openGL context
-    initGL (windowPosAndSize);
+    initGL (windowPosAndSize, headless);
     
     Cursor cursor;  // Cursor
     struct stat st; // for files to watch
@@ -141,6 +145,8 @@ int main(int argc, char **argv){
             argument == "-h" || argument == "--height" ) {
             i++;
         }
+        else if (argument == "--headless") {
+        } 
         else if (argument == "-l") {
         } 
         else if (argument == "-m") {

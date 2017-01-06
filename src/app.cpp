@@ -47,7 +47,7 @@ static GLFWwindow* window;
 static float devicePixelRatio = 1.0;
 #endif
 
-void initGL (glm::ivec4 &_viewport) {
+void initGL (glm::ivec4 &_viewport, bool _headless) {
 
     #ifdef PLATFORM_RPI
         // RASPBERRY_PI
@@ -66,14 +66,6 @@ void initGL (glm::ivec4 &_viewport) {
         // Clear application state
         EGLBoolean result;
         EGLint num_config;
-
-        static EGL_DISPMANX_WINDOW_T nativeviewport;
-
-        DISPMANX_ELEMENT_HANDLE_T dispman_element;
-        DISPMANX_DISPLAY_HANDLE_T dispman_display;
-        DISPMANX_UPDATE_HANDLE_T dispman_update;
-        VC_RECT_T dst_rect;
-        VC_RECT_T src_rect;
 
         static const EGLint attribute_list[] = {
             EGL_RED_SIZE, 8,
@@ -119,6 +111,11 @@ void initGL (glm::ivec4 &_viewport) {
         assert(context!=EGL_NO_CONTEXT);
         check();
 
+        static EGL_DISPMANX_WINDOW_T nativeviewport;
+
+        VC_RECT_T dst_rect;
+        VC_RECT_T src_rect;
+
         //  Initially the viewport is for all the screen
         dst_rect.x = _viewport.x;
         dst_rect.y = _viewport.y;
@@ -130,12 +127,23 @@ void initGL (glm::ivec4 &_viewport) {
         src_rect.width = _viewport.z << 16;
         src_rect.height = _viewport.w << 16;
 
-        dispman_display = vc_dispmanx_display_open(0); // LCD
-        dispman_update = vc_dispmanx_update_start(0);
+        DISPMANX_ELEMENT_HANDLE_T dispman_element;
+        DISPMANX_DISPLAY_HANDLE_T dispman_display;
+        DISPMANX_UPDATE_HANDLE_T dispman_update;
 
+        if (_headless) {
+            DISPMANX_RESOURCE_HANDLE_T dispman_resource;
+            dispman_resource = vc_dispmanx_resource_create(VC_IMAGE_RGBA32, screen_width, screen_height, &dest_image_handle);
+            dispman_display = vc_dispmanx_display_open_offscreen(dispman_resource, DISPMANX_NO_ROTATE);
+        } else {
+            dispman_display = vc_dispmanx_display_open(0); // LCD
+        }
+        
+        dispman_update = vc_dispmanx_update_start(0);
         dispman_element = vc_dispmanx_element_add(  dispman_update, dispman_display,
                                                     0/*layer*/, &dst_rect, 0/*src*/,
-                                                    &src_rect, DISPMANX_PROTECTION_NONE, 0 /*alpha*/, 0/*clamp*/, (DISPMANX_TRANSFORM_T)0/*transform*/);
+                                                    &src_rect, DISPMANX_PROTECTION_NONE, 
+                                                    0 /*alpha*/, 0/*clamp*/, (DISPMANX_TRANSFORM_T)0/*transform*/);
 
         nativeviewport.element = dispman_element;
         nativeviewport.width = _viewport.z;
@@ -159,6 +167,10 @@ void initGL (glm::ivec4 &_viewport) {
         if(!glfwInit()) {
             std::cerr << "ABORT: GLFW init failed" << std::endl;
             exit(-1);
+        }
+
+        if (_headless) {
+            glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
         }
 
         window = glfwCreateWindow(_viewport.z, _viewport.w, appTitle.c_str(), NULL, NULL);
@@ -251,7 +263,7 @@ void updateGL(){
         fDelta = now - fTime;
         fTime = now;
 
-        static int frame_count = 0.;
+        static uint frame_count = 0.;
         if (fDelta > 0.25) {
             std::string title = appTitle + ":..: FPS:" + toString(frame_count / fDelta);
             glfwSetWindowTitle(window, title.c_str());
@@ -348,6 +360,9 @@ void closeGL(){
         eglDestroySurface(display, surface);
         eglDestroyContext(display, context);
         eglTerminate(display);
+        eglReleaseThread();
+        vc_dispmanx_display_close(dispman_display);
+        bcm_host_deinit();
     #else
         // OSX/LINUX
         glfwSetWindowShouldClose(window, GL_TRUE);
