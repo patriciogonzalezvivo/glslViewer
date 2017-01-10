@@ -10,6 +10,11 @@ ifneq ("$(wildcard /etc/os-release)","")
 PLATFORM = $(shell . /etc/os-release && echo $$NAME)
 endif
 
+#override platform selection on RPi:
+ifneq ("$(wildcard /opt/vc/include/bcm_host.h)","")
+    PLATFORM = Raspbian GNU/Linux
+endif
+
 #$(info Platform ${PLATFORM}) 
 
 INCLUDES +=	-Isrc/ -Iinclude/
