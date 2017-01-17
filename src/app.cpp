@@ -39,8 +39,24 @@ EGLDisplay display;
 EGLSurface surface;
 EGLContext context;
 
-unsigned long long timeStart;
+// unsigned long long timeStart;
+struct timespec time_start;
 static bool bBcm = false;
+
+double getTimeSec() {
+    timespec now;
+    clock_gettime(CLOCK_MONOTONIC, &now);
+    timespec temp;
+    if ((now.tv_nsec-time_start.tv_nsec)<0) {
+        temp.tv_sec = now.tv_sec-time_start.tv_sec-1;
+        temp.tv_nsec = 1000000000+now.tv_nsec-time_start.tv_nsec;
+    } else {
+        temp.tv_sec = now.tv_sec-time_start.tv_sec;
+        temp.tv_nsec = now.tv_nsec-time_start.tv_nsec;
+    }
+    return double(temp.tv_sec) + double(temp.tv_nsec/1000000000.);
+}
+
 #else
 
 // OSX/Linux globals
@@ -55,9 +71,10 @@ void initGL (glm::ivec4 &_viewport, bool _headless) {
         // RASPBERRY_PI
 
         // Start clock
-        gettimeofday(&tv, NULL);
-        timeStart = (unsigned long long)(tv.tv_sec) * 1000 +
-                    (unsigned long long)(tv.tv_usec) / 1000; 
+        // gettimeofday(&tv, NULL);
+        // timeStart = (unsigned long long)(tv.tv_sec) * 1000 +
+        //             (unsigned long long)(tv.tv_usec) / 1000; 
+        clock_gettime(CLOCK_MONOTONIC, &time_start);
 
         // Start OpenGL ES
         if (!bBcm) {
@@ -252,10 +269,11 @@ void updateGL(){
     // --------------------------------------------------------------------
     #ifdef PLATFORM_RPI
         // RASPBERRY_PI
-        gettimeofday(&tv, NULL);
-        unsigned long long timeNow =    (unsigned long long)(tv.tv_sec) * 1000 +
-                                        (unsigned long long)(tv.tv_usec) / 1000;
-        double now = (timeNow - timeStart)*0.001;
+        // gettimeofday(&tv, NULL);
+        // unsigned long long timeNow =    (unsigned long long)(tv.tv_sec) * 1000 +
+        //                                 (unsigned long long)(tv.tv_usec) / 1000;
+        // double now = (timeNow - timeStart)*0.001;
+        double now = getTimeSec();
     #else
         // OSX/LINUX
         double now = glfwGetTime();
