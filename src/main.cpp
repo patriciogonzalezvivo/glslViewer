@@ -351,15 +351,15 @@ void cinWatcherThread() {
         }
         else if (line == "fps") {
             // std::cout << getFPS() << std::endl;
-            printf("%f",getFPS());
+            printf("%f\n",getFPS());
         }
         else if (line == "delta") {
             // std::cout << getDelta() << std::endl;
-            printf("%f",getDelta());
+            printf("%f\n",getDelta());
         }
         else if (line == "time") {
             // std::cout << getTime() << std::endl;
-            printf("%f",getTime());
+            printf("%f\n",getTime());
         }
         else if (line == "date") {
             glm::vec4 date = getDate();
