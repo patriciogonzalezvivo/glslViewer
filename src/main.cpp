@@ -605,11 +605,11 @@ void onFileChange(int index) {
 }
 
 void onKeyPress(int _key) {
-    if( _key == 'q' || _key == 'Q' || _key == 's' || _key == 'S' ){
+    if (_key == 's' || _key == 'S') {
         screenshot();
     }
 
-    if ( _key == 'q' || _key == 'Q'){
+    if (_key == 'q' || _key == 'Q') {
         bRun = false;
         bRun.store(false);
     }
@@ -646,7 +646,7 @@ void onViewportResize(int _newWidth, int _newHeight) {
 }
 
 void screenshot() {
-    if (outputFile != "") {
+    if (outputFile != "" && isGL()) {
         unsigned char* pixels = new unsigned char[getWindowWidth()*getWindowHeight()*4];
         glReadPixels(0, 0, getWindowWidth(), getWindowHeight(), GL_RGBA, GL_UNSIGNED_BYTE, pixels);
         Texture::savePixels(outputFile, pixels, getWindowWidth(), getWindowHeight());
@@ -654,6 +654,7 @@ void screenshot() {
 }
 
 void onExit() {
+    // Take a screenshot if it need 
     screenshot();
 
     // clear screen
