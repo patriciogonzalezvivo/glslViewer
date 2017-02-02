@@ -10,8 +10,27 @@ Live-coding console tool that renders GLSL Shaders. Every file you use (frag/ver
 
 ### Installing in Ubuntu
 
-You need to [install GLFW](http://www.glfw.org/docs/latest/compile.html#compile_deps_x11) then download the code, compile and install. 
+Install the GLFW 3 library and other dependencies:
+```bash
+sudo apt-get update
+sudo apt-get upgrade
+sudo apt-get install libglfw3-dev git-core
+```
 
+Download the glslViewer code, compile and install:
+```bash
+git clone http://github.com/patriciogonzalezvivo/glslViewer
+cd glslViewer
+make
+sudo make install
+```
+
+This was tested with Ubuntu 16.04.
+
+These instructions may not work for all users.
+For example, it seems that libglfw3-dev conflicts with the older libglfw-dev.
+The previous Ubuntu install instructions direct you to
+[download and compile glfw3 manually](http://www.glfw.org/docs/latest/compile.html#compile_deps_x11):
 ```bash
 sudo apt-get update
 sudo apt-get upgrade
@@ -20,11 +39,6 @@ cd ~
 git clone https://github.com/glfw/glfw.git
 cd glfw
 cmake .
-make
-sudo make install
-cd ..
-git clone http://github.com/patriciogonzalezvivo/glslViewer
-cd glslViewer
 make
 sudo make install
 ```

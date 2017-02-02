@@ -189,7 +189,7 @@ void initGL (glm::ivec4 &_viewport, bool _headless) {
         }
 
         if (_headless) {
-            glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+            glfwWindowHint(GLFW_VISIBLE, GL_FALSE);
         }
 
         window = glfwCreateWindow(_viewport.z, _viewport.w, appTitle.c_str(), NULL, NULL);
