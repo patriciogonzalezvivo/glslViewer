@@ -127,6 +127,12 @@ glslViewer bunny.frag bunny.vert bunny.ply
 
 * ```varying vec2 v_texcoord```: UV of the billboard ( normalized )
 
+### ShaderToy.com Image Shaders
+ShaderToy.com image shaders are automatically detected and supported.
+However, only a subset of the ShaderToy uniforms are currently supported:
+* `uniform vec2 iResolution;` -- same as `u_resolution`
+* `uniform float iGlobalTime;` -- same as `u_time`
+
 ### Textures
 
 You can load PNGs and JPEGs images to a shader. They will be automatically loaded and asigned to an uniform name acording to the order they are pass as arguments: ex. ```u_tex0```, ```u_tex1```, etc. Also the resolution will be assigned to ```vec2``` uniform acording the texture uniforma name: ex. ```u_tex0Resolution```, ```u_tex1Resolution```, etc. 
