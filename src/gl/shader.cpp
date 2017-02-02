@@ -54,7 +54,8 @@ bool Shader::load(const std::string& _fragmentSrc, const std::string& _vertexSrc
         return false;
     } else {
         m_backbuffer = std::regex_search(_fragmentSrc, std::regex("u_backbuffer"));
-        m_time = std::regex_search(_fragmentSrc, std::regex("u_time"));
+        if (!m_time)
+            m_time = std::regex_search(_fragmentSrc, std::regex("u_time"));
         m_delta = std::regex_search(_fragmentSrc, std::regex("u_delta"));
         m_date = std::regex_search(_fragmentSrc, std::regex("u_date"));
         m_mouse = std::regex_search(_fragmentSrc, std::regex("u_mouse"));
@@ -110,11 +111,42 @@ bool Shader::isInUse() const {
 }
 
 GLuint Shader::compileShader(const std::string& _src, GLenum _type) {
+    std::string prolog;
+    const char* epilog = "";
+
+    // Test if this is a shadertoy.com image shader. If it is, we need to
+    // define some uniforms with different names than the glslViewer standard,
+    // and we need to add prolog and epilog code. Only a subset of the shadertoy
+    // uniforms are currently supported (iResolution and iGlobalTime).
+    if (_type == GL_FRAGMENT_SHADER
+        && std::regex_search(_src, std::regex("\\bmainImage\\b")))
+    {
+        epilog =
+            "\n"
+            "void main(void) {\n"
+            "    mainImage(gl_FragColor, gl_FragCoord);\n"
+            "}\n";
+        prolog =
+            "uniform vec2 u_resolution;\n"
+            "#define iResolution u_resolution\n"
+            "\n";
+        m_time = std::regex_search(_src, std::regex("\\biGlobalTime\\b"));
+        if (m_time) {
+            prolog +=
+                "uniform float u_time;\n"
+                "#define iGlobalTime u_time\n"
+                "\n";
+        }
+    }
+
+    const GLchar* sources[3] = {
+        (const GLchar*) prolog.c_str(),
+        (const GLchar*) _src.c_str(),
+        (const GLchar*) epilog,
+    };
+
     GLuint shader = glCreateShader(_type);
-
-    const GLchar* source = (const GLchar*) _src.c_str();
-
-    glShaderSource(shader, 1, &source, NULL);
+    glShaderSource(shader, 3, sources, NULL);
     glCompileShader(shader);
     
     GLint isCompiled;
