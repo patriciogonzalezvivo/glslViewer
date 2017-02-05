@@ -1,6 +1,6 @@
 #include "shader.h"
 
-#include <regex>
+#include <cstring>
 #include "utils.h"
 
 Shader::Shader():m_program(0),m_fragmentShader(0),m_vertexShader(0), m_backbuffer(0), m_time(false), m_delta(false), m_date(false), m_mouse(false) {
@@ -37,6 +37,11 @@ std::string getLineNumber(const std::string& _source, unsigned _lineNumber){
     return "NOT FOUND";
 }
 
+// Quickly determine if a shader program contains the specified identifier.
+bool find_id(const std::string& program, const char* id) {
+    return std::strstr(program.c_str(), id) != 0;
+}
+
 bool Shader::load(const std::string& _fragmentSrc, const std::string& _vertexSrc) {
     m_vertexShader = compileShader(_vertexSrc, GL_VERTEX_SHADER);
 
@@ -53,12 +58,12 @@ bool Shader::load(const std::string& _fragmentSrc, const std::string& _vertexSrc
         glDeleteShader(m_fragmentShader);
         return false;
     } else {
-        m_backbuffer = std::regex_search(_fragmentSrc, std::regex("u_backbuffer"));
+        m_backbuffer = find_id(_fragmentSrc, "u_backbuffer");
         if (!m_time)
-            m_time = std::regex_search(_fragmentSrc, std::regex("u_time"));
-        m_delta = std::regex_search(_fragmentSrc, std::regex("u_delta"));
-        m_date = std::regex_search(_fragmentSrc, std::regex("u_date"));
-        m_mouse = std::regex_search(_fragmentSrc, std::regex("u_mouse"));
+            m_time = find_id(_fragmentSrc, "u_time");
+        m_delta = find_id(_fragmentSrc, "u_delta");
+        m_date = find_id(_fragmentSrc, "u_date");
+        m_mouse = find_id(_fragmentSrc, "u_mouse");
     }
 
     m_program = glCreateProgram();
@@ -118,9 +123,7 @@ GLuint Shader::compileShader(const std::string& _src, GLenum _type) {
     // define some uniforms with different names than the glslViewer standard,
     // and we need to add prolog and epilog code. Only a subset of the shadertoy
     // uniforms are currently supported (iResolution and iGlobalTime).
-    if (_type == GL_FRAGMENT_SHADER
-        && std::regex_search(_src, std::regex("\\bmainImage\\b")))
-    {
+    if (_type == GL_FRAGMENT_SHADER && find_id(_src, "mainImage")) {
         epilog =
             "\n"
             "void main(void) {\n"
@@ -130,7 +133,7 @@ GLuint Shader::compileShader(const std::string& _src, GLenum _type) {
             "uniform vec2 u_resolution;\n"
             "#define iResolution u_resolution\n"
             "\n";
-        m_time = std::regex_search(_src, std::regex("\\biGlobalTime\\b"));
+        m_time = find_id(_src, "GlobalTime");
         if (m_time) {
             prolog +=
                 "uniform float u_time;\n"
