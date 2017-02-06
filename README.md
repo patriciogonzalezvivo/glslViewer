@@ -141,11 +141,12 @@ you don't declare them:
   `iResolution.z` is hard coded to 1.0, just like shadertoy.com and synthclipse,
   although it was originally supposed to be the pixel aspect ratio.
 * `uniform float iGlobalTime;` <br>
-  Shader playback time in seconds, like `u_time`.
+  Shader playback time (in seconds), like `u_time`.
 * `uniform float iTimeDelta;` <br>
-  Render time for last frame, in seconds, like `u_delta`.
+  Render time for last frame (in seconds), like `u_delta`.
 * `uniform vec4 iDate;` <br>
-  [year, month (0-11), month_day (1-31), time of day in seconds], like `u_date`.
+  [year, month (0-11), day of month (1-31), time of day (in seconds)],
+  like `u_date`.
 
 ### Textures
 
