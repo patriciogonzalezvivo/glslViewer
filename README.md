@@ -131,8 +131,11 @@ glslViewer bunny.frag bunny.vert bunny.ply
 ShaderToy.com image shaders are automatically detected and supported.
 These conventions are also supported by other tools, such as Synthclipse.
 
-The shader must define `void mainImage(out vec4 fragColor, in vec2 fragCoord)`.
-It must not define `main()`.
+To be recognized as a ShaderToy image shader, a fragment shader must define
+```
+  void mainImage(out vec4 fragColor, in vec2 fragCoord)
+```
+It must not define `main()`, because this is automatically defined for you.
 
 The following ShaderToy uniforms are automatically defined,
 you don't declare them:
