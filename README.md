@@ -123,15 +123,29 @@ glslViewer bunny.frag bunny.vert bunny.ply
 
 * ```uniform vec2 u_resolution;```: viewport resolution (in pixels)
 
-* ```uniform vec2 u_mouse;```: mouse pixel coords (xy: pos, zw: buttons)
+* ```uniform vec2 u_mouse;```: mouse pixel coords
 
 * ```varying vec2 v_texcoord```: UV of the billboard ( normalized )
 
 ### ShaderToy.com Image Shaders
 ShaderToy.com image shaders are automatically detected and supported.
-However, only a subset of the ShaderToy uniforms are currently supported:
-* `uniform vec2 iResolution;` -- same as `u_resolution`
-* `uniform float iGlobalTime;` -- same as `u_time`
+These conventions are also supported by other tools, such as Synthclipse.
+
+The shader must define `void mainImage(out vec4 fragColor, in vec2 fragCoord)`.
+It must not define `main()`.
+
+The following ShaderToy uniforms are automatically defined,
+you don't declare them:
+* `uniform vec3 iResolution;` <br>
+  `iResolution.xy` is the viewport size in pixels, like `u_resolution`.
+  `iResolution.z` is hard coded to 1.0, just like shadertoy.com and synthclipse,
+  although it was originally supposed to be the pixel aspect ratio.
+* `uniform float iGlobalTime;` <br>
+  Shader playback time in seconds, like `u_time`.
+* `uniform float iTimeDelta;` <br>
+  Render time for last frame, in seconds, like `u_delta`.
+* `uniform vec4 iDate;` <br>
+  [year, month (0-11), month_day (1-31), time of day in seconds], like `u_date`.
 
 ### Textures
 

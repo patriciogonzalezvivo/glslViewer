@@ -61,8 +61,10 @@ bool Shader::load(const std::string& _fragmentSrc, const std::string& _vertexSrc
         m_backbuffer = find_id(_fragmentSrc, "u_backbuffer");
         if (!m_time)
             m_time = find_id(_fragmentSrc, "u_time");
-        m_delta = find_id(_fragmentSrc, "u_delta");
-        m_date = find_id(_fragmentSrc, "u_date");
+        if (!m_delta)
+            m_delta = find_id(_fragmentSrc, "u_delta");
+        if (!m_date)
+            m_date = find_id(_fragmentSrc, "u_date");
         m_mouse = find_id(_fragmentSrc, "u_mouse");
     }
 
@@ -121,8 +123,7 @@ GLuint Shader::compileShader(const std::string& _src, GLenum _type) {
 
     // Test if this is a shadertoy.com image shader. If it is, we need to
     // define some uniforms with different names than the glslViewer standard,
-    // and we need to add prolog and epilog code. Only a subset of the shadertoy
-    // uniforms are currently supported (iResolution and iGlobalTime).
+    // and we need to add prolog and epilog code.
     if (_type == GL_FRAGMENT_SHADER && find_id(_src, "mainImage")) {
         epilog =
             "\n"
@@ -131,13 +132,27 @@ GLuint Shader::compileShader(const std::string& _src, GLenum _type) {
             "}\n";
         prolog =
             "uniform vec2 u_resolution;\n"
-            "#define iResolution u_resolution\n"
+            "#define iResolution vec3(u_resolution, 1.0)\n"
             "\n";
-        m_time = find_id(_src, "GlobalTime");
+        m_time = find_id(_src, "iGlobalTime");
         if (m_time) {
             prolog +=
                 "uniform float u_time;\n"
                 "#define iGlobalTime u_time\n"
+                "\n";
+        }
+        m_delta = find_id(_src, "iTimeDelta");
+        if (m_delta) {
+            prolog +=
+                "uniform float u_delta;\n"
+                "#define iTimeDelta u_delta\n"
+                "\n";
+        }
+        m_date = find_id(_src, "iDate");
+        if (m_date) {
+            prolog +=
+                "uniform vec4 u_date;\n"
+                "#define iDate u_date\n"
                 "\n";
         }
     }
