@@ -123,9 +123,49 @@ glslViewer bunny.frag bunny.vert bunny.ply
 
 * ```uniform vec2 u_resolution;```: viewport resolution (in pixels)
 
-* ```uniform vec2 u_mouse;```: mouse pixel coords (xy: pos, zw: buttons)
+* ```uniform vec2 u_mouse;```: mouse pixel coords
 
 * ```varying vec2 v_texcoord```: UV of the billboard ( normalized )
+
+### ShaderToy.com Image Shaders
+ShaderToy.com image shaders are automatically detected and supported.
+These conventions are also supported by other tools, such as Synthclipse.
+
+To be recognized as a ShaderToy image shader, a fragment shader must define
+```
+  void mainImage(out vec4 fragColor, in vec2 fragCoord)
+```
+It must not define `main()`, because this is automatically defined for you.
+
+The following ShaderToy uniforms are automatically defined,
+you don't declare them:
+* `uniform vec3 iResolution;` <br>
+  `iResolution.xy` is the viewport size in pixels, like `u_resolution`.
+  `iResolution.z` is hard coded to 1.0, just like shadertoy.com and synthclipse,
+  although it was originally supposed to be the pixel aspect ratio.
+* `uniform float iGlobalTime;` <br>
+  Shader playback time (in seconds), like `u_time`.
+* `uniform float iTimeDelta;` <br>
+  Render time for last frame (in seconds), like `u_delta`.
+* `uniform vec4 iDate;` <br>
+  [year, month (0-11), day of month (1-31), time of day (in seconds)],
+  like `u_date`.
+* `uniform vec4 iMouse;` <br>
+  `iMouse` is initialized to 0, and only changes while the left mouse button
+  (LMB) is being held down.
+  * Mouse coordinates are integers in the range [0,0]..iResolution.xy.
+  * `iMouse.xy` is the current mouse coordinates in pixels, while the LMB
+    is being held down. When the LMB is released, `iMouse.xy` is set to the
+    current coordinates, then stops changing.
+  * `iMouse.zw` is set to the current mouse coordinates at the instant when
+    the LMB is pressed, remains constant as long as the LMB is held down,
+    and is set to `-iMouse.zw` when the LMB is released.
+  * If the LMB is up, then iMouse.xy is the mouse location at the most recent
+    mouseup event, and iMouse.zw is the negative of the mouse location at the
+    most recent mousedown event.
+    For example, after a mouse click, iMouse might be [216,320,-216,-320].
+
+Demo: examples/numbers.frag
 
 ### Textures
 

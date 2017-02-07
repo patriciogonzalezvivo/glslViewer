@@ -16,6 +16,8 @@ typedef struct {
 } Mouse;
 struct timeval tv;
 static Mouse mouse;
+static bool left_mouse_button_down = false;
+static glm::vec4 iMouse = {0.0, 0.0, 0.0, 0.0};
 static glm::ivec4 viewport;
 static double fTime = 0.0f;
 static double fDelta = 0.0f;
@@ -213,6 +215,25 @@ void initGL (glm::ivec4 &_viewport, bool _headless) {
             onKeyPress(_key);
         });
 
+        // callback when a mouse button is pressed or released
+        glfwSetMouseButtonCallback(window, [](GLFWwindow* _window, int button, int action, int mods) {
+            if (button == GLFW_MOUSE_BUTTON_1) {
+                // update iMouse when left mouse button is pressed or released
+                if (action == GLFW_PRESS && !left_mouse_button_down) {
+                    left_mouse_button_down = true;
+                    iMouse.x = mouse.x;
+                    iMouse.y = mouse.y;
+                    iMouse.z = mouse.x;
+                    iMouse.w = mouse.y;
+                } else if (action == GLFW_RELEASE && left_mouse_button_down) {
+                    left_mouse_button_down = false;
+                    iMouse.z = -iMouse.z;
+                    iMouse.w = -iMouse.w;
+                }
+            }
+        });
+
+        // callback when the mouse cursor moves
         glfwSetCursorPosCallback(window, [](GLFWwindow* _window, double x, double y) {
             // Update stuff
             x *= devicePixelRatio;
@@ -228,6 +249,18 @@ void initGL (glm::ivec4 &_viewport, bool _headless) {
             if (mouse.x > viewport.z) mouse.x = viewport.z;
             if (mouse.y > viewport.w) mouse.y = viewport.w;
 
+            // update iMouse when cursor moves
+            if (left_mouse_button_down) {
+                iMouse.x = mouse.x;
+                iMouse.y = mouse.y;
+            }
+
+            /*
+             * TODO: the following code would best be moved into the
+             * mouse button callback. If you click the mouse button without
+             * moving the mouse, then using this code, the mouse click doesn't
+             * register until the cursor is moved. (@doug-moen)
+             */
             int action1 = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1);
             int action2 = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_2);
             int button = 0;
@@ -503,4 +536,8 @@ glm::vec2 getMouseVelocity() {
 
 int getMouseButton(){
     return mouse.button;
+}
+
+glm::vec4 get_iMouse() {
+    return iMouse;
 }

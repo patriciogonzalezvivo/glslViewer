@@ -517,6 +517,9 @@ void draw() {
     if (shader.needMouse()) {
         shader.setUniform("u_mouse", getMouseX(), getMouseY());
     }
+    if (shader.need_iMouse()) {
+        shader.setUniform("iMouse", get_iMouse());
+    }
     
     for (UniformList::iterator it=uniforms.begin(); it!=uniforms.end(); ++it) {
         shader.setUniform(it->first, it->second.value, it->second.size);
