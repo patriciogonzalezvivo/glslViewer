@@ -150,6 +150,22 @@ you don't declare them:
 * `uniform vec4 iDate;` <br>
   [year, month (0-11), day of month (1-31), time of day (in seconds)],
   like `u_date`.
+* `uniform vec4 iMouse;` <br>
+  `iMouse` is initialized to 0, and only changes while the left mouse button
+  (LMB) is being held down.
+  * Mouse coordinates are integers in the range [0,0]..iResolution.xy.
+  * `iMouse.xy` is the current mouse coordinates in pixels, while the LMB
+    is being held down. When the LMB is released, `iMouse.xy` is set to the
+    current coordinates, then stops changing.
+  * `iMouse.zw` is set to the current mouse coordinates at the instant when
+    the LMB is pressed, remains constant as long as the LMB is held down,
+    and is set to `-iMouse.zw` when the LMB is released.
+  * If the LMB is up, then iMouse.xy is the mouse location at the most recent
+    mouseup event, and iMouse.zw is the negative of the mouse location at the
+    most recent mousedown event.
+    For example, after a mouse click, iMouse might be [216,320,-216,-320].
+
+Demo: examples/numbers.frag
 
 ### Textures
 

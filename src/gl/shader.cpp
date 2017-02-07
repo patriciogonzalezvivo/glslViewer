@@ -3,7 +3,7 @@
 #include <cstring>
 #include "utils.h"
 
-Shader::Shader():m_program(0),m_fragmentShader(0),m_vertexShader(0), m_backbuffer(0), m_time(false), m_delta(false), m_date(false), m_mouse(false) {
+Shader::Shader():m_program(0),m_fragmentShader(0),m_vertexShader(0), m_backbuffer(0), m_time(false), m_delta(false), m_date(false), m_mouse(false), m_imouse(false) {
 
 }
 
@@ -153,6 +153,12 @@ GLuint Shader::compileShader(const std::string& _src, GLenum _type) {
             prolog +=
                 "uniform vec4 u_date;\n"
                 "#define iDate u_date\n"
+                "\n";
+        }
+        m_imouse = find_id(_src, "iMouse");
+        if (m_imouse) {
+            prolog +=
+                "uniform vec4 iMouse;\n"
                 "\n";
         }
     }
