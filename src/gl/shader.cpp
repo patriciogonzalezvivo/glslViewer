@@ -128,7 +128,7 @@ GLuint Shader::compileShader(const std::string& _src, GLenum _type) {
         epilog =
             "\n"
             "void main(void) {\n"
-            "    mainImage(gl_FragColor, gl_FragCoord);\n"
+            "    mainImage(gl_FragColor, gl_FragCoord.st);\n"
             "}\n";
         prolog =
             "uniform vec2 u_resolution;\n"
