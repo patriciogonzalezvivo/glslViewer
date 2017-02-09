@@ -61,6 +61,15 @@ make
 sudo make install
 ```
 
+### Installing in Arch Linux
+```bash
+sudo pacman -S glu glfw-x11
+git clone http://github.com/patriciogonzalezvivo/glslViewer
+cd glslViewer
+make
+sudo make install
+```
+
 ### Installing in Mac OSX
 
 You need to [install GLFW](http://www.glfw.org), ```pkg-config``` first and then download the code, compile and install.
