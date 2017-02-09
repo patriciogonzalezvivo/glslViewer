@@ -205,6 +205,87 @@ Beside for texture uniforms other arguments can be add to ```glslViewer```:
 
 You can include other GLSL code using a traditional ```#include “file.glsl”``` macro. Note: included files are not under watch so changes will not take effect until the main file is save.
 
+## Examples
+
+* Open a Fragment shader:
+
+```bash
+glslViewer examples/test.frag 
+```
+
+* Open a Fragment shader with an image:
+
+```bash
+glslViewer examples/test.frag examples/test.png
+``` 
+
+* Open a Fragment and Vertext shader with a geometry:
+
+```bash
+glslViewer examples/bunny.frag examples/bunny.vert examples/bunny.ply
+``` 
+
+* Open a Fragment that use the backbuffer to do a reaction diffusion example:
+
+```bash
+glslViewer examples/grayscott.frag
+``` 
+
+* Open a Fragment that use OS defines to know what platform is runnion on:
+
+```bash
+glslViewer examples/platform.frag
+```
+
+* Change a uniform value on the fly by passing CSV on the console IN:
+
+```bash
+glslViewer examples/temp.frag
+u_temp,30
+u_temp,40
+u_temp,50
+u_temp,60
+u_temp,70
+```
+
+* Create a bash script to change uniform parameters on the fly:
+
+```bash
+examples/.temp.sh | glslViewer examples/temp.frag
+```
+
+* Run a headless instance of glslViewer that exits after 1 second outputing an PNG image
+
+```bash
+glslViewer examples/cross.frag --headless -s 1 -o cross.png 
+```
+
+* Make an SVG from a shader usin [potrace](http://potrace.sourceforge.net/) and [ImageMagic](https://www.imagemagick.org/script/index.php)
+
+```bash
+glslViewer examples/cross.frag --headless -s 1 -o cross.png 
+convert cross.png cross.pnm
+potrace cross.pnm -s -o cross.svg 
+```
+
+* Open a ShaderToy's image shader
+
+```bash
+glslViewer examples/numbers.frag
+```
+
+* Download a shader shared through the [ShaderToy's](https://shadertoy.com/) by passing the ID `glslLoader`. Ex:
+
+```bash
+glslLoader llVXRd
+```
+
+* Download a shader shared through the [Book of Shader's](https://thebookofshaders.com/) [editor](http://editor.thebookofshaders.com/) by passing the LOG number to `glslLoader`. Ex:
+
+```bash
+glslLoader 170208142327
+```
+
 ## Author
 
 [Patricio Gonzalez Vivo](http://https://twitter.com/patriciogv): [github](https://github.com/patriciogonzalezvivo) | [twitter](http://https://twitter.com/patriciogv) | [website](http://patricio.io)
