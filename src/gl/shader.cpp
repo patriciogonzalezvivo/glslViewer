@@ -2,6 +2,8 @@
 
 #include <cstring>
 #include "utils.h"
+#include <chrono>
+#include <iostream>
 
 Shader::Shader():m_program(0),m_fragmentShader(0),m_vertexShader(0), m_backbuffer(0), m_time(false), m_delta(false), m_date(false), m_mouse(false), m_imouse(false) {
 
@@ -42,7 +44,10 @@ bool find_id(const std::string& program, const char* id) {
     return std::strstr(program.c_str(), id) != 0;
 }
 
-bool Shader::load(const std::string& _fragmentSrc, const std::string& _vertexSrc) {
+bool Shader::load(const std::string& _fragmentSrc, const std::string& _vertexSrc, bool verbose) {
+    std::chrono::time_point<std::chrono::steady_clock> start_time, end_time;
+    start_time = std::chrono::steady_clock::now();
+
     m_vertexShader = compileShader(_vertexSrc, GL_VERTEX_SHADER);
 
     if(!m_vertexShader) {
@@ -74,6 +79,9 @@ bool Shader::load(const std::string& _fragmentSrc, const std::string& _vertexSrc
     glAttachShader(m_program, m_fragmentShader);    
     glLinkProgram(m_program);
 
+    end_time = std::chrono::steady_clock::now();
+    std::chrono::duration<double> load_time = end_time - start_time;
+
     GLint isLinked;
     glGetProgramiv(m_program, GL_LINK_STATUS, &isLinked);
     
@@ -97,6 +105,18 @@ bool Shader::load(const std::string& _fragmentSrc, const std::string& _vertexSrc
     } else {
         glDeleteShader(m_vertexShader);
         glDeleteShader(m_fragmentShader);
+        if (verbose) {
+            std::cerr << "shader load time: " << load_time.count() << "s";
+            GLint proglen = 0;
+            glGetProgramiv(m_program, GL_PROGRAM_BINARY_LENGTH, &proglen);
+            if (proglen > 0)
+                std::cerr << " size: " << proglen;
+            GLint icount = 0;
+            glGetProgramivARB(m_program, GL_PROGRAM_INSTRUCTIONS_ARB, &icount);
+            if (icount > 0)
+                std::cerr << " #instructions: " << icount;
+            std::cerr << "\n";
+        }
         return true;
     }
 }

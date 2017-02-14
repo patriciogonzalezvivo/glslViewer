@@ -29,7 +29,7 @@ public:
     bool    isInUse() const;
 
     const   GLint   getAttribLocation(const std::string& _attribute) const;
-    bool    load(const std::string& _fragmentSrc, const std::string& _vertexSrc);
+    bool    load(const std::string& _fragmentSrc, const std::string& _vertexSrc, bool verbose);
 
     void    setUniform(const std::string& _name, float _x);
     void    setUniform(const std::string& _name, float _x, float _y);

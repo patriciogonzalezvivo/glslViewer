@@ -455,7 +455,7 @@ void setup() {
     #ifdef PLATFORM_RPI
     fragSource = "#define PLATFORM_RPI\n"+fragSource;
     #endif
-    shader.load(fragSource, vertSource);
+    shader.load(fragSource, vertSource, true);
     
     cam.setViewport(getWindowWidth(), getWindowHeight());
     cam.setPosition(glm::vec3(0.0,0.0,-3.));
@@ -484,7 +484,7 @@ void main() {\n\
     vec2 st = gl_FragCoord.xy/u_resolution.xy;\n\
     gl_FragColor = texture2D(u_buffer, st);\n\
 }";
-    buffer_shader.load(buffer_frag, buffer_vert);
+    buffer_shader.load(buffer_frag, buffer_vert, false);
 
     // Turn on Alpha blending
     glEnable(GL_BLEND);
@@ -584,14 +584,14 @@ void onFileChange(int index) {
             fragSource = "#define PLATFORM_RPI\n"+fragSource;
             #endif
             shader.detach(GL_FRAGMENT_SHADER | GL_VERTEX_SHADER);
-            shader.load(fragSource, vertSource);
+            shader.load(fragSource, vertSource, true);
         }
     }
     else if (type == "vertex") {
         vertSource = "";
         if (loadFromPath(path, &vertSource)) {
             shader.detach(GL_FRAGMENT_SHADER | GL_VERTEX_SHADER);
-            shader.load(fragSource,vertSource);
+            shader.load(fragSource,vertSource, true);
         }
     }
     else if (type == "geometry") {
