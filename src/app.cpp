@@ -207,7 +207,6 @@ void initGL (glm::ivec4 &_viewport, bool _headless) {
 
         glfwMakeContextCurrent(window);
         glfwSetWindowSizeCallback(window, [](GLFWwindow* _window, int _w, int _h) {
-            devicePixelRatio = getPixelDensity();
             setWindowSize(_w*devicePixelRatio,_h*devicePixelRatio);
         });
 
