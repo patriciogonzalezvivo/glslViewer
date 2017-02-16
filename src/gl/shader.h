@@ -24,6 +24,7 @@ public:
     const   bool    needDate() const { return m_date; };
     const   bool    needMouse() const { return m_mouse; };
     const   bool    need_iMouse() const { return m_imouse; };
+    const   bool    needView2d() const { return m_view2d; };
 
     void    use() const;
     bool    isInUse() const;
@@ -66,4 +67,5 @@ private:
     bool    m_date;
     bool    m_mouse;
     bool    m_imouse;
+    bool    m_view2d;
 };
