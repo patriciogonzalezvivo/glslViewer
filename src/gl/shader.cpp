@@ -106,7 +106,7 @@ bool Shader::load(const std::string& _fragmentSrc, const std::string& _vertexSrc
     } else {
         glDeleteShader(m_vertexShader);
         glDeleteShader(m_fragmentShader);
-#ifndef #ifdef PLATFORM_RPI
+#ifndef PLATFORM_RPI
         if (verbose) {
             std::cerr << "shader load time: " << load_time.count() << "s";
             GLint proglen = 0;
