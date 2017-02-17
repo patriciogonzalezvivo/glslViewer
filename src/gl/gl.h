@@ -11,8 +11,6 @@
 #endif
 
 #ifdef PLATFORM_RPI
-#define GL_PROGRAM_BINARY_LENGTH 0x8741
-#define GL_PROGRAM_INSTRUCTIONS_ARB 0x88A0
 #include "bcm_host.h"
 
 #include <GLES2/gl2.h>
