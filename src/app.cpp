@@ -10,9 +10,10 @@
 const std::string appTitle = "glslViewer";
 static glm::mat4 orthoMatrix;
 typedef struct {
-    float   x,y;
-    float   velX,velY;
-    int     button;
+    float     x,y;
+    int       button;
+    float     velX,velY;
+    glm::vec2 drag;
 } Mouse;
 struct timeval tv;
 static Mouse mouse;
@@ -230,19 +231,37 @@ void initGL (glm::ivec4 &_viewport, bool _headless) {
                     iMouse.w = -iMouse.w;
                 }
             }
+            if (action == GLFW_PRESS) {
+                mouse.drag.x = mouse.x;
+                mouse.drag.y = mouse.y;
+            }
+        });
+
+        glfwSetScrollCallback(window, [](GLFWwindow* _window, double xoffset, double yoffset) {
+            onScroll(-yoffset * devicePixelRatio);
         });
 
         // callback when the mouse cursor moves
         glfwSetCursorPosCallback(window, [](GLFWwindow* _window, double x, double y) {
-            // Update stuff
+            // Convert x,y to pixel coordinates relative to viewport.
+            // (0,0) is lower left corner.
             x *= devicePixelRatio;
             y *= devicePixelRatio;
+            y = viewport.w - y;
 
-            mouse.velX = x - mouse.x;
-            mouse.velY = (viewport.w - y) - mouse.y;
+            // mouse.velX,mouse.velY is the distance the mouse cursor has moved
+            // since the last callback, during a drag gesture.
+            // mouse.drag is the previous mouse position, during a drag gesture.
+            // Note that mouse.drag is *not* constrained to the viewport.
+            mouse.velX = x - mouse.drag.x;
+            mouse.velY = y - mouse.drag.y;
+            mouse.drag.x = x;
+            mouse.drag.y = y;
+
+            // mouse.x,mouse.y is the current cursor position, constrained
+            // to the viewport.
             mouse.x = x;
-            mouse.y = viewport.w - y;
-
+            mouse.y = y;
             if (mouse.x < 0) mouse.x = 0;
             if (mouse.y < 0) mouse.y = 0;
             if (mouse.x > viewport.z) mouse.x = viewport.z;

@@ -16,6 +16,7 @@
 #include "gl/uniform.h"
 #include "3d/camera.h"
 #include "types/shapes.h"
+#include "glm/gtx/matrix_transform_2d.hpp"
 
 #include "ui/cursor.h"
 
@@ -48,6 +49,7 @@ std::string vertSource = "";
 Camera cam;
 float lat = 180.0;
 float lon = 0.0;
+glm::mat3 u_view2d = glm::mat3(1.);
 
 //  ASSETS
 Vbo* vbo;
@@ -520,6 +522,9 @@ void draw() {
     if (shader.need_iMouse()) {
         shader.setUniform("iMouse", get_iMouse());
     }
+    if (shader.needView2d()) {
+        shader.setUniform("u_view2d", u_view2d);
+    }
     
     for (UniformList::iterator it=uniforms.begin(); it!=uniforms.end(); ++it) {
         shader.setUniform(it->first, it->second.value, it->second.size);
@@ -626,6 +631,20 @@ void onMouseClick(float _x, float _y, int _button) {
 
 }
 
+void onScroll(float _yoffset) {
+    // Vertical scroll button zooms u_view2d.
+    /* zoomfactor 2^(1/4): 4 scroll wheel clicks to double in size. */
+    constexpr float zoomfactor = 1.1892;
+    if (_yoffset != 0) {
+        glm::vec2 zoom = glm::vec2(
+            _yoffset > 0 ? _yoffset * zoomfactor : 1/(-_yoffset * zoomfactor));
+        glm::vec2 origin = {getWindowWidth()/2, getWindowHeight()/2};
+        u_view2d = glm::translate(u_view2d, origin);
+        u_view2d = glm::scale(u_view2d, zoom);
+        u_view2d = glm::translate(u_view2d, -origin);
+    }
+}
+
 void onMouseDrag(float _x, float _y, int _button) {
     if (_button == 1){
         float dist = glm::length(cam.getPosition());
@@ -633,6 +652,8 @@ void onMouseDrag(float _x, float _y, int _button) {
         lon -= getMouseVelY()*0.5;
         cam.orbit(lat,lon,dist);
         cam.lookAt(glm::vec3(0.0));
+        // Left-button drag is used to pan u_view2d.
+        u_view2d = glm::translate(u_view2d, -getMouseVelocity());
     } else {
         float dist = glm::length(cam.getPosition());
         dist += (-.008f * getMouseVelY());

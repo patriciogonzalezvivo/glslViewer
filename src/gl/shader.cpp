@@ -5,7 +5,7 @@
 #include <chrono>
 #include <iostream>
 
-Shader::Shader():m_program(0),m_fragmentShader(0),m_vertexShader(0), m_backbuffer(0), m_time(false), m_delta(false), m_date(false), m_mouse(false), m_imouse(false) {
+Shader::Shader():m_program(0),m_fragmentShader(0),m_vertexShader(0), m_backbuffer(0), m_time(false), m_delta(false), m_date(false), m_mouse(false), m_imouse(false), m_view2d(false) {
 
 }
 
@@ -71,6 +71,7 @@ bool Shader::load(const std::string& _fragmentSrc, const std::string& _vertexSrc
         if (!m_date)
             m_date = find_id(_fragmentSrc, "u_date");
         m_mouse = find_id(_fragmentSrc, "u_mouse");
+        m_view2d = find_id(_fragmentSrc, "u_view2d");
     }
 
     m_program = glCreateProgram();
@@ -151,6 +152,7 @@ GLuint Shader::compileShader(const std::string& _src, GLenum _type) {
             "    mainImage(gl_FragColor, gl_FragCoord.st);\n"
             "}\n";
         prolog =
+            "#define __GLSLVIEWER__ 1\n"
             "uniform vec2 u_resolution;\n"
             "#define iResolution vec3(u_resolution, 1.0)\n"
             "\n";
