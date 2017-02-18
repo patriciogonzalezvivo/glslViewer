@@ -51,16 +51,12 @@ bool Shader::load(const std::string& _fragmentSrc, const std::string& _vertexSrc
     m_vertexShader = compileShader(_vertexSrc, GL_VERTEX_SHADER);
 
     if(!m_vertexShader) {
-        glDeleteShader(m_vertexShader);
-        std::cout << "Error loading vertex shader src" << std::endl;
         return false;
     }
 
     m_fragmentShader = compileShader(_fragmentSrc, GL_FRAGMENT_SHADER);
 
     if(!m_fragmentShader) {
-        std::cout << "Error loading fragment shader src" << std::endl;
-        glDeleteShader(m_fragmentShader);
         return false;
     } else {
         m_backbuffer = find_id(_fragmentSrc, "u_backbuffer");
@@ -144,6 +140,20 @@ GLuint Shader::compileShader(const std::string& _src, GLenum _type) {
     std::string prolog;
     const char* epilog = "";
 
+    prolog += "#define __GLSLVIEWER__ 1\n";
+
+    #ifdef PLATFORM_OSX
+    prolog += "#define PLATFORM_OSX\n";
+    #endif
+
+    #ifdef PLATFORM_LINUX
+    prolog += "#define PLATFORM_LINUX\n";
+    #endif
+
+    #ifdef PLATFORM_RPI
+    prolog += "#define PLATFORM_RPI\n";
+    #endif
+
     // Test if this is a shadertoy.com image shader. If it is, we need to
     // define some uniforms with different names than the glslViewer standard,
     // and we need to add prolog and epilog code.
@@ -153,8 +163,7 @@ GLuint Shader::compileShader(const std::string& _src, GLenum _type) {
             "void main(void) {\n"
             "    mainImage(gl_FragColor, gl_FragCoord.st);\n"
             "}\n";
-        prolog =
-            "#define __GLSLVIEWER__ 1\n"
+        prolog +=
             "uniform vec2 u_resolution;\n"
             "#define iResolution vec3(u_resolution, 1.0)\n"
             "\n";
@@ -187,6 +196,8 @@ GLuint Shader::compileShader(const std::string& _src, GLenum _type) {
         }
     }
 
+    prolog += "#line 1\n";
+
     const GLchar* sources[3] = {
         (const GLchar*) prolog.c_str(),
         (const GLchar*) _src.c_str(),
@@ -200,14 +211,16 @@ GLuint Shader::compileShader(const std::string& _src, GLenum _type) {
     GLint isCompiled;
     glGetShaderiv(shader, GL_COMPILE_STATUS, &isCompiled);
 
+    GLint infoLength = 0;
+    glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &infoLength);
+    if (infoLength > 1) {
+        std::vector<GLchar> infoLog(infoLength);
+        glGetShaderInfoLog(shader, infoLength, NULL, &infoLog[0]);
+        std::cerr << (isCompiled ? "Warnings" : "Errors");
+        std::cerr << " while compiling shader:\n" << &infoLog[0];
+    }
+
     if (isCompiled == GL_FALSE) {
-        GLint infoLength = 0;
-        glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &infoLength);
-        if (infoLength > 1) {
-            std::vector<GLchar> infoLog(infoLength);
-            glGetShaderInfoLog(shader, infoLength, NULL, &infoLog[0]);
-            printf("Error compiling shader:\n%s\n", &infoLog[0]);
-        }
         glDeleteShader(shader);
         return 0;
     }

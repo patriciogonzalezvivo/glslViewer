@@ -446,17 +446,6 @@ void setup() {
         vertSource = vbo->getVertexLayout()->getDefaultVertShader();
     }    
 
-    #ifdef PLATFORM_OSX
-    fragSource = "#define PLATFORM_OSX\n"+fragSource;
-    #endif
-
-    #ifdef PLATFORM_LINUX
-    fragSource = "#define PLATFORM_LINUX\n"+fragSource;
-    #endif
-
-    #ifdef PLATFORM_RPI
-    fragSource = "#define PLATFORM_RPI\n"+fragSource;
-    #endif
     shader.load(fragSource, vertSource, true);
     
     cam.setViewport(getWindowWidth(), getWindowHeight());
@@ -577,17 +566,6 @@ void onFileChange(int index) {
     if (type == "fragment") {
         fragSource = "";
         if (loadFromPath(path, &fragSource)) {
-            #ifdef PLATFORM_OSX
-            fragSource = "#define PLATFORM_OSX\n"+fragSource;
-            #endif
-
-            #ifdef PLATFORM_LINUX
-            fragSource = "#define PLATFORM_LINUX\n"+fragSource;
-            #endif
-
-            #ifdef PLATFORM_RPI
-            fragSource = "#define PLATFORM_RPI\n"+fragSource;
-            #endif
             shader.detach(GL_FRAGMENT_SHADER | GL_VERTEX_SHADER);
             shader.load(fragSource, vertSource, true);
         }

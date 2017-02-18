@@ -18,10 +18,10 @@ void main() {
     float scale;
     if (scale2.x > scale2.y) {
         scale = scale2.x;
-        offset.y -= (u_resolution.y*scale - size.y)/2;
+        offset.y -= (u_resolution.y*scale - size.y)/2.0;
     } else {
         scale = scale2.y;
-        offset.x -= (u_resolution.x*scale - size.x)/2;
+        offset.x -= (u_resolution.x*scale - size.x)/2.0;
     }
 
     // Transform the fragment coordinates into model coordinates.
