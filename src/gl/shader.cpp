@@ -44,17 +44,17 @@ bool find_id(const std::string& program, const char* id) {
     return std::strstr(program.c_str(), id) != 0;
 }
 
-bool Shader::load(const std::string& _fragmentSrc, const std::string& _vertexSrc, bool verbose) {
+bool Shader::load(const std::string* _fragmentPath, const std::string& _fragmentSrc, const std::string* _vertexPath, const std::string& _vertexSrc, bool verbose) {
     std::chrono::time_point<std::chrono::steady_clock> start_time, end_time;
     start_time = std::chrono::steady_clock::now();
 
-    m_vertexShader = compileShader(_vertexSrc, GL_VERTEX_SHADER);
+    m_vertexShader = compileShader(_vertexPath, _vertexSrc, GL_VERTEX_SHADER);
 
     if(!m_vertexShader) {
         return false;
     }
 
-    m_fragmentShader = compileShader(_fragmentSrc, GL_FRAGMENT_SHADER);
+    m_fragmentShader = compileShader(_fragmentPath, _fragmentSrc, GL_FRAGMENT_SHADER);
 
     if(!m_fragmentShader) {
         return false;
@@ -136,28 +136,30 @@ bool Shader::isInUse() const {
     return (getProgram() == (GLuint)currentProgram);
 }
 
-GLuint Shader::compileShader(const std::string& _src, GLenum _type) {
+GLuint Shader::compileShader(const std::string* _path, const std::string& _src, GLenum _type) {
     std::string prolog;
     const char* epilog = "";
 
-    prolog += "#define __GLSLVIEWER__ 1\n";
+    if (_path) {
+        prolog += "#define __GLSLVIEWER__ 1\n";
 
-    #ifdef PLATFORM_OSX
-    prolog += "#define PLATFORM_OSX\n";
-    #endif
+        #ifdef PLATFORM_OSX
+        prolog += "#define PLATFORM_OSX\n";
+        #endif
 
-    #ifdef PLATFORM_LINUX
-    prolog += "#define PLATFORM_LINUX\n";
-    #endif
+        #ifdef PLATFORM_LINUX
+        prolog += "#define PLATFORM_LINUX\n";
+        #endif
 
-    #ifdef PLATFORM_RPI
-    prolog += "#define PLATFORM_RPI\n";
-    #endif
+        #ifdef PLATFORM_RPI
+        prolog += "#define PLATFORM_RPI\n";
+        #endif
+    }
 
     // Test if this is a shadertoy.com image shader. If it is, we need to
     // define some uniforms with different names than the glslViewer standard,
     // and we need to add prolog and epilog code.
-    if (_type == GL_FRAGMENT_SHADER && find_id(_src, "mainImage")) {
+    if (_path && _type == GL_FRAGMENT_SHADER && find_id(_src, "mainImage")) {
         epilog =
             "\n"
             "void main(void) {\n"
@@ -196,7 +198,9 @@ GLuint Shader::compileShader(const std::string& _src, GLenum _type) {
         }
     }
 
-    prolog += "#line 1\n";
+    if (_path) {
+        prolog += "#line 1\n";
+    }
 
     const GLchar* sources[3] = {
         (const GLchar*) prolog.c_str(),
@@ -217,7 +221,9 @@ GLuint Shader::compileShader(const std::string& _src, GLenum _type) {
         std::vector<GLchar> infoLog(infoLength);
         glGetShaderInfoLog(shader, infoLength, NULL, &infoLog[0]);
         std::cerr << (isCompiled ? "Warnings" : "Errors");
-        std::cerr << " while compiling shader:\n" << &infoLog[0];
+        std::cerr << " while compiling ";
+        std::cerr << (_path ? *_path : "shader");
+        std::cerr << ":\n" << &infoLog[0];
     }
 
     if (isCompiled == GL_FALSE) {

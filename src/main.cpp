@@ -42,8 +42,10 @@ std::mutex uniformsMutex;
 Shader shader;
 int iFrag = -1;
 std::string fragSource = "";
+const std::string* fragPath = nullptr;
 int iVert = -1;
 std::string vertSource = "";
+const std::string* vertPath = nullptr;
 
 //  CAMERA
 Camera cam;
@@ -429,8 +431,9 @@ void setup() {
     //  Build shader;
     //
     if (iFrag != -1) {
+        fragPath = &files[iFrag].path;
         fragSource = "";
-        if(!loadFromPath(files[iFrag].path, &fragSource)) {
+        if(!loadFromPath(*fragPath, &fragSource)) {
             return;
         }
     }
@@ -439,14 +442,15 @@ void setup() {
     }
 
     if (iVert != -1) {
+        vertPath = &files[iVert].path;
         vertSource = "";
-        loadFromPath(files[iVert].path, &vertSource);
+        loadFromPath(*vertPath, &vertSource);
     }
     else {
         vertSource = vbo->getVertexLayout()->getDefaultVertShader();
     }    
 
-    shader.load(fragSource, vertSource, true);
+    shader.load(fragPath, fragSource, vertPath, vertSource, true);
     
     cam.setViewport(getWindowWidth(), getWindowHeight());
     cam.setPosition(glm::vec3(0.0,0.0,-3.));
@@ -475,7 +479,7 @@ void main() {\n\
     vec2 st = gl_FragCoord.xy/u_resolution.xy;\n\
     gl_FragColor = texture2D(u_buffer, st);\n\
 }";
-    buffer_shader.load(buffer_frag, buffer_vert, false);
+    buffer_shader.load(nullptr, buffer_frag, nullptr, buffer_vert, false);
 
     // Turn on Alpha blending
     glEnable(GL_BLEND);
@@ -567,14 +571,14 @@ void onFileChange(int index) {
         fragSource = "";
         if (loadFromPath(path, &fragSource)) {
             shader.detach(GL_FRAGMENT_SHADER | GL_VERTEX_SHADER);
-            shader.load(fragSource, vertSource, true);
+            shader.load(fragPath, fragSource, vertPath, vertSource, true);
         }
     }
     else if (type == "vertex") {
         vertSource = "";
         if (loadFromPath(path, &vertSource)) {
             shader.detach(GL_FRAGMENT_SHADER | GL_VERTEX_SHADER);
-            shader.load(fragSource,vertSource, true);
+            shader.load(fragPath, fragSource, vertPath, vertSource, true);
         }
     }
     else if (type == "geometry") {
