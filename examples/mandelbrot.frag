@@ -1,3 +1,7 @@
+#ifdef GL_ES
+precision mediump float;
+#endif
+
 // Demo of pan and zoom using left-mouse-button drag and scroll-wheel.
 
 uniform mat3 u_view2d;
