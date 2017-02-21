@@ -226,7 +226,7 @@ GLuint Shader::compileShader(const std::string* _path, const std::string& _src, 
         std::cerr << (isCompiled ? "Warnings" : "Errors");
         std::cerr << " while compiling ";
         std::cerr << (_path ? *_path : "shader");
-        std::cerr << ":\n" << &infoLog[0];
+        std::cerr << ":\n" << &infoLog[0] << std::endl;
     }
 
     if (isCompiled == GL_FALSE) {
