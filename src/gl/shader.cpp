@@ -104,18 +104,18 @@ bool Shader::load(const std::string* _fragmentPath, const std::string& _fragment
         glDeleteShader(m_fragmentShader);
 
         if (verbose) {
-            std::cerr << "shader load time: " << load_time.count() << "s";
+            std::cerr << "shader load time: " << load_time.count() << "s" << std::endl;
 #ifdef GL_PROGRAM_BINARY_LENGTH
             GLint proglen = 0;
             glGetProgramiv(m_program, GL_PROGRAM_BINARY_LENGTH, &proglen);
             if (proglen > 0)
-                std::cerr << " size: " << proglen;
+                std::cerr << " size: " << proglen << std::endl ;
 #endif
 #ifdef GL_PROGRAM_INSTRUCTIONS_ARB
             GLint icount = 0;
             glGetProgramivARB(m_program, GL_PROGRAM_INSTRUCTIONS_ARB, &icount);
             if (icount > 0)
-                std::cerr << " #instructions: " << icount;
+                std::cerr << " #instructions: " << icount << std::endl;
 #endif
         }
 
