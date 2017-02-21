@@ -203,12 +203,11 @@ void initGL (glm::ivec4 &_viewport, bool _headless) {
             exit(-1);
         }
 
-        devicePixelRatio = getPixelDensity();
-        setWindowSize(_viewport.z*devicePixelRatio, _viewport.w*devicePixelRatio);
+        setWindowSize(_viewport.z, _viewport.w);
 
         glfwMakeContextCurrent(window);
         glfwSetWindowSizeCallback(window, [](GLFWwindow* _window, int _w, int _h) {
-            setWindowSize(_w*devicePixelRatio,_h*devicePixelRatio);
+            setWindowSize(_w,_h);
         });
 
         glfwSetKeyCallback(window, [](GLFWwindow* _window, int _key, int _scancode, int _action, int _mods) {
@@ -298,7 +297,13 @@ void initGL (glm::ivec4 &_viewport, bool _headless) {
             if (mouse.velX != 0.0 || mouse.velY != 0.0) {
                 if (button != 0) onMouseDrag(mouse.x,mouse.y,mouse.button);
                 else onMouseMove(mouse.x,mouse.y);
-            }    
+            }
+        });
+
+        glfwSetWindowPosCallback(window, [](GLFWwindow* _window, int x, int y) {
+            if (devicePixelRatio != getPixelDensity()) {
+                setWindowSize(viewport.z, viewport.w);
+            }
         });
 
         glfwSwapInterval(1);
@@ -447,10 +452,11 @@ void closeGL(){
 void setWindowSize(int _width, int _height) {
     viewport.z = _width;
     viewport.w = _height;
-    glViewport(0.0, 0.0, (float)viewport.z, (float)viewport.w);
-    orthoMatrix = glm::ortho((float)viewport.x, (float)viewport.z, (float)viewport.y, (float)viewport.w);
+    devicePixelRatio = getPixelDensity();
+    glViewport(0.0, 0.0, (float)getWindowWidth(), (float)getWindowHeight());
+    orthoMatrix = glm::ortho((float)viewport.x, (float)getWindowWidth(), (float)viewport.y, (float)getWindowHeight());
 
-    onViewportResize(viewport.z, viewport.w);
+    onViewportResize(getWindowWidth(), getWindowHeight());
 }
 
 glm::ivec2 getScreenSize() {
@@ -485,7 +491,7 @@ float getPixelDensity() {
         int window_width, window_height, framebuffer_width, framebuffer_height;
         glfwGetWindowSize(window, &window_width, &window_height);
         glfwGetFramebufferSize(window, &framebuffer_width, &framebuffer_height);
-        return framebuffer_width/window_width;
+        return float(framebuffer_width)/float(window_width);
     #endif
 }
 
@@ -494,11 +500,11 @@ glm::ivec4 getViewport() {
 }
 
 int getWindowWidth() {
-    return viewport.z;
+    return viewport.z*devicePixelRatio;
 }
 
 int getWindowHeight() {
-    return viewport.w;
+    return viewport.w*devicePixelRatio;
 }
 
 glm::mat4 getOrthoMatrix() {
