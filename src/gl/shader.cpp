@@ -140,11 +140,11 @@ bool Shader::isInUse() const {
 }
 
 GLuint Shader::compileShader(const std::string* _path, const std::string& _src, GLenum _type) {
-    std::string prolog;
+    std::string prolog = "";
     const char* epilog = "";
 
     if (_path) {
-        prolog += "#define __GLSLVIEWER__ 1\n";
+        prolog += "#define GLSLVIEWER 1\n";
 
         #ifdef PLATFORM_OSX
         prolog += "#define PLATFORM_OSX\n";
