@@ -1,123 +1,67 @@
-///////////////////////////////////////////////////////////////////////////////////
-/// OpenGL Mathematics (glm.g-truc.net)
-///
-/// Copyright (c) 2005 - 2015 G-Truc Creation (www.g-truc.net)
-/// Permission is hereby granted, free of charge, to any person obtaining a copy
-/// of this software and associated documentation files (the "Software"), to deal
-/// in the Software without restriction, including without limitation the rights
-/// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-/// copies of the Software, and to permit persons to whom the Software is
-/// furnished to do so, subject to the following conditions:
-/// 
-/// The above copyright notice and this permission notice shall be included in
-/// all copies or substantial portions of the Software.
-/// 
-/// Restrictions:
-///		By making use of the Software for military purposes, you choose to make
-///		a Bunny unhappy.
-/// 
-/// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-/// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-/// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-/// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-/// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-/// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-/// THE SOFTWARE.
-///
 /// @ref gtx_dual_quaternion
 /// @file glm/gtx/dual_quaternion.inl
-/// @date 2013-02-10 / 2013-02-13
-/// @author Maksim Vorobiev (msomeone@gmail.com)
-///////////////////////////////////////////////////////////////////////////////////
 
 #include "../geometric.hpp"
 #include <limits>
 
 namespace glm
 {
-	//////////////////////////////////////
-	// Component accesses
-
-#	ifdef GLM_FORCE_SIZE_FUNC
-		template <typename T, precision P>
-		GLM_FUNC_QUALIFIER GLM_CONSTEXPR typename tdualquat<T, P>::size_type tdualquat<T, P>::size() const
-		{
-			return 2;
-		}
-
-		template <typename T, precision P>
-		GLM_FUNC_QUALIFIER typename tdualquat<T, P>::part_type & tdualquat<T, P>::operator[](typename tdualquat<T, P>::size_type i)
-		{
-			assert(i >= 0 && static_cast<detail::component_count_t>(i) < detail::component_count(*this));
-			return (&real)[i];
-		}
-
-		template <typename T, precision P>
-		GLM_FUNC_QUALIFIER typename tdualquat<T, P>::part_type const & tdualquat<T, P>::operator[](typename tdualquat<T, P>::size_type i) const
-		{
-			assert(i >= 0 && static_cast<detail::component_count_t>(i) < detail::component_count(*this));
-			return (&real)[i];
-		}
-#	else
-		template <typename T, precision P>
-		GLM_FUNC_QUALIFIER GLM_CONSTEXPR typename tdualquat<T, P>::length_type tdualquat<T, P>::length() const
-		{
-			return 2;
-		}
-
-		template <typename T, precision P>
-		GLM_FUNC_QUALIFIER typename tdualquat<T, P>::part_type & tdualquat<T, P>::operator[](typename tdualquat<T, P>::length_type i)
-		{
-			assert(i >= 0 && static_cast<detail::component_count_t>(i) < detail::component_count(*this));
-			return (&real)[i];
-		}
-
-		template <typename T, precision P>
-		GLM_FUNC_QUALIFIER typename tdualquat<T, P>::part_type const & tdualquat<T, P>::operator[](typename tdualquat<T, P>::length_type i) const
-		{
-			assert(i >= 0 && static_cast<detail::component_count_t>(i) < detail::component_count(*this));
-			return (&real)[i];
-		}
-#	endif//GLM_FORCE_SIZE_FUNC
-
-	//////////////////////////////////////
-	// Implicit basic constructors
+	// -- Component accesses --
 
 	template <typename T, precision P>
-	GLM_FUNC_QUALIFIER tdualquat<T, P>::tdualquat()
-#		ifndef GLM_FORCE_NO_CTOR_INIT 
-			: real(tquat<T, P>())
-			, dual(tquat<T, P>(0, 0, 0, 0))
-#		endif
-	{}
+	GLM_FUNC_QUALIFIER typename tdualquat<T, P>::part_type & tdualquat<T, P>::operator[](typename tdualquat<T, P>::length_type i)
+	{
+		assert(i >= 0 && i < this->length());
+		return (&real)[i];
+	}
 
 	template <typename T, precision P>
-	GLM_FUNC_QUALIFIER tdualquat<T, P>::tdualquat(tdualquat<T, P> const & d)
-		: real(d.real)
-		, dual(d.dual)
-	{}
+	GLM_FUNC_QUALIFIER typename tdualquat<T, P>::part_type const & tdualquat<T, P>::operator[](typename tdualquat<T, P>::length_type i) const
+	{
+		assert(i >= 0 && i < this->length());
+		return (&real)[i];
+	}
+
+	// -- Implicit basic constructors --
+
+#	if !GLM_HAS_DEFAULTED_FUNCTIONS || !defined(GLM_FORCE_NO_CTOR_INIT)
+		template <typename T, precision P>
+		GLM_FUNC_QUALIFIER GLM_CONSTEXPR tdualquat<T, P>::tdualquat()
+#			ifndef GLM_FORCE_NO_CTOR_INIT 
+				: real(tquat<T, P>())
+				, dual(tquat<T, P>(0, 0, 0, 0))
+#			endif
+		{}
+#	endif
+
+#	if !GLM_HAS_DEFAULTED_FUNCTIONS
+		template <typename T, precision P>
+		GLM_FUNC_QUALIFIER GLM_CONSTEXPR tdualquat<T, P>::tdualquat(tdualquat<T, P> const & d)
+			: real(d.real)
+			, dual(d.dual)
+		{}
+#	endif//!GLM_HAS_DEFAULTED_FUNCTIONS
 
 	template <typename T, precision P>
 	template <precision Q>
-	GLM_FUNC_QUALIFIER tdualquat<T, P>::tdualquat(tdualquat<T, Q> const & d)
+	GLM_FUNC_QUALIFIER GLM_CONSTEXPR tdualquat<T, P>::tdualquat(tdualquat<T, Q> const & d)
 		: real(d.real)
 		, dual(d.dual)
 	{}
 
-	//////////////////////////////////////
-	// Explicit basic constructors
+	// -- Explicit basic constructors --
 
 	template <typename T, precision P>
-	GLM_FUNC_QUALIFIER tdualquat<T, P>::tdualquat(ctor)
+	GLM_FUNC_QUALIFIER GLM_CONSTEXPR_CTOR tdualquat<T, P>::tdualquat(ctor)
 	{}
 
 	template <typename T, precision P>
-	GLM_FUNC_QUALIFIER tdualquat<T, P>::tdualquat(tquat<T, P> const & r)
+	GLM_FUNC_QUALIFIER GLM_CONSTEXPR tdualquat<T, P>::tdualquat(tquat<T, P> const & r)
 		: real(r), dual(tquat<T, P>(0, 0, 0, 0))
 	{}
 
 	template <typename T, precision P>
-	GLM_FUNC_QUALIFIER tdualquat<T, P>::tdualquat(tquat<T, P> const & q, tvec3<T, P> const& p)
+	GLM_FUNC_QUALIFIER GLM_CONSTEXPR tdualquat<T, P>::tdualquat(tquat<T, P> const & q, tvec3<T, P> const& p)
 		: real(q), dual(
 			T(-0.5) * ( p.x*q.x + p.y*q.y + p.z*q.z),
 			T(+0.5) * ( p.x*q.w + p.y*q.z - p.z*q.y),
@@ -126,16 +70,15 @@ namespace glm
 	{}
 
 	template <typename T, precision P>
-	GLM_FUNC_QUALIFIER tdualquat<T, P>::tdualquat(tquat<T, P> const & r, tquat<T, P> const & d)
+	GLM_FUNC_QUALIFIER GLM_CONSTEXPR tdualquat<T, P>::tdualquat(tquat<T, P> const & r, tquat<T, P> const & d)
 		: real(r), dual(d)
 	{}
 
-	//////////////////////////////////////////////////////////////
-	// tdualquat conversions
+	// -- Conversion constructors --
 
 	template <typename T, precision P>
 	template <typename U, precision Q>
-	GLM_FUNC_QUALIFIER tdualquat<T, P>::tdualquat(tdualquat<U, Q> const & q)
+	GLM_FUNC_QUALIFIER GLM_CONSTEXPR tdualquat<T, P>::tdualquat(tdualquat<U, Q> const & q)
 		: real(q.real)
 		, dual(q.dual)
 	{}
@@ -152,16 +95,17 @@ namespace glm
 		*this = dualquat_cast(m);
 	}
 
-	//////////////////////////////////////////////////////////////
-	// tdualquat operators
+	// -- Unary arithmetic operators --
 
-	template <typename T, precision P>
-	GLM_FUNC_QUALIFIER tdualquat<T, P> & tdualquat<T, P>::operator=(tdualquat<T, P> const & q)
-	{
-		this->real = q.real;
-		this->dual = q.dual;
-		return *this;
-	}
+#	if !GLM_HAS_DEFAULTED_FUNCTIONS
+		template <typename T, precision P>
+		GLM_FUNC_QUALIFIER tdualquat<T, P> & tdualquat<T, P>::operator=(tdualquat<T, P> const & q)
+		{
+			this->real = q.real;
+			this->dual = q.dual;
+			return *this;
+		}
+#	endif//!GLM_HAS_DEFAULTED_FUNCTIONS
 
 	template <typename T, precision P>
 	template <typename U>
@@ -190,14 +134,21 @@ namespace glm
 		return *this;
 	}
 
-	//////////////////////////////////////////////////////////////
-	// tquat<valType> external operators
+	// -- Unary bit operators --
+
+	template <typename T, precision P>
+	GLM_FUNC_QUALIFIER tdualquat<T, P> operator+(tdualquat<T, P> const & q)
+	{
+		return q;
+	}
 
 	template <typename T, precision P>
 	GLM_FUNC_QUALIFIER tdualquat<T, P> operator-(tdualquat<T, P> const & q)
 	{
-		return tdualquat<T, P>(-q.real,-q.dual);
+		return tdualquat<T, P>(-q.real, -q.dual);
 	}
+
+	// -- Binary operators --
 
 	template <typename T, precision P>
 	GLM_FUNC_QUALIFIER tdualquat<T, P> operator+(tdualquat<T, P> const & q, tdualquat<T, P> const & p)
@@ -211,7 +162,6 @@ namespace glm
 		return tdualquat<T, P>(p.real * o.real,p.real * o.dual + p.dual * o.real);
 	}
 
-	// Transformation
 	template <typename T, precision P>
 	GLM_FUNC_QUALIFIER tvec3<T, P> operator*(tdualquat<T, P> const & q, tvec3<T, P> const & v)
 	{
@@ -256,8 +206,8 @@ namespace glm
 		return tdualquat<T, P>(q.real / s, q.dual / s);
 	}
 
-	//////////////////////////////////////
-	// Boolean operators
+	// -- Boolean operators --
+
 	template <typename T, precision P>
 	GLM_FUNC_QUALIFIER bool operator==(tdualquat<T, P> const & q1, tdualquat<T, P> const & q2)
 	{
@@ -270,7 +220,8 @@ namespace glm
 		return (q1.real != q2.dual) || (q1.real != q2.dual);
 	}
 
-	////////////////////////////////////////////////////////
+	// -- Operations --
+
 	template <typename T, precision P>
 	GLM_FUNC_QUALIFIER tdualquat<T, P> normalize(tdualquat<T, P> const & q)
 	{

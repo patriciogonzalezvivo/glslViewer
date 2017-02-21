@@ -1,42 +1,106 @@
-///////////////////////////////////////////////////////////////////////////////////
-/// OpenGL Mathematics (glm.g-truc.net)
-///
-/// Copyright (c) 2005 - 2015 G-Truc Creation (www.g-truc.net)
-/// Permission is hereby granted, free of charge, to any person obtaining a copy
-/// of this software and associated documentation files (the "Software"), to deal
-/// in the Software without restriction, including without limitation the rights
-/// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-/// copies of the Software, and to permit persons to whom the Software is
-/// furnished to do so, subject to the following conditions:
-/// 
-/// The above copyright notice and this permission notice shall be included in
-/// all copies or substantial portions of the Software.
-/// 
-/// Restrictions:
-///		By making use of the Software for military purposes, you choose to make
-///		a Bunny unhappy.
-/// 
-/// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-/// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-/// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-/// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-/// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-/// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-/// THE SOFTWARE.
-///
 /// @ref core
 /// @file glm/detail/type_vec.hpp
-/// @date 2010-01-26 / 2014-10-05
-/// @author Christophe Riccio
-///////////////////////////////////////////////////////////////////////////////////
 
 #pragma once
 
 #include "precision.hpp"
 #include "type_int.hpp"
 
-namespace glm
+namespace glm{
+namespace detail
 {
+	template <typename T, std::size_t size, bool aligned>
+	struct storage
+	{
+		typedef struct type {
+			uint8 data[size];
+		} type;
+	};
+
+	#define GLM_ALIGNED_STORAGE_TYPE_STRUCT(x) \
+		template <typename T> \
+		struct storage<T, x, true> { \
+			GLM_ALIGNED_STRUCT(x) type { \
+				uint8 data[x]; \
+			}; \
+		};
+
+	GLM_ALIGNED_STORAGE_TYPE_STRUCT(1)
+	GLM_ALIGNED_STORAGE_TYPE_STRUCT(2)
+	GLM_ALIGNED_STORAGE_TYPE_STRUCT(4)
+	GLM_ALIGNED_STORAGE_TYPE_STRUCT(8)
+	GLM_ALIGNED_STORAGE_TYPE_STRUCT(16)
+	GLM_ALIGNED_STORAGE_TYPE_STRUCT(32)
+	GLM_ALIGNED_STORAGE_TYPE_STRUCT(64)
+		
+#	if GLM_ARCH & GLM_ARCH_SSE2_BIT
+		template <>
+		struct storage<float, 16, true>
+		{
+			typedef glm_vec4 type;
+		};
+
+		template <>
+		struct storage<int, 16, true>
+		{
+			typedef glm_ivec4 type;
+		};
+
+		template <>
+		struct storage<unsigned int, 16, true>
+		{
+			typedef glm_uvec4 type;
+		};
+/*
+#	else
+		typedef union __declspec(align(16)) glm_128
+		{
+			unsigned __int8 data[16];
+		} glm_128;
+
+		template <>
+		struct storage<float, 16, true>
+		{
+			typedef glm_128 type;
+		};
+
+		template <>
+		struct storage<int, 16, true>
+		{
+			typedef glm_128 type;
+		};
+
+		template <>
+		struct storage<unsigned int, 16, true>
+		{
+			typedef glm_128 type;
+		};
+*/
+#	endif
+
+#	if (GLM_ARCH & GLM_ARCH_AVX_BIT)
+		template <>
+		struct storage<double, 32, true>
+		{
+			typedef glm_dvec4 type;
+		};
+#	endif
+
+#	if (GLM_ARCH & GLM_ARCH_AVX2_BIT)
+		template <>
+		struct storage<int64, 32, true>
+		{
+			typedef glm_i64vec4 type;
+		};
+
+		template <>
+		struct storage<uint64, 32, true>
+		{
+			typedef glm_u64vec4 type;
+		};
+#	endif
+}//namespace detail
+
 	template <typename T, precision P> struct tvec1;
 	template <typename T, precision P> struct tvec2;
 	template <typename T, precision P> struct tvec3;
@@ -167,7 +231,6 @@ namespace glm
 	typedef tvec2<bool, lowp>		lowp_bvec2;
 
 	/// @}
-
 
 	/// @addtogroup core_precision
 	/// @{
@@ -374,8 +437,7 @@ namespace glm
 	/// @addtogroup core_types
 	/// @{
 
-	//////////////////////////
-	// Default float definition
+	// -- Default float definition --
 
 #if(defined(GLM_PRECISION_LOWP_FLOAT))
 	typedef lowp_vec2			vec2;
@@ -402,8 +464,7 @@ namespace glm
 	typedef highp_vec4			vec4;
 #endif//GLM_PRECISION
 
-	//////////////////////////
-	// Default double definition
+	// -- Default double definition --
 
 #if(defined(GLM_PRECISION_LOWP_DOUBLE))
 	typedef lowp_dvec2			dvec2;
@@ -418,21 +479,20 @@ namespace glm
 	///
 	/// @see <a href="http://www.opengl.org/registry/doc/GLSLangSpec.4.20.8.pdf">GLSL 4.20.8 specification, section 4.1.5 Vectors</a>
 	typedef highp_dvec2			dvec2;
-	
+
 	//! 3 components vector of double-precision floating-point numbers.
 	///
 	/// @see <a href="http://www.opengl.org/registry/doc/GLSLangSpec.4.20.8.pdf">GLSL 4.20.8 specification, section 4.1.5 Vectors</a>
 	typedef highp_dvec3			dvec3;
-	
+
 	//! 4 components vector of double-precision floating-point numbers.
 	///
 	/// @see <a href="http://www.opengl.org/registry/doc/GLSLangSpec.4.20.8.pdf">GLSL 4.20.8 specification, section 4.1.5 Vectors</a>
 	typedef highp_dvec4			dvec4;
 #endif//GLM_PRECISION
-	
-	//////////////////////////
-	// Signed integer definition
-	
+
+	// -- Signed integer definition --
+
 #if(defined(GLM_PRECISION_LOWP_INT))
 	typedef lowp_ivec2			ivec2;
 	typedef lowp_ivec3			ivec3;
@@ -442,25 +502,24 @@ namespace glm
 	typedef mediump_ivec3		ivec3;
 	typedef mediump_ivec4		ivec4;
 #else //defined(GLM_PRECISION_HIGHP_INT)
-	//! 2 components vector of signed integer numbers.
+	/// 2 components vector of signed integer numbers.
 	///
 	/// @see <a href="http://www.opengl.org/registry/doc/GLSLangSpec.4.20.8.pdf">GLSL 4.20.8 specification, section 4.1.5 Vectors</a>
 	typedef highp_ivec2			ivec2;
-	
-	//! 3 components vector of signed integer numbers.
+
+	/// 3 components vector of signed integer numbers.
 	///
 	/// @see <a href="http://www.opengl.org/registry/doc/GLSLangSpec.4.20.8.pdf">GLSL 4.20.8 specification, section 4.1.5 Vectors</a>
 	typedef highp_ivec3			ivec3;
-	
-	//! 4 components vector of signed integer numbers.
+
+	/// 4 components vector of signed integer numbers.
 	///
 	/// @see <a href="http://www.opengl.org/registry/doc/GLSLangSpec.4.20.8.pdf">GLSL 4.20.8 specification, section 4.1.5 Vectors</a>
 	typedef highp_ivec4			ivec4;
 #endif//GLM_PRECISION
-	
-	//////////////////////////
-	// Unsigned integer definition
-	
+
+	// -- Unsigned integer definition --
+
 #if(defined(GLM_PRECISION_LOWP_UINT))
 	typedef lowp_uvec2			uvec2;
 	typedef lowp_uvec3			uvec3;
@@ -474,20 +533,19 @@ namespace glm
 	///
 	/// @see <a href="http://www.opengl.org/registry/doc/GLSLangSpec.4.20.8.pdf">GLSL 4.20.8 specification, section 4.1.5 Vectors</a>
 	typedef highp_uvec2			uvec2;
-	
+
 	/// 3 components vector of unsigned integer numbers.
 	///
 	/// @see <a href="http://www.opengl.org/registry/doc/GLSLangSpec.4.20.8.pdf">GLSL 4.20.8 specification, section 4.1.5 Vectors</a>
 	typedef highp_uvec3			uvec3;
-	
+
 	/// 4 components vector of unsigned integer numbers.
 	///
 	/// @see <a href="http://www.opengl.org/registry/doc/GLSLangSpec.4.20.8.pdf">GLSL 4.20.8 specification, section 4.1.5 Vectors</a>
 	typedef highp_uvec4			uvec4;
 #endif//GLM_PRECISION
-	
-	//////////////////////////
-	// Boolean definition
+
+	// -- Boolean definition --
 
 #if(defined(GLM_PRECISION_LOWP_BOOL))
 	typedef lowp_bvec2			bvec2;
@@ -498,21 +556,21 @@ namespace glm
 	typedef mediump_bvec3		bvec3;
 	typedef mediump_bvec4		bvec4;
 #else //defined(GLM_PRECISION_HIGHP_BOOL)
-	//! 2 components vector of boolean.
+	/// 2 components vector of boolean.
 	///
 	/// @see <a href="http://www.opengl.org/registry/doc/GLSLangSpec.4.20.8.pdf">GLSL 4.20.8 specification, section 4.1.5 Vectors</a>
 	typedef highp_bvec2			bvec2;
-	
-	//! 3 components vector of boolean.
+
+	/// 3 components vector of boolean.
 	///
 	/// @see <a href="http://www.opengl.org/registry/doc/GLSLangSpec.4.20.8.pdf">GLSL 4.20.8 specification, section 4.1.5 Vectors</a>
 	typedef highp_bvec3			bvec3;
-	
-	//! 4 components vector of boolean.
+
+	/// 4 components vector of boolean.
 	///
 	/// @see <a href="http://www.opengl.org/registry/doc/GLSLangSpec.4.20.8.pdf">GLSL 4.20.8 specification, section 4.1.5 Vectors</a>
 	typedef highp_bvec4			bvec4;
 #endif//GLM_PRECISION
-	
+
 	/// @}
 }//namespace glm

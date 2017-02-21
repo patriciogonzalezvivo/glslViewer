@@ -1,38 +1,19 @@
-///////////////////////////////////////////////////////////////////////////////////
-/// OpenGL Mathematics (glm.g-truc.net)
-///
-/// Copyright (c) 2005 - 2015 G-Truc Creation (www.g-truc.net)
-/// Permission is hereby granted, free of charge, to any person obtaining a copy
-/// of this software and associated documentation files (the "Software"), to deal
-/// in the Software without restriction, including without limitation the rights
-/// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-/// copies of the Software, and to permit persons to whom the Software is
-/// furnished to do so, subject to the following conditions:
-/// 
-/// The above copyright notice and this permission notice shall be included in
-/// all copies or substantial portions of the Software.
-/// 
-/// Restrictions:
-///		By making use of the Software for military purposes, you choose to make
-///		a Bunny unhappy.
-/// 
-/// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-/// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-/// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-/// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-/// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-/// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-/// THE SOFTWARE.
-///
 /// @ref gtx_fast_trigonometry
 /// @file glm/gtx/fast_trigonometry.inl
-/// @date 2006-01-08 / 2014-11-25
-/// @author Christophe Riccio
-///////////////////////////////////////////////////////////////////////////////////////////////////
 
 namespace glm{
 namespace detail
 {
+	template <typename T, precision P, template <typename, precision> class vecType>
+	GLM_FUNC_QUALIFIER vecType<T, P> taylorCos(vecType<T, P> const & x)
+	{
+		return static_cast<T>(1)
+			- (x * x) / 2.f
+			+ (x * x * x * x) / 24.f
+			- (x * x * x * x * x * x) / 720.f
+			+ (x * x * x * x * x * x * x * x) / 40320.f;
+	}
+
 	template <typename T>
 	GLM_FUNC_QUALIFIER T cos_52s(T x)
 	{
@@ -66,11 +47,11 @@ namespace detail
 	{
 		T const angle(wrapAngle<T>(x));
 
-		if(angle<half_pi<T>())
+		if(angle < half_pi<T>())
 			return detail::cos_52s(angle);
-		if(angle<pi<T>())
+		if(angle < pi<T>())
 			return -detail::cos_52s(pi<T>() - angle);
-		if(angle<(T(3) * half_pi<T>()))
+		if(angle < (T(3) * half_pi<T>()))
 			return -detail::cos_52s(angle - pi<T>());
 
 		return detail::cos_52s(two_pi<T>() - angle);

@@ -1,34 +1,5 @@
-///////////////////////////////////////////////////////////////////////////////////
-/// OpenGL Mathematics (glm.g-truc.net)
-///
-/// Copyright (c) 2005 - 2015 G-Truc Creation (www.g-truc.net)
-/// Permission is hereby granted, free of charge, to any person obtaining a copy
-/// of this software and associated documentation files (the "Software"), to deal
-/// in the Software without restriction, including without limitation the rights
-/// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-/// copies of the Software, and to permit persons to whom the Software is
-/// furnished to do so, subject to the following conditions:
-/// 
-/// The above copyright notice and this permission notice shall be included in
-/// all copies or substantial portions of the Software.
-/// 
-/// Restrictions:
-///		By making use of the Software for military purposes, you choose to make
-///		a Bunny unhappy.
-/// 
-/// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-/// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-/// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-/// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-/// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-/// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-/// THE SOFTWARE.
-///
 /// @ref gtx_string_cast
 /// @file glm/gtx/string_cast.inl
-/// @date 2008-04-26 / 2014-05-10
-/// @author Christophe Riccio
-///////////////////////////////////////////////////////////////////////////////////
 
 #include <cstdarg>
 #include <cstdio>
@@ -444,10 +415,42 @@ namespace detail
 				x[3][0], x[3][1], x[3][2], x[3][3]);
 		}
 	};
+
+
+	template <typename T, precision P>
+	struct compute_to_string<tquat, T, P>
+	{
+		GLM_FUNC_QUALIFIER static std::string call(tquat<T, P> const & x)
+		{
+			char const * PrefixStr = prefix<T>::value();
+			char const * LiteralStr = literal<T, std::numeric_limits<T>::is_iec559>::value();
+			std::string FormatStr(detail::format("%squat(%s, %s, %s, %s)",
+				PrefixStr,
+				LiteralStr, LiteralStr, LiteralStr, LiteralStr));
+
+			return detail::format(FormatStr.c_str(), x[0], x[1], x[2], x[3]);
+		}
+	};
+
+	template <typename T, precision P>
+	struct compute_to_string<tdualquat, T, P>
+	{
+		GLM_FUNC_QUALIFIER static std::string call(tdualquat<T, P> const & x)
+		{
+			char const * PrefixStr = prefix<T>::value();
+			char const * LiteralStr = literal<T, std::numeric_limits<T>::is_iec559>::value();
+			std::string FormatStr(detail::format("%sdualquat((%s, %s, %s, %s), (%s, %s, %s, %s))",
+				PrefixStr,
+				LiteralStr, LiteralStr, LiteralStr, LiteralStr));
+
+			return detail::format(FormatStr.c_str(), x.real[0], x.real[1], x.real[2], x.real[3], x.dual[0], x.dual[1], x.dual[2], x.dual[3]);
+		}
+	};
+
 }//namespace detail
 
 template <template <typename, precision> class matType, typename T, precision P>
-GLM_FUNC_DECL std::string to_string(matType<T, P> const & x)
+GLM_FUNC_QUALIFIER std::string to_string(matType<T, P> const & x)
 {
 	return detail::compute_to_string<matType, T, P>::call(x);
 }
