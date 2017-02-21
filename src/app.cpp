@@ -23,6 +23,7 @@ static glm::ivec4 viewport;
 static double fTime = 0.0f;
 static double fDelta = 0.0f;
 static double fFPS = 0.0f;
+static float fPixelDensity = 1.0;
 
 #ifdef PLATFORM_RPI
 #include <assert.h>
@@ -65,7 +66,6 @@ double getTimeSec() {
 // OSX/Linux globals
 //----------------------------------------------------
 static GLFWwindow* window;
-static float devicePixelRatio = 1.0;
 #endif
 
 void initGL (glm::ivec4 &_viewport, bool _headless) {
@@ -237,15 +237,15 @@ void initGL (glm::ivec4 &_viewport, bool _headless) {
         });
 
         glfwSetScrollCallback(window, [](GLFWwindow* _window, double xoffset, double yoffset) {
-            onScroll(-yoffset * devicePixelRatio);
+            onScroll(-yoffset * fPixelDensity);
         });
 
         // callback when the mouse cursor moves
         glfwSetCursorPosCallback(window, [](GLFWwindow* _window, double x, double y) {
             // Convert x,y to pixel coordinates relative to viewport.
             // (0,0) is lower left corner.
-            x *= devicePixelRatio;
-            y *= devicePixelRatio;
+            x *= fPixelDensity;
+            y *= fPixelDensity;
             y = viewport.w - y;
 
             // mouse.velX,mouse.velY is the distance the mouse cursor has moved
@@ -301,7 +301,7 @@ void initGL (glm::ivec4 &_viewport, bool _headless) {
         });
 
         glfwSetWindowPosCallback(window, [](GLFWwindow* _window, int x, int y) {
-            if (devicePixelRatio != getPixelDensity()) {
+            if (fPixelDensity != getPixelDensity()) {
                 setWindowSize(viewport.z, viewport.w);
             }
         });
@@ -452,7 +452,7 @@ void closeGL(){
 void setWindowSize(int _width, int _height) {
     viewport.z = _width;
     viewport.w = _height;
-    devicePixelRatio = getPixelDensity();
+    fPixelDensity = getPixelDensity();
     glViewport(0.0, 0.0, (float)getWindowWidth(), (float)getWindowHeight());
     orthoMatrix = glm::ortho((float)viewport.x, (float)getWindowWidth(), (float)viewport.y, (float)getWindowHeight());
 
@@ -500,11 +500,11 @@ glm::ivec4 getViewport() {
 }
 
 int getWindowWidth() {
-    return viewport.z*devicePixelRatio;
+    return viewport.z*fPixelDensity;
 }
 
 int getWindowHeight() {
-    return viewport.w*devicePixelRatio;
+    return viewport.w*fPixelDensity;
 }
 
 glm::mat4 getOrthoMatrix() {
