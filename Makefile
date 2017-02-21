@@ -21,7 +21,7 @@ INCLUDES +=	-Isrc/ -Iinclude/
 CFLAGS += -Wall -O3 -std=c++11 -fpermissive
 
 ifeq ($(PLATFORM),Raspbian GNU/Linux)
-#CFLAGS += -DGLM_FORCE_CXX98 -DPLATFORM_RPI
+CFLAGS += -DGLM_FORCE_CXX98 -DPLATFORM_RPI
 INCLUDES += -I$(SDKSTAGE)/opt/vc/include/ \
 			-I$(SDKSTAGE)/opt/vc/include/interface/vcos/pthreads \
 			-I$(SDKSTAGE)/opt/vc/include/interface/vmcs_host/linux
