@@ -186,6 +186,9 @@ void initGL (glm::ivec4 &_viewport, bool _headless) {
     #else
         // OSX/LINUX use GLFW
         // ---------------------------------------------
+        glfwSetErrorCallback([](int err, const char* msg)->void {
+            std::cerr << "GLFW error 0x"<<std::hex<<err<<std::dec<<": "<<msg<<"\n";
+        });
         if(!glfwInit()) {
             std::cerr << "ABORT: GLFW init failed" << std::endl;
             exit(-1);
