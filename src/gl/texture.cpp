@@ -1,3 +1,4 @@
+#include <iostream>
 #include "texture.h"
 
 #define STB_IMAGE_IMPLEMENTATION
@@ -84,7 +85,9 @@ bool Texture::savePixels(const std::string& _path, unsigned char* _pixels, int _
         }
      }
     }
-    stbi_write_png(_path.c_str(), _width, _height, 4, result, _width * 4);
+    if (0 == stbi_write_png(_path.c_str(), _width, _height, 4, result, _width * 4)) {
+        std::cout << "can't create file " << _path << std::endl;
+    }
     delete [] result;
     
     return true;
