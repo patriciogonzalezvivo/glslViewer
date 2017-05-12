@@ -671,8 +671,10 @@ void onMouseDrag(float _x, float _y, int _button) {
         // Left-button drag is used to rotate eye3d around centre3d.
         // One complete drag across the screen width equals 360 degrees.
         constexpr double tau = 6.283185307179586;
-        float xangle = (getMouseVelX() / getWindowWidth()) * tau;
+        u_eye3d -= u_centre3d;
+        u_up3d -= u_centre3d;
         // Rotate about vertical axis, defined by the 'up' vector.
+        float xangle = (getMouseVelX() / getWindowWidth()) * tau;
         u_eye3d = glm::rotate(u_eye3d, -xangle, u_up3d);
         // Rotate about horizontal axis, which is perpendicular to
         // the (centre3d,eye3d,up3d) plane.
@@ -680,6 +682,9 @@ void onMouseDrag(float _x, float _y, int _button) {
         glm::vec3 haxis = glm::cross(u_eye3d-u_centre3d, u_up3d);
         u_eye3d = glm::rotate(u_eye3d, -yangle, haxis);
         u_up3d = glm::rotate(u_up3d, -yangle, haxis);
+        //
+        u_eye3d += u_centre3d;
+        u_up3d += u_centre3d;
     } else {
         // Right-button drag is used to zoom geometry.
         float dist = glm::length(cam.getPosition());
