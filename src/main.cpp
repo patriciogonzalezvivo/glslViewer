@@ -17,6 +17,7 @@
 #include "3d/camera.h"
 #include "types/shapes.h"
 #include "glm/gtx/matrix_transform_2d.hpp"
+#include "glm/gtx/rotate_vector.hpp"
 
 #include "ui/cursor.h"
 
@@ -52,6 +53,12 @@ Camera cam;
 float lat = 180.0;
 float lon = 0.0;
 glm::mat3 u_view2d = glm::mat3(1.);
+// These are the 'view3d' uniforms.
+// Note: the up3d vector must be orthogonal to (eye3d - centre3d),
+// or rotation doesn't work correctly.
+glm::vec3 u_centre3d = glm::vec3(0.,0.,0.);
+glm::vec3 u_eye3d = glm::vec3(0.0,0.0,6.0);
+glm::vec3 u_up3d = glm::vec3(0.0,1.0,0.0);
 
 //  ASSETS
 Vbo* vbo;
@@ -396,6 +403,17 @@ void cinWatcherThread() {
             glm::vec2 pos = getMousePosition();
             std::cout << pos.x << "," << pos.y << std::endl;
         }
+        else if (line == "view3d") {
+            std::cout
+                << "eye=("
+                    << u_eye3d.x << "," << u_eye3d.y << "," << u_eye3d.z << ") "
+                << "centre=("
+                    << u_centre3d.x << "," << u_centre3d.y << ","
+                    << u_centre3d.z << ") "
+                << "up=("
+                    << u_up3d.x << "," << u_up3d.y << "," << u_up3d.z << ")"
+                << std::endl;
+        }
         else {
             uniformsMutex.lock();
             parseUniforms(line, &uniforms);
@@ -518,6 +536,11 @@ void draw() {
     if (shader.needView2d()) {
         shader.setUniform("u_view2d", u_view2d);
     }
+    if (shader.needView3d()) {
+        shader.setUniform("u_eye3d", u_eye3d);
+        shader.setUniform("u_centre3d", u_centre3d);
+        shader.setUniform("u_up3d", u_up3d);
+    }
     
     for (UniformList::iterator it=uniforms.begin(); it!=uniforms.end(); ++it) {
         shader.setUniform(it->first, it->second.value, it->second.size);
@@ -614,35 +637,71 @@ void onMouseClick(float _x, float _y, int _button) {
 }
 
 void onScroll(float _yoffset) {
-    // Vertical scroll button zooms u_view2d.
+    // Vertical scroll button zooms u_view2d and view3d.
     /* zoomfactor 2^(1/4): 4 scroll wheel clicks to double in size. */
     constexpr float zoomfactor = 1.1892;
     if (_yoffset != 0) {
-        glm::vec2 zoom = glm::vec2(
-            _yoffset > 0 ? _yoffset * zoomfactor : 1/(-_yoffset * zoomfactor));
+        float z =
+            (_yoffset > 0 ? _yoffset * zoomfactor : 1/(-_yoffset * zoomfactor));
+
+        // zoom view2d
+        glm::vec2 zoom = glm::vec2(z,z);
         glm::vec2 origin = {getWindowWidth()/2, getWindowHeight()/2};
         u_view2d = glm::translate(u_view2d, origin);
         u_view2d = glm::scale(u_view2d, zoom);
         u_view2d = glm::translate(u_view2d, -origin);
+
+        // zoom view3d
+        u_eye3d = u_centre3d + (u_eye3d - u_centre3d)*z;
     }
 }
 
 void onMouseDrag(float _x, float _y, int _button) {
     if (_button == 1){
+        // Left-button drag is used to rotate geometry.
         float dist = glm::length(cam.getPosition());
         lat -= getMouseVelX();
         lon -= getMouseVelY()*0.5;
         cam.orbit(lat,lon,dist);
         cam.lookAt(glm::vec3(0.0));
+
         // Left-button drag is used to pan u_view2d.
         u_view2d = glm::translate(u_view2d, -getMouseVelocity());
+
+        // Left-button drag is used to rotate eye3d around centre3d.
+        // One complete drag across the screen width equals 360 degrees.
+        constexpr double tau = 6.283185307179586;
+        float xangle = (getMouseVelX() / getWindowWidth()) * tau;
+        // Rotate about vertical axis, defined by the 'up' vector.
+        u_eye3d = glm::rotate(u_eye3d, -xangle, u_up3d);
+        // Rotate about horizontal axis, which is perpendicular to
+        // the (centre3d,eye3d,up3d) plane.
+        float yangle = (getMouseVelY() / getWindowHeight()) * tau;
+        glm::vec3 haxis = glm::cross(u_eye3d-u_centre3d, u_up3d);
+        u_eye3d = glm::rotate(u_eye3d, -yangle, haxis);
+        u_up3d = glm::rotate(u_up3d, -yangle, haxis);
     } else {
+        // Right-button drag is used to zoom geometry.
         float dist = glm::length(cam.getPosition());
         dist += (-.008f * getMouseVelY());
         if(dist > 0.0f){
             cam.setPosition( -dist * cam.getZAxis() );
             cam.lookAt(glm::vec3(0.0));
         }
+
+        // TODO: rotate view2d.
+
+        // pan view3d.
+        float dist3d = glm::length(u_eye3d - u_centre3d);
+        glm::vec3 voff = glm::normalize(u_up3d)
+            * (getMouseVelY()/getWindowHeight()) * dist3d;
+        u_centre3d -= voff;
+        u_eye3d -= voff;
+        glm::vec3 haxis = glm::cross(u_eye3d-u_centre3d, u_up3d);
+        glm::vec3 hoff = glm::normalize(haxis)
+            * (getMouseVelX()/getWindowWidth()) * dist3d;
+        u_centre3d += hoff;
+        u_eye3d += hoff;
     }
 }
 
