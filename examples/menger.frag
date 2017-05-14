@@ -1,3 +1,5 @@
+// Use mouse scroll wheel to zoom, left button to rotate, right button to pan.
+
 uniform vec3 u_eye3d;
 uniform vec3 u_centre3d;
 uniform vec3 u_up3d;
