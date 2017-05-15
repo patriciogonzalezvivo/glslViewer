@@ -645,8 +645,7 @@ void onScroll(float _yoffset) {
     /* zoomfactor 2^(1/4): 4 scroll wheel clicks to double in size. */
     constexpr float zoomfactor = 1.1892;
     if (_yoffset != 0) {
-        float z =
-            (_yoffset > 0 ? _yoffset * zoomfactor : 1/(-_yoffset * zoomfactor));
+        float z = pow(zoomfactor, _yoffset);
 
         // zoom view2d
         glm::vec2 zoom = glm::vec2(z,z);
