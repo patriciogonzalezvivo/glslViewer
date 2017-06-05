@@ -136,7 +136,7 @@ int main(int argc, char **argv){
     
     Cursor cursor;  // Cursor
     struct stat st; // for files to watch
-    float timeLimit = 0.0f; //  Time limit
+    float timeLimit = -1.0f; //  Time limit
     int textureCounter = 0; // Number of textures to load
 
     //Load the the resources (textures)
@@ -303,7 +303,7 @@ int main(int argc, char **argv){
         // Swap the buffers
         renderGL();
 
-        if (timeLimit > 0.0 && getTime() > timeLimit) {
+        if (timeLimit >= 0.0 && getTime() >= timeLimit) {
             bRun.store(false);
         }
     }
