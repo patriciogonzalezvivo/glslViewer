@@ -19,7 +19,7 @@ sudo apt-get install libglfw3-dev git-core
 
 Download the glslViewer code, compile and install:
 ```bash
-git clone http://github.com/patriciogonzalezvivo/glslViewer
+git clone https://github.com/doug-moen/glslViewer.git
 cd glslViewer
 make
 sudo make install
