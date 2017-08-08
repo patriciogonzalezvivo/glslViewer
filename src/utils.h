@@ -330,7 +330,7 @@ inline std::istream& operator>>(std::istream& is, glm::vec3& vec) {
 
 //----------------------------------------  String I/O
 std::string getAbsPath (const std::string& str);
-std::string urlResolve(const std::string& path, const std::vector<std::string> include_folders);
+std::string urlResolve(const std::string& path, const std::string& pwd, const std::vector<std::string> include_folders);
 
 static inline bool loadFromPath(const std::string& path, std::string* into, const std::vector<std::string> include_folders) {
     std::ifstream file;
@@ -347,14 +347,13 @@ static inline bool loadFromPath(const std::string& path, std::string* into, cons
     		unsigned end = buffer.find_last_of("\"");
     		if (begin != end) {
     			std::string file_name = buffer.substr(begin+1,end-begin-1);
-                file_name = urlResolve(file_name, include_folders);
-                file_name = original_path+'/'+file_name;
+                file_name = urlResolve(file_name, original_path, include_folders);
     			std::string newBuffer;
     			if(loadFromPath(file_name, &newBuffer, include_folders)){
     				(*into) += "\n" + newBuffer + "\n";
     			}
                 else {
-    				std::cout << file_name << " not found" << std::endl;
+    				std::cout << file_name << " not found at " << original_path << std::endl;
     			}
     		}
     	} else {

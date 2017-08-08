@@ -270,14 +270,16 @@ std::string getAbsPath (const std::string& str) {
         return "";
     }
 }
+
 bool urlExists(const std::string& name) {
   struct stat buffer;   
   return (stat (name.c_str(), &buffer) == 0); 
 }
 
-std::string urlResolve(const std::string& path, const std::vector<std::string> include_folders) {
-    if (urlExists(path)) {
-        return path;
+std::string urlResolve(const std::string& path, const std::string& pwd, const std::vector<std::string> include_folders) {
+    std::string url = pwd+'/'+path;
+    if (urlExists(url)) {
+        return url;
     }
     else {
         for (int i = 0; i < include_folders.size(); i++) {
