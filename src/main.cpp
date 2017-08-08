@@ -267,7 +267,8 @@ int main(int argc, char **argv){
             }
         }
         else if (argument.find("-D") == 0) {
-            defines.push_back(argument.substr(2));
+            std::string define = argument.substr(2);
+            defines.push_back(define);
         }
         else if (argument.find("-") == 0) {
             std::string parameterPair = argument.substr(argument.find_last_of('-')+1);
