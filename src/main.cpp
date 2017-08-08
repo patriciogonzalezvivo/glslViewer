@@ -112,29 +112,29 @@ int main(int argc, char **argv){
     for (int i = 1; i < argc ; i++) {
         std::string argument = std::string(argv[i]);
 
-        if ( std::string(argv[i]) == "-x" ) {
+        if (        std::string(argv[i]) == "-x" ) {
             i++;
             windowPosAndSize.x = getInt(std::string(argv[i]));
         } 
-        else if ( std::string(argv[i]) == "-y" ) {
+        else if (   std::string(argv[i]) == "-y" ) {
             i++;
             windowPosAndSize.y = getInt(std::string(argv[i]));
         } 
-        else if ( std::string(argv[i]) == "-w" || 
+        else if (   std::string(argv[i]) == "-w" || 
                     std::string(argv[i]) == "--width" ) {
             i++;
             windowPosAndSize.z = getInt(std::string(argv[i]));
         } 
-        else if ( std::string(argv[i]) == "-h" || 
+        else if (   std::string(argv[i]) == "-h" || 
                     std::string(argv[i]) == "--height") {
             i++;
             windowPosAndSize.w = getInt(std::string(argv[i]));
         }
-        else if ( std::string(argv[i]) == "--headless" ) {
+        else if (   std::string(argv[i]) == "--headless" ) {
             headless = true;
         }
         #ifdef PLATFORM_RPI 
-        else if ( std::string(argv[i]) == "-l" || 
+        else if (   std::string(argv[i]) == "-l" || 
                     std::string(argv[i]) == "--life-coding" ){
             windowPosAndSize.x = windowPosAndSize.z-500;
             windowPosAndSize.z = windowPosAndSize.w = 500;
