@@ -36,6 +36,8 @@ std::vector<WatchFile> files;
 std::mutex filesMutex;
 int fileChanged;
 
+std::vector<std::string> defines;
+
 UniformList uniforms;
 std::mutex uniformsMutex;
 
@@ -150,6 +152,21 @@ int main(int argc, char **argv){
     float timeLimit = -1.0f; //  Time limit
     int textureCounter = 0; // Number of textures to load
 
+    // Adding default deines
+    defines.push_back("GLSLVIEWER 1")
+    // Define PLATFORM
+    #ifdef PLATFORM_OSX
+    defines.push_back("PLATFORM_OSX");
+    #endif
+
+    #ifdef PLATFORM_LINUX
+    defines.push_back("PLATFORM_LINUX)";
+    #endif
+
+    #ifdef PLATFORM_RPI
+    defines.push_back("PLATFORM_RPI");
+    #endif
+
     //Load the the resources (textures)
     for (int i = 1; i < argc ; i++){
         std::string argument = std::string(argv[i]);
@@ -248,6 +265,9 @@ int main(int argc, char **argv){
                     textureCounter++;
                 }
             }
+        }
+        else if (argument.find("-D") == 0) {
+            defines.push_back(argument.substr(2));
         }
         else if (argument.find("-") == 0) {
             std::string parameterPair = argument.substr(argument.find_last_of('-')+1);
@@ -472,7 +492,7 @@ void setup() {
         vertSource = vbo->getVertexLayout()->getDefaultVertShader();
     }    
 
-    shader.load(fragPath, fragSource, vertPath, vertSource, true);
+    shader.load(fragSource, vertSource, defines, defines, true);
     
     cam.setViewport(getWindowWidth(), getWindowHeight());
     cam.setPosition(glm::vec3(0.0,0.0,-3.));
@@ -501,7 +521,7 @@ void main() {\n\
     vec2 st = gl_FragCoord.xy/u_resolution.xy;\n\
     gl_FragColor = texture2D(u_buffer, st);\n\
 }";
-    buffer_shader.load(nullptr, buffer_frag, nullptr, buffer_vert, false);
+    buffer_shader.load(buffer_frag, buffer_vert, defines, false);
 
     // Turn on Alpha blending
     glEnable(GL_BLEND);
@@ -598,14 +618,14 @@ void onFileChange(int index) {
         fragSource = "";
         if (loadFromPath(path, &fragSource)) {
             shader.detach(GL_FRAGMENT_SHADER | GL_VERTEX_SHADER);
-            shader.load(fragPath, fragSource, vertPath, vertSource, true);
+            shader.load(fragSource, vertSource, defines, true);
         }
     }
     else if (type == "vertex") {
         vertSource = "";
         if (loadFromPath(path, &vertSource)) {
             shader.detach(GL_FRAGMENT_SHADER | GL_VERTEX_SHADER);
-            shader.load(fragPath, fragSource, vertPath, vertSource, true);
+            shader.load(fragSource, vertSource, defines, true);
         }
     }
     else if (type == "geometry") {

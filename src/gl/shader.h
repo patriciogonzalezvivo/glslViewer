@@ -31,7 +31,7 @@ public:
     bool    isInUse() const;
 
     const   GLint   getAttribLocation(const std::string& _attribute) const;
-    bool    load(const std::string& _fragmentSrc, const std::string& _vertexSrc, const std::vector<std::string> &_defines, bool verbose);
+    bool    load(const std::string& _fragmentSrc, const std::string& _vertexSrc, const std::vector<std::string> &_defines, bool _verbose);
 
     void    setUniform(const std::string& _name, float _x);
     void    setUniform(const std::string& _name, float _x, float _y);

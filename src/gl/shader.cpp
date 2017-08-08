@@ -44,7 +44,7 @@ bool find_id(const std::string& program, const char* id) {
     return std::strstr(program.c_str(), id) != 0;
 }
 
-bool Shader::load(const std::string& _fragmentSrc, const std::string& _vertexSrc, const std::vector<std::string> &_defines, bool verbose) {
+bool Shader::load(const std::string& _fragmentSrc, const std::string& _vertexSrc, const std::vector<std::string> &_defines, bool _verbose) {
     std::chrono::time_point<std::chrono::steady_clock> start_time, end_time;
     start_time = std::chrono::steady_clock::now();
 
@@ -106,7 +106,7 @@ bool Shader::load(const std::string& _fragmentSrc, const std::string& _vertexSrc
         glDeleteShader(m_vertexShader);
         glDeleteShader(m_fragmentShader);
 
-        if (verbose) {
+        if (_verbose) {
             std::cerr << "shader load time: " << load_time.count() << "s";
 #ifdef GL_PROGRAM_BINARY_LENGTH
             GLint proglen = 0;
