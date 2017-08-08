@@ -25,6 +25,7 @@ public:
     const   bool    needMouse() const { return m_mouse; };
     const   bool    need_iMouse() const { return m_imouse; };
     const   bool    needView2d() const { return m_view2d; };
+    const   bool    needView3d() const { return m_view3d; };
 
     void    use() const;
     bool    isInUse() const;
@@ -68,4 +69,5 @@ private:
     bool    m_mouse;
     bool    m_imouse;
     bool    m_view2d;
+    bool    m_view3d;
 };
