@@ -260,6 +260,16 @@ void simplify(std::vector<glm::vec3> &_pts, float _tolerance){
     }
 }
 
+std::string getAbsPath (const std::string& str) {
+    std::string abs_path = realpath(str.c_str(), NULL);
+    std::size_t found = abs_path.find_last_of("\\/");
+    if (found){
+        return abs_path.substr(0,found);
+    }
+    else {
+        return "";
+    }
+}
 bool urlExists(const std::string& name) {
   struct stat buffer;   
   return (stat (name.c_str(), &buffer) == 0); 

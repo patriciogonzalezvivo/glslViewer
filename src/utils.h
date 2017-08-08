@@ -329,41 +329,32 @@ inline std::istream& operator>>(std::istream& is, glm::vec3& vec) {
 }
 
 //----------------------------------------  String I/O
-static inline std::string getAbsPath (const std::string& str) {
-    std::string abs_path = realpath(str.c_str(), NULL);
-    std::size_t found = abs_path.find_last_of("\\/");
-    if (found){
-        return abs_path.substr(0,found);
-    }
-    else {
-        return "";
-    }
-}
-
+std::string getAbsPath (const std::string& str);
 std::string urlResolve(const std::string& path, const std::vector<std::string> include_folders);
 
 static inline bool loadFromPath(const std::string& path, std::string* into, const std::vector<std::string> include_folders) {
     std::ifstream file;
     std::string buffer;
 
-    std::string url = urlResolve(path, include_folders);
-    file.open(url.c_str());
+    file.open(path.c_str());
     if(!file.is_open()) return false;
+    std::string original_path = getAbsPath(path);
 
-    std::string original_path = getAbsPath(url);
     while(!file.eof()) {
         getline(file, buffer);
     	if (buffer.find("#include ") == 0 || buffer.find("#pragma include ") == 0){
     		unsigned begin = buffer.find_first_of("\"");
     		unsigned end = buffer.find_last_of("\"");
     		if (begin != end) {
-    			std::string file = buffer.substr(begin+1,end-begin-1);
+    			std::string file_name = buffer.substr(begin+1,end-begin-1);
+                file_name = urlResolve(file_name, include_folders);
+                file_name = original_path+'/'+file_name;
     			std::string newBuffer;
-    			if(loadFromPath(original_path+'/'+file, &newBuffer, include_folders)){
+    			if(loadFromPath(file_name, &newBuffer, include_folders)){
     				(*into) += "\n" + newBuffer + "\n";
     			}
                 else {
-    				std::cout << file << " not found" << std::endl;
+    				std::cout << file_name << " not found" << std::endl;
     			}
     		}
     	} else {

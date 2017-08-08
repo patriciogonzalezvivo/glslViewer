@@ -273,6 +273,7 @@ int main(int argc, char **argv){
         }
         else if (argument.find("-I") == 0) {
             std::string include = argument.substr(2);
+            std::cout << "Include folder:" << include << std::endl;
             include_folders.push_back(include);
         }
         else if (argument.find("-") == 0) {
