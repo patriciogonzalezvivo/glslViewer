@@ -153,7 +153,7 @@ int main(int argc, char **argv){
     int textureCounter = 0; // Number of textures to load
 
     // Adding default deines
-    defines.push_back("GLSLVIEWER 1")
+    defines.push_back("GLSLVIEWER 1");
     // Define PLATFORM
     #ifdef PLATFORM_OSX
     defines.push_back("PLATFORM_OSX");
@@ -493,7 +493,7 @@ void setup() {
         vertSource = vbo->getVertexLayout()->getDefaultVertShader();
     }    
 
-    shader.load(fragSource, vertSource, defines, defines, true);
+    shader.load(fragSource, vertSource, defines, true);
     
     cam.setViewport(getWindowWidth(), getWindowHeight());
     cam.setPosition(glm::vec3(0.0,0.0,-3.));
@@ -522,7 +522,7 @@ void main() {\n\
     vec2 st = gl_FragCoord.xy/u_resolution.xy;\n\
     gl_FragColor = texture2D(u_buffer, st);\n\
 }";
-    buffer_shader.load(buffer_frag, buffer_vert, defines, false);
+    buffer_shader.load(buffer_frag, buffer_vert, defines);
 
     // Turn on Alpha blending
     glEnable(GL_BLEND);

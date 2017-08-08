@@ -40,7 +40,8 @@ void main(void) {
     gl_FragColor = vec4(1.0);
 } );
 
-	m_shader.load(nullptr, frag, nullptr, vert, false);
+    std::vector<std::string> defines;
+	m_shader.load(frag, vert, defines);
 }
 
 void Cursor::draw(){
