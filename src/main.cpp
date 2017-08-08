@@ -37,6 +37,7 @@ std::mutex filesMutex;
 int fileChanged;
 
 std::vector<std::string> defines;
+std::vector<std::string> include_folders;
 
 UniformList uniforms;
 std::mutex uniformsMutex;
@@ -270,6 +271,10 @@ int main(int argc, char **argv){
             std::string define = argument.substr(2);
             defines.push_back(define);
         }
+        else if (argument.find("-I") == 0) {
+            std::string include = argument.substr(2);
+            include_folders.push_back(include);
+        }
         else if (argument.find("-") == 0) {
             std::string parameterPair = argument.substr(argument.find_last_of('-')+1);
             i++;
@@ -476,7 +481,7 @@ void setup() {
     if (iFrag != -1) {
         fragPath = &files[iFrag].path;
         fragSource = "";
-        if(!loadFromPath(*fragPath, &fragSource)) {
+        if(!loadFromPath(*fragPath, &fragSource, include_folders)) {
             return;
         }
     }
@@ -487,7 +492,7 @@ void setup() {
     if (iVert != -1) {
         vertPath = &files[iVert].path;
         vertSource = "";
-        loadFromPath(*vertPath, &vertSource);
+        loadFromPath(*vertPath, &vertSource, include_folders);
     }
     else {
         vertSource = vbo->getVertexLayout()->getDefaultVertShader();
@@ -617,14 +622,14 @@ void onFileChange(int index) {
 
     if (type == "fragment") {
         fragSource = "";
-        if (loadFromPath(path, &fragSource)) {
+        if (loadFromPath(path, &fragSource, include_folders)) {
             shader.detach(GL_FRAGMENT_SHADER | GL_VERTEX_SHADER);
             shader.load(fragSource, vertSource, defines, true);
         }
     }
     else if (type == "vertex") {
         vertSource = "";
-        if (loadFromPath(path, &vertSource)) {
+        if (loadFromPath(path, &vertSource, include_folders)) {
             shader.detach(GL_FRAGMENT_SHADER | GL_VERTEX_SHADER);
             shader.load(fragSource, vertSource, defines, true);
         }

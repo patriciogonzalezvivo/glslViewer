@@ -259,3 +259,23 @@ void simplify(std::vector<glm::vec3> &_pts, float _tolerance){
         _pts = sV;
     }
 }
+
+bool urlExists(const std::string& name) {
+  struct stat buffer;   
+  return (stat (name.c_str(), &buffer) == 0); 
+}
+
+std::string urlResolve(const std::string& path, const std::vector<std::string> include_folders) {
+    if (urlExists(path)) {
+        return path;
+    }
+    else {
+        for (int i = 0; i < include_folders.size(); i++) {
+            std::string new_path = include_folders[i] + "/" + path;
+            if (urlExists(new_path)) {
+                return new_path;
+            }
+        }
+        return path;
+    }
+}
