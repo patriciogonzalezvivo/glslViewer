@@ -214,7 +214,14 @@ GLuint Shader::compileShader(const std::string& _src, const std::vector<std::str
         std::vector<GLchar> infoLog(infoLength);
         glGetShaderInfoLog(shader, infoLength, NULL, &infoLog[0]);
         std::cerr << (isCompiled ? "Warnings" : "Errors");
-        std::cerr << " while compiling shader:\n" << &infoLog[0] << std::endl;
+        std::cerr << " while compiling ";
+        if (_type == GL_FRAGMENT_SHADER) {
+            std::cerr << "fragment ";
+        }
+        else {
+            std::cerr << "vertex ";
+        }
+        std::cerr << "shader:\n" << &infoLog[0] << std::endl;
     }
 
     if (isCompiled == GL_FALSE) {
