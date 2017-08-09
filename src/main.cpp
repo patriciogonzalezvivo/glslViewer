@@ -547,12 +547,12 @@ void draw() {
     shader.use();
 
     // Pass uniforms
-    shader.setUniform("u_resolution",getWindowWidth(), getWindowHeight());
+    shader.setUniform("u_resolution", getWindowWidth(), getWindowHeight());
     if (shader.needTime()) {
-        shader.setUniform("u_time", getTime());
+        shader.setUniform("u_time", float(getTime()));
     }
     if (shader.needDelta()) {
-        shader.setUniform("u_delta", getDelta());
+        shader.setUniform("u_delta", float(getDelta()));
     }
     if (shader.needDate()) {
         shader.setUniform("u_date", getDate());
@@ -573,7 +573,12 @@ void draw() {
     }
     
     for (UniformList::iterator it=uniforms.begin(); it!=uniforms.end(); ++it) {
-        shader.setUniform(it->first, it->second.value, it->second.size);
+        if (it->second.bInt) {
+            shader.setUniform(it->first, int(it->second.value[0]));
+        }
+        else {
+            shader.setUniform(it->first, it->second.value, it->second.size);
+        }
     }
 
     glm::mat4 mvp = glm::mat4(1.);

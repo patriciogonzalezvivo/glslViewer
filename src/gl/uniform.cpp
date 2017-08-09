@@ -7,7 +7,7 @@
 
 bool parseUniforms(const std::string &_line, UniformList *_uniforms) {
     bool rta = false;
-    std::regex re("(\\w+)\\,");
+    std::regex re("^(\\w+)\\,");
     std::smatch match;
     if (std::regex_search(_line, match, re)) {
         // Extract uniform name
@@ -19,6 +19,7 @@ bool parseUniforms(const std::string &_line, UniformList *_uniforms) {
         std::string item;
         while (getline(ss, item, ',')) {
             if (index != 0) {
+                (*_uniforms)[name].bInt = !isFloat(item);
                 (*_uniforms)[name].value[index-1] = toFloat(item);
             }
             index++;

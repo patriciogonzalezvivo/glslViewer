@@ -122,6 +122,24 @@ inline void purifyString( std::string& _s ){
     }
 }
 
+inline bool isFloat(const std::string &_string) { 
+    std::istringstream iss(_string); 
+    float dummy; 
+    iss >> std::skipws >> dummy; 
+    // if it's a number
+    if (iss && iss.eof()) {
+        std::string::const_iterator it = _string.begin();
+        while(it != _string.end()){
+            if(*it == '.'){
+                // That contain a .
+                return true;
+            }
+            ++it;
+        }
+    }
+    return false;
+} 
+
 inline int getInt(const std::string &_intString) {
     int x = 0;
     std::istringstream cur(_intString);
