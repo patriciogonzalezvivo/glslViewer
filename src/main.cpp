@@ -161,7 +161,7 @@ int main(int argc, char **argv){
     #endif
 
     #ifdef PLATFORM_LINUX
-    defines.push_back("PLATFORM_LINUX)";
+    defines.push_back("PLATFORM_LINUX");
     #endif
 
     #ifdef PLATFORM_RPI
