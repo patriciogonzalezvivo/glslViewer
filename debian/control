@@ -2,7 +2,8 @@ Source: glslviewer
 Section: unknown
 Priority: optional
 Maintainer: Patricio Gonzalez Vivo <patriciogonzalezvivo@gmail.com>
-Build-Depends: debhelper (>=9)
+Build-Depends: debhelper (>=9), pkg-config, libglfw3-dev, libglu1-mesa-dev, libxrandr-dev,
+ libxi-dev, libxcursor-dev, libxinerama-dev
 Standards-Version: 3.9.6
 Homepage: https://github.com/patriciogonzalezvivo/glslViewer
 
