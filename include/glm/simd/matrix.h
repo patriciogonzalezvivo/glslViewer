@@ -712,9 +712,9 @@ GLM_FUNC_QUALIFIER void glm_mat4_inverse(glm_vec4 const in[4], glm_vec4 out[4])
 	__m128 Row1 = _mm_shuffle_ps(Inv2, Inv3, _MM_SHUFFLE(0, 0, 0, 0));
 	__m128 Row2 = _mm_shuffle_ps(Row0, Row1, _MM_SHUFFLE(2, 0, 2, 0));
 
-	//	valType Determinant = m[0][0] * Inverse[0][0] 
-	//						+ m[0][1] * Inverse[1][0] 
-	//						+ m[0][2] * Inverse[2][0] 
+	//	valType Determinant = m[0][0] * Inverse[0][0]
+	//						+ m[0][1] * Inverse[1][0]
+	//						+ m[0][2] * Inverse[2][0]
 	//						+ m[0][3] * Inverse[3][0];
 	__m128 Det0 = glm_vec4_dot(in[0], Row2);
 	__m128 Rcp0 = _mm_div_ps(_mm_set1_ps(1.0f), Det0);
@@ -933,9 +933,9 @@ GLM_FUNC_QUALIFIER void glm_mat4_inverse_lowp(glm_vec4 const in[4], glm_vec4 out
 	__m128 Row1 = _mm_shuffle_ps(Inv2, Inv3, _MM_SHUFFLE(0, 0, 0, 0));
 	__m128 Row2 = _mm_shuffle_ps(Row0, Row1, _MM_SHUFFLE(2, 0, 2, 0));
 
-	//	valType Determinant = m[0][0] * Inverse[0][0] 
-	//						+ m[0][1] * Inverse[1][0] 
-	//						+ m[0][2] * Inverse[2][0] 
+	//	valType Determinant = m[0][0] * Inverse[0][0]
+	//						+ m[0][1] * Inverse[1][0]
+	//						+ m[0][2] * Inverse[2][0]
 	//						+ m[0][3] * Inverse[3][0];
 	__m128 Det0 = glm_vec4_dot(in[0], Row2);
 	__m128 Rcp0 = _mm_rcp_ps(Det0);
@@ -965,7 +965,7 @@ GLM_FUNC_QUALIFIER void glm_mat4_rotate(__m128 const in[4], float Angle, float c
 	// tvec3<T, P> temp = (valType(1) - c) * axis;
 	__m128 Temp0 = _mm_sub_ps(one, CosA);
 	__m128 Temp1 = _mm_mul_ps(Temp0, AxisC);
-	
+
 	//Rotate[0][0] = c + temp[0] * axis[0];
 	//Rotate[0][1] = 0 + temp[0] * axis[1] + s * axis[2];
 	//Rotate[0][2] = 0 + temp[0] * axis[2] - s * axis[1];

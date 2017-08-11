@@ -76,7 +76,7 @@ void initGL (glm::ivec4 &_viewport, bool _headless) {
         // Start clock
         // gettimeofday(&tv, NULL);
         // timeStart = (unsigned long long)(tv.tv_sec) * 1000 +
-        //             (unsigned long long)(tv.tv_usec) / 1000; 
+        //             (unsigned long long)(tv.tv_usec) / 1000;
         clock_gettime(CLOCK_MONOTONIC, &time_start);
 
         // Start OpenGL ES
@@ -160,11 +160,11 @@ void initGL (glm::ivec4 &_viewport, bool _headless) {
         } else {
             dispman_display = vc_dispmanx_display_open(0); // LCD
         }
-        
+
         dispman_update = vc_dispmanx_update_start(0);
         dispman_element = vc_dispmanx_element_add(  dispman_update, dispman_display,
                                                     0/*layer*/, &dst_rect, 0/*src*/,
-                                                    &src_rect, DISPMANX_PROTECTION_NONE, 
+                                                    &src_rect, DISPMANX_PROTECTION_NONE,
                                                     0 /*alpha*/, 0/*clamp*/, (DISPMANX_TRANSFORM_T)0/*transform*/);
 
         nativeviewport.element = dispman_element;
@@ -199,7 +199,7 @@ void initGL (glm::ivec4 &_viewport, bool _headless) {
         }
 
         window = glfwCreateWindow(_viewport.z, _viewport.w, appTitle.c_str(), NULL, NULL);
-        
+
         if(!window) {
             glfwTerminate();
             std::cerr << "ABORT: GLFW create window failed" << std::endl;
@@ -292,7 +292,7 @@ void initGL (glm::ivec4 &_viewport, bool _headless) {
             if (mouse.button == 0 && button != mouse.button) {
                 mouse.button = button;
                 onMouseClick(mouse.x,mouse.y,mouse.button);
-            } 
+            }
             else {
                 mouse.button = button;
             }
@@ -363,36 +363,36 @@ void updateGL(){
             // Set values to 0
             mouse.velX=0;
             mouse.velY=0;
-            
+
             // Extract values from driver
             struct {char buttons, dx, dy; } m;
             while (1) {
                 int bytes = read(fd, &m, sizeof m);
-                
+
                 if (bytes < (int)sizeof m) {
                     return;
                 } else if (m.buttons&8) {
                     break; // This bit should always be set
                 }
-                
+
                 read(fd, &m, 1); // Try to sync up again
             }
-            
+
             // Set button value
             int button = m.buttons&3;
             if (button) mouse.button = button;
             else mouse.button = 0;
-            
+
             // Set deltas
             mouse.velX=m.dx;
             mouse.velY=m.dy;
             if (m.buttons&XSIGN) mouse.velX-=256;
             if (m.buttons&YSIGN) mouse.velY-=256;
-            
+
             // Add movement
             mouse.x+=mouse.velX;
             mouse.y+=mouse.velY;
-            
+
             // Clamp values
             if (mouse.x < 0) mouse.x=0;
             if (mouse.y < 0) mouse.y=0;
@@ -403,7 +403,7 @@ void updateGL(){
             if (mouse.button == 0 && button != mouse.button) {
                 mouse.button = button;
                 onMouseClick(mouse.x, mouse.y, mouse.button);
-            } 
+            }
             else {
                 mouse.button = button;
             }
@@ -464,10 +464,10 @@ void setWindowSize(int _width, int _height) {
 
 glm::ivec2 getScreenSize() {
     glm::ivec2 screen;
-    
+
     #ifdef PLATFORM_RPI
         // RASPBERRYPI
-        
+
         if (!bBcm) {
             bcm_host_init();
             bBcm = true;

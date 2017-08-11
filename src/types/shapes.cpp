@@ -4,7 +4,7 @@ Mesh line (const glm::vec3 &_a, const glm::vec3 &_b) {
     glm::vec3 linePoints[2];
     linePoints[0] = glm::vec3(_a.x,_a.y,_a.z);
     linePoints[1] = glm::vec3(_b.x,_b.y,_b.z);;
-    
+
     Mesh mesh;
     mesh.addVertices(linePoints,2);
     mesh.setDrawMode(GL_LINES);
@@ -22,7 +22,7 @@ void drawLine(const glm::vec3 &_a, const glm::vec3 &_b){
                         GL_FLOAT,               // type
                         GL_FALSE,               // normalized?
                         0,                      // stride
-                        g_vertex_buffer_data    // (void*)0 
+                        g_vertex_buffer_data    // (void*)0
                 );
 
     glEnableVertexAttribArray ( 0 );
@@ -39,7 +39,7 @@ Mesh cross (const glm::vec3 &_pos, float _width) {
     linePoints[1].x += _width;
     linePoints[2].y -= _width;
     linePoints[3].y += _width;
-    
+
     Mesh mesh;
     mesh.addVertices(linePoints,4);
     mesh.setDrawMode(GL_LINES);
@@ -67,7 +67,7 @@ void drawCross(const glm::vec3 &_pos, float _width ){
                         GL_FLOAT,           // type
                         GL_FALSE,           // normalized?
                         0,                  // stride
-                        (void*)&linePoints[0].x // (void*)0 
+                        (void*)&linePoints[0].x // (void*)0
                         );
 
     glEnableVertexAttribArray( 0 );
@@ -105,7 +105,7 @@ Mesh rect (float _x, float _y, float _w, float _h) {
 
     mesh.addIndex(0);   mesh.addIndex(1);   mesh.addIndex(2);
     mesh.addIndex(2);   mesh.addIndex(3);   mesh.addIndex(0);
-    
+
     return mesh;
 }
 
@@ -133,13 +133,13 @@ Mesh rect (const Rectangle &_rect){
 
     mesh.addIndex(2);   mesh.addIndex(1);   mesh.addIndex(0);
     mesh.addIndex(0);   mesh.addIndex(3);   mesh.addIndex(2);
-    
+
     return mesh;
 }
 
 Mesh rectBorders(const Rectangle &_rect){
     glm::vec3 linePoints[5] = {_rect.getTopLeft(), _rect.getTopRight(), _rect.getBottomRight(), _rect.getBottomLeft(), _rect.getTopLeft()};
-    
+
     Mesh mesh;
     mesh.addVertices(linePoints,5);
     mesh.setDrawMode(GL_LINE_STRIP);
@@ -148,14 +148,14 @@ Mesh rectBorders(const Rectangle &_rect){
 
 void drawBorders( const Rectangle &_rect ){
     glm::vec3 linePoints[5] = { _rect.getTopLeft(), _rect.getTopRight(), _rect.getBottomRight(), _rect.getBottomLeft(), _rect.getTopLeft()};
-    
+
     glVertexAttribPointer(
                         0,                  //vertexPosition_modelspaceID,
                         3,                  // size
                         GL_FLOAT,           // type
                         GL_FALSE,           // normalized?
                         0,                  // stride
-                        &linePoints[0].x    // (void*)0 
+                        &linePoints[0].x    // (void*)0
                         );
 
     glEnableVertexAttribArray ( 0 );
@@ -169,16 +169,16 @@ Mesh rectCorners(const Rectangle &_rect, float _width ){
                                 _rect.getBottomLeft(), _rect.getBottomLeft(),_rect.getBottomLeft(), _rect.getBottomLeft() };
     linePoints[0].x += _width;
     linePoints[3].y += _width;
-    
+
     linePoints[4].x -= _width;
     linePoints[7].y += _width;
-    
+
     linePoints[8].x -= _width;
     linePoints[11].y -= _width;
-    
+
     linePoints[12].x += _width;
     linePoints[15].y -= _width;
-    
+
     Mesh mesh;
     mesh.addVertices(linePoints,16);
 
@@ -193,13 +193,13 @@ void drawCorners(const Rectangle &_rect, float _width){
                                 _rect.getBottomLeft(), _rect.getBottomLeft(),_rect.getBottomLeft(), _rect.getBottomLeft() };
     linePoints[0].x += _width;
     linePoints[3].y += _width;
-    
+
     linePoints[4].x -= _width;
     linePoints[7].y += _width;
-    
+
     linePoints[8].x -= _width;
     linePoints[11].y -= _width;
-    
+
     linePoints[12].x += _width;
     linePoints[15].y -= _width;
 
@@ -209,7 +209,7 @@ void drawCorners(const Rectangle &_rect, float _width){
                         GL_FLOAT,           // type
                         GL_FALSE,           // normalized?
                         0,                  // stride
-                        &linePoints[0].x    // (void*)0 
+                        &linePoints[0].x    // (void*)0
                         );
 
     glEnableVertexAttribArray ( 0 );
@@ -230,7 +230,7 @@ void drawPolyline(const std::vector<glm::vec3> &_pts ){
                         GL_FLOAT,   // type
                         GL_FALSE,   // normalized?
                         0,          // stride
-                        &_pts[0].x  // (void*)0 
+                        &_pts[0].x  // (void*)0
                         );
 
     glEnableVertexAttribArray ( 0 );

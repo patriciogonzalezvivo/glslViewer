@@ -76,7 +76,7 @@ void VertexLayout::enable(const Shader* _program) {
 }
 
 std::string VertexLayout::getDefaultVertShader() {
-    std::string rta = 
+    std::string rta =
 "#ifdef GL_ES\n"
 "precision mediump float;\n"
 "#endif\n"
@@ -111,15 +111,15 @@ std::string VertexLayout::getDefaultVertShader() {
 
     if (m_positionAttribIndex != -1 && m_positionAttribIndex < int(m_attribs.size())) {
         rta += "    gl_Position = u_modelViewProjectionMatrix * v_" + m_attribs[m_positionAttribIndex].name + ";\n";
-    } 
-    
+    }
+
     rta +=  "}\n";
 
     return rta;
 }
 
 std::string VertexLayout::getDefaultFragShader() {
-    std::string rta = 
+    std::string rta =
 "#ifdef GL_ES\n"
 "precision mediump float;\n"
 "#endif\n"
@@ -159,7 +159,7 @@ std::string VertexLayout::getDefaultFragShader() {
     else {
         rta += "    gl_FragColor = vec4(1.0);\n";
     }
-    
+
     rta +=  "}\n";
 
     return rta;

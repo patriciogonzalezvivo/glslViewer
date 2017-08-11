@@ -3,7 +3,7 @@
 
 namespace glm
 {
-	template <typename genType> 
+	template <typename genType>
 	GLM_FUNC_QUALIFIER genType log(genType const & x, genType const & base)
 	{
 		assert(x != genType(0));

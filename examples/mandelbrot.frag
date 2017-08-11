@@ -40,7 +40,7 @@ void main() {
     for (int i=0; i<maxiter; i++) {
         //Perform complex number arithmetic
         p= vec2(p.x*p.x-p.y*p.y,2.0*p.x*p.y)+c;
-        
+
         if (dot(p,p)>4.0){
             // The point, c, is not part of the set, so smoothly color it.
             // colorRegulator increases linearly by 1 for every extra step it

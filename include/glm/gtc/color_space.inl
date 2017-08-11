@@ -66,7 +66,7 @@ namespace detail
 	{
 		return detail::compute_srgbToRgb<T, P, vecType>::call(ColorSRGB, static_cast<T>(2.4));
 	}
-	
+
 	template <typename T, precision P, template <typename, precision> class vecType>
 	GLM_FUNC_QUALIFIER vecType<T, P> convertSRGBToLinear(vecType<T, P> const& ColorSRGB, T Gamma)
 	{

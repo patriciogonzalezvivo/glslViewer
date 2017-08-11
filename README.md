@@ -37,7 +37,7 @@ The previous Ubuntu install instructions direct you to
 sudo apt-get update
 sudo apt-get upgrade
 sudo apt-get install git-core cmake xorg-dev libglu1-mesa-dev
-cd ~ 
+cd ~
 git clone https://github.com/glfw/glfw.git
 cd glfw
 cmake .
@@ -56,7 +56,7 @@ sudo apt-get install glslviewer
 Or if you want to compile the code your self:
 
 ```bash
-cd ~ 
+cd ~
 git clone http://github.com/patriciogonzalezvivo/glslViewer
 cd glslViewer
 make
@@ -83,7 +83,7 @@ brew update
 brew upgrade
 brew tap homebrew/versions
 brew install glfw3 pkg-config
-cd ~ 
+cd ~
 git clone http://github.com/patriciogonzalezvivo/glslViewer
 cd glslViewer
 make
@@ -110,7 +110,7 @@ cd examples
 glslViewer test.frag
 ```
 
-* Then edit the shader with your favorite text editor. 
+* Then edit the shader with your favorite text editor.
 
 ```bash
 vim test.frag
@@ -182,7 +182,7 @@ Demo: examples/numbers.frag
 
 ### Textures
 
-You can load PNGs and JPEGs images to a shader. They will be automatically loaded and asigned to an uniform name acording to the order they are pass as arguments: ex. ```u_tex0```, ```u_tex1```, etc. Also the resolution will be assigned to ```vec2``` uniform acording the texture uniforma name: ex. ```u_tex0Resolution```, ```u_tex1Resolution```, etc. 
+You can load PNGs and JPEGs images to a shader. They will be automatically loaded and asigned to an uniform name acording to the order they are pass as arguments: ex. ```u_tex0```, ```u_tex1```, etc. Also the resolution will be assigned to ```vec2``` uniform acording the texture uniforma name: ex. ```u_tex0Resolution```, ```u_tex1Resolution```, etc.
 
 ```bash
 glslViewer test.frag test.png
@@ -214,7 +214,7 @@ Beside for texture uniforms other arguments can be add to ```glslViewer```:
 
 * ```--headless``` headless rendering. Very usefull for making images or benchmarking.
 
-* ```-I[include_folder]``` add a include folder to default for `#include` files 
+* ```-I[include_folder]``` add a include folder to default for `#include` files
 
 * ```-D[define]``` add system `#define`s directly from the console argument
 
@@ -229,26 +229,26 @@ You can include other GLSL code using a traditional ```#include “file.glsl”`
 * Open a Fragment shader:
 
 ```bash
-glslViewer examples/test.frag 
+glslViewer examples/test.frag
 ```
 
 * Open a Fragment shader with an image:
 
 ```bash
 glslViewer examples/test.frag examples/test.png
-``` 
+```
 
 * Open a Fragment and Vertext shader with a geometry:
 
 ```bash
 glslViewer examples/bunny.frag examples/bunny.vert examples/bunny.ply
-``` 
+```
 
 * Open a Fragment that use the backbuffer to do a reaction diffusion example:
 
 ```bash
 glslViewer examples/grayscott.frag
-``` 
+```
 
 * Open a Fragment that use OS defines to know what platform is runnion on:
 
@@ -276,15 +276,15 @@ examples/.temp.sh | glslViewer examples/temp.frag
 * Run a headless instance of glslViewer that exits after 1 second outputing an PNG image
 
 ```bash
-glslViewer examples/cross.frag --headless -s 1 -o cross.png 
+glslViewer examples/cross.frag --headless -s 1 -o cross.png
 ```
 
 * Make an SVG from a shader usin [potrace](http://potrace.sourceforge.net/) and [ImageMagic](https://www.imagemagick.org/script/index.php)
 
 ```bash
-glslViewer examples/cross.frag --headless -s 1 -o cross.png 
+glslViewer examples/cross.frag --headless -s 1 -o cross.png
 convert cross.png cross.pnm
-potrace cross.pnm -s -o cross.svg 
+potrace cross.pnm -s -o cross.svg
 ```
 
 * Open a ShaderToy's image shader

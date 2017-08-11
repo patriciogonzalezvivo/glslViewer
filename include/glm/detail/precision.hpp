@@ -31,7 +31,7 @@ namespace glm
 			defaultp = highp
 #		endif
 	};
-	
+
 namespace detail
 {
 	template <glm::precision P>

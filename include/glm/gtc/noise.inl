@@ -1,9 +1,9 @@
 /// @ref gtc_noise
 /// @file glm/gtc/noise.inl
 ///
-// Based on the work of Stefan Gustavson and Ashima Arts on "webgl-noise": 
-// https://github.com/ashima/webgl-noise 
-// Following Stefan Gustavson's paper "Simplex noise demystified": 
+// Based on the work of Stefan Gustavson and Ashima Arts on "webgl-noise":
+// https://github.com/ashima/webgl-noise
+// Following Stefan Gustavson's paper "Simplex noise demystified":
 // http://www.itn.liu.se/~stegu/simplexnoise/simplexnoise.pdf
 
 namespace glm{
@@ -15,7 +15,7 @@ namespace gtc
 		tvec3<T, P> pXYZ = floor(fract(tvec3<T, P>(j) * tvec3<T, P>(ip)) * T(7)) * ip[2] - T(1);
 		T pW = static_cast<T>(1.5) - dot(abs(pXYZ), tvec3<T, P>(1));
 		tvec4<T, P> s = tvec4<T, P>(lessThan(tvec4<T, P>(pXYZ, pW), tvec4<T, P>(0.0)));
-		pXYZ = pXYZ + (tvec3<T, P>(s) * T(2) - T(1)) * s.w; 
+		pXYZ = pXYZ + (tvec3<T, P>(s) * T(2) - T(1)) * s.w;
 		return tvec4<T, P>(pXYZ, pW);
 	}
 }//namespace gtc
@@ -128,7 +128,7 @@ namespace gtc
 		tvec3<T, P> fade_xyz = detail::fade(Pf0);
 		tvec4<T, P> n_z = mix(tvec4<T, P>(n000, n100, n010, n110), tvec4<T, P>(n001, n101, n011, n111), fade_xyz.z);
 		tvec2<T, P> n_yz = mix(tvec2<T, P>(n_z.x, n_z.y), tvec2<T, P>(n_z.z, n_z.w), fade_xyz.y);
-		T n_xyz = mix(n_yz.x, n_yz.y, fade_xyz.x); 
+		T n_xyz = mix(n_yz.x, n_yz.y, fade_xyz.x);
 		return T(2.2) * n_xyz;
 	}
 	/*
@@ -199,9 +199,9 @@ namespace gtc
 		tvec3<T, P> fade_xyz = fade(Pf0);
 		tvec4<T, P> n_z = mix(tvec4<T, P>(n000, n100, n010, n110), tvec4<T, P>(n001, n101, n011, n111), fade_xyz.z);
 		tvec2<T, P> n_yz = mix(
-			tvec2<T, P>(n_z.x, n_z.y), 
+			tvec2<T, P>(n_z.x, n_z.y),
 			tvec2<T, P>(n_z.z, n_z.w), fade_xyz.y);
-		T n_xyz = mix(n_yz.x, n_yz.y, fade_xyz.x); 
+		T n_xyz = mix(n_yz.x, n_yz.y, fade_xyz.x);
 		return T(2.2) * n_xyz;
 	}
 	*/
@@ -619,7 +619,7 @@ namespace gtc
 
 		tvec3<T, P> m = max(tvec3<T, P>(0.5) - tvec3<T, P>(
 			dot(x0, x0),
-			dot(tvec2<T, P>(x12.x, x12.y), tvec2<T, P>(x12.x, x12.y)), 
+			dot(tvec2<T, P>(x12.x, x12.y), tvec2<T, P>(x12.x, x12.y)),
 			dot(tvec2<T, P>(x12.z, x12.w), tvec2<T, P>(x12.z, x12.w))), tvec3<T, P>(0));
 		m = m * m ;
 		m = m * m ;
@@ -770,7 +770,7 @@ namespace gtc
 		tvec4<T, P> x4 = x0 + C.w;
 
 		// Permutations
-		i = mod(i, tvec4<T, P>(289)); 
+		i = mod(i, tvec4<T, P>(289));
 		T j0 = detail::permute(detail::permute(detail::permute(detail::permute(i.w) + i.z) + i.y) + i.x);
 		tvec4<T, P> j1 = detail::permute(detail::permute(detail::permute(detail::permute(
 			i.w + tvec4<T, P>(i1.w, i2.w, i3.w, T(1))) +
@@ -801,8 +801,8 @@ namespace gtc
 		tvec2<T, P> m1 = max(T(0.6) - tvec2<T, P>(dot(x3, x3), dot(x4, x4)             ), tvec2<T, P>(0));
 		m0 = m0 * m0;
 		m1 = m1 * m1;
-		return T(49) * 
-			(dot(m0 * m0, tvec3<T, P>(dot(p0, x0), dot(p1, x1), dot(p2, x2))) + 
+		return T(49) *
+			(dot(m0 * m0, tvec3<T, P>(dot(p0, x0), dot(p1, x1), dot(p2, x2))) +
 			dot(m1 * m1, tvec2<T, P>(dot(p3, x3), dot(p4, x4))));
 	}
 }//namespace glm

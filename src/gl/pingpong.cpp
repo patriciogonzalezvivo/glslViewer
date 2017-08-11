@@ -13,12 +13,12 @@ void PingPong::allocate(int _width, int _height, bool _depth) {
     }
 
     clear();
-    
+
     // Set everything to 0
     m_flag = 0;
     swap();
 }
-    
+
 void PingPong::swap(){
     src = &(m_fbos[(m_flag)%2]);
     dst = &(m_fbos[++(m_flag)%2]);

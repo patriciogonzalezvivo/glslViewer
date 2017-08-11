@@ -13,7 +13,7 @@ namespace glm
 	{
 		T cosX = glm::cos(angleX);
 		T sinX = glm::sin(angleX);
-	
+
 		return tmat4x4<T, defaultp>(
 			T(1), T(0), T(0), T(0),
 			T(0), cosX, sinX, T(0),
@@ -130,7 +130,7 @@ namespace glm
 	{
 		return eulerAngleZ(angleZ) * eulerAngleY(angleY);
 	}
-    
+
     template <typename T>
     GLM_FUNC_QUALIFIER tmat4x4<T, defaultp> eulerAngleXYZ
     (
@@ -145,7 +145,7 @@ namespace glm
         T s1 = glm::sin(-t1);
         T s2 = glm::sin(-t2);
         T s3 = glm::sin(-t3);
-        
+
         tmat4x4<T, defaultp> Result;
         Result[0][0] = c2 * c3;
         Result[0][1] =-c1 * s3 + s1 * s2 * c3;
@@ -165,7 +165,7 @@ namespace glm
         Result[3][3] = static_cast<T>(1);
         return Result;
     }
-    
+
 	template <typename T>
 	GLM_FUNC_QUALIFIER tmat4x4<T, defaultp> eulerAngleYXZ
 	(
@@ -292,7 +292,7 @@ namespace glm
 	{
 		return yawPitchRoll(angles.z, angles.x, angles.y);
 	}
-    
+
     template <typename T>
     GLM_FUNC_DECL void extractEulerAngleXYZ(tmat4x4<T, defaultp> const & M,
                                             T & t1,

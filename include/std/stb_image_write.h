@@ -104,7 +104,7 @@ CREDITS:
       Filip Wasil
       Thatcher Ulrich
       github:poppolopoppo
-      
+
 LICENSE
 
 This software is dual-licensed to the public domain and under the following

@@ -1,6 +1,6 @@
 #!/usr/bin/make -f
 
-%:  
+%:
 	dh $@ --with autotools-dev
 
 override_dh_auto_install:

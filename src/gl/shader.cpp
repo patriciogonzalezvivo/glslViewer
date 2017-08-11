@@ -23,7 +23,7 @@ std::string getLineNumber(const std::string& _source, unsigned _lineNumber){
     while (true) {
         subend = search(substart, _source.end(), delimiter.begin(), delimiter.end());
         std::string sub(substart, subend);
-        
+
         if (index == _lineNumber) {
             return sub;
         }
@@ -76,7 +76,7 @@ bool Shader::load(const std::string& _fragmentSrc, const std::string& _vertexSrc
     m_program = glCreateProgram();
 
     glAttachShader(m_program, m_vertexShader);
-    glAttachShader(m_program, m_fragmentShader);    
+    glAttachShader(m_program, m_fragmentShader);
     glLinkProgram(m_program);
 
     end_time = std::chrono::steady_clock::now();
@@ -84,7 +84,7 @@ bool Shader::load(const std::string& _fragmentSrc, const std::string& _vertexSrc
 
     GLint isLinked;
     glGetProgramiv(m_program, GL_LINK_STATUS, &isLinked);
-    
+
     if (isLinked == GL_FALSE) {
         GLint infoLength = 0;
         glGetProgramiv(m_program, GL_INFO_LOG_LENGTH, &infoLength);
@@ -148,7 +148,7 @@ GLuint Shader::compileShader(const std::string& _src, const std::vector<std::str
     const char* epilog = "";
 
     for (unsigned int i = 0; i < _defines.size(); i++) {
-        prolog += "#define " + _defines[i] + "\n"; 
+        prolog += "#define " + _defines[i] + "\n";
     }
 
     // Test if this is a shadertoy.com image shader. If it is, we need to
@@ -204,7 +204,7 @@ GLuint Shader::compileShader(const std::string& _src, const std::vector<std::str
     GLuint shader = glCreateShader(_type);
     glShaderSource(shader, 3, sources, NULL);
     glCompileShader(shader);
-    
+
     GLint isCompiled;
     glGetShaderiv(shader, GL_COMPILE_STATUS, &isCompiled);
 
@@ -235,7 +235,7 @@ GLuint Shader::compileShader(const std::string& _src, const std::vector<std::str
 void Shader::detach(GLenum _type) {
     bool vert = (GL_VERTEX_SHADER & _type) == GL_VERTEX_SHADER;
     bool frag = (GL_FRAGMENT_SHADER & _type) == GL_FRAGMENT_SHADER;
-    
+
     if(vert) {
         glDeleteShader(m_vertexShader);
         glDetachShader(m_vertexShader, GL_VERTEX_SHADER);
@@ -262,7 +262,7 @@ void Shader::setUniform(const std::string& _name, int _x) {
 }
 
 void Shader::setUniform(const std::string& _name, const float *_array, unsigned int _size) {
-    GLint loc = getUniformLocation(_name); 
+    GLint loc = getUniformLocation(_name);
     if(isInUse()) {
         if (_size == 1) {
             glUniform1f(loc, _array[0]);

@@ -32,7 +32,7 @@ namespace detail
 	GLM_ALIGNED_STORAGE_TYPE_STRUCT(16)
 	GLM_ALIGNED_STORAGE_TYPE_STRUCT(32)
 	GLM_ALIGNED_STORAGE_TYPE_STRUCT(64)
-		
+
 #	if GLM_ARCH & GLM_ARCH_SSE2_BIT
 		template <>
 		struct storage<float, 16, true>

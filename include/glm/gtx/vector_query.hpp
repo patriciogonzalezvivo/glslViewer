@@ -30,7 +30,7 @@ namespace glm
 	/// @see gtx_vector_query extensions.
 	template <typename T, precision P, template <typename, precision> class vecType>
 	GLM_FUNC_DECL bool areCollinear(vecType<T, P> const & v0, vecType<T, P> const & v1, T const & epsilon);
-		
+
 	//! Check whether two vectors are orthogonals.
 	/// @see gtx_vector_query extensions.
 	template <typename T, precision P, template <typename, precision> class vecType>
@@ -40,7 +40,7 @@ namespace glm
 	/// @see gtx_vector_query extensions.
 	template <typename T, precision P, template <typename, precision> class vecType>
 	GLM_FUNC_DECL bool isNormalized(vecType<T, P> const & v, T const & epsilon);
-		
+
 	//! Check whether a vector is null.
 	/// @see gtx_vector_query extensions.
 	template <typename T, precision P, template <typename, precision> class vecType>

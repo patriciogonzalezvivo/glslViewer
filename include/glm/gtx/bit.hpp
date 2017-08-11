@@ -6,9 +6,9 @@
 ///
 /// @defgroup gtx_bit GLM_GTX_bit
 /// @ingroup gtx
-/// 
+///
 /// @brief Allow to perform bit operations on integer values
-/// 
+///
 /// <glm/gtx/bit.hpp> need to be included to use these functionalities.
 
 #pragma once
@@ -92,4 +92,3 @@ namespace glm
 
 
 #include "bit.inl"
-

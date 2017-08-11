@@ -6,8 +6,8 @@ namespace glm
 	template <typename genType>
 	GLM_FUNC_QUALIFIER genType extend
 	(
-		genType const & Origin, 
-		genType const & Source, 
+		genType const & Origin,
+		genType const & Source,
 		genType const & Distance
 	)
 	{

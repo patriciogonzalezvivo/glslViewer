@@ -3,7 +3,7 @@
 
 namespace glm
 {
-	template <typename genType> 
+	template <typename genType>
 	GLM_FUNC_QUALIFIER genType angle
 	(
 		genType const & x,
@@ -14,7 +14,7 @@ namespace glm
 		return acos(clamp(dot(x, y), genType(-1), genType(1)));
 	}
 
-	template <typename T, precision P, template <typename, precision> class vecType> 
+	template <typename T, precision P, template <typename, precision> class vecType>
 	GLM_FUNC_QUALIFIER T angle
 	(
 		vecType<T, P> const & x,

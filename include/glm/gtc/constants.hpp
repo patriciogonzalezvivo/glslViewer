@@ -6,9 +6,9 @@
 ///
 /// @defgroup gtc_constants GLM_GTC_constants
 /// @ingroup gtc
-/// 
+///
 /// @brief Provide a list of constants and precomputed useful values.
-/// 
+///
 /// <glm/gtc/constants.hpp> need to be included to use these features.
 
 #pragma once

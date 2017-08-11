@@ -2,14 +2,14 @@
 /// @file glm/detail/func_matrix.hpp
 ///
 /// @see <a href="http://www.opengl.org/registry/doc/GLSLangSpec.4.20.8.pdf">GLSL 4.20.8 specification, section 8.6 Matrix Functions</a>
-/// 
+///
 /// @defgroup core_func_matrix Matrix functions
 /// @ingroup core
-/// 
-/// For each of the following built-in matrix functions, there is both a 
-/// single-precision floating point version, where all arguments and return values 
-/// are single precision, and a double-precision floating version, where all 
-/// arguments and return values are double precision. Only the single-precision 
+///
+/// For each of the following built-in matrix functions, there is both a
+/// single-precision floating point version, where all arguments and return values
+/// are single precision, and a double-precision floating version, where all
+/// arguments and return values are double precision. Only the single-precision
 /// floating point version is shown.
 
 #pragma once
@@ -93,9 +93,9 @@ namespace detail
 	/// @addtogroup core_func_matrix
 	/// @{
 
-	/// Multiply matrix x by matrix y component-wise, i.e., 
+	/// Multiply matrix x by matrix y component-wise, i.e.,
 	/// result[i][j] is the scalar product of x[i][j] and y[i][j].
-	/// 
+	///
 	/// @tparam matType Floating-point matrix types.
 	///
 	/// @see <a href="http://www.opengl.org/sdk/docs/manglsl/xhtml/matrixCompMult.xml">GLSL matrixCompMult man page</a>
@@ -106,7 +106,7 @@ namespace detail
 	/// Treats the first parameter c as a column vector
 	/// and the second parameter r as a row vector
 	/// and does a linear algebraic matrix multiply c * r.
-	/// 
+	///
 	/// @tparam matType Floating-point matrix types.
 	///
 	/// @see <a href="http://www.opengl.org/sdk/docs/manglsl/xhtml/outerProduct.xml">GLSL outerProduct man page</a>
@@ -115,7 +115,7 @@ namespace detail
 	GLM_FUNC_DECL typename detail::outerProduct_trait<T, P, vecTypeA, vecTypeB>::type outerProduct(vecTypeA<T, P> const & c, vecTypeB<T, P> const & r);
 
 	/// Returns the transposed matrix of x
-	/// 
+	///
 	/// @tparam matType Floating-point matrix types.
 	///
 	/// @see <a href="http://www.opengl.org/sdk/docs/manglsl/xhtml/transpose.xml">GLSL transpose man page</a>
@@ -124,22 +124,22 @@ namespace detail
 		template <typename T, precision P, template <typename, precision> class matType>
 		GLM_FUNC_DECL typename matType<T, P>::transpose_type transpose(matType<T, P> const & x);
 #	endif
-	
+
 	/// Return the determinant of a squared matrix.
-	/// 
+	///
 	/// @tparam valType Floating-point scalar types.
 	///
 	/// @see <a href="http://www.opengl.org/sdk/docs/manglsl/xhtml/determinant.xml">GLSL determinant man page</a>
-	/// @see <a href="http://www.opengl.org/registry/doc/GLSLangSpec.4.20.8.pdf">GLSL 4.20.8 specification, section 8.6 Matrix Functions</a>	
+	/// @see <a href="http://www.opengl.org/registry/doc/GLSLangSpec.4.20.8.pdf">GLSL 4.20.8 specification, section 8.6 Matrix Functions</a>
 	template <typename T, precision P, template <typename, precision> class matType>
 	GLM_FUNC_DECL T determinant(matType<T, P> const & m);
 
 	/// Return the inverse of a squared matrix.
-	/// 
+	///
 	/// @tparam valType Floating-point scalar types.
 	///
 	/// @see <a href="http://www.opengl.org/sdk/docs/manglsl/xhtml/inverse.xml">GLSL inverse man page</a>
-	/// @see <a href="http://www.opengl.org/registry/doc/GLSLangSpec.4.20.8.pdf">GLSL 4.20.8 specification, section 8.6 Matrix Functions</a>	 
+	/// @see <a href="http://www.opengl.org/registry/doc/GLSLangSpec.4.20.8.pdf">GLSL 4.20.8 specification, section 8.6 Matrix Functions</a>
 	template <typename T, precision P, template <typename, precision> class matType>
 	GLM_FUNC_DECL matType<T, P> inverse(matType<T, P> const & m);
 

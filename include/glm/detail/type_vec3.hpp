@@ -58,7 +58,7 @@ namespace glm
 					_GLM_SWIZZLE3_4_MEMBERS(T, P, glm::tvec4, s, t, p)
 #				endif//GLM_SWIZZLE
 			};
-		
+
 #			if GLM_COMPILER & GLM_COMPILER_CLANG
 #				pragma clang diagnostic pop
 #			endif
@@ -386,7 +386,7 @@ namespace glm
 	template <typename T, precision P>
 	GLM_FUNC_DECL tvec3<T, P> operator>>(tvec3<T, P> const & v1, tvec3<T, P> const & v2);
 
-	template <typename T, precision P> 
+	template <typename T, precision P>
 	GLM_FUNC_DECL tvec3<T, P> operator~(tvec3<T, P> const & v);
 
 	// -- Boolean operators --

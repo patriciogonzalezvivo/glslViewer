@@ -42,7 +42,7 @@ namespace detail
 	}
 
 	// cos
-	template <typename T> 
+	template <typename T>
 	GLM_FUNC_QUALIFIER T fastCos(T x)
 	{
 		T const angle(wrapAngle<T>(x));
@@ -64,7 +64,7 @@ namespace detail
 	}
 
 	// sin
-	template <typename T> 
+	template <typename T>
 	GLM_FUNC_QUALIFIER T fastSin(T x)
 	{
 		return fastCos<T>(half_pi<T>() - x);
@@ -77,7 +77,7 @@ namespace detail
 	}
 
 	// tan
-	template <typename T> 
+	template <typename T>
 	GLM_FUNC_QUALIFIER T fastTan(T x)
 	{
 		return x + (x * x * x * T(0.3333333333)) + (x * x * x * x * x * T(0.1333333333333)) + (x * x * x * x * x * x * x * T(0.0539682539));
@@ -90,7 +90,7 @@ namespace detail
 	}
 
 	// asin
-	template <typename T> 
+	template <typename T>
 	GLM_FUNC_QUALIFIER T fastAsin(T x)
 	{
 		return x + (x * x * x * T(0.166666667)) + (x * x * x * x * x * T(0.075)) + (x * x * x * x * x * x * x * T(0.0446428571)) + (x * x * x * x * x * x * x * x * x * T(0.0303819444));// + (x * x * x * x * x * x * x * x * x * x * x * T(0.022372159));
@@ -103,7 +103,7 @@ namespace detail
 	}
 
 	// acos
-	template <typename T> 
+	template <typename T>
 	GLM_FUNC_QUALIFIER T fastAcos(T x)
 	{
 		return T(1.5707963267948966192313216916398) - fastAsin(x); //(PI / 2)
@@ -116,7 +116,7 @@ namespace detail
 	}
 
 	// atan
-	template <typename T> 
+	template <typename T>
 	GLM_FUNC_QUALIFIER T fastAtan(T y, T x)
 	{
 		T sgn = sign(y) * sign(x);
@@ -129,7 +129,7 @@ namespace detail
 		return detail::functor2<T, P, vecType>::call(fastAtan, y, x);
 	}
 
-	template <typename T> 
+	template <typename T>
 	GLM_FUNC_QUALIFIER T fastAtan(T x)
 	{
 		return x - (x * x * x * T(0.333333333333)) + (x * x * x * x * x * T(0.2)) - (x * x * x * x * x * x * x * T(0.1428571429)) + (x * x * x * x * x * x * x * x * x * T(0.111111111111)) - (x * x * x * x * x * x * x * x * x * x * x * T(0.0909090909));

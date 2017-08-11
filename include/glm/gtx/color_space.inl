@@ -45,13 +45,13 @@ namespace glm
 				rgbColor.b = hsv.z;
 				break;
 			case 4:
-				rgbColor.r = q; 
-				rgbColor.g = o; 
+				rgbColor.r = q;
+				rgbColor.g = o;
 				rgbColor.b = hsv.z;
 				break;
 			case 5:
-				rgbColor.r = hsv.z; 
-				rgbColor.g = o; 
+				rgbColor.r = hsv.z;
+				rgbColor.g = o;
 				rgbColor.b = p;
 				break;
 			}
@@ -68,11 +68,11 @@ namespace glm
 		float Max   = max(max(rgbColor.r, rgbColor.g), rgbColor.b);
 		float Delta = Max - Min;
 
-		hsv.z = Max;                               
+		hsv.z = Max;
 
 		if(Max != static_cast<T>(0))
 		{
-			hsv.y = Delta / hsv.z;    
+			hsv.y = Delta / hsv.z;
 			T h = static_cast<T>(0);
 
 			if(rgbColor.r == Max)
@@ -85,7 +85,7 @@ namespace glm
 				// between magenta & cyan
 				h = static_cast<T>(240) + T(60) * (rgbColor.r - rgbColor.g) / Delta;
 
-			if(h < T(0)) 
+			if(h < T(0))
 				hsv.x = h + T(360);
 			else
 				hsv.x = h;
@@ -132,7 +132,7 @@ namespace glm
 		return saturation(s) * color;
 	}
 
-	template <typename T, precision P> 
+	template <typename T, precision P>
 	GLM_FUNC_QUALIFIER T luminosity(const tvec3<T, P>& color)
 	{
 		const tvec3<T, P> tmp = tvec3<T, P>(0.33, 0.59, 0.11);

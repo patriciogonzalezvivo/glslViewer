@@ -35,13 +35,13 @@ glm::vec3 getScaled(const glm::vec3 &_vec, float _length) {
 
 float getArea(const std::vector<glm::vec3> &_pts){
     float area = 0.0;
-    
+
     for(int i=0;i<(int)_pts.size()-1;i++){
         area += _pts[i].x * _pts[i+1].y - _pts[i+1].x * _pts[i].y;
     }
     area += _pts[_pts.size()-1].x * _pts[0].y - _pts[0].x * _pts[_pts.size()-1].y;
     area *= 0.5;
-    
+
     return area;
 }
 
@@ -69,59 +69,59 @@ bool isRightTurn(const glm::vec3 &a, const glm::vec3 &b, const glm::vec3 &c) {
 std::vector<glm::vec3> getConvexHull(const std::vector<glm::vec3> &_pts){
     std::vector<glm::vec3> pts;
     pts.assign(_pts.begin(),_pts.end());
-    
+
     return getConvexHull(pts);
 }
 
 std::vector<glm::vec3> getConvexHull(std::vector<glm::vec3> &pts){
     std::vector<glm::vec3> hull;
     glm::vec3 h1,h2,h3;
-    
+
     if (pts.size() < 3) {
         std::cout << "Error: you need at least three points to calculate the convex hull" << std::endl;
         return hull;
     }
-    
+
     std::sort(pts.begin(), pts.end(), &lexicalComparison);
-    
+
     hull.push_back(pts.at(0));
     hull.push_back(pts.at(1));
-    
+
     uint currentPoint = 2;
     int direction = 1;
-    
+
     for (int i=0; i<3000; i++) { //max 1000 tries
-        
+
         hull.push_back(pts.at(currentPoint));
-        
+
         // look at the turn direction in the last three points
         h1 = hull.at(hull.size()-3);
         h2 = hull.at(hull.size()-2);
         h3 = hull.at(hull.size()-1);
-        
+
         // while there are more than two points in the hull
         // and the last three points do not make a right turn
         while (!isRightTurn(h1, h2, h3) && hull.size() > 2) {
-            
+
             // remove the middle of the last three points
             hull.erase(hull.end() - 2);
-            
+
             if (hull.size() >= 3) {
                 h1 = hull.at(hull.size()-3);
             }
             h2 = hull.at(hull.size()-2);
             h3 = hull.at(hull.size()-1);
         }
-        
+
         // going through left-to-right calculates the top hull
         // when we get to the end, we reverse direction
         // and go back again right-to-left to calculate the bottom hull
         if (currentPoint == pts.size() -1 || currentPoint == 0) {
             direction = direction * -1;
         }
-        
+
         currentPoint+=direction;
-        
+
         if (hull.front()==hull.back()) {
             if(currentPoint == 3 && direction == 1){
                 currentPoint = 4;
@@ -130,7 +130,7 @@ std::vector<glm::vec3> getConvexHull(std::vector<glm::vec3> &pts){
             }
         }
     }
-    
+
     return hull;
 }
 
@@ -158,7 +158,7 @@ typedef struct{
 static void simplifyDP(float tol, glm::vec3* v, int j, int k, int* mk ){
     if (k <= j+1) // there is nothing to simplify
         return;
-    
+
     // check for adequate approximation by segment S from v[j] to v[k]
     int     maxi	= j;          // index of vertex farthest from S
     float   maxd2	= 0;         // distance squared of farthest vertex
@@ -167,14 +167,14 @@ static void simplifyDP(float tol, glm::vec3* v, int j, int k, int* mk ){
     glm::vec3 u;
     u				= S.P1 - S.P0;   // segment direction vector
     float  cu		= glm::dot(u,u);     // segment length squared
-    
+
     // test each vertex v[i] for max distance from S
     // compute using the Feb 2001 Algorithm's dist_ofPoint_to_Segment()
     // Note: this works in any dimension (2D, 3D, ...)
     glm::vec3  w;
     glm::vec3   Pb;                // base of perpendicular from v[i] to S
     float  b, cw, dv2;        // dv2 = distance v[i] to S squared
-    
+
     for (int i=j+1; i<k; i++){
         // compute distance squared
         w = v[i] - S.P0;
@@ -188,7 +188,7 @@ static void simplifyDP(float tol, glm::vec3* v, int j, int k, int* mk ){
         }
         // test with current max distance squared
         if (dv2 <= maxd2) continue;
-        
+
         // v[i] is a new max vertex
         maxi = i;
         maxd2 = dv2;
@@ -213,45 +213,45 @@ std::vector<glm::vec3> getSimplify(std::vector<glm::vec3> &_pts, float _toleranc
 }
 
 void simplify(std::vector<glm::vec3> &_pts, float _tolerance){
-    
+
     if(_pts.size() < 2) return;
-    
+
     int n = _pts.size();
-    
+
     if(n == 0) {
         return;
     }
-    
+
     std::vector<glm::vec3> sV;
     sV.resize(n);
-    
+
     int    i, k, m, pv;            // misc counters
     float  tol2 = _tolerance * _tolerance;       // tolerance squared
     std::vector<glm::vec3> vt;
     std::vector<int> mk;
     vt.resize(n);
     mk.resize(n,0);
-    
-    
+
+
     // STAGE 1.  Vertex Reduction within tolerance of prior vertex cluster
     vt[0] = _pts[0];              // start at the beginning
     for (i=k=1, pv=0; i<n; i++) {
         if (d2(_pts[i], _pts[pv]) < tol2) continue;
-        
+
         vt[k++] = _pts[i];
         pv = i;
     }
     if (pv < n-1) vt[k++] = _pts[n-1];      // finish at the end
-    
+
     // STAGE 2.  Douglas-Peucker polyline simplification
     mk[0] = mk[k-1] = 1;       // mark the first and last vertices
     simplifyDP( _tolerance, &vt[0], 0, k-1, &mk[0] );
-    
+
     // copy marked vertices to the output simplified polyline
     for (i=m=0; i<k; i++) {
         if (mk[i]) sV[m++] = vt[i];
     }
-    
+
     //get rid of the unused points
     if( m < (int)sV.size() ){
         _pts.assign( sV.begin(),sV.begin()+m );
@@ -272,8 +272,8 @@ std::string getAbsPath (const std::string& str) {
 }
 
 bool urlExists(const std::string& name) {
-  struct stat buffer;   
-  return (stat (name.c_str(), &buffer) == 0); 
+  struct stat buffer;
+  return (stat (name.c_str(), &buffer) == 0);
 }
 
 std::string urlResolve(const std::string& path, const std::string& pwd, const std::vector<std::string> include_folders) {

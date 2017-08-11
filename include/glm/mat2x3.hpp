@@ -29,4 +29,3 @@ namespace glm
 	typedef tmat2x3<float, highp>		highp_mat2x3;
 
 }//namespace glm
-
