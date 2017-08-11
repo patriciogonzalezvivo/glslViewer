@@ -206,9 +206,6 @@ int main(int argc, char **argv){
                 std::cout << "At the moment screenshots only support PNG formats" << std::endl;
             }
         } 
-        else if (argument == "vFlip") {
-            vFlip = false;
-        }
         else if (iFrag == -1 && (haveExt(argument,"frag") || haveExt(argument,"fs"))) {
             if (stat(argument.c_str(), &st) != 0) {
                 std::cerr << "Error watching file " << argv[i] << std::endl;
@@ -248,6 +245,9 @@ int main(int argc, char **argv){
                 files.push_back(file);
                 iGeom = files.size()-1;
             }
+        }
+        else if (argument == "-vFlip") {
+            vFlip = false;
         }
         else if (   haveExt(argument,"png") || haveExt(argument,"PNG") ||
                     haveExt(argument,"jpg") || haveExt(argument,"JPG") || 
@@ -454,6 +454,9 @@ void cinWatcherThread() {
                     << u_up3d.x << "," << u_up3d.y << "," << u_up3d.z << ")"
                 << std::endl;
         }
+        // else if (line == "screenshot") {
+        //     screenshot();
+        // }
         else {
             uniformsMutex.lock();
             parseUniforms(line, &uniforms);
