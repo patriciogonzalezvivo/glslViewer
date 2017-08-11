@@ -70,6 +70,8 @@ make
 sudo make install
 ```
 
+Or simply install the AUR package [glslviewer-git](https://aur.archlinux.org/packages/glslviewer-git/) with an [AUR helper](https://wiki.archlinux.org/index.php/AUR_helpers).
+
 ### Installing in Mac OSX
 
 You need to [install GLFW](http://www.glfw.org), ```pkg-config``` first and then download the code, compile and install.
