@@ -147,7 +147,7 @@ GLuint Shader::compileShader(const std::string& _src, const std::vector<std::str
     std::string prolog = "";
     const char* epilog = "";
 
-    for (int i = 0; i < _defines.size(); i++) {
+    for (unsigned int i = 0; i < _defines.size(); i++) {
         prolog += "#define " + _defines[i] + "\n"; 
     }
 
