@@ -9,7 +9,7 @@ public:
 	Texture();
 	virtual ~Texture();
 
-	bool load(const std::string& _filepath);
+	bool load(const std::string& _filepath, bool _vFlip = true);
 	bool load(unsigned char* _pixels, int _width, int _height);
 
 	static bool savePixels(const std::string& _path, unsigned char* _pixels, int _width, int _height);

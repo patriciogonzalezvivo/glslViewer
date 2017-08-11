@@ -30,14 +30,12 @@ std::atomic<bool> bRun(true);
 struct WatchFile {
     std::string type;
     std::string path;
+    bool vFlip;
     int lastChange;
 };
 std::vector<WatchFile> files;
 std::mutex filesMutex;
 int fileChanged;
-
-std::vector<std::string> defines;
-std::vector<std::string> include_folders;
 
 UniformList uniforms;
 std::mutex uniformsMutex;
@@ -75,6 +73,13 @@ std::string outputFile = "";
 
 // Textures
 std::map<std::string,Texture*> textures;
+bool vFlip = true;
+
+// Defines
+std::vector<std::string> defines;
+
+// Include folders
+std::vector<std::string> include_folders;
 
 // Backbuffer
 PingPong buffer;
@@ -193,7 +198,7 @@ int main(int argc, char **argv){
         else if (argument == "-o") {
             i++;
             argument = std::string(argv[i]);
-            if (haveExt(argument, "png")){
+            if (haveExt(argument, "png")) {
                 outputFile = argument;
                 std::cout << "Will save screenshot to " << outputFile  << " on exit." << std::endl; 
             }
@@ -201,6 +206,9 @@ int main(int argc, char **argv){
                 std::cout << "At the moment screenshots only support PNG formats" << std::endl;
             }
         } 
+        else if (argument == "vFlip") {
+            vFlip = false;
+        }
         else if (iFrag == -1 && (haveExt(argument,"frag") || haveExt(argument,"fs"))) {
             if (stat(argument.c_str(), &st) != 0) {
                 std::cerr << "Error watching file " << argv[i] << std::endl;
@@ -250,7 +258,7 @@ int main(int argc, char **argv){
             else {
                 Texture* tex = new Texture();
 
-                if (tex->load(argument)) {
+                if (tex->load(argument, vFlip)) {
                     std::string name = "u_tex"+getString(textureCounter);
                     textures[name] = tex;
  
@@ -258,6 +266,7 @@ int main(int argc, char **argv){
                     file.type = "image";
                     file.path = argument;
                     file.lastChange = st.st_mtime;
+                    file.vFlip = vFlip;
                     files.push_back(file);
 
                     std::cout << "Loading " << argument << " as the following uniform: " << std::endl;
@@ -284,13 +293,14 @@ int main(int argc, char **argv){
             }
             else {
                 Texture* tex = new Texture();
-                if (tex->load(argument)) {
+                if (tex->load(argument, vFlip)) {
                     textures[parameterPair] = tex;
 
                     WatchFile file;
                     file.type = "image";
                     file.path = argument;
                     file.lastChange = st.st_mtime;
+                    file.vFlip = vFlip;
                     files.push_back(file);
 
                     std::cout << "Loading " << argument << " as the following uniform: " << std::endl;
@@ -645,7 +655,7 @@ void onFileChange(int index) {
     else if (type == "image") {
         for (std::map<std::string,Texture*>::iterator it = textures.begin(); it!=textures.end(); ++it) {
             if (path == it->second->getFilePath()) {
-                it->second->load(path);
+                it->second->load(path, files[index].vFlip);
                 break;
             }
         }

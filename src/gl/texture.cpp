@@ -14,7 +14,7 @@ Texture::~Texture() {
 	glDeleteTextures(1, &m_id);
 }
 
-bool Texture::load(const std::string& _path) {
+bool Texture::load(const std::string& _path, bool _vFlip) {
     stbi_set_flip_vertically_on_load(true);
     int comp;
     unsigned char* pixels = stbi_load(_path.c_str(), &m_width, &m_height, &comp, STBI_rgb_alpha);
