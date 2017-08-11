@@ -10,7 +10,7 @@ void main (void) {
 
     #ifdef PLATFORM_LINUX
         gl_FragColor = vec4(0.0,1.0,0.0,1.0);
-    #endif    
+    #endif
 
     #ifdef PLATFORM_RPI
         gl_FragColor = vec4(0.0,0.0,1.0,1.0);

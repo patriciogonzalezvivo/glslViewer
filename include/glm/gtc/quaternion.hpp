@@ -50,13 +50,13 @@ namespace glm
 #				pragma clang diagnostic ignored "-Wgnu-anonymous-struct"
 #				pragma clang diagnostic ignored "-Wnested-anon-types"
 #			endif
-		
+
 			union
 			{
 				struct { T x, y, z, w;};
 				typename detail::storage<T, sizeof(T) * 4, detail::is_aligned<P>::value>::type data;
 			};
-		
+
 #			if GLM_COMPILER & GLM_COMPILER_CLANG
 #				pragma clang diagnostic pop
 #			endif
@@ -177,19 +177,19 @@ namespace glm
 	GLM_FUNC_DECL bool operator!=(tquat<T, P> const & q1, tquat<T, P> const & q2);
 
 	/// Returns the length of the quaternion.
-	/// 
+	///
 	/// @see gtc_quaternion
 	template <typename T, precision P>
 	GLM_FUNC_DECL T length(tquat<T, P> const & q);
 
 	/// Returns the normalized quaternion.
-	/// 
+	///
 	/// @see gtc_quaternion
 	template <typename T, precision P>
 	GLM_FUNC_DECL tquat<T, P> normalize(tquat<T, P> const & q);
-		
+
 	/// Returns dot product of q1 and q2, i.e., q1[0] * q2[0] + q1[1] * q2[1] + ...
-	/// 
+	///
 	/// @see gtc_quaternion
 	template <typename T, precision P, template <typename, precision> class quatType>
 	GLM_FUNC_DECL T dot(quatType<T, P> const & x, quatType<T, P> const & y);
@@ -197,7 +197,7 @@ namespace glm
 	/// Spherical linear interpolation of two quaternions.
 	/// The interpolation is oriented and the rotation is performed at constant speed.
 	/// For short path spherical linear interpolation, use the slerp function.
-	/// 
+	///
 	/// @param x A quaternion
 	/// @param y A quaternion
 	/// @param a Interpolation factor. The interpolation is defined beyond the range [0, 1].
@@ -209,7 +209,7 @@ namespace glm
 
 	/// Linear interpolation of two quaternions.
 	/// The interpolation is oriented.
-	/// 
+	///
 	/// @param x A quaternion
 	/// @param y A quaternion
 	/// @param a Interpolation factor. The interpolation is defined in the range [0, 1].
@@ -220,7 +220,7 @@ namespace glm
 
 	/// Spherical linear interpolation of two quaternions.
 	/// The interpolation always take the short path and the rotation is performed at constant speed.
-	/// 
+	///
 	/// @param x A quaternion
 	/// @param y A quaternion
 	/// @param a Interpolation factor. The interpolation is defined beyond the range [0, 1].
@@ -230,30 +230,30 @@ namespace glm
 	GLM_FUNC_DECL tquat<T, P> slerp(tquat<T, P> const & x, tquat<T, P> const & y, T a);
 
 	/// Returns the q conjugate.
-	/// 
+	///
 	/// @see gtc_quaternion
 	template <typename T, precision P>
 	GLM_FUNC_DECL tquat<T, P> conjugate(tquat<T, P> const & q);
 
 	/// Returns the q inverse.
-	/// 
+	///
 	/// @see gtc_quaternion
 	template <typename T, precision P>
 	GLM_FUNC_DECL tquat<T, P> inverse(tquat<T, P> const & q);
 
 	/// Rotates a quaternion from a vector of 3 components axis and an angle.
-	/// 
+	///
 	/// @param q Source orientation
 	/// @param angle Angle expressed in radians.
 	/// @param axis Axis of the rotation
-	/// 
+	///
 	/// @see gtc_quaternion
 	template <typename T, precision P>
 	GLM_FUNC_DECL tquat<T, P> rotate(tquat<T, P> const & q, T const & angle, tvec3<T, P> const & axis);
 
 	/// Returns euler angles, pitch as x, yaw as y, roll as z.
 	/// The result is expressed in radians if GLM_FORCE_RADIANS is defined or degrees otherwise.
-	/// 
+	///
 	/// @see gtc_quaternion
 	template <typename T, precision P>
 	GLM_FUNC_DECL tvec3<T, P> eulerAngles(tquat<T, P> const & x);
@@ -277,25 +277,25 @@ namespace glm
 	GLM_FUNC_DECL T yaw(tquat<T, P> const & x);
 
 	/// Converts a quaternion to a 3 * 3 matrix.
-	/// 
+	///
 	/// @see gtc_quaternion
 	template <typename T, precision P>
 	GLM_FUNC_DECL tmat3x3<T, P> mat3_cast(tquat<T, P> const & x);
 
 	/// Converts a quaternion to a 4 * 4 matrix.
-	/// 
+	///
 	/// @see gtc_quaternion
 	template <typename T, precision P>
 	GLM_FUNC_DECL tmat4x4<T, P> mat4_cast(tquat<T, P> const & x);
 
 	/// Converts a 3 * 3 matrix to a quaternion.
-	/// 
+	///
 	/// @see gtc_quaternion
 	template <typename T, precision P>
 	GLM_FUNC_DECL tquat<T, P> quat_cast(tmat3x3<T, P> const & x);
 
 	/// Converts a 4 * 4 matrix to a quaternion.
-	/// 
+	///
 	/// @see gtc_quaternion
 	template <typename T, precision P>
 	GLM_FUNC_DECL tquat<T, P> quat_cast(tmat4x4<T, P> const & x);
@@ -322,7 +322,7 @@ namespace glm
 	GLM_FUNC_DECL tquat<T, P> angleAxis(T const & angle, tvec3<T, P> const & axis);
 
 	/// Returns the component-wise comparison result of x < y.
-	/// 
+	///
 	/// @tparam quatType Floating-point quaternion types.
 	///
 	/// @see gtc_quaternion
@@ -362,7 +362,7 @@ namespace glm
 	GLM_FUNC_DECL tvec4<bool, P> equal(tquat<T, P> const & x, tquat<T, P> const & y);
 
 	/// Returns the component-wise comparison of result x != y.
-	/// 
+	///
 	/// @tparam quatType Floating-point quaternion types.
 	///
 	/// @see gtc_quaternion
@@ -374,9 +374,9 @@ namespace glm
 	/// floating point representations. Returns false otherwise,
 	/// including for implementations with no NaN
 	/// representations.
-	/// 
+	///
 	/// /!\ When using compiler fast math, this function may fail.
-	/// 
+	///
 	/// @tparam genType Floating-point scalar or vector types.
 	template <typename T, precision P>
 	GLM_FUNC_DECL tvec4<bool, P> isnan(tquat<T, P> const & x);
@@ -386,7 +386,7 @@ namespace glm
 	/// set of floating point representations. Returns false
 	/// otherwise, including for implementations with no infinity
 	/// representations.
-	/// 
+	///
 	/// @tparam genType Floating-point scalar or vector types.
 	template <typename T, precision P>
 	GLM_FUNC_DECL tvec4<bool, P> isinf(tquat<T, P> const & x);

@@ -254,4 +254,3 @@ template struct tdualquat<float32, highp>;
 template struct tdualquat<float64, highp>;
 
 }//namespace glm
-

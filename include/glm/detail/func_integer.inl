@@ -365,4 +365,3 @@ namespace detail
 #if GLM_ARCH != GLM_ARCH_PURE && GLM_HAS_UNRESTRICTED_UNIONS
 #	include "func_integer_simd.inl"
 #endif
-

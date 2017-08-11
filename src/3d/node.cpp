@@ -22,7 +22,7 @@ void Node::setTransformMatrix(const glm::mat4& _m) {
     glm::decompose(m_transformMatrix, m_scale, m_orientation, m_position, skew, perspective );
 
     updateAxis();
-    
+
     onPositionChanged();
     onOrientationChanged();
     onScaleChanged();
@@ -91,7 +91,7 @@ float Node::getHeading() const {
 float Node::getRoll() const {
     return getOrientationEuler().z;
 }
-    
+
 glm::quat Node::getOrientationQuat() const {
     return m_orientation;
 }
@@ -143,11 +143,11 @@ void Node::rotate(const glm::quat& _q) {
 
     createMatrix();
     onOrientationChanged();
-} 
+}
 
 void Node::rotateAround(const glm::quat& _q, const glm::vec3& _point) {
-    setPosition( (getPosition() - _point) * _q + _point); 
-    
+    setPosition( (getPosition() - _point) * _q + _point);
+
     onOrientationChanged();
     onPositionChanged();
 }
@@ -161,14 +161,14 @@ void Node::orbit(float _lat, float _lon, float _radius, const glm::vec3& _center
     glm::vec3 p = glm::vec3(0.0, 0.0, _radius);
 
     _lon = CLAMP(_lon,-89.9,89.9);
-    
+
     glm::quat lat = glm::angleAxis(glm::radians(_lon), glm::vec3(1.0, 0.0, 0.0));
     glm::quat lon = glm::angleAxis(glm::radians(_lat), glm::vec3(0.0, 1.0, 0.0));
     p = lat * p;
     p = lon * p;
     p += _centerPoint;
     setPosition(p);
-    
+
     lookAt(_centerPoint);
 }
 
@@ -189,11 +189,11 @@ void Node::updateAxis() {
     if(m_scale[0]>0) {
         m_axis[0] = glm::vec3(glm::row(getTransformMatrix(),0))/m_scale[0];
     }
-        
+
     if(m_scale[1]>0) {
         m_axis[1] = glm::vec3(glm::row(getTransformMatrix(),1))/m_scale[1];
     }
-        
+
     if(m_scale[2]>0) {
         m_axis[2] = glm::vec3(glm::row(getTransformMatrix(),2))/m_scale[2];
     }

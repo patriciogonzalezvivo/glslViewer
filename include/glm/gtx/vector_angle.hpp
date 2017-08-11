@@ -34,7 +34,7 @@ namespace glm
 	/// @see gtx_vector_angle extension.
 	template <typename vecType>
 	GLM_FUNC_DECL typename vecType::value_type angle(
-		vecType const & x, 
+		vecType const & x,
 		vecType const & y);
 
 	//! Returns the oriented angle between two 2d vectors.

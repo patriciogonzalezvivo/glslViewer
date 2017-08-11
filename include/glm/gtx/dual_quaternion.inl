@@ -27,7 +27,7 @@ namespace glm
 #	if !GLM_HAS_DEFAULTED_FUNCTIONS || !defined(GLM_FORCE_NO_CTOR_INIT)
 		template <typename T, precision P>
 		GLM_FUNC_QUALIFIER GLM_CONSTEXPR tdualquat<T, P>::tdualquat()
-#			ifndef GLM_FORCE_NO_CTOR_INIT 
+#			ifndef GLM_FORCE_NO_CTOR_INIT
 				: real(tquat<T, P>())
 				, dual(tquat<T, P>(0, 0, 0, 0))
 #			endif
@@ -258,35 +258,35 @@ namespace glm
 	GLM_FUNC_QUALIFIER tmat3x4<T, P> mat3x4_cast(tdualquat<T, P> const & x)
 	{
 		tquat<T, P> r = x.real / length2(x.real);
-		
+
 		tquat<T, P> const rr(r.w * x.real.w, r.x * x.real.x, r.y * x.real.y, r.z * x.real.z);
 		r *= static_cast<T>(2);
-		
+
 		T const xy = r.x * x.real.y;
 		T const xz = r.x * x.real.z;
 		T const yz = r.y * x.real.z;
 		T const wx = r.w * x.real.x;
 		T const wy = r.w * x.real.y;
 		T const wz = r.w * x.real.z;
-		
+
 		tvec4<T, P> const a(
 			rr.w + rr.x - rr.y - rr.z,
 			xy - wz,
 			xz + wy,
 			-(x.dual.w * r.x - x.dual.x * r.w + x.dual.y * r.z - x.dual.z * r.y));
-		
+
 		tvec4<T, P> const b(
 			xy + wz,
 			rr.w + rr.y - rr.x - rr.z,
 			yz - wx,
 			-(x.dual.w * r.y - x.dual.x * r.z - x.dual.y * r.w + x.dual.z * r.x));
-		
+
 		tvec4<T, P> const c(
 			xz - wy,
 			yz + wx,
 			rr.w + rr.z - rr.x - rr.y,
 			-(x.dual.w * r.z + x.dual.x * r.y - x.dual.y * r.x - x.dual.z * r.w));
-		
+
 		return tmat3x4<T, P>(a, b, c);
 	}
 
@@ -302,7 +302,7 @@ namespace glm
 	GLM_FUNC_QUALIFIER tdualquat<T, P> dualquat_cast(tmat3x4<T, P> const & x)
 	{
 		tquat<T, P> real(uninitialize);
-		
+
 		T const trace = x[0].x + x[1].y + x[2].z;
 		if(trace > static_cast<T>(0))
 		{
@@ -340,7 +340,7 @@ namespace glm
 			real.z = static_cast<T>(0.5) * r;
 			real.w = (x[1].x - x[0].y) * invr;
 		}
-		
+
 		tquat<T, P> dual(uninitialize);
 		dual.x =  static_cast<T>(0.5) * ( x[0].w * real.w + x[1].w * real.z - x[2].w * real.y);
 		dual.y =  static_cast<T>(0.5) * (-x[0].w * real.z + x[1].w * real.w + x[2].w * real.x);

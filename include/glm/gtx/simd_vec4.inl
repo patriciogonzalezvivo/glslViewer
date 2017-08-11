@@ -159,7 +159,7 @@ template <comp X_, comp Y_, comp Z_, comp W_>
 GLM_FUNC_QUALIFIER fvec4SIMD fvec4SIMD::swizzle() const
 {
 	__m128 Data = _mm_shuffle_ps(
-		this->Data, this->Data, 
+		this->Data, this->Data,
 		shuffle_mask<(W_ << 6) | (Z_ << 4) | (Y_ << 2) | (X_ << 0)>::value);
 	return fvec4SIMD(Data);
 }
@@ -168,7 +168,7 @@ template <comp X_, comp Y_, comp Z_, comp W_>
 GLM_FUNC_QUALIFIER fvec4SIMD& fvec4SIMD::swizzle()
 {
 	this->Data = _mm_shuffle_ps(
-		this->Data, this->Data, 
+		this->Data, this->Data,
 		shuffle_mask<(W_ << 6) | (Z_ << 4) | (Y_ << 2) | (X_ << 0)>::value);
 	return *this;
 }
@@ -356,7 +356,7 @@ GLM_FUNC_QUALIFIER detail::fvec4SIMD fract
 
 GLM_FUNC_QUALIFIER detail::fvec4SIMD mod
 (
-	detail::fvec4SIMD const & x, 
+	detail::fvec4SIMD const & x,
 	detail::fvec4SIMD const & y
 )
 {
@@ -365,7 +365,7 @@ GLM_FUNC_QUALIFIER detail::fvec4SIMD mod
 
 GLM_FUNC_QUALIFIER detail::fvec4SIMD mod
 (
-	detail::fvec4SIMD const & x, 
+	detail::fvec4SIMD const & x,
 	float const & y
 )
 {
@@ -374,7 +374,7 @@ GLM_FUNC_QUALIFIER detail::fvec4SIMD mod
 
 //GLM_FUNC_QUALIFIER detail::fvec4SIMD modf
 //(
-//	detail::fvec4SIMD const & x, 
+//	detail::fvec4SIMD const & x,
 //	detail::fvec4SIMD & i
 //)
 //{
@@ -383,7 +383,7 @@ GLM_FUNC_QUALIFIER detail::fvec4SIMD mod
 
 GLM_FUNC_QUALIFIER detail::fvec4SIMD min
 (
-	detail::fvec4SIMD const & x, 
+	detail::fvec4SIMD const & x,
 	detail::fvec4SIMD const & y
 )
 {
@@ -392,7 +392,7 @@ GLM_FUNC_QUALIFIER detail::fvec4SIMD min
 
 GLM_FUNC_QUALIFIER detail::fvec4SIMD min
 (
-	detail::fvec4SIMD const & x, 
+	detail::fvec4SIMD const & x,
 	float const & y
 )
 {
@@ -401,7 +401,7 @@ GLM_FUNC_QUALIFIER detail::fvec4SIMD min
 
 GLM_FUNC_QUALIFIER detail::fvec4SIMD max
 (
-	detail::fvec4SIMD const & x, 
+	detail::fvec4SIMD const & x,
 	detail::fvec4SIMD const & y
 )
 {
@@ -410,7 +410,7 @@ GLM_FUNC_QUALIFIER detail::fvec4SIMD max
 
 GLM_FUNC_QUALIFIER detail::fvec4SIMD max
 (
-	detail::fvec4SIMD const & x, 
+	detail::fvec4SIMD const & x,
 	float const & y
 )
 {
@@ -419,8 +419,8 @@ GLM_FUNC_QUALIFIER detail::fvec4SIMD max
 
 GLM_FUNC_QUALIFIER detail::fvec4SIMD clamp
 (
-	detail::fvec4SIMD const & x, 
-	detail::fvec4SIMD const & minVal, 
+	detail::fvec4SIMD const & x,
+	detail::fvec4SIMD const & minVal,
 	detail::fvec4SIMD const & maxVal
 )
 {
@@ -429,18 +429,18 @@ GLM_FUNC_QUALIFIER detail::fvec4SIMD clamp
 
 GLM_FUNC_QUALIFIER detail::fvec4SIMD clamp
 (
-	detail::fvec4SIMD const & x, 
-	float const & minVal, 
+	detail::fvec4SIMD const & x,
+	float const & minVal,
 	float const & maxVal
-) 
+)
 {
 	return detail::sse_clp_ps(x.Data, _mm_set1_ps(minVal), _mm_set1_ps(maxVal));
 }
 
 GLM_FUNC_QUALIFIER detail::fvec4SIMD mix
 (
-	detail::fvec4SIMD const & x, 
-	detail::fvec4SIMD const & y, 
+	detail::fvec4SIMD const & x,
+	detail::fvec4SIMD const & y,
 	detail::fvec4SIMD const & a
 )
 {
@@ -451,7 +451,7 @@ GLM_FUNC_QUALIFIER detail::fvec4SIMD mix
 
 GLM_FUNC_QUALIFIER detail::fvec4SIMD step
 (
-	detail::fvec4SIMD const & edge, 
+	detail::fvec4SIMD const & edge,
 	detail::fvec4SIMD const & x
 )
 {
@@ -461,7 +461,7 @@ GLM_FUNC_QUALIFIER detail::fvec4SIMD step
 
 GLM_FUNC_QUALIFIER detail::fvec4SIMD step
 (
-	float const & edge, 
+	float const & edge,
 	detail::fvec4SIMD const & x
 )
 {
@@ -471,8 +471,8 @@ GLM_FUNC_QUALIFIER detail::fvec4SIMD step
 
 GLM_FUNC_QUALIFIER detail::fvec4SIMD smoothstep
 (
-	detail::fvec4SIMD const & edge0, 
-	detail::fvec4SIMD const & edge1, 
+	detail::fvec4SIMD const & edge0,
+	detail::fvec4SIMD const & edge1,
 	detail::fvec4SIMD const & x
 )
 {
@@ -481,8 +481,8 @@ GLM_FUNC_QUALIFIER detail::fvec4SIMD smoothstep
 
 GLM_FUNC_QUALIFIER detail::fvec4SIMD smoothstep
 (
-	float const & edge0, 
-	float const & edge1, 
+	float const & edge0,
+	float const & edge1,
 	detail::fvec4SIMD const & x
 )
 {
@@ -517,8 +517,8 @@ GLM_FUNC_QUALIFIER detail::fvec4SIMD smoothstep
 
 GLM_FUNC_QUALIFIER detail::fvec4SIMD fma
 (
-	detail::fvec4SIMD const & a, 
-	detail::fvec4SIMD const & b, 
+	detail::fvec4SIMD const & a,
+	detail::fvec4SIMD const & b,
 	detail::fvec4SIMD const & c
 )
 {

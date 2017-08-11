@@ -25,7 +25,7 @@ namespace detail
 	};
 }//namespace detail
 
-	template <typename T> 
+	template <typename T>
 	GLM_FUNC_QUALIFIER bool isdenormal(T const & x)
 	{
 		GLM_STATIC_ASSERT(std::numeric_limits<T>::is_iec559, "'isdenormal' only accept floating-point inputs");

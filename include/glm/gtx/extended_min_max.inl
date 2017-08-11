@@ -5,8 +5,8 @@ namespace glm
 {
 	template <typename T>
 	GLM_FUNC_QUALIFIER T min(
-		T const & x, 
-		T const & y, 
+		T const & x,
+		T const & y,
 		T const & z)
 	{
 		return glm::min(glm::min(x, y), z);
@@ -15,8 +15,8 @@ namespace glm
 	template <typename T, template <typename> class C>
 	GLM_FUNC_QUALIFIER C<T> min
 	(
-		C<T> const & x, 
-		typename C<T>::T const & y, 
+		C<T> const & x,
+		typename C<T>::T const & y,
 		typename C<T>::T const & z
 	)
 	{
@@ -26,8 +26,8 @@ namespace glm
 	template <typename T, template <typename> class C>
 	GLM_FUNC_QUALIFIER C<T> min
 	(
-		C<T> const & x, 
-		C<T> const & y, 
+		C<T> const & x,
+		C<T> const & y,
 		C<T> const & z
 	)
 	{
@@ -37,9 +37,9 @@ namespace glm
 	template <typename T>
 	GLM_FUNC_QUALIFIER T min
 	(
-		T const & x, 
-		T const & y, 
-		T const & z, 
+		T const & x,
+		T const & y,
+		T const & z,
 		T const & w
 	)
 	{
@@ -49,9 +49,9 @@ namespace glm
 	template <typename T, template <typename> class C>
 	GLM_FUNC_QUALIFIER C<T> min
 	(
-		C<T> const & x, 
-		typename C<T>::T const & y, 
-		typename C<T>::T const & z, 
+		C<T> const & x,
+		typename C<T>::T const & y,
+		typename C<T>::T const & z,
 		typename C<T>::T const & w
 	)
 	{
@@ -61,9 +61,9 @@ namespace glm
 	template <typename T, template <typename> class C>
 	GLM_FUNC_QUALIFIER C<T> min
 	(
-		C<T> const & x, 
-		C<T> const & y, 
-		C<T> const & z, 
+		C<T> const & x,
+		C<T> const & y,
+		C<T> const & z,
 		C<T> const & w
 	)
 	{
@@ -72,8 +72,8 @@ namespace glm
 
 	template <typename T>
 	GLM_FUNC_QUALIFIER T max(
-		T const & x, 
-		T const & y, 
+		T const & x,
+		T const & y,
 		T const & z)
 	{
 		return glm::max(glm::max(x, y), z);
@@ -82,8 +82,8 @@ namespace glm
 	template <typename T, template <typename> class C>
 	GLM_FUNC_QUALIFIER C<T> max
 	(
-		C<T> const & x, 
-		typename C<T>::T const & y, 
+		C<T> const & x,
+		typename C<T>::T const & y,
 		typename C<T>::T const & z
 	)
 	{
@@ -93,8 +93,8 @@ namespace glm
 	template <typename T, template <typename> class C>
 	GLM_FUNC_QUALIFIER C<T> max
 	(
-		C<T> const & x, 
-		C<T> const & y, 
+		C<T> const & x,
+		C<T> const & y,
 		C<T> const & z
 	)
 	{
@@ -104,9 +104,9 @@ namespace glm
 	template <typename T>
 	GLM_FUNC_QUALIFIER T max
 	(
-		T const & x, 
-		T const & y, 
-		T const & z, 
+		T const & x,
+		T const & y,
+		T const & z,
 		T const & w
 	)
 	{
@@ -116,9 +116,9 @@ namespace glm
 	template <typename T, template <typename> class C>
 	GLM_FUNC_QUALIFIER C<T> max
 	(
-		C<T> const & x, 
-		typename C<T>::T const & y, 
-		typename C<T>::T const & z, 
+		C<T> const & x,
+		typename C<T>::T const & y,
+		typename C<T>::T const & z,
 		typename C<T>::T const & w
 	)
 	{
@@ -128,9 +128,9 @@ namespace glm
 	template <typename T, template <typename> class C>
 	GLM_FUNC_QUALIFIER C<T> max
 	(
-		C<T> const & x, 
-		C<T> const & y, 
-		C<T> const & z, 
+		C<T> const & x,
+		C<T> const & y,
+		C<T> const & z,
 		C<T> const & w
 	)
 	{

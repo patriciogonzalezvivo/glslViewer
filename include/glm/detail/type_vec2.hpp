@@ -39,7 +39,7 @@ namespace glm
 #				pragma clang diagnostic ignored "-Wgnu-anonymous-struct"
 #				pragma clang diagnostic ignored "-Wnested-anon-types"
 #			endif
-		
+
 			union
 			{
 				struct{ T x, y; };
@@ -59,7 +59,7 @@ namespace glm
 #				endif//GLM_SWIZZLE
 
 			};
-		
+
 #			if GLM_COMPILER & GLM_COMPILER_CLANG
 #				pragma clang diagnostic pop
 #			endif
@@ -167,41 +167,41 @@ namespace glm
 
 		// -- Unary bit operators --
 
-		template <typename U> 
+		template <typename U>
 		GLM_FUNC_DECL tvec2<T, P> & operator%=(U scalar);
-		template <typename U> 
+		template <typename U>
 		GLM_FUNC_DECL tvec2<T, P> & operator%=(tvec1<U, P> const & v);
-		template <typename U> 
+		template <typename U>
 		GLM_FUNC_DECL tvec2<T, P> & operator%=(tvec2<U, P> const & v);
-		template <typename U> 
+		template <typename U>
 		GLM_FUNC_DECL tvec2<T, P> & operator&=(U scalar);
-		template <typename U> 
+		template <typename U>
 		GLM_FUNC_DECL tvec2<T, P> & operator&=(tvec1<U, P> const & v);
-		template <typename U> 
+		template <typename U>
 		GLM_FUNC_DECL tvec2<T, P> & operator&=(tvec2<U, P> const & v);
-		template <typename U> 
+		template <typename U>
 		GLM_FUNC_DECL tvec2<T, P> & operator|=(U scalar);
-		template <typename U> 
+		template <typename U>
 		GLM_FUNC_DECL tvec2<T, P> & operator|=(tvec1<U, P> const & v);
-		template <typename U> 
+		template <typename U>
 		GLM_FUNC_DECL tvec2<T, P> & operator|=(tvec2<U, P> const & v);
-		template <typename U> 
+		template <typename U>
 		GLM_FUNC_DECL tvec2<T, P> & operator^=(U scalar);
-		template <typename U> 
+		template <typename U>
 		GLM_FUNC_DECL tvec2<T, P> & operator^=(tvec1<U, P> const & v);
-		template <typename U> 
+		template <typename U>
 		GLM_FUNC_DECL tvec2<T, P> & operator^=(tvec2<U, P> const & v);
-		template <typename U> 
+		template <typename U>
 		GLM_FUNC_DECL tvec2<T, P> & operator<<=(U scalar);
-		template <typename U> 
+		template <typename U>
 		GLM_FUNC_DECL tvec2<T, P> & operator<<=(tvec1<U, P> const & v);
-		template <typename U> 
+		template <typename U>
 		GLM_FUNC_DECL tvec2<T, P> & operator<<=(tvec2<U, P> const & v);
-		template <typename U> 
+		template <typename U>
 		GLM_FUNC_DECL tvec2<T, P> & operator>>=(U scalar);
-		template <typename U> 
+		template <typename U>
 		GLM_FUNC_DECL tvec2<T, P> & operator>>=(tvec1<U, P> const & v);
-		template <typename U> 
+		template <typename U>
 		GLM_FUNC_DECL tvec2<T, P> & operator>>=(tvec2<U, P> const & v);
 	};
 

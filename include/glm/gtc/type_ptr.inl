@@ -51,12 +51,12 @@ namespace glm
 	{
 		return &(vec.x);
 	}
-		
+
 	/// Return the constant address to the data of the vector input.
 	/// @see gtc_type_ptr
 	template<typename T, precision P>
 	GLM_FUNC_QUALIFIER T const * value_ptr
-	(	
+	(
 		tvec4<T, P> const & vec
 	)
 	{
@@ -67,7 +67,7 @@ namespace glm
 	//! From GLM_GTC_type_ptr extension.
 	template<typename T, precision P>
 	GLM_FUNC_QUALIFIER T * value_ptr
-	(	
+	(
 		tvec4<T, P> & vec
 	)
 	{
@@ -95,7 +95,7 @@ namespace glm
 	{
 		return &(mat[0].x);
 	}
-		
+
 	/// Return the constant address to the data of the matrix input.
 	/// @see gtc_type_ptr
 	template<typename T, precision P>
@@ -117,7 +117,7 @@ namespace glm
 	{
 		return &(mat[0].x);
 	}
-		
+
 	/// Return the constant address to the data of the matrix input.
 	/// @see gtc_type_ptr
 	template<typename T, precision P>
@@ -161,7 +161,7 @@ namespace glm
 	{
 		return &(mat[0].x);
 	}
-		
+
 	/// Return the constant address to the data of the matrix input.
 	/// @see gtc_type_ptr
 	template<typename T, precision P>
@@ -183,7 +183,7 @@ namespace glm
 	{
 		return &(mat[0].x);
 	}
-		
+
 	/// Return the constant address to the data of the matrix input.
 	/// @see gtc_type_ptr
 	template<typename T, precision P>
@@ -205,7 +205,7 @@ namespace glm
 	{
 		return &(mat[0].x);
 	}
-		
+
 	/// Return the constant address to the data of the matrix input.
 	/// @see gtc_type_ptr
 	template<typename T, precision P>
@@ -221,13 +221,13 @@ namespace glm
 	/// @see gtc_type_ptr
 	template<typename T, precision P>
 	GLM_FUNC_QUALIFIER T * value_ptr
-	(	
+	(
 		tmat4x2<T, P> & mat
 	)
 	{
 		return &(mat[0].x);
 	}
-		
+
 	/// Return the constant address to the data of the matrix input.
 	/// @see gtc_type_ptr
 	template<typename T, precision P>
@@ -249,7 +249,7 @@ namespace glm
 	{
 		return &(mat[0].x);
 	}
-		
+
 	/// Return the constant address to the data of the matrix input.
 	/// @see gtc_type_ptr
 	template<typename T, precision P>
@@ -426,7 +426,7 @@ namespace glm
 	{
 		return make_mat3x3(ptr);
 	}
-		
+
 	//! Build a matrix from a pointer.
 	/// @see gtc_type_ptr
 	template <typename T>
@@ -447,4 +447,3 @@ namespace glm
 
 	/// @}
 }//namespace glm
-

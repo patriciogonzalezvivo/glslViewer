@@ -6,8 +6,8 @@
 
 namespace glm
 {
-	
-	template <typename T, precision P> 
+
+	template <typename T, precision P>
 	GLM_FUNC_QUALIFIER tmat3x3<T, P> translate(
 		tmat3x3<T, P> const & m,
 		tvec2<T, P> const & v)
@@ -18,7 +18,7 @@ namespace glm
 	}
 
 
-	template <typename T, precision P> 
+	template <typename T, precision P>
 	GLM_FUNC_QUALIFIER tmat3x3<T, P> rotate(
 		tmat3x3<T, P> const & m,
 		T angle)
@@ -34,7 +34,7 @@ namespace glm
 		return Result;
 	}
 
-	template <typename T, precision P> 
+	template <typename T, precision P>
 	GLM_FUNC_QUALIFIER tmat3x3<T, P> scale(
 		tmat3x3<T, P> const & m,
 		tvec2<T, P> const & v)
@@ -46,7 +46,7 @@ namespace glm
 		return Result;
 	}
 
-	template <typename T, precision P> 
+	template <typename T, precision P>
 	GLM_FUNC_QUALIFIER tmat3x3<T, P> shearX(
 		tmat3x3<T, P> const & m,
 		T y)
@@ -56,7 +56,7 @@ namespace glm
 		return m * Result;
 	}
 
-	template <typename T, precision P> 
+	template <typename T, precision P>
 	GLM_FUNC_QUALIFIER tmat3x3<T, P> shearY(
 		tmat3x3<T, P> const & m,
 		T x)

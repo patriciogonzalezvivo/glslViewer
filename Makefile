@@ -15,7 +15,7 @@ ifneq ("$(wildcard /opt/vc/include/bcm_host.h)","")
     PLATFORM = Raspbian GNU/Linux
 endif
 
-#$(info Platform ${PLATFORM}) 
+#$(info Platform ${PLATFORM})
 
 INCLUDES +=	-Isrc/ -Iinclude/
 CFLAGS += -Wall -O3 -std=c++11 -fpermissive
@@ -31,8 +31,8 @@ LDFLAGS += -L$(SDKSTAGE)/opt/vc/lib/ \
 			-lpthread
 
 else ifeq ($(shell uname),Linux)
-CFLAGS += -DPLATFORM_LINUX $(shell pkg-config --cflags glfw3 glu gl) 
-LDFLAGS += $(shell pkg-config --libs glfw3 glu gl x11 xrandr xi xxf86vm xcursor xinerama xrender xext xdamage) -lpthread -ldl 
+CFLAGS += -DPLATFORM_LINUX $(shell pkg-config --cflags glfw3 glu gl)
+LDFLAGS += $(shell pkg-config --libs glfw3 glu gl x11 xrandr xi xxf86vm xcursor xinerama xrender xext xdamage) -lpthread -ldl
 
 else ifeq ($(PLATFORM),Darwin)
 CXX = /usr/bin/clang++

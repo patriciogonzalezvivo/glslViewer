@@ -22,7 +22,7 @@ bool Texture::load(const std::string& _path, bool _vFlip) {
     load(pixels, m_width, m_height);
     stbi_image_free(pixels);
 
-    // TODO: 
+    // TODO:
     //      - on Rpi should use openMAX
 
     m_path = _path;
@@ -39,8 +39,8 @@ bool Texture::load(unsigned char* _pixels, int _width, int _height) {
         // Generate an OpenGL texture ID for this texture
         glGenTextures(1, &m_id);
     }
-    
-    glBindTexture(GL_TEXTURE_2D, m_id); 
+
+    glBindTexture(GL_TEXTURE_2D, m_id);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -66,9 +66,9 @@ bool Texture::load(unsigned char* _pixels, int _width, int _height) {
 
 bool Texture::savePixels(const std::string& _path, unsigned char* _pixels, int _width, int _height) {
 
-    // TODO: 
+    // TODO:
     //      - on Rpi should use openMAX
-    
+
     // Flip the image on Y
     int depth = 4;
     unsigned char *result = new unsigned char[_width*_height*depth];
@@ -89,7 +89,7 @@ bool Texture::savePixels(const std::string& _path, unsigned char* _pixels, int _
         std::cout << "can't create file " << _path << std::endl;
     }
     delete [] result;
-    
+
     return true;
 }
 

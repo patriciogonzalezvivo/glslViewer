@@ -1,4 +1,4 @@
-#include <sys/stat.h> 
+#include <sys/stat.h>
 #include <unistd.h>
 
 #include <map>
@@ -123,17 +123,17 @@ int main(int argc, char **argv){
         if (        std::string(argv[i]) == "-x" ) {
             i++;
             windowPosAndSize.x = getInt(std::string(argv[i]));
-        } 
+        }
         else if (   std::string(argv[i]) == "-y" ) {
             i++;
             windowPosAndSize.y = getInt(std::string(argv[i]));
-        } 
-        else if (   std::string(argv[i]) == "-w" || 
+        }
+        else if (   std::string(argv[i]) == "-w" ||
                     std::string(argv[i]) == "--width" ) {
             i++;
             windowPosAndSize.z = getInt(std::string(argv[i]));
-        } 
-        else if (   std::string(argv[i]) == "-h" || 
+        }
+        else if (   std::string(argv[i]) == "-h" ||
                     std::string(argv[i]) == "--height") {
             i++;
             windowPosAndSize.w = getInt(std::string(argv[i]));
@@ -141,8 +141,8 @@ int main(int argc, char **argv){
         else if (   std::string(argv[i]) == "--headless" ) {
             headless = true;
         }
-        #ifdef PLATFORM_RPI 
-        else if (   std::string(argv[i]) == "-l" || 
+        #ifdef PLATFORM_RPI
+        else if (   std::string(argv[i]) == "-l" ||
                     std::string(argv[i]) == "--life-coding" ){
             windowPosAndSize.x = windowPosAndSize.z-500;
             windowPosAndSize.z = windowPosAndSize.w = 500;
@@ -152,7 +152,7 @@ int main(int argc, char **argv){
 
     // Initialize openGL context
     initGL (windowPosAndSize, headless);
-    
+
     Cursor cursor;  // Cursor
     struct stat st; // for files to watch
     float timeLimit = -1.0f; //  Time limit
@@ -177,35 +177,35 @@ int main(int argc, char **argv){
     for (int i = 1; i < argc ; i++){
         std::string argument = std::string(argv[i]);
 
-        if (argument == "-x" || argument == "-y" || 
-            argument == "-w" || argument == "--width" || 
+        if (argument == "-x" || argument == "-y" ||
+            argument == "-w" || argument == "--width" ||
             argument == "-h" || argument == "--height" ) {
             i++;
         }
         else if (argument == "--headless") {
-        } 
+        }
         else if (argument == "-l") {
-        } 
+        }
         else if (argument == "-m") {
             cursor.init();
-        } 
+        }
         else if (argument == "-s" || argument == "--sec") {
             i++;
             argument = std::string(argv[i]);
             timeLimit = getFloat(argument);
             std::cout << "Will exit in " << timeLimit << " seconds." << std::endl;
-        } 
+        }
         else if (argument == "-o") {
             i++;
             argument = std::string(argv[i]);
             if (haveExt(argument, "png")) {
                 outputFile = argument;
-                std::cout << "Will save screenshot to " << outputFile  << " on exit." << std::endl; 
+                std::cout << "Will save screenshot to " << outputFile  << " on exit." << std::endl;
             }
             else {
                 std::cout << "At the moment screenshots only support PNG formats" << std::endl;
             }
-        } 
+        }
         else if (iFrag == -1 && (haveExt(argument,"frag") || haveExt(argument,"fs"))) {
             if (stat(argument.c_str(), &st) != 0) {
                 std::cerr << "Error watching file " << argv[i] << std::endl;
@@ -218,7 +218,7 @@ int main(int argc, char **argv){
                 files.push_back(file);
                 iFrag = files.size()-1;
             }
-        } 
+        }
         else if ( iVert == -1 && ( haveExt(argument,"vert") || haveExt(argument,"vs") ) ) {
             if (stat(argument.c_str(), &st) != 0) {
                 std::cerr << "Error watching file " << argument << std::endl;
@@ -231,7 +231,7 @@ int main(int argc, char **argv){
                 files.push_back(file);
                 iVert = files.size()-1;
             }
-        } 
+        }
         else if (iGeom == -1 && (   haveExt(argument,"ply") || haveExt(argument,"PLY") ||
                                     haveExt(argument,"obj") || haveExt(argument,"OBJ"))) {
             if (stat(argument.c_str(), &st) != 0) {
@@ -250,7 +250,7 @@ int main(int argc, char **argv){
             vFlip = false;
         }
         else if (   haveExt(argument,"png") || haveExt(argument,"PNG") ||
-                    haveExt(argument,"jpg") || haveExt(argument,"JPG") || 
+                    haveExt(argument,"jpg") || haveExt(argument,"JPG") ||
                     haveExt(argument,"jpeg") || haveExt(argument,"JPEG")) {
             if (stat(argument.c_str(), &st) != 0) {
                 std::cerr << "Error watching file " << argument << std::endl;
@@ -261,7 +261,7 @@ int main(int argc, char **argv){
                 if (tex->load(argument, vFlip)) {
                     std::string name = "u_tex"+getString(textureCounter);
                     textures[name] = tex;
- 
+
                     WatchFile file;
                     file.type = "image";
                     file.path = argument;
@@ -330,7 +330,7 @@ int main(int argc, char **argv){
     while (isGL() && bRun.load()) {
         // Update
         updateGL();
-        
+
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Something change??
@@ -346,7 +346,7 @@ int main(int argc, char **argv){
 
         // Draw Cursor
         cursor.draw();
-        
+
         // Swap the buffers
         renderGL();
 
@@ -383,7 +383,7 @@ void fileWatcherThread() {
                 int date = st.st_mtime;
                 if (date != files[i].lastChange ) {
                     filesMutex.lock();
-                    fileChanged = i; 
+                    fileChanged = i;
                     files[i].lastChange = date;
                     filesMutex.unlock();
                 }
@@ -474,7 +474,7 @@ void setup() {
 
     glEnable(GL_DEPTH_TEST);
     glFrontFace(GL_CCW);
-    
+
     //  Load Geometry
     //
     if (iGeom == -1){
@@ -509,10 +509,10 @@ void setup() {
     }
     else {
         vertSource = vbo->getVertexLayout()->getDefaultVertShader();
-    }    
+    }
 
     shader.load(fragSource, vertSource, defines, true);
-    
+
     cam.setViewport(getWindowWidth(), getWindowHeight());
     cam.setPosition(glm::vec3(0.0,0.0,-3.));
 
@@ -556,7 +556,7 @@ void draw() {
         buffer.swap();
         buffer.src->bind();
     }
-    
+
     shader.use();
 
     // Pass uniforms
@@ -584,7 +584,7 @@ void draw() {
         shader.setUniform("u_centre3d", u_centre3d);
         shader.setUniform("u_up3d", u_up3d);
     }
-    
+
     for (UniformList::iterator it=uniforms.begin(); it!=uniforms.end(); ++it) {
         if (it->second.bInt) {
             shader.setUniform(it->first, int(it->second.value[0]));
@@ -602,7 +602,7 @@ void draw() {
         shader.setUniform("u_modelMatrix", model_matrix);
         shader.setUniform("u_viewMatrix", cam.getViewMatrix());
         shader.setUniform("u_projectionMatrix", cam.getProjectionMatrix());
-        
+
         mvp = cam.getProjectionViewMatrix() * model_matrix;
     }
     shader.setUniform("u_modelViewProjectionMatrix", mvp);
@@ -623,7 +623,7 @@ void draw() {
 
     if (shader.needBackbuffer()) {
         buffer.src->unbind();
-        
+
         buffer_shader.use();
         buffer_shader.setUniform("u_resolution",getWindowWidth(), getWindowHeight());
         buffer_shader.setUniform("u_modelViewProjectionMatrix", mvp);
@@ -662,7 +662,7 @@ void onFileChange(int index) {
                 break;
             }
         }
-    }   
+    }
 }
 
 void onKeyPress(int _key) {
@@ -771,7 +771,7 @@ void screenshot() {
 }
 
 void onExit() {
-    // Take a screenshot if it need 
+    // Take a screenshot if it need
     screenshot();
 
     // clear screen

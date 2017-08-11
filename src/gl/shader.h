@@ -60,7 +60,7 @@ private:
 
     GLuint  compileShader(const std::string& _src, const std::vector<std::string> &_defines, GLenum _type);
     GLint   getUniformLocation(const std::string& _uniformName) const;
-    
+
     GLuint  m_program;
     GLuint  m_fragmentShader;
     GLuint  m_vertexShader;

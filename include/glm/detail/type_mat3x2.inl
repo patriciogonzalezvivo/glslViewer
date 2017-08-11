@@ -6,10 +6,10 @@ namespace glm
 	// -- Constructors --
 
 #	if !GLM_HAS_DEFAULTED_FUNCTIONS || !defined(GLM_FORCE_NO_CTOR_INIT)
-		template <typename T, precision P> 
+		template <typename T, precision P>
 		GLM_FUNC_QUALIFIER tmat3x2<T, P>::tmat3x2()
 		{
-#			ifndef GLM_FORCE_NO_CTOR_INIT 
+#			ifndef GLM_FORCE_NO_CTOR_INIT
 				this->value[0] = col_type(1, 0);
 				this->value[1] = col_type(0, 1);
 				this->value[2] = col_type(0, 0);
@@ -325,7 +325,7 @@ namespace glm
 		return m;
 	}
 
-	template <typename T, precision P> 
+	template <typename T, precision P>
 	GLM_FUNC_QUALIFIER tmat3x2<T, P> operator-(tmat3x2<T, P> const & m)
 	{
 		return tmat3x2<T, P>(
@@ -363,7 +363,7 @@ namespace glm
 			m[2] - scalar);
 	}
 
-	template <typename T, precision P> 
+	template <typename T, precision P>
 	GLM_FUNC_QUALIFIER tmat3x2<T, P> operator-(tmat3x2<T, P> const & m1, tmat3x2<T, P> const & m2)
 	{
 		return tmat3x2<T, P>(
@@ -372,7 +372,7 @@ namespace glm
 			m1[2] - m2[2]);
 	}
 
-	template <typename T, precision P> 
+	template <typename T, precision P>
 	GLM_FUNC_QUALIFIER tmat3x2<T, P> operator*(tmat3x2<T, P> const & m, T scalar)
 	{
 		return tmat3x2<T, P>(
@@ -381,7 +381,7 @@ namespace glm
 			m[2] * scalar);
 	}
 
-	template <typename T, precision P> 
+	template <typename T, precision P>
 	GLM_FUNC_QUALIFIER tmat3x2<T, P> operator*(T scalar, tmat3x2<T, P> const & m)
 	{
 		return tmat3x2<T, P>(
@@ -389,7 +389,7 @@ namespace glm
 			m[1] * scalar,
 			m[2] * scalar);
 	}
-   
+
 	template <typename T, precision P>
 	GLM_FUNC_QUALIFIER typename tmat3x2<T, P>::col_type operator*(tmat3x2<T, P> const & m, typename tmat3x2<T, P>::row_type const & v)
 	{
@@ -467,7 +467,7 @@ namespace glm
 			m[2] / scalar);
 	}
 
-	template <typename T, precision P> 
+	template <typename T, precision P>
 	GLM_FUNC_QUALIFIER tmat3x2<T, P> operator/(T scalar, tmat3x2<T, P> const & m)
 	{
 		return tmat3x2<T, P>(
@@ -484,7 +484,7 @@ namespace glm
 		return (m1[0] == m2[0]) && (m1[1] == m2[1]) && (m1[2] == m2[2]);
 	}
 
-	template <typename T, precision P> 
+	template <typename T, precision P>
 	GLM_FUNC_QUALIFIER bool operator!=(tmat3x2<T, P> const & m1, tmat3x2<T, P> const & m2)
 	{
 		return (m1[0] != m2[0]) || (m1[1] != m2[1]) || (m1[2] != m2[2]);

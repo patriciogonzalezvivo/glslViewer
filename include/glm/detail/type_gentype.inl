@@ -174,7 +174,7 @@ typename base<vT, cT, rT, pT>::col_type const & base<vT, cT, rT, pT>::operator[]
 // Unary updatable operators
 
 template <typename vT, uint cT, uint rT, profile pT>
-typename base<vT, cT, rT, pT>::class_type& base<vT, cT, rT, pT>::operator= 
+typename base<vT, cT, rT, pT>::class_type& base<vT, cT, rT, pT>::operator=
 (
 	typename base<vT, cT, rT, pT>::class_type const & x
 )
@@ -184,7 +184,7 @@ typename base<vT, cT, rT, pT>::class_type& base<vT, cT, rT, pT>::operator=
 }
 
 template <typename vT, uint cT, uint rT, profile pT>
-typename base<vT, cT, rT, pT>::class_type& base<vT, cT, rT, pT>::operator+= 
+typename base<vT, cT, rT, pT>::class_type& base<vT, cT, rT, pT>::operator+=
 (
 	typename base<vT, cT, rT, pT>::T const & x
 )
@@ -200,7 +200,7 @@ typename base<vT, cT, rT, pT>::class_type& base<vT, cT, rT, pT>::operator+=
 }
 
 template <typename vT, uint cT, uint rT, profile pT>
-typename base<vT, cT, rT, pT>::class_type& base<vT, cT, rT, pT>::operator+= 
+typename base<vT, cT, rT, pT>::class_type& base<vT, cT, rT, pT>::operator+=
 (
 	typename base<vT, cT, rT, pT>::class_type const & x
 )
@@ -216,7 +216,7 @@ typename base<vT, cT, rT, pT>::class_type& base<vT, cT, rT, pT>::operator+=
 }
 
 template <typename vT, uint cT, uint rT, profile pT>
-typename base<vT, cT, rT, pT>::class_type& base<vT, cT, rT, pT>::operator-= 
+typename base<vT, cT, rT, pT>::class_type& base<vT, cT, rT, pT>::operator-=
 (
 	typename base<vT, cT, rT, pT>::T const & x
 )
@@ -232,7 +232,7 @@ typename base<vT, cT, rT, pT>::class_type& base<vT, cT, rT, pT>::operator-=
 }
 
 template <typename vT, uint cT, uint rT, profile pT>
-typename base<vT, cT, rT, pT>::class_type& base<vT, cT, rT, pT>::operator-= 
+typename base<vT, cT, rT, pT>::class_type& base<vT, cT, rT, pT>::operator-=
 (
 	typename base<vT, cT, rT, pT>::class_type const & x
 )
@@ -248,7 +248,7 @@ typename base<vT, cT, rT, pT>::class_type& base<vT, cT, rT, pT>::operator-=
 }
 
 template <typename vT, uint cT, uint rT, profile pT>
-typename base<vT, cT, rT, pT>::class_type& base<vT, cT, rT, pT>::operator*= 
+typename base<vT, cT, rT, pT>::class_type& base<vT, cT, rT, pT>::operator*=
 (
 	typename base<vT, cT, rT, pT>::T const & x
 )
@@ -264,7 +264,7 @@ typename base<vT, cT, rT, pT>::class_type& base<vT, cT, rT, pT>::operator*=
 }
 
 template <typename vT, uint cT, uint rT, profile pT>
-typename base<vT, cT, rT, pT>::class_type& base<vT, cT, rT, pT>::operator*= 
+typename base<vT, cT, rT, pT>::class_type& base<vT, cT, rT, pT>::operator*=
 (
 	typename base<vT, cT, rT, pT>::class_type const & x
 )
@@ -280,7 +280,7 @@ typename base<vT, cT, rT, pT>::class_type& base<vT, cT, rT, pT>::operator*=
 }
 
 template <typename vT, uint cT, uint rT, profile pT>
-typename base<vT, cT, rT, pT>::class_type& base<vT, cT, rT, pT>::operator/= 
+typename base<vT, cT, rT, pT>::class_type& base<vT, cT, rT, pT>::operator/=
 (
 	typename base<vT, cT, rT, pT>::T const & x
 )
@@ -296,7 +296,7 @@ typename base<vT, cT, rT, pT>::class_type& base<vT, cT, rT, pT>::operator/=
 }
 
 template <typename vT, uint cT, uint rT, profile pT>
-typename base<vT, cT, rT, pT>::class_type& base<vT, cT, rT, pT>::operator/= 
+typename base<vT, cT, rT, pT>::class_type& base<vT, cT, rT, pT>::operator/=
 (
 	typename base<vT, cT, rT, pT>::class_type const & x
 )

@@ -132,7 +132,7 @@ namespace detail
 		, w(static_cast<T>(q.w))
 	{}
 
-	//template <typename valType> 
+	//template <typename valType>
 	//GLM_FUNC_QUALIFIER tquat<valType>::tquat
 	//(
 	//	valType const & pitch,
@@ -143,7 +143,7 @@ namespace detail
 	//	tvec3<valType> eulerAngle(pitch * valType(0.5), yaw * valType(0.5), roll * valType(0.5));
 	//	tvec3<valType> c = glm::cos(eulerAngle * valType(0.5));
 	//	tvec3<valType> s = glm::sin(eulerAngle * valType(0.5));
-	//	
+	//
 	//	this->w = c.x * c.y * c.z + s.x * s.y * s.z;
 	//	this->x = s.x * c.y * c.z - c.x * s.y * s.z;
 	//	this->y = c.x * s.y * c.z + s.x * c.y * s.z;
@@ -165,7 +165,7 @@ namespace detail
 	{
 		tvec3<T, P> c = glm::cos(eulerAngle * T(0.5));
 		tvec3<T, P> s = glm::sin(eulerAngle * T(0.5));
-		
+
 		this->w = c.x * c.y * c.z + s.x * s.y * s.z;
 		this->x = s.x * c.y * c.z - c.x * s.y * s.z;
 		this->y = c.x * s.y * c.z + s.x * c.y * s.z;
@@ -190,8 +190,8 @@ namespace detail
 	{
 		return mat3_cast(*this);
 	}
-	
-	template <typename T, precision P>	
+
+	template <typename T, precision P>
 	GLM_FUNC_QUALIFIER tquat<T, P>::operator tmat4x4<T, P>()
 	{
 		return mat4_cast(*this);
@@ -436,8 +436,8 @@ namespace detail
 	template <typename T, precision P>
 	GLM_FUNC_QUALIFIER tquat<T, P> mix2
 	(
-		tquat<T, P> const & x, 
-		tquat<T, P> const & y, 
+		tquat<T, P> const & x,
+		tquat<T, P> const & y,
 		T const & a
 	)
 	{
@@ -466,7 +466,7 @@ namespace detail
 
 		if(flip)
 			alpha = -alpha;
-		
+
 		return normalize(beta * x + alpha * y);
 	}
 */
@@ -511,7 +511,7 @@ namespace detail
 
 		T cosTheta = dot(x, y);
 
-		// If cosTheta < 0, the interpolation will take the long way around the sphere. 
+		// If cosTheta < 0, the interpolation will take the long way around the sphere.
 		// To fix this, one quat must be negated.
 		if (cosTheta < T(0))
 		{
@@ -673,7 +673,7 @@ namespace detail
 			Result.y = (m[1][2] + m[2][1]) * mult;
 			Result.z = biggestVal;
 			break;
-			
+
 		default:					// Silence a -Wswitch-default warning in GCC. Should never actually get here. Assert is just for sanity.
 			assert(false);
 			break;
@@ -792,4 +792,3 @@ namespace detail
 #if GLM_ARCH != GLM_ARCH_PURE && GLM_HAS_ALIGNED_TYPE
 #	include "quaternion_simd.inl"
 #endif
-

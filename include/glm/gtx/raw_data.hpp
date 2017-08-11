@@ -25,19 +25,19 @@ namespace glm
 	/// @addtogroup gtx_raw_data
 	/// @{
 
-	//! Type for byte numbers. 
+	//! Type for byte numbers.
 	//! From GLM_GTX_raw_data extension.
 	typedef detail::uint8		byte;
 
-	//! Type for word numbers. 
+	//! Type for word numbers.
 	//! From GLM_GTX_raw_data extension.
 	typedef detail::uint16		word;
 
-	//! Type for dword numbers. 
+	//! Type for dword numbers.
 	//! From GLM_GTX_raw_data extension.
 	typedef detail::uint32		dword;
 
-	//! Type for qword numbers. 
+	//! Type for qword numbers.
 	//! From GLM_GTX_raw_data extension.
 	typedef detail::uint64		qword;
 

@@ -111,7 +111,7 @@ GLM_FUNC_QUALIFIER fquatSIMD operator* (fquatSIMD const & q1, fquatSIMD const & 
     //    11 shuffle
     //    8  mul
     //    8  add
-    
+
     // SSE4 STATS:
     //    3 shuffle
     //    4 mul
@@ -153,7 +153,7 @@ GLM_FUNC_QUALIFIER fquatSIMD operator* (fquatSIMD const & q1, fquatSIMD const & 
     //__m128 zzww = _mm_shuffle_ps(add2, add3, _MM_SHUFFLE(0, 0, 0, 0));
     //
     //return _mm_shuffle_ps(xxyy, zzww, _MM_SHUFFLE(2, 0, 2, 0));
-    
+
     float x;
     float y;
     float z;
@@ -176,13 +176,13 @@ GLM_FUNC_QUALIFIER fvec4SIMD operator* (fquatSIMD const & q, fvec4SIMD const & v
 	__m128 q_swp1  = _mm_shuffle_ps(q.Data, q.Data, _MM_SHUFFLE(3, 1, 0, 2));
 	__m128 v_swp0  = _mm_shuffle_ps(v.Data, v.Data, _MM_SHUFFLE(3, 0, 2, 1));
 	__m128 v_swp1  = _mm_shuffle_ps(v.Data, v.Data, _MM_SHUFFLE(3, 1, 0, 2));
-	
+
 	__m128 uv      = _mm_sub_ps(_mm_mul_ps(q_swp0, v_swp1), _mm_mul_ps(q_swp1, v_swp0));
     __m128 uv_swp0 = _mm_shuffle_ps(uv, uv, _MM_SHUFFLE(3, 0, 2, 1));
     __m128 uv_swp1 = _mm_shuffle_ps(uv, uv, _MM_SHUFFLE(3, 1, 0, 2));
     __m128 uuv     = _mm_sub_ps(_mm_mul_ps(q_swp0, uv_swp1), _mm_mul_ps(q_swp1, uv_swp0));
 
-    
+
     uv  = _mm_mul_ps(uv,  _mm_mul_ps(q_wwww, two));
     uuv = _mm_mul_ps(uuv, two);
 
@@ -333,7 +333,7 @@ GLM_FUNC_QUALIFIER detail::fmat4x4SIMD mat4SIMD_cast
     __m128 _xyzw2 = _mm_add_ps(_xyzw, _xyzw);
     __m128 _zxyw2 = _mm_shuffle_ps(_xyzw2, _xyzw2, _MM_SHUFFLE(3, 1, 0, 2));
     __m128 _yzxw2 = _mm_shuffle_ps(_xyzw2, _xyzw2, _MM_SHUFFLE(3, 0, 2, 1));
-    
+
     __m128 _tmp0  = _mm_sub_ps(_mm_set1_ps(1.0f), _mm_mul_ps(_yzxw2, _yzxw));
            _tmp0  = _mm_sub_ps(_tmp0, _mm_mul_ps(_zxyw2, _zxyw));
 
@@ -413,8 +413,8 @@ GLM_FUNC_QUALIFIER float dot
 
 GLM_FUNC_QUALIFIER detail::fquatSIMD mix
 (
-	detail::fquatSIMD const & x, 
-	detail::fquatSIMD const & y, 
+	detail::fquatSIMD const & x,
+	detail::fquatSIMD const & y,
 	float const & a
 )
 {
@@ -427,8 +427,8 @@ GLM_FUNC_QUALIFIER detail::fquatSIMD mix
     else
     {
         float angle = glm::acos(cosTheta);
-        
-        
+
+
         float s0 = glm::sin((1.0f - a) * angle);
         float s1 = glm::sin(a * angle);
         float d  = 1.0f / glm::sin(angle);
@@ -439,8 +439,8 @@ GLM_FUNC_QUALIFIER detail::fquatSIMD mix
 
 GLM_FUNC_QUALIFIER detail::fquatSIMD lerp
 (
-	detail::fquatSIMD const & x, 
-	detail::fquatSIMD const & y, 
+	detail::fquatSIMD const & x,
+	detail::fquatSIMD const & y,
 	float const & a
 )
 {
@@ -453,8 +453,8 @@ GLM_FUNC_QUALIFIER detail::fquatSIMD lerp
 
 GLM_FUNC_QUALIFIER detail::fquatSIMD slerp
 (
-	detail::fquatSIMD const & x, 
-	detail::fquatSIMD const & y, 
+	detail::fquatSIMD const & x,
+	detail::fquatSIMD const & y,
 	float const & a
 )
 {
@@ -462,7 +462,7 @@ GLM_FUNC_QUALIFIER detail::fquatSIMD slerp
 
 	float cosTheta = dot(x, y);
 
-	// If cosTheta < 0, the interpolation will take the long way around the sphere. 
+	// If cosTheta < 0, the interpolation will take the long way around the sphere.
 	// To fix this, one quat must be negated.
 	if (cosTheta < 0.0f)
 	{
@@ -491,8 +491,8 @@ GLM_FUNC_QUALIFIER detail::fquatSIMD slerp
 
 GLM_FUNC_QUALIFIER detail::fquatSIMD fastMix
 (
-	detail::fquatSIMD const & x, 
-	detail::fquatSIMD const & y, 
+	detail::fquatSIMD const & x,
+	detail::fquatSIMD const & y,
 	float const & a
 )
 {
@@ -512,15 +512,15 @@ GLM_FUNC_QUALIFIER detail::fquatSIMD fastMix
         __m128 s0 =                               _mm_shuffle_ps(s, s, _MM_SHUFFLE(3, 3, 3, 3));
         __m128 s1 =                               _mm_shuffle_ps(s, s, _MM_SHUFFLE(2, 2, 2, 2));
         __m128 d  = _mm_div_ps(_mm_set1_ps(1.0f), _mm_shuffle_ps(s, s, _MM_SHUFFLE(1, 1, 1, 1)));
-        
+
         return _mm_mul_ps(_mm_add_ps(_mm_mul_ps(s0, x.Data), _mm_mul_ps(s1, y.Data)), d);
     }
 }
 
 GLM_FUNC_QUALIFIER detail::fquatSIMD fastSlerp
 (
-	detail::fquatSIMD const & x, 
-	detail::fquatSIMD const & y, 
+	detail::fquatSIMD const & x,
+	detail::fquatSIMD const & y,
 	float const & a
 )
 {
@@ -548,7 +548,7 @@ GLM_FUNC_QUALIFIER detail::fquatSIMD fastSlerp
         __m128 s0 =                               _mm_shuffle_ps(s, s, _MM_SHUFFLE(3, 3, 3, 3));
         __m128 s1 =                               _mm_shuffle_ps(s, s, _MM_SHUFFLE(2, 2, 2, 2));
         __m128 d  = _mm_div_ps(_mm_set1_ps(1.0f), _mm_shuffle_ps(s, s, _MM_SHUFFLE(1, 1, 1, 1)));
-        
+
         return _mm_mul_ps(_mm_add_ps(_mm_mul_ps(s0, x.Data), _mm_mul_ps(s1, y.Data)), d);
 	}
 }
@@ -589,9 +589,9 @@ GLM_FUNC_QUALIFIER detail::fquatSIMD angleAxisSIMD
 
 GLM_FUNC_QUALIFIER detail::fquatSIMD angleAxisSIMD
 (
-	float const & angle, 
-	float const & x, 
-	float const & y, 
+	float const & angle,
+	float const & x,
+	float const & y,
 	float const & z
 )
 {

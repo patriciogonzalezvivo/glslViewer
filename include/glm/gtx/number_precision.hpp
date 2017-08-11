@@ -26,7 +26,7 @@ namespace glm{
 namespace gtx
 {
 	/////////////////////////////
-	// Unsigned int vector types 
+	// Unsigned int vector types
 
 	/// @addtogroup gtx_number_precision
 	/// @{
@@ -37,13 +37,13 @@ namespace gtx
 	typedef u64			u64vec1;    //!< \brief 64bit unsigned integer scalar. (from GLM_GTX_number_precision extension)
 
 	//////////////////////
-	// Float vector types 
+	// Float vector types
 
 	typedef f32			f32vec1;    //!< \brief Single-precision floating-point scalar. (from GLM_GTX_number_precision extension)
 	typedef f64			f64vec1;    //!< \brief Single-precision floating-point scalar. (from GLM_GTX_number_precision extension)
 
 	//////////////////////
-	// Float matrix types 
+	// Float matrix types
 
 	typedef f32			f32mat1;	//!< \brief Single-precision floating-point scalar. (from GLM_GTX_number_precision extension)
 	typedef f32			f32mat1x1;	//!< \brief Single-precision floating-point scalar. (from GLM_GTX_number_precision extension)

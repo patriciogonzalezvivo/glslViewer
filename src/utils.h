@@ -15,7 +15,7 @@
 #include <limits.h>
 #include <stdlib.h>
 
-#include <sys/stat.h> 
+#include <sys/stat.h>
 
 #include "glm/glm.hpp"
 
@@ -85,7 +85,7 @@ inline float mapValue(const float &value, const float &inputMin, const float &in
         return outputMin;
     } else {
         float outVal = ((value - inputMin) / (inputMax - inputMin) * (outputMax - outputMin) + outputMin);
-        
+
         if( clamp ){
             if(outputMax < outputMin){
                 if( outVal < outputMax )outVal = outputMax;
@@ -122,10 +122,10 @@ inline void purifyString( std::string& _s ){
     }
 }
 
-inline bool isFloat(const std::string &_string) { 
-    std::istringstream iss(_string); 
-    float dummy; 
-    iss >> std::skipws >> dummy; 
+inline bool isFloat(const std::string &_string) {
+    std::istringstream iss(_string);
+    float dummy;
+    iss >> std::skipws >> dummy;
     // if it's a number
     if (iss && iss.eof()) {
         std::string::const_iterator it = _string.begin();
@@ -138,7 +138,7 @@ inline bool isFloat(const std::string &_string) {
         }
     }
     return false;
-} 
+}
 
 inline int getInt(const std::string &_intString) {
     int x = 0;
@@ -164,16 +164,16 @@ inline double getDouble(const std::string &_doubleString) {
 inline bool getBool(const std::string &_boolString) {
     static const std::string trueString = "true";
     static const std::string falseString = "false";
-    
+
     std::string lower = getLower(_boolString);
-    
+
     if(lower == trueString) {
         return true;
     }
     if(lower == falseString) {
         return false;
     }
-    
+
     bool x = false;
     std::istringstream cur(lower);
     cur >> x;
@@ -252,16 +252,16 @@ inline double toDouble(const std::string &_doubleString) {
 inline bool toBool(const std::string &_boolString) {
     static const std::string trueString = "true";
     static const std::string falseString = "false";
-    
+
     std::string lower = getLower(_boolString);
-    
+
     if(lower == trueString) {
         return true;
     }
     if(lower == falseString) {
         return false;
     }
-    
+
     bool x = false;
     std::istringstream cur(lower);
     cur >> x;

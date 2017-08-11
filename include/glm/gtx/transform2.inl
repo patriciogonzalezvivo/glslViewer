@@ -77,7 +77,7 @@ namespace glm
 
 	template <typename T, precision P>
 	GLM_FUNC_QUALIFIER tmat3x3<T, P> proj2D(
-		const tmat3x3<T, P>& m, 
+		const tmat3x3<T, P>& m,
 		const tvec3<T, P>& normal)
 	{
 		tmat3x3<T, P> r(static_cast<T>(1));
@@ -90,7 +90,7 @@ namespace glm
 
 	template <typename T, precision P>
 	GLM_FUNC_QUALIFIER tmat4x4<T, P> proj3D(
-		const tmat4x4<T, P>& m, 
+		const tmat4x4<T, P>& m,
 		const tvec3<T, P>& normal)
 	{
 		tmat4x4<T, P> r(static_cast<T>(1));
@@ -117,10 +117,9 @@ namespace glm
 		return result;
 	}
 
-	template <typename T, precision P> 
+	template <typename T, precision P>
 	GLM_FUNC_QUALIFIER tmat4x4<T, P> scaleBias(tmat4x4<T, P> const& m, T scale, T bias)
 	{
 		return m * scaleBias(scale, bias);
 	}
 }//namespace glm
-

@@ -140,7 +140,7 @@ namespace detail
 
 #if(GLM_COMPILER & (GLM_COMPILER_VC | GLM_COMPILER_GCC))
 
-	GLM_FUNC_QUALIFIER unsigned int nlz(unsigned int x) 
+	GLM_FUNC_QUALIFIER unsigned int nlz(unsigned int x)
 	{
 		return 31u - findMSB(x);
 	}
@@ -148,7 +148,7 @@ namespace detail
 #else
 
 	// Hackers Delight: http://www.hackersdelight.org/HDcode/nlz.c.txt
-	GLM_FUNC_QUALIFIER unsigned int nlz(unsigned int x) 
+	GLM_FUNC_QUALIFIER unsigned int nlz(unsigned int x)
 	{
 		int y, m, n;
 

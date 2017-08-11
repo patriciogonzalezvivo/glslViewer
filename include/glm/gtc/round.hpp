@@ -103,7 +103,7 @@ namespace glm
 	/// Higher multiple number of Source.
 	///
 	/// @tparam genType Floating-point or integer scalar or vector types.
-	/// @param Source 
+	/// @param Source
 	/// @param Multiple Must be a null or positive value
 	///
 	/// @see gtc_round
@@ -113,7 +113,7 @@ namespace glm
 	/// Higher multiple number of Source.
 	///
 	/// @tparam genType Floating-point or integer scalar or vector types.
-	/// @param Source 
+	/// @param Source
 	/// @param Multiple Must be a null or positive value
 	///
 	/// @see gtc_round
@@ -123,7 +123,7 @@ namespace glm
 	/// Lower multiple number of Source.
 	///
 	/// @tparam genType Floating-point or integer scalar or vector types.
-	/// @param Source 
+	/// @param Source
 	/// @param Multiple Must be a null or positive value
 	///
 	/// @see gtc_round
@@ -135,7 +135,7 @@ namespace glm
 	/// Lower multiple number of Source.
 	///
 	/// @tparam genType Floating-point or integer scalar or vector types.
-	/// @param Source 
+	/// @param Source
 	/// @param Multiple Must be a null or positive value
 	///
 	/// @see gtc_round
@@ -147,7 +147,7 @@ namespace glm
 	/// Lower multiple number of Source.
 	///
 	/// @tparam genType Floating-point or integer scalar or vector types.
-	/// @param Source 
+	/// @param Source
 	/// @param Multiple Must be a null or positive value
 	///
 	/// @see gtc_round
@@ -159,7 +159,7 @@ namespace glm
 	/// Lower multiple number of Source.
 	///
 	/// @tparam genType Floating-point or integer scalar or vector types.
-	/// @param Source 
+	/// @param Source
 	/// @param Multiple Must be a null or positive value
 	///
 	/// @see gtc_round
