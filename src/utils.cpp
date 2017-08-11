@@ -282,7 +282,7 @@ std::string urlResolve(const std::string& path, const std::string& pwd, const st
         return url;
     }
     else {
-        for (int i = 0; i < include_folders.size(); i++) {
+        for (unsigned int i = 0; i < include_folders.size(); i++) {
             std::string new_path = include_folders[i] + "/" + path;
             if (urlExists(new_path)) {
                 return new_path;
