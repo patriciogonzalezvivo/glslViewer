@@ -262,20 +262,19 @@ void simplify(std::vector<glm::vec3> &_pts, float _tolerance){
     }
 }
 
-template<typename Out>
-void split(const std::string &s, char delim, Out result) {
-    std::stringstream ss;
-    ss.str(s);
-    std::string item;
-    while (std::getline(ss, item, delim)) {
-        *(result++) = item;
+std::vector<std::string> split(const std::string &_string, char sep) {
+    std::vector<std::string> tokens;
+    std::size_t start = 0, end = 0;
+    while ((end = _string.find(sep, start)) != std::string::npos) {
+        if (end != start) {
+          tokens.push_back(_string.substr(start, end - start));
+        }
+        start = end + 1;
     }
-}
-
-std::vector<std::string> split(const std::string &_string, char _delim) {
-    std::vector<std::string> elems;
-    split(_string, _delim, std::back_inserter(elems));
-    return elems;
+    if (end != start) {
+       tokens.push_back(_string.substr(start));
+    }
+    return tokens;
 }
 
 bool beginsWith(const std::string &_stringA, const std::string &_stringB) {

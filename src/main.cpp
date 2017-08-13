@@ -460,7 +460,6 @@ void cinWatcherThread() {
         }
         else if (beginsWith(line, "screenshot")) {
             std::vector<std::string> values = split(line,' ');
-            
             if (values.size() == 1 && outputFile != "") {
                 screenshotMutex.lock();
                 screenshotFile = outputFile;
@@ -468,7 +467,8 @@ void cinWatcherThread() {
             }
             else if (values.size() == 2) {
                 screenshotMutex.lock();
-                screenshotFile = values[2];
+                std::cout << values[1] << std::endl;
+                screenshotFile = values[1];
                 screenshotMutex.unlock();
             }
         }
