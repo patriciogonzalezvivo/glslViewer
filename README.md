@@ -134,11 +134,23 @@ glslViewer bunny.frag bunny.vert bunny.ply
 
 * ```uniform float u_time;```: shader playback time (in seconds)
 
+* ```uniform float u_delta;```: delta time between frames (in seconds)
+
+* ```uniform vec4 u_date;```: year, month, day and seconds
+
 * ```uniform vec2 u_resolution;```: viewport resolution (in pixels)
 
 * ```uniform vec2 u_mouse;```: mouse pixel coords
 
 * ```varying vec2 v_texcoord```: UV of the billboard ( normalized )
+
+* ```u_view2d```:
+
+* ```u_eye3d```:
+
+* ```u_centre3d```:
+
+* ```u_up3d```: 
 
 ### ShaderToy.com Image Shaders
 ShaderToy.com image shaders are automatically detected and supported.
@@ -218,11 +230,55 @@ Beside for texture uniforms other arguments can be add to ```glslViewer```:
 
 * ```-D[define]``` add system `#define`s directly from the console argument
 
+* ```-[testure_uniform_name] [texture.png]```: add textures asociated with different ```uniform sampler2D```names
+
 * ```-vFlip``` all textures after will be fliped vertically
 
 ### Inject other files
 
 You can include other GLSL code using a traditional ```#include “file.glsl”``` macro. Note: included files are not under watch so changes will not take effect until the main file is save.
+
+### Console IN commands
+
+Once glslViewer is running the CIN is listening for some commands, so you can pass data trough regular *nix pipes. 
+
+* ```int```, ```floats```, ```vec2```, ```vec3``` and ```vec4``` uniforms can be pass as comma separated values, where the first column is for the name of the uniform and the rest for the numbers of values the uniform have. **Note** that there is a distintion between ```int```and ```float```so remember to put ```.``` (floating points) to your values.
+
+* ```data```: return content of ```u_date```, return the current year, month, day and seconds
+
+* ```time```: return content of ```u_time```, the elapsed time since the app start
+
+* ```delta```: return content of ```u_delta```,return the last delta time between frames
+
+* ```fps```: return content of ```u_fps```,return the number of frames per second
+
+* ```window_width```, ```window_height```, ```screen_size``` and ```viewport``` : return the size of the windows, screen and viewport (content of ```u_resolution```)
+
+* ```pixel_density```: return the pixel density
+
+* ```mouse_x```, ```mouse_y``` and ```mouse```: return the position of the mouse ( content of ```u_mouse```)
+
+* ```view3d```: 
+
+* ```screenshot [filename]```: save a screenshot of what's being render. If there is no filename as argument will default to what was define after the ```-o``` argument when glslViewer was lanched.
+
+* ```q```, ```quit``` or ```exit```: close glslViewer
+
+## glslLoader
+
+```glslLoader``` is a python script that is install together with ```glslViewer``` binnary which let you download any shader made with [The book of shaders editor (editor.thebookofshaders.com) ](http://editor.thebookofshaders.com/). Just pass as argument the ***log number***
+
+![](http://patriciogonzalezvivo.com/images/glslGallery/00.gif)
+
+```bash
+glslLoader 170208142327
+```
+
+it will also download a shader shared through the [ShaderToy's](https://shadertoy.com/) by passing the ID `glslLoader`. Ex:
+
+```bash
+glslLoader llVXRd
+```
 
 ## Examples
 
@@ -311,4 +367,12 @@ glslLoader 170208142327
 
 ## Acknowledgements
 
-Inspired by [Karim’s Naaki](http://karim.naaji.fr/) [fragTool](https://github.com/karimnaaji/fragtool).
+Thanks to:
+
+* [Karim’s Naaki](http://karim.naaji.fr/) lot of concept and code was inspired by his: [fragTool](https://github.com/karimnaaji/fragtool).
+
+* [Doug Moen](https://github.com/doug-moen) he help to add the compatibility to ShaderToy shaders and some RayMarching features were added for his integration with his project: [curv](https://github.com/doug-moen/curv)
+
+* [Yvan Sraka](https://github.com/yvan-sraka) for puting the code in shape and setting it for travis
+
+
