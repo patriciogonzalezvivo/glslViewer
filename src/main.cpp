@@ -7,6 +7,7 @@
 #include <atomic>
 #include <iostream>
 
+#include "fs.h"
 #include "app.h"
 #include "utils.h"
 #include "gl/shader.h"
@@ -39,6 +40,9 @@ int fileChanged;
 
 UniformList uniforms;
 std::mutex uniformsMutex;
+
+std::string screenshotFile = "";
+std::mutex screenshotMutex;
 
 //  SHADER
 Shader shader;
@@ -94,7 +98,7 @@ void cinWatcherThread();
 void setup();
 void draw();
 
-void screenshot();
+void screenshot(std::string file);
 
 void onFileChange(int index);
 void onExit();
@@ -454,9 +458,20 @@ void cinWatcherThread() {
                     << u_up3d.x << "," << u_up3d.y << "," << u_up3d.z << ")"
                 << std::endl;
         }
-        // else if (line == "screenshot") {
-        //     screenshot();
-        // }
+        else if (beginsWith(line, "screenshot")) {
+            std::vector<std::string> values = split(line,' ');
+            
+            if (values.size() == 1 && outputFile != "") {
+                screenshotMutex.lock();
+                screenshotFile = outputFile;
+                screenshotMutex.unlock();
+            }
+            else if (values.size() == 2) {
+                screenshotMutex.lock();
+                screenshotFile = values[2];
+                screenshotMutex.unlock();
+            }
+        }
         else {
             uniformsMutex.lock();
             parseUniforms(line, &uniforms);
@@ -623,12 +638,16 @@ void draw() {
 
     if (shader.needBackbuffer()) {
         buffer.src->unbind();
-
         buffer_shader.use();
         buffer_shader.setUniform("u_resolution",getWindowWidth(), getWindowHeight());
         buffer_shader.setUniform("u_modelViewProjectionMatrix", mvp);
         buffer_shader.setUniform("u_buffer", buffer.src, index++);
         buffer_vbo->draw(&buffer_shader);
+    }
+
+    if (screenshotFile != "") {
+        screenshot(screenshotFile);
+        screenshotFile = "";
     }
 }
 
@@ -667,7 +686,7 @@ void onFileChange(int index) {
 
 void onKeyPress(int _key) {
     if (_key == 's' || _key == 'S') {
-        screenshot();
+        screenshot(outputFile);
     }
 
     if (_key == 'q' || _key == 'Q') {
@@ -762,17 +781,17 @@ void onViewportResize(int _newWidth, int _newHeight) {
     buffer.allocate(_newWidth,_newHeight);
 }
 
-void screenshot() {
-    if (outputFile != "" && isGL()) {
+void screenshot(std::string _file) {
+    if (_file != "" && isGL()) {
         unsigned char* pixels = new unsigned char[getWindowWidth()*getWindowHeight()*4];
         glReadPixels(0, 0, getWindowWidth(), getWindowHeight(), GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-        Texture::savePixels(outputFile, pixels, getWindowWidth(), getWindowHeight());
+        Texture::savePixels(_file, pixels, getWindowWidth(), getWindowHeight());
     }
 }
 
 void onExit() {
     // Take a screenshot if it need
-    screenshot();
+    screenshot(outputFile);
 
     // clear screen
     glClear( GL_COLOR_BUFFER_BIT );

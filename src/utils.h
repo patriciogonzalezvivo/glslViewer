@@ -3,19 +3,17 @@
 #include <vector>
 
 #include <string>
-#include <fstream>
 #include <sstream>
 #include <iostream>
-
-#include <cctype>
 #include <iomanip>
-#include <algorithm>
-#include <math.h>
 
-#include <limits.h>
-#include <stdlib.h>
+// #include <cctype>
+// #include <iomanip>
+// #include <algorithm>
+// #include <math.h>
 
-#include <sys/stat.h>
+// #include <limits.h>
+// #include <stdlib.h>
 
 #include "glm/glm.hpp"
 
@@ -333,7 +331,7 @@ inline std::string toString(const glm::vec4 &_vec, char _sep = ','){
 //-------------------------------------------------- << and >>
 
 inline std::ostream& operator<<(std::ostream& os, const glm::vec3& vec) {
-    os << vec.x << ", " << vec.y << ", " << vec.z;
+    os << vec.x << ", " << vec.y << ", " << vec.z; 
     return os;
 }
 
@@ -346,43 +344,5 @@ inline std::istream& operator>>(std::istream& is, glm::vec3& vec) {
     return is;
 }
 
-//----------------------------------------  String I/O
-std::string getAbsPath (const std::string& str);
-std::string urlResolve(const std::string& path, const std::string& pwd, const std::vector<std::string> include_folders);
-
-static inline bool loadFromPath(const std::string& path, std::string* into, const std::vector<std::string> include_folders) {
-    std::ifstream file;
-    std::string buffer;
-
-    file.open(path.c_str());
-    if(!file.is_open()) return false;
-    std::string original_path = getAbsPath(path);
-
-    while(!file.eof()) {
-        getline(file, buffer);
-    	if (buffer.find("#include ") == 0 || buffer.find("#pragma include ") == 0){
-    		unsigned begin = buffer.find_first_of("\"");
-    		unsigned end = buffer.find_last_of("\"");
-    		if (begin != end) {
-    			std::string file_name = buffer.substr(begin+1,end-begin-1);
-                file_name = urlResolve(file_name, original_path, include_folders);
-    			std::string newBuffer;
-    			if(loadFromPath(file_name, &newBuffer, include_folders)){
-    				(*into) += "\n" + newBuffer + "\n";
-    			}
-                else {
-    				std::cout << file_name << " not found at " << original_path << std::endl;
-    			}
-    		}
-    	} else {
-            	(*into) += buffer + "\n";
-    	}
-    }
-
-    file.close();
-    return true;
-}
-
-static inline bool haveExt(const std::string& file, const std::string& ext){
-    return file.find("."+ext) != std::string::npos;
-}
+bool beginsWith(const std::string &_stringA, const std::string &_stringB);
+std::vector<std::string> split(const std::string &s, char delim);

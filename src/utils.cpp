@@ -1,5 +1,7 @@
 #include "utils.h"
 
+#include <iterator>
+
 int signValue(float _n) {
     if( _n > 0 ) return 1;
     else if(_n < 0) return -1;
@@ -260,34 +262,27 @@ void simplify(std::vector<glm::vec3> &_pts, float _tolerance){
     }
 }
 
-std::string getAbsPath (const std::string& str) {
-    std::string abs_path = realpath(str.c_str(), NULL);
-    std::size_t found = abs_path.find_last_of("\\/");
-    if (found){
-        return abs_path.substr(0,found);
-    }
-    else {
-        return "";
+template<typename Out>
+void split(const std::string &s, char delim, Out result) {
+    std::stringstream ss;
+    ss.str(s);
+    std::string item;
+    while (std::getline(ss, item, delim)) {
+        *(result++) = item;
     }
 }
 
-bool urlExists(const std::string& name) {
-  struct stat buffer;
-  return (stat (name.c_str(), &buffer) == 0);
+std::vector<std::string> split(const std::string &_string, char _delim) {
+    std::vector<std::string> elems;
+    split(_string, _delim, std::back_inserter(elems));
+    return elems;
 }
 
-std::string urlResolve(const std::string& path, const std::string& pwd, const std::vector<std::string> include_folders) {
-    std::string url = pwd+'/'+path;
-    if (urlExists(url)) {
-        return url;
-    }
-    else {
-        for (unsigned int i = 0; i < include_folders.size(); i++) {
-            std::string new_path = include_folders[i] + "/" + path;
-            if (urlExists(new_path)) {
-                return new_path;
-            }
+bool beginsWith(const std::string &_stringA, const std::string &_stringB) {
+    for (int i = 0; i < _stringB.size(); i++) {
+        if (_stringB[i] != _stringA[i]) {
+            return false;
         }
-        return path;
     }
+    return true;
 }
