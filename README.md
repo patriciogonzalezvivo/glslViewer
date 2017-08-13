@@ -45,15 +45,15 @@ make
 sudo make install
 ```
 
-### Installing in RaspberryPi
+### Installing in Raspberry Pi
 
-Do:
+Get [Raspbian](https://www.raspberrypi.org/downloads/raspbian/), a Debian-based Linux distribution made for Raspberry Pi and then do:
 
 ```bash
 sudo apt-get install glslviewer
 ```
 
-Or if you want to compile the code your self:
+Or, if you want to compile the code yourself:
 
 ```bash
 cd ~
