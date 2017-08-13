@@ -1,7 +1,7 @@
 #include "polyline.h"
 
 #include "polarPoint.h"
-#include "utils.h"
+#include "tools/geom.h"
 
 Polyline::Polyline():m_centroid(0.0,0.0,0.0),m_bChange(true){
     m_points.clear();
@@ -60,7 +60,7 @@ void Polyline::add( const glm::vec3 & _point ){
 }
 
 void Polyline::add(const std::vector<glm::vec3> & _points){
-    for (uint i = 0; i < _points.size(); i++) {
+    for (unsigned int i = 0; i < _points.size(); i++) {
         add(_points[i]);
     }
 }
@@ -89,7 +89,7 @@ const std::vector<glm::vec3> & Polyline::getVertices() const{
 
 glm::vec3 Polyline::getPositionAt(const float &_dist) const{
     float distance = 0.0;
-    for (uint i = 0; i < m_points.size()-1; i++){
+    for (unsigned int i = 0; i < m_points.size()-1; i++){
         PolarPoint polar(m_points[i],m_points[i+1]);
         if(distance+polar.r <= _dist){
             return  m_points[i] + PolarPoint(polar.a,_dist-distance).getXY();
@@ -124,7 +124,7 @@ std::vector<Polyline> Polyline::splitAt(float _dist){
 
         buffer.add(m_points[0]);
         float distance = 0.0;
-        for (uint i = 0; i < m_points.size()-1; i++){
+        for (unsigned int i = 0; i < m_points.size()-1; i++){
             PolarPoint polar(m_points[i],m_points[i+1]);
             if(distance+polar.r <= _dist){
                 buffer.add(m_points[i] + PolarPoint(polar.a,_dist-distance).getXY());

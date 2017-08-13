@@ -7,9 +7,10 @@
 #include <atomic>
 #include <iostream>
 
-#include "fs.h"
+#include "tools/fs.h"
 #include "app.h"
-#include "utils.h"
+#include "tools/text.h"
+#include "tools/geom.h"
 #include "gl/shader.h"
 #include "gl/vbo.h"
 #include "gl/texture.h"
@@ -126,21 +127,21 @@ int main(int argc, char **argv){
 
         if (        std::string(argv[i]) == "-x" ) {
             i++;
-            windowPosAndSize.x = getInt(std::string(argv[i]));
+            windowPosAndSize.x = toInt(std::string(argv[i]));
         }
         else if (   std::string(argv[i]) == "-y" ) {
             i++;
-            windowPosAndSize.y = getInt(std::string(argv[i]));
+            windowPosAndSize.y = toInt(std::string(argv[i]));
         }
         else if (   std::string(argv[i]) == "-w" ||
                     std::string(argv[i]) == "--width" ) {
             i++;
-            windowPosAndSize.z = getInt(std::string(argv[i]));
+            windowPosAndSize.z = toInt(std::string(argv[i]));
         }
         else if (   std::string(argv[i]) == "-h" ||
                     std::string(argv[i]) == "--height") {
             i++;
-            windowPosAndSize.w = getInt(std::string(argv[i]));
+            windowPosAndSize.w = toInt(std::string(argv[i]));
         }
         else if (   std::string(argv[i]) == "--headless" ) {
             headless = true;
@@ -196,7 +197,7 @@ int main(int argc, char **argv){
         else if (argument == "-s" || argument == "--sec") {
             i++;
             argument = std::string(argv[i]);
-            timeLimit = getFloat(argument);
+            timeLimit = toFloat(argument);
             std::cout << "Will exit in " << timeLimit << " seconds." << std::endl;
         }
         else if (argument == "-o") {
@@ -263,7 +264,7 @@ int main(int argc, char **argv){
                 Texture* tex = new Texture();
 
                 if (tex->load(argument, vFlip)) {
-                    std::string name = "u_tex"+getString(textureCounter);
+                    std::string name = "u_tex"+toString(textureCounter);
                     textures[name] = tex;
 
                     WatchFile file;
@@ -459,17 +460,18 @@ void cinWatcherThread() {
                 << std::endl;
         }
         else if (beginsWith(line, "screenshot")) {
-            std::vector<std::string> values = split(line,' ');
-            if (values.size() == 1 && outputFile != "") {
+            if (line == "screenshot" && outputFile != "") {
                 screenshotMutex.lock();
                 screenshotFile = outputFile;
                 screenshotMutex.unlock();
             }
-            else if (values.size() == 2) {
-                screenshotMutex.lock();
-                std::cout << values[1] << std::endl;
-                screenshotFile = values[1];
-                screenshotMutex.unlock();
+            else {
+                std::vector<std::string> values = split(line,' ');
+                if (values.size() == 2) {
+                    screenshotMutex.lock();
+                    screenshotFile = values[1];
+                    screenshotMutex.unlock();
+                }
             }
         }
         else {
@@ -786,6 +788,7 @@ void screenshot(std::string _file) {
         unsigned char* pixels = new unsigned char[getWindowWidth()*getWindowHeight()*4];
         glReadPixels(0, 0, getWindowWidth(), getWindowHeight(), GL_RGBA, GL_UNSIGNED_BYTE, pixels);
         Texture::savePixels(_file, pixels, getWindowWidth(), getWindowHeight());
+        std::cout << "Screenshot saved to " << _file << std::endl;
     }
 }
 

@@ -3,7 +3,7 @@
 #include "glm/gtx/matrix_decompose.hpp"
 #include "glm/gtc/matrix_access.hpp"
 
-#include "utils.h"
+#include "tools/geom.h"
 
 Node::Node() {
     setPosition(glm::vec3(0.0));

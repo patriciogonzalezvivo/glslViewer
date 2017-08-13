@@ -2,15 +2,11 @@
 
 #include <algorithm>
 
-void toLower(std::string &_string) {
-    for (int i = 0; _string[i]; i++) {
-        _string[i] = tolower(_string[i]);
-    }
-}
-
 std::string getLower(const std::string& _string) {
     std::string std = _string;
-    toLower(std);
+    for (int i = 0; _string[i]; i++) {
+        std[i] = tolower(_string[i]);
+    }
     return std;
 }
 
@@ -40,37 +36,38 @@ bool isFloat(const std::string &_string) {
     return false;
 }
 
-int getInt(const std::string &_string) {
+//---------------------------------------- Conversions
+int toInt(const std::string &_string) {
     int x = 0;
     std::istringstream cur(_string);
     cur >> x;
     return x;
 }
 
-float getFloat(const std::string &_string) {
+float toFloat(const std::string &_string) {
     float x = 0;
     std::istringstream cur(_string);
     cur >> x;
     return x;
 }
 
-double getDouble(const std::string &_string) {
+double toDouble(const std::string &_string) {
     double x = 0;
     std::istringstream cur(_string);
     cur >> x;
     return x;
 }
 
-bool getBool(const std::string &_string) {
+bool toBool(const std::string &_string) {
     static const std::string trueString = "true";
     static const std::string falseString = "false";
 
     std::string lower = getLower(_string);
 
-    if (lower == trueString) {
+    if(lower == trueString) {
         return true;
     }
-    if (lower == falseString) {
+    if(lower == falseString) {
         return false;
     }
 
@@ -80,17 +77,55 @@ bool getBool(const std::string &_string) {
     return x;
 }
 
-char getChar(const std::string &_string) {
+char toChar(const std::string &_string) {
     char x = '\0';
     std::istringstream cur(_string);
     cur >> x;
     return x;
 }
 
-std::vector<std::string> split(const std::string &_string, char sep) {
+std::string toString(bool _bool) {
+    std::ostringstream strStream;
+    strStream << (_bool?"true":"false") ;
+    return strStream.str();
+}
+
+std::string toString(const glm::vec2 &_vec, char _sep) {
+    std::ostringstream strStream;
+    strStream<< _vec.x << _sep << _vec.y << _sep;
+    return strStream.str();
+}
+
+std::string toString(const glm::vec3 &_vec, char _sep) {
+    std::ostringstream strStream;
+    strStream<< _vec.x << _sep << _vec.y << _sep << _vec.z;
+    return strStream.str();
+}
+
+std::string toString(const glm::vec4 &_vec, char _sep) {
+    std::ostringstream strStream;
+    strStream<< _vec.x << _sep << _vec.y << _sep << _vec.z << _sep << _vec.w;
+    return strStream.str();
+}
+
+std::ostream& operator<<(std::ostream& os, const glm::vec3& vec) {
+    os << vec.x << ", " << vec.y << ", " << vec.z; 
+    return os;
+}
+
+std::istream& operator>>(std::istream& is, glm::vec3& vec) {
+    is >> vec.x;
+    is.ignore(2);
+    is >> vec.y;
+    is.ignore(2);
+    is >> vec.z;
+    return is;
+}
+
+std::vector<std::string> split(const std::string &_string, char _sep) {
     std::vector<std::string> tokens;
     std::size_t start = 0, end = 0;
-    while ((end = _string.find(sep, start)) != std::string::npos) {
+    while ((end = _string.find(_sep, start)) != std::string::npos) {
         if (end != start) {
           tokens.push_back(_string.substr(start, end - start));
         }

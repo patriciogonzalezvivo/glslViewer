@@ -1,5 +1,5 @@
 #include "vertexLayout.h"
-#include "utils.h"
+#include "tools/text.h"
 
 std::map<GLint, GLuint> VertexLayout::s_enabledAttribs = std::map<GLint, GLuint>();
 
@@ -97,8 +97,8 @@ std::string VertexLayout::getDefaultVertShader() {
         if (m_positionAttribIndex == int(i)) {
             size = 4;
         }
-        rta += "attribute vec" + getString(size) + " a_" + m_attribs[i].name + ";\n";
-        rta += "varying vec" + getString(size) + " v_" + m_attribs[i].name + ";\n";
+        rta += "attribute vec" + toString(size) + " a_" + m_attribs[i].name + ";\n";
+        rta += "varying vec" + toString(size) + " v_" + m_attribs[i].name + ";\n";
     }
 
     rta += "\n"
@@ -140,7 +140,7 @@ std::string VertexLayout::getDefaultFragShader() {
         if (m_positionAttribIndex == int(i)) {
             size = 4;
         }
-        rta += "varying vec" + getString(size) + " v_" + m_attribs[i].name + ";\n";
+        rta += "varying vec" + toString(size) + " v_" + m_attribs[i].name + ";\n";
     }
 
     rta += "\n"

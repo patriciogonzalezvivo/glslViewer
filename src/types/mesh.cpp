@@ -3,8 +3,9 @@
 #include <iostream>
 #include <fstream> 
 
-#include "fs.h"
-#include "utils.h"
+#include "tools/fs.h"
+#include "tools/geom.h"
+#include "tools/text.h"
 #include "gl/vertexLayout.h"
 
 #include "tinyobjloader/tiny_obj_loader.h"

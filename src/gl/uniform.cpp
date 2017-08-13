@@ -3,7 +3,7 @@
 #include <regex>
 #include <sstream>
 
-#include "../utils.h"
+#include "tools/text.h"
 
 bool parseUniforms(const std::string &_line, UniformList *_uniforms) {
     bool rta = false;

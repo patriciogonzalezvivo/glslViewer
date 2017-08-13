@@ -39,7 +39,7 @@ Fbo::~Fbo() {
     }
 }
 
-void Fbo::allocate(const unsigned int _width, const unsigned int _height, bool _depth) {
+void Fbo::allocate(const uint _width, const uint _height, bool _depth) {
     if (!m_allocated) {
         // Create a frame buffer
         glGenFramebuffers(1, &m_id);

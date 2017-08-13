@@ -1,6 +1,6 @@
 #include "shader.h"
 
-#include "utils.h"
+#include "tools/text.h"
 #include <cstring>
 #include <chrono>
 #include <algorithm>
@@ -99,7 +99,7 @@ bool Shader::load(const std::string& _fragmentSrc, const std::string& _vertexSrc
             std::size_t start = error.find("line ")+5;
             std::size_t end = error.find_last_of(")");
             std::string lineNum = error.substr(start,end-start);
-            std::cerr << (unsigned)getInt(lineNum) << ": " << getLineNumber(_fragmentSrc,(unsigned)getInt(lineNum)) << std::endl;
+            std::cerr << (unsigned)toInt(lineNum) << ": " << getLineNumber(_fragmentSrc,(unsigned)toInt(lineNum)) << std::endl;
         }
         glDeleteProgram(m_program);
         return false;
