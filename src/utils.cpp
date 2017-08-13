@@ -1,6 +1,6 @@
 #include "utils.h"
 
-#include <iterator>
+#include <algorithm>
 
 int signValue(float _n) {
     if( _n > 0 ) return 1;
@@ -278,7 +278,7 @@ std::vector<std::string> split(const std::string &_string, char sep) {
 }
 
 bool beginsWith(const std::string &_stringA, const std::string &_stringB) {
-    for (int i = 0; i < _stringB.size(); i++) {
+    for (unsigned int i = 0; i < _stringB.size(); i++) {
         if (_stringB[i] != _stringA[i]) {
             return false;
         }

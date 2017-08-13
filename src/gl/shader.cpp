@@ -1,8 +1,9 @@
 #include "shader.h"
 
-#include <cstring>
 #include "utils.h"
+#include <cstring>
 #include <chrono>
+#include <algorithm>
 #include <iostream>
 
 Shader::Shader():m_program(0),m_fragmentShader(0),m_vertexShader(0), m_backbuffer(0), m_time(false), m_delta(false), m_date(false), m_mouse(false), m_imouse(false), m_view2d(false), m_view3d(false) {
