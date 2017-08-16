@@ -1,3 +1,15 @@
+glslviewer (1.3) UNRELEASED; urgency=medium
+
+  * Adding console gcc-like precompiler arguments to satisfy GLSL shaders dependencies -I[dir] -D[define]
+
+  * Adding 'screenshot' command on CIN to save screenshots to other files rather than the specified on -o [file]
+
+  * Adding travis and editorconfig files to help others contribute
+
+  * General housekeeping of utils functions. Now they are split in tools/fs tools/text and tools/geom 
+
+ -- Patricio Gonzalez Vivo <patricio@ubuntu>  Wed, 16 Aug 2017 11:45:45 -0700
+
 glslviewer (1.2) UNRELEASED; urgency=medium
 
   * Better Makefile: Using Broadcom SDK when is possible not... only on Raspberry Pi
