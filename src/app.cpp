@@ -323,6 +323,22 @@ bool isGL(){
     #endif
 }
 
+#ifndef PLATFORM_RPI
+void debounceSetWindowTitle(std::string title){
+    static double lastUpdated;
+
+    double now = glfwGetTime();
+
+    if ((now - lastUpdated) < 1.) {
+        return;
+    }
+
+    glfwSetWindowTitle(window, title.c_str());
+
+    lastUpdated = now;
+}
+#endif
+
 void updateGL(){
     // Update time
     // --------------------------------------------------------------------
@@ -415,7 +431,7 @@ void updateGL(){
         }
     #else
         std::string title = appTitle + ":..: FPS:" + toString(fFPS);
-        glfwSetWindowTitle(window, title.c_str());
+        debounceSetWindowTitle(title);
 
         // OSX/LINUX
         glfwPollEvents();
