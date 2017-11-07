@@ -237,6 +237,8 @@ Beside for texture uniforms other arguments can be add to `glslViewer`:
 
 * `-vFlip` all textures after will be fliped vertically
 
+* `--help` display the available command line options
+
 ### Inject other files
 
 You can include other GLSL code using a traditional `#include "file.glsl"` macro. Note: included files are not under watch so changes will not take effect until the main file is save.

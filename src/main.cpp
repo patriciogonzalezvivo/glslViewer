@@ -103,6 +103,7 @@ void screenshot(std::string file);
 
 void onFileChange(int index);
 void onExit();
+void printUsage(char *);
 
 // Main program
 //============================================================================
@@ -122,6 +123,7 @@ int main(int argc, char **argv){
     #endif
 
     bool headless = false;
+    bool displayHelp = false;
     for (int i = 1; i < argc ; i++) {
         std::string argument = std::string(argv[i]);
 
@@ -146,6 +148,9 @@ int main(int argc, char **argv){
         else if (   std::string(argv[i]) == "--headless" ) {
             headless = true;
         }
+        else if (   std::string(argv[i]) == "--help" ) {
+            displayHelp = true;
+        }
         #ifdef PLATFORM_RPI
         else if (   std::string(argv[i]) == "-l" ||
                     std::string(argv[i]) == "--life-coding" ){
@@ -153,6 +158,11 @@ int main(int argc, char **argv){
             windowPosAndSize.z = windowPosAndSize.w = 500;
         }
         #endif
+    }
+
+    if (displayHelp) {
+        printUsage(argv[0]);
+        exit(0);
     }
 
     // Initialize openGL context
@@ -318,7 +328,7 @@ int main(int argc, char **argv){
 
     // If no shader
     if (iFrag == -1 && iVert == -1 && iGeom == -1) {
-        std::cerr << "Usage: " << argv[0] << " shader.frag [shader.vert] [mesh.(obj/.ply)] [texture.(png/jpg)] [-textureNameA texture.(png/jpg)] [-u] [-x x] [-y y] [-w width] [-h height] [-l/--livecoding] [--square] [-s seconds] [-o screenshot.png]\n";
+        printUsage(argv[0]);
         onExit();
         exit(EXIT_FAILURE);
     }
@@ -809,4 +819,8 @@ void onExit() {
     }
     textures.clear();
     delete vbo;
+}
+
+void printUsage(char * executableName) {
+    std::cerr << "Usage: " << executableName << " shader.frag [shader.vert] [mesh.(obj/.ply)] [texture.(png/jpg)] [-textureNameA texture.(png/jpg)] [-u] [-x x] [-y y] [-w width] [-h height] [-l/--livecoding] [--square] [-s seconds] [-o screenshot.png] [--help]\n";
 }
