@@ -469,6 +469,12 @@ void cinWatcherThread() {
                     << u_up3d.x << "," << u_up3d.y << "," << u_up3d.z << ")"
                 << std::endl;
         }
+        else if (line == "frag") {
+            std::cout << fragSource << std::endl;
+        }
+        else if (line == "vert") {
+            std::cout << vertSource << std::endl;
+        }
         else if (beginsWith(line, "screenshot")) {
             if (line == "screenshot" && outputFile != "") {
                 screenshotMutex.lock();

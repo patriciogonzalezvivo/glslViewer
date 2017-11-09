@@ -257,6 +257,10 @@ Once glslViewer is running the CIN is listening for some commands, so you can pa
 
 * ```fps```: return content of ```u_fps```,return the number of frames per second
 
+* ```frag```: return the source of the fragment shader
+
+* ```vert```: return the source of the vertex shader
+
 * ```window_width```, ```window_height```, ```screen_size``` and ```viewport``` : return the size of the windows, screen and viewport (content of ```u_resolution```)
 
 * ```pixel_density```: return the pixel density
