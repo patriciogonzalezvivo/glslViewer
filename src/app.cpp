@@ -245,6 +245,8 @@ void initGL (glm::ivec4 &_viewport, bool _headless) {
 
         // callback when the mouse cursor moves
         glfwSetCursorPosCallback(window, [](GLFWwindow* _window, double x, double y) {
+            // Convert x,y to pixel coordinates relative to viewport.
+            // (0,0) is lower left corner.
             y = viewport.w - y;
             x *= fPixelDensity;
             y *= fPixelDensity;
@@ -254,8 +256,8 @@ void initGL (glm::ivec4 &_viewport, bool _headless) {
             // Note that mouse.drag is *not* constrained to the viewport.
             mouse.velX = x - mouse.drag.x;
             mouse.velY = y - mouse.drag.y;
-            mouse.drag.x = x ;
-            mouse.drag.y = y ;
+            mouse.drag.x = x;
+            mouse.drag.y = y;
 
             // mouse.x,mouse.y is the current cursor position, constrained
             // to the viewport.
@@ -270,8 +272,6 @@ void initGL (glm::ivec4 &_viewport, bool _headless) {
             if (left_mouse_button_down) {
                 iMouse.x = mouse.x;
                 iMouse.y = mouse.y;
-            // Convert x,y to pixel coordinates relative to viewport.
-            // (0,0) is lower left corner.
             }
 
             /*
