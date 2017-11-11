@@ -139,8 +139,8 @@ void initGL (glm::ivec4 &_viewport, bool _headless) {
         VC_RECT_T src_rect;
 
         //  Initially the viewport is for all the screen
-        dst_rect.x = _viewport.x  ;
-        dst_rect.y = _viewport.y  ;
+        dst_rect.x = _viewport.x;
+        dst_rect.y = _viewport.y;
         dst_rect.width = _viewport.z;
         dst_rect.height = _viewport.w;
 
@@ -168,8 +168,8 @@ void initGL (glm::ivec4 &_viewport, bool _headless) {
                                                     0 /*alpha*/, 0/*clamp*/, (DISPMANX_TRANSFORM_T)0/*transform*/);
 
         nativeviewport.element = dispman_element;
-        nativeviewport.width = _viewport.z  ;
-        nativeviewport.height = _viewport.w ;
+        nativeviewport.width = _viewport.z;
+        nativeviewport.height = _viewport.w;
         vc_dispmanx_update_submit_sync( dispman_update );
         check();
 
@@ -245,19 +245,15 @@ void initGL (glm::ivec4 &_viewport, bool _headless) {
 
         // callback when the mouse cursor moves
         glfwSetCursorPosCallback(window, [](GLFWwindow* _window, double x, double y) {
-
             y = viewport.w - y;
             x *= fPixelDensity;
             y *= fPixelDensity;
-            
             // mouse.velX,mouse.velY is the distance the mouse cursor has moved
             // since the last callback, during a drag gesture.
             // mouse.drag is the previous mouse position, during a drag gesture.
             // Note that mouse.drag is *not* constrained to the viewport.
             mouse.velX = x - mouse.drag.x;
             mouse.velY = y - mouse.drag.y;
-
-
             mouse.drag.x = x ;
             mouse.drag.y = y ;
 
@@ -276,9 +272,6 @@ void initGL (glm::ivec4 &_viewport, bool _headless) {
                 iMouse.y = mouse.y;
             // Convert x,y to pixel coordinates relative to viewport.
             // (0,0) is lower left corner.
-
-
-
             }
 
             /*
@@ -475,8 +468,8 @@ void closeGL(){
 //-------------------------------------------------------------
 
 void setWindowSize(int _width, int _height) {
-    viewport.z = _width  ;
-    viewport.w = _height ;
+    viewport.z = _width;
+    viewport.w = _height;
     fPixelDensity = getPixelDensity();
     glViewport(0.0, 0.0, (float)getWindowWidth(), (float)getWindowHeight());
     orthoMatrix = glm::ortho((float)viewport.x, (float)getWindowWidth(), (float)viewport.y, (float)getWindowHeight());
