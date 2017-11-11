@@ -247,10 +247,9 @@ void initGL (glm::ivec4 &_viewport, bool _headless) {
         glfwSetCursorPosCallback(window, [](GLFWwindow* _window, double x, double y) {
             // Convert x,y to pixel coordinates relative to viewport.
             // (0,0) is lower left corner.
+            y = viewport.w - y;
             x *= fPixelDensity;
             y *= fPixelDensity;
-            y = viewport.w - y;
-
             // mouse.velX,mouse.velY is the distance the mouse cursor has moved
             // since the last callback, during a drag gesture.
             // mouse.drag is the previous mouse position, during a drag gesture.
@@ -266,8 +265,8 @@ void initGL (glm::ivec4 &_viewport, bool _headless) {
             mouse.y = y;
             if (mouse.x < 0) mouse.x = 0;
             if (mouse.y < 0) mouse.y = 0;
-            if (mouse.x > viewport.z) mouse.x = viewport.z;
-            if (mouse.y > viewport.w) mouse.y = viewport.w;
+            if (mouse.x > viewport.z * fPixelDensity) mouse.x = viewport.z * fPixelDensity;
+            if (mouse.y > viewport.w * fPixelDensity) mouse.y = viewport.w * fPixelDensity;
 
             // update iMouse when cursor moves
             if (left_mouse_button_down) {
