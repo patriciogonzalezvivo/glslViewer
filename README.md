@@ -118,7 +118,7 @@ glslViewer test.frag
 vim test.frag
 ```
 
-**Note**: In RaspberryPi you can avoid taking over the screen by using the `-l` or `--live-coding` flags so you can see the console. Also you can edit the shader file through ssh/sftp.
+**Note**: In RaspberryPi you can avoid taking over the screen by using the `-l` flags so you can see the console. Also you can edit the shader file through ssh/sftp.
 
 **Note**: On Linux and MacOS you may used to edit your shaders with Sublime Text 2, if thats your case you should try this [Sublime Text 2 plugin that lunch glslViewer every time you open a shader](https://packagecontrol.io/packages/glslViewer).
 
@@ -225,7 +225,9 @@ Beside for texture uniforms other arguments can be add to `glslViewer`:
 
 * `-o [image.png]` save the viewport to a image file before
 
-* `-l` or `--live-coding` to draw a 500x500 billboard on the top right corner of the screen that let you see the code and the shader at the same time. (RaspberryPi only)
+* `-l` to draw a 500x500 billboard on the top right corner of the screen that let you see the code and the shader at the same time. (RaspberryPi only)
+
+* `-c`or `--cursor` show cursor.
 
 * `--headless` headless rendering. Very usefull for making images or benchmarking.
 
@@ -236,6 +238,8 @@ Beside for texture uniforms other arguments can be add to `glslViewer`:
 * `-[testure_uniform_name] [texture.png]`: add textures asociated with different `uniform sampler2D`names
 
 * `-vFlip` all textures after will be fliped vertically
+
+*  `-v` verbose outputs
 
 * `--help` display the available command line options
 

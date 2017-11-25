@@ -53,6 +53,7 @@ const std::string* fragPath = nullptr;
 int iVert = -1;
 std::string vertSource = "";
 const std::string* vertPath = nullptr;
+bool verbose = false;
 
 //  CAMERA
 Camera cam;
@@ -141,7 +142,7 @@ int main(int argc, char **argv){
             windowPosAndSize.z = toInt(std::string(argv[i]));
         }
         else if (   std::string(argv[i]) == "-h" ||
-                    std::string(argv[i]) == "--height") {
+                    std::string(argv[i]) == "--height" ) {
             i++;
             windowPosAndSize.w = toInt(std::string(argv[i]));
         }
@@ -197,28 +198,31 @@ int main(int argc, char **argv){
             argument == "-h" || argument == "--height" ) {
             i++;
         }
-        else if (argument == "--headless") {
+        else if (argument == "-l" ||
+                 argument == "--headless") {
         }
-        else if (argument == "-l") {
+        else if ( argument == "-v" || 
+                  argument == "--verbose" ) {
+            verbose = true;
         }
-        else if (argument == "-m") {
+        else if (argument == "-c" || argument == "--cursor") {
             cursor.init();
         }
         else if (argument == "-s" || argument == "--sec") {
             i++;
             argument = std::string(argv[i]);
             timeLimit = toFloat(argument);
-            std::cout << "Will exit in " << timeLimit << " seconds." << std::endl;
+            std::cout << "// Will exit in " << timeLimit << " seconds." << std::endl;
         }
         else if (argument == "-o") {
             i++;
             argument = std::string(argv[i]);
             if (haveExt(argument, "png")) {
                 outputFile = argument;
-                std::cout << "Will save screenshot to " << outputFile  << " on exit." << std::endl;
+                std::cout << "// Will save screenshot to " << outputFile  << " on exit." << std::endl;
             }
             else {
-                std::cout << "At the moment screenshots only support PNG formats" << std::endl;
+                std::cerr << "At the moment screenshots only support PNG formats" << std::endl;
             }
         }
         else if (iFrag == -1 && (haveExt(argument,"frag") || haveExt(argument,"fs"))) {
@@ -284,9 +288,9 @@ int main(int argc, char **argv){
                     file.vFlip = vFlip;
                     files.push_back(file);
 
-                    std::cout << "Loading " << argument << " as the following uniform: " << std::endl;
-                    std::cout << "    uniform sampler2D " << name  << "; // loaded"<< std::endl;
-                    std::cout << "    uniform vec2 " << name  << "Resolution;"<< std::endl;
+                    std::cout << "// Loading " << argument << " as the following uniform: " << std::endl;
+                    std::cout << "//    uniform sampler2D " << name  << "; // loaded"<< std::endl;
+                    std::cout << "//    uniform vec2 " << name  << "Resolution;"<< std::endl;
                     textureCounter++;
                 }
             }
@@ -318,9 +322,9 @@ int main(int argc, char **argv){
                     file.vFlip = vFlip;
                     files.push_back(file);
 
-                    std::cout << "Loading " << argument << " as the following uniform: " << std::endl;
-                    std::cout << "    uniform sampler2D " << parameterPair  << "; // loaded"<< std::endl;
-                    std::cout << "    uniform vec2 " << parameterPair  << "Resolution;"<< std::endl;
+                    std::cout << "// Loading " << argument << " as the following uniform: " << std::endl;
+                    std::cout << "//     uniform sampler2D " << parameterPair  << "; // loaded"<< std::endl;
+                    std::cout << "//     uniform vec2 " << parameterPair  << "Resolution;"<< std::endl;
                 }
             }
         }
@@ -417,15 +421,15 @@ void cinWatcherThread() {
         }
         else if (line == "fps") {
             // std::cout << getFPS() << std::endl;
-            printf("%f\n",getFPS());
+            printf("%f\n", getFPS());
         }
         else if (line == "delta") {
             // std::cout << getDelta() << std::endl;
-            printf("%f\n",getDelta());
+            printf("%f\n", getDelta());
         }
         else if (line == "time") {
             // std::cout << getTime() << std::endl;
-            printf("%f\n",getTime());
+            printf("%f\n", getTime());
         }
         else if (line == "date") {
             glm::vec4 date = getDate();
@@ -544,7 +548,7 @@ void setup() {
         vertSource = vbo->getVertexLayout()->getDefaultVertShader();
     }
 
-    shader.load(fragSource, vertSource, defines, true);
+    shader.load(fragSource, vertSource, defines, verbose);
 
     cam.setViewport(getWindowWidth(), getWindowHeight());
     cam.setPosition(glm::vec3(0.0,0.0,-3.));
@@ -679,14 +683,14 @@ void onFileChange(int index) {
         fragSource = "";
         if (loadFromPath(path, &fragSource, include_folders)) {
             shader.detach(GL_FRAGMENT_SHADER | GL_VERTEX_SHADER);
-            shader.load(fragSource, vertSource, defines, true);
+            shader.load(fragSource, vertSource, defines, verbose);
         }
     }
     else if (type == "vertex") {
         vertSource = "";
         if (loadFromPath(path, &vertSource, include_folders)) {
             shader.detach(GL_FRAGMENT_SHADER | GL_VERTEX_SHADER);
-            shader.load(fragSource, vertSource, defines, true);
+            shader.load(fragSource, vertSource, defines, verbose);
         }
     }
     else if (type == "geometry") {
@@ -804,7 +808,7 @@ void screenshot(std::string _file) {
         unsigned char* pixels = new unsigned char[getWindowWidth()*getWindowHeight()*4];
         glReadPixels(0, 0, getWindowWidth(), getWindowHeight(), GL_RGBA, GL_UNSIGNED_BYTE, pixels);
         Texture::savePixels(_file, pixels, getWindowWidth(), getWindowHeight());
-        std::cout << "Screenshot saved to " << _file << std::endl;
+        std::cout << "// Screenshot saved to " << _file << std::endl;
     }
 }
 
@@ -828,5 +832,5 @@ void onExit() {
 }
 
 void printUsage(char * executableName) {
-    std::cerr << "Usage: " << executableName << " shader.frag [shader.vert] [mesh.(obj/.ply)] [texture.(png/jpg)] [-textureNameA texture.(png/jpg)] [-u] [-x x] [-y y] [-w width] [-h height] [-l/--livecoding] [--square] [-s seconds] [-o screenshot.png] [--help]\n";
+    std::cerr << "Usage: " << executableName << " <shader>.frag [<shader>.vert] [<mesh>.(obj/.ply)] [<texture>.(png/jpg)] [-<uniformName> <texture>.(png/jpg)] [-vFlip] [-x <x>] [-y <y>] [-w <width>] [-h <height>] [-l] [--square] [-s/--sec <seconds>] [-o <screenshot_file>.png] [--headless] [-c/--cursor] [-I<include_folder>] [-D<define>] [-v/--verbose] [--help]\n";
 }

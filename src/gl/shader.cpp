@@ -278,7 +278,7 @@ void Shader::setUniform(const std::string& _name, const float *_array, unsigned 
             glUniform4f(loc, _array[0], _array[1], _array[2], _array[2]);
         }
         else {
-            std::cout << "Passing matrix uniform as array, not supported yet" << std::endl;
+            std::cerr << "Passing matrix uniform as array, not supported yet" << std::endl;
         }
     }
 }
