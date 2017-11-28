@@ -76,29 +76,14 @@ sudo make install
 
 Or simply install the AUR package [glslviewer-git](https://aur.archlinux.org/packages/glslviewer-git/) with an [AUR helper](https://wiki.archlinux.org/index.php/AUR_helpers).
 
-### Installing in Mac OSX
+### Installing on macOS
 
-You need to [install GLFW](http://www.glfw.org), `pkg-config` first and then download the code, compile and install.
+Use [Homebrew](https://brew.sh) to install glslViewer and its dependencies:
 
 ```bash
 brew update
 brew upgrade
-brew tap homebrew/versions
-brew install glfw3 pkg-config
-cd ~
-git clone http://github.com/patriciogonzalezvivo/glslViewer
-cd glslViewer
-make
-make install
-```
-
-If `glfw3` was installed before, after running the code above, remove `glfw3` and try:
-
-```bash
-brew install glfw3 pkg-config
-export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig
-make
-make install
+brew install glslviewer
 ```
 
 ## Use
@@ -120,7 +105,7 @@ vim test.frag
 
 **Note**: In RaspberryPi you can avoid taking over the screen by using the `-l` flags so you can see the console. Also you can edit the shader file through ssh/sftp.
 
-**Note**: On Linux and MacOS you may used to edit your shaders with Sublime Text 2, if thats your case you should try this [Sublime Text 2 plugin that lunch glslViewer every time you open a shader](https://packagecontrol.io/packages/glslViewer).
+**Note**: On Linux and macOS you may used to edit your shaders with Sublime Text 2, if thats your case you should try this [Sublime Text 2 plugin that lunch glslViewer every time you open a shader](https://packagecontrol.io/packages/glslViewer).
 
 ### Loading Vertex shaders and geometries
 
@@ -152,7 +137,7 @@ glslViewer bunny.frag bunny.vert bunny.ply
 
 * `u_centre3d`:
 
-* `u_up3d`: 
+* `u_up3d`:
 
 ### ShaderToy.com Image Shaders
 
@@ -249,7 +234,7 @@ You can include other GLSL code using a traditional `#include "file.glsl"` macro
 
 ### Console IN commands
 
-Once glslViewer is running the CIN is listening for some commands, so you can pass data trough regular *nix pipes. 
+Once glslViewer is running the CIN is listening for some commands, so you can pass data trough regular *nix pipes.
 
 * ```int```, ```floats```, ```vec2```, ```vec3``` and ```vec4``` uniforms can be pass as comma separated values, where the first column is for the name of the uniform and the rest for the numbers of values the uniform have. **Note** that there is a distintion between ```int```and ```float```so remember to put ```.``` (floating points) to your values.
 
@@ -271,7 +256,7 @@ Once glslViewer is running the CIN is listening for some commands, so you can pa
 
 * `mouse_x`, `mouse_y` and `mouse`: return the position of the mouse (content of `u_mouse`)
 
-* `view3d`: 
+* `view3d`:
 
 * `screenshot [filename]`: save a screenshot of what's being render. If there is no filename as argument will default to what was define after the `-o` argument when glslViewer was lanched.
 
