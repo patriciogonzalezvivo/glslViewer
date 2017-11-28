@@ -203,7 +203,7 @@ namespace glm
 		T invs = static_cast<T>(1) / s;
 
 		return tquat<T, P>(
-			s * static_cast<T>(0.5f), 
+			s * static_cast<T>(0.5f),
 			rotationAxis.x * invs,
 			rotationAxis.y * invs,
 			rotationAxis.z * invs);

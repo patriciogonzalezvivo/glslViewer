@@ -31,17 +31,17 @@ namespace glm
 	/// Returns true if x is a denormalized number
 	/// Numbers whose absolute value is too small to be represented in the normal format are represented in an alternate, denormalized format.
 	/// This format is less precise but can represent values closer to zero.
-	/// 
+	///
 	/// @tparam genType Floating-point scalar or vector types.
 	///
 	/// @see <a href="http://www.opengl.org/sdk/docs/manglsl/xhtml/isnan.xml">GLSL isnan man page</a>
 	/// @see <a href="http://www.opengl.org/registry/doc/GLSLangSpec.4.20.8.pdf">GLSL 4.20.8 specification, section 8.3 Common Functions</a>
-	template <typename genType> 
+	template <typename genType>
 	GLM_FUNC_DECL typename genType::bool_type isdenormal(genType const & x);
 
 	/// Similar to 'mod' but with a different rounding and integer support.
 	/// Returns 'x - y * trunc(x/y)' instead of 'x - y * floor(x/y)'
-	/// 
+	///
 	/// @see <a href="http://stackoverflow.com/questions/7610631/glsl-mod-vs-hlsl-fmod">GLSL mod vs HLSL fmod</a>
 	/// @see <a href="http://www.opengl.org/sdk/docs/manglsl/xhtml/mod.xml">GLSL mod man page</a>
 	template <typename T, precision P, template <typename, precision> class vecType>

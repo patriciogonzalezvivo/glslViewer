@@ -1,13 +1,17 @@
 #include "mesh.h"
 
 #include <iostream>
-#include "utils.h"
+#include <fstream> 
+
+#include "tools/fs.h"
+#include "tools/geom.h"
+#include "tools/text.h"
 #include "gl/vertexLayout.h"
 
 #include "tinyobjloader/tiny_obj_loader.h"
 
 Mesh::Mesh():m_drawMode(GL_TRIANGLES) {
-    
+
 }
 
 Mesh::Mesh(const Mesh &_mother):m_drawMode(_mother.getDrawMode()) {
@@ -15,30 +19,30 @@ Mesh::Mesh(const Mesh &_mother):m_drawMode(_mother.getDrawMode()) {
 }
 
 Mesh::~Mesh(){
-    
+
 }
 
 bool Mesh::load(const std::string& _file) {
     if ( haveExt(_file,"ply") || haveExt(_file,"PLY") ){
         std::fstream is(_file.c_str(), std::ios::in);
         if(is.is_open()){
-            
+
             std::string line;
             std::string error;
-            
+
             int orderVertices=-1;
             int orderIndices=-1;
-            
+
             int vertexCoordsFound=0;
             int colorCompsFound=0;
             int texCoordsFound=0;
             int normalsCoordsFound=0;
-            
+
             int currentVertex = 0;
             int currentFace = 0;
-            
+
             bool floatColor = false;
-            
+
             enum State{
                 Header,
                 VertexDef,
@@ -47,11 +51,11 @@ bool Mesh::load(const std::string& _file) {
                 Normals,
                 Faces
             };
-            
+
             State state = Header;
-            
+
             int lineNum = 0;
-            
+
             std::vector<glm::vec4> colors;
             std::vector<glm::vec3> vertices;
             std::vector<glm::vec3> normals;
@@ -64,70 +68,70 @@ bool Mesh::load(const std::string& _file) {
                 error = "wrong format, expecting 'ply'";
                 goto clean;
             }
-            
+
             std::getline(is,line);
             lineNum++;
             if(line!="format ascii 1.0"){
                 error = "wrong format, expecting 'format ascii 1.0'";
                 goto clean;
             }
-            
+
             while(std::getline(is,line)){
                 lineNum++;
                 if(line.find("comment")==0){
                     continue;
                 }
-                
+
                 if((state==Header || state==FaceDef) && line.find("element vertex")==0){
                     state = VertexDef;
                     orderVertices = MAX(orderIndices, 0)+1;
                     vertices.resize(toInt(line.substr(15)));
                     continue;
                 }
-                
+
                 if((state==Header || state==VertexDef) && line.find("element face")==0){
                     state = FaceDef;
                     orderIndices = MAX(orderVertices, 0)+1;
                     indices.resize(toInt(line.substr(13))*3);
                     continue;
                 }
-                
+
                 if(state==VertexDef && (line.find("property float x")==0 || line.find("property float y")==0 || line.find("property float z")==0)){
                     vertexCoordsFound++;
                     continue;
                 }
-                
+
                 if(state==VertexDef && (line.find("property float r")==0 || line.find("property float g")==0 || line.find("property float b")==0 || line.find("property float a")==0)){
                     colorCompsFound++;
                     colors.resize(vertices.size());
                     floatColor = true;
                     continue;
                 }
-                
+
                 if(state==VertexDef && (line.find("property uchar red")==0 || line.find("property uchar green")==0 || line.find("property uchar blue")==0 || line.find("property uchar alpha")==0)){
                     colorCompsFound++;
                     colors.resize(vertices.size());
                     floatColor = false;
                     continue;
                 }
-                
+
                 if(state==VertexDef && (line.find("property float u")==0 || line.find("property float v")==0)){
                     texCoordsFound++;
                     texcoord.resize(vertices.size());
                     continue;
                 }
-                
+
                 if(state==VertexDef && (line.find("property float nx")==0 || line.find("property float ny")==0 || line.find("property float nz")==0)){
                     normalsCoordsFound++;
                     if (normalsCoordsFound==3) normals.resize(vertices.size());
                     continue;
                 }
-                
+
                 if(state==FaceDef && line.find("property list")!=0 && line!="end_header"){
                     error = "wrong face definition";
                     goto clean;
                 }
-                
+
                 if(line=="end_header"){
                     if(colors.size() && colorCompsFound!=3 && colorCompsFound!=4){
                         error =  "data has color coordiantes but not correct number of components. Found " + toString(colorCompsFound) + " expecting 3 or 4";
@@ -142,7 +146,7 @@ bool Mesh::load(const std::string& _file) {
                     }
                     if(orderVertices==-1) orderVertices=9999;
                     if(orderIndices==-1) orderIndices=9999;
-                    
+
                     if(orderVertices < orderIndices){
                         state = Vertices;
                     }else {
@@ -150,7 +154,7 @@ bool Mesh::load(const std::string& _file) {
                     }
                     continue;
                 }
-                
+
                 if(state==Vertices){
                     std::stringstream sline;
                     sline.str(line);
@@ -159,7 +163,7 @@ bool Mesh::load(const std::string& _file) {
                     sline >> v.y;
                     if(vertexCoordsFound>2) sline >> v.z;
                     vertices[currentVertex] = v;
-                    
+
                     if(colorCompsFound>0){
                         if (floatColor){
                             glm::vec4 c;
@@ -177,14 +181,14 @@ bool Mesh::load(const std::string& _file) {
                             colors[currentVertex] = glm::vec4(r/255.0, g/255.0, b/255.0, a/255.0);
                         }
                     }
-                    
+
                     if(texCoordsFound>0){
                         glm::vec2 uv;
                         sline >> uv.x;
                         sline >> uv.y;
                         texcoord[currentVertex] = uv;
                     }
-                    
+
                     if (normalsCoordsFound>0){
                         glm::vec3 n;
                         sline >> n.x;
@@ -192,7 +196,7 @@ bool Mesh::load(const std::string& _file) {
                         sline >> n.z;
                         normals[currentVertex] = n;
                     }
-                    
+
                     currentVertex++;
                     if((uint)currentVertex==vertices.size()){
                         if(orderVertices<orderIndices){
@@ -203,7 +207,7 @@ bool Mesh::load(const std::string& _file) {
                     }
                     continue;
                 }
-                
+
                 if(state==Faces){
                     std::stringstream sline;
                     sline.str(line);
@@ -220,7 +224,7 @@ bool Mesh::load(const std::string& _file) {
                     indices[currentFace*3+1] = i;
                     sline >> i;
                     indices[currentFace*3+2] = i;
-                    
+
                     currentFace++;
                     if((uint)currentFace==indices.size()/3){
                         if(orderVertices<orderIndices){
@@ -233,7 +237,7 @@ bool Mesh::load(const std::string& _file) {
                 }
             }
             is.close();
-            
+
             //  Succed loading the PLY data
             //  (proceed replacing the data on mesh)
             //
@@ -242,21 +246,21 @@ bool Mesh::load(const std::string& _file) {
             addVertices(vertices);
             addTexCoords(texcoord);
             addIndices(indices);
-            
+
             if(normals.size()>0 && ( getDrawMode() == GL_TRIANGLES || getDrawMode() == GL_TRIANGLE_STRIP)){
                 addNormals(normals);
             } else {
                 computeNormals();
             }
-            
+
             return true;
-            
+
         clean:
             std::cout << "ERROR glMesh, load(): " << lineNum << ":" << error << std::endl;
             std::cout << "ERROR glMesh, load(): \"" << line << "\"" << std::endl;
-        
+
         }
-        
+
         is.close();
         std::cout << "ERROR glMesh, can not load  " << _file << std::endl;
         return false;
@@ -277,28 +281,28 @@ bool Mesh::load(const std::string& _file) {
                                         shapes[i].mesh.positions[3*v+2]));
                 }
             }
-            
+
             if ( (shapes[i].mesh.normals.size() % 3) == 0) {
                 for (size_t v = 0; v < shapes[i].mesh.normals.size() / 3; v++) {
                     addNormal(glm::vec3(shapes[i].mesh.normals[3*v+0],
                                         shapes[i].mesh.normals[3*v+1],
                                         shapes[i].mesh.normals[3*v+2]));
                 }
-            } 
+            }
 
             if ( (shapes[i].mesh.texcoords.size() % 2) == 0) {
                 for (size_t v = 0; v < shapes[i].mesh.texcoords.size() / 2; v++) {
                     addTexCoord(glm::vec2(  shapes[i].mesh.texcoords[2*v+0],
                                             shapes[i].mesh.texcoords[2*v+1] ));
                 }
-            } 
-            
+            }
+
             if ( (shapes[i].mesh.indices.size() % 3) == 0) {
                 for (size_t f = 0; f < shapes[i].mesh.indices.size() / 3; f++) {
                     addTriangle(shapes[i].mesh.indices[3*f+0], shapes[i].mesh.indices[3*f+1],shapes[i].mesh.indices[3*f+2]);
                 }
             }
-            
+
         }
     }
     return false;
@@ -308,14 +312,14 @@ bool Mesh::save(const std::string& _file, bool _useBinary) {
     if (haveExt(_file,"ply")){
         std::ios_base::openmode binary_mode = _useBinary ? std::ios::binary : (std::ios_base::openmode)0;
         std::fstream os(_file.c_str(), std::ios::out | binary_mode);
-        
+
         os << "ply" << std::endl;
         if(_useBinary) {
             os << "format binary_little_endian 1.0" << std::endl;
         } else {
             os << "format ascii 1.0" << std::endl;
         }
-        
+
         if(getVertices().size()){
             os << "element vertex " << getVertices().size() << std::endl;
             os << "property float x" << std::endl;
@@ -337,7 +341,7 @@ bool Mesh::save(const std::string& _file, bool _useBinary) {
                 os << "property float nz" << std::endl;
             }
         }
-        
+
         unsigned char faceSize = 3;
         if(getIndices().size()){
             os << "element face " << getIndices().size() / faceSize << std::endl;
@@ -346,9 +350,9 @@ bool Mesh::save(const std::string& _file, bool _useBinary) {
             os << "element face " << getIndices().size() / faceSize << std::endl;
             os << "property list uchar int vertex_indices" << std::endl;
         }
-        
+
         os << "end_header" << std::endl;
-        
+
         for(uint i = 0; i < getVertices().size(); i++){
             if(_useBinary) {
                 os.write((char*) &getVertices()[i], sizeof(glm::vec3));
@@ -384,7 +388,7 @@ bool Mesh::save(const std::string& _file, bool _useBinary) {
                 os << std::endl;
             }
         }
-        
+
         if(getIndices().size()) {
             for(uint i = 0; i < getIndices().size(); i += faceSize) {
                 if(_useBinary) {
@@ -410,7 +414,7 @@ bool Mesh::save(const std::string& _file, bool _useBinary) {
                 }
             }
         }
-        
+
         os.close();
         return true;
     }
@@ -483,19 +487,19 @@ void Mesh::addTriangle(uint16_t index1, uint16_t index2, uint16_t index3){
 }
 
 void Mesh::add(const Mesh &_mesh){
-    
+
     if(_mesh.getDrawMode() != m_drawMode){
         std::cout << "INCOMPATIBLE DRAW MODES" << std::endl;
         return;
     }
-    
+
     uint16_t indexOffset = (uint16_t)getVertices().size();
-    
+
     addColors(_mesh.getColors());
     addVertices(_mesh.getVertices());
     addNormals(_mesh.getNormals());
     addTexCoords(_mesh.getTexCoords());
-    
+
     for (uint i = 0; i < _mesh.getIndices().size(); i++) {
         addIndex(indexOffset+_mesh.getIndices()[i]);
     }
@@ -527,7 +531,7 @@ const std::vector<uint16_t> & Mesh::getIndices() const{
 
 std::vector<glm::ivec3> Mesh::getTriangles() const {
     std::vector<glm::ivec3> faces;
-    
+
     if(getDrawMode() == GL_TRIANGLES) {
         if(m_indices.size()>0){
             for(unsigned int j = 0; j < m_indices.size(); j += 3) {
@@ -551,7 +555,7 @@ std::vector<glm::ivec3> Mesh::getTriangles() const {
         //
         std::cout << "ERROR: Mesh only add GL_TRIANGLES for NOW !!" << std::endl;
     }
-    
+
     return faces;
 }
 
@@ -571,45 +575,45 @@ void Mesh::clear(){
 }
 
 void Mesh::computeNormals(){
-    
+
     if(getDrawMode() == GL_TRIANGLES){
         //The number of the vertices
         int nV = m_vertices.size();
-        
+
         //The number of the triangles
         int nT = m_indices.size() / 3;
-        
+
         std::vector<glm::vec3> norm( nV ); //Array for the normals
-        
+
         //Scan all the triangles. For each triangle add its
         //normal to norm's vectors of triangle's vertices
         for (int t=0; t<nT; t++) {
-            
+
             //Get indices of the triangle t
             int i1 = m_indices[ 3 * t ];
             int i2 = m_indices[ 3 * t + 1 ];
             int i3 = m_indices[ 3 * t + 2 ];
-            
+
             //Get vertices of the triangle
             const glm::vec3 &v1 = m_vertices[ i1 ];
             const glm::vec3 &v2 = m_vertices[ i2 ];
             const glm::vec3 &v3 = m_vertices[ i3 ];
-            
+
             //Compute the triangle's normal
             glm::vec3 dir = glm::normalize(glm::cross(v2-v1,v3-v1));
-            
+
             //Accumulate it to norm array for i1, i2, i3
             norm[ i1 ] += dir;
             norm[ i2 ] += dir;
             norm[ i3 ] += dir;
         }
-        
+
         //Normalize the normal's length and add it.
         m_normals.clear();
         for (int i=0; i<nV; i++) {
             addNormal( glm::normalize(norm[i]) );
         }
-        
+
     } else {
         //  TODO
         //
@@ -623,7 +627,7 @@ Vbo* Mesh::getVbo() {
     //
     std::vector<VertexLayout::VertexAttrib> attribs;
     attribs.push_back({"position", 3, GL_FLOAT, POSITION_ATTRIBUTE, false, 0});
-    int  nBits = 3; 
+    int  nBits = 3;
 
     bool bColor = false;
     if (getColors().size() > 0 && getColors().size() == m_vertices.size()){
@@ -651,7 +655,7 @@ Vbo* Mesh::getVbo() {
     tmpMesh->setDrawMode(getDrawMode());
 
     std::vector<GLfloat> data;
-    for(uint i = 0; i < m_vertices.size(); i++){ 
+    for(uint i = 0; i < m_vertices.size(); i++){
         data.push_back(m_vertices[i].x);
         data.push_back(m_vertices[i].y);
         data.push_back(m_vertices[i].z);

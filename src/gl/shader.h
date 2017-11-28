@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <vector>
 
 #include "gl.h"
 #include "glm/glm.hpp"
@@ -31,7 +32,9 @@ public:
     bool    isInUse() const;
 
     const   GLint   getAttribLocation(const std::string& _attribute) const;
-    bool    load(const std::string* _fragmentPath, const std::string& _fragmentSrc, const std::string* _vertextPath, const std::string& _vertexSrc, bool verbose);
+    bool    load(const std::string& _fragmentSrc, const std::string& _vertexSrc, const std::vector<std::string> &_defines, bool _verbose = false);
+
+    void    setUniform(const std::string& _name, int _x);
 
     void    setUniform(const std::string& _name, float _x);
     void    setUniform(const std::string& _name, float _x, float _y);
@@ -55,9 +58,9 @@ public:
 
 private:
 
-    GLuint  compileShader(const std::string* _path, const std::string& _src, GLenum _type);
+    GLuint  compileShader(const std::string& _src, const std::vector<std::string> &_defines, GLenum _type);
     GLint   getUniformLocation(const std::string& _uniformName) const;
-    
+
     GLuint  m_program;
     GLuint  m_fragmentShader;
     GLuint  m_vertexShader;

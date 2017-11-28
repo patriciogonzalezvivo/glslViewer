@@ -11,7 +11,7 @@
  * Vbo - Drawable collection of geometry contained in a vertex buffer and (optionally) an index buffer
  */
 
-class Vbo { 
+class Vbo {
 public:
 
     Vbo();
@@ -28,7 +28,7 @@ public:
      */
     void setDrawMode(GLenum _drawMode = GL_TRIANGLES);
 
-    
+
     /*
      * Adds a single vertex to the mesh; _vertex must be a pointer to the beginning of a vertex structured
      * according to the VertexLayout associated with this mesh
@@ -69,7 +69,7 @@ public:
     void draw(const Shader* _shader);
 
 private:
-    
+
     VertexLayout* m_vertexLayout;
 
     std::vector<GLbyte> m_vertexData;

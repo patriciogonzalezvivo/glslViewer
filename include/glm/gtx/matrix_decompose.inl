@@ -8,7 +8,7 @@ namespace detail
 	// result = (a * ascl) + (b * bscl)
 	template <typename T, precision P>
 	GLM_FUNC_QUALIFIER tvec3<T, P> combine(
-		tvec3<T, P> const & a, 
+		tvec3<T, P> const & a,
 		tvec3<T, P> const & b,
 		T ascl, T bscl)
 	{
@@ -160,26 +160,26 @@ namespace detail
 			z = (Row[1][0] - Row[0][1]) * s;
 		}
 		else if(Row[0][0] > Row[1][1] && Row[0][0] > Row[2][2])
-		{ 
-			s = sqrt (static_cast<T>(1) + Row[0][0] - Row[1][1] - Row[2][2]) * static_cast<T>(2); // S=4*qx 
+		{
+			s = sqrt (static_cast<T>(1) + Row[0][0] - Row[1][1] - Row[2][2]) * static_cast<T>(2); // S=4*qx
 			x = static_cast<T>(0.25) * s;
-			y = (Row[0][1] + Row[1][0]) / s; 
-			z = (Row[0][2] + Row[2][0]) / s; 
+			y = (Row[0][1] + Row[1][0]) / s;
+			z = (Row[0][2] + Row[2][0]) / s;
 			w = (Row[2][1] - Row[1][2]) / s;
 		}
 		else if(Row[1][1] > Row[2][2])
-		{ 
+		{
 			s = sqrt (static_cast<T>(1) + Row[1][1] - Row[0][0] - Row[2][2]) * static_cast<T>(2); // S=4*qy
-			x = (Row[0][1] + Row[1][0]) / s; 
+			x = (Row[0][1] + Row[1][0]) / s;
 			y = static_cast<T>(0.25) * s;
-			z = (Row[1][2] + Row[2][1]) / s; 
+			z = (Row[1][2] + Row[2][1]) / s;
 			w = (Row[0][2] - Row[2][0]) / s;
 		}
 		else
-		{ 
+		{
 			s = sqrt(static_cast<T>(1) + Row[2][2] - Row[0][0] - Row[1][1]) * static_cast<T>(2); // S=4*qz
 			x = (Row[0][2] + Row[2][0]) / s;
-			y = (Row[1][2] + Row[2][1]) / s; 
+			y = (Row[1][2] + Row[2][1]) / s;
 			z = static_cast<T>(0.25) * s;
 			w = (Row[1][0] - Row[0][1]) / s;
 		}

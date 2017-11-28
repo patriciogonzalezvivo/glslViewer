@@ -1,9 +1,39 @@
+glslviewer (1.5) UNRELEASED; urgency=medium
+
+  * Adding `frag`/`vert` console commands to print fragment/vertex source code
+
+  * Adding -v/--verbose arguments
+
+  * Adding --help argument
+
+  * Changing -m argument for -c/--cursor
+
+  * Compilation time now only shows on -v/--verbose mode
+
+  * COUTs print w '//' at the beginning in case someone wants to use the output directly as source code
+
+
+ -- Patricio Gonzalez Vivo <patricio@ubuntu>  Sun, 26 Nov 2017 02:45:12 -0800
+
+glslviewer (1.3) UNRELEASED; urgency=medium
+
+  * Adding console gcc-like precompiler arguments to satisfy GLSL shaders dependencies -I[dir] -D[define]
+
+  * Adding 'screenshot' command on CIN to save screenshots to other files rather than the specified on -o [file]
+
+  * Adding travis and editorconfig files to help others contribute
+
+  * General housekeeping of utils functions. Now they are split in tools/fs tools/text and tools/geom 
+  * 
+
+ -- Patricio Gonzalez Vivo <patricio@ubuntu>  Wed, 16 Aug 2017 03:20:21 -0800
+
 glslviewer (1.2) UNRELEASED; urgency=medium
 
   * Better Makefile: Using Broadcom SDK when is possible not... only on Raspberry Pi
-  
+
   * Upgrading GLM to 0.9.8.4
- 
+
   * Upgrading stb_image to 2.14
 
   * Upgrading stb_image_write to 1.03
@@ -18,7 +48,7 @@ glslviewer (1.2) UNRELEASED; urgency=medium
 
   * fixing recursive #include system
 
-  * console outs for time, delta and fps on demand  
+  * console outs for time, delta and fps on demand
 
  -- Patricio Gonzalez Vivo <patricio@ubuntu>  Tue, 21 Feb 2017 14:20:28 -0500
 

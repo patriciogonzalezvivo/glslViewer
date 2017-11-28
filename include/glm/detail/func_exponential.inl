@@ -46,7 +46,7 @@ namespace detail
 			return static_cast<T>(1) / sqrt(x);
 		}
 	};
-		
+
 	template <template <class, precision> class vecType, bool Aligned>
 	struct compute_inversesqrt<vecType, float, lowp, Aligned>
 	{
@@ -131,7 +131,7 @@ namespace detail
 	{
 		return static_cast<genType>(1) / sqrt(x);
 	}
-	
+
 	template <typename T, precision P, template <typename, precision> class vecType>
 	GLM_FUNC_QUALIFIER vecType<T, P> inversesqrt(vecType<T, P> const & x)
 	{
@@ -143,4 +143,3 @@ namespace detail
 #if GLM_ARCH != GLM_ARCH_PURE && GLM_HAS_UNRESTRICTED_UNIONS
 #	include "func_exponential_simd.inl"
 #endif
-

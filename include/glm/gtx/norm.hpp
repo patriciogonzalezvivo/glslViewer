@@ -8,7 +8,7 @@
 /// @ingroup gtx
 ///
 /// @brief Various ways to compute vector norms.
-/// 
+///
 /// <glm/gtx/norm.hpp> need to be included to use these functionalities.
 
 #pragma once
@@ -45,26 +45,26 @@ namespace glm
 	GLM_FUNC_DECL T l1Norm(
 		tvec3<T, P> const & x,
 		tvec3<T, P> const & y);
-		
+
 	//! Returns the L1 norm of v.
 	//! From GLM_GTX_norm extension.
 	template <typename T, precision P>
 	GLM_FUNC_DECL T l1Norm(
 		tvec3<T, P> const & v);
-		
+
 	//! Returns the L2 norm between x and y.
 	//! From GLM_GTX_norm extension.
 	template <typename T, precision P>
 	GLM_FUNC_DECL T l2Norm(
 		tvec3<T, P> const & x,
 		tvec3<T, P> const & y);
-		
+
 	//! Returns the L2 norm of v.
 	//! From GLM_GTX_norm extension.
 	template <typename T, precision P>
 	GLM_FUNC_DECL T l2Norm(
 		tvec3<T, P> const & x);
-		
+
 	//! Returns the L norm between x and y.
 	//! From GLM_GTX_norm extension.
 	template <typename T, precision P>

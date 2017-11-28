@@ -3,7 +3,7 @@
 #include "types/shapes.h"
 #include "types/rectangle.h"
 #include "app.h"
-#include "utils.h"
+#include "tools/text.h"
 
 #ifndef STRINGIFY
 #define STRINGIFY(A) #A
@@ -19,7 +19,7 @@ Cursor::~Cursor(){
 
 void Cursor::init(){
 
-    m_vbo = cross(glm::vec3(0.,0.,0.1), 10.).getVbo(); 
+    m_vbo = cross(glm::vec3(0.,0.,0.1), 10.).getVbo();
 
 	std::string vert, frag =
 "#ifdef GL_ES\n"
@@ -40,7 +40,8 @@ void main(void) {
     gl_FragColor = vec4(1.0);
 } );
 
-	m_shader.load(nullptr, frag, nullptr, vert, false);
+    std::vector<std::string> defines;
+	m_shader.load(frag, vert, defines);
 }
 
 void Cursor::draw(){

@@ -8,7 +8,7 @@
 ///
 /// @defgroup gtx_io GLM_GTX_io
 /// @ingroup gtx
-/// 
+///
 /// @brief std::[w]ostream support for glm types
 ///
 /// std::[w]ostream support for glm types + precision/width/etc. manipulators

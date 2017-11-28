@@ -9,7 +9,7 @@ namespace glm
 		template <typename T, precision P>
 		GLM_FUNC_QUALIFIER tmat4x3<T, P>::tmat4x3()
 		{
-#			ifndef GLM_FORCE_NO_CTOR_INIT 
+#			ifndef GLM_FORCE_NO_CTOR_INIT
 				this->value[0] = col_type(1, 0, 0);
 				this->value[1] = col_type(0, 1, 0);
 				this->value[2] = col_type(0, 0, 1);
@@ -103,7 +103,7 @@ namespace glm
 		this->value[2] = col_type(static_cast<T>(x3), value_type(y3), value_type(z3));
 		this->value[3] = col_type(static_cast<T>(x4), value_type(y4), value_type(z4));
 	}
-	
+
 	template <typename T, precision P>
 	template <typename V1, typename V2, typename V3, typename V4>
 	GLM_FUNC_QUALIFIER tmat4x3<T, P>::tmat4x3

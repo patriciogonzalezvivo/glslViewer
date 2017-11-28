@@ -145,7 +145,7 @@ namespace glm
 	(
 		genType const & point0, genType const & point1,
 		genType const & sphereCenter, typename genType::value_type sphereRadius,
-		genType & intersectionPoint1, genType & intersectionNormal1, 
+		genType & intersectionPoint1, genType & intersectionNormal1,
 		genType & intersectionPoint2, genType & intersectionNormal2
 	)
 	{

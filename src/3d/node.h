@@ -28,7 +28,7 @@ public:
     float   getPitch() const;
     float   getHeading() const;
     float   getRoll() const;
-    
+
     glm::quat   getOrientationQuat() const;
     glm::vec3   getOrientationEuler() const;
     glm::vec3   getScale() const;
@@ -40,14 +40,14 @@ public:
     void    truck(float _amount);
     void    boom(float _amount);
     void    dolly(float _amount);
-    
+
     void    tilt(float _degrees);
     void    pan(float _degrees);
     void    roll(float _degrees);
 
-    void    rotate(const glm::quat& _q); 
-    
-    void    rotateAround(const glm::quat& _q, const glm::vec3& _point);    
+    void    rotate(const glm::quat& _q);
+
+    void    rotateAround(const glm::quat& _q, const glm::vec3& _point);
 
     void    lookAt(const glm::vec3& _lookAtPosition, glm::vec3 _upVector = glm::vec3(0.0, 1.0, 0.0));
 

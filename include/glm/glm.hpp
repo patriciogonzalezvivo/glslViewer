@@ -6,7 +6,7 @@
 /// @brief The core of GLM, which implements exactly and only the GLSL specification to the degree possible.
 ///
 /// The GLM core consists of @ref core_types "C++ types that mirror GLSL types" and
-/// C++ functions that mirror the GLSL functions. It also includes 
+/// C++ functions that mirror the GLSL functions. It also includes
 /// @ref core_precision "a set of precision-based types" that can be used in the appropriate
 /// functions. The C++ types are all based on a basic set of @ref core_template "template types".
 ///
@@ -42,7 +42,7 @@
 ///
 /// @defgroup core_template Template types
 ///
-/// @brief The generic template types used as the basis for the core types. 
+/// @brief The generic template types used as the basis for the core types.
 ///
 /// These types are all templates used to define the actual @ref core_types.
 /// These templetes are implementation details of GLM types and should not be used explicitly.

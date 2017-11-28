@@ -13,12 +13,12 @@ namespace glm
 	};
 
 	typedef std::size_t sizeType;
-	
+
 namespace detail
 {
 	template
 	<
-		typename VALTYPE, 
+		typename VALTYPE,
 		template <typename> class TYPE
 	>
 	struct genType
@@ -35,7 +35,7 @@ namespace detail
 		typedef sizeType size_type;
 		static bool is_vector();
 		static bool is_matrix();
-		
+
 		typedef TYPE<VALTYPE> type;
 		typedef TYPE<VALTYPE> * pointer;
 		typedef TYPE<VALTYPE> const * const_pointer;
@@ -64,7 +64,7 @@ namespace detail
 
 	template
 	<
-		typename VALTYPE, 
+		typename VALTYPE,
 		template <typename> class TYPE
 	>
 	bool genType<VALTYPE, TYPE>::is_vector()
@@ -97,8 +97,8 @@ namespace detail
 		static bool									is_matrix();
 
 	private:
-		// Data 
-		col_type value[colT];		
+		// Data
+		col_type value[colT];
 
 	public:
 		//////////////////////////////////////
@@ -135,7 +135,7 @@ namespace detail
 		class_type& operator-- ();
 	};
 */
-	
+
 	//template <typename T>
 	//struct traits
 	//{
@@ -147,28 +147,28 @@ namespace detail
 	//	static const bool is_genIType = false;
 	//	static const bool is_genUType = false;
 	//};
-	
+
 	//template <>
 	//struct traits<half>
 	//{
 	//	static const bool is_float = true;
 	//	static const bool is_genType = true;
 	//};
-	
+
 	//template <>
 	//struct traits<float>
 	//{
 	//	static const bool is_float = true;
 	//	static const bool is_genType = true;
 	//};
-	
+
 	//template <>
 	//struct traits<double>
 	//{
 	//	static const bool is_float = true;
 	//	static const bool is_genType = true;
 	//};
-	
+
 	//template <typename genType>
 	//struct desc
 	//{
@@ -180,15 +180,15 @@ namespace detail
 	//	typedef genType &						reference;
 	//	typedef genType const&					const_reference;
 	//	typedef genType const&					param_type;
-	
+
 	//	typedef typename genType::value_type	value_type;
 	//	typedef typename genType::size_type		size_type;
 	//	static const typename size_type			value_size;
 	//};
-	
+
 	//template <typename genType>
 	//const typename desc<genType>::size_type desc<genType>::value_size = genType::value_size();
-	
+
 }//namespace detail
 }//namespace glm
 

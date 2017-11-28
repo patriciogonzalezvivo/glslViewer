@@ -6,10 +6,10 @@
 /// @defgroup gtc_noise GLM_GTC_noise
 /// @ingroup gtc
 ///
-/// Defines 2D, 3D and 4D procedural noise functions 
-/// Based on the work of Stefan Gustavson and Ashima Arts on "webgl-noise": 
-/// https://github.com/ashima/webgl-noise 
-/// Following Stefan Gustavson's paper "Simplex noise demystified": 
+/// Defines 2D, 3D and 4D procedural noise functions
+/// Based on the work of Stefan Gustavson and Ashima Arts on "webgl-noise":
+/// https://github.com/ashima/webgl-noise
+/// Following Stefan Gustavson's paper "Simplex noise demystified":
 /// http://www.itn.liu.se/~stegu/simplexnoise/simplexnoise.pdf
 /// <glm/gtc/noise.hpp> need to be included to use these functionalities.
 
@@ -40,7 +40,7 @@ namespace glm
 	template <typename T, precision P, template<typename, precision> class vecType>
 	GLM_FUNC_DECL T perlin(
 		vecType<T, P> const & p);
-		
+
 	/// Periodic perlin noise.
 	/// @see gtc_noise
 	template <typename T, precision P, template<typename, precision> class vecType>

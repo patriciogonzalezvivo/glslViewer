@@ -9,7 +9,7 @@ namespace glm
 		template <typename T, precision P>
 		GLM_FUNC_QUALIFIER tmat3x4<T, P>::tmat3x4()
 		{
-#			ifndef GLM_FORCE_NO_CTOR_INIT 
+#			ifndef GLM_FORCE_NO_CTOR_INIT
 				this->value[0] = col_type(1, 0, 0, 0);
 				this->value[1] = col_type(0, 1, 0, 0);
 				this->value[2] = col_type(0, 0, 1, 0);
@@ -92,7 +92,7 @@ namespace glm
 		this->value[1] = col_type(static_cast<T>(x2), value_type(y2), value_type(z2), value_type(w2));
 		this->value[2] = col_type(static_cast<T>(x3), value_type(y3), value_type(z3), value_type(w3));
 	}
-	
+
 	template <typename T, precision P>
 	template <typename V1, typename V2, typename V3>
 	GLM_FUNC_QUALIFIER tmat3x4<T, P>::tmat3x4
@@ -106,7 +106,7 @@ namespace glm
 		this->value[1] = col_type(v2);
 		this->value[2] = col_type(v3);
 	}
-	
+
 	// -- Matrix conversions --
 
 	template <typename T, precision P>
@@ -211,8 +211,8 @@ namespace glm
 		}
 #	endif//!GLM_HAS_DEFAULTED_FUNCTIONS
 
-	template <typename T, precision P> 
-	template <typename U> 
+	template <typename T, precision P>
+	template <typename U>
 	GLM_FUNC_QUALIFIER tmat3x4<T, P>& tmat3x4<T, P>::operator=(tmat3x4<U, P> const & m)
 	{
 		this->value[0] = m[0];
@@ -221,8 +221,8 @@ namespace glm
 		return *this;
 	}
 
-	template <typename T, precision P> 
-	template <typename U> 
+	template <typename T, precision P>
+	template <typename U>
 	GLM_FUNC_QUALIFIER tmat3x4<T, P>& tmat3x4<T, P>::operator+=(U s)
 	{
 		this->value[0] += s;
@@ -231,8 +231,8 @@ namespace glm
 		return *this;
 	}
 
-	template <typename T, precision P> 
-	template <typename U> 
+	template <typename T, precision P>
+	template <typename U>
 	GLM_FUNC_QUALIFIER tmat3x4<T, P>& tmat3x4<T, P>::operator+=(tmat3x4<U, P> const & m)
 	{
 		this->value[0] += m[0];

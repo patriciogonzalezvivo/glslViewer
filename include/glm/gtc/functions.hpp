@@ -1,15 +1,15 @@
 /// @ref gtc_functions
 /// @file glm/gtc/functions.hpp
-/// 
+///
 /// @see core (dependence)
 /// @see gtc_half_float (dependence)
 /// @see gtc_quaternion (dependence)
 ///
 /// @defgroup gtc_functions GLM_GTC_functions
 /// @ingroup gtc
-/// 
+///
 /// @brief List of useful common functions.
-/// 
+///
 /// <glm/gtc/functions.hpp> need to be included to use these functionalities.
 
 #pragma once
@@ -50,4 +50,3 @@ namespace glm
 }//namespace glm
 
 #include "functions.inl"
-

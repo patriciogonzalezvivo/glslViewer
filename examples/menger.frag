@@ -20,7 +20,7 @@ float sdBox( vec3 p, vec3 b )
 
 // result res:
 //   res.x -- signed distance
-//   res.yzw -- initial 1,0,0; 
+//   res.yzw -- initial 1,0,0;
 vec4 map( in vec3 p )
 {
     float d = sdBox(p,vec3(1.0));
@@ -95,13 +95,13 @@ vec3 render( in vec3 ro, in vec3 rd )
 {
     // background color
     vec3 col = mix( vec3(0.3,0.2,0.1)*0.5, vec3(0.7, 0.9, 1.0), 0.5 + 0.5*rd.y );
-    
+
     vec4 tmat = intersect(ro,rd);
     if( tmat.x>0.0 )
     {
         vec3  pos = ro + tmat.x*rd;
         vec3  nor = calcNormal(pos);
-        
+
         float occ = tmat.y;
         float sha = softshadow( pos, light, 0.01, 64.0 );
 
@@ -113,7 +113,7 @@ vec3 render( in vec3 ro, in vec3 rd )
         lin += 1.00*dif*vec3(1.10,0.85,0.60)*sha;
         lin += 0.50*sky*vec3(0.10,0.20,0.40)*occ;
         lin += 0.10*bac*vec3(1.00,1.00,1.00)*(0.5+0.5*occ);
-        lin += 0.25*occ*vec3(0.15,0.17,0.20);    
+        lin += 0.25*occ*vec3(0.15,0.17,0.20);
 
         vec3 matcol = vec3(
             0.5+0.5*cos(0.0+2.0*tmat.z),
@@ -140,6 +140,6 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
     vec3 rd = normalize( p.x*uu + p.y*vv + 2.5*ww );
 
     vec3 col = render( ro, rd );
-    
+
     fragColor = vec4(col,1.0);
 }

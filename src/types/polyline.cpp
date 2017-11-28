@@ -1,7 +1,7 @@
 #include "polyline.h"
 
 #include "polarPoint.h"
-#include "utils.h"
+#include "tools/geom.h"
 
 Polyline::Polyline():m_centroid(0.0,0.0,0.0),m_bChange(true){
     m_points.clear();
@@ -24,16 +24,16 @@ Polyline::Polyline(const Rectangle &_rect, float _radiants){
         add(_rect.getBottomRight());
         add(_rect.getBottomLeft());
     } else {
-        
+
         PolarPoint toTR = PolarPoint(_rect.getCenter(),_rect.getTopRight());
         PolarPoint toBR = PolarPoint(_rect.getCenter(),_rect.getBottomRight());
-        
+
         toTR.a += _radiants;
         toBR.a += _radiants;
-        
+
         add(toTR.getXY());
         add(toBR.getXY());
-        
+
         toTR.a += PI;
         toBR.a += PI;
 
@@ -60,7 +60,7 @@ void Polyline::add( const glm::vec3 & _point ){
 }
 
 void Polyline::add(const std::vector<glm::vec3> & _points){
-    for (uint i = 0; i < _points.size(); i++) {
+    for (unsigned int i = 0; i < _points.size(); i++) {
         add(_points[i]);
     }
 }
@@ -89,7 +89,7 @@ const std::vector<glm::vec3> & Polyline::getVertices() const{
 
 glm::vec3 Polyline::getPositionAt(const float &_dist) const{
     float distance = 0.0;
-    for (uint i = 0; i < m_points.size()-1; i++){
+    for (unsigned int i = 0; i < m_points.size()-1; i++){
         PolarPoint polar(m_points[i],m_points[i+1]);
         if(distance+polar.r <= _dist){
             return  m_points[i] + PolarPoint(polar.a,_dist-distance).getXY();
@@ -121,10 +121,10 @@ std::vector<Polyline> Polyline::splitAt(float _dist){
     std::vector<Polyline> RTA;
     if (size()>0) {
         Polyline buffer;
-        
+
         buffer.add(m_points[0]);
         float distance = 0.0;
-        for (uint i = 0; i < m_points.size()-1; i++){
+        for (unsigned int i = 0; i < m_points.size()-1; i++){
             PolarPoint polar(m_points[i],m_points[i+1]);
             if(distance+polar.r <= _dist){
                 buffer.add(m_points[i] + PolarPoint(polar.a,_dist-distance).getXY());
@@ -147,9 +147,9 @@ bool Polyline::isInside(float _x, float _y){
 	int counter = 0;
 	double xinters;
     glm::vec3 p1,p2;
-    
+
 	int N = size();
-    
+
 	p1 = m_points[0];
 	for (int i=1; i<=N; i++) {
 		p2 = m_points[i % N];
@@ -166,7 +166,7 @@ bool Polyline::isInside(float _x, float _y){
 		}
 		p1 = p2;
 	}
-    
+
 	if (counter % 2 == 0) return false;
 	else return true;
 }

@@ -5,7 +5,7 @@
 #include <chrono>
 #include <thread>
 #include "glm/gtc/matrix_transform.hpp"
-#include "utils.h"
+#include "tools/text.h"
 
 // Common global variables
 //----------------------------------------------------
@@ -78,7 +78,7 @@ void initGL (glm::ivec4 &_viewport, bool _headless) {
         // Start clock
         // gettimeofday(&tv, NULL);
         // timeStart = (unsigned long long)(tv.tv_sec) * 1000 +
-        //             (unsigned long long)(tv.tv_usec) / 1000; 
+        //             (unsigned long long)(tv.tv_usec) / 1000;
         clock_gettime(CLOCK_MONOTONIC, &time_start);
 
         // Start OpenGL ES
@@ -162,11 +162,11 @@ void initGL (glm::ivec4 &_viewport, bool _headless) {
         } else {
             dispman_display = vc_dispmanx_display_open(0); // LCD
         }
-        
+
         dispman_update = vc_dispmanx_update_start(0);
         dispman_element = vc_dispmanx_element_add(  dispman_update, dispman_display,
                                                     0/*layer*/, &dst_rect, 0/*src*/,
-                                                    &src_rect, DISPMANX_PROTECTION_NONE, 
+                                                    &src_rect, DISPMANX_PROTECTION_NONE,
                                                     0 /*alpha*/, 0/*clamp*/, (DISPMANX_TRANSFORM_T)0/*transform*/);
 
         nativeviewport.element = dispman_element;
@@ -201,7 +201,7 @@ void initGL (glm::ivec4 &_viewport, bool _headless) {
         }
 
         window = glfwCreateWindow(_viewport.z, _viewport.w, appTitle.c_str(), NULL, NULL);
-        
+
         if(!window) {
             glfwTerminate();
             std::cerr << "ABORT: GLFW create window failed" << std::endl;
@@ -249,10 +249,9 @@ void initGL (glm::ivec4 &_viewport, bool _headless) {
         glfwSetCursorPosCallback(window, [](GLFWwindow* _window, double x, double y) {
             // Convert x,y to pixel coordinates relative to viewport.
             // (0,0) is lower left corner.
+            y = viewport.w - y;
             x *= fPixelDensity;
             y *= fPixelDensity;
-            y = viewport.w - y;
-
             // mouse.velX,mouse.velY is the distance the mouse cursor has moved
             // since the last callback, during a drag gesture.
             // mouse.drag is the previous mouse position, during a drag gesture.
@@ -268,8 +267,8 @@ void initGL (glm::ivec4 &_viewport, bool _headless) {
             mouse.y = y;
             if (mouse.x < 0) mouse.x = 0;
             if (mouse.y < 0) mouse.y = 0;
-            if (mouse.x > viewport.z) mouse.x = viewport.z;
-            if (mouse.y > viewport.w) mouse.y = viewport.w;
+            if (mouse.x > viewport.z * fPixelDensity) mouse.x = viewport.z * fPixelDensity;
+            if (mouse.y > viewport.w * fPixelDensity) mouse.y = viewport.w * fPixelDensity;
 
             // update iMouse when cursor moves
             if (left_mouse_button_down) {
@@ -294,7 +293,7 @@ void initGL (glm::ivec4 &_viewport, bool _headless) {
             if (mouse.button == 0 && button != mouse.button) {
                 mouse.button = button;
                 onMouseClick(mouse.x,mouse.y,mouse.button);
-            } 
+            }
             else {
                 mouse.button = button;
             }
@@ -324,6 +323,22 @@ bool isGL(){
         return !glfwWindowShouldClose(window);
     #endif
 }
+
+#ifndef PLATFORM_RPI
+void debounceSetWindowTitle(std::string title){
+    static double lastUpdated;
+
+    double now = glfwGetTime();
+
+    if ((now - lastUpdated) < 1.) {
+        return;
+    }
+
+    glfwSetWindowTitle(window, title.c_str());
+
+    lastUpdated = now;
+}
+#endif
 
 void updateGL(){
     // Update time
@@ -365,36 +380,36 @@ void updateGL(){
             // Set values to 0
             mouse.velX=0;
             mouse.velY=0;
-            
+
             // Extract values from driver
             struct {char buttons, dx, dy; } m;
             while (1) {
                 int bytes = read(fd, &m, sizeof m);
-                
+
                 if (bytes < (int)sizeof m) {
                     return;
                 } else if (m.buttons&8) {
                     break; // This bit should always be set
                 }
-                
+
                 read(fd, &m, 1); // Try to sync up again
             }
-            
+
             // Set button value
             int button = m.buttons&3;
             if (button) mouse.button = button;
             else mouse.button = 0;
-            
+
             // Set deltas
             mouse.velX=m.dx;
             mouse.velY=m.dy;
             if (m.buttons&XSIGN) mouse.velX-=256;
             if (m.buttons&YSIGN) mouse.velY-=256;
-            
+
             // Add movement
             mouse.x+=mouse.velX;
             mouse.y+=mouse.velY;
-            
+
             // Clamp values
             if (mouse.x < 0) mouse.x=0;
             if (mouse.y < 0) mouse.y=0;
@@ -405,7 +420,7 @@ void updateGL(){
             if (mouse.button == 0 && button != mouse.button) {
                 mouse.button = button;
                 onMouseClick(mouse.x, mouse.y, mouse.button);
-            } 
+            }
             else {
                 mouse.button = button;
             }
@@ -417,7 +432,7 @@ void updateGL(){
         }
     #else
         std::string title = appTitle + ":..: FPS:" + toString(fFPS);
-        glfwSetWindowTitle(window, title.c_str());
+        debounceSetWindowTitle(title);
 
         // OSX/LINUX
         glfwPollEvents();
@@ -467,10 +482,10 @@ void setWindowSize(int _width, int _height) {
 
 glm::ivec2 getScreenSize() {
     glm::ivec2 screen;
-    
+
     #ifdef PLATFORM_RPI
         // RASPBERRYPI
-        
+
         if (!bBcm) {
             bcm_host_init();
             bBcm = true;

@@ -3,15 +3,15 @@
 #include <regex>
 #include <sstream>
 
-#include "../utils.h"
+#include "tools/text.h"
 
 bool parseUniforms(const std::string &_line, UniformList *_uniforms) {
     bool rta = false;
-    std::regex re("u_(\\w+)\\,");
+    std::regex re("^(\\w+)\\,");
     std::smatch match;
     if (std::regex_search(_line, match, re)) {
         // Extract uniform name
-        std::string name = "u_" + std::ssub_match(match[1]).str();
+        std::string name = std::ssub_match(match[1]).str();
 
         // Extract values
         int index = 0;
@@ -19,6 +19,7 @@ bool parseUniforms(const std::string &_line, UniformList *_uniforms) {
         std::string item;
         while (getline(ss, item, ',')) {
             if (index != 0) {
+                (*_uniforms)[name].bInt = !isFloat(item);
                 (*_uniforms)[name].value[index-1] = toFloat(item);
             }
             index++;

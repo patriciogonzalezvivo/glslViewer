@@ -103,7 +103,7 @@ namespace detail
 
 		return REG1 | (REG2 << 1) | (REG3 << 2);
 	}
-		
+
 	template <>
 	GLM_FUNC_QUALIFIER glm::uint64 bitfieldInterleave(glm::uint16 x, glm::uint16 y, glm::uint16 z)
 	{

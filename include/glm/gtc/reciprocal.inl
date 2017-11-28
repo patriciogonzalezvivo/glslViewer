@@ -41,7 +41,7 @@ namespace glm
 	GLM_FUNC_QUALIFIER genType cot(genType angle)
 	{
 		GLM_STATIC_ASSERT(std::numeric_limits<genType>::is_iec559, "'cot' only accept floating-point values");
-	
+
 		genType const pi_over_2 = genType(3.1415926535897932384626433832795 / 2.0);
 		return glm::tan(pi_over_2 - angle);
 	}

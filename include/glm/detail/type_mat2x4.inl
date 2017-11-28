@@ -9,7 +9,7 @@ namespace glm
 		template <typename T, precision P>
 		GLM_FUNC_QUALIFIER tmat2x4<T, P>::tmat2x4()
 		{
-#			ifndef GLM_FORCE_NO_CTOR_INIT 
+#			ifndef GLM_FORCE_NO_CTOR_INIT
 				this->value[0] = col_type(1, 0, 0, 0);
 				this->value[1] = col_type(0, 1, 0, 0);
 #			endif
@@ -78,7 +78,7 @@ namespace glm
 		this->value[0] = col_type(static_cast<T>(x1), value_type(y1), value_type(z1), value_type(w1));
 		this->value[1] = col_type(static_cast<T>(x2), value_type(y2), value_type(z2), value_type(w2));
 	}
-	
+
 	template <typename T, precision P>
 	template <typename V1, typename V2>
 	GLM_FUNC_QUALIFIER tmat2x4<T, P>::tmat2x4(tvec4<V1, P> const & v1, tvec4<V2, P> const & v2)
@@ -290,7 +290,7 @@ namespace glm
 	GLM_FUNC_QUALIFIER tmat2x4<T, P> operator-(tmat2x4<T, P> const & m)
 	{
 		return tmat2x4<T, P>(
-			-m[0], 
+			-m[0],
 			-m[1]);
 	}
 
@@ -304,7 +304,7 @@ namespace glm
 			m[1] + scalar);
 	}
 
-	template <typename T, precision P> 
+	template <typename T, precision P>
 	GLM_FUNC_QUALIFIER tmat2x4<T, P> operator+(tmat2x4<T, P> const & m1, tmat2x4<T, P> const & m2)
 	{
 		return tmat2x4<T, P>(
@@ -312,7 +312,7 @@ namespace glm
 			m1[1] + m2[1]);
 	}
 
-	template <typename T, precision P> 
+	template <typename T, precision P>
 	GLM_FUNC_QUALIFIER tmat2x4<T, P> operator-(tmat2x4<T, P> const & m, T scalar)
 	{
 		return tmat2x4<T, P>(
@@ -336,7 +336,7 @@ namespace glm
 			m[1] * scalar);
 	}
 
-	template <typename T, precision P> 
+	template <typename T, precision P>
 	GLM_FUNC_QUALIFIER tmat2x4<T, P> operator*(T scalar, tmat2x4<T, P> const & m)
 	{
 		return tmat2x4<T, P>(
@@ -435,7 +435,7 @@ namespace glm
 			m1[0][3] * m2[2][0] + m1[1][3] * m2[2][1]);
 	}
 
-	template <typename T, precision P> 
+	template <typename T, precision P>
 	GLM_FUNC_QUALIFIER tmat2x4<T, P> operator/(tmat2x4<T, P> const & m, T scalar)
 	{
 		return tmat2x4<T, P>(

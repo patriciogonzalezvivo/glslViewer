@@ -12,15 +12,15 @@ endif
 
 #override platform selection on RPi:
 ifneq ("$(wildcard /opt/vc/include/bcm_host.h)","")
-    PLATFORM = Raspbian GNU/Linux
+    PLATFORM = $(shell . /etc/os-release && echo $$PRETTY_NAME)
 endif
 
-#$(info Platform ${PLATFORM}) 
+#$(info Platform ${PLATFORM})
 
 INCLUDES +=	-Isrc/ -Iinclude/
 CFLAGS += -Wall -O3 -std=c++11 -fpermissive
 
-ifeq ($(PLATFORM),Raspbian GNU/Linux)
+ifeq ($(PLATFORM),Raspbian GNU/Linux 8 (jessie))
 CFLAGS += -DGLM_FORCE_CXX98 -DPLATFORM_RPI
 INCLUDES += -I$(SDKSTAGE)/opt/vc/include/ \
 			-I$(SDKSTAGE)/opt/vc/include/interface/vcos/pthreads \
@@ -30,9 +30,20 @@ LDFLAGS += -L$(SDKSTAGE)/opt/vc/lib/ \
 			-lbcm_host \
 			-lpthread
 
+else ifeq ($(PLATFORM),Raspbian GNU/Linux 9 (stretch))
+	CFLAGS += -DGLM_FORCE_CXX98 -DPLATFORM_RPI
+	INCLUDES += -I$(SDKSTAGE)/opt/vc/include/ \
+				-I$(SDKSTAGE)/opt/vc/include/interface/vcos/pthreads \
+				-I$(SDKSTAGE)/opt/vc/include/interface/vmcs_host/linux
+	LDFLAGS += -L$(SDKSTAGE)/opt/vc/lib/ \
+			   	-lbrcmGLESv2 -lbrcmEGL \
+			   	-lbcm_host \
+			    -lpthread
+$(info Platform ${PLATFORM})
+
 else ifeq ($(shell uname),Linux)
-CFLAGS += -DPLATFORM_LINUX $(shell pkg-config --cflags glfw3 glu gl) 
-LDFLAGS += $(shell pkg-config --libs glfw3 glu gl x11 xrandr xi xxf86vm xcursor xinerama xrender xext xdamage) -lpthread -ldl 
+CFLAGS += -DPLATFORM_LINUX $(shell pkg-config --cflags glfw3 glu gl)
+LDFLAGS += $(shell pkg-config --libs glfw3 glu gl x11 xrandr xi xxf86vm xcursor xinerama xrender xext xdamage) -lpthread -ldl
 
 else ifeq ($(PLATFORM),Darwin)
 CXX = /usr/bin/clang++

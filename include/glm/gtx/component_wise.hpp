@@ -2,7 +2,7 @@
 /// @file glm/gtx/component_wise.hpp
 /// @date 2007-05-21 / 2011-06-07
 /// @author Christophe Riccio
-/// 
+///
 /// @see core (dependence)
 ///
 /// @defgroup gtx_component_wise GLM_GTX_component_wise
@@ -39,24 +39,24 @@ namespace glm
 	template <typename T, typename floatType, precision P, template <typename, precision> class vecType>
 	GLM_FUNC_DECL vecType<T, P> compScale(vecType<floatType, P> const & v);
 
-	/// Add all vector components together. 
+	/// Add all vector components together.
 	/// @see gtx_component_wise
-	template <typename genType> 
+	template <typename genType>
 	GLM_FUNC_DECL typename genType::value_type compAdd(genType const & v);
 
-	/// Multiply all vector components together. 
+	/// Multiply all vector components together.
 	/// @see gtx_component_wise
-	template <typename genType> 
+	template <typename genType>
 	GLM_FUNC_DECL typename genType::value_type compMul(genType const & v);
 
 	/// Find the minimum value between single vector components.
 	/// @see gtx_component_wise
-	template <typename genType> 
+	template <typename genType>
 	GLM_FUNC_DECL typename genType::value_type compMin(genType const & v);
 
 	/// Find the maximum value between single vector components.
 	/// @see gtx_component_wise
-	template <typename genType> 
+	template <typename genType>
 	GLM_FUNC_DECL typename genType::value_type compMax(genType const & v);
 
 	/// @}

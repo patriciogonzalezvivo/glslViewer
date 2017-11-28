@@ -106,7 +106,7 @@ static inline int parseInt(const char *&token) {
 //  Valid strings are for example:
 //   -0	 +3.1417e+2  -0.0E-3  1.0324  -1.41   11e2
 //
-// If the parsing is a success, result is set to the parsed value and true 
+// If the parsing is a success, result is set to the parsed value and true
 // is returned.
 //
 // The function is greedy and will parse until any of the following happens:
@@ -116,7 +116,7 @@ static inline int parseInt(const char *&token) {
 // The following situations triggers a failure:
 //  - s >= s_end.
 //  - parse failure.
-// 
+//
 static bool tryParseDouble(const char *s, const char *s_end, double *result)
 {
 	if (s >= s_end)
@@ -127,7 +127,7 @@ static bool tryParseDouble(const char *s, const char *s_end, double *result)
 	double mantissa = 0.0;
 	// This exponent is base 2 rather than 10.
 	// However the exponent we parse is supposed to be one of ten,
-	// thus we must take care to convert the exponent/and or the 
+	// thus we must take care to convert the exponent/and or the
 	// mantissa to a * 2^E, where a is the mantissa and E is the
 	// exponent.
 	// To get the final double we will use ldexp, it requires the
@@ -140,7 +140,7 @@ static bool tryParseDouble(const char *s, const char *s_end, double *result)
 	char exp_sign = '+';
 	char const *curr = s;
 
-	// How many characters were read in a loop. 
+	// How many characters were read in a loop.
 	int read = 0;
 	// Tells whether a loop terminated due to reaching s_end.
 	bool end_not_reached = false;

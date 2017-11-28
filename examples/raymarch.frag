@@ -8,9 +8,9 @@ uniform vec3 u_up3d;
 // The MIT License
 // Copyright © 2013 Inigo Quilez
 // Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-    
 
-// A list of useful distance function to simple primitives, and an example on how to 
+
+// A list of useful distance function to simple primitives, and an example on how to
 // do some interesting boolean operations, repetition and displacement.
 //
 // More info here: http://www.iquilezles.org/www/articles/distfunctions/distfunctions.htm
@@ -109,7 +109,7 @@ float sdPryamid4(vec3 p, vec3 h ) // h = { cos a, sin a, height }
 {
     // Tetrahedron = Octahedron - Cube
     float box = sdBox( p - vec3(0,-2.0*h.z,0), vec3(2.0*h.z) );
- 
+
     float d = 0.0;
     d = max( d, abs( dot(p, vec3( -h.x, h.y, 0 )) ));
     d = max( d, abs( dot(p, vec3(  h.x, h.y, 0 )) ));
@@ -207,7 +207,7 @@ vec2 map( in vec3 pos )
     res = opU( res, vec2( 0.5*sdTorus( opTwist(pos-vec3(-2.0,0.25, 2.0)),vec2(0.20,0.05)), 46.7 ) );
     res = opU( res, vec2( sdConeSection( pos-vec3( 0.0,0.35,-2.0), 0.15, 0.2, 0.1 ), 13.67 ) );
     res = opU( res, vec2( sdEllipsoid( pos-vec3( 1.0,0.35,-2.0), vec3(0.15, 0.2, 0.05) ), 43.17 ) );
-        
+
     return res;
 }
 
@@ -220,14 +220,14 @@ vec2 castRay( in vec3 ro, in vec3 rd )
 {
     float tmin = 1.0;
     float tmax = 20.0;
-   
+
 #if 0
     // bounding volume
     float tp1 = (0.0-ro.y)/rd.y; if( tp1>0.0 ) tmax = min( tmax, tp1 );
     float tp2 = (1.6-ro.y)/rd.y; if( tp2>0.0 ) { if( ro.y>1.6 ) tmin = max( tmin, tp2 );
                                                  else           tmax = min( tmax, tp2 ); }
 #endif
-    
+
     float t = tmin;
     float m = -1.0;
     for( int i=0; i<64; i++ )
@@ -261,9 +261,9 @@ float softshadow( in vec3 ro, in vec3 rd, in float mint, in float tmax )
 vec3 calcNormal( in vec3 pos )
 {
     vec2 e = vec2(1.0,-1.0)*0.5773*0.0005;
-    return normalize( e.xyy*map( pos + e.xyy ).x + 
-                      e.yyx*map( pos + e.yyx ).x + 
-                      e.yxy*map( pos + e.yxy ).x + 
+    return normalize( e.xyy*map( pos + e.xyy ).x +
+                      e.yyx*map( pos + e.yyx ).x +
+                      e.yxy*map( pos + e.yxy ).x +
                       e.xxx*map( pos + e.xxx ).x );
     /*
     vec3 eps = vec3( 0.0005, 0.0, 0.0 );
@@ -287,14 +287,14 @@ float calcAO( in vec3 pos, in vec3 nor )
         occ += -(dd-hr)*sca;
         sca *= 0.95;
     }
-    return clamp( 1.0 - 3.0*occ, 0.0, 1.0 );    
+    return clamp( 1.0 - 3.0*occ, 0.0, 1.0 );
 }
 
 // in ro: ray origin
 // in rd: ray direction
 // out: rgb colour
 vec3 render( in vec3 ro, in vec3 rd )
-{ 
+{
     vec3 col = vec3(0.7, 0.9, 1.0) +rd.y*0.8;
     vec2 res = castRay(ro,rd);
     float t = res.x;
@@ -304,17 +304,17 @@ vec3 render( in vec3 ro, in vec3 rd )
         vec3 pos = ro + t*rd;
         vec3 nor = calcNormal( pos );
         vec3 ref = reflect( rd, nor );
-        
-        // material        
+
+        // material
         col = 0.45 + 0.35*sin( vec3(0.05,0.08,0.10)*(m-1.0) );
         if( m<1.5 )
         {
-            
+
             float f = mod( floor(5.0*pos.z) + floor(5.0*pos.x), 2.0);
             col = 0.3 + 0.1*f*vec3(1.0);
         }
 
-        // lighting        
+        // lighting
         float occ = calcAO( pos, nor );
         vec3  lig = normalize( vec3(-0.4, 0.7, -0.6) );
         float amb = clamp( 0.5+0.5*nor.y, 0.0, 1.0 );
@@ -323,7 +323,7 @@ vec3 render( in vec3 ro, in vec3 rd )
         float dom = smoothstep( -0.1, 0.1, ref.y );
         float fre = pow( clamp(1.0+dot(nor,rd),0.0,1.0), 2.0 );
         float spe = pow(clamp( dot( ref, lig ), 0.0, 1.0 ),16.0);
-        
+
         dif *= softshadow( pos, lig, 0.02, 2.5 );
         dom *= softshadow( pos, ref, 0.02, 2.5 );
 
@@ -360,11 +360,11 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
         // pixel coordinates
         vec2 o = vec2(float(m),float(n)) / float(AA) - 0.5;
         vec2 p = (-iResolution.xy + 2.0*(fragCoord+o))/iResolution.y;
-#else    
+#else
         vec2 p = (-iResolution.xy + 2.0*fragCoord)/iResolution.y;
 #endif
 
-        // camera   
+        // camera
         vec3 ro = u_eye3d;
         vec3 ta = u_centre3d;
         // camera-to-world transformation
@@ -372,7 +372,7 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
         // ray direction
         vec3 rd = ca * normalize( vec3(p.xy,2.0) );
 
-        // render   
+        // render
         vec3 col = render( ro, rd );
 
         // gamma
@@ -384,6 +384,6 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
     tot /= float(AA*AA);
 #endif
 
-    
+
     fragColor = vec4( tot, 1.0 );
 }
