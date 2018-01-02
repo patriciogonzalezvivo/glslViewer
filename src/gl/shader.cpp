@@ -211,7 +211,12 @@ GLuint Shader::compileShader(const std::string& _src, const std::vector<std::str
 
     GLint infoLength = 0;
     glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &infoLength);
+    
+#ifdef PLATFORM_RPI
+    if (infoLength > 1 && !isCompiled) {
+#else
     if (infoLength > 1) {
+#endif
         std::vector<GLchar> infoLog(infoLength);
         glGetShaderInfoLog(shader, infoLength, NULL, &infoLog[0]);
         std::cerr << (isCompiled ? "Warnings" : "Errors");
