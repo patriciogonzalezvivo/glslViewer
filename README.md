@@ -135,7 +135,8 @@ glslViewer bunny.frag bunny.vert bunny.ply
 
 * `u_view2d`: 2D position of viewport that can be changed by dragging
 
-The following variables are used for fragment shaders that mimic a 3d model.
+The following variables are used for fragment shaders that mimic a 3d model. See examples/menger.frag.
+
 * `u_eye3d`: Position of the camera
 
 * `u_centre3d`: Position of the center of the object
