@@ -86,6 +86,28 @@ brew upgrade
 brew install glslviewer
 ```
 
+If you prefere to compile from source directly from this repository you need to [install GLFW](http://www.glfw.org), `pkg-config` first and then download the code, compile and install.
+
+```bash
+brew update
+brew upgrade
+brew tap homebrew/versions
+brew install glfw3 pkg-config
+cd ~
+git clone http://github.com/patriciogonzalezvivo/glslViewer
+cd glslViewer
+make
+make install
+```
+
+If `glfw3` was installed before, after running the code above, remove `glfw3` and try:
+
+```bash
+brew install glfw3 pkg-config
+export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig
+make
+make install
+
 ## Use
 
 In the most simple scenario you just want to load a fragment shader. For that you need to:
