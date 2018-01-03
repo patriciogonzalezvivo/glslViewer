@@ -1,6 +1,6 @@
 .DS_Store
 *.o
-glslViewer
+bin/glslViewer
 debian/glslviewer
 debian/debhelper-build-stamp
 debian/files
