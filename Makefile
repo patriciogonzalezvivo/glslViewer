@@ -65,6 +65,9 @@ $(EXE): $(OBJECTS) $(HEADERS)
 
 clean:
 	@rm -rvf $(EXE) src/*.o src/*/*.o include/*/*.o *.dSYM
+	@rm -rvf build
+	@rm -rvf dist
+	@rm -rvf python/glslviewer.egg-info
 
 install:
 	@cp $(EXE) /usr/local/bin

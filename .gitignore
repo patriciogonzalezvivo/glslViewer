@@ -6,3 +6,6 @@ debian/debhelper-build-stamp
 debian/files
 debian/glslviewer.debhelper.log
 debian/glslviewer.substvars
+build/*
+dist/*
+python/glslviewer.egg-info/*
