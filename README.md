@@ -107,6 +107,7 @@ brew install glfw3 pkg-config
 export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig
 make
 make install
+```
 
 ## Use
 
