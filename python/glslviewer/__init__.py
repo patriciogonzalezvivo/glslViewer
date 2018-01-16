@@ -53,10 +53,12 @@ class GlslViewer:
                 self.cmd.append('-v')
 
         if 'x' in options:
-            self.cmd.append('-x ' + str(options['x']))
+            self.cmd.append('-x')
+            self.cmd.append(str(options['x']))
 
         if 'y' in options:
-            self.cmd.append('-y ' + str(options['y']))
+            self.cmd.append('-y')
+            self.cmd.append(str(options['y']))
 
         if 'size' in options:
             self.cmd.append('--width')
@@ -65,10 +67,12 @@ class GlslViewer:
             self.cmd.append(str(options['size']))
         else:
             if 'width' in options:
-                self.cmd.append('--width ' + str(options['width']))
+                self.cmd.append('--width')
+                self.cmd.append(str(options['width']))
 
             if 'height' in options:
-                self.cmd.append('--height ' + str(options['height']))
+                self.cmd.append('--height')
+                self.cmd.append(str(options['height']))
 
         if 'extra_arguments' in options:
             self.cmd.append(options['extra_arguments'])

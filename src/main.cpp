@@ -155,7 +155,7 @@ int main(int argc, char **argv){
         #ifdef PLATFORM_RPI
         else if (   std::string(argv[i]) == "-l" ||
                     std::string(argv[i]) == "--life-coding" ){
-            windowPosAndSize.x = windowPosAndSize.z-500;
+            windowPosAndSize.x = windowPosAndSize.z - 500;
             windowPosAndSize.z = windowPosAndSize.w = 500;
         }
         #endif
