@@ -109,6 +109,9 @@ void printUsage(char *);
 // Main program
 //============================================================================
 int main(int argc, char **argv){
+    u_centre3d = glm::vec3(0.,0.,0.);
+    u_eye3d = glm::vec3(2.598076,3.0,4.5);
+    u_up3d = glm::vec3(-0.25,0.866025,-0.433013);
 
     // Set the size
     glm::ivec4 windowPosAndSize = glm::ivec4(0.);

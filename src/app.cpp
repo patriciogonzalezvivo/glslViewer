@@ -2,6 +2,8 @@
 
 #include <time.h>
 #include <sys/time.h>
+#include <chrono>
+#include <thread>
 #include "glm/gtc/matrix_transform.hpp"
 #include "tools/text.h"
 
@@ -443,6 +445,7 @@ void renderGL(){
         eglSwapBuffers(display, surface);
     #else
         // OSX/LINUX
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
         glfwSwapBuffers(window);
     #endif
 }
