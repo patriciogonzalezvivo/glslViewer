@@ -46,6 +46,30 @@ make
 sudo make install
 ```
 
+### Installing on Debian testing (Buster)
+
+Install the GLFW 3 library, build tools, and other dependencies:
+
+```bash
+sudo apt-get update
+sudo apt-get upgrade
+sudo apt-get install libglfw3-dev xorg-dev libglu1-mesa-dev git-core dh-make fakeroot build-essential
+```
+
+Download the glslViewer code, compile and install. These instructions use deb-helper
+to build a native debian package, to build a simple binary, follow the Ubuntu instructions above.
+
+```bash
+git clone https://github.com/patriciogonzalezvivo/glslViewer.git
+cd glslViewer
+fakeroot dh binary
+cd ..
+sudo dpkg -i glslviewer_1.5_amd64.deb
+```
+(The arch part of the .deb filename will differ on other cpu architectures.)
+
+This was tested with the Debian testing distribution on January 28th 2018.
+
 ### Installing on Raspberry Pi
 
 Get [Raspbian](https://www.raspberrypi.org/downloads/raspbian/), a Debian-based Linux distribution made for Raspberry Pi and then do:
