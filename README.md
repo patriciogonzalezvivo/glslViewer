@@ -289,7 +289,7 @@ Once glslViewer is running the CIN is listening for some commands, so you can pa
 
 * ```int```, ```floats```, ```vec2```, ```vec3``` and ```vec4``` uniforms can be pass as comma separated values, where the first column is for the name of the uniform and the rest for the numbers of values the uniform have. **Note** that there is a distintion between ```int```and ```float```so remember to put ```.``` (floating points) to your values.
 
-* ```data```: return content of ```u_date```, return the current year, month, day and seconds
+* ```date```: return content of ```u_date```, return the current year, month, day and seconds
 
 * ```time```: return content of ```u_time```, the elapsed time since the app start
 
