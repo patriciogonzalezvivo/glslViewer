@@ -110,7 +110,7 @@ brew upgrade
 brew install glslviewer
 ```
 
-If you prefere to compile from source directly from this repository you need to [install GLFW](http://www.glfw.org), `pkg-config` first and then download the code, compile and install.
+If you prefer to compile from source directly from this repository you need to [install GLFW](http://www.glfw.org), `pkg-config` first and then download the code, compile and install.
 
 ```bash
 brew update
@@ -152,19 +152,19 @@ vim test.frag
 
 **Note**: In RaspberryPi you can avoid taking over the screen by using the `-l` flags so you can see the console. Also you can edit the shader file through ssh/sftp.
 
-**Note**: On Linux and macOS you may used to edit your shaders with Sublime Text 2, if thats your case you should try this [Sublime Text 2 plugin that lunch glslViewer every time you open a shader](https://packagecontrol.io/packages/glslViewer).
+**Note**: On Linux and macOS you may used to edit your shaders with Sublime Text 2, if that's your case you should try this [Sublime Text 2 plugin that launch glslViewer every time you open a shader](https://packagecontrol.io/packages/glslViewer).
 
 ### Loading Vertex shaders and geometries
 
 ![](http://patriciogonzalezvivo.com/images/glslViewer-3D.gif)
 
-You can also load both fragments and vertex shaders. Of course modifing a vertex shader makes no sense unless you load an interesting geometry. That's why `glslViewer` is can load `.ply` files. Try doing:
+You can also load both fragments and vertex shaders. Of course modifying a vertex shader makes no sense unless you load an interesting geometry. That's why `glslViewer` can load `.ply` files. Try doing:
 
 ```bash
 glslViewer bunny.frag bunny.vert bunny.ply
 ```
 
-### Pre-Define `uniforms` and `varyings`
+### Pre-Defined `uniforms` and `varyings`
 
 * `uniform float u_time;`: shader playback time (in seconds)
 
@@ -233,19 +233,19 @@ Demo: `examples/numbers.frag`
 
 ### Textures
 
-You can load PNGs and JPEGs images to a shader. They will be automatically loaded and asigned to an uniform name acording to the order they are pass as arguments: ex. `u_tex0`, `u_tex1`, etc. Also the resolution will be assigned to `vec2` uniform acording the texture uniforma name: ex. `u_tex0Resolution`, `u_tex1Resolution`, etc.
+You can load PNGs and JPEGs images to a shader. They will be automatically loaded and assigned to a uniform name according to the order they are passed as arguments: ex. `u_tex0`, `u_tex1`, etc. Also the resolution will be assigned to `vec2` uniform according to the texture uniform's name: ex. `u_tex0Resolution`, `u_tex1Resolution`, etc.
 
 ```bash
 glslViewer test.frag test.png
 ```
 
-In case you want to assign customs names to your textures uniforms you must specify the name with a flag before the texture file. For example to pass the following uniforms `uniform sampled2D imageExample;` and  `uniform vec2 imageExampleResolution;` is defined in this way:
+In case you want to assign custom names to your textures uniforms you must specify the name with a flag before the texture file. For example to pass the following uniforms `uniform sampled2D imageExample;` and  `uniform vec2 imageExampleResolution;` is defined in this way:
 
 ```bash
 glslViewer shader.frag -imageExample image.png
 ```
 
-### Others arguments
+### Other arguments
 
 Beside for texture uniforms other arguments can be add to `glslViewer`:
 
@@ -259,21 +259,21 @@ Beside for texture uniforms other arguments can be add to `glslViewer`:
 
 * `-s [seconds]` exit app after a specific amount of seconds
 
-* `-o [image.png]` save the viewport to a image file before
+* `-o [image.png]` save the viewport to an image file before
 
 * `-l` to draw a 500x500 billboard on the top right corner of the screen that let you see the code and the shader at the same time. (RaspberryPi only)
 
 * `-c`or `--cursor` show cursor.
 
-* `--headless` headless rendering. Very usefull for making images or benchmarking.
+* `--headless` headless rendering. Very useful for making images or benchmarking.
 
-* `-I[include_folder]` add a include folder to default for `#include` files
+* `-I[include_folder]` add an include folder to default for `#include` files
 
 * `-D[define]` add system `#define`s directly from the console argument
 
-* `-[testure_uniform_name] [texture.png]`: add textures asociated with different `uniform sampler2D`names
+* `-[texture_uniform_name] [texture.png]`: add textures associated with different `uniform sampler2D`names
 
-* `-vFlip` all textures after will be fliped vertically
+* `-vFlip` all textures after will be flipped vertically
 
 *  `-v` verbose outputs
 
@@ -281,21 +281,21 @@ Beside for texture uniforms other arguments can be add to `glslViewer`:
 
 ### Inject other files
 
-You can include other GLSL code using a traditional `#include "file.glsl"` macro. Note: included files are not under watch so changes will not take effect until the main file is save.
+You can include other GLSL code using a traditional `#include "file.glsl"` macro. Note: included files are not under watch so changes will not take effect until the main file is saved.
 
 ### Console IN commands
 
-Once glslViewer is running the CIN is listening for some commands, so you can pass data trough regular *nix pipes.
+Once glslViewer is running the CIN is listening for some commands, so you can pass data through regular *nix pipes.
 
-* ```int```, ```floats```, ```vec2```, ```vec3``` and ```vec4``` uniforms can be pass as comma separated values, where the first column is for the name of the uniform and the rest for the numbers of values the uniform have. **Note** that there is a distintion between ```int```and ```float```so remember to put ```.``` (floating points) to your values.
+* ```int```, ```floats```, ```vec2```, ```vec3``` and ```vec4``` uniforms can be passed as comma separated values, where the first column is for the name of the uniform and the rest for the numbers of values the uniform have. **Note** that there is a distinction between ```int```and ```float```so remember to put ```.``` (floating points) to your values.
 
 * ```date```: return content of ```u_date```, return the current year, month, day and seconds
 
 * ```time```: return content of ```u_time```, the elapsed time since the app start
 
-* ```delta```: return content of ```u_delta```,return the last delta time between frames
+* ```delta```: return content of ```u_delta```, return the last delta time between frames
 
-* ```fps```: return content of ```u_fps```,return the number of frames per second
+* ```fps```: return content of ```u_fps```, return the number of frames per second
 
 * ```frag```: return the source of the fragment shader
 
@@ -309,13 +309,13 @@ Once glslViewer is running the CIN is listening for some commands, so you can pa
 
 * `view3d`:
 
-* `screenshot [filename]`: save a screenshot of what's being render. If there is no filename as argument will default to what was define after the `-o` argument when glslViewer was lanched.
+* `screenshot [filename]`: save a screenshot of what's being rendered. If there is no filename as argument will default to what was defined after the `-o` argument when glslViewer was launched.
 
 * `q`, `quit` or `exit`: close glslViewer
 
 ## glslLoader
 
-```glslLoader``` is a python script that is install together with ```glslViewer``` binnary which let you download any shader made with [The book of shaders editor (editor.thebookofshaders.com) ](http://editor.thebookofshaders.com/). Just pass as argument the ***log number***
+```glslLoader``` is a python script that is installed together with ```glslViewer``` binary which let you download any shader made with [The book of shaders editor (editor.thebookofshaders.com) ](http://editor.thebookofshaders.com/). Just pass as argument the ***log number***
 
 ![](http://patriciogonzalezvivo.com/images/glslGallery/00.gif)
 
@@ -343,7 +343,7 @@ glslViewer examples/test.frag
 glslViewer examples/test.frag examples/test.png
 ```
 
-* Open a Fragment and Vertext shader with a geometry:
+* Open a Fragment and Vertex shader with a geometry:
 
 ```bash
 glslViewer examples/bunny.frag examples/bunny.vert examples/bunny.ply
@@ -355,7 +355,7 @@ glslViewer examples/bunny.frag examples/bunny.vert examples/bunny.ply
 glslViewer examples/grayscott.frag
 ```
 
-* Open a Fragment that use OS defines to know what platform is runnion on:
+* Open a Fragment that use OS defines to know what platform is running on:
 
 ```bash
 glslViewer examples/platform.frag
@@ -378,13 +378,13 @@ u_temp,70
 examples/.temp.sh | glslViewer examples/temp.frag
 ```
 
-* Run a headless instance of glslViewer that exits after 1 second outputing an PNG image:
+* Run a headless instance of glslViewer that exits after 1 second outputting a PNG image:
 
 ```bash
 glslViewer examples/cross.frag --headless -s 1 -o cross.png
 ```
 
-* Make an SVG from a shader usin [potrace](http://potrace.sourceforge.net/) and [ImageMagic](https://www.imagemagick.org/script/index.php):
+* Make an SVG from a shader using [potrace](http://potrace.sourceforge.net/) and [ImageMagic](https://www.imagemagick.org/script/index.php):
 
 ```bash
 glslViewer examples/cross.frag --headless -s 1 -o cross.png
@@ -422,4 +422,4 @@ Thanks to:
 
 * [Doug Moen](https://github.com/doug-moen) he help to add the compatibility to ShaderToy shaders and some RayMarching features were added for his integration with his project: [curv](https://github.com/doug-moen/curv).
 
-* [Yvan Sraka](https://github.com/yvan-sraka) for puting the code in shape and setting it for TravisCI.
+* [Yvan Sraka](https://github.com/yvan-sraka) for putting the code in shape and setting it up for TravisCI.
