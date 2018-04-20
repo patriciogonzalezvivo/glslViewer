@@ -285,7 +285,7 @@ You can include other GLSL code using a traditional `#include "file.glsl"` macro
 
 ### Console IN commands
 
-Once glslViewer is running the CIN is listening for some commands, so you can pass data trough regular *nix pipes.
+Once glslViewer is running the CIN is listening for some commands, so you can pass data through regular *nix pipes.
 
 * ```int```, ```floats```, ```vec2```, ```vec3``` and ```vec4``` uniforms can be passed as comma separated values, where the first column is for the name of the uniform and the rest for the numbers of values the uniform have. **Note** that there is a distinction between ```int```and ```float```so remember to put ```.``` (floating points) to your values.
 
