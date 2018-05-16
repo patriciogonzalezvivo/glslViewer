@@ -365,11 +365,11 @@ glslViewer examples/platform.frag
 
 ```bash
 glslViewer examples/temp.frag
-u_temp,30
-u_temp,40
-u_temp,50
-u_temp,60
-u_temp,70
+u_temp,30.0
+u_temp,40.0
+u_temp,50.0
+u_temp,60.0
+u_temp,70.0
 ```
 
 * Create a bash script to change uniform parameters on the fly:
