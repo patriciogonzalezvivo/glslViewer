@@ -36,6 +36,9 @@ class GlslViewer:
         if 'vertex' in options:
             self.cmd.append(options['vertex'])
 
+        if 'geometry' in options:
+            self.cmd.append(options['geometry'])
+
         if 'headless' in options:
             if options['headless']:
                 self.cmd.append('--headless')
