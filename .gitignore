@@ -9,3 +9,4 @@ debian/glslviewer.substvars
 build/*
 dist/*
 python/glslviewer.egg-info/*
+.vscode/browse.db*

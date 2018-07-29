@@ -1,0 +1,90 @@
+{
+    "version": "2.0.0",
+    "shell":{
+        "task": true
+    },
+    "tasks": [
+        {
+            "type": "shell",
+            "label": "Build and Run",
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            },
+            "command": "make",
+            "args": [
+                "&&",
+                "make",
+                "run"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "type": "shell",
+            "label": "build debug",
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            },
+            "command": "make",
+            "args": [
+                "Debug"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "type": "shell",
+            "label": "build Release",
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            },
+            "command": "make",
+            "args": [
+                "Release"
+            ]
+        },
+        {
+            "type": "shell",
+            "label": "clean Debug",
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            },
+            "command": "make",
+            "args": [
+                "CleanDebug"
+            ]
+        },
+        {
+            "type": "shell",
+            "label": "clean Release",
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            },
+            "command": "make",
+            "args": [
+                "CleanRelease"
+            ]
+        },
+        {
+            "type": "shell",
+            "label": "clean All",
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            },
+            "command": "make",
+            "args": [
+                "clean"
+            ]
+        }
+    ]
+}
