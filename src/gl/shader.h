@@ -19,7 +19,7 @@ public:
     const   GLuint  getFragmentShader() const { return m_fragmentShader; };
     const   GLuint  getVertexShader() const { return m_vertexShader; };
     const   GLint   getAttribLocation(const std::string& _attribute) const;
-    const   uint 	getTotalBuffers() const { return m_nBuffers; }
+    const   int 	getTotalBuffers() const { return m_nBuffers; }
 
     const   bool    needTime() const { return m_time; };
     const   bool    needDelta() const { return m_delta; };
@@ -64,7 +64,7 @@ private:
     GLuint  m_fragmentShader;
     GLuint  m_vertexShader;
 
-    uint    m_nBuffers;
+    int     m_nBuffers;
 
     bool    m_time;
     bool    m_delta;

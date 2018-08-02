@@ -143,14 +143,14 @@ std::string Sandbox::get3DView() const {
 
 void Sandbox::_updateBuffers() {
     // Update BUFFERS
-    uint totalBuffers = m_shader.getTotalBuffers();
+    int totalBuffers = m_shader.getTotalBuffers();
     // std::cout << "TOTAL BUFFERS: " << totalBuffers << std::endl; 
     
     if ( totalBuffers != m_buffers.size() ) {
         m_buffers.clear();
         m_buffers_shaders.clear();
 
-        for (uint i = 0; i < totalBuffers; i++) {
+        for (unsigned int i = 0; i < totalBuffers; i++) {
             // New FBO
             m_buffers.push_back( Fbo() );
             m_buffers[i].allocate(getWindowWidth(), getWindowHeight(), false);
@@ -166,7 +166,7 @@ void Sandbox::_updateBuffers() {
         }
     }
     else {
-        for (uint i = 0; i < m_buffers_shaders.size(); i++) {
+        for (unsigned int i = 0; i < m_buffers_shaders.size(); i++) {
             // Specific defines for this buffer
             std::vector<std::string> sub_defines = defines;
             sub_defines.push_back("BUFFER_" + toString(i));
@@ -214,7 +214,7 @@ void Sandbox::_updateUniforms( Shader &_shader ) {
     }
 }
 
-void Sandbox::_updateTextures( Shader &_shader, uint &_textureIndex ) {
+void Sandbox::_updateTextures( Shader &_shader, int &_textureIndex ) {
     // Pass Textures Uniforms
     for (std::map<std::string,Texture*>::iterator it = textures.begin(); it!=textures.end(); ++it) {
         _shader.setUniform(it->first, it->second, _textureIndex );
@@ -229,7 +229,7 @@ void Sandbox::draw() {
     }
 
     // Update buffers
-    uint textureIndex = 0;
+    int textureIndex = 0;
     for (unsigned int i = 0; i < m_buffers.size(); i++) {
         m_buffers[i].bind();
         m_buffers_shaders[i].use();

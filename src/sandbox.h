@@ -58,7 +58,7 @@ public:
 private:
     void _updateBuffers();
     void _updateUniforms( Shader &_shader );
-    void _updateTextures( Shader &_shader, uint &_textureIndex  );
+    void _updateTextures( Shader &_shader, int &_textureIndex  );
     
     //  Shader
     Shader              m_shader;
