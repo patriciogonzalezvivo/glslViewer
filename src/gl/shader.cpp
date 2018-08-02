@@ -1,12 +1,14 @@
 #include "shader.h"
 
 #include "tools/text.h"
+
 #include <cstring>
 #include <chrono>
 #include <algorithm>
 #include <iostream>
+#include <regex>
 
-Shader::Shader():m_program(0),m_fragmentShader(0),m_vertexShader(0), m_backbuffer(0), m_time(false), m_delta(false), m_date(false), m_mouse(false), m_imouse(false), m_view2d(false), m_view3d(false) {
+Shader::Shader():m_program(0),m_fragmentShader(0),m_vertexShader(0), m_nBuffers(0), m_time(false), m_delta(false), m_date(false), m_mouse(false), m_imouse(false), m_view2d(false), m_view3d(false) {
 
 }
 
@@ -45,33 +47,94 @@ bool find_id(const std::string& program, const char* id) {
     return std::strstr(program.c_str(), id) != 0;
 }
 
+// TODO: 
+//      - this can be done in a more elegant way
+//
+
+// Count how many BUFFERS are in the shader
+int countBuffers(const std::string &_source) {
+    // Split Source code in lines
+    std::vector<std::string> lines = split(_source, '\n');
+
+    // Group results in a vector to check for duplicates
+    std::vector<std::string> results;
+
+    // Regext to search for #ifdef BUFFER_[NUMBER], #if defined() BUFFER_[NUMBER] ) and #elif defined( BUFFER_[NUMBER] ) occurences
+    std::regex re(R"((?:^\s*#if|^\s*#elif)(?:\s+)(defined\s*\(\s*BUFFER_)(\d+)(?:\s*\))|(?:^\s*#ifdef\s+BUFFER_)(\d+))");
+    std::smatch match;
+
+    // For each line search for
+    for (int l = 0; l < lines.size(); l++) {
+
+        // if there are matches
+        if (std::regex_search(lines[l], match, re)) {
+            // Depending the case can be in the 2nd or 3rd group
+            std::string number = std::ssub_match(match[2]).str();
+            if (number.size() == 0) {
+                number = std::ssub_match(match[3]).str();
+            }
+
+            // Check if it's already defined
+            bool already = false;
+            for (int i = 0; i < results.size(); i++) {
+                if (results[i] == number) {
+                    already = true;
+                    break;
+                }
+            }
+
+            // If it's not add it
+            if (!already) {
+                results.push_back(number);
+            }
+        }
+    }
+
+    // return the number of results
+    return results.size();
+}
+
 bool Shader::load(const std::string& _fragmentSrc, const std::string& _vertexSrc, const std::vector<std::string> &_defines, bool _verbose) {
     std::chrono::time_point<std::chrono::steady_clock> start_time, end_time;
     start_time = std::chrono::steady_clock::now();
 
     m_vertexShader = compileShader(_vertexSrc, _defines, GL_VERTEX_SHADER);
 
-    if(!m_vertexShader) {
+    if (!m_vertexShader) {
         return false;
     }
 
     m_fragmentShader = compileShader(_fragmentSrc, _defines, GL_FRAGMENT_SHADER);
 
-    if(!m_fragmentShader) {
+    if (!m_fragmentShader) {
         return false;
-    } else {
-        m_backbuffer = find_id(_fragmentSrc, "u_backbuffer");
+    }
+    else {
+        // Check for the precense of:
+
+        // Buffers
+        m_nBuffers = countBuffers(_fragmentSrc);
+
+        // u_time
         if (!m_time)
             m_time = find_id(_fragmentSrc, "u_time");
+        
+        // u_delta
         if (!m_delta)
             m_delta = find_id(_fragmentSrc, "u_delta");
+        
+        // u_data
         if (!m_date)
             m_date = find_id(_fragmentSrc, "u_date");
+        
+        // u_mouse
         m_mouse = find_id(_fragmentSrc, "u_mouse");
+
+        // u_view 2D
         m_view2d = find_id(_fragmentSrc, "u_view2d");
-        m_view3d = (find_id(_fragmentSrc, "u_eye3d")
-            || find_id(_fragmentSrc, "u_centre3d")
-            || find_id(_fragmentSrc, "u_up3d"));
+
+        // u_view 3D
+        m_view3d = (find_id(_fragmentSrc, "u_eye3d") || find_id(_fragmentSrc, "u_centre3d") || find_id(_fragmentSrc, "u_up3d"));
     }
 
     m_program = glCreateProgram();
@@ -103,7 +166,8 @@ bool Shader::load(const std::string& _fragmentSrc, const std::string& _vertexSrc
         }
         glDeleteProgram(m_program);
         return false;
-    } else {
+    } 
+    else {
         glDeleteShader(m_vertexShader);
         glDeleteShader(m_fragmentShader);
 
@@ -133,7 +197,7 @@ const GLint Shader::getAttribLocation(const std::string& _attribute) const {
 }
 
 void Shader::use() const {
-    if(!isInUse()) {
+    if (!isInUse()) {
         glUseProgram(getProgram());
     }
 }
@@ -242,12 +306,12 @@ void Shader::detach(GLenum _type) {
     bool vert = (GL_VERTEX_SHADER & _type) == GL_VERTEX_SHADER;
     bool frag = (GL_FRAGMENT_SHADER & _type) == GL_FRAGMENT_SHADER;
 
-    if(vert) {
+    if (vert) {
         glDeleteShader(m_vertexShader);
         glDetachShader(m_vertexShader, GL_VERTEX_SHADER);
     }
 
-    if(frag) {
+    if (frag) {
         glDeleteShader(m_fragmentShader);
         glDetachShader(m_fragmentShader, GL_FRAGMENT_SHADER);
     }
@@ -255,21 +319,21 @@ void Shader::detach(GLenum _type) {
 
 GLint Shader::getUniformLocation(const std::string& _uniformName) const {
     GLint loc = glGetUniformLocation(m_program, _uniformName.c_str());
-    if(loc == -1){
+    if (loc == -1){
         // std::cerr << "Uniform " << _uniformName << " not found" << std::endl;
     }
     return loc;
 }
 
 void Shader::setUniform(const std::string& _name, int _x) {
-    if(isInUse()) {
+    if (isInUse()) {
         glUniform1i(getUniformLocation(_name), _x);
     }
 }
 
 void Shader::setUniform(const std::string& _name, const float *_array, unsigned int _size) {
     GLint loc = getUniformLocation(_name);
-    if(isInUse()) {
+    if (isInUse()) {
         if (_size == 1) {
             glUniform1f(loc, _array[0]);
         }
@@ -289,35 +353,35 @@ void Shader::setUniform(const std::string& _name, const float *_array, unsigned 
 }
 
 void Shader::setUniform(const std::string& _name, float _x) {
-    if(isInUse()) {
+    if (isInUse()) {
         glUniform1f(getUniformLocation(_name), _x);
         // std::cout << "Uniform " << _name << ": float(" << _x << ")" << std::endl;
     }
 }
 
 void Shader::setUniform(const std::string& _name, float _x, float _y) {
-    if(isInUse()) {
+    if (isInUse()) {
         glUniform2f(getUniformLocation(_name), _x, _y);
         // std::cout << "Uniform " << _name << ": vec2(" << _x << "," << _y << ")" << std::endl;
     }
 }
 
 void Shader::setUniform(const std::string& _name, float _x, float _y, float _z) {
-    if(isInUse()) {
+    if (isInUse()) {
         glUniform3f(getUniformLocation(_name), _x, _y, _z);
         // std::cout << "Uniform " << _name << ": vec3(" << _x << "," << _y << "," << _z <<")" << std::endl;
     }
 }
 
 void Shader::setUniform(const std::string& _name, float _x, float _y, float _z, float _w) {
-    if(isInUse()) {
+    if (isInUse()) {
         glUniform4f(getUniformLocation(_name), _x, _y, _z, _w);
         // std::cout << "Uniform " << _name << ": vec3(" << _x << "," << _y << "," << _z <<")" << std::endl;
     }
 }
 
 void Shader::setUniform(const std::string& _name, const Texture* _tex, unsigned int _texLoc){
-    if(isInUse()) {
+    if (isInUse()) {
         glActiveTexture(GL_TEXTURE0 + _texLoc);
         glBindTexture(GL_TEXTURE_2D, _tex->getId());
         glUniform1i(getUniformLocation(_name), _texLoc);
@@ -325,7 +389,7 @@ void Shader::setUniform(const std::string& _name, const Texture* _tex, unsigned 
 }
 
 void Shader::setUniform(const std::string& _name, const Fbo* _fbo, unsigned int _texLoc){
-    if(isInUse()) {
+    if (isInUse()) {
         glActiveTexture(GL_TEXTURE0 + _texLoc);
         glBindTexture(GL_TEXTURE_2D, _fbo->getTextureId());
         glUniform1i(getUniformLocation(_name), _texLoc);
@@ -333,19 +397,19 @@ void Shader::setUniform(const std::string& _name, const Fbo* _fbo, unsigned int 
 }
 
 void Shader::setUniform(const std::string& _name, const glm::mat2& _value, bool _transpose){
-    if(isInUse()) {
+    if (isInUse()) {
         glUniformMatrix2fv(getUniformLocation(_name), 1, _transpose, &_value[0][0]);
     }
 }
 
 void Shader::setUniform(const std::string& _name, const glm::mat3& _value, bool _transpose){
-    if(isInUse()) {
+    if (isInUse()) {
         glUniformMatrix3fv(getUniformLocation(_name), 1, _transpose, &_value[0][0]);
     }
 }
 
 void Shader::setUniform(const std::string& _name, const glm::mat4& _value, bool _transpose){
-    if(isInUse()) {
+    if (isInUse()) {
         glUniformMatrix4fv(getUniformLocation(_name), 1, _transpose, &_value[0][0]);
     }
 }

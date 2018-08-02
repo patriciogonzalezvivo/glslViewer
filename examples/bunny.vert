@@ -19,10 +19,11 @@ attribute vec2 a_texcoord;
 
 varying vec4 v_position;
 varying vec3 v_normal;
+varying vec2 v_texcoord;
 
 void main(void) {
-    v_position = u_modelViewProjectionMatrix * a_position;
-    gl_Position = v_position;
+    v_position = a_position;
+    gl_Position = u_modelViewProjectionMatrix * v_position;
 
     v_normal = a_normal;
 }

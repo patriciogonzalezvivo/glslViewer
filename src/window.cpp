@@ -1,4 +1,4 @@
-#include "app.h"
+#include "window.h"
 
 #include <time.h>
 #include <sys/time.h>

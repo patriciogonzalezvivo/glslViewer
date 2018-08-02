@@ -2,7 +2,7 @@
 
 #include "types/shapes.h"
 #include "types/rectangle.h"
-#include "app.h"
+#include "window.h"
 #include "tools/text.h"
 
 #ifndef STRINGIFY

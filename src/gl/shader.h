@@ -18,8 +18,9 @@ public:
     const   GLuint  getProgram() const { return m_program; };
     const   GLuint  getFragmentShader() const { return m_fragmentShader; };
     const   GLuint  getVertexShader() const { return m_vertexShader; };
+    const   GLint   getAttribLocation(const std::string& _attribute) const;
+    const   int 	getTotalBuffers() const { return m_nBuffers; }
 
-    const   bool    needBackbuffer() const { return m_backbuffer; };
     const   bool    needTime() const { return m_time; };
     const   bool    needDelta() const { return m_delta; };
     const   bool    needDate() const { return m_date; };
@@ -30,8 +31,6 @@ public:
 
     void    use() const;
     bool    isInUse() const;
-
-    const   GLint   getAttribLocation(const std::string& _attribute) const;
     bool    load(const std::string& _fragmentSrc, const std::string& _vertexSrc, const std::vector<std::string> &_defines, bool _verbose = false);
 
     void    setUniform(const std::string& _name, int _x);
@@ -65,7 +64,8 @@ private:
     GLuint  m_fragmentShader;
     GLuint  m_vertexShader;
 
-    bool    m_backbuffer;
+    int     m_nBuffers;
+
     bool    m_time;
     bool    m_delta;
     bool    m_date;
