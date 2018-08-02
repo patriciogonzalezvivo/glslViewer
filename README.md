@@ -133,6 +133,24 @@ make
 make install
 ```
 
+### Install Python wrapper
+
+GlslViewer now ships with a Python package. It's essentially a wrapper that allows to compile, benchmaark and render shaders from a Python script.
+
+1. First make sure you have the setup tools
+
+```bash
+sudo apt install python-setuptools
+```
+
+2. Once you compile the binnaries do
+
+```bash
+sudo make install_python
+```
+
+
+
 ## Using glslViewer
 
 ### 1. Loading a single Fragment shader

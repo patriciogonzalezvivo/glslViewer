@@ -2,6 +2,8 @@
 
 #include <time.h>
 #include <sys/time.h>
+
+#include "gl/gl.h"
 #include "glm/gtc/matrix_transform.hpp"
 #include "tools/text.h"
 

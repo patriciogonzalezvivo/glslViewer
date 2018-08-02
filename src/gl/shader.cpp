@@ -52,7 +52,7 @@ bool find_id(const std::string& program, const char* id) {
 //
 
 // Count how many BUFFERS are in the shader
-int countBuffers(const std::string &_source) {
+uint countBuffers(const std::string &_source) {
     // Split Source code in lines
     std::vector<std::string> lines = split(_source, '\n');
 

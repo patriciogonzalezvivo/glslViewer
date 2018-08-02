@@ -1,6 +1,5 @@
 #pragma once
 
-#include "gl/gl.h"
 #include "glm/glm.hpp"
 
 //	GL Context

@@ -32,6 +32,8 @@
             "name": "Linux",
             "defines": [ "PLATFORM_LINUX" ],
             "includePath": [
+                "${workspaceRoot}/src",
+                "${workspaceRoot}/include",
                 "/usr/include",
                 "/usr/local/include",
                 "/usr/include/c++/5",

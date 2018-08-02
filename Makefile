@@ -72,6 +72,8 @@ clean:
 install:
 	@cp $(EXE) /usr/local/bin
 	@cp bin/glslLoader /usr/local/bin
+
+install_python:
 	@python setup.py install
 
 uninstall:

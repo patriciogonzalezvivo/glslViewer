@@ -2,7 +2,7 @@
 
 #include "window.h"
 
-#include "tools/fs.h"
+#include "tools/text.h"
 #include "tools/geom.h"
 #include "types/shapes.h"
 

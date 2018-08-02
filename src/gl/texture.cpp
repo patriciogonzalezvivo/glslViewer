@@ -1,5 +1,8 @@
 #include <iostream>
+
 #include "texture.h"
+
+#include "gl/gl.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "std/stb_image.h"

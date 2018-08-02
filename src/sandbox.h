@@ -7,7 +7,7 @@
 #include "gl/uniform.h"
 
 #include "3d/camera.h"
-#include "tools/text.h"
+
 #include "tools/fs.h"
 
 class Sandbox {

@@ -7,10 +7,12 @@
 #include <atomic>
 #include <iostream>
 
-#include "tools/fs.h"
+#include "gl/gl.h"
 #include "window.h"
 #include "sandbox.h"
 #include "ui/cursor.h"
+#include "tools/fs.h"
+#include "tools/text.h"
 
 // GLOBAL VARIABLES
 //============================================================================
