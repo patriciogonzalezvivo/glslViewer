@@ -64,7 +64,7 @@ int countBuffers(const std::string &_source) {
     std::smatch match;
 
     // For each line search for
-    for (int l = 0; l < lines.size(); l++) {
+    for (unsigned int l = 0; l < lines.size(); l++) {
 
         // if there are matches
         if (std::regex_search(lines[l], match, re)) {
@@ -76,7 +76,7 @@ int countBuffers(const std::string &_source) {
 
             // Check if it's already defined
             bool already = false;
-            for (int i = 0; i < results.size(); i++) {
+            for (unsigned int i = 0; i < results.size(); i++) {
                 if (results[i] == number) {
                     already = true;
                     break;

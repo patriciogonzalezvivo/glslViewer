@@ -34,6 +34,7 @@
         "__tree": "cpp",
         "map": "cpp",
         "__locale": "cpp",
-        "utility": "cpp"
+        "utility": "cpp",
+        "array": "cpp"
     }
 }

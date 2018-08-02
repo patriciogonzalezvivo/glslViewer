@@ -65,16 +65,18 @@ $(EXE): $(OBJECTS) $(HEADERS)
 
 clean:
 	@rm -rvf $(EXE) src/*.o src/*/*.o include/*/*.o *.dSYM
-	@rm -rvf build
-	@rm -rvf dist
-	@rm -rvf python/glslviewer.egg-info
-
+	
 install:
 	@cp $(EXE) /usr/local/bin
 	@cp bin/glslLoader /usr/local/bin
 
 install_python:
 	@python setup.py install
+
+clean_python:
+	@rm -rvf build
+	@rm -rvf dist]
+	@rm -rvf python/glslviewer.egg-info
 
 uninstall:
 	@rm /usr/local/$(EXE)

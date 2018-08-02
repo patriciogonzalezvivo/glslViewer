@@ -146,11 +146,11 @@ void Sandbox::_updateBuffers() {
     int totalBuffers = m_shader.getTotalBuffers();
     // std::cout << "TOTAL BUFFERS: " << totalBuffers << std::endl; 
     
-    if ( totalBuffers != m_buffers.size() ) {
+    if ( totalBuffers != int(m_buffers.size()) ) {
         m_buffers.clear();
         m_buffers_shaders.clear();
 
-        for (unsigned int i = 0; i < totalBuffers; i++) {
+        for (int i = 0; i < totalBuffers; i++) {
             // New FBO
             m_buffers.push_back( Fbo() );
             m_buffers[i].allocate(getWindowWidth(), getWindowHeight(), false);
@@ -224,7 +224,7 @@ void Sandbox::_updateTextures( Shader &_shader, int &_textureIndex ) {
 }
 
 void Sandbox::draw() {
-    if ( m_shader.getTotalBuffers() != m_buffers.size() ) {
+    if ( m_shader.getTotalBuffers() != int(m_buffers.size()) ) {
         _updateBuffers();
     }
 
