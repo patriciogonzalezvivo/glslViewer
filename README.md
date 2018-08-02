@@ -133,7 +133,9 @@ make
 make install
 ```
 
-## Use
+## Using glslViewer
+
+### 1. Loading a single Fragment shader
 
 In the most simple scenario you just want to load a fragment shader. For that you need to:
 
@@ -152,9 +154,9 @@ vim test.frag
 
 **Note**: In RaspberryPi you can avoid taking over the screen by using the `-l` flags so you can see the console. Also you can edit the shader file through ssh/sftp.
 
-**Note**: On Linux and macOS you may used to edit your shaders with Sublime Text 2, if that's your case you should try this [Sublime Text 2 plugin that launch glslViewer every time you open a shader](https://packagecontrol.io/packages/glslViewer).
+**Note**: On Linux and macOS you may used to edit your shaders with Sublime Text, if that's your case you should try this [Sublime Text 2 plugin that launch glslViewer every time you open a shader](https://packagecontrol.io/packages/glslViewer).
 
-### Loading Vertex shaders and geometries
+### 2. Loading a Vertex shader and a geometrie
 
 ![](http://patriciogonzalezvivo.com/images/glslViewer-3D.gif)
 
@@ -164,74 +166,7 @@ You can also load both fragments and vertex shaders. Of course modifying a verte
 glslViewer bunny.frag bunny.vert bunny.ply
 ```
 
-### Pre-Defined `uniforms` and `varyings`
-
-* `uniform float u_time;`: shader playback time (in seconds)
-
-* `uniform float u_delta;`: delta time between frames (in seconds)
-
-* `uniform vec4 u_date;`: year, month, day and seconds
-
-* `uniform vec2 u_resolution;`: viewport resolution (in pixels)
-
-* `uniform vec2 u_mouse;`: mouse pixel coords
-
-* `varying vec2 v_texcoord`: UV of the billboard ( normalized )
-
-* `uniform vec3 u_eye`: Position of the 3d camera when rendering 3d objects
-
-* `u_view2d`: 2D position of viewport that can be changed by dragging
-
-The following variables are used for fragment shaders that mimic a 3d model. See examples/menger.frag.
-
-* `u_eye3d`: Position of the camera
-
-* `u_centre3d`: Position of the center of the object
-
-* `u_up3d`: Up-vector of the camera
-
-### ShaderToy.com Image Shaders
-
-ShaderToy.com image shaders are automatically detected and supported.
-These conventions are also supported by other tools, such as Synthclipse.
-
-To be recognized as a ShaderToy image shader, a fragment shader must define
-```c++
-void mainImage(out vec4 fragColor, in vec2 fragCoord)
-```
-It must not define `main()`, because this is automatically defined for you.
-
-The following ShaderToy uniforms are automatically defined,
-you don't declare them:
-* `uniform vec3 iResolution;` <br>
-  `iResolution.xy` is the viewport size in pixels, like `u_resolution`.
-  `iResolution.z` is hard coded to 1.0, just like shadertoy.com and synthclipse,
-  although it was originally supposed to be the pixel aspect ratio.
-* `uniform float iGlobalTime;` <br>
-  Shader playback time (in seconds), like `u_time`.
-* `uniform float iTimeDelta;` <br>
-  Render time for last frame (in seconds), like `u_delta`.
-* `uniform vec4 iDate;` <br>
-  [year, month (0-11), day of month (1-31), time of day (in seconds)],
-  like `u_date`.
-* `uniform vec4 iMouse;` <br>
-  `iMouse` is initialized to 0, and only changes while the left mouse button
-  (LMB) is being held down.
-  * Mouse coordinates are integers in the range `[0,0]..iResolution.xy`.
-  * `iMouse.xy` is the current mouse coordinates in pixels, while the LMB
-    is being held down. When the LMB is released, `iMouse.xy` is set to the
-    current coordinates, then stops changing.
-  * `iMouse.zw` is set to the current mouse coordinates at the instant when
-    the LMB is pressed, remains constant as long as the LMB is held down,
-    and is set to `-iMouse.zw` when the LMB is released.
-  * If the LMB is up, then `iMouse.xy` is the mouse location at the most recent
-    mouseup event, and `iMouse.zw` is the negative of the mouse location at the
-    most recent mousedown event.
-    For example, after a mouse click, `iMouse` might be `[216,320,-216,-320]`.
-
-Demo: `examples/numbers.frag`
-
-### Textures
+### 3. Loading Textures
 
 You can load PNGs and JPEGs images to a shader. They will be automatically loaded and assigned to a uniform name according to the order they are passed as arguments: ex. `u_tex0`, `u_tex1`, etc. Also the resolution will be assigned to `vec2` uniform according to the texture uniform's name: ex. `u_tex0Resolution`, `u_tex1Resolution`, etc.
 
@@ -245,7 +180,7 @@ In case you want to assign custom names to your textures uniforms you must speci
 glslViewer shader.frag -imageExample image.png
 ```
 
-### Other arguments
+### 4. Other arguments
 
 Beside for texture uniforms other arguments can be add to `glslViewer`:
 
@@ -279,10 +214,6 @@ Beside for texture uniforms other arguments can be add to `glslViewer`:
 
 * `--help` display the available command line options
 
-### Inject other files
-
-You can include other GLSL code using a traditional `#include "file.glsl"` macro. Note: included files are not under watch so changes will not take effect until the main file is saved.
-
 ### Console IN commands
 
 Once glslViewer is running the CIN is listening for some commands, so you can pass data through regular *nix pipes.
@@ -307,29 +238,84 @@ Once glslViewer is running the CIN is listening for some commands, so you can pa
 
 * `mouse_x`, `mouse_y` and `mouse`: return the position of the mouse (content of `u_mouse`)
 
-* `view3d`:
+* `view3d`: returns the position of the camera, the up-vector and the center of the object;
 
 * `screenshot [filename]`: save a screenshot of what's being rendered. If there is no filename as argument will default to what was defined after the `-o` argument when glslViewer was launched.
 
 * `q`, `quit` or `exit`: close glslViewer
 
-## glslLoader
 
-```glslLoader``` is a python script that is installed together with ```glslViewer``` binary which let you download any shader made with [The book of shaders editor (editor.thebookofshaders.com) ](http://editor.thebookofshaders.com/). Just pass as argument the ***log number***
+## glslViewer conventions
 
-![](http://patriciogonzalezvivo.com/images/glslGallery/00.gif)
+### Pre-Defined `uniforms`
 
-```bash
-glslLoader 170208142327
+* `uniform sampler2D u_tex[number]`: default textures names
+
+* `uniform float u_time;`: shader playback time (in seconds)
+
+* `uniform float u_delta;`: delta time between frames (in seconds)
+
+* `uniform vec4 u_date;`: year, month, day and seconds
+
+* `uniform vec2 u_resolution;`: viewport resolution (in pixels)
+
+* `uniform vec2 u_mouse;`: mouse pixel coords
+
+* `varying vec2 v_texcoord`: UV of the billboard ( normalized )
+
+* `uniform vec3 u_eye`: Position of the 3d camera when rendering 3d objects
+
+* `uniform vec2 u_view2d`: 2D position of viewport that can be changed by dragging
+
+* `uniform vec3 u_eye3d`: Position of the camera
+
+* `uniform vec3 u_centre3d`: Position of the center of the object
+
+* `uniform vec3 u_up3d`: Up-vector of the camera
+
+### Including dependent files with `#include`
+
+You can include other GLSL code using a traditional `#include "file.glsl"` macro. 
+
+*Note*: included files are not under watch so changes will not take effect until the main file is saved.
+
+### Using multiple buffers
+
+You can use multiple buffers by forking the code using `#ifdef BUFFER_[number]`, `#if defined (BUFFER_[number])` and/or `#elif defined (BUFFER_[number])`. Then you can fetch the content of those buffers by using the `uniform sampler2D u_buffer[number]` texture. Ex.:
+
+```glsl
+    uniform sampler2D   u_buffer0;
+    uniform sampler2D   u_buffer1;
+
+    varying vec2        v_texcoord;
+
+    void main() {
+        vec3 color = vec3(0.0);
+        vec2 st = v_texcoord;
+
+    #ifdef BUFFER_0
+        color.g = abs(sin(u_time));
+
+    #elif defined( BUFFER_1 )
+        color.r = abs(sin(u_time));
+
+    #else
+        color.b = abs(sin(u_time));
+
+        color = mix(color, 
+                    mix(texture2D(u_buffer0, st).rgb, 
+                        texture2D(u_buffer1, st).rgb, 
+                        step(0.5, st.x) ), 
+                    step(0.5, st.y));
+    #endif
+        
+        gl_FragColor = vec4(color, 1.0);
+    }
 ```
 
-It will also download a shader shared through the [ShaderToy's](https://shadertoy.com/) by passing the ID `glslLoader`. Ex:
+There is a more extense example on `examples/test_multibuffer.frag` and `examples/grayscott.frag`.
 
-```bash
-glslLoader llVXRd
-```
-
-## Examples
+### Examples
 
 * Open a Fragment shader:
 
@@ -349,7 +335,7 @@ glslViewer examples/test.frag examples/test.png
 glslViewer examples/bunny.frag examples/bunny.vert examples/bunny.ply
 ```
 
-* Open a Fragment that use the backbuffer to do a reaction diffusion example:
+* Open a Fragment that use two buffers as a Ping-Pong to do a reaction diffusion example:
 
 ```bash
 glslViewer examples/grayscott.frag
@@ -358,10 +344,10 @@ glslViewer examples/grayscott.frag
 * Open a Fragment that use OS defines to know what platform is running on:
 
 ```bash
-glslViewer examples/platform.frag
+glslViewer examples/test_platform.frag
 ```
 
-* Change a uniform value on the fly by passing CSV on the console IN:
+* Change the value of a uniform by passing CSV on the console IN:
 
 ```bash
 glslViewer examples/temp.frag
@@ -372,16 +358,16 @@ u_temp,60
 u_temp,70
 ```
 
-* Create a bash script to change uniform parameters on the fly:
+* Create a bash pipe to animate the uniform value using the CPU temperature of your Raspberry PI:
 
 ```bash
 examples/.temp.sh | glslViewer examples/temp.frag
 ```
 
-* Run a headless instance of glslViewer that exits after 1 second outputting a PNG image:
+* Run a headless instance of glslViewer that exits after 1 second outputting a high resolution PNG image:
 
 ```bash
-glslViewer examples/cross.frag --headless -s 1 -o cross.png
+glslViewer examples/mandelbrot.frag -w 2048 -h 2048 --headless -s 1 -o mandelbrot.png
 ```
 
 * Make an SVG from a shader using [potrace](http://potrace.sourceforge.net/) and [ImageMagic](https://www.imagemagick.org/script/index.php):
@@ -392,27 +378,21 @@ convert cross.png cross.pnm
 potrace cross.pnm -s -o cross.svg
 ```
 
-* Open a ShaderToy's image shader:
+## Using glslLoader
 
-```bash
-glslViewer examples/numbers.frag
-```
+```glslLoader``` is a python script that is installed together with ```glslViewer``` binary which let you download any shader made with [The book of shaders editor (editor.thebookofshaders.com) ](http://editor.thebookofshaders.com/). Just pass as argument the ***log number***
 
-* Download a shader shared through the [ShaderToy's](https://shadertoy.com/) by passing the ID `glslLoader`. Ex:
-
-```bash
-glslLoader llVXRd
-```
-
-* Download a shader shared through the [Book of Shader's](https://thebookofshaders.com/) [editor](http://editor.thebookofshaders.com/) by passing the LOG number to `glslLoader`. Ex:
+![](http://patriciogonzalezvivo.com/images/glslGallery/00.gif)
 
 ```bash
 glslLoader 170208142327
 ```
 
+
 ## Author
 
 [Patricio Gonzalez Vivo](https://twitter.com/patriciogv): [github](https://github.com/patriciogonzalezvivo) | [twitter](https://twitter.com/patriciogv) | [website](http://patricio.io)
+
 
 ## Acknowledgements
 
