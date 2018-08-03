@@ -3,6 +3,24 @@
 
 std::map<GLint, GLuint> VertexLayout::s_enabledAttribs = std::map<GLint, GLuint>();
 
+std::string uniforms_common = 
+"uniform mat4 u_modelViewProjectionMatrix;\n"
+"uniform mat4 u_modelMatrix;\n"
+"uniform mat4 u_viewMatrix;\n"
+"uniform mat4 u_projectionMatrix;\n"
+"uniform mat4 u_normalMatrix;\n"
+"\n"
+"uniform vec4 u_date;\n"
+"uniform vec3 u_centre3d;\n"
+"uniform vec3 u_eye3d;\n"
+"uniform vec3 u_up3d;\n"
+"uniform vec3 u_view2d;\n"
+"uniform vec2 u_resolution;\n"
+"uniform vec2 u_mouse;\n"
+"uniform float u_time;\n"
+"uniform float u_delta;\n"
+"\n";
+
 VertexLayout::VertexLayout(std::vector<VertexAttrib> _attribs) : m_attribs(_attribs), m_stride(0), m_positionAttribIndex(-1), m_colorAttribIndex(-1), m_normalAttribIndex(-1), m_texCoordAttribIndex(-1) {
 
     m_stride = 0;
@@ -79,18 +97,9 @@ std::string VertexLayout::getDefaultVertShader() {
     std::string rta =
 "#ifdef GL_ES\n"
 "precision mediump float;\n"
-"#endif\n"
-"\n"
-"uniform mat4 u_modelViewProjectionMatrix;\n"
-"uniform mat4 u_modelMatrix;\n"
-"uniform mat4 u_viewMatrix;\n"
-"uniform mat4 u_projectionMatrix;\n"
-"uniform mat4 u_normalMatrix;\n"
-"\n"
-"uniform float u_time;\n"
-"uniform vec2 u_mouse;\n"
-"uniform vec2 u_resolution;\n"
-"\n";
+"#endif\n";
+
+    rta += uniforms_common;
 
     for (uint i = 0; i < m_attribs.size(); i++) {
         int size = m_attribs[i].size;
@@ -123,17 +132,9 @@ std::string VertexLayout::getDefaultFragShader() {
 "#ifdef GL_ES\n"
 "precision mediump float;\n"
 "#endif\n"
-"\n"
-"uniform mat4 u_modelViewProjectionMatrix;\n"
-"uniform mat4 u_modelMatrix;\n"
-"uniform mat4 u_viewMatrix;\n"
-"uniform mat4 u_projectionMatrix;\n"
-"uniform mat4 u_normalMatrix;\n"
-"\n"
-"uniform float u_time;\n"
-"uniform vec2 u_mouse;\n"
-"uniform vec2 u_resolution;\n"
 "\n";
+
+    rta += uniforms_common;
 
     for (uint i = 0; i < m_attribs.size(); i++) {
         int size = m_attribs[i].size;

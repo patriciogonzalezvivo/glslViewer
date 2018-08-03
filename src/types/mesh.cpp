@@ -101,14 +101,18 @@ bool Mesh::load(const std::string& _file) {
                     continue;
                 }
 
+                if(state==VertexDef && (line.find("property float nx")==0 || line.find("property float ny")==0 || line.find("property float nz")==0)){
+                    normalsCoordsFound++;
+                    if (normalsCoordsFound==3) normals.resize(vertices.size());
+                    continue;
+                }
+
                 if(state==VertexDef && (line.find("property float r")==0 || line.find("property float g")==0 || line.find("property float b")==0 || line.find("property float a")==0)){
                     colorCompsFound++;
                     colors.resize(vertices.size());
                     floatColor = true;
                     continue;
-                }
-
-                if(state==VertexDef && (line.find("property uchar red")==0 || line.find("property uchar green")==0 || line.find("property uchar blue")==0 || line.find("property uchar alpha")==0)){
+                } else if(state==VertexDef && (line.find("property uchar red")==0 || line.find("property uchar green")==0 || line.find("property uchar blue")==0 || line.find("property uchar alpha")==0)){
                     colorCompsFound++;
                     colors.resize(vertices.size());
                     floatColor = false;
@@ -120,10 +124,9 @@ bool Mesh::load(const std::string& _file) {
                     texcoord.resize(vertices.size());
                     continue;
                 }
-
-                if(state==VertexDef && (line.find("property float nx")==0 || line.find("property float ny")==0 || line.find("property float nz")==0)){
-                    normalsCoordsFound++;
-                    if (normalsCoordsFound==3) normals.resize(vertices.size());
+                else if(state==VertexDef && (line.find("property float texture_u")==0 || line.find("property float texture_v")==0)){
+                    texCoordsFound++;
+                    texcoord.resize(vertices.size());
                     continue;
                 }
 
@@ -155,41 +158,16 @@ bool Mesh::load(const std::string& _file) {
                     continue;
                 }
 
-                if(state==Vertices){
+                if (state==Vertices) {
                     std::stringstream sline;
                     sline.str(line);
                     glm::vec3 v;
                     sline >> v.x;
                     sline >> v.y;
-                    if(vertexCoordsFound>2) sline >> v.z;
+                    if ( vertexCoordsFound > 2) sline >> v.z;
                     vertices[currentVertex] = v;
 
-                    if(colorCompsFound>0){
-                        if (floatColor){
-                            glm::vec4 c;
-                            sline >> c.r;
-                            sline >> c.g;
-                            sline >> c.b;
-                            if(colorCompsFound>3) sline >> c.a;
-                            colors[currentVertex] = c;
-                        }else{
-                            float r, g, b, a = 255;
-                            sline >> r;
-                            sline >> g;
-                            sline >> b;
-                            if(colorCompsFound>3) sline >> a;
-                            colors[currentVertex] = glm::vec4(r/255.0, g/255.0, b/255.0, a/255.0);
-                        }
-                    }
-
-                    if(texCoordsFound>0){
-                        glm::vec2 uv;
-                        sline >> uv.x;
-                        sline >> uv.y;
-                        texcoord[currentVertex] = uv;
-                    }
-
-                    if (normalsCoordsFound>0){
+                    if (normalsCoordsFound > 0) {
                         glm::vec3 n;
                         sline >> n.x;
                         sline >> n.y;
@@ -197,11 +175,38 @@ bool Mesh::load(const std::string& _file) {
                         normals[currentVertex] = n;
                     }
 
+                    if (colorCompsFound > 0) {
+                        if (floatColor){
+                            glm::vec4 c;
+                            sline >> c.r;
+                            sline >> c.g;
+                            sline >> c.b;
+                            if (colorCompsFound > 3) sline >> c.a;
+                            colors[currentVertex] = c;
+                        }
+                        else {
+                            float r, g, b, a = 255;
+                            sline >> r;
+                            sline >> g;
+                            sline >> b;
+                            if (colorCompsFound > 3) sline >> a;
+                            colors[currentVertex] = glm::vec4(r/255.0, g/255.0, b/255.0, a/255.0);
+                        }
+                    }
+
+                    if (texCoordsFound>0) {
+                        glm::vec2 uv;
+                        sline >> uv.x;
+                        sline >> uv.y;
+                        texcoord[currentVertex] = uv;
+                    }
+
                     currentVertex++;
-                    if((uint)currentVertex==vertices.size()){
-                        if(orderVertices<orderIndices){
+                    if ((uint)currentVertex==vertices.size()) {
+                        if (orderVertices<orderIndices){
                             state = Faces;
-                        }else{
+                        }
+                        else{
                             state = Vertices;
                         }
                     }
