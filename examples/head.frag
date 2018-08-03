@@ -31,10 +31,9 @@ void main(void) {
     
     color = v_color.rgb;
     // color.rgb = v_normal * 0.5 + 0.5;
-    // color.xy += st.xy;
 
-    // color *= step(.5, fract(pos.z * 2. + u_time));
-    color *= step( 1.0 - smoothstep(0.2, 0.8, color.r) * 0.5 , fract(st.x + st.y * 2. + u_time));
+    float pct = 1.0 - smoothstep(0.2, 0.8, color.r) * 0.5 ;
+    color *= step(pct, fract(st.x + st.y * 2. + u_time));
 
     gl_FragColor = vec4(color, 1.0);
 }
