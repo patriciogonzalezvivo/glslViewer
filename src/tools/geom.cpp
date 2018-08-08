@@ -9,12 +9,12 @@ int signValue(float _n) {
     else return 0;
 }
 
-void wrapRad(double &_rad){
+void wrapRad(double &_rad) {
     if (_rad < -PI) _rad += PI*2.;
     if (_rad > PI) _rad -= PI*2.;
 }
 
-void wrapDeg(float &_angle){
+void wrapDeg(float &_angle) {
     if (_angle < -180.0) _angle += 360.0;
     if (_angle > 180) _angle -= 360.0;
 }
@@ -36,10 +36,10 @@ glm::vec3 getScaled(const glm::vec3 &_vec, float _length) {
         return glm::vec3();
 }
 
-float getArea(const std::vector<glm::vec3> &_pts){
+float getArea(const std::vector<glm::vec3> &_pts) {
     float area = 0.0;
 
-    for(int i=0;i<(int)_pts.size()-1;i++){
+    for(int i=0;i<(int)_pts.size()-1;i++) {
         area += _pts[i].x * _pts[i+1].y - _pts[i+1].x * _pts[i].y;
     }
     area += _pts[_pts.size()-1].x * _pts[0].y - _pts[0].x * _pts[_pts.size()-1].y;
@@ -48,12 +48,52 @@ float getArea(const std::vector<glm::vec3> &_pts){
     return area;
 }
 
-glm::vec3 getCentroid(const std::vector<glm::vec3> &_pts){
+void getBoundingBox(const std::vector<glm::vec3> &_pts, glm::vec3 &_min, glm::vec3 &_max) {
+    _min = glm::vec3(10000.0, 10000.0, 10000.0);
+    _max = glm::vec3(-10000.0, -10000.0, -10000.0);
+
+    for (uint i = 0; i < _pts.size(); i++) {
+        if ( _pts[i].x < _min.x)
+            _min.x = _pts[i].x;
+
+        if ( _pts[i].y < _min.y)
+            _min.y = _pts[i].y;
+
+        if ( _pts[i].z < _min.z)
+            _min.z = _pts[i].z;
+
+        if ( _pts[i].x > _max.x)
+            _max.x = _pts[i].x;
+
+        if ( _pts[i].y > _max.y)
+            _max.y = _pts[i].y;
+
+        if ( _pts[i].z > _max.z)
+            _max.z = _pts[i].z;
+    }
+}
+
+glm::vec3 getCentroid(const std::vector<glm::vec3> &_pts) {
     glm::vec3 centroid;
     for (uint i = 0; i < _pts.size(); i++) {
         centroid += _pts[i] / (float)_pts.size();
     }
     return centroid;
+}
+
+float getSize(const std::vector<glm::vec3> &_pts) {
+    // Substract the Model position
+    glm::vec3 centroid = getCentroid(_pts);
+    std::vector<glm::vec3> pts = _pts;
+    for (uint i = 0; i < pts.size(); i++) {
+        pts[i] -= centroid;
+    }
+
+    // Calculate the size from the Bounding Box
+    glm::vec3 min_v;
+    glm::vec3 max_v;
+    getBoundingBox( pts, min_v, max_v);
+    return glm::min(glm::length(min_v), glm::length(max_v));
 }
 
 
@@ -69,14 +109,14 @@ bool isRightTurn(const glm::vec3 &a, const glm::vec3 &b, const glm::vec3 &c) {
     return ((b.x - a.x)*(c.y - a.y) - (b.y - a.y)*(c.x - a.x)) > 0;
 }
 
-std::vector<glm::vec3> getConvexHull(const std::vector<glm::vec3> &_pts){
+std::vector<glm::vec3> getConvexHull(const std::vector<glm::vec3> &_pts) {
     std::vector<glm::vec3> pts;
     pts.assign(_pts.begin(),_pts.end());
 
     return getConvexHull(pts);
 }
 
-std::vector<glm::vec3> getConvexHull(std::vector<glm::vec3> &pts){
+std::vector<glm::vec3> getConvexHull(std::vector<glm::vec3> &pts) {
     std::vector<glm::vec3> hull;
     glm::vec3 h1,h2,h3;
 
@@ -126,7 +166,7 @@ std::vector<glm::vec3> getConvexHull(std::vector<glm::vec3> &pts){
         currentPoint+=direction;
 
         if (hull.front()==hull.back()) {
-            if(currentPoint == 3 && direction == 1){
+            if(currentPoint == 3 && direction == 1) {
                 currentPoint = 4;
             } else {
                 break;
@@ -158,7 +198,7 @@ typedef struct{
 #define d(u,v)     norm(u-v)       // distance = norm of difference
 
 //--------------------------------------------------
-static void simplifyDP(float tol, glm::vec3* v, int j, int k, int* mk ){
+static void simplifyDP(float tol, glm::vec3* v, int j, int k, int* mk ) {
     if (k <= j+1) // there is nothing to simplify
         return;
 
@@ -178,7 +218,7 @@ static void simplifyDP(float tol, glm::vec3* v, int j, int k, int* mk ){
     glm::vec3   Pb;                // base of perpendicular from v[i] to S
     float  b, cw, dv2;        // dv2 = distance v[i] to S squared
 
-    for (int i=j+1; i<k; i++){
+    for (int i=j+1; i<k; i++) {
         // compute distance squared
         w = v[i] - S.P0;
         cw = glm::dot(w,u);
@@ -208,14 +248,14 @@ static void simplifyDP(float tol, glm::vec3* v, int j, int k, int* mk ){
     return;
 }
 
-std::vector<glm::vec3> getSimplify(std::vector<glm::vec3> &_pts, float _tolerance){
+std::vector<glm::vec3> getSimplify(std::vector<glm::vec3> &_pts, float _tolerance) {
     std::vector<glm::vec3> rta;
     rta.assign(_pts.begin(),_pts.end());
     simplify(rta);
     return rta;
 }
 
-void simplify(std::vector<glm::vec3> &_pts, float _tolerance){
+void simplify(std::vector<glm::vec3> &_pts, float _tolerance) {
 
     if(_pts.size() < 2) return;
 
@@ -256,7 +296,7 @@ void simplify(std::vector<glm::vec3> &_pts, float _tolerance){
     }
 
     //get rid of the unused points
-    if( m < (int)sV.size() ){
+    if( m < (int)sV.size() ) {
         _pts.assign( sV.begin(),sV.begin()+m );
     }else{
         _pts = sV;
@@ -264,13 +304,13 @@ void simplify(std::vector<glm::vec3> &_pts, float _tolerance){
 }
 
 float mapValue(const float &_value, const float &_inputMin, const float &_inputMax, const float &_outputMin, const float &_outputMax, bool _clamp) {
-    if (fabs(_inputMin - _inputMax) < FLT_EPSILON){
+    if (fabs(_inputMin - _inputMax) < FLT_EPSILON) {
         return _outputMin;
     } else {
         float outVal = ((_value - _inputMin) / (_inputMax - _inputMin) * (_outputMax - _outputMin) + _outputMin);
 
-        if( _clamp ){
-            if(_outputMax < _outputMin){
+        if( _clamp ) {
+            if(_outputMax < _outputMin) {
                 if( outVal < _outputMax )outVal = _outputMax;
                 else if( outVal > _outputMin )outVal = _outputMin;
             }else{

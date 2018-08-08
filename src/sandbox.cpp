@@ -57,9 +57,14 @@ void Sandbox::setup( WatchFileList &_files ) {
     glEnable(GL_DEPTH_TEST);
     glFrontFace(GL_CCW);
 
+    // Init camera
+    //
+    m_cam.setViewport(getWindowWidth(), getWindowHeight());
+    m_cam.setPosition(glm::vec3(0.0,0.0,-3.));
+
     //  Load Geometry
     //
-    if (iGeom == -1){
+    if (iGeom == -1) {
         m_vbo = rect(0.0,0.0,1.0,1.0).getVbo();
     }
     else {
@@ -67,8 +72,10 @@ void Sandbox::setup( WatchFileList &_files ) {
         model.load( _files[iGeom].path );
         m_vbo = model.getVbo();
         glm::vec3 toCentroid = getCentroid( model.getVertices() );
-        // m_vbo_matrix = glm::scale(glm::vec3(0.001));
-        m_vbo_matrix = glm::translate(-toCentroid);
+        m_vbo_matrix = glm::translate( -toCentroid );
+        
+        float size = getSize( model.getVertices() );
+        m_cam.setDistance( size * 2.0 );
     }
 
     //  Build shader
@@ -94,11 +101,6 @@ void Sandbox::setup( WatchFileList &_files ) {
     }
 
     m_shader.load(m_fragSource, m_vertSource, defines, verbose);
-
-    // Init camera
-    //
-    m_cam.setViewport(getWindowWidth(), getWindowHeight());
-    m_cam.setPosition(glm::vec3(0.0,0.0,-3.));
 
     // Init buffers
     m_billboard_vbo = rect(0.0,0.0,1.0,1.0).getVbo();
@@ -356,9 +358,9 @@ void Sandbox::onScroll(float _yoffset) {
 }
 
 void Sandbox::onMouseDrag(float _x, float _y, int _button) {
-    if (_button == 1){
+    if (_button == 1) {
         // Left-button drag is used to rotate geometry.
-        float dist = glm::length(m_cam.getPosition());
+        float dist = m_cam.getDistance();
         m_lat -= getMouseVelX();
         m_lon -= getMouseVelY()*0.5;
         m_cam.orbit(m_lat ,m_lon, dist);
@@ -387,11 +389,10 @@ void Sandbox::onMouseDrag(float _x, float _y, int _button) {
     } 
     else {
         // Right-button drag is used to zoom geometry.
-        float dist = glm::length(m_cam.getPosition());
+        float dist = m_cam.getDistance();
         dist += (-.008f * getMouseVelY());
-        if(dist > 0.0f){
-            m_cam.setPosition( -dist * m_cam.getZAxis() );
-            m_cam.lookAt(glm::vec3(0.0));
+        if (dist > 0.0f) {
+            m_cam.setDistance( dist );
         }
 
         // TODO: rotate view2d.
@@ -403,8 +404,7 @@ void Sandbox::onMouseDrag(float _x, float _y, int _button) {
         m_centre3d -= voff;
         m_eye3d -= voff;
         glm::vec3 haxis = glm::cross(m_eye3d - m_centre3d, m_up3d);
-        glm::vec3 hoff = glm::normalize(haxis)
-            * (getMouseVelX()/getWindowWidth()) * dist3d;
+        glm::vec3 hoff = glm::normalize(haxis) * (getMouseVelX()/getWindowWidth()) * dist3d;
         m_centre3d += hoff;
         m_eye3d += hoff;
     }

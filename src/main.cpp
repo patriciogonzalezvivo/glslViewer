@@ -411,6 +411,25 @@ void cinWatcherThread() {
                 }
             }
         }
+        else if (beginsWith(line, "camera_distance")) {
+            std::vector<std::string> values = split(line,',');
+            if (values.size() == 2) {
+                sandbox.getCamera().setDistance(toFloat(values[1]));
+            }
+            else {
+                std::cout << sandbox.getCamera().getDistance() << std::endl;
+            }
+        }
+        else if (beginsWith(line, "camera_position")) {
+            std::vector<std::string> values = split(line,',');
+            if (values.size() == 4) {
+                sandbox.getCamera().setPosition(glm::vec3(toFloat(values[1]),toFloat(values[2]),toFloat(values[3])));
+            }
+            else {
+                glm::vec3 pos = sandbox.getCamera().getPosition();
+                std::cout << pos.x << ',' << pos.y << ',' << pos.z << std::endl;
+            }
+        }
         else {
             uniformsMutex.lock();
             parseUniforms(line, &sandbox.uniforms);

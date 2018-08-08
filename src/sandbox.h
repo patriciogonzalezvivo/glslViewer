@@ -23,6 +23,7 @@ public:
     std::string getVertexSource() const { return m_vertSource; } 
     std::string getFragmentSource() const { return m_fragSource; }
     std::string get3DView() const;
+    Camera&     getCamera() { return m_cam; }
     int         getTotalBuffers() const { return m_buffers.size(); }
     
     // Some events

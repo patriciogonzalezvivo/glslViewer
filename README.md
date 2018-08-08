@@ -236,25 +236,29 @@ Beside for texture uniforms other arguments can be add to `glslViewer`:
 
 Once glslViewer is running the CIN is listening for some commands, so you can pass data through regular *nix pipes.
 
-* ```int```, ```floats```, ```vec2```, ```vec3``` and ```vec4``` uniforms can be passed as comma separated values, where the first column is for the name of the uniform and the rest for the numbers of values the uniform have. **Note** that there is a distinction between ```int```and ```float```so remember to put ```.``` (floating points) to your values.
+* `int`, `floats`, `vec2`, `vec3` and `vec4` uniforms can be passed as **comma separated values** (CVS), where the first column is for the name of the uniform and the rest for the numbers of values the uniform have. **Note** that there is a distinction between `int`and `float`so remember to put `.` (floating points) to your values.
 
-* ```date```: return content of ```u_date```, return the current year, month, day and seconds
+* `date`: return content of `u_date`, return the current year, month, day and seconds
 
-* ```time```: return content of ```u_time```, the elapsed time since the app start
+* `time`: return content of `u_time`, the elapsed time since the app start
 
-* ```delta```: return content of ```u_delta```, return the last delta time between frames
+* `delta`: return content of `u_delta`, return the last delta time between frames
 
-* ```fps```: return content of ```u_fps```, return the number of frames per second
+* `fps`: return content of `u_fps`, return the number of frames per second
 
-* ```frag```: return the source of the fragment shader
+* `frag`: return the source of the fragment shader
 
-* ```vert```: return the source of the vertex shader
+* `vert`: return the source of the vertex shader
 
-* ```window_width```, ```window_height```, ```screen_size``` and ```viewport``` : return the size of the windows, screen and viewport (content of ```u_resolution```)
+* `window_width`, `window_height`, `screen_size` and `viewport` : return the size of the windows, screen and viewport (content of `u_resolution`)
 
-* ```pixel_density```: return the pixel density
+* `pixel_density`: return the pixel density
 
 * `mouse_x`, `mouse_y` and `mouse`: return the position of the mouse (content of `u_mouse`)
+
+* `camera_distance`: returns the distance of the camera to the model. If a value is provide separated by a comma will set the distance. Ex: `camera_distance,10.0` 
+
+* `camera_position`: returns the position of the camera. If a value is provide separated by commas will set the position. Ex: `camera_position,0.0,0.0,10.0` 
 
 * `view3d`: returns the position of the camera, the up-vector and the center of the object;
 
