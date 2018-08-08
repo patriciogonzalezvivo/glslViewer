@@ -20,7 +20,7 @@ typedef struct {
 struct timeval tv;
 static Mouse mouse;
 static bool left_mouse_button_down = false;
-static glm::vec4 iMouse = {0.0, 0.0, 0.0, 0.0};
+static glm::vec4 mouse4 = {0.0, 0.0, 0.0, 0.0};
 static glm::ivec4 viewport;
 static double fTime = 0.0f;
 static double fDelta = 0.0f;
@@ -222,17 +222,17 @@ void initGL (glm::ivec4 &_viewport, bool _headless) {
         // callback when a mouse button is pressed or released
         glfwSetMouseButtonCallback(window, [](GLFWwindow* _window, int button, int action, int mods) {
             if (button == GLFW_MOUSE_BUTTON_1) {
-                // update iMouse when left mouse button is pressed or released
+                // update mouse4 when left mouse button is pressed or released
                 if (action == GLFW_PRESS && !left_mouse_button_down) {
                     left_mouse_button_down = true;
-                    iMouse.x = mouse.x;
-                    iMouse.y = mouse.y;
-                    iMouse.z = mouse.x;
-                    iMouse.w = mouse.y;
+                    mouse4.x = mouse.x;
+                    mouse4.y = mouse.y;
+                    mouse4.z = mouse.x;
+                    mouse4.w = mouse.y;
                 } else if (action == GLFW_RELEASE && left_mouse_button_down) {
                     left_mouse_button_down = false;
-                    iMouse.z = -iMouse.z;
-                    iMouse.w = -iMouse.w;
+                    mouse4.z = -mouse4.z;
+                    mouse4.w = -mouse4.w;
                 }
             }
             if (action == GLFW_PRESS) {
@@ -270,10 +270,10 @@ void initGL (glm::ivec4 &_viewport, bool _headless) {
             if (mouse.x > viewport.z * fPixelDensity) mouse.x = viewport.z * fPixelDensity;
             if (mouse.y > viewport.w * fPixelDensity) mouse.y = viewport.w * fPixelDensity;
 
-            // update iMouse when cursor moves
+            // update mouse4 when cursor moves
             if (left_mouse_button_down) {
-                iMouse.x = mouse.x;
-                iMouse.y = mouse.y;
+                mouse4.x = mouse.x;
+                mouse4.y = mouse.y;
             }
 
             /*
@@ -582,6 +582,6 @@ int getMouseButton(){
     return mouse.button;
 }
 
-glm::vec4 get_iMouse() {
-    return iMouse;
+glm::vec4 getMouse4() {
+    return mouse4;
 }

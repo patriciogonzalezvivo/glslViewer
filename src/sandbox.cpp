@@ -191,12 +191,14 @@ void Sandbox::_updateUniforms( Shader &_shader ) {
     if (_shader.needDate()) {
         _shader.setUniform("u_date", getDate());
     }
-    if (_shader.needMouse()) {
+    
+    if (_shader.needMouse4()) {
+        _shader.setUniform("u_mouse", getMouse4());
+    }
+    else if (_shader.needMouse()) {
         _shader.setUniform("u_mouse", getMouseX(), getMouseY());
     }
-    if (_shader.need_iMouse()) {
-        _shader.setUniform("iMouse", get_iMouse());
-    }
+    
     if (_shader.needView2d()) {
         _shader.setUniform("u_view2d", m_view2d);
     }

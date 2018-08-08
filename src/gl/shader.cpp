@@ -8,7 +8,7 @@
 #include <iostream>
 #include <regex>
 
-Shader::Shader():m_program(0),m_fragmentShader(0),m_vertexShader(0), m_nBuffers(0), m_time(false), m_delta(false), m_date(false), m_mouse(false), m_imouse(false), m_view2d(false), m_view3d(false) {
+Shader::Shader():m_program(0),m_fragmentShader(0),m_vertexShader(0), m_nBuffers(0), m_time(false), m_delta(false), m_date(false), m_mouse(false), m_mouse4(false), m_view2d(false), m_view3d(false) {
 
 }
 
@@ -127,6 +127,8 @@ bool Shader::load(const std::string& _fragmentSrc, const std::string& _vertexSrc
         if (!m_date)
             m_date = find_id(_fragmentSrc, "u_date");
         
+        m_mouse4 = find_id(_fragmentSrc, "vec4 u_mouse");
+
         // u_mouse
         m_mouse = find_id(_fragmentSrc, "u_mouse");
 
@@ -245,10 +247,11 @@ GLuint Shader::compileShader(const std::string& _src, const std::vector<std::str
                 "#define iDate u_date\n"
                 "\n";
         }
-        m_imouse = find_id(_src, "iMouse");
-        if (m_imouse) {
+        m_mouse4 = find_id(_src, "iMouse");
+        if (m_mouse4) {
             prolog +=
-                "uniform vec4 iMouse;\n"
+                "uniform vec4 u_mouse;\n"
+                "#define iMouse u_mouse\n"
                 "\n";
         }
         epilog =

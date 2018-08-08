@@ -146,22 +146,26 @@ std::string VertexLayout::getDefaultFragShader() {
 
     rta += "\n"
 "void main(void) {\n"
+"   vec3 color = vec3(1.0);\n"
 "\n";
 
     if (m_colorAttribIndex != -1) {
-        rta += "    gl_FragColor = v_" + m_attribs[m_colorAttribIndex].name + ";\n";
-    }
-    else if ( m_texCoordAttribIndex != -1 ){
-        rta += "    gl_FragColor = vec4(vec3(v_" + m_attribs[m_texCoordAttribIndex].name + ",1.0),1.0);\n";
+        rta += "    color = v_" + m_attribs[m_colorAttribIndex].name + ".rgb;\n";
     }
     else if ( m_normalAttribIndex != -1 ){
-        rta += "    gl_FragColor = vec4(0.5+v_" + m_attribs[m_normalAttribIndex].name + "*0.5,1.0);\n";
+        rta += "    color *= v_" + m_attribs[m_normalAttribIndex].name + " * 0.5 + 0.5;\n";
     }
-    else {
-        rta += "    gl_FragColor = vec4(1.0);\n";
+    else if ( m_texCoordAttribIndex != -1 ){
+        rta += "    color.xy = v_" + m_attribs[m_texCoordAttribIndex].name + ".xy;\n";
     }
 
-    rta +=  "}\n";
+    if ( m_normalAttribIndex != -1 ){
+        rta += "    float shade = dot(v_" + m_attribs[m_normalAttribIndex].name + ", normalize(vec3(0.0, 0.75, 0.75)));\n"
+        "    color *= smoothstep(-1.0, 1.0, shade);\n";
+    }
+
+    rta +=  "    gl_FragColor = vec4(color, 1.0);\n"
+"}\n";
 
     return rta;
 }

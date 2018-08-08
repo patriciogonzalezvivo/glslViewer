@@ -25,7 +25,7 @@ public:
     const   bool    needDelta() const { return m_delta; };
     const   bool    needDate() const { return m_date; };
     const   bool    needMouse() const { return m_mouse; };
-    const   bool    need_iMouse() const { return m_imouse; };
+    const   bool    needMouse4() const { return m_mouse4; };
     const   bool    needView2d() const { return m_view2d; };
     const   bool    needView3d() const { return m_view3d; };
 
@@ -70,7 +70,7 @@ private:
     bool    m_delta;
     bool    m_date;
     bool    m_mouse;
-    bool    m_imouse;
+    bool    m_mouse4;
     bool    m_view2d;
     bool    m_view3d;
 };

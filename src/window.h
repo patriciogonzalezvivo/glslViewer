@@ -36,7 +36,7 @@ float getMouseVelX();
 float getMouseVelY();
 glm::vec2 getMouseVelocity();
 int getMouseButton();
-glm::vec4 get_iMouse();
+glm::vec4 getMouse4();
 
 // EVENTS
 //----------------------------------------------

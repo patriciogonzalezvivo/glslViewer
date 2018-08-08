@@ -1,8 +1,8 @@
 #pragma once
 
 #include "glm/glm.hpp"
-#include "types/mesh.h"
-#include "types/rectangle.h"
+#include "mesh.h"
+#include "rectangle.h"
 
 Mesh line (const glm::vec3 &_a, const glm::vec3 &_b);
 void drawLine(const glm::vec3 &_a, const glm::vec3 &_b);
