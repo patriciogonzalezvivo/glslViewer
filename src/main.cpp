@@ -25,11 +25,10 @@ std::mutex filesMutex;
 int fileChanged;
 
 std::mutex uniformsMutex;
-
 std::mutex screenshotMutex;
-
 std::string outputFile = "";
 
+// Here is where all the magic happens
 Sandbox sandbox;
 
 //================================================================= Threads
@@ -40,6 +39,10 @@ void cinWatcherThread();
 void onExit();
 void printUsage(char * executableName) {
     std::cerr << "Usage: " << executableName << " <shader>.frag [<shader>.vert] [<mesh>.(obj/.ply)] [<texture>.(png/jpg)] [-<uniformName> <texture>.(png/jpg)] [-vFlip] [-x <x>] [-y <y>] [-w <width>] [-h <height>] [-l] [--square] [-s/--sec <seconds>] [-o <screenshot_file>.png] [--headless] [-c/--cursor] [-I<include_folder>] [-D<define>] [-v/--verbose] [--help]\n";
+}
+
+void printHelp() {
+    // std::cout << "// "
 }
 
 // Main program
@@ -340,7 +343,10 @@ void cinWatcherThread() {
     while (std::getline(std::cin, line)) {
         // GET ONLY
         // 
-        if (line == "fps") {
+        if (line == "help") {
+            printHelp();
+        }
+        else if (line == "fps") {
             // Force the output in floats
             printf("%f\n", getFPS());
         }

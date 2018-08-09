@@ -238,6 +238,8 @@ Once glslViewer is running the CIN is listening for some commands, so you can pa
 
 * `int`, `floats`, `vec2`, `vec3` and `vec4` uniforms can be passed as **comma separated values** (CVS), where the first column is for the name of the uniform and the rest for the numbers of values the uniform have. **Note** that there is a distinction between `int`and `float`so remember to put `.` (floating points) to your values.
 
+* `help`: return this list of commands
+
 * `date`: return content of `u_date`, return the current year, month, day and seconds
 
 * `time`: return content of `u_time`, the elapsed time since the app start
@@ -249,6 +251,12 @@ Once glslViewer is running the CIN is listening for some commands, so you can pa
 * `frag`: return the source of the fragment shader
 
 * `vert`: return the source of the vertex shader
+
+* `buffers`: return a list of active buffers as their sampler2D uniform name
+
+* `uniforms`: return a list of active uniforms together with their values in CSV format 
+
+* `textures`: return a list of active textures as their sampler2D uniform name folowed by the file path to the source image
 
 * `window_width`, `window_height`, `screen_size` and `viewport` : return the size of the windows, screen and viewport (content of `u_resolution`)
 
@@ -262,10 +270,9 @@ Once glslViewer is running the CIN is listening for some commands, so you can pa
 
 * `view3d`: returns the position of the camera, the up-vector and the center of the object;
 
-* `screenshot [filename]`: save a screenshot of what's being rendered. If there is no filename as argument will default to what was defined after the `-o` argument when glslViewer was launched.
+* `screenshot,[filename]`: save a screenshot of what's being rendered. If there is no filename as argument will default to what was defined after the `-o` argument when glslViewer was launched.
 
 * `q`, `quit` or `exit`: close glslViewer
-
 
 ## glslViewer conventions
 
