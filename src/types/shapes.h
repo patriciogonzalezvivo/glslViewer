@@ -10,6 +10,8 @@ void drawLine(const glm::vec3 &_a, const glm::vec3 &_b);
 Mesh cross(const glm::vec3 &_pos, float _width);
 void drawCross(const glm::vec3 &_pos, float _width = 3.5);
 
+Mesh crossCube(const std::vector<glm::vec3> &_pts);
+
 Mesh rect (float _x, float _y, float _w, float _h);
 Mesh rect (const Rectangle &_rect);
 

@@ -57,18 +57,19 @@ public:
     bool vFlip;
 
 private:
+    void _updateBackground(); 
     void _updateBuffers();
     void _updateUniforms( Shader &_shader );
     void _updateTextures( Shader &_shader, int &_textureIndex  );
-    
-    //  Shader
-    Shader              m_shader;
 
+    // Main Shader
     std::string         m_fragSource;
     const std::string*  m_fragPath;
     
     std::string         m_vertSource;
     const std::string*  m_vertPath;
+
+    Shader              m_shader;
 
     // Geometry
     Vbo*                m_vbo;
@@ -88,4 +89,9 @@ private:
     std::vector<Shader> m_buffers_shaders;
     Vbo*                m_billboard_vbo;
     std::string         m_billboard_vert;
+    
+    // Background
+    Shader              m_background_shader;
+    bool                m_background_enabled;
+
 };

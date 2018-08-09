@@ -301,7 +301,25 @@ You can include other GLSL code using a traditional `#include "file.glsl"` macro
 
 *Note*: included files are not under watch so changes will not take effect until the main file is saved.
 
-### Using multiple buffers
+### Native defines
+
+Beside the defines you can pass as an argument using `-D[define]` you can relay on the following native defines automatically generated for you.
+
+* `GLSLVIEWER`: you can use it to tell your shader it's being render in GlslViewer.
+
+* `PLATFORM_OSX`: added only on MacOS/OSX platforms.
+
+* `PLATFORM_RPI`: added only only on RaspberryPi devices.
+
+* `PLATFORM_LINUX`: added only in i86 and 64bit Linux platforms.
+
+* `BACKGROUND`: added on background shader.
+
+* `BACKGROUND`: added on background shader.
+
+* `BUFFER_[NUMBER]`: added on each buffer pass.
+
+### Using the defines flags to use multiple buffer passes
 
 You can use multiple buffers by forking the code using `#ifdef BUFFER_[number]`, `#if defined (BUFFER_[number])` and/or `#elif defined (BUFFER_[number])`. Then you can fetch the content of those buffers by using the `uniform sampler2D u_buffer[number]` texture. Ex.:
 
@@ -336,6 +354,12 @@ You can use multiple buffers by forking the code using `#ifdef BUFFER_[number]`,
 ```
 
 There is a more extense example on `examples/test_multibuffer.frag` and `examples/grayscott.frag`.
+
+### Using the defines flags to draw the background
+
+If you load a 3D model or set a shader without opacity you will notice the background is black by defaltt (actually transparent in RaspberryPi). 
+
+It's possible to set a background by adding a `#ifdef BACKGROUND` check and adding your code there. Check the example `examples/head.frag`
 
 ### Examples
 

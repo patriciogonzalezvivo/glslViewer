@@ -20,6 +20,7 @@ public:
     const   GLuint  getVertexShader() const { return m_vertexShader; };
     const   GLint   getAttribLocation(const std::string& _attribute) const;
     const   int 	getTotalBuffers() const { return m_nBuffers; }
+    const   bool    isBackground() const { return m_background; }
 
     const   bool    needTime() const { return m_time; };
     const   bool    needDelta() const { return m_delta; };
@@ -73,4 +74,5 @@ private:
     bool    m_mouse4;
     bool    m_view2d;
     bool    m_view3d;
+    bool    m_background;
 };

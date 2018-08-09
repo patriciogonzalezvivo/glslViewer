@@ -8,8 +8,11 @@
 #include <iostream>
 #include <regex>
 
-Shader::Shader():m_program(0),m_fragmentShader(0),m_vertexShader(0), m_nBuffers(0), m_time(false), m_delta(false), m_date(false), m_mouse(false), m_mouse4(false), m_view2d(false), m_view3d(false) {
-
+Shader::Shader():
+m_program(0), 
+m_fragmentShader(0),m_vertexShader(0), 
+m_nBuffers(0), 
+m_time(false), m_delta(false), m_date(false), m_mouse(false), m_mouse4(false), m_view2d(false), m_view3d(false), m_background(false) {
 }
 
 Shader::~Shader() {
@@ -52,14 +55,14 @@ bool find_id(const std::string& program, const char* id) {
 //
 
 // Count how many BUFFERS are in the shader
-int countBuffers(const std::string &_source) {
+int count_buffers(const std::string &_source) {
     // Split Source code in lines
     std::vector<std::string> lines = split(_source, '\n');
 
     // Group results in a vector to check for duplicates
     std::vector<std::string> results;
 
-    // Regext to search for #ifdef BUFFER_[NUMBER], #if defined() BUFFER_[NUMBER] ) and #elif defined( BUFFER_[NUMBER] ) occurences
+    // Regext to search for #ifdef BUFFER_[NUMBER], #if defined( BUFFER_[NUMBER] ) and #elif defined( BUFFER_[NUMBER] ) occurences
     std::regex re(R"((?:^\s*#if|^\s*#elif)(?:\s+)(defined\s*\(\s*BUFFER_)(\d+)(?:\s*\))|(?:^\s*#ifdef\s+BUFFER_)(\d+))");
     std::smatch match;
 
@@ -94,6 +97,24 @@ int countBuffers(const std::string &_source) {
     return results.size();
 }
 
+// Count how many BUFFERS are in the shader
+bool check_for_background(const std::string &_source) {
+    // Split Source code in lines
+    std::vector<std::string> lines = split(_source, '\n');
+
+    // Regext to search for #ifdef BACKGROUND, #if defined( BACKGROUND ) and #elif defined( BACKGROUND ) occurences
+    std::regex re(R"((?:^\s*#if|^\s*#elif)(?:\s+)(defined\s*\(\s*BACKGROUND)(?:\s*\))|(?:^\s*#ifdef\s+BACKGROUND))");
+    std::smatch match;
+
+    for (unsigned int l = 0; l < lines.size(); l++) {
+        if (std::regex_search(lines[l], match, re)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 bool Shader::load(const std::string& _fragmentSrc, const std::string& _vertexSrc, const std::vector<std::string> &_defines, bool _verbose) {
     std::chrono::time_point<std::chrono::steady_clock> start_time, end_time;
     start_time = std::chrono::steady_clock::now();
@@ -113,23 +134,24 @@ bool Shader::load(const std::string& _fragmentSrc, const std::string& _vertexSrc
         // Check for the precense of:
 
         // Buffers
-        m_nBuffers = countBuffers(_fragmentSrc);
+        m_nBuffers = count_buffers(_fragmentSrc);
+
+        // Background pass
+        m_background = check_for_background(_fragmentSrc);
 
         // u_time
-        if (!m_time)
-            m_time = find_id(_fragmentSrc, "u_time");
+        m_time = find_id(_fragmentSrc, "u_time");
         
         // u_delta
-        if (!m_delta)
-            m_delta = find_id(_fragmentSrc, "u_delta");
+        m_delta = find_id(_fragmentSrc, "u_delta");
         
         // u_data
-        if (!m_date)
-            m_date = find_id(_fragmentSrc, "u_date");
+        m_date = find_id(_fragmentSrc, "u_date");
         
+        /// u_mouse as vec4
         m_mouse4 = find_id(_fragmentSrc, "vec4 u_mouse");
 
-        // u_mouse
+        // u_mouse as vec2 (Legacy)
         m_mouse = find_id(_fragmentSrc, "u_mouse");
 
         // u_view 2D

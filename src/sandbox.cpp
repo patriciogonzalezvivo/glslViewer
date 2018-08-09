@@ -13,7 +13,8 @@ Sandbox::Sandbox():
     iFrag(-1), iVert(-1), iGeom(-1),
     verbose(false), vFlip(true),
     m_fragPath(nullptr), m_vertPath(nullptr),
-    m_lat(180.0), m_lon(0.0) {
+    m_lat(180.0), m_lon(0.0),
+    m_background_enabled(false) {
 
     m_view2d = glm::mat3(1.);
 
@@ -118,6 +119,7 @@ void main(void) {\n\
     v_texcoord = a_texcoord;\n\
 }";
 
+    _updateBackground();
     _updateBuffers();
 
     // Turn on Alpha blending
@@ -138,9 +140,20 @@ void main(void) {\n\
 }
 
 std::string Sandbox::get3DView() const {
-    return  "up=("      + toString(m_up3d.x)    + "," + toString(m_up3d.y)      + "," + toString(m_up3d.z) + ") " +
-            "eye=("     + toString(m_eye3d.x)   + "," + toString(m_eye3d.y)     + "," + toString(m_eye3d.z) + ")" +
-            "centre=("  + toString(m_centre3d.x) + "," + toString(m_centre3d.y) + "," + toString(m_centre3d.z) + ")";            
+    return  "up,"      + toString(m_up3d.x)    + "," + toString(m_up3d.y)      + "," + toString(m_up3d.z) + "\n" +
+            "eye,"     + toString(m_eye3d.x)   + "," + toString(m_eye3d.y)     + "," + toString(m_eye3d.z) + "\n" +
+            "centre,"  + toString(m_centre3d.x) + "," + toString(m_centre3d.y) + "," + toString(m_centre3d.z) + "\n";            
+}
+
+void Sandbox::_updateBackground() {
+    m_background_enabled = m_shader.isBackground();
+
+    if (m_background_enabled) {
+        // Specific defines for this buffer
+        std::vector<std::string> sub_defines = defines;
+        sub_defines.push_back("BACKGROUND");
+        m_background_shader.load(m_fragSource, m_billboard_vert, sub_defines, verbose);
+    }
 }
 
 void Sandbox::_updateBuffers() {
@@ -157,7 +170,6 @@ void Sandbox::_updateBuffers() {
             m_buffers.push_back( Fbo() );
             m_buffers[i].allocate(getWindowWidth(), getWindowHeight(), false);
             
-
             // Specific defines for this buffer
             std::vector<std::string> sub_defines = defines;
             sub_defines.push_back("BUFFER_" + toString(i));
@@ -228,6 +240,7 @@ void Sandbox::_updateTextures( Shader &_shader, int &_textureIndex ) {
 }
 
 void Sandbox::draw() {
+    // Need to update Buffers
     if ( m_shader.getTotalBuffers() != int(m_buffers.size()) ) {
         _updateBuffers();
     }
@@ -255,6 +268,33 @@ void Sandbox::draw() {
         m_billboard_vbo->draw( &m_buffers_shaders[i] );
 
         m_buffers[i].unbind();
+    }
+
+    // need to update Background
+    if ( m_shader.isBackground() != m_background_enabled) {
+        _updateBackground();
+    }
+
+    if (m_background_enabled) {
+        glDisable(GL_DEPTH_TEST);
+
+        m_background_shader.use();
+
+        // Update Uniforms variables
+        _updateUniforms( m_background_shader );
+
+        // Update textures
+        _updateTextures( m_background_shader, textureIndex );
+
+        // Pass all buffers
+        for (unsigned int i = 0; i < m_buffers.size(); i++) {
+            m_background_shader.setUniform("u_buffer" + toString(i), &m_buffers[i], textureIndex );
+            textureIndex++;
+        }
+
+        m_billboard_vbo->draw( &m_background_shader );
+
+        glEnable(GL_DEPTH_TEST);
     }
 
     // MAIN SHADER
@@ -310,6 +350,7 @@ void Sandbox::onFileChange(WatchFileList &_files, int index) {
                 m_shader.load(default_frag, default_vert, defines, false);
             }
 
+            _updateBackground();
             _updateBuffers();
         }
     }
@@ -338,7 +379,6 @@ void Sandbox::onFileChange(WatchFileList &_files, int index) {
         }
     }
 }
-
 
 void Sandbox::onScroll(float _yoffset) {
     // Vertical scroll button zooms u_view2d and view3d.
@@ -401,8 +441,7 @@ void Sandbox::onMouseDrag(float _x, float _y, int _button) {
 
         // pan view3d.
         float dist3d = glm::length(m_eye3d - m_centre3d);
-        glm::vec3 voff = glm::normalize(m_up3d)
-            * (getMouseVelY()/getWindowHeight()) * dist3d;
+        glm::vec3 voff = glm::normalize(m_up3d) * (getMouseVelY()/getWindowHeight()) * dist3d;
         m_centre3d -= voff;
         m_eye3d -= voff;
         glm::vec3 haxis = glm::cross(m_eye3d - m_centre3d, m_up3d);

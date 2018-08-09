@@ -1,4 +1,5 @@
 #include "shapes.h"
+#include "../tools/geom.h"
 
 Mesh line (const glm::vec3 &_a, const glm::vec3 &_b) {
     glm::vec3 linePoints[2];
@@ -72,6 +73,65 @@ void drawCross(const glm::vec3 &_pos, float _width ){
 
     glEnableVertexAttribArray( 0 );
     glDrawArrays(GL_LINES, 0, 4);
+}
+
+Mesh crossCube(const std::vector<glm::vec3> &_pts) {
+    glm::vec3 min_v;
+    glm::vec3 max_v;
+    getBoundingBox( _pts, min_v, max_v);
+    float size = glm::min(glm::length(min_v), glm::length(max_v)) * 0.1;
+    
+
+    //    D ---- A
+    // C ---- B  |
+    // |  |   |  |
+    // |  I --|- F
+    // H .... G
+
+    glm::vec3 A = max_v;
+    glm::vec3 H = min_v;
+
+    glm::vec3 B = glm::vec3(A.x, A.y, H.z);
+    glm::vec3 C = glm::vec3(H.x, A.y, H.z);
+    glm::vec3 D = glm::vec3(H.x, A.y, A.z);
+
+    glm::vec3 F = glm::vec3(A.x, H.y, A.z);
+    glm::vec3 G = glm::vec3(A.x, H.y, H.z);
+    glm::vec3 I = glm::vec3(H.x, H.y, A.z);
+
+    Mesh mesh = line(A, glm::normalize(D) * size);
+    mesh.add( line(A, B * size) );
+    mesh.add( line(A, F * size) );
+
+    mesh.add( line(B, A * size) );
+    mesh.add( line(B, C * size) );
+    mesh.add( line(B, G * size) );
+
+    mesh.add( line(C, D * size) );
+    mesh.add( line(C, B * size) );
+    mesh.add( line(C, H * size) );
+
+    mesh.add( line(D, A * size) );
+    mesh.add( line(D, C * size) );
+    mesh.add( line(D, I * size) );
+
+    mesh.add( line(F, I * size) );
+    mesh.add( line(F, G * size) );
+    mesh.add( line(F, A * size) );
+
+    mesh.add( line(G, F * size) );
+    mesh.add( line(G, H * size) );
+    mesh.add( line(G, B * size) );
+
+    mesh.add( line(H, G * size) );
+    mesh.add( line(H, I * size) );
+    mesh.add( line(H, C * size) );
+
+    mesh.add( line(I, F * size) );
+    mesh.add( line(I, H * size) );
+    mesh.add( line(I, C * size) );
+
+    return mesh;
 }
 
 // Billboard
