@@ -336,26 +336,53 @@ void fileWatcherThread() {
 
 void cinWatcherThread() {
     std::string line;
-
+    std::cout << "// > ";
     while (std::getline(std::cin, line)) {
-        if (line == "q" || line == "quit" || line == "exit") {
-            bRun.store(false);
-        }
-        else if (line == "fps") {
-            // std::cout << getFPS() << std::endl;
+        // GET ONLY
+        // 
+        if (line == "fps") {
+            // Force the output in floats
             printf("%f\n", getFPS());
         }
         else if (line == "delta") {
-            // std::cout << getDelta() << std::endl;
+            // Force the output in floats
             printf("%f\n", getDelta());
         }
         else if (line == "time") {
-            // std::cout << getTime() << std::endl;
+            // Force the output in floats
             printf("%f\n", getTime());
         }
         else if (line == "date") {
             glm::vec4 date = getDate();
             std::cout << date.x << ',' << date.y << ',' << date.z << ',' << date.w << std::endl;
+        }
+        else if (line == "view3d") {
+            std::cout << sandbox.get3DView() << std::endl;
+        }
+        else if (line == "frag") {
+            std::cout << sandbox.getFragmentSource() << std::endl;
+        }
+        else if (line == "vert") {
+            std::cout << sandbox.getVertexSource() << std::endl;
+        }
+        else if (line == "buffers") {
+            for (int i = 0; i < sandbox.getTotalBuffers(); i++) {
+                std::cout << "u_buffer" << i<< std::endl;
+            }
+        }
+        else if (line == "uniforms") {
+            for (UniformList::iterator it= sandbox.uniforms.begin(); it != sandbox.uniforms.end(); ++it) {
+                std::cout << it->first;
+                for (int i = 0; i < it->second.size; i++) {
+                    std::cout << ',' << it->second.value[i];
+                }
+                std::cout << std::endl;
+            }
+        }
+        else if (line == "textures") {
+            for (std::map<std::string,Texture*>::iterator it = sandbox.textures.begin(); it != sandbox.textures.end(); ++it) {
+                std::cout << it->first << ',' << it->second->getFilePath() << std::endl;
+            }
         }
         else if (line == "window_width") {
             std::cout << getWindowWidth() << std::endl;
@@ -384,33 +411,8 @@ void cinWatcherThread() {
             glm::vec2 pos = getMousePosition();
             std::cout << pos.x << "," << pos.y << std::endl;
         }
-        else if (line == "view3d") {
-            std::cout << sandbox.get3DView() << std::endl;
-        }
-        else if (line == "frag") {
-            std::cout << sandbox.getFragmentSource() << std::endl;
-        }
-        else if (line == "vert") {
-            std::cout << sandbox.getVertexSource() << std::endl;
-        }
-        else if (line == "buffers") {
-            std::cout << sandbox.getTotalBuffers() << std::endl;
-        }
-        else if (beginsWith(line, "screenshot")) {
-            if (line == "screenshot" && outputFile != "") {
-                screenshotMutex.lock();
-                sandbox.screenshotFile = outputFile;
-                screenshotMutex.unlock();
-            }
-            else {
-                std::vector<std::string> values = split(line,' ');
-                if (values.size() == 2) {
-                    screenshotMutex.lock();
-                    sandbox.screenshotFile = values[1];
-                    screenshotMutex.unlock();
-                }
-            }
-        }
+        // GET/SET 
+        //
         else if (beginsWith(line, "camera_distance")) {
             std::vector<std::string> values = split(line,',');
             if (values.size() == 2) {
@@ -430,19 +432,37 @@ void cinWatcherThread() {
                 std::cout << pos.x << ',' << pos.y << ',' << pos.z << std::endl;
             }
         }
+        // ACTIONS
+        else if (line == "q" || line == "quit" || line == "exit") {
+            bRun.store(false);
+        }
+        else if (beginsWith(line, "screenshot")) {
+            if (line == "screenshot" && outputFile != "") {
+                screenshotMutex.lock();
+                sandbox.screenshotFile = outputFile;
+                screenshotMutex.unlock();
+            }
+            else {
+                std::vector<std::string> values = split(line,',');
+                if (values.size() == 2) {
+                    screenshotMutex.lock();
+                    sandbox.screenshotFile = values[1];
+                    screenshotMutex.unlock();
+                }
+            }
+        }
+        // SET ONLY
         else {
             uniformsMutex.lock();
             parseUniforms(line, &sandbox.uniforms);
             uniformsMutex.unlock();
         }
+
+        std::cout << "// > ";
     }
 }
 
 void onKeyPress (int _key) {
-    if (_key == 's' || _key == 'S') {
-        sandbox.onScreenshot(outputFile);
-    }
-
     if (_key == 'q' || _key == 'Q') {
         bRun = false;
         bRun.store(false);
