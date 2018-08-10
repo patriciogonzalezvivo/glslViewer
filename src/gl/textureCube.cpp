@@ -1,4 +1,5 @@
 #include <iostream>
+#include <cstring>
 
 #include "textureCube.h"
 
@@ -61,7 +62,7 @@ bool TextureCube::load(const std::string &_path, bool _vFlip) {
                 // the number of components to copy
                 int n = sizeof(float) * faceWidth * 3;
 
-                memcpy(face->data + face->currentOffset, data + offset, n);
+                std::memcpy(face->data + face->currentOffset, data + offset, n);
                 face->currentOffset += (3 * faceWidth);
             }
         }
@@ -115,11 +116,11 @@ void TextureCube::_flipHorizontal(Face* face) {
     int n = sizeof(float) * 3 * face->width;
     float* newData = new float[dataSize];
 
-    for(int i = 0; i < face->height; i++) {
+    for (int i = 0; i < face->height; i++) {
         int offset = i * face->width * 3;
         int bias = -(i + 1) * 3 * face->width;
 
-        memcpy(newData + dataSize + bias, face->data + offset, n);
+        std::memcpy(newData + dataSize + bias, face->data + offset, n);
     }
 
     delete[] face->data;
@@ -138,7 +139,7 @@ void TextureCube::_flipVertical(Face* face) {
             int offset = lineOffset + j * 3;
             int bias = lineOffset + face->width * 3 - (j + 1) * 3;
 
-            memcpy(newData + bias, face->data + offset, n);
+            std::memcpy(newData + bias, face->data + offset, n);
         }
     }
 
