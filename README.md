@@ -461,7 +461,7 @@ glslLoader 170208142327
 
 Thanks to:
 
-* [Karim’s Naaki](http://karim.naaji.fr/) lot of concept and code was inspired by his: [fragTool](https://github.com/karimnaaji/fragtool).
+* [Karim’s Naaki](http://karim.naaji.fr/) lot of concept and code was inspired by this two projects: [fragTool](https://github.com/karimnaaji/fragtool) and [hdreffects](https://github.com/karimnaaji/hdreffects)
 
 * [Doug Moen](https://github.com/doug-moen) he help to add the compatibility to ShaderToy shaders and some RayMarching features were added for his integration with his project: [curv](https://github.com/doug-moen/curv).
 
