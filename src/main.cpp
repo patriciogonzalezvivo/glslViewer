@@ -38,11 +38,40 @@ void cinWatcherThread();
 //================================================================= Functions
 void onExit();
 void printUsage(char * executableName) {
-    std::cerr << "Usage: " << executableName << " <shader>.frag [<shader>.vert] [<mesh>.(obj/.ply)] [<texture>.(png/jpg)] [-<uniformName> <texture>.(png/jpg)] [-vFlip] [-x <x>] [-y <y>] [-w <width>] [-h <height>] [-l] [--square] [-s/--sec <seconds>] [-o <screenshot_file>.png] [--headless] [-c/--cursor] [-I<include_folder>] [-D<define>] [-v/--verbose] [--help]\n";
+    std::cout << "// GlslViewer by Patricio Gonzalez Vivo ( patriciogonzalezvivo.com )" << std::endl; 
+    std::cerr << "// Usage: " << executableName << " <shader>.frag [<shader>.vert] [<mesh>.(obj/.ply)] [<texture>.(png/jpg)] [-<uniformName> <texture>.(png/jpg)] [-vFlip] [-x <x>] [-y <y>] [-w <width>] [-h <height>] [-l] [--square] [-s/--sec <seconds>] [-o <screenshot_file>.png] [--headless] [-c/--cursor] [-I<include_folder>] [-D<define>] [-v/--verbose] [--help]\n";
 }
 
 void printHelp() {
-    // std::cout << "// "
+    std::cout << "// GlslViewer by Patricio Gonzalez Vivo ( patriciogonzalezvivo.com )" << std::endl; 
+    std::cout << "//" << std::endl; 
+    std::cout << "// help           return this list of commands" << std::endl;
+    std::cout << "// date           return content of u_date as year, month, day and seconds" << std::endl;
+    std::cout << "// time           return content of u_time, the elapsed time since the app start" << std::endl;
+    std::cout << "// delta          return content of u_delta, the time between frames" << std::endl;
+    std::cout << "// fps            return content of u_fps, the number of frames per second" << std::endl;
+    std::cout << "// frag           return the source of the fragment shader" << std::endl;
+    std::cout << "// vert           return the source of the vertex shader" << std::endl;
+    std::cout << "// buffers        return a list of active buffers as their uniform name" << std::endl;
+    std::cout << "// uniforms       return a list of active uniforms and their values as CSV" << std::endl;
+    std::cout << "// textures       return a list of active textures as their uniform name and the image path" << std::endl;
+    std::cout << "// window_width   return the width of the windows" << std::endl;
+    std::cout << "// window_height  return the height of the windows" << std::endl;
+    std::cout << "// screen_size    return the width and height of the screen" << std::endl;
+    std::cout << "// viewport       return the size of the viewport (content of u_resolution) as CSV" << std::endl;
+    std::cout << "// pixel_density  return the pixel density" << std::endl;
+    std::cout << "// mouse_x        return the position of the mouse in x" << std::endl;
+    std::cout << "// mouse_y        return the position of the mouse in x" << std::endl;
+    std::cout << "// mouse          return the position of the mouse (content of u_mouse) as CSV" << std::endl;
+    std::cout << "// view3d         returns the position of the camera, the up-vector and the center of the object." << std::endl;
+    std::cout << "//" << std::endl;
+    std::cout << "// camera_distance                returns the distance of the camera to the model." << std::endl;
+    std::cout << "// camera_distance,[distance]     set the camera distance to the target." << std::endl;
+    std::cout << "// camera_position                returns the position of the camera." << std::endl;
+    std::cout << "// camera_position,[x],[y],[z]    set the position." << std::endl;
+    std::cout << "// screenshot,[filename]          makes a screenshot and save it in the filename provided." << std::endl;
+    std::cout << "//" << std::endl;
+    std::cout << "// exit           close glslViewer" << std::endl;
 }
 
 // Main program
