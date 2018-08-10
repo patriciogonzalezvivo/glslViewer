@@ -75,7 +75,7 @@ bool Texture::savePixels(const std::string& _path, unsigned char* _pixels, int _
     // Flip the image on Y
     int depth = 4;
     unsigned char *result = new unsigned char[_width*_height*depth];
-    std::memcpy(result, _pixels, _width*_height*depth);
+    memcpy(result, _pixels, _width*_height*depth);
     int row,col,z;
     stbi_uc temp;
 
