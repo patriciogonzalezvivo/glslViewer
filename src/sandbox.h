@@ -3,7 +3,8 @@
 #include "gl/shader.h"
 #include "gl/vbo.h"
 #include "gl/texture.h"
-#include "gl/pingpong.h"
+#include "gl/textureCube.h"
+#include "gl/fbo.h"
 #include "gl/uniform.h"
 
 #include "3d/camera.h"
@@ -25,6 +26,8 @@ public:
 
     void        addDefines(const std::string &_define);
     void        delDefines(const std::string &_define);
+
+    void        setCubeMapName(const std::string &_name);
 
     // Getting some data out of Sandbox
     std::string getVertexSource() const { return m_vertSource; } 
@@ -101,4 +104,9 @@ private:
     Shader              m_background_shader;
     bool                m_background_enabled;
 
+    // CubeMap
+    Shader              m_cubemap_shader;
+    std::string         m_cubemap_name;
+    Vbo*                m_cubemap_vbo;
+    bool                m_cubemap;
 };

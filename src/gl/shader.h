@@ -7,6 +7,7 @@
 #include "glm/glm.hpp"
 
 #include "texture.h"
+#include "textureCube.h"
 #include "fbo.h"
 
 class Shader {
@@ -43,6 +44,7 @@ public:
 
     void    setUniform(const std::string& _name, const float *_array, unsigned int _size);
 
+    void    setUniform(const std::string& _name, const TextureCube* _tex, unsigned int _texLoc);
     void    setUniform(const std::string& _name, const Texture* _tex, unsigned int _texLoc);
     void    setUniform(const std::string& _name, const Fbo* _fbo, unsigned int _texLoc);
 

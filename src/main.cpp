@@ -6,6 +6,7 @@
 #include <mutex>
 #include <atomic>
 #include <iostream>
+#include <fstream>
 
 #include "gl/gl.h"
 #include "window.h"
@@ -72,23 +73,24 @@ void printHelp() {
     std::cout << "// mouse          return the position of the mouse (u_mouse)" << std::endl;
     std::cout << "//" << std::endl; 
     std::cout << "// files          return a list of files" << std::endl;
-    std::cout << "// frag           return the fragment shader source code" << std::endl;
-    std::cout << "// vert           return the vertex shader source code" << std::endl;
     std::cout << "// buffers        return a list of buffers as their uniform name" << std::endl;
     std::cout << "// uniforms       return a list of uniforms and their values" << std::endl;
     std::cout << "// textures       return a list of textures as their uniform name and path" << std::endl;
     std::cout << "//" << std::endl;
     std::cout << "// defines            return a list of active defines" << std::endl;
-    std::cout << "// define,[DEFINE]    add a define to the shader" << std::endl;
-    std::cout << "// undefine,[DEFINE]  remove a define on the shader" << std::endl;
+    std::cout << "// define,<DEFINE>    add a define to the shader" << std::endl;
+    std::cout << "// undefine,<DEFINE>  remove a define on the shader" << std::endl;
     std::cout << "//" << std::endl;
     std::cout << "// view3d                         returns the position of the camera," << std::endl;
     std::cout << "//                                the up-vector and the center of model." << std::endl;
     std::cout << "// camera_distance                returns camera to target distance." << std::endl;
-    std::cout << "// camera_distance,[distance]     set the camera distance to the target." << std::endl;
+    std::cout << "// camera_distance[,distance]     set the camera distance to the target." << std::endl;
     std::cout << "// camera_position                returns the position of the camera." << std::endl;
-    std::cout << "// camera_position,[x],[y],[z]    set the position." << std::endl;
-    std::cout << "// screenshot,[filename]          saves a screenshot to a filename." << std::endl;
+    std::cout << "// camera_position[,x][,y][,z]    set the position." << std::endl;
+    std::cout << "//" << std::endl;
+    std::cout << "// screenshot[,filename]      saves a screenshot to a filename." << std::endl;
+    std::cout << "// frag[,filename]            returns or save the fragment shader source code " << std::endl;
+    std::cout << "// vert[,filename]            return or save the vertex shader source code" << std::endl;
     std::cout << "//" << std::endl;
     std::cout << "// version        return glslViewer version" << std::endl;
     std::cout << "// exit           close glslViewer" << std::endl;
@@ -161,6 +163,7 @@ int main(int argc, char **argv){
     struct stat st; // for files to watch
     float timeLimit = -1.0f; //  Time limit
     int textureCounter = 0; // Number of textures to load
+    int textureCubeCounter = 0; // Number of cube textures to load
 
     //Load the the resources (textures)
     for (int i = 1; i < argc ; i++){
@@ -260,10 +263,36 @@ int main(int argc, char **argv){
                     file.vFlip = sandbox.vFlip;
                     files.push_back(file);
 
-                    std::cout << "// Loading " << argument << " as the following uniform: " << std::endl;
-                    std::cout << "//    uniform sampler2D " << name  << "; // loaded"<< std::endl;
+                    std::cout << "// " << argument << " loaded as: " << std::endl;
+                    std::cout << "//    uniform sampler2D " << name  << ";"<< std::endl;
                     std::cout << "//    uniform vec2 " << name  << "Resolution;"<< std::endl;
                     textureCounter++;
+                }
+            }
+        }
+        else if (   haveExt(argument,"hdr") || haveExt(argument,"HDR") ) {
+            if ( stat(argument.c_str(), &st) != 0 ) {
+                std::cerr << "Error watching file " << argument << std::endl;
+            }
+            else {
+                TextureCube* tex = new TextureCube();
+
+                if ( tex->load(argument, sandbox.vFlip) ) {
+                    std::string name = "u_cubeMap"+toString(textureCubeCounter);
+                    sandbox.textures[name] = tex;
+                    sandbox.setCubeMapName(name);
+
+                    WatchFile file;
+                    file.type = "imageCube";
+                    file.path = argument;
+                    file.lastChange = st.st_mtime;
+                    file.vFlip = sandbox.vFlip;
+                    files.push_back(file);
+
+                    std::cout << "// " << argument << " loaded as: " << std::endl;
+                    std::cout << "//    uniform samplerCube " << name  << ";"<< std::endl;
+                    std::cout << "//    uniform vec2 " << name  << "Resolution;"<< std::endl;
+                    textureCubeCounter++;
                 }
             }
         }
@@ -298,8 +327,8 @@ int main(int argc, char **argv){
                     file.vFlip = sandbox.vFlip;
                     files.push_back(file);
 
-                    std::cout << "// Loading " << argument << " as the following uniform: " << std::endl;
-                    std::cout << "//     uniform sampler2D " << parameterPair  << "; // loaded"<< std::endl;
+                    std::cout << "// " << argument << " loaded as: " << std::endl;
+                    std::cout << "//     uniform sampler2D " << parameterPair  << ";"<< std::endl;
                     std::cout << "//     uniform vec2 " << parameterPair  << "Resolution;"<< std::endl;
                 }
             }
@@ -417,8 +446,24 @@ void cinWatcherThread() {
         else if (line == "view3d") {
             std::cout << sandbox.get3DView() << std::endl;
         }
+        else if (beginsWith(line, "frag,")) {
+            std::vector<std::string> values = split(line,',');
+            if (values.size() == 2) {
+                std::ofstream out(values[1]);
+                out << sandbox.getFragmentSource();
+                out.close();
+            }
+        }
         else if (line == "frag") {
             std::cout << sandbox.getFragmentSource() << std::endl;
+        }
+        else if (beginsWith(line, "vert,")) {
+            std::vector<std::string> values = split(line,',');
+            if (values.size() == 2) {
+                std::ofstream out(values[1]);
+                out << sandbox.getVertexSource();
+                out.close();
+            }
         }
         else if (line == "vert") {
             std::cout << sandbox.getVertexSource() << std::endl;

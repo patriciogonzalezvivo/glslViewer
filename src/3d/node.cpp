@@ -108,6 +108,10 @@ const glm::mat4& Node::getTransformMatrix() const {
     return m_transformMatrix;
 }
 
+ const glm::mat4& Node::getRotationMatrix() const {
+    return glm::toMat4(m_orientation) * glm::mat4(1.0);
+ }
+
 void Node::move(const glm::vec3& _offset) {
     m_position += _offset;
     m_transformMatrix = glm::translate(m_transformMatrix, m_position);

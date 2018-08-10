@@ -134,6 +134,39 @@ Mesh crossCube(const std::vector<glm::vec3> &_pts) {
     return mesh;
 }
 
+Mesh cube(float _size) {
+    float vertices[] = {
+        -_size,  _size,  _size,
+        -_size, -_size,  _size,
+        _size, -_size,  _size,
+        _size,  _size,  _size,
+        -_size,  _size, -_size,
+        -_size, -_size, -_size,
+        _size, -_size, -_size,
+        _size,  _size, -_size,
+    };
+
+    uint16_t indices[] = {
+        0, 1, 2,
+        0, 2, 3,
+        3, 2, 6,
+        3, 6, 7,
+        0, 4, 7,
+        0, 7, 3,
+        4, 6, 7,
+        4, 6, 5,
+        0, 5, 4,
+        0, 5, 1,
+        1, 6, 5,
+        1, 6, 2,
+    };
+
+    Mesh mesh;
+    mesh.addVertices(reinterpret_cast<glm::vec3*>(vertices), 8);
+    mesh.addIndices(indices, 36);
+    return mesh;
+}
+
 // Billboard
 //============================================================================
 Mesh rect (float _x, float _y, float _w, float _h) {

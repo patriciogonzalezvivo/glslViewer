@@ -14,7 +14,8 @@ Sandbox::Sandbox():
     verbose(false), vFlip(true),
     m_fragPath(nullptr), m_vertPath(nullptr),
     m_lat(180.0), m_lon(0.0),
-    m_background_enabled(false) {
+    m_background_enabled(false),
+    m_cubemap_vbo(nullptr), m_cubemap(false) {
 
     m_view2d = glm::mat3(1.);
 
@@ -55,13 +56,8 @@ void Sandbox::setup( WatchFileList &_files ) {
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    glEnable(GL_DEPTH_TEST);
+    // glEnable(GL_DEPTH_TEST);
     glFrontFace(GL_CCW);
-
-    // Init camera
-    //
-    m_cam.setViewport(getWindowWidth(), getWindowHeight());
-    m_cam.setPosition(glm::vec3(0.0,0.0,-3.));
 
     //  Load Geometry
     //
@@ -72,8 +68,13 @@ void Sandbox::setup( WatchFileList &_files ) {
         Mesh model;
         model.load( _files[iGeom].path );
         m_vbo = model.getVbo();
-        glm::vec3 toCentroid = getCentroid( model.getVertices() );
-        m_vbo_matrix = glm::translate( -toCentroid );
+        m_centre3d = getCentroid( model.getVertices() );
+        m_vbo_matrix = glm::translate( -m_centre3d );
+
+        // Init camera
+        //
+        m_cam.setViewport(getWindowWidth(), getWindowHeight());
+        m_cam.setPosition(glm::vec3(0.0,0.0,-3.));
         
         float size = getSize( model.getVertices() );
         m_cam.setDistance( size * 2.0 );
@@ -121,6 +122,44 @@ void main(void) {\n\
 
     _updateBackground();
     _updateBuffers();
+
+    // CUBEMAP
+    if (m_cubemap) {
+        m_cubemap_vbo = cube(1.0f).getVbo();
+
+        std::string vert = "\n\
+#ifdef GL_ES\n\
+precision mediump float;\n\
+#endif\n\
+\n\
+uniform mat4    u_modelViewProjectionMatrix;\n\
+uniform vec3    m_centre3d;\n\
+uniform vec3    u_eye3d;\n\
+\n\
+attribute vec4  a_position;\n\
+\n\
+varying vec4    v_position;\n\
+\n\
+void main(void) {\n\
+    v_position = a_position;\n\
+    gl_Position = u_modelViewProjectionMatrix * vec4(v_position.xyz, 1.0);\n\
+}";
+
+        std::string frag = "\n\
+#ifdef GL_ES\n\
+precision mediump float;\n\
+#endif\n\
+\n\
+uniform samplerCube " + m_cubemap_name + ";\n\
+\n\
+varying vec4    v_position;\n\
+\n\
+void main(void) {\n\
+    gl_FragColor = textureCube(" + m_cubemap_name + ", v_position.xyz);\n\
+}";
+
+        m_cubemap_shader.load(frag, vert, defines, false);
+    }
 
     // Turn on Alpha blending
     glEnable(GL_BLEND);
@@ -270,14 +309,27 @@ void Sandbox::draw() {
         m_buffers[i].unbind();
     }
 
+    // Cubemap
+    if (m_cubemap) {
+        m_cubemap_shader.use();
+
+        _updateUniforms( m_cubemap_shader );
+        // ((TextureCube*)textures[m_cubemap_name])->bind();
+        m_cubemap_shader.setUniform("u_eye3d", m_cam.getPosition());
+        m_cubemap_shader.setUniform("u_modelViewProjectionMatrix", m_cam.getProjectionMatrix() * m_cam.getRotationMatrix());
+        m_cubemap_shader.setUniform( m_cubemap_name, (TextureCube*)textures[m_cubemap_name], textureIndex++ );
+
+        // glDisable(GL_DEPTH_TEST);
+
+        m_cubemap_vbo->draw( &m_cubemap_shader );
+    }
+
     // need to update Background
     if ( m_shader.isBackground() != m_background_enabled) {
         _updateBackground();
     }
 
     if (m_background_enabled) {
-        glDisable(GL_DEPTH_TEST);
-
         m_background_shader.use();
 
         // Update Uniforms variables
@@ -293,7 +345,9 @@ void Sandbox::draw() {
         }
 
         m_billboard_vbo->draw( &m_background_shader );
+    }
 
+    if (iGeom != -1) {
         glEnable(GL_DEPTH_TEST);
     }
 
@@ -306,14 +360,18 @@ void Sandbox::draw() {
     // Update textures
     _updateTextures( m_shader, textureIndex );
 
+    if (m_cubemap) {
+        m_shader.setUniform( m_cubemap_name, (TextureCube*)textures[m_cubemap_name], textureIndex++ );
+    }
+
     // Pass all buffers
     for (unsigned int i = 0; i < m_buffers.size(); i++) {
         m_shader.setUniform("u_buffer" + toString(i), &m_buffers[i], textureIndex );
         textureIndex++;
     }
 
-    // Pass special uniforms
     glm::mat4 mvp = glm::mat4(1.);
+    // Pass special uniforms
     if (iGeom != -1) {
         m_shader.setUniform("u_eye", -m_cam.getPosition());
         m_shader.setUniform("u_normalMatrix", m_cam.getNormalMatrix());
@@ -327,6 +385,10 @@ void Sandbox::draw() {
     m_shader.setUniform("u_modelViewProjectionMatrix", mvp);
 
     m_vbo->draw( &m_shader );
+
+    if (iGeom != -1) {
+        glDisable(GL_DEPTH_TEST);
+    }
 
     if (screenshotFile != "") {
         onScreenshot(screenshotFile);
@@ -399,12 +461,15 @@ void Sandbox::onScroll(float _yoffset) {
 
 void Sandbox::onMouseDrag(float _x, float _y, int _button) {
     if (_button == 1) {
-        // Left-button drag is used to rotate geometry.
-        float dist = m_cam.getDistance();
-        m_lat -= getMouseVelX();
-        m_lon -= getMouseVelY()*0.5;
-        m_cam.orbit(m_lat ,m_lon, dist);
-        m_cam.lookAt(glm::vec3(0.0));
+
+        if (iGeom != -1) {
+            // Left-button drag is used to rotate geometry.
+            float dist = m_cam.getDistance();
+            m_lat -= getMouseVelX();
+            m_lon -= getMouseVelY()*0.5;
+            m_cam.orbit(m_lat ,m_lon, dist);
+            m_cam.lookAt(glm::vec3(0.0));
+        }
 
         // Left-button drag is used to pan u_view2d.
         m_view2d = glm::translate(m_view2d, -getMouseVelocity());
@@ -428,11 +493,14 @@ void Sandbox::onMouseDrag(float _x, float _y, int _button) {
         m_up3d += m_centre3d;
     } 
     else {
-        // Right-button drag is used to zoom geometry.
-        float dist = m_cam.getDistance();
-        dist += (-.008f * getMouseVelY());
-        if (dist > 0.0f) {
-            m_cam.setDistance( dist );
+
+        if (iGeom != -1) {
+            // Right-button drag is used to zoom geometry.
+            float dist = m_cam.getDistance();
+            dist += (-.008f * getMouseVelY());
+            if (dist > 0.0f) {
+                m_cam.setDistance( dist );
+            }
         }
 
         // TODO: rotate view2d.
@@ -450,7 +518,9 @@ void Sandbox::onMouseDrag(float _x, float _y, int _button) {
 }
 
 void Sandbox::onViewportResize(int _newWidth, int _newHeight) {
-    m_cam.setViewport(_newWidth,_newHeight);
+    if (iGeom != -1) {
+        m_cam.setViewport(_newWidth, _newHeight);
+    }
     for (unsigned int i = 0; i < m_buffers.size(); i++) {
         m_buffers[i].allocate(_newWidth, _newHeight, false);
     }
@@ -478,6 +548,10 @@ void Sandbox::delDefines(const std::string &_define) {
     }
 }
 
+void Sandbox::setCubeMapName(const std::string &_name) { 
+    m_cubemap_name = _name; 
+    m_cubemap = true; 
+};
 
 void Sandbox::clean() {
     for (TextureList::iterator i = textures.begin(); i != textures.end(); ++i) {
@@ -485,6 +559,12 @@ void Sandbox::clean() {
         i->second = NULL;
     }
     textures.clear();
+
     delete m_vbo;
-    delete m_billboard_vbo;
+
+    if (m_billboard_vbo)
+        delete m_billboard_vbo;
+
+    if (m_cubemap)
+        delete m_cubemap_vbo;
 }
