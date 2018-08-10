@@ -3,8 +3,6 @@
 
 #include "textureCube.h"
 
-#include "rgbe/rgbe.h"
-
 TextureCube::TextureCube() {
 }
 
@@ -120,7 +118,7 @@ void TextureCube::_flipHorizontal(Face* face) {
         int offset = i * face->width * 3;
         int bias = -(i + 1) * 3 * face->width;
 
-        std::memcpy(newData + dataSize + bias, face->data + offset, n);
+        memcpy(newData + dataSize + bias, face->data + offset, n);
     }
 
     delete[] face->data;
@@ -139,7 +137,7 @@ void TextureCube::_flipVertical(Face* face) {
             int offset = lineOffset + j * 3;
             int bias = lineOffset + face->width * 3 - (j + 1) * 3;
 
-            std::memcpy(newData + bias, face->data + offset, n);
+            memcpy(newData + bias, face->data + offset, n);
         }
     }
 

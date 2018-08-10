@@ -3,6 +3,11 @@
 
 #include "texture.h"
 
+#include <stdexcept>
+extern "C" {
+    #include "rgbe/rgbe.h"    
+}
+
 struct Face {
 	float *data;
 	int width;

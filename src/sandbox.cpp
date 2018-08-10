@@ -317,7 +317,7 @@ void Sandbox::draw() {
         // ((TextureCube*)textures[m_cubemap_name])->bind();
         m_cubemap_shader.setUniform("u_eye3d", m_cam.getPosition());
         m_cubemap_shader.setUniform("u_modelViewProjectionMatrix", m_cam.getProjectionMatrix() * m_cam.getRotationMatrix());
-        m_cubemap_shader.setUniform( m_cubemap_name, (TextureCube*)textures[m_cubemap_name], textureIndex++ );
+        m_cubemap_shader.setUniform( m_cubemap_name, ((TextureCube*)textures[m_cubemap_name]), textureIndex++ );
 
         // glDisable(GL_DEPTH_TEST);
 
@@ -361,7 +361,7 @@ void Sandbox::draw() {
     _updateTextures( m_shader, textureIndex );
 
     if (m_cubemap) {
-        m_shader.setUniform( m_cubemap_name, (TextureCube*)textures[m_cubemap_name], textureIndex++ );
+        m_shader.setUniform( m_cubemap_name, ((TextureCube*)textures[m_cubemap_name]), textureIndex++ );
     }
 
     // Pass all buffers
