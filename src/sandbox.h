@@ -10,14 +10,21 @@
 
 #include "tools/fs.h"
 
+typedef std::map<std::string,Texture*> TextureList;
+typedef std::vector<std::string> List;
+
 class Sandbox {
 public:
     Sandbox();
     
     // Main stages
-    void setup(WatchFileList &_files);
-    void draw();
-    void clean();
+    void        setup(WatchFileList &_files);
+    void        draw();
+    void        clean();
+    bool        reload();
+
+    void        addDefines(const std::string &_define);
+    void        delDefines(const std::string &_define);
 
     // Getting some data out of Sandbox
     std::string getVertexSource() const { return m_vertSource; } 
@@ -27,34 +34,34 @@ public:
     int         getTotalBuffers() const { return m_buffers.size(); }
     
     // Some events
-    void onFileChange(WatchFileList &_files, int _index);
-    void onScroll(float _yoffset);
-    void onScreenshot(std::string _file);
-    void onMouseDrag(float _x, float _y, int _button);
-    void onViewportResize(int _newWidth, int _newHeight);
+    void        onFileChange(WatchFileList &_files, int _index);
+    void        onScroll(float _yoffset);
+    void        onScreenshot(std::string _file);
+    void        onMouseDrag(float _x, float _y, int _button);
+    void        onViewportResize(int _newWidth, int _newHeight);
    
     // Uniforms
-    UniformList                     uniforms;
+    UniformList uniforms;
 
     // Textures
-    std::map<std::string,Texture*>  textures;
+    TextureList textures;
 
     // Defines
-    std::vector<std::string>        defines;
+    List        defines;
 
     // Include folders
-    std::vector<std::string>        include_folders;
+    List        include_folders;
 
     // Screenshot file
     std::string screenshotFile;
 
     // States
-    int iFrag;
-    int iVert;
-    int iGeom;
+    int         iFrag;
+    int         iVert;
+    int         iGeom;
 
-    bool verbose;
-    bool vFlip;
+    bool        verbose;
+    bool        vFlip;
 
 private:
     void _updateBackground(); 

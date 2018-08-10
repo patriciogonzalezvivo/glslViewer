@@ -24,9 +24,10 @@ WatchFileList files;
 std::mutex filesMutex;
 int fileChanged;
 
-std::mutex uniformsMutex;
-std::mutex screenshotMutex;
+std::mutex consoleMutex;
 std::string outputFile = "";
+
+std::string version = "1.5.1";
 
 // Here is where all the magic happens
 Sandbox sandbox;
@@ -38,39 +39,58 @@ void cinWatcherThread();
 //================================================================= Functions
 void onExit();
 void printUsage(char * executableName) {
-    std::cout << "// GlslViewer by Patricio Gonzalez Vivo ( patriciogonzalezvivo.com )" << std::endl; 
-    std::cerr << "// Usage: " << executableName << " <shader>.frag [<shader>.vert] [<mesh>.(obj/.ply)] [<texture>.(png/jpg)] [-<uniformName> <texture>.(png/jpg)] [-vFlip] [-x <x>] [-y <y>] [-w <width>] [-h <height>] [-l] [--square] [-s/--sec <seconds>] [-o <screenshot_file>.png] [--headless] [-c/--cursor] [-I<include_folder>] [-D<define>] [-v/--verbose] [--help]\n";
+    std::cout << "// GlslViewer " << version << " by Patricio Gonzalez Vivo ( patriciogonzalezvivo.com )" << std::endl;
+    std::cout << "// "<< std::endl;
+    std::cout << "// Swiss army knife of GLSL Shaders. Loads frag/vertex shaders, images and " << std::endl;
+    std::cout << "// geometries. Will reload automatically on changes. Support for multi  "<< std::endl;
+    std::cout << "// buffers, baground and postprocessing passes. Can render headlessly and "<< std::endl;
+    std::cout << "// into a file. Use POSIX STANDARD CONSOLE IN/OUT to comunicate (uniforms,"<< std::endl;
+    std::cout << "// camera position, scene description and  commands) to and with other "<< std::endl;
+    std::cout << "// programs. Compatible with Linux and MacOS, runs from command line with"<< std::endl;
+    std::cout << "// out X11 enviroment on RaspberryPi devices. "<< std::endl;
+    std::cout << "// "<< std::endl;
+    std::cerr << "// Usage: " << executableName << " <shader>.frag [<shader>.vert] [<mesh>.(obj/.ply)] [<texture>.(png/jpg)] [-<uniformName> <texture>.(png/jpg)] [-vFlip] [-x <x>] [-y <y>] [-w <width>] [-h <height>] [-l] [--square] [-s/--sec <seconds>] [-o <screenshot_file>.png] [--headless] [-c/--cursor] [-I<include_folder>] [-D<define>] [-v/--version] [--verbose] [--help]\n";
 }
 
 void printHelp() {
-    std::cout << "// GlslViewer by Patricio Gonzalez Vivo ( patriciogonzalezvivo.com )" << std::endl; 
-    std::cout << "//" << std::endl; 
+    std::cout << "// GlslViewer " << version << " by Patricio Gonzalez Vivo ( patriciogonzalezvivo.com )" << std::endl; 
+    std::cout << "//" << std::endl;
     std::cout << "// help           return this list of commands" << std::endl;
-    std::cout << "// date           return content of u_date as year, month, day and seconds" << std::endl;
-    std::cout << "// time           return content of u_time, the elapsed time since the app start" << std::endl;
-    std::cout << "// delta          return content of u_delta, the time between frames" << std::endl;
-    std::cout << "// fps            return content of u_fps, the number of frames per second" << std::endl;
-    std::cout << "// frag           return the source of the fragment shader" << std::endl;
-    std::cout << "// vert           return the source of the vertex shader" << std::endl;
-    std::cout << "// buffers        return a list of active buffers as their uniform name" << std::endl;
-    std::cout << "// uniforms       return a list of active uniforms and their values as CSV" << std::endl;
-    std::cout << "// textures       return a list of active textures as their uniform name and the image path" << std::endl;
+    std::cout << "//" << std::endl;
     std::cout << "// window_width   return the width of the windows" << std::endl;
     std::cout << "// window_height  return the height of the windows" << std::endl;
     std::cout << "// screen_size    return the width and height of the screen" << std::endl;
-    std::cout << "// viewport       return the size of the viewport (content of u_resolution) as CSV" << std::endl;
+    std::cout << "// viewport       return the size of the viewport (u_resolution)" << std::endl;
     std::cout << "// pixel_density  return the pixel density" << std::endl;
+    std::cout << "//" << std::endl;
+    std::cout << "// date           return u_date as YYYY, M, D and Secs" << std::endl;
+    std::cout << "// time           return u_time, the elapsed time" << std::endl;
+    std::cout << "// delta          return u_delta, the secs between frames" << std::endl;
+    std::cout << "// fps            return u_fps, the number of frames per second" << std::endl;
     std::cout << "// mouse_x        return the position of the mouse in x" << std::endl;
     std::cout << "// mouse_y        return the position of the mouse in x" << std::endl;
-    std::cout << "// mouse          return the position of the mouse (content of u_mouse) as CSV" << std::endl;
-    std::cout << "// view3d         returns the position of the camera, the up-vector and the center of the object." << std::endl;
+    std::cout << "// mouse          return the position of the mouse (u_mouse)" << std::endl;
+    std::cout << "//" << std::endl; 
+    std::cout << "// files          return a list of files" << std::endl;
+    std::cout << "// frag           return the fragment shader source code" << std::endl;
+    std::cout << "// vert           return the vertex shader source code" << std::endl;
+    std::cout << "// buffers        return a list of buffers as their uniform name" << std::endl;
+    std::cout << "// uniforms       return a list of uniforms and their values" << std::endl;
+    std::cout << "// textures       return a list of textures as their uniform name and path" << std::endl;
     std::cout << "//" << std::endl;
-    std::cout << "// camera_distance                returns the distance of the camera to the model." << std::endl;
+    std::cout << "// defines            return a list of active defines" << std::endl;
+    std::cout << "// define,[DEFINE]    add a define to the shader" << std::endl;
+    std::cout << "// undefine,[DEFINE]  remove a define on the shader" << std::endl;
+    std::cout << "//" << std::endl;
+    std::cout << "// view3d                         returns the position of the camera," << std::endl;
+    std::cout << "//                                the up-vector and the center of model." << std::endl;
+    std::cout << "// camera_distance                returns camera to target distance." << std::endl;
     std::cout << "// camera_distance,[distance]     set the camera distance to the target." << std::endl;
     std::cout << "// camera_position                returns the position of the camera." << std::endl;
     std::cout << "// camera_position,[x],[y],[z]    set the position." << std::endl;
-    std::cout << "// screenshot,[filename]          makes a screenshot and save it in the filename provided." << std::endl;
+    std::cout << "// screenshot,[filename]          saves a screenshot to a filename." << std::endl;
     std::cout << "//" << std::endl;
+    std::cout << "// version        return glslViewer version" << std::endl;
     std::cout << "// exit           close glslViewer" << std::endl;
 }
 
@@ -154,8 +174,7 @@ int main(int argc, char **argv){
         else if (   argument == "-l" ||
                     argument == "--headless") {
         }
-        else if (   argument == "-v" || 
-                    argument == "--verbose" ) {
+        else if (   argument == "--verbose" ) {
             sandbox.verbose = true;
         }
         else if ( argument == "-c" || argument == "--cursor" ) {
@@ -255,6 +274,10 @@ int main(int argc, char **argv){
         else if ( argument.find("-I") == 0 ) {
             std::string include = argument.substr(2);
             sandbox.include_folders.push_back(include);
+        }
+        else if (   argument == "-v" || 
+                    argument == "--version") {
+            std::cout << version << std::endl;
         }
         else if ( argument.find("-") == 0 ) {
             std::string parameterPair = argument.substr( argument.find_last_of('-') + 1 );
@@ -400,9 +423,19 @@ void cinWatcherThread() {
         else if (line == "vert") {
             std::cout << sandbox.getVertexSource() << std::endl;
         }
+        else if (line == "files") {
+            for (unsigned int i = 0; i < files.size(); i++) {
+                std::cout << std::setw(2) << i << "," << std::setw(9) << files[i].type << "," << files[i].path << std::endl;
+            }
+        }
         else if (line == "buffers") {
             for (int i = 0; i < sandbox.getTotalBuffers(); i++) {
-                std::cout << "u_buffer" << i<< std::endl;
+                std::cout << "u_buffer" << i << std::endl;
+            }
+        }
+        else if (line == "defines") {
+            for (unsigned int i = 0; i < sandbox.defines.size(); i++) {
+                std::cout << sandbox.defines[i] << std::endl;
             }
         }
         else if (line == "uniforms") {
@@ -415,7 +448,7 @@ void cinWatcherThread() {
             }
         }
         else if (line == "textures") {
-            for (std::map<std::string,Texture*>::iterator it = sandbox.textures.begin(); it != sandbox.textures.end(); ++it) {
+            for (TextureList::iterator it = sandbox.textures.begin(); it != sandbox.textures.end(); ++it) {
                 std::cout << it->first << ',' << it->second->getFilePath() << std::endl;
             }
         }
@@ -446,6 +479,9 @@ void cinWatcherThread() {
             glm::vec2 pos = getMousePosition();
             std::cout << pos.x << "," << pos.y << std::endl;
         }
+        else if (line == "version") {
+            std::cout << version << std::endl;
+        }
         // GET/SET 
         //
         else if (beginsWith(line, "camera_distance")) {
@@ -473,24 +509,46 @@ void cinWatcherThread() {
         }
         else if (beginsWith(line, "screenshot")) {
             if (line == "screenshot" && outputFile != "") {
-                screenshotMutex.lock();
+                consoleMutex.lock();
                 sandbox.screenshotFile = outputFile;
-                screenshotMutex.unlock();
+                consoleMutex.unlock();
             }
             else {
                 std::vector<std::string> values = split(line,',');
                 if (values.size() == 2) {
-                    screenshotMutex.lock();
+                    consoleMutex.lock();
                     sandbox.screenshotFile = values[1];
-                    screenshotMutex.unlock();
+                    consoleMutex.unlock();
                 }
             }
         }
         // SET ONLY
+        else if (beginsWith(line, "define")) {
+            std::vector<std::string> values = split(line,',');
+            if (values.size() == 2) {
+                consoleMutex.lock();
+                sandbox.addDefines( values[1] ); 
+                consoleMutex.unlock();
+                filesMutex.lock();
+                fileChanged = sandbox.iFrag;
+                filesMutex.unlock();
+            }
+        }
+        else if (beginsWith(line, "undefine")) {
+            std::vector<std::string> values = split(line,',');
+            if (values.size() == 2) {
+                consoleMutex.lock();
+                sandbox.delDefines( values[1] ); 
+                consoleMutex.unlock();
+                filesMutex.lock();
+                fileChanged = sandbox.iFrag;
+                filesMutex.unlock();
+            }
+        }
         else {
-            uniformsMutex.lock();
+            consoleMutex.lock();
             parseUniforms(line, &sandbox.uniforms);
-            uniformsMutex.unlock();
+            consoleMutex.unlock();
         }
 
         std::cout << "// > ";

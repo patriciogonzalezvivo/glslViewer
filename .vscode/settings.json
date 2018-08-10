@@ -35,6 +35,7 @@
         "map": "cpp",
         "__locale": "cpp",
         "utility": "cpp",
-        "array": "cpp"
+        "array": "cpp",
+        "fstream": "cpp"
     }
 }

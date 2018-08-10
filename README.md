@@ -4,7 +4,7 @@
 
 [![Donate](https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=4BQMKQJDQ9XH6)
 
-Live-coding console tool that renders GLSL Shaders. Every file you use (frag/vert shader, images and geometries) are watched for modification, so they can be updated on the fly.
+Swiss army knife of GLSL Shaders. Loads frag/vertex shaders, images and geometries. Will reload automatically on changes. Support for multi buffers, baground and postprocessing passes. Can render headlessly and into a file. Use POSIX STANDARD CONSOLE IN/OUT to comunicate (uniforms, camera position, scene description and commands) to and with other programs. Compatible with Linux and MacOS, runs from command line with out X11 enviroment on RaspberryPi devices. 
 
 ## Install
 
@@ -228,7 +228,9 @@ Beside for texture uniforms other arguments can be add to `glslViewer`:
 
 * `-vFlip` all textures after will be flipped vertically
 
-*  `-v` verbose outputs
+*  `-v` or `--version` return glslViewer version
+
+*  `--verbose` turn verbose outputs on
 
 * `--help` display the available command line options
 
@@ -252,7 +254,15 @@ Once glslViewer is running the CIN is listening for some commands, so you can pa
 
 * `vert`: return the source of the vertex shader
 
+* `file`: return a list of files
+
 * `buffers`: return a list of active buffers as their sampler2D uniform name
+
+* `defines`: return a list of active defines
+
+* `define,[DEFINE]`: add define flag to the shader
+
+* `undefine,[DEFINE]`: removes define flag to the shader
 
 * `uniforms`: return a list of active uniforms together with their values in CSV format 
 

@@ -232,7 +232,7 @@ void Sandbox::_updateUniforms( Shader &_shader ) {
 
 void Sandbox::_updateTextures( Shader &_shader, int &_textureIndex ) {
     // Pass Textures Uniforms
-    for (std::map<std::string,Texture*>::iterator it = textures.begin(); it!=textures.end(); ++it) {
+    for (TextureList::iterator it = textures.begin(); it!=textures.end(); ++it) {
         _shader.setUniform(it->first, it->second, _textureIndex );
         _shader.setUniform(it->first+"Resolution", it->second->getWidth(), it->second->getHeight());
         _textureIndex++;
@@ -334,6 +334,19 @@ void Sandbox::draw() {
     }
 }
 
+bool Sandbox::reload() {
+    m_shader.detach(GL_FRAGMENT_SHADER | GL_VERTEX_SHADER);
+    bool success = m_shader.load(m_fragSource, m_vertSource, defines, verbose);
+
+    if (!success) {
+        std::string default_vert = m_vbo->getVertexLayout()->getDefaultVertShader(); 
+        std::string default_frag = m_vbo->getVertexLayout()->getDefaultFragShader(); 
+        m_shader.load(default_frag, default_vert, defines, false);
+    }
+
+    return success;
+}
+
 void Sandbox::onFileChange(WatchFileList &_files, int index) {
     std::string type = _files[index].type;
     std::string path = _files[index].path;
@@ -341,15 +354,7 @@ void Sandbox::onFileChange(WatchFileList &_files, int index) {
     if (type == "fragment") {
         m_fragSource = "";
         if (loadFromPath(path, &m_fragSource, include_folders)) {
-            m_shader.detach(GL_FRAGMENT_SHADER | GL_VERTEX_SHADER);
-            bool success = m_shader.load(m_fragSource, m_vertSource, defines, verbose);
-
-            if (!success) {
-                std::string default_vert = m_vbo->getVertexLayout()->getDefaultVertShader(); 
-                std::string default_frag = m_vbo->getVertexLayout()->getDefaultFragShader(); 
-                m_shader.load(default_frag, default_vert, defines, false);
-            }
-
+            reload();
             _updateBackground();
             _updateBuffers();
         }
@@ -357,21 +362,14 @@ void Sandbox::onFileChange(WatchFileList &_files, int index) {
     else if (type == "vertex") {
         m_vertSource = "";
         if (loadFromPath(path, &m_vertSource, include_folders)) {
-            m_shader.detach(GL_FRAGMENT_SHADER | GL_VERTEX_SHADER);
-            bool success = m_shader.load(m_fragSource, m_vertSource, defines, verbose);
-
-            if (!success) {
-                std::string default_vert = m_vbo->getVertexLayout()->getDefaultVertShader(); 
-                std::string default_frag = m_vbo->getVertexLayout()->getDefaultFragShader(); 
-                m_shader.load(default_frag, default_vert, defines, false);
-            }
+            reload();
         }
     }
     else if (type == "geometry") {
         // TODO
     }
     else if (type == "image") {
-        for (std::map<std::string,Texture*>::iterator it = textures.begin(); it!=textures.end(); ++it) {
+        for (TextureList::iterator it = textures.begin(); it!=textures.end(); ++it) {
             if (path == it->second->getFilePath()) {
                 it->second->load(path, _files[index].vFlip);
                 break;
@@ -464,14 +462,29 @@ void Sandbox::onScreenshot(std::string _file) {
         glReadPixels(0, 0, getWindowWidth(), getWindowHeight(), GL_RGBA, GL_UNSIGNED_BYTE, pixels);
         Texture::savePixels(_file, pixels, getWindowWidth(), getWindowHeight());
         std::cout << "// Screenshot saved to " << _file << std::endl;
+        std::cout << "// > ";
     }
 }
 
+void Sandbox::addDefines(const std::string &_define) {
+    defines.push_back(_define);
+}
+
+void Sandbox::delDefines(const std::string &_define) {
+    for (int i = (int)defines.size() - 1; i >= 0 ; i--) {
+        if ( defines[i] == _define ) {
+            defines.erase(defines.begin() + i);
+        }
+    }
+}
+
+
 void Sandbox::clean() {
-    for (std::map<std::string,Texture*>::iterator i = textures.begin(); i != textures.end(); ++i) {
+    for (TextureList::iterator i = textures.begin(); i != textures.end(); ++i) {
         delete i->second;
         i->second = NULL;
     }
     textures.clear();
     delete m_vbo;
+    delete m_billboard_vbo;
 }
