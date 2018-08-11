@@ -38,7 +38,7 @@ enum rgbe_error_codes {
 };
 
 /* default error routine.  change this to change error handling */
-static int rgbe_error(int rgbe_error_code, char *msg)
+static int rgbe_error(int rgbe_error_code, char const *msg)
 {
   switch (rgbe_error_code) {
   case rgbe_read_error:
@@ -101,7 +101,7 @@ rgbe2float(float *red, float *green, float *blue, unsigned char rgbe[4])
 /* default minimal header. modify if you want more information in header */
 int RGBE_WriteHeader(FILE *fp, int width, int height, rgbe_header_info *info)
 {
-  char *programtype = "RGBE";
+  char const *programtype = "RGBE";
 
   if (info && (info->valid & RGBE_VALID_PROGRAMTYPE))
     programtype = info->programtype;
@@ -127,11 +127,9 @@ int RGBE_WriteHeader(FILE *fp, int width, int height, rgbe_header_info *info)
 int RGBE_ReadHeader(FILE *fp, int *width, int *height, rgbe_header_info *info)
 {
   char buf[128];
-  int found_format;
   float tempf;
-  int i;
+  unsigned int i;
 
-  found_format = 0;
   if (info) {
     info->valid = 0;
     info->programtype[0] = 0;
@@ -146,7 +144,7 @@ int RGBE_ReadHeader(FILE *fp, int *width, int *height, rgbe_header_info *info)
   }
   else if (info) {
     info->valid |= RGBE_VALID_PROGRAMTYPE;
-    for(i=0;i<sizeof(info->programtype)-1;i++) {
+    for( i=0; i < sizeof(info->programtype)-1; i++) {
       if ((buf[i+2] == 0) || isspace(buf[i+2]))
 	break;
       info->programtype[i] = buf[i+2];
@@ -158,7 +156,7 @@ int RGBE_ReadHeader(FILE *fp, int *width, int *height, rgbe_header_info *info)
 
   for(;;) {
     if ((buf[0] == 0)||(buf[0] == '\n'))
-      return rgbe_error(rgbe_format_error,"no FORMAT specifier found");
+      return rgbe_error(rgbe_format_error, "no FORMAT specifier found" );
     else if (strcmp(buf,"FORMAT=32-bit_rle_rgbe\n") == 0)
       break;       /* format found so break out of loop */
     else if (info && (sscanf(buf,"GAMMA=%g",&tempf) == 1)) {
