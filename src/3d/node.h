@@ -34,7 +34,6 @@ public:
     glm::vec3   getScale() const;
 
     const glm::mat4& getTransformMatrix() const;
-    const glm::mat4& getRotationMatrix() const;
 
     void    move(const glm::vec3& _offset);
 

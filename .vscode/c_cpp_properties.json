@@ -44,6 +44,8 @@
                 "limitSymbolsToIncludedHeaders": true,
                 "databaseFilename": "",
                 "path": [
+                    "${workspaceRoot}/src",
+                    "${workspaceRoot}/include",
                     "/usr/include",
                     "/usr/local/include"
                 ]

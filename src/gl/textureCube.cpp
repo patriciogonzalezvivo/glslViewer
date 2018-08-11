@@ -92,18 +92,19 @@ bool TextureCube::load(const std::string &_path, bool _vFlip) {
     }
     glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 
-    std::cout << "// HDR Texture parameters : " << std::endl;
-    std::cout << "//  - Format: " << ((Format == GL_RGB) ? "RGB" : "") << std::endl;
-    std::cout << "//  - Type : " << ((Type == GL_FLOAT) ? "Float" : "") << std::endl;
-    std::cout << "//  - Internal Format : " << ((InternalFormat == GL_RGB8) ? "RGB8" : "RGB16F") << std::endl;
+    // std::cout << "// HDR Texture parameters : " << std::endl;
+    // std::cout << "//  - Format: " << ((Format == GL_RGB) ? "RGB" : "") << std::endl;
+    // std::cout << "//  - Type : " << ((Type == GL_FLOAT) ? "Float" : "") << std::endl;
+    // std::cout << "//  - Internal Format : " << ((InternalFormat == GL_RGB8) ? "RGB8" : "RGB16F") << std::endl;
 
-    // Debug
-    std::cout << "//  - width : " << m_width << "px" << std::endl;
-    std::cout << "//  - height : " << m_height << "px" << std::endl;
-    std::cout << "//  - memory size : " << (3 * m_width * m_height * sizeof(float)) / 8 << " bytes" << std::endl;
-    std::cout << "// Generating texture cube.." << std::endl;
+    // // Debug
+    // std::cout << "//  - width : " << m_width << "px" << std::endl;
+    // std::cout << "//  - height : " << m_height << "px" << std::endl;
+    // std::cout << "//  - memory size : " << (3 * m_width * m_height * sizeof(float)) / 8 << " bytes" << std::endl;
+    // std::cout << "// Generating texture cube.." << std::endl;
 
     m_path = _path;
+
     delete[] data;
     
     return true;

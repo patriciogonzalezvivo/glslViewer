@@ -133,11 +133,7 @@ precision mediump float;\n\
 #endif\n\
 \n\
 uniform mat4    u_modelViewProjectionMatrix;\n\
-uniform vec3    m_centre3d;\n\
-uniform vec3    u_eye3d;\n\
-\n\
 attribute vec4  a_position;\n\
-\n\
 varying vec4    v_position;\n\
 \n\
 void main(void) {\n\
@@ -159,6 +155,8 @@ void main(void) {\n\
 }";
 
         m_cubemap_shader.load(frag, vert, defines, false);
+
+        std::cout << "CUBEMAP SHADER LOADED" << std::endl;
     }
 
     // Turn on Alpha blending
@@ -309,21 +307,6 @@ void Sandbox::draw() {
         m_buffers[i].unbind();
     }
 
-    // Cubemap
-    if (m_cubemap) {
-        m_cubemap_shader.use();
-
-        _updateUniforms( m_cubemap_shader );
-        // ((TextureCube*)textures[m_cubemap_name])->bind();
-        m_cubemap_shader.setUniform("u_eye3d", m_cam.getPosition());
-        m_cubemap_shader.setUniform("u_modelViewProjectionMatrix", m_cam.getProjectionMatrix() * m_cam.getRotationMatrix());
-        m_cubemap_shader.setUniform( m_cubemap_name, ((TextureCube*)textures[m_cubemap_name]), textureIndex++ );
-
-        // glDisable(GL_DEPTH_TEST);
-
-        m_cubemap_vbo->draw( &m_cubemap_shader );
-    }
-
     // need to update Background
     if ( m_shader.isBackground() != m_background_enabled) {
         _updateBackground();
@@ -345,6 +328,17 @@ void Sandbox::draw() {
         }
 
         m_billboard_vbo->draw( &m_background_shader );
+    }
+    // Cubemap
+    else if (iGeom != -1 && m_cubemap) {
+        m_cubemap_shader.use();
+
+        // _updateUniforms( m_cubemap_shader );
+        m_cubemap_shader.setUniform("u_modelViewProjectionMatrix", m_cam.getProjectionMatrix() * glm::toMat4(m_cam.getOrientationQuat()) );
+        m_cubemap_shader.setUniform( m_cubemap_name, ((TextureCube*)textures[m_cubemap_name]), textureIndex++ );
+
+        // glDisable(GL_DEPTH_TEST);
+        m_cubemap_vbo->draw( &m_cubemap_shader );
     }
 
     if (iGeom != -1) {
