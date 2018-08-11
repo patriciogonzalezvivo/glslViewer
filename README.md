@@ -216,7 +216,7 @@ Beside for texture uniforms other arguments can be add to `glslViewer`:
 
 * `-l` to draw a 500x500 billboard on the top right corner of the screen that let you see the code and the shader at the same time. (RaspberryPi only)
 
-* `-c`or `--cursor` show cursor.
+* `--cursor` show cursor.
 
 * `--headless` headless rendering. Very useful for making images or benchmarking.
 

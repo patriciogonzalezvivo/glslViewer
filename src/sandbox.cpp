@@ -155,8 +155,6 @@ void main(void) {\n\
 }";
 
         m_cubemap_shader.load(frag, vert, defines, false);
-
-        std::cout << "CUBEMAP SHADER LOADED" << std::endl;
     }
 
     // Turn on Alpha blending

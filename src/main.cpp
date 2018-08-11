@@ -50,7 +50,7 @@ void printUsage(char * executableName) {
     std::cout << "// programs. Compatible with Linux and MacOS, runs from command line with"<< std::endl;
     std::cout << "// out X11 enviroment on RaspberryPi devices. "<< std::endl;
     std::cout << "// "<< std::endl;
-    std::cerr << "// Usage: " << executableName << " <shader>.frag [<shader>.vert] [<mesh>.(obj/.ply)] [<texture>.(png/jpg)] [-<uniformName> <texture>.(png/jpg)] [-c <cubemap>.hdr] [-vFlip] [-x <x>] [-y <y>] [-w <width>] [-h <height>] [-l] [--square] [-s/--sec <seconds>] [-o <screenshot_file>.png] [--headless] [-c/--cursor] [-I<include_folder>] [-D<define>] [-v/--version] [--verbose] [--help]\n";
+    std::cerr << "// Usage: " << executableName << " <shader>.frag [<shader>.vert] [<mesh>.(obj/.ply)] [<texture>.(png/jpg)] [-<uniformName> <texture>.(png/jpg)] [-c <cubemap>.hdr] [-vFlip] [-x <x>] [-y <y>] [-w <width>] [-h <height>] [-l] [--square] [-s/--sec <seconds>] [-o <screenshot_file>.png] [--headless] [--cursor] [-I<include_folder>] [-D<define>] [-v/--version] [--verbose] [--help]\n";
 }
 
 void printHelp() {
@@ -179,7 +179,7 @@ int main(int argc, char **argv){
         else if (   argument == "--verbose" ) {
             sandbox.verbose = true;
         }
-        else if ( argument == "-c" || argument == "--cursor" ) {
+        else if ( argument == "--cursor" ) {
             cursor.init();
         }
         else if ( argument == "-s" || argument == "--sec" ) {
