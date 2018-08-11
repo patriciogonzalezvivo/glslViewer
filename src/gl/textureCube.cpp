@@ -80,16 +80,34 @@ bool TextureCube::load(const std::string &_path, bool _vFlip) {
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+#ifndef PLATFORM_RPI
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+#endif
 
     GLenum Format = GL_RGB;
     GLenum Type = GL_FLOAT;
+#ifndef PLATFORM_RPI
     GLenum InternalFormat = GL_RGB16F_ARB;
 
     for(int i = 0; i < 6; ++i) {
         Face *f = m_faces[i];
         glTexImage2D(CubeMapFace[i], 0, InternalFormat, f->width, f->height, 0, Format, Type, f->data);
     }
+ #else
+    GLenum InternalFormat = GL_RGB;
+    for(int i = 0; i < 6; ++i) {
+        Face *f = m_faces[i];
+        int total = 3 * faceWidth * faceHeight;
+        unsigned char pixels[total];
+        
+        for (int j = 0; j < total; i++) {
+            pixels[i] = (int)(f->data[i] * 255);
+        }
+        glTexImage2D(CubeMapFace[i], 0, InternalFormat, f->width, f->height, 0, Format, Type, pixels);
+        //delete[] pixels;
+    }
+ #endif
+
     glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 
     // std::cout << "// HDR Texture parameters : " << std::endl;
