@@ -224,7 +224,9 @@ Beside for texture uniforms other arguments can be add to `glslViewer`:
 
 * `-D[define]` add system `#define`s directly from the console argument
 
-* `-[texture_uniform_name] [texture.png]`: add textures associated with different `uniform sampler2D`names
+* `-[texture_uniform_name] [texture].[png|jpg]`: add textures associated with different `uniform sampler2D`names
+
+* `-c [cubemap].hdr`: load a HDR cubemap
 
 * `-vFlip` all textures after will be flipped vertically
 

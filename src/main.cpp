@@ -50,7 +50,7 @@ void printUsage(char * executableName) {
     std::cout << "// programs. Compatible with Linux and MacOS, runs from command line with"<< std::endl;
     std::cout << "// out X11 enviroment on RaspberryPi devices. "<< std::endl;
     std::cout << "// "<< std::endl;
-    std::cerr << "// Usage: " << executableName << " <shader>.frag [<shader>.vert] [<mesh>.(obj/.ply)] [<texture>.(png/jpg)] [-<uniformName> <texture>.(png/jpg)] [-vFlip] [-x <x>] [-y <y>] [-w <width>] [-h <height>] [-l] [--square] [-s/--sec <seconds>] [-o <screenshot_file>.png] [--headless] [-c/--cursor] [-I<include_folder>] [-D<define>] [-v/--version] [--verbose] [--help]\n";
+    std::cerr << "// Usage: " << executableName << " <shader>.frag [<shader>.vert] [<mesh>.(obj/.ply)] [<texture>.(png/jpg)] [-<uniformName> <texture>.(png/jpg)] [-c <cubemap>.hdr] [-vFlip] [-x <x>] [-y <y>] [-w <width>] [-h <height>] [-l] [--square] [-s/--sec <seconds>] [-o <screenshot_file>.png] [--headless] [-c/--cursor] [-I<include_folder>] [-D<define>] [-v/--version] [--verbose] [--help]\n";
 }
 
 void printHelp() {
@@ -163,7 +163,6 @@ int main(int argc, char **argv){
     struct stat st; // for files to watch
     float timeLimit = -1.0f; //  Time limit
     int textureCounter = 0; // Number of textures to load
-    int textureCubeCounter = 0; // Number of cube textures to load
 
     //Load the the resources (textures)
     for (int i = 1; i < argc ; i++){
@@ -270,30 +269,34 @@ int main(int argc, char **argv){
                 }
             }
         }
-        else if (   haveExt(argument,"hdr") || haveExt(argument,"HDR") ) {
-            if ( stat(argument.c_str(), &st) != 0 ) {
-                std::cerr << "Error watching file " << argument << std::endl;
+        else if ( argument == "-c" ) {
+            i++;
+            argument = std::string(argv[i]);
+            if ( haveExt(argument, "hdr") || haveExt(argument,"HDR") ) {
+                if ( stat(argument.c_str(), &st) != 0 ) {
+                    std::cerr << "Error watching file " << argument << std::endl;
+                }
+                else {
+                    TextureCube* tex = new TextureCube();
+                    if ( tex->load(argument, sandbox.vFlip) ) {
+                        std::string name = "u_cubeMap";
+                        sandbox.textures[name] = tex;
+                        sandbox.setCubeMapName(name);
+
+                        WatchFile file;
+                        file.type = "imageCube";
+                        file.path = argument;
+                        file.lastChange = st.st_mtime;
+                        file.vFlip = sandbox.vFlip;
+                        files.push_back(file);
+
+                        std::cout << "// " << argument << " loaded as: " << std::endl;
+                        std::cout << "//    uniform samplerCube " << name  << ";"<< std::endl;
+                    }
+                }
             }
             else {
-                TextureCube* tex = new TextureCube();
-
-                if ( tex->load(argument, sandbox.vFlip) ) {
-                    std::string name = "u_cubeMap"+toString(textureCubeCounter);
-                    sandbox.textures[name] = tex;
-                    sandbox.setCubeMapName(name);
-
-                    WatchFile file;
-                    file.type = "imageCube";
-                    file.path = argument;
-                    file.lastChange = st.st_mtime;
-                    file.vFlip = sandbox.vFlip;
-                    files.push_back(file);
-
-                    std::cout << "// " << argument << " loaded as: " << std::endl;
-                    std::cout << "//    uniform samplerCube " << name  << ";"<< std::endl;
-                    std::cout << "//    uniform vec2 " << name  << "Resolution;"<< std::endl;
-                    textureCubeCounter++;
-                }
+                std::cerr << "At the moment cubemaps only support HDR formats" << std::endl;
             }
         }
         else if ( argument.find("-D") == 0 ) {
