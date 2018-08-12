@@ -89,7 +89,7 @@ void printHelp() {
     std::cout << "// camera_position[,x][,y][,z]    set the position." << std::endl;
     std::cout << "//" << std::endl;
     std::cout << "// screenshot[,filename]      saves a screenshot to a filename." << std::endl;
-    std::cout << "// secuence,<A_sec>,<B_sec>   saves a secuence of images from A to B second." << std::endl;
+    std::cout << "// sequence,<A_sec>,<B_sec>   saves a sequence of images from A to B second." << std::endl;
     std::cout << "// frag[,filename]            returns or save the fragment shader source code." << std::endl;
     std::cout << "// vert[,filename]            return or save the vertex shader source code." << std::endl;
     std::cout << "//" << std::endl;
@@ -567,14 +567,14 @@ void cinWatcherThread() {
                 }
             }
         }
-        else if (beginsWith(line, "secuence")) {
+        else if (beginsWith(line, "sequence")) {
             std::vector<std::string> values = split(line,',');
             if (values.size() == 3) {
                 consoleMutex.lock();
                 sandbox.record(toFloat(values[1]), toFloat(values[2]));
                 consoleMutex.unlock();
 
-                std::cout << "// Start secuence recording... " << std::endl;
+                std::cout << "// " << std::endl;
 
                 int pct = 0;
                 while (pct < 100) {

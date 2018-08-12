@@ -284,7 +284,7 @@ Once glslViewer is running the CIN is listening for some commands, so you can pa
 
 * `screenshot,[filename]`: save a screenshot of what's being rendered. If there is no filename as argument will default to what was defined after the `-o` argument when glslViewer was launched.
 
-* `secuence,<start_sec>,<end_sec>`:   saves a secuence of images from A to B second.
+* `sequence,<start_sec>,<end_sec>`:   saves a sequence of images from A to B second.
 
 * `q`, `quit` or `exit`: close glslViewer
 
