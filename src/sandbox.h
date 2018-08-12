@@ -24,6 +24,9 @@ public:
     void        clean();
     bool        reload();
 
+    void        record(float _start, float _end);
+    int         getRecordedPorcentage();
+
     void        addDefines(const std::string &_define);
     void        delDefines(const std::string &_define);
 
@@ -109,4 +112,11 @@ private:
     std::string         m_cubemap_name;
     Vbo*                m_cubemap_vbo;
     bool                m_cubemap;
+
+    // Recording
+    float               m_record_start;
+    float               m_record_head;
+    float               m_record_end;
+    int                 m_record_counter;
+    bool                m_record;
 };

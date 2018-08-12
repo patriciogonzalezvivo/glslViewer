@@ -56,26 +56,26 @@ void printUsage(char * executableName) {
 void printHelp() {
     std::cout << "// GlslViewer " << version << " by Patricio Gonzalez Vivo ( patriciogonzalezvivo.com )" << std::endl; 
     std::cout << "//" << std::endl;
-    std::cout << "// help           return this list of commands" << std::endl;
+    std::cout << "// help           return this list of commands." << std::endl;
     std::cout << "//" << std::endl;
-    std::cout << "// window_width   return the width of the windows" << std::endl;
-    std::cout << "// window_height  return the height of the windows" << std::endl;
-    std::cout << "// screen_size    return the width and height of the screen" << std::endl;
-    std::cout << "// viewport       return the size of the viewport (u_resolution)" << std::endl;
+    std::cout << "// window_width   return the width of the windows." << std::endl;
+    std::cout << "// window_height  return the height of the windows." << std::endl;
+    std::cout << "// screen_size    return the width and height of the screen." << std::endl;
+    std::cout << "// viewport       return the size of the viewport (u_resolution)." << std::endl;
     std::cout << "// pixel_density  return the pixel density" << std::endl;
     std::cout << "//" << std::endl;
-    std::cout << "// date           return u_date as YYYY, M, D and Secs" << std::endl;
-    std::cout << "// time           return u_time, the elapsed time" << std::endl;
-    std::cout << "// delta          return u_delta, the secs between frames" << std::endl;
-    std::cout << "// fps            return u_fps, the number of frames per second" << std::endl;
-    std::cout << "// mouse_x        return the position of the mouse in x" << std::endl;
-    std::cout << "// mouse_y        return the position of the mouse in x" << std::endl;
-    std::cout << "// mouse          return the position of the mouse (u_mouse)" << std::endl;
+    std::cout << "// date           return u_date as YYYY, M, D and Secs." << std::endl;
+    std::cout << "// time           return u_time, the elapsed time." << std::endl;
+    std::cout << "// delta          return u_delta, the secs between frames." << std::endl;
+    std::cout << "// fps            return u_fps, the number of frames per second." << std::endl;
+    std::cout << "// mouse_x        return the position of the mouse in x." << std::endl;
+    std::cout << "// mouse_y        return the position of the mouse in x." << std::endl;
+    std::cout << "// mouse          return the position of the mouse (u_mouse)." << std::endl;
     std::cout << "//" << std::endl; 
     std::cout << "// files          return a list of files" << std::endl;
-    std::cout << "// buffers        return a list of buffers as their uniform name" << std::endl;
-    std::cout << "// uniforms       return a list of uniforms and their values" << std::endl;
-    std::cout << "// textures       return a list of textures as their uniform name and path" << std::endl;
+    std::cout << "// buffers        return a list of buffers as their uniform name." << std::endl;
+    std::cout << "// uniforms       return a list of uniforms and their values." << std::endl;
+    std::cout << "// textures       return a list of textures as their uniform name and path." << std::endl;
     std::cout << "//" << std::endl;
     std::cout << "// defines            return a list of active defines" << std::endl;
     std::cout << "// define,<DEFINE>    add a define to the shader" << std::endl;
@@ -89,8 +89,9 @@ void printHelp() {
     std::cout << "// camera_position[,x][,y][,z]    set the position." << std::endl;
     std::cout << "//" << std::endl;
     std::cout << "// screenshot[,filename]      saves a screenshot to a filename." << std::endl;
-    std::cout << "// frag[,filename]            returns or save the fragment shader source code " << std::endl;
-    std::cout << "// vert[,filename]            return or save the vertex shader source code" << std::endl;
+    std::cout << "// secuence,<A_sec>,<B_sec>   saves a secuence of images from A to B second." << std::endl;
+    std::cout << "// frag[,filename]            returns or save the fragment shader source code." << std::endl;
+    std::cout << "// vert[,filename]            return or save the vertex shader source code." << std::endl;
     std::cout << "//" << std::endl;
     std::cout << "// version        return glslViewer version" << std::endl;
     std::cout << "// exit           close glslViewer" << std::endl;
@@ -563,6 +564,36 @@ void cinWatcherThread() {
                     consoleMutex.lock();
                     sandbox.screenshotFile = values[1];
                     consoleMutex.unlock();
+                }
+            }
+        }
+        else if (beginsWith(line, "secuence")) {
+            std::vector<std::string> values = split(line,',');
+            if (values.size() == 3) {
+                consoleMutex.lock();
+                sandbox.record(toFloat(values[1]), toFloat(values[2]));
+                consoleMutex.unlock();
+
+                std::cout << "// Start secuence recording... " << std::endl;
+
+                int pct = 0;
+                while (pct < 100) {
+                    const std::string deleteLine = "\e[2K\r\e[1A";
+                    std::cout << deleteLine;
+                    consoleMutex.lock();
+                    pct = sandbox.getRecordedPorcentage();
+                    consoleMutex.unlock();
+                    std::cout << "// [ ";
+                    for (int i = 0; i < 50; i++) {
+                        if (i < pct/2) {
+                            std::cout << "#";
+                        }
+                        else {
+                            std::cout << ".";
+                        }
+                    }
+                    std::cout << " ] " << pct << "%" << std::endl;
+                    usleep(10000);
                 }
             }
         }

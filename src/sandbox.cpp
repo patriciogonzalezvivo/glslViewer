@@ -9,6 +9,8 @@
 #include "glm/gtx/matrix_transform_2d.hpp"
 #include "glm/gtx/rotate_vector.hpp"
 
+#define FRAME_DELTA 0.03333333333
+
 Sandbox::Sandbox(): 
     iFrag(-1), iVert(-1), iGeom(-1),
     verbose(false), vFlip(true),
@@ -230,10 +232,20 @@ void Sandbox::_updateUniforms( Shader &_shader ) {
     // Pass uniforms
     _shader.setUniform("u_resolution", getWindowWidth(), getWindowHeight());
     if (_shader.needTime()) {
-        _shader.setUniform("u_time", float(getTime()));
+        if (m_record) {
+            _shader.setUniform("u_time", m_record_head);
+        }
+        else {
+            _shader.setUniform("u_time", float(getTime()));
+        }
     }
     if (_shader.needDelta()) {
-        _shader.setUniform("u_delta", float(getDelta()));
+        if (m_record) {
+            _shader.setUniform("u_delta", float(FRAME_DELTA));
+        }    
+        else {
+            _shader.setUniform("u_delta", float(getDelta()));
+        }
     }
     if (_shader.needDate()) {
         _shader.setUniform("u_date", getDate());
@@ -382,10 +394,22 @@ void Sandbox::draw() {
         glDisable(GL_DEPTH_TEST);
     }
 
-    if (screenshotFile != "") {
+    if (m_record) {
+        onScreenshot(toString(m_record_counter,0,3,'0') + ".png");
+        m_record_head += FRAME_DELTA;
+        m_record_counter++;
+
+        if (m_record_head >= m_record_end) {
+            m_record = false;
+        }
+    } else if (screenshotFile != "") {
         onScreenshot(screenshotFile);
         screenshotFile = "";
     }
+}
+
+int Sandbox::getRecordedPorcentage() {
+    return ((m_record_head - m_record_start) / (m_record_end - m_record_start)) * 100 ;
 }
 
 bool Sandbox::reload() {
@@ -523,8 +547,11 @@ void Sandbox::onScreenshot(std::string _file) {
         unsigned char* pixels = new unsigned char[getWindowWidth()*getWindowHeight()*4];
         glReadPixels(0, 0, getWindowWidth(), getWindowHeight(), GL_RGBA, GL_UNSIGNED_BYTE, pixels);
         Texture::savePixels(_file, pixels, getWindowWidth(), getWindowHeight());
-        std::cout << "// Screenshot saved to " << _file << std::endl;
-        std::cout << "// > ";
+
+        if (!m_record) {
+            std::cout << "// Screenshot saved to " << _file << std::endl;
+            std::cout << "// > ";
+        }
     }
 }
 
@@ -544,6 +571,14 @@ void Sandbox::setCubeMapName(const std::string &_name) {
     m_cubemap_name = _name; 
     m_cubemap = true; 
 };
+
+void Sandbox::record(float _start, float _end) {
+    m_record_start = _start;
+    m_record_head = _start;
+    m_record_end = _end;
+    m_record_counter = 0;
+    m_record = true;
+}
 
 void Sandbox::clean() {
     for (TextureList::iterator i = textures.begin(); i != textures.end(); ++i) {
