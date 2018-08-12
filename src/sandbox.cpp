@@ -268,7 +268,7 @@ void Sandbox::_updateUniforms( Shader &_shader ) {
 void Sandbox::_updateTextures( Shader &_shader, int &_textureIndex ) {
     // Pass Textures Uniforms
     for (TextureList::iterator it = textures.begin(); it!=textures.end(); ++it) {
-        _shader.setUniform(it->first, it->second, _textureIndex );
+        _shader.setUniformTexture(it->first, it->second, _textureIndex );
         _shader.setUniform(it->first+"Resolution", it->second->getWidth(), it->second->getHeight());
         _textureIndex++;
     }
@@ -295,7 +295,7 @@ void Sandbox::draw() {
         // Pass textures for the other buffers
         for (unsigned int j = 0; j < m_buffers.size(); j++) {
             if (i != j) {
-                m_buffers_shaders[i].setUniform("u_buffer" + toString(j), &m_buffers[j], textureIndex );
+                m_buffers_shaders[i].setUniformTexture("u_buffer" + toString(j), &m_buffers[j], textureIndex );
                 textureIndex++;
             }
         }
@@ -321,7 +321,7 @@ void Sandbox::draw() {
 
         // Pass all buffers
         for (unsigned int i = 0; i < m_buffers.size(); i++) {
-            m_background_shader.setUniform("u_buffer" + toString(i), &m_buffers[i], textureIndex );
+            m_background_shader.setUniformTexture("u_buffer" + toString(i), &m_buffers[i], textureIndex );
             textureIndex++;
         }
 
@@ -333,7 +333,7 @@ void Sandbox::draw() {
 
         // _updateUniforms( m_cubemap_shader );
         m_cubemap_shader.setUniform("u_modelViewProjectionMatrix", m_cam.getProjectionMatrix() * glm::toMat4(m_cam.getOrientationQuat()) );
-        m_cubemap_shader.setUniform( m_cubemap_name, ((TextureCube*)textures[m_cubemap_name]), textureIndex++ );
+        m_cubemap_shader.setUniformTextureCube( m_cubemap_name, ((TextureCube*)textures[m_cubemap_name]), textureIndex++ );
 
         // glDisable(GL_DEPTH_TEST);
         m_cubemap_vbo->draw( &m_cubemap_shader );
@@ -353,12 +353,12 @@ void Sandbox::draw() {
     _updateTextures( m_shader, textureIndex );
 
     if (m_cubemap) {
-        m_shader.setUniform( m_cubemap_name, ((TextureCube*)textures[m_cubemap_name]), textureIndex++ );
+        m_shader.setUniformTextureCube( m_cubemap_name, ((TextureCube*)textures[m_cubemap_name]), textureIndex++ );
     }
 
     // Pass all buffers
     for (unsigned int i = 0; i < m_buffers.size(); i++) {
-        m_shader.setUniform("u_buffer" + toString(i), &m_buffers[i], textureIndex );
+        m_shader.setUniformTexture("u_buffer" + toString(i), &m_buffers[i], textureIndex );
         textureIndex++;
     }
 

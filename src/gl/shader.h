@@ -44,10 +44,6 @@ public:
 
     void    setUniform(const std::string& _name, const float *_array, unsigned int _size);
 
-    void    setUniform(const std::string& _name, const TextureCube* _tex, unsigned int _texLoc);
-    void    setUniform(const std::string& _name, const Texture* _tex, unsigned int _texLoc);
-    void    setUniform(const std::string& _name, const Fbo* _fbo, unsigned int _texLoc);
-
     void    setUniform(const std::string& _name, const glm::vec2& _value) { setUniform(_name,_value.x,_value.y); }
     void    setUniform(const std::string& _name, const glm::vec3& _value) { setUniform(_name,_value.x,_value.y,_value.z); }
     void    setUniform(const std::string& _name, const glm::vec4& _value) { setUniform(_name,_value.x,_value.y,_value.z,_value.w); }
@@ -55,6 +51,10 @@ public:
     void    setUniform(const std::string& _name, const glm::mat2& _value, bool transpose = false);
     void    setUniform(const std::string& _name, const glm::mat3& _value, bool transpose = false);
     void    setUniform(const std::string& _name, const glm::mat4& _value, bool transpose = false);
+
+    void    setUniformTexture(const std::string& _name, const Fbo* _fbo, unsigned int _texLoc);
+    void    setUniformTexture(const std::string& _name, const Texture* _tex, unsigned int _texLoc);
+    void    setUniformTextureCube(const std::string& _name, const TextureCube* _tex, unsigned int _texLoc);
 
     void    detach(GLenum type);
 

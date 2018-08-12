@@ -19,15 +19,9 @@ Texture::~Texture() {
 	glDeleteTextures(1, &m_id);
 }
 
-/**
- * pixels_buffer - Pixels buffer to be operated
- * width - Image width
- * height - Image height
- * bytes_per_pixel - Number of image components, ie: 3 for rgb, 4 rgba, etc...
- **/
 template<typename T>
-void flipVertically(T *_pixels, const unsigned int _width, const unsigned int _height, const int _bytes_per_pixel) {
-    int row, col, z;
+void flipVertically(T *_pixels, const unsigned int _width, const unsigned int _height, const unsigned int _bytes_per_pixel) {
+    unsigned int row, col, z;
     T temp;
     for (row = 0; row < (_height>>1); row++) {
         for (col = 0; col < _width; col++) {
@@ -38,56 +32,20 @@ void flipVertically(T *_pixels, const unsigned int _width, const unsigned int _h
             }
         }
     }
-
-    // const size_t stride = _width * _bytes_per_pixel;
-    // T *row = (T*)malloc(stride);
-    // T *low = _pixels;
-    // T *high = &_pixels[(_height - 1) * stride];
-
-    // for (; low < high; low += stride, high -= stride) {
-    //     memcpy(row, low, stride * sizeof(T));
-    //     memcpy(low, high, stride * sizeof(T));
-    //     memcpy(high, row, stride * sizeof(T));
-    // }
-    // free(row);
-
-    // const unsigned int rows = _height / 2; // Iterate only half the buffer to get a full flip
-    // const unsigned int row_stride = _width * _bytes_per_pixel;
-    // T* temp_row = (T*)malloc(row_stride);
-
-    // int source_offset, target_offset;
-
-    // for (int rowIndex = 0; rowIndex < rows; rowIndex++) {
-    //     source_offset = rowIndex * row_stride;
-    //     target_offset = (_height - rowIndex - 1) * row_stride;
-
-    //     memcpy(temp_row, _pixels + source_offset, row_stride * sizeof(T));
-    //     memcpy(_pixels + source_offset, _pixels + target_offset, row_stride * sizeof(T));
-    //     memcpy(_pixels + target_offset, temp_row, row_stride * sizeof(T));
-    // }
-
-    // free(temp_row);
-    // temp_row = NULL;
 }
 
 bool Texture::load(const std::string& _path, bool _vFlip) {
-    m_path = _path;
-
     if (haveExt(_path,"png") || haveExt(_path,"PNG") ||
         haveExt(_path,"jpg") || haveExt(_path,"JPG") ||
         haveExt(_path,"jpeg") || haveExt(_path,"JPEG")) {
 
-        std::cout << "PNG/JPG" << std::endl;
-
-        stbi_set_flip_vertically_on_load(_vFlip);
-        int comp;
-        unsigned char* pixels = stbi_load(_path.c_str(), &m_width, &m_height, &comp, STBI_rgb_alpha);
+        unsigned char* pixels = loadPixels(_path, &m_width, &m_height, RGBA, _vFlip);
 
         load(pixels, m_width, m_height);
         stbi_image_free(pixels);
     }
+
     else if (haveExt(_path, "hdr") || haveExt(_path,"HDR")) {
-        std::cout << "HDR" << std::endl;
         int channels = 3;
         FILE* file = fopen(_path.c_str(), "rb");
         RGBE_ReadHeader(file, &m_width, &m_height, NULL);
@@ -104,6 +62,7 @@ bool Texture::load(const std::string& _path, bool _vFlip) {
         delete[] pixels;
     }
 
+    m_path = _path;
     return true;
 }
 
@@ -113,7 +72,7 @@ bool Texture::load(unsigned char* _pixels, int _width, int _height) {
 
     glEnable(GL_TEXTURE_2D);
 
-    if(m_id == 0){
+    if (m_id == 0){
         // Generate an OpenGL texture ID for this texture
         glGenTextures(1, &m_id);
     }
@@ -173,29 +132,11 @@ bool Texture::savePixels(const std::string& _path, unsigned char* _pixels, int _
 
     // Flip the image on Y
     int depth = 4;
-    // unsigned char *result = new unsigned char[_width*_height*depth];
-    // memcpy(result, _pixels, _width * _height * depth);
     flipVertically<unsigned char>(_pixels, _width, _height, depth);
+
     if (0 == stbi_write_png(_path.c_str(), _width, _height, 4, _pixels, _width * 4)) {
         std::cout << "can't create file " << _path << std::endl;
     }
-
-    // int row,col,z;
-    // stbi_uc temp;
-
-    // for (row = 0; row < (_height>>1); row++) {
-    //  for (col = 0; col < _width; col++) {
-    //     for (z = 0; z < depth; z++) {
-    //        temp = result[(row * _width + col) * depth + z];
-    //        result[(row * _width + col) * depth + z] = result[((_height - row - 1) * _width + col) * depth + z];
-    //        result[((_height - row - 1) * _width + col) * depth + z] = temp;
-    //     }
-    //  }
-    // }
-    // if (0 == stbi_write_png(_path.c_str(), _width, _height, 4, result, _width * 4)) {
-    //     std::cout << "can't create file " << _path << std::endl;
-    // }
-    // delete [] result;
 
     return true;
 }

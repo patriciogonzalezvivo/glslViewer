@@ -64,6 +64,9 @@
         "thread": "cpp",
         "cinttypes": "cpp",
         "typeindex": "cpp",
-        "ios": "cpp"
+        "ios": "cpp",
+        "strstream": "cpp",
+        "numeric": "cpp",
+        "valarray": "cpp"
     }
 }
