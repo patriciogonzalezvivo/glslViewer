@@ -17,20 +17,30 @@ Texture::~Texture() {
 	glDeleteTextures(1, &m_id);
 }
 
+unsigned char *Texture::loadPixels(const std::string& _path, int *_width, int *_height, Channels _channels, bool _vFlip) {
+    stbi_set_flip_vertically_on_load(_vFlip);
+    int comp;
+    return stbi_load(_path.c_str(), _width, _height, &comp, (_channels == RGB)? STBI_rgb : STBI_rgb_alpha);
+}
+
 bool Texture::load(const std::string& _path, bool _vFlip) {
+    m_path = _path;
+
     stbi_set_flip_vertically_on_load(_vFlip);
     int comp;
     unsigned char* pixels = stbi_load(_path.c_str(), &m_width, &m_height, &comp, STBI_rgb_alpha);
 
+    
     load(pixels, m_width, m_height);
     stbi_image_free(pixels);
 
     // TODO:
     //      - on Rpi should use openMAX
-
-    m_path = _path;
+    
     return true;
 }
+
+
 
 bool Texture::load(unsigned char* _pixels, int _width, int _height) {
     m_width = _width;
@@ -56,16 +66,6 @@ bool Texture::load(unsigned char* _pixels, int _width, int _height) {
 
     return true;
 }
-
-// bool Texture::save(const std::string& _path) {
-//     bind();
-//     unsigned char* pixels = new unsigned char[m_width*m_height*4];
-//     glReadPixels(0, 0, m_width, m_height, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-//     bool rta = savePixels(_path, pixels, m_width, m_height);
-//     unbind();
-
-//     return rta;
-// }
 
 bool Texture::savePixels(const std::string& _path, unsigned char* _pixels, int _width, int _height) {
 

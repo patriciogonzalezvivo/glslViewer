@@ -272,31 +272,26 @@ int main(int argc, char **argv){
         else if ( argument == "-c" ) {
             i++;
             argument = std::string(argv[i]);
-            if ( haveExt(argument, "hdr") || haveExt(argument,"HDR") ) {
-                if ( stat(argument.c_str(), &st) != 0 ) {
-                    std::cerr << "Error watching file " << argument << std::endl;
-                }
-                else {
-                    TextureCube* tex = new TextureCube();
-                    if ( tex->load(argument, sandbox.vFlip) ) {
-                        std::string name = "u_cubeMap";
-                        sandbox.textures[name] = tex;
-                        sandbox.setCubeMapName(name);
-
-                        WatchFile file;
-                        file.type = "imageCube";
-                        file.path = argument;
-                        file.lastChange = st.st_mtime;
-                        file.vFlip = sandbox.vFlip;
-                        files.push_back(file);
-
-                        std::cout << "// " << argument << " loaded as: " << std::endl;
-                        std::cout << "//    uniform samplerCube " << name  << ";"<< std::endl;
-                    }
-                }
+            if ( stat(argument.c_str(), &st) != 0 ) {
+                std::cerr << "Error watching cubefile: " << argument << std::endl;
             }
             else {
-                std::cerr << "At the moment cubemaps only support HDR formats" << std::endl;
+                TextureCube* tex = new TextureCube();
+                if ( tex->load(argument, sandbox.vFlip) ) {
+                    std::string name = "u_cubeMap";
+                    sandbox.textures[name] = tex;
+                    sandbox.setCubeMapName(name);
+
+                    WatchFile file;
+                    file.type = "imageCube";
+                    file.path = argument;
+                    file.lastChange = st.st_mtime;
+                    file.vFlip = sandbox.vFlip;
+                    files.push_back(file);
+
+                    std::cout << "// " << argument << " loaded as: " << std::endl;
+                    std::cout << "//    uniform samplerCube " << name  << ";"<< std::endl;
+                }
             }
         }
         else if ( argument.find("-D") == 0 ) {

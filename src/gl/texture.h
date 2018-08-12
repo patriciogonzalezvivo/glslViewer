@@ -4,6 +4,11 @@
 
 #include "gl.h"
 
+enum Channels {
+	RGB,
+	RGBA
+};
+
 class Texture {
 public:
 	Texture();
@@ -13,6 +18,7 @@ public:
 	virtual bool 	load(unsigned char* _pixels, int _width, int _height);
 
 	static bool 	savePixels(const std::string& _path, unsigned char* _pixels, int _width, int _height);
+	unsigned char	*loadPixels(const std::string& _path, int *_width, int *_height, Channels _channels = RGB, bool _vFlip = true);
 
 	virtual const GLuint	getId() const { return m_id; };
 	virtual std::string	 	getFilePath() const { return m_path; };
