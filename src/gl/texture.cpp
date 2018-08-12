@@ -21,17 +21,28 @@ Texture::~Texture() {
 
 template<typename T>
 void flipVertically(T *_pixels, const unsigned int _width, const unsigned int _height, const unsigned int _bytes_per_pixel) {
-    unsigned int row, col, z;
-    T temp;
-    for (row = 0; row < (_height>>1); row++) {
-        for (col = 0; col < _width; col++) {
-            for (z = 0; z < _bytes_per_pixel; z++) {
-                temp = _pixels[(row * _width + col) * _bytes_per_pixel + z];
-                _pixels[(row * _width + col) * _bytes_per_pixel + z] = _pixels[((_height - row - 1) * _width + col) * _bytes_per_pixel + z];
-                _pixels[((_height - row - 1) * _width + col) * _bytes_per_pixel + z] = temp;
-            }
-        }
+    // unsigned int row, col, z;
+    // T temp;
+    // for (row = 0; row < (_height>>1); row++) {
+    //     for (col = 0; col < _width; col++) {
+    //         for (z = 0; z < _bytes_per_pixel; z++) {
+    //             temp = _pixels[(row * _width + col) * _bytes_per_pixel + z];
+    //             _pixels[(row * _width + col) * _bytes_per_pixel + z] = _pixels[((_height - row - 1) * _width + col) * _bytes_per_pixel + z];
+    //             _pixels[((_height - row - 1) * _width + col) * _bytes_per_pixel + z] = temp;
+    //         }
+    //     }
+    // }
+
+    const size_t stride = _width * _bytes_per_pixel;
+    T *row = (T*)malloc(stride * sizeof(T));
+    T *low = _pixels;
+    T *high = &_pixels[(_height - 1) * stride];
+     for (; low < high; low += stride, high -= stride) {
+        memcpy(row, low, stride * sizeof(T));
+        memcpy(low, high, stride * sizeof(T));
+        memcpy(high, row, stride * sizeof(T));
     }
+    free(row);
 }
 
 bool Texture::load(const std::string& _path, bool _vFlip) {

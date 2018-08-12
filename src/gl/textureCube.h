@@ -42,17 +42,6 @@ struct Face {
     }
 
     void upload(GLenum _face, GLenum _type) {
-        // GLenum Type = GL_FLOAT;
-
-        // if(std::is_same<T,unsigned char*>::value) {
-        //     Type = GL_UNSIGNED_BYTE;
-        //     std::cout << "GL_UNSIGNED_BYTE" << std::end;
-        // }
-        // else if(std::is_same<T,float>::value) {
-        //     std::cout << "GL_FLOAT" << std::end;
-        //     Type = GL_FLOAT;
-        // }     
-
     #ifndef PLATFORM_RPI
         GLenum InternalFormat = GL_RGB16F_ARB;
     #else
