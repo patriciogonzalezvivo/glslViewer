@@ -3,14 +3,8 @@
 
 #include "texture.h"
 
-#include <stdexcept>
-extern "C" {
-    #include "rgbe/rgbe.h"    
-}
-
 template <typename T> 
 struct Face {
-
     void flipHorizontal() {
         int dataSize = width * height * 3;
         int n = sizeof(T) * 3 * width;

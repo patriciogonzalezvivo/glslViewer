@@ -32,8 +32,6 @@ bool TextureCube::load(const std::string &_path, bool _vFlip) {
         haveExt(_path,"jpg") || haveExt(_path,"JPG") ||
         haveExt(_path,"jpeg") || haveExt(_path,"JPEG")) {
 
-        std::cout << "Loading cube texture " << _path << ".." << std::endl;
-
         unsigned char* data = loadPixels(_path, &m_width, &m_height, RGB, false);
 
         // LOAD FACES
@@ -93,8 +91,6 @@ bool TextureCube::load(const std::string &_path, bool _vFlip) {
 
     }
     else if (haveExt(_path, "hdr") || haveExt(_path,"HDR")) {
-        std::cout << "Loading HDR cube texture " << _path << ".." << std::endl;
-
         FILE* file = fopen(_path.c_str(), "rb");
 
         RGBE_ReadHeader(file, &m_width, &m_height, NULL);
