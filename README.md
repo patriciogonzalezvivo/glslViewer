@@ -384,65 +384,90 @@ It's possible to set a background by adding a `#ifdef BACKGROUND` check and addi
 
 ### Examples
 
-* Open a Fragment shader:
+1. Open a Fragment shader:
 
 ```bash
-glslViewer examples/test.frag
+$ glslViewer examples/test.frag
 ```
 
-* Open a Fragment shader with an image:
+2. Open a Fragment shader with an image:
 
 ```bash
-glslViewer examples/test.frag examples/test.png
+$ glslViewer examples/test.frag examples/test.png
 ```
 
-* Open a Fragment and Vertex shader with a geometry:
+3. Open a Fragment and Vertex shader with a geometry:
 
 ```bash
-glslViewer examples/bunny.frag examples/bunny.vert examples/bunny.ply
+$ glslViewer examples/bunny.frag examples/bunny.vert examples/bunny.ply
 ```
 
-* Open a Fragment that use two buffers as a Ping-Pong to do a reaction diffusion example:
+4.  Open a Fragment that use two buffers as a Ping-Pong to do a reaction diffusion example:
 
 ```bash
-glslViewer examples/grayscott.frag
+$ glslViewer examples/grayscott.frag
 ```
 
-* Open a Fragment that use OS defines to know what platform is running on:
+5. Open a Fragment that use OS defines to know what platform is running on:
 
 ```bash
-glslViewer examples/test_platform.frag
+$ glslViewer examples/test_platform.frag
 ```
 
-* Change the value of a uniform by passing CSV on the console IN:
+6. Make an image secuence of 500x500 pixel each from an animating shader from second 0 to second 1
 
 ```bash
-glslViewer examples/temp.frag
-u_temp,30
-u_temp,40
-u_temp,50
-u_temp,60
-u_temp,70
+$ glslViewer examples/cross.frag -w 500 -h 500 
+// > secuence,0,1
+// > exit
 ```
 
-* Create a bash pipe to animate the uniform value using the CPU temperature of your Raspberry PI:
+7. Change the value of a uniform by passing CSV on the console IN:
 
 ```bash
-examples/.temp.sh | glslViewer examples/temp.frag
+$ glslViewer examples/temp.frag
+// > u_temp,30
+// > u_temp,40
+// > u_temp,50
+// > u_temp,60
+// > u_temp,70
 ```
 
-* Run a headless instance of glslViewer that exits after 1 second outputting a high resolution PNG image:
+8. Animate the value of a uniform by piping the output of a script that fetch  the CPU temperature of your Raspberry PI:
 
 ```bash
-glslViewer examples/mandelbrot.frag -w 2048 -h 2048 --headless -s 1 -o mandelbrot.png
+$ examples/.temp.sh | glslViewer examples/temp.frag
 ```
 
-* Make an SVG from a shader using [potrace](http://potrace.sourceforge.net/) and [ImageMagic](https://www.imagemagick.org/script/index.php):
+9. Run a headless instance of glslViewer that exits after 1 second outputting a high resolution PNG image:
 
 ```bash
-glslViewer examples/cross.frag --headless -s 1 -o cross.png
-convert cross.png cross.pnm
-potrace cross.pnm -s -o cross.svg
+$ glslViewer examples/mandelbrot.frag -w 2048 -h 2048 --headless -s 1 -o mandelbrot.png
+```
+
+10. Make an SVG from a shader using [potrace](http://potrace.sourceforge.net/) and [ImageMagic](https://www.imagemagick.org/script/index.php):
+
+```bash
+$ glslViewer examples/cross.frag --headless -s 1 -o cross.png
+$ convert cross.png cross.pnm
+$ potrace cross.pnm -s -o cross.svg
+```
+
+11. Load a OBJ or PLY file directly on GlslViewer. It will automatically generated a vertex and fragment shader based on the attributes. On the command line you can visualize or save it to a file.
+
+```bash
+$ glslViewer examples/head.ply
+// > vert
+// > frag
+// > frag,head_default.frag
+// > exit
+$ glslViewer example/head.ply head_default.frag
+```
+
+12. Load a OBJ or PLY file and a cubemap for it. Here an example of a beautiful Fresnel effect by [Karim’s Naaki](http://karim.naaji.fr/)
+
+```bash
+$ glslViewer examples/head.ply examples/fresnel.vert examples/fresnel.frag -c uffizi_cross.hdr
 ```
 
 ## Using glslLoader
