@@ -30,7 +30,7 @@ public:
     void        addDefines(const std::string &_define);
     void        delDefines(const std::string &_define);
 
-    void        setCubeMapName(const std::string &_name);
+    void        setCubeMap(TextureCube* _cubemap) { m_cubemap = _cubemap; }
 
     // Getting some data out of Sandbox
     std::string getVertexSource() const { return m_vertSource; } 
@@ -109,9 +109,8 @@ private:
 
     // CubeMap
     Shader              m_cubemap_shader;
-    std::string         m_cubemap_name;
     Vbo*                m_cubemap_vbo;
-    bool                m_cubemap;
+    TextureCube*        m_cubemap;
 
     // Recording
     float               m_record_start;

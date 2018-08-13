@@ -4,6 +4,7 @@
 #include "textureCube.h"
 
 #include "tools/fs.h"
+#include "tools/pixels.h"
 
 TextureCube::TextureCube() {
 }
@@ -13,7 +14,7 @@ TextureCube::~TextureCube() {
 }
 
 bool TextureCube::load(const std::string &_path, bool _vFlip) {
-    m_path = _path;
+    bool loaded = false;
 
     // Init
     glGenTextures(1, &m_id);
@@ -141,13 +142,7 @@ bool TextureCube::load(const std::string &_path, bool _vFlip) {
 
     }
     else if (haveExt(_path, "hdr") || haveExt(_path,"HDR")) {
-        FILE* file = fopen(_path.c_str(), "rb");
-
-        RGBE_ReadHeader(file, &m_width, &m_height, NULL);
-        float* data = new float[3 * m_width * m_height];
-        RGBE_ReadPixels_RLE(file, data, m_width, m_height);
-
-        fclose(file);
+        float* data = loadFloatPixels(_path, &m_width, &m_height, _vFlip);
 
         // LOAD FACES
         Face<float> **faces = new Face<float>*[6];
@@ -258,8 +253,12 @@ bool TextureCube::load(const std::string &_path, bool _vFlip) {
     }
 
     glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+
+    if (loaded) {
+        m_path = _path;
+    }
                     
-    return true;
+    return loaded;
 }
 
 void TextureCube::bind() {

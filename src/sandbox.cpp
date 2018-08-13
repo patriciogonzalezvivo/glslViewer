@@ -4,6 +4,7 @@
 
 #include "tools/text.h"
 #include "tools/geom.h"
+#include "tools/pixels.h"
 #include "types/shapes.h"
 
 #include "glm/gtx/matrix_transform_2d.hpp"
@@ -17,7 +18,7 @@ Sandbox::Sandbox():
     m_fragPath(nullptr), m_vertPath(nullptr),
     m_lat(180.0), m_lon(0.0),
     m_background_enabled(false),
-    m_cubemap_vbo(nullptr), m_cubemap(false) {
+    m_cubemap_vbo(nullptr), m_cubemap(nullptr) {
 
     m_view2d = glm::mat3(1.);
 
@@ -148,12 +149,12 @@ void main(void) {\n\
 precision mediump float;\n\
 #endif\n\
 \n\
-uniform samplerCube " + m_cubemap_name + ";\n\
+uniform samplerCube u_cubeMap;\n\
 \n\
 varying vec4    v_position;\n\
 \n\
 void main(void) {\n\
-    gl_FragColor = textureCube(" + m_cubemap_name + ", v_position.xyz);\n\
+    gl_FragColor = textureCube(u_cubeMap, v_position.xyz);\n\
 }";
 
         m_cubemap_shader.load(frag, vert, defines, false);
@@ -280,9 +281,8 @@ void Sandbox::_updateUniforms( Shader &_shader ) {
 void Sandbox::_updateTextures( Shader &_shader, int &_textureIndex ) {
     // Pass Textures Uniforms
     for (TextureList::iterator it = textures.begin(); it!=textures.end(); ++it) {
-        _shader.setUniformTexture(it->first, it->second, _textureIndex );
+        _shader.setUniformTexture(it->first, it->second, _textureIndex++ );
         _shader.setUniform(it->first+"Resolution", it->second->getWidth(), it->second->getHeight());
-        _textureIndex++;
     }
 }
 
@@ -307,8 +307,7 @@ void Sandbox::draw() {
         // Pass textures for the other buffers
         for (unsigned int j = 0; j < m_buffers.size(); j++) {
             if (i != j) {
-                m_buffers_shaders[i].setUniformTexture("u_buffer" + toString(j), &m_buffers[j], textureIndex );
-                textureIndex++;
+                m_buffers_shaders[i].setUniformTexture("u_buffer" + toString(j), &m_buffers[j], textureIndex++ );
             }
         }
 
@@ -333,8 +332,7 @@ void Sandbox::draw() {
 
         // Pass all buffers
         for (unsigned int i = 0; i < m_buffers.size(); i++) {
-            m_background_shader.setUniformTexture("u_buffer" + toString(i), &m_buffers[i], textureIndex );
-            textureIndex++;
+            m_background_shader.setUniformTexture("u_buffer" + toString(i), &m_buffers[i], textureIndex++ );
         }
 
         m_billboard_vbo->draw( &m_background_shader );
@@ -345,7 +343,7 @@ void Sandbox::draw() {
 
         // _updateUniforms( m_cubemap_shader );
         m_cubemap_shader.setUniform("u_modelViewProjectionMatrix", m_cam.getProjectionMatrix() * glm::toMat4(m_cam.getOrientationQuat()) );
-        m_cubemap_shader.setUniformTextureCube( m_cubemap_name, ((TextureCube*)textures[m_cubemap_name]), textureIndex++ );
+        m_cubemap_shader.setUniformTextureCube( "u_cubeMap", m_cubemap, textureIndex++ );
 
         // glDisable(GL_DEPTH_TEST);
         m_cubemap_vbo->draw( &m_cubemap_shader );
@@ -365,7 +363,7 @@ void Sandbox::draw() {
     _updateTextures( m_shader, textureIndex );
 
     if (m_cubemap) {
-        m_shader.setUniformTextureCube( m_cubemap_name, ((TextureCube*)textures[m_cubemap_name]), textureIndex++ );
+        m_shader.setUniformTextureCube( "u_cubeMap", m_cubemap, textureIndex++ );
     }
 
     // Pass all buffers
@@ -452,6 +450,11 @@ void Sandbox::onFileChange(WatchFileList &_files, int index) {
                 it->second->load(path, _files[index].vFlip);
                 break;
             }
+        }
+    }
+    else if (type == "cubemap") {
+        if (m_cubemap) {
+            m_cubemap->load(path, _files[index].vFlip);
         }
     }
 }
@@ -546,7 +549,7 @@ void Sandbox::onScreenshot(std::string _file) {
     if (_file != "" && isGL()) {
         unsigned char* pixels = new unsigned char[getWindowWidth()*getWindowHeight()*4];
         glReadPixels(0, 0, getWindowWidth(), getWindowHeight(), GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-        Texture::savePixels(_file, pixels, getWindowWidth(), getWindowHeight());
+        savePixels(_file, pixels, getWindowWidth(), getWindowHeight());
 
         if (!m_record) {
             std::cout << "// Screenshot saved to " << _file << std::endl;
@@ -566,11 +569,6 @@ void Sandbox::delDefines(const std::string &_define) {
         }
     }
 }
-
-void Sandbox::setCubeMapName(const std::string &_name) { 
-    m_cubemap_name = _name; 
-    m_cubemap = true; 
-};
 
 void Sandbox::record(float _start, float _end) {
     m_record_start = _start;

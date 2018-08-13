@@ -280,19 +280,17 @@ int main(int argc, char **argv){
             else {
                 TextureCube* tex = new TextureCube();
                 if ( tex->load(argument, sandbox.vFlip) ) {
-                    std::string name = "u_cubeMap";
-                    sandbox.textures[name] = tex;
-                    sandbox.setCubeMapName(name);
+                    sandbox.setCubeMap(tex);
 
                     WatchFile file;
-                    file.type = "imageCube";
+                    file.type = "cubemap";
                     file.path = argument;
                     file.lastChange = st.st_mtime;
                     file.vFlip = sandbox.vFlip;
                     files.push_back(file);
 
                     std::cout << "// " << argument << " loaded as: " << std::endl;
-                    std::cout << "//    uniform samplerCube " << name  << ";"<< std::endl;
+                    std::cout << "//    uniform samplerCube u_cubeMap;"<< std::endl;
                 }
             }
         }
