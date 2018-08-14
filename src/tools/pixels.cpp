@@ -1,7 +1,6 @@
 #include "pixels.h"
 
 #include <iostream>
-#include <cstring>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "std/stb_image.h"
