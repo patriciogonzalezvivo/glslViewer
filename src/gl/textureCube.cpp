@@ -1,5 +1,4 @@
 #include <iostream>
-#include <cstring>
 
 #include "textureCube.h"
 
@@ -14,7 +13,6 @@ TextureCube::~TextureCube() {
 }
 
 bool TextureCube::load(const std::string &_path, bool _vFlip) {
-    bool loaded = false;
 
     // Init
     glGenTextures(1, &m_id);
@@ -142,12 +140,12 @@ bool TextureCube::load(const std::string &_path, bool _vFlip) {
 
     }
     else if (haveExt(_path, "hdr") || haveExt(_path,"HDR")) {
-        float* data = loadFloatPixels(_path, &m_width, &m_height, _vFlip);
+        float* data = loadFloatPixels(_path, &m_width, &m_height, false);
 
         // LOAD FACES
         Face<float> **faces = new Face<float>*[6];
 
-        if (m_height < m_width) {
+        if (m_height > m_width) {
             int faceWidth = m_width / 3;
             int faceHeight = m_height / 4;
 
@@ -254,11 +252,8 @@ bool TextureCube::load(const std::string &_path, bool _vFlip) {
 
     glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 
-    if (loaded) {
-        m_path = _path;
-    }
-                    
-    return loaded;
+    m_path = _path;             
+    return true;
 }
 
 void TextureCube::bind() {

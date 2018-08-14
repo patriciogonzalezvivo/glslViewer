@@ -1,7 +1,7 @@
 #include "pixels.h"
 
 #include <iostream>
-// #include "fs.h"
+#include <cstring>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "std/stb_image.h"
@@ -9,10 +9,7 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "std/stb_image_write.h"
 
-#include <stdexcept>
-extern "C" {
-    #include "rgbe/rgbe.h"    
-}
+#include "rgbe/rgbe.h" 
 
 template<typename T>
 void flipPixelsVertically(T *_pixels, int _width, int _height, int _bytes_per_pixel) {

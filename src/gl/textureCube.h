@@ -56,8 +56,6 @@ struct Face {
 	// for mem copy purposes only
 	int currentOffset;
     T   *data;
-
-
 };
 
 const GLenum CubeMapFace[6] { 

@@ -341,7 +341,6 @@ void Sandbox::draw() {
     else if (iGeom != -1 && m_cubemap) {
         m_cubemap_shader.use();
 
-        // _updateUniforms( m_cubemap_shader );
         m_cubemap_shader.setUniform("u_modelViewProjectionMatrix", m_cam.getProjectionMatrix() * glm::toMat4(m_cam.getOrientationQuat()) );
         m_cubemap_shader.setUniformTextureCube( "u_cubeMap", m_cubemap, textureIndex++ );
 
@@ -362,14 +361,13 @@ void Sandbox::draw() {
     // Update textures
     _updateTextures( m_shader, textureIndex );
 
-    if (m_cubemap) {
-        m_shader.setUniformTextureCube( "u_cubeMap", m_cubemap, textureIndex++ );
+    if (m_cubemap != nullptr) {
+        m_shader.setUniformTextureCube( "u_cubeMap", (TextureCube*)m_cubemap, textureIndex++ );
     }
 
     // Pass all buffers
     for (unsigned int i = 0; i < m_buffers.size(); i++) {
-        m_shader.setUniformTexture("u_buffer" + toString(i), &m_buffers[i], textureIndex );
-        textureIndex++;
+        m_shader.setUniformTexture("u_buffer" + toString(i), &m_buffers[i], textureIndex++ );
     }
 
     glm::mat4 mvp = glm::mat4(1.);
