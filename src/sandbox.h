@@ -11,8 +11,8 @@
 
 #include "tools/fs.h"
 
-typedef std::map<std::string,Texture*> TextureList;
 typedef std::vector<std::string> List;
+typedef std::map<std::string,Texture*> TextureList;
 
 class Sandbox {
 public:
@@ -56,7 +56,11 @@ public:
     List        defines;
 
     // Include folders
-    List        include_folders;
+    FileList    include_folders;
+
+    // Dependencies
+    FileList    vert_dependencies;
+    FileList    frag_dependencies;
 
     // Screenshot file
     std::string screenshotFile;
@@ -74,6 +78,7 @@ private:
     void _updateBuffers();
     void _updateUniforms( Shader &_shader );
     void _updateTextures( Shader &_shader, int &_textureIndex  );
+    void _updateDependencies(WatchFileList &_files);
 
     // Main Shader
     std::string         m_fragSource;

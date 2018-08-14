@@ -1,5 +1,7 @@
 #include "sandbox.h"
 
+#include <sys/stat.h>
+
 #include "window.h"
 
 #include "tools/text.h"
@@ -88,9 +90,12 @@ void Sandbox::setup( WatchFileList &_files ) {
     if (iFrag != -1) {
         m_fragPath = &_files[iFrag].path;
         m_fragSource = "";
-        if ( !loadFromPath(*m_fragPath, &m_fragSource, include_folders) ) {
+        frag_dependencies.clear();
+
+        if ( !loadFromPath(*m_fragPath, &m_fragSource, include_folders, &frag_dependencies) ) {
             return;
         }
+
     }
     else {
         m_fragSource = m_vbo->getVertexLayout()->getDefaultFragShader();
@@ -99,13 +104,16 @@ void Sandbox::setup( WatchFileList &_files ) {
     if (iVert != -1) {
         m_vertPath = &_files[iVert].path;
         m_vertSource = "";
-        loadFromPath(*m_vertPath, &m_vertSource, include_folders);
+        vert_dependencies.clear();
+
+        loadFromPath(*m_vertPath, &m_vertSource, include_folders, &vert_dependencies);
     }
     else {
         m_vertSource = m_vbo->getVertexLayout()->getDefaultVertShader();
     }
 
     m_shader.load(m_fragSource, m_vertSource, defines, verbose);
+    _updateDependencies( _files );
 
     // Init buffers
     m_billboard_vbo = rect(0.0,0.0,1.0,1.0).getVbo();
@@ -197,7 +205,6 @@ void Sandbox::_updateBackground() {
 void Sandbox::_updateBuffers() {
     // Update BUFFERS
     int totalBuffers = m_shader.getTotalBuffers();
-    // std::cout << "TOTAL BUFFERS: " << totalBuffers << std::endl; 
     
     if ( totalBuffers != int(m_buffers.size()) ) {
         m_buffers.clear();
@@ -422,38 +429,76 @@ bool Sandbox::reload() {
 }
 
 void Sandbox::onFileChange(WatchFileList &_files, int index) {
-    std::string type = _files[index].type;
-    std::string path = _files[index].path;
+    FileType type = _files[index].type;
+    std::string filename = _files[index].path;
 
-    if (type == "fragment") {
+    if (type == GLSL_DEPENDENCY) {
+        if (std::find(frag_dependencies.begin(), frag_dependencies.end(), filename) != frag_dependencies.end()) {
+            type = FRAG_SHADER;
+            filename = _files[iFrag].path;
+        }
+        else if(std::find(vert_dependencies.begin(), vert_dependencies.end(), filename) != vert_dependencies.end()) {
+            type = VERT_SHADER;
+            filename = _files[iVert].path;
+        }
+    }
+
+    if (type == FRAG_SHADER) {
         m_fragSource = "";
-        if (loadFromPath(path, &m_fragSource, include_folders)) {
+        frag_dependencies.clear();
+
+        if (loadFromPath(filename, &m_fragSource, include_folders, &frag_dependencies)) {
             reload();
             _updateBackground();
             _updateBuffers();
+
+            _updateDependencies(_files);
         }
     }
-    else if (type == "vertex") {
+    else if (type == VERT_SHADER) {
         m_vertSource = "";
-        if (loadFromPath(path, &m_vertSource, include_folders)) {
+        vert_dependencies.clear();
+
+        if (loadFromPath(filename, &m_vertSource, include_folders, &vert_dependencies)) {
             reload();
         }
     }
-    else if (type == "geometry") {
+    else if (type == GEOMETRY) {
         // TODO
     }
-    else if (type == "image") {
+    else if (type == IMAGE) {
         for (TextureList::iterator it = textures.begin(); it!=textures.end(); ++it) {
-            if (path == it->second->getFilePath()) {
-                it->second->load(path, _files[index].vFlip);
+            if (filename == it->second->getFilePath()) {
+                it->second->load(filename, _files[index].vFlip);
                 break;
             }
         }
     }
-    else if (type == "cubemap") {
+    else if (type == CUBEMAP) {
         if (m_cubemap) {
-            m_cubemap->load(path, _files[index].vFlip);
+            m_cubemap->load(filename, _files[index].vFlip);
         }
+    }
+}
+
+void Sandbox::_updateDependencies(WatchFileList &_files) {
+    FileList new_dependencies = mergeList(frag_dependencies, vert_dependencies);
+
+    // remove old dependencies
+    for (int i = _files.size() - 1; i >= 0; i--) {
+        if (_files[i].type == GLSL_DEPENDENCY) {
+            _files.erase( _files.begin() + i);
+        }
+    }
+
+    // Add new dependencies
+    struct stat st;
+    for (unsigned int i = 0; i < new_dependencies.size(); i++) {
+        WatchFile file;
+        file.type = GLSL_DEPENDENCY;
+        file.path = new_dependencies[i];
+        file.lastChange = st.st_mtime;
+        _files.push_back(file);
     }
 }
 
@@ -545,7 +590,7 @@ void Sandbox::onViewportResize(int _newWidth, int _newHeight) {
 
 void Sandbox::onScreenshot(std::string _file) {
     if (_file != "" && isGL()) {
-        unsigned char* pixels = new unsigned char[getWindowWidth()*getWindowHeight()*4];
+        unsigned char* pixels = new unsigned char[getWindowWidth() * getWindowHeight()*4];
         glReadPixels(0, 0, getWindowWidth(), getWindowHeight(), GL_RGBA, GL_UNSIGNED_BYTE, pixels);
         savePixels(_file, pixels, getWindowWidth(), getWindowHeight());
 

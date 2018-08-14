@@ -67,6 +67,8 @@
         "ios": "cpp",
         "strstream": "cpp",
         "numeric": "cpp",
-        "valarray": "cpp"
+        "valarray": "cpp",
+        "__functional_base_03": "cpp",
+        "__tuple": "cpp"
     }
 }

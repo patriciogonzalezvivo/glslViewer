@@ -40,16 +40,16 @@ void cinWatcherThread();
 //================================================================= Functions
 void onExit();
 void printUsage(char * executableName) {
-    std::cout << "// GlslViewer " << version << " by Patricio Gonzalez Vivo ( patriciogonzalezvivo.com )" << std::endl;
-    std::cout << "// "<< std::endl;
-    std::cout << "// Swiss army knife of GLSL Shaders. Loads frag/vertex shaders, images and " << std::endl;
-    std::cout << "// geometries. Will reload automatically on changes. Support for multi  "<< std::endl;
-    std::cout << "// buffers, baground and postprocessing passes. Can render headlessly and "<< std::endl;
-    std::cout << "// into a file. Use POSIX STANDARD CONSOLE IN/OUT to comunicate (uniforms,"<< std::endl;
-    std::cout << "// camera position, scene description and  commands) to and with other "<< std::endl;
-    std::cout << "// programs. Compatible with Linux and MacOS, runs from command line with"<< std::endl;
-    std::cout << "// out X11 enviroment on RaspberryPi devices. "<< std::endl;
-    std::cout << "// "<< std::endl;
+    std::cerr << "// GlslViewer " << version << " by Patricio Gonzalez Vivo ( patriciogonzalezvivo.com )" << std::endl;
+    std::cerr << "// "<< std::endl;
+    std::cerr << "// Swiss army knife of GLSL Shaders. Loads frag/vertex shaders, images and " << std::endl;
+    std::cerr << "// geometries. Will reload automatically on changes. Support for multi  "<< std::endl;
+    std::cerr << "// buffers, baground and postprocessing passes. Can render headlessly and "<< std::endl;
+    std::cerr << "// into a file. Use POSIX STANDARD CONSOLE IN/OUT to comunicate (uniforms,"<< std::endl;
+    std::cerr << "// camera position, scene description and  commands) to and with other "<< std::endl;
+    std::cerr << "// programs. Compatible with Linux and MacOS, runs from command line with"<< std::endl;
+    std::cerr << "// out X11 enviroment on RaspberryPi devices. "<< std::endl;
+    std::cerr << "// "<< std::endl;
     std::cerr << "// Usage: " << executableName << " <shader>.frag [<shader>.vert] [<mesh>.(obj/.ply)] [<texture>.(png/jpg)] [-<uniformName> <texture>.(png/jpg/hdr)] [-c <cubemap>.hdr] [-vFlip] [-x <x>] [-y <y>] [-w <width>] [-h <height>] [-l] [--square] [-s/--sec <seconds>] [-o <screenshot_file>.png] [--headless] [--cursor] [-I<include_folder>] [-D<define>] [-v/--version] [--verbose] [--help]\n";
 }
 
@@ -91,7 +91,9 @@ void printHelp() {
     std::cout << "// screenshot[,filename]      saves a screenshot to a filename." << std::endl;
     std::cout << "// sequence,<A_sec>,<B_sec>   saves a sequence of images from A to B second." << std::endl;
     std::cout << "// frag[,filename]            returns or save the fragment shader source code." << std::endl;
+    std::cout << "// frag_dependencies          returns all the fragment shader dependencies." << std::endl;
     std::cout << "// vert[,filename]            return or save the vertex shader source code." << std::endl;
+    std::cout << "// vert_dependencies          returns all the vertex shader dependencies." << std::endl;
     std::cout << "//" << std::endl;
     std::cout << "// version        return glslViewer version" << std::endl;
     std::cout << "// exit           close glslViewer" << std::endl;
@@ -206,10 +208,11 @@ int main(int argc, char **argv){
             }
             else {
                 WatchFile file;
-                file.type = "fragment";
+                file.type = FRAG_SHADER;
                 file.path = argument;
                 file.lastChange = st.st_mtime;
                 files.push_back(file);
+
                 sandbox.iFrag = files.size()-1;
             }
         }
@@ -219,10 +222,11 @@ int main(int argc, char **argv){
             }
             else {
                 WatchFile file;
-                file.type = "vertex";
+                file.type = VERT_SHADER;
                 file.path = argument;
                 file.lastChange = st.st_mtime;
                 files.push_back(file);
+
                 sandbox.iVert = files.size()-1;
             }
         }
@@ -233,10 +237,11 @@ int main(int argc, char **argv){
             }
             else {
                 WatchFile file;
-                file.type = "geometry";
+                file.type = GEOMETRY;
                 file.path = argument;
                 file.lastChange = st.st_mtime;
                 files.push_back(file);
+
                 sandbox.iGeom = files.size()-1;
             }
         }
@@ -258,7 +263,7 @@ int main(int argc, char **argv){
                     sandbox.textures[name] = tex;
 
                     WatchFile file;
-                    file.type = "image";
+                    file.type = IMAGE;
                     file.path = argument;
                     file.lastChange = st.st_mtime;
                     file.vFlip = sandbox.vFlip;
@@ -283,7 +288,7 @@ int main(int argc, char **argv){
                     sandbox.setCubeMap(tex);
 
                     WatchFile file;
-                    file.type = "cubemap";
+                    file.type = CUBEMAP;
                     file.path = argument;
                     file.lastChange = st.st_mtime;
                     file.vFlip = sandbox.vFlip;
@@ -319,7 +324,7 @@ int main(int argc, char **argv){
                     sandbox.textures[parameterPair] = tex;
 
                     WatchFile file;
-                    file.type = "image";
+                    file.type = IMAGE;
                     file.path = argument;
                     file.lastChange = st.st_mtime;
                     file.vFlip = sandbox.vFlip;
@@ -346,7 +351,9 @@ int main(int argc, char **argv){
     std::thread cinWatcher( &cinWatcherThread );
 
     // Start working on the GL context
+    filesMutex.lock();
     sandbox.setup(files);
+    filesMutex.unlock();
 
     // Render Loop
     while ( isGL() && bRun.load() ) {
@@ -357,9 +364,8 @@ int main(int argc, char **argv){
 
         // Something change??
         if ( fileChanged != -1 ) {
-            sandbox.onFileChange( files, fileChanged );
-
             filesMutex.lock();
+            sandbox.onFileChange( files, fileChanged );
             fileChanged = -1;
             filesMutex.unlock();
         }
@@ -410,9 +416,9 @@ void fileWatcherThread() {
                     files[i].lastChange = date;
                     filesMutex.unlock();
                 }
-                usleep(500000);
             }
         }
+        usleep(500000);
     }
 }
 
@@ -455,6 +461,11 @@ void cinWatcherThread() {
         else if (line == "frag") {
             std::cout << sandbox.getFragmentSource() << std::endl;
         }
+        else if (line == "frag_dependencies") {
+            for (unsigned int i = 0; i < sandbox.frag_dependencies.size(); i++) {
+                std::cout << sandbox.frag_dependencies[i] << std::endl;
+            }
+        }
         else if (beginsWith(line, "vert,")) {
             std::vector<std::string> values = split(line,',');
             if (values.size() == 2) {
@@ -466,9 +477,14 @@ void cinWatcherThread() {
         else if (line == "vert") {
             std::cout << sandbox.getVertexSource() << std::endl;
         }
+        else if (line == "vert_dependencies") {
+            for (unsigned int i = 0; i < sandbox.frag_dependencies.size(); i++) {
+                std::cout << sandbox.frag_dependencies[i] << std::endl;
+            }
+        }
         else if (line == "files") {
-            for (unsigned int i = 0; i < files.size(); i++) {
-                std::cout << std::setw(2) << i << "," << std::setw(9) << files[i].type << "," << files[i].path << std::endl;
+            for (unsigned int i = 0; i < files.size(); i++) { 
+                std::cout << std::setw(2) << i << "," << std::setw(12) << toString(files[i].type) << "," << files[i].path << std::endl;
             }
         }
         else if (line == "buffers") {
@@ -568,19 +584,30 @@ void cinWatcherThread() {
         else if (beginsWith(line, "sequence")) {
             std::vector<std::string> values = split(line,',');
             if (values.size() == 3) {
+                float from = toFloat(values[1]);
+                float to = toFloat(values[2]);
+
+                if (from >= to) {
+                    from = 0.0;
+                }
+
                 consoleMutex.lock();
-                sandbox.record(toFloat(values[1]), toFloat(values[2]));
+                sandbox.record(from, to);
                 consoleMutex.unlock();
 
                 std::cout << "// " << std::endl;
 
                 int pct = 0;
                 while (pct < 100) {
+                    // Delete previous line
                     const std::string deleteLine = "\e[2K\r\e[1A";
                     std::cout << deleteLine;
+
+                    // Check progres.
                     consoleMutex.lock();
                     pct = sandbox.getRecordedPorcentage();
                     consoleMutex.unlock();
+                    
                     std::cout << "// [ ";
                     for (int i = 0; i < 50; i++) {
                         if (i < pct/2) {

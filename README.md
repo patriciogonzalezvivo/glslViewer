@@ -256,6 +256,14 @@ Once glslViewer is running the CIN is listening for some commands, so you can pa
 
 * `vert`: return the source of the vertex shader
 
+* `frag[,filename]`: save the source of the fragment shader into a file
+
+* `vert[,filename]`: save the source of the vertex shader into a file
+
+* `frag_dependencies`: return the the fragment shader dependencies
+
+* `vert_dependencies`: return the the vertex shader dependencies
+
 * `file`: return a list of files
 
 * `buffers`: return a list of active buffers as their sampler2D uniform name
@@ -276,13 +284,19 @@ Once glslViewer is running the CIN is listening for some commands, so you can pa
 
 * `mouse_x`, `mouse_y` and `mouse`: return the position of the mouse (content of `u_mouse`)
 
-* `camera_distance`: returns the distance of the camera to the model. If a value is provide separated by a comma will set the distance. Ex: `camera_distance,10.0` 
+* `camera_distance`: returns the distance of the camera to the model.
 
-* `camera_position`: returns the position of the camera. If a value is provide separated by commas will set the position. Ex: `camera_position,0.0,0.0,10.0` 
+* `camera_distance[,<distance>]`: set the distance. Ex: `camera_distance,10.0` 
 
-* `view3d`: returns the position of the camera, the up-vector and the center of the object;
+* `camera_position`: returns the position of the camera.
 
-* `screenshot,[filename]`: save a screenshot of what's being rendered. If there is no filename as argument will default to what was defined after the `-o` argument when glslViewer was launched.
+* `camera_position[,<x>,<y>,<z>]`: set the position. Ex: `camera_position,0.0,0.0,10.0` 
+
+* `view3d`: returns the position of the camera, the up-vector and the center of the object.
+
+* `screenshot`: save a screenshot of what's being rendered to what was defined after the `-o` argument when glslViewer was launched.
+
+* `screenshot[,<filename>]`: save a screenshot of what's being rendered to a especific file.
 
 * `sequence,<start_sec>,<end_sec>`:   saves a sequence of images from A to B second.
 

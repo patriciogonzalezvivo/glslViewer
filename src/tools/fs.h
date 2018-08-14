@@ -3,17 +3,34 @@
 #include <vector>
 #include <string>
 
-struct WatchFile {
-    std::string type;
-    std::string path;
-    bool vFlip;
-    int lastChange;
+enum FileType {
+    FRAG_SHADER     = 0,
+    VERT_SHADER     = 1,
+    IMAGE           = 2,
+    GEOMETRY        = 3,
+    CUBEMAP         = 4,
+    GLSL_DEPENDENCY = 5
 };
 
+struct WatchFile {
+    std::string path;
+    FileType    type;
+    int         lastChange;
+    bool        vFlip;      // Use for textures to know if they should be flipped or not
+};
+
+typedef std::vector<std::string> FileList;
 typedef std::vector<WatchFile> WatchFileList;
 
-std::string getAbsPath (const std::string& str);
-bool urlExists(const std::string& name);
-std::string urlResolve(const std::string& path, const std::string& pwd, const std::vector<std::string> include_folders);
-bool loadFromPath(const std::string& path, std::string* into, const std::vector<std::string> include_folders);
-bool haveExt(const std::string& file, const std::string& ext);
+bool urlExists(const std::string &_filename);
+bool haveExt(const std::string &_filename, const std::string &_ext);
+
+bool loadFromPath(const std::string &_filename, std::string *_into, const FileList &_include_folders, FileList *_dependencies);
+
+std::string toString(FileType _type);
+std::string getAbsPath (const std::string &_filename);
+std::string urlResolve(const std::string &_filename, const std::string &_pwd, const FileList &_include_folders);
+
+FileList mergeList(const FileList &_A, const FileList &_B);
+
+
