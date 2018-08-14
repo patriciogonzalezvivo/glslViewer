@@ -140,25 +140,26 @@ bool Shader::load(const std::string& _fragmentSrc, const std::string& _vertexSrc
         m_background = check_for_background(_fragmentSrc);
 
         // u_time
-        m_time = find_id(_fragmentSrc, "u_time");
+        m_time = find_id(_fragmentSrc, "u_time") || find_id(_vertexSrc, "u_time");
         
         // u_delta
-        m_delta = find_id(_fragmentSrc, "u_delta");
+        m_delta = find_id(_fragmentSrc, "u_delta") || find_id(_vertexSrc, "u_delta");
         
         // u_data
-        m_date = find_id(_fragmentSrc, "u_date");
+        m_date = find_id(_fragmentSrc, "u_date") || find_id(_vertexSrc, "u_date");
         
         /// u_mouse as vec4
-        m_mouse4 = find_id(_fragmentSrc, "vec4 u_mouse");
+        m_mouse4 = find_id(_fragmentSrc, "vec4 u_mouse") || find_id(_vertexSrc, "vec4 u_mouse");
 
         // u_mouse as vec2 (Legacy)
-        m_mouse = find_id(_fragmentSrc, "u_mouse");
+        m_mouse = find_id(_fragmentSrc, "u_mouse") || find_id(_vertexSrc, "u_mouse");
 
         // u_view 2D
-        m_view2d = find_id(_fragmentSrc, "u_view2d");
+        m_view2d = find_id(_fragmentSrc, "u_view2d") || find_id(_vertexSrc, "u_view2d");
 
         // u_view 3D
-        m_view3d = (find_id(_fragmentSrc, "u_eye3d") || find_id(_fragmentSrc, "u_centre3d") || find_id(_fragmentSrc, "u_up3d"));
+        m_view3d =  (find_id(_fragmentSrc, "u_eye3d") || find_id(_fragmentSrc, "u_centre3d") || find_id(_fragmentSrc, "u_up3d")) ||
+                    (find_id(_vertexSrc, "u_eye3d") || find_id(_vertexSrc, "u_centre3d") || find_id(_vertexSrc, "u_up3d"));
     }
 
     m_program = glCreateProgram();

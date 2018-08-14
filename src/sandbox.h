@@ -115,10 +115,10 @@ private:
     Shader              m_background_shader;
     bool                m_background_enabled;
 
-    // Postprocessing
-    Fbo                 m_postprocessing_fbo;
-    Shader              m_postprocessing_shader;
-    bool                m_postprocessing_enabled;
+    // // Postprocessing
+    // Fbo                 m_postprocessing_fbo;
+    // Shader              m_postprocessing_shader;
+    // bool                m_postprocessing_enabled;
 
     // CubeMap
     Shader              m_cubemap_shader;

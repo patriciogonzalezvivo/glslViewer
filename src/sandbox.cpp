@@ -122,11 +122,17 @@ precision mediump float;\n\
 \n\
 attribute vec4 a_position;\n\
 attribute vec2 a_texcoord;\n\
+varying vec4 v_position;\n\
+varying vec3 v_color;\n\
+varying vec3 v_normal;\n\
 varying vec2 v_texcoord;\n\
 \n\
 void main(void) {\n\
-    gl_Position = a_position;\n\
+    v_position =  a_position;\n\
+    v_color = vec3(1.0);\n\
+    v_normal = vec3(0.0,0.0,1.0);\n\
     v_texcoord = a_texcoord;\n\
+    gl_Position = v_position;\n\
 }";
 
     _updateBackground();
@@ -318,6 +324,7 @@ void Sandbox::draw() {
     // Update buffers
     int textureIndex = 0;
     for (unsigned int i = 0; i < m_buffers.size(); i++) {
+        textureIndex = 0;
         m_buffers[i].bind();
         m_buffers_shaders[i].use();
 
@@ -345,6 +352,7 @@ void Sandbox::draw() {
     }
 
     if (m_background_enabled) {
+        textureIndex = 0;
         m_background_shader.use();
 
         // Update Uniforms variables
@@ -362,6 +370,7 @@ void Sandbox::draw() {
     }
     // Cubemap
     else if (geom_index != -1 && m_cubemap) {
+        textureIndex = 0;
         m_cubemap_shader.use();
 
         m_cubemap_shader.setUniform("u_modelViewProjectionMatrix", m_cam.getProjectionMatrix() * glm::toMat4(m_cam.getOrientationQuat()) );
@@ -376,6 +385,7 @@ void Sandbox::draw() {
     }
 
     // MAIN SHADER
+    textureIndex = 0;
     m_shader.use();
 
     // Update Uniforms variables
