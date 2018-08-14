@@ -1,6 +1,7 @@
 #include "sandbox.h"
 
-#include <sys/stat.h>
+#include <sys/stat.h>   // stat
+#include <algorithm>    // std::find
 
 #include "window.h"
 
