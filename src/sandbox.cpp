@@ -16,9 +16,8 @@
 #define FRAME_DELTA 0.03333333333
 
 Sandbox::Sandbox(): 
-    iFrag(-1), iVert(-1), iGeom(-1),
-    verbose(false), vFlip(true),
-    m_fragPath(nullptr), m_vertPath(nullptr),
+    frag_index(-1), vert_index(-1), geom_index(-1),
+    verbose(false),
     m_lat(180.0), m_lon(0.0),
     m_background_enabled(false),
     m_cubemap_vbo(nullptr), m_cubemap(nullptr) {
@@ -67,12 +66,12 @@ void Sandbox::setup( WatchFileList &_files ) {
 
     //  Load Geometry
     //
-    if (iGeom == -1) {
+    if (geom_index == -1) {
         m_vbo = rect(0.0,0.0,1.0,1.0).getVbo();
     }
     else {
         Mesh model;
-        model.load( _files[iGeom].path );
+        model.load( _files[geom_index].path );
         m_vbo = model.getVbo();
         m_centre3d = getCentroid( model.getVertices() );
         m_vbo_matrix = glm::translate( -m_centre3d );
@@ -88,32 +87,30 @@ void Sandbox::setup( WatchFileList &_files ) {
 
     //  Build shader
     //
-    if (iFrag != -1) {
-        m_fragPath = &_files[iFrag].path;
-        m_fragSource = "";
-        frag_dependencies.clear();
+    if (frag_index != -1) {
+        m_frag_source = "";
+        m_frag_dependencies.clear();
 
-        if ( !loadFromPath(*m_fragPath, &m_fragSource, include_folders, &frag_dependencies) ) {
+        if ( !loadFromPath(_files[frag_index].path, &m_frag_source, include_folders, &m_frag_dependencies) ) {
             return;
         }
 
     }
     else {
-        m_fragSource = m_vbo->getVertexLayout()->getDefaultFragShader();
+        m_frag_source = m_vbo->getVertexLayout()->getDefaultFragShader();
     }
 
-    if (iVert != -1) {
-        m_vertPath = &_files[iVert].path;
-        m_vertSource = "";
-        vert_dependencies.clear();
+    if (vert_index != -1) {
+        m_vert_source = "";
+        m_vert_dependencies.clear();
 
-        loadFromPath(*m_vertPath, &m_vertSource, include_folders, &vert_dependencies);
+        loadFromPath(_files[vert_index].path, &m_vert_source, include_folders, &m_vert_dependencies);
     }
     else {
-        m_vertSource = m_vbo->getVertexLayout()->getDefaultVertShader();
+        m_vert_source = m_vbo->getVertexLayout()->getDefaultVertShader();
     }
 
-    m_shader.load(m_fragSource, m_vertSource, defines, verbose);
+    m_shader.load(m_frag_source, m_vert_source, defines, verbose);
     _updateDependencies( _files );
 
     // Init buffers
@@ -186,10 +183,28 @@ void main(void) {\n\
     m_buffers_shaders.clear();
 }
 
-std::string Sandbox::get3DView() const {
-    return  "up,"      + toString(m_up3d.x)    + "," + toString(m_up3d.y)      + "," + toString(m_up3d.z) + "\n" +
-            "eye,"     + toString(m_eye3d.x)   + "," + toString(m_eye3d.y)     + "," + toString(m_eye3d.z) + "\n" +
-            "centre,"  + toString(m_centre3d.x) + "," + toString(m_centre3d.y) + "," + toString(m_centre3d.z) + "\n";            
+std::string Sandbox::getSource(ShaderType _type) const {
+    if (_type == FRAGMENT) return m_frag_source;
+    else return m_vert_source;
+}
+
+void Sandbox::printDependencies(ShaderType _type) const {
+    if (_type == FRAGMENT) {
+        for (unsigned int i = 0; i < m_frag_dependencies.size(); i++) {
+            std::cout << m_frag_dependencies[i] << std::endl;
+        }
+    }
+    else {
+        for (unsigned int i = 0; i < m_vert_dependencies.size(); i++) {
+            std::cout << m_vert_dependencies[i] << std::endl;
+        }
+    }
+}
+
+void Sandbox::print3DView() const {
+    std::cout << "up,"      << toString(m_up3d.x)       << "," << toString(m_up3d.y)   <<  "," << toString(m_up3d.z)        << std::endl;
+    std::cout << "eye,"     << toString(m_eye3d.x)      << "," << toString(m_eye3d.y)  <<  "," << toString(m_eye3d.z)       << std::endl;
+    std::cout << "centre,"  << toString(m_centre3d.x)   << "," + toString(m_centre3d.y) << "," << toString(m_centre3d.z)    << std::endl;           
 }
 
 void Sandbox::_updateBackground() {
@@ -199,7 +214,7 @@ void Sandbox::_updateBackground() {
         // Specific defines for this buffer
         std::vector<std::string> sub_defines = defines;
         sub_defines.push_back("BACKGROUND");
-        m_background_shader.load(m_fragSource, m_billboard_vert, sub_defines, verbose);
+        m_background_shader.load(m_frag_source, m_billboard_vert, sub_defines, verbose);
     }
 }
 
@@ -222,7 +237,7 @@ void Sandbox::_updateBuffers() {
 
             // New SHADER
             m_buffers_shaders.push_back( Shader() );
-            m_buffers_shaders[i].load(m_fragSource, m_billboard_vert, sub_defines, verbose);
+            m_buffers_shaders[i].load(m_frag_source, m_billboard_vert, sub_defines, verbose);
         }
     }
     else {
@@ -232,7 +247,7 @@ void Sandbox::_updateBuffers() {
             sub_defines.push_back("BUFFER_" + toString(i));
 
             // Reload shader code
-            m_buffers_shaders[i].load(m_fragSource, m_billboard_vert, sub_defines, verbose);
+            m_buffers_shaders[i].load(m_frag_source, m_billboard_vert, sub_defines, verbose);
         }
     }
  }
@@ -346,7 +361,7 @@ void Sandbox::draw() {
         m_billboard_vbo->draw( &m_background_shader );
     }
     // Cubemap
-    else if (iGeom != -1 && m_cubemap) {
+    else if (geom_index != -1 && m_cubemap) {
         m_cubemap_shader.use();
 
         m_cubemap_shader.setUniform("u_modelViewProjectionMatrix", m_cam.getProjectionMatrix() * glm::toMat4(m_cam.getOrientationQuat()) );
@@ -356,7 +371,7 @@ void Sandbox::draw() {
         m_cubemap_vbo->draw( &m_cubemap_shader );
     }
 
-    if (iGeom != -1) {
+    if (geom_index != -1) {
         glEnable(GL_DEPTH_TEST);
     }
 
@@ -380,7 +395,7 @@ void Sandbox::draw() {
 
     glm::mat4 mvp = glm::mat4(1.);
     // Pass special uniforms
-    if (iGeom != -1) {
+    if (geom_index != -1) {
         m_shader.setUniform("u_eye", -m_cam.getPosition());
         m_shader.setUniform("u_normalMatrix", m_cam.getNormalMatrix());
 
@@ -394,7 +409,7 @@ void Sandbox::draw() {
 
     m_vbo->draw( &m_shader );
 
-    if (iGeom != -1) {
+    if (geom_index != -1) {
         glDisable(GL_DEPTH_TEST);
     }
 
@@ -418,7 +433,7 @@ int Sandbox::getRecordedPorcentage() {
 
 bool Sandbox::reload() {
     m_shader.detach(GL_FRAGMENT_SHADER | GL_VERTEX_SHADER);
-    bool success = m_shader.load(m_fragSource, m_vertSource, defines, verbose);
+    bool success = m_shader.load(m_frag_source, m_vert_source, defines, verbose);
 
     if (!success) {
         std::string default_vert = m_vbo->getVertexLayout()->getDefaultVertShader(); 
@@ -434,21 +449,21 @@ void Sandbox::onFileChange(WatchFileList &_files, int index) {
     std::string filename = _files[index].path;
 
     if (type == GLSL_DEPENDENCY) {
-        if (std::find(frag_dependencies.begin(), frag_dependencies.end(), filename) != frag_dependencies.end()) {
+        if (std::find(m_frag_dependencies.begin(), m_frag_dependencies.end(), filename) != m_frag_dependencies.end()) {
             type = FRAG_SHADER;
-            filename = _files[iFrag].path;
+            filename = _files[frag_index].path;
         }
-        else if(std::find(vert_dependencies.begin(), vert_dependencies.end(), filename) != vert_dependencies.end()) {
+        else if(std::find(m_vert_dependencies.begin(), m_vert_dependencies.end(), filename) != m_vert_dependencies.end()) {
             type = VERT_SHADER;
-            filename = _files[iVert].path;
+            filename = _files[vert_index].path;
         }
     }
 
     if (type == FRAG_SHADER) {
-        m_fragSource = "";
-        frag_dependencies.clear();
+        m_frag_source = "";
+        m_frag_dependencies.clear();
 
-        if (loadFromPath(filename, &m_fragSource, include_folders, &frag_dependencies)) {
+        if (loadFromPath(filename, &m_frag_source, include_folders, &m_frag_dependencies)) {
             reload();
             _updateBackground();
             _updateBuffers();
@@ -457,10 +472,10 @@ void Sandbox::onFileChange(WatchFileList &_files, int index) {
         }
     }
     else if (type == VERT_SHADER) {
-        m_vertSource = "";
-        vert_dependencies.clear();
+        m_vert_source = "";
+        m_vert_dependencies.clear();
 
-        if (loadFromPath(filename, &m_vertSource, include_folders, &vert_dependencies)) {
+        if (loadFromPath(filename, &m_vert_source, include_folders, &m_vert_dependencies)) {
             reload();
         }
     }
@@ -483,7 +498,7 @@ void Sandbox::onFileChange(WatchFileList &_files, int index) {
 }
 
 void Sandbox::_updateDependencies(WatchFileList &_files) {
-    FileList new_dependencies = mergeList(frag_dependencies, vert_dependencies);
+    FileList new_dependencies = mergeList(m_frag_dependencies, m_vert_dependencies);
 
     // remove old dependencies
     for (int i = _files.size() - 1; i >= 0; i--) {
@@ -525,7 +540,7 @@ void Sandbox::onScroll(float _yoffset) {
 void Sandbox::onMouseDrag(float _x, float _y, int _button) {
     if (_button == 1) {
 
-        if (iGeom != -1) {
+        if (geom_index != -1) {
             // Left-button drag is used to rotate geometry.
             float dist = m_cam.getDistance();
             m_lat -= getMouseVelX();
@@ -557,7 +572,7 @@ void Sandbox::onMouseDrag(float _x, float _y, int _button) {
     } 
     else {
 
-        if (iGeom != -1) {
+        if (geom_index != -1) {
             // Right-button drag is used to zoom geometry.
             float dist = m_cam.getDistance();
             dist += (-.008f * getMouseVelY());
@@ -581,7 +596,7 @@ void Sandbox::onMouseDrag(float _x, float _y, int _button) {
 }
 
 void Sandbox::onViewportResize(int _newWidth, int _newHeight) {
-    if (iGeom != -1) {
+    if (geom_index != -1) {
         m_cam.setViewport(_newWidth, _newHeight);
     }
     for (unsigned int i = 0; i < m_buffers.size(); i++) {

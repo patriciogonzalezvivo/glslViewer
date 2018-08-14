@@ -11,6 +11,11 @@
 
 #include "tools/fs.h"
 
+enum ShaderType {
+    FRAGMENT = 0,
+    VERTEX = 1
+};
+
 typedef std::vector<std::string> List;
 typedef std::map<std::string,Texture*> TextureList;
 
@@ -33,11 +38,12 @@ public:
     void        setCubeMap(TextureCube* _cubemap) { m_cubemap = _cubemap; }
 
     // Getting some data out of Sandbox
-    std::string getVertexSource() const { return m_vertSource; } 
-    std::string getFragmentSource() const { return m_fragSource; }
-    std::string get3DView() const;
-    Camera&     getCamera() { return m_cam; }
+    std::string getSource(ShaderType _type) const;
     int         getTotalBuffers() const { return m_buffers.size(); }
+    Camera&     getCamera() { return m_cam; }
+
+    void        printDependencies(ShaderType _type) const;
+    void        print3DView() const;
     
     // Some events
     void        onFileChange(WatchFileList &_files, int _index);
@@ -58,20 +64,15 @@ public:
     // Include folders
     FileList    include_folders;
 
-    // Dependencies
-    FileList    vert_dependencies;
-    FileList    frag_dependencies;
-
     // Screenshot file
     std::string screenshotFile;
 
     // States
-    int         iFrag;
-    int         iVert;
-    int         iGeom;
+    int         frag_index;
+    int         vert_index;
+    int         geom_index;
 
     bool        verbose;
-    bool        vFlip;
 
 private:
     void _updateBackground(); 
@@ -81,12 +82,11 @@ private:
     void _updateDependencies(WatchFileList &_files);
 
     // Main Shader
-    std::string         m_fragSource;
-    const std::string*  m_fragPath;
-    
-    std::string         m_vertSource;
-    const std::string*  m_vertPath;
-
+    std::string         m_frag_source;
+    std::string         m_vert_source;
+    // Dependencies
+    FileList            m_vert_dependencies;
+    FileList            m_frag_dependencies;
     Shader              m_shader;
 
     // Geometry
@@ -102,15 +102,23 @@ private:
     float               m_lat;
     float               m_lon;
 
+
+    // Billboard
+    Vbo*                m_billboard_vbo;
+    std::string         m_billboard_vert;
+
     // Buffers
     std::vector<Fbo>    m_buffers;
     std::vector<Shader> m_buffers_shaders;
-    Vbo*                m_billboard_vbo;
-    std::string         m_billboard_vert;
     
     // Background
     Shader              m_background_shader;
     bool                m_background_enabled;
+
+    // Postprocessing
+    Fbo                 m_postprocessing_fbo;
+    Shader              m_postprocessing_shader;
+    bool                m_postprocessing_enabled;
 
     // CubeMap
     Shader              m_cubemap_shader;

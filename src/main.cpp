@@ -162,10 +162,11 @@ int main(int argc, char **argv){
     // Initialize openGL context
     initGL (windowPosAndSize, headless);
 
-    Cursor cursor;  // Cursor
-    struct stat st; // for files to watch
-    float timeLimit = -1.0f; //  Time limit
-    int textureCounter = 0; // Number of textures to load
+    Cursor cursor;              // Cursor
+    struct stat st;             // for files to watch
+    float timeLimit = -1.0f;    // Time limit
+    int textureCounter = 0;     // Number of textures to load
+    bool vFlip = true;          // Flip state
 
     //Load the the resources (textures)
     for (int i = 1; i < argc ; i++){
@@ -202,7 +203,7 @@ int main(int argc, char **argv){
                 std::cerr << "At the moment screenshots only support PNG formats" << std::endl;
             }
         }
-        else if ( sandbox.iFrag == -1 && (haveExt(argument,"frag") || haveExt(argument,"fs") ) ) {
+        else if ( sandbox.frag_index == -1 && (haveExt(argument,"frag") || haveExt(argument,"fs") ) ) {
             if ( stat(argument.c_str(), &st) != 0 ) {
                 std::cerr << "Error watching file " << argv[i] << std::endl;
             }
@@ -213,10 +214,10 @@ int main(int argc, char **argv){
                 file.lastChange = st.st_mtime;
                 files.push_back(file);
 
-                sandbox.iFrag = files.size()-1;
+                sandbox.frag_index = files.size()-1;
             }
         }
-        else if ( sandbox.iVert == -1 && ( haveExt(argument,"vert") || haveExt(argument,"vs") ) ) {
+        else if ( sandbox.vert_index == -1 && ( haveExt(argument,"vert") || haveExt(argument,"vs") ) ) {
             if ( stat(argument.c_str(), &st) != 0) {
                 std::cerr << "Error watching file " << argument << std::endl;
             }
@@ -227,10 +228,10 @@ int main(int argc, char **argv){
                 file.lastChange = st.st_mtime;
                 files.push_back(file);
 
-                sandbox.iVert = files.size()-1;
+                sandbox.vert_index = files.size()-1;
             }
         }
-        else if ( sandbox.iGeom == -1 && (  haveExt(argument,"ply") || haveExt(argument,"PLY") ||
+        else if ( sandbox.geom_index == -1 && (  haveExt(argument,"ply") || haveExt(argument,"PLY") ||
                                             haveExt(argument,"obj") || haveExt(argument,"OBJ") ) ) {
             if ( stat(argument.c_str(), &st) != 0) {
                 std::cerr << "Error watching file " << argument << std::endl;
@@ -242,11 +243,11 @@ int main(int argc, char **argv){
                 file.lastChange = st.st_mtime;
                 files.push_back(file);
 
-                sandbox.iGeom = files.size()-1;
+                sandbox.geom_index = files.size()-1;
             }
         }
         else if ( argument == "-vFlip" ) {
-            sandbox.vFlip = false;
+            vFlip = false;
         }
         else if (   haveExt(argument,"hdr") || haveExt(argument,"HDR") ||
                     haveExt(argument,"png") || haveExt(argument,"PNG") ||
@@ -258,7 +259,7 @@ int main(int argc, char **argv){
             else {
                 Texture* tex = new Texture();
 
-                if ( tex->load(argument, sandbox.vFlip) ) {
+                if ( tex->load(argument, vFlip) ) {
                     std::string name = "u_tex"+toString(textureCounter);
                     sandbox.textures[name] = tex;
 
@@ -266,7 +267,7 @@ int main(int argc, char **argv){
                     file.type = IMAGE;
                     file.path = argument;
                     file.lastChange = st.st_mtime;
-                    file.vFlip = sandbox.vFlip;
+                    file.vFlip = vFlip;
                     files.push_back(file);
 
                     std::cout << "// " << argument << " loaded as: " << std::endl;
@@ -284,14 +285,14 @@ int main(int argc, char **argv){
             }
             else {
                 TextureCube* tex = new TextureCube();
-                if ( tex->load(argument, sandbox.vFlip) ) {
+                if ( tex->load(argument, vFlip) ) {
                     sandbox.setCubeMap(tex);
 
                     WatchFile file;
                     file.type = CUBEMAP;
                     file.path = argument;
                     file.lastChange = st.st_mtime;
-                    file.vFlip = sandbox.vFlip;
+                    file.vFlip = vFlip;
                     files.push_back(file);
 
                     std::cout << "// " << argument << " loaded as: " << std::endl;
@@ -320,14 +321,14 @@ int main(int argc, char **argv){
             }
             else {
                 Texture* tex = new Texture();
-                if (tex->load(argument, sandbox.vFlip)) {
+                if (tex->load(argument, vFlip)) {
                     sandbox.textures[parameterPair] = tex;
 
                     WatchFile file;
                     file.type = IMAGE;
                     file.path = argument;
                     file.lastChange = st.st_mtime;
-                    file.vFlip = sandbox.vFlip;
+                    file.vFlip = vFlip;
                     files.push_back(file);
 
                     std::cout << "// " << argument << " loaded as: " << std::endl;
@@ -339,7 +340,7 @@ int main(int argc, char **argv){
     }
 
     // If no shader
-    if ( sandbox.iFrag == -1 && sandbox.iVert == -1 && sandbox.iGeom == -1 ) {
+    if ( sandbox.frag_index == -1 && sandbox.vert_index == -1 && sandbox.geom_index == -1 ) {
         printUsage(argv[0]);
         onExit();
         exit(EXIT_FAILURE);
@@ -448,39 +449,35 @@ void cinWatcherThread() {
             std::cout << date.x << ',' << date.y << ',' << date.z << ',' << date.w << std::endl;
         }
         else if (line == "view3d") {
-            std::cout << sandbox.get3DView() << std::endl;
+            sandbox.print3DView();
         }
         else if (beginsWith(line, "frag,")) {
             std::vector<std::string> values = split(line,',');
             if (values.size() == 2) {
                 std::ofstream out(values[1]);
-                out << sandbox.getFragmentSource();
+                out << sandbox.getSource(FRAGMENT);
                 out.close();
             }
         }
         else if (line == "frag") {
-            std::cout << sandbox.getFragmentSource() << std::endl;
+            std::cout << sandbox.getSource(FRAGMENT) << std::endl;
         }
         else if (line == "frag_dependencies") {
-            for (unsigned int i = 0; i < sandbox.frag_dependencies.size(); i++) {
-                std::cout << sandbox.frag_dependencies[i] << std::endl;
-            }
+            sandbox.printDependencies(FRAGMENT);
         }
         else if (beginsWith(line, "vert,")) {
             std::vector<std::string> values = split(line,',');
             if (values.size() == 2) {
                 std::ofstream out(values[1]);
-                out << sandbox.getVertexSource();
+                out << sandbox.getSource(VERTEX);
                 out.close();
             }
         }
         else if (line == "vert") {
-            std::cout << sandbox.getVertexSource() << std::endl;
+            std::cout << sandbox.getSource(VERTEX) << std::endl;
         }
         else if (line == "vert_dependencies") {
-            for (unsigned int i = 0; i < sandbox.frag_dependencies.size(); i++) {
-                std::cout << sandbox.frag_dependencies[i] << std::endl;
-            }
+            sandbox.printDependencies(VERTEX);
         }
         else if (line == "files") {
             for (unsigned int i = 0; i < files.size(); i++) { 
@@ -630,7 +627,7 @@ void cinWatcherThread() {
                 sandbox.addDefines( values[1] ); 
                 consoleMutex.unlock();
                 filesMutex.lock();
-                fileChanged = sandbox.iFrag;
+                fileChanged = sandbox.frag_index;
                 filesMutex.unlock();
             }
         }
@@ -641,7 +638,7 @@ void cinWatcherThread() {
                 sandbox.delDefines( values[1] ); 
                 consoleMutex.unlock();
                 filesMutex.lock();
-                fileChanged = sandbox.iFrag;
+                fileChanged = sandbox.frag_index;
                 filesMutex.unlock();
             }
         }
