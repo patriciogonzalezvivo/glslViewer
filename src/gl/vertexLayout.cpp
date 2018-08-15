@@ -8,7 +8,7 @@ std::string uniforms_common =
 "uniform mat4 u_modelMatrix;\n"
 "uniform mat4 u_viewMatrix;\n"
 "uniform mat4 u_projectionMatrix;\n"
-"uniform mat4 u_normalMatrix;\n"
+"uniform mat3 u_normalMatrix;\n"
 "\n"
 "uniform vec4 u_date;\n"
 "uniform vec3 u_eye;\n"
