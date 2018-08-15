@@ -75,12 +75,13 @@ public:
     bool        verbose;
 
 private:
-    void _updateBackground(); 
-    void _updateBuffers();
     void _updateUniforms( Shader &_shader );
     void _updateTextures( Shader &_shader, int &_textureIndex  );
     void _updateDependencies(WatchFileList &_files);
-
+    void _updateBuffers();
+    void _updateBackground();
+    void _updatePostprocessing();
+    
     // Main Shader
     std::string         m_frag_source;
     std::string         m_vert_source;
@@ -115,10 +116,10 @@ private:
     Shader              m_background_shader;
     bool                m_background_enabled;
 
-    // // Postprocessing
-    // Fbo                 m_postprocessing_fbo;
-    // Shader              m_postprocessing_shader;
-    // bool                m_postprocessing_enabled;
+    // Postprocessing
+    Fbo                 m_scene_fbo;
+    Shader              m_postprocessing_shader;
+    bool                m_postprocessing_enabled;
 
     // CubeMap
     Shader              m_cubemap_shader;

@@ -26,7 +26,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "fbo.h"
 #include <iostream>
 
-Fbo::Fbo():m_id(0), m_old_fbo_id(0), m_texture(0), m_depth_buffer(0), m_width(0), m_height(0), m_allocated(false), m_binded(false) {
+Fbo::Fbo():m_id(0), m_old_fbo_id(0), m_texture(0), m_depth_buffer(0), m_width(0), m_height(0), m_allocated(false), m_binded(false), m_depth(false) {
 }
 
 Fbo::~Fbo() {
@@ -40,6 +40,8 @@ Fbo::~Fbo() {
 }
 
 void Fbo::allocate(const uint _width, const uint _height, bool _depth) {
+    m_depth = _depth;
+
     if (!m_allocated) {
         // Create a frame buffer
         glGenFramebuffers(1, &m_id);
@@ -70,7 +72,7 @@ void Fbo::allocate(const uint _width, const uint _height, bool _depth) {
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_texture, 0);
 
         // Depth Buffer
-        if (_depth) {
+        if (m_depth) {
             glBindRenderbuffer(GL_RENDERBUFFER, m_depth_buffer);
 #ifdef PLATFORM_RPI
             glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16, m_width, m_height);
@@ -86,7 +88,7 @@ void Fbo::allocate(const uint _width, const uint _height, bool _depth) {
         unbind();
 
         glBindTexture(GL_TEXTURE_2D, 0);
-        if (_depth){
+        if (m_depth){
             glBindRenderbuffer(GL_RENDERBUFFER, 0);
         }
     // }
@@ -101,7 +103,7 @@ void Fbo::bind() {
         glBindFramebuffer(GL_FRAMEBUFFER, m_id);
         glViewport(0.0f, 0.0f, m_width, m_height);
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-        if (m_depth_buffer) {
+        if (m_depth) {
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         } else {
             glClear(GL_COLOR_BUFFER_BIT);

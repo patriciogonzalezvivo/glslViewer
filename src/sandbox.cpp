@@ -19,7 +19,7 @@ Sandbox::Sandbox():
     frag_index(-1), vert_index(-1), geom_index(-1),
     verbose(false),
     m_lat(180.0), m_lon(0.0),
-    m_background_enabled(false),
+    m_background_enabled(false), m_postprocessing_enabled(false),
     m_cubemap_vbo(nullptr), m_cubemap(nullptr) {
 
     m_view2d = glm::mat3(1.);
@@ -136,6 +136,7 @@ void main(void) {\n\
 }";
 
     _updateBackground();
+    _updatePostprocessing();
     _updateBuffers();
 
     // CUBEMAP
@@ -221,6 +222,23 @@ void Sandbox::_updateBackground() {
         std::vector<std::string> sub_defines = defines;
         sub_defines.push_back("BACKGROUND");
         m_background_shader.load(m_frag_source, m_billboard_vert, sub_defines, verbose);
+    }
+}
+
+void Sandbox::_updatePostprocessing() {
+
+    // If it's new that postprocessing is ON -> allocate the FBL
+    if (m_shader.isPostProcessing() && !m_postprocessing_enabled) {
+        m_scene_fbo.allocate(getWindowWidth(), getWindowHeight(), true);
+    }
+
+    m_postprocessing_enabled = m_shader.isPostProcessing();
+
+    if (m_postprocessing_enabled) {
+        // Specific defines for this buffer
+        std::vector<std::string> sub_defines = defines;
+        sub_defines.push_back("POSTPROCESSING");
+        m_postprocessing_shader.load(m_frag_source, m_billboard_vert, sub_defines, verbose);
     }
 }
 
@@ -321,7 +339,8 @@ void Sandbox::draw() {
         _updateBuffers();
     }
 
-    // Update buffers
+    // BUFFERS
+    // -----------------------------------------------
     int textureIndex = 0;
     for (unsigned int i = 0; i < m_buffers.size(); i++) {
         textureIndex = 0;
@@ -341,16 +360,22 @@ void Sandbox::draw() {
             }
         }
 
+        if (m_postprocessing_enabled) {
+            m_buffers_shaders[i].setUniformTexture("u_scene", &m_scene_fbo, textureIndex++ );
+        }
+
         m_billboard_vbo->draw( &m_buffers_shaders[i] );
 
         m_buffers[i].unbind();
     }
 
-    // need to update Background
-    if ( m_shader.isBackground() != m_background_enabled) {
-        _updateBackground();
+    // MAIN SCENE
+    // ----------------------------------------------- < main scene start
+    if (m_postprocessing_enabled) {
+        m_scene_fbo.bind();
     }
 
+    // BACKGROUND
     if (m_background_enabled) {
         textureIndex = 0;
         m_background_shader.use();
@@ -366,9 +391,13 @@ void Sandbox::draw() {
             m_background_shader.setUniformTexture("u_buffer" + toString(i), &m_buffers[i], textureIndex++ );
         }
 
+        if (m_postprocessing_enabled) {
+            m_background_shader.setUniformTexture("u_scene", &m_scene_fbo, textureIndex++ );
+        }
+
         m_billboard_vbo->draw( &m_background_shader );
     }
-    // Cubemap
+    // CUBEMAP
     else if (geom_index != -1 && m_cubemap) {
         textureIndex = 0;
         m_cubemap_shader.use();
@@ -380,6 +409,7 @@ void Sandbox::draw() {
         m_cubemap_vbo->draw( &m_cubemap_shader );
     }
 
+    // Begining of DEPTH for 3D 
     if (geom_index != -1) {
         glEnable(GL_DEPTH_TEST);
     }
@@ -419,10 +449,36 @@ void Sandbox::draw() {
 
     m_vbo->draw( &m_shader );
 
+    // END OF DEPTH for 3D 
     if (geom_index != -1) {
         glDisable(GL_DEPTH_TEST);
     }
+    // ----------------------------------------------- < main scene end
 
+    // POST PROCESSING
+    if (m_postprocessing_enabled) {
+        m_scene_fbo.unbind();
+    
+        textureIndex = 0;
+        m_postprocessing_shader.use();
+
+        // Update uniforms variables
+        _updateUniforms( m_postprocessing_shader );
+
+        // Update textures
+        _updateTextures( m_postprocessing_shader, textureIndex );
+
+        // Pass textures of buffers
+        for (unsigned int i = 0; i < m_buffers.size(); i++) {
+            m_postprocessing_shader.setUniformTexture("u_buffer" + toString(i), &m_buffers[i], textureIndex++ );
+        }
+
+        m_postprocessing_shader.setUniformTexture("u_scene", &m_scene_fbo, textureIndex++ );
+
+        m_billboard_vbo->draw( &m_postprocessing_shader );
+    }
+
+    // RECORD
     if (m_record) {
         onScreenshot(toString(m_record_counter,0,3,'0') + ".png");
         m_record_head += FRAME_DELTA;
@@ -431,7 +487,9 @@ void Sandbox::draw() {
         if (m_record_head >= m_record_end) {
             m_record = false;
         }
-    } else if (screenshotFile != "") {
+    }
+    // SCREENSHOT 
+    else if (screenshotFile != "") {
         onScreenshot(screenshotFile);
         screenshotFile = "";
     }
@@ -475,9 +533,9 @@ void Sandbox::onFileChange(WatchFileList &_files, int index) {
 
         if (loadFromPath(filename, &m_frag_source, include_folders, &m_frag_dependencies)) {
             reload();
-            _updateBackground();
             _updateBuffers();
-
+            _updateBackground();
+            _updatePostprocessing();
             _updateDependencies(_files);
         }
     }
@@ -609,8 +667,13 @@ void Sandbox::onViewportResize(int _newWidth, int _newHeight) {
     if (geom_index != -1) {
         m_cam.setViewport(_newWidth, _newHeight);
     }
+    
     for (unsigned int i = 0; i < m_buffers.size(); i++) {
         m_buffers[i].allocate(_newWidth, _newHeight, false);
+    }
+
+    if (m_postprocessing_enabled) {
+        m_scene_fbo.allocate(_newWidth, _newHeight, true);
     }
 }
 

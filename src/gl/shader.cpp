@@ -102,8 +102,24 @@ bool check_for_background(const std::string &_source) {
     // Split Source code in lines
     std::vector<std::string> lines = split(_source, '\n');
 
-    // Regext to search for #ifdef BACKGROUND, #if defined( BACKGROUND ) and #elif defined( BACKGROUND ) occurences
-    std::regex re(R"((?:^\s*#if|^\s*#elif)(?:\s+)(defined\s*\(\s*BACKGROUND)(?:\s*\))|(?:^\s*#ifdef\s+BACKGROUND))");
+    std::regex re(R"((?:^\s*#if|^\s*#elif)(?:\s+)(defined\s*\(\s*BACKGROUND)(?:\s*\))|(?:^\s*#ifdef\s+BACKGROUND)|(?:^\s*#ifndef\s+BACKGROUND))");
+    std::smatch match;
+
+    for (unsigned int l = 0; l < lines.size(); l++) {
+        if (std::regex_search(lines[l], match, re)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+// Count how many BUFFERS are in the shader
+bool check_for_postprocessing(const std::string &_source) {
+    // Split Source code in lines
+    std::vector<std::string> lines = split(_source, '\n');
+
+    std::regex re(R"((?:^\s*#if|^\s*#elif)(?:\s+)(defined\s*\(\s*POSTPROCESSING)(?:\s*\))|(?:^\s*#ifdef\s+POSTPROCESSING)|(?:^\s*#ifndef\s+POSTPROCESSING))");
     std::smatch match;
 
     for (unsigned int l = 0; l < lines.size(); l++) {
@@ -138,6 +154,9 @@ bool Shader::load(const std::string& _fragmentSrc, const std::string& _vertexSrc
 
         // Background pass
         m_background = check_for_background(_fragmentSrc);
+
+        // Postprocessing
+        m_postprocessing = check_for_postprocessing(_fragmentSrc);
 
         // u_time
         m_time = find_id(_fragmentSrc, "u_time") || find_id(_vertexSrc, "u_time");
@@ -427,6 +446,12 @@ void Shader::setUniformTexture(const std::string& _name, const Fbo* _fbo, unsign
         glActiveTexture(GL_TEXTURE0 + _texLoc);
         glBindTexture(GL_TEXTURE_2D, _fbo->getTextureId());
         glUniform1i(getUniformLocation(_name), _texLoc);
+
+        if (_fbo->haveDepthBuffer()) {
+            glActiveTexture(GL_TEXTURE0 + _texLoc + 1);
+            glBindTexture(GL_TEXTURE_2D, _fbo->getDepthTextureId() );
+            glUniform1i(getUniformLocation(_name + "_depth"), _texLoc + 1);
+        }
     }
 }
 
