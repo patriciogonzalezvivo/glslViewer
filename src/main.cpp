@@ -28,7 +28,7 @@ int fileChanged;
 std::mutex consoleMutex;
 std::string outputFile = "";
 
-std::string version = "1.5.1";
+std::string version = "1.5.2";
 
 // Here is where all the magic happens
 Sandbox sandbox;
