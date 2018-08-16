@@ -362,11 +362,12 @@ Beside the defines you can pass as an argument using `-D[define]` you can relay 
 
 * `PLATFORM_LINUX`: added only in i86 and 64bit Linux platforms.
 
-* `BACKGROUND`: added on background shader.
+* `BUFFER_[NUMBER]`: added extra buffer passes trough branching subshader. Each one renders to `uniform sampler2D u_buffer[NUMBER];`. (Readmore more about it in the next section)
 
-* `BACKGROUND`: added on background shader.
+* `BACKGROUND`: added a background subshader when rendering a 3D geometry.
 
-* `BUFFER_[NUMBER]`: added on each buffer pass.
+* `POSTPROCESSING`: added a post-processing pass where the main scene have been render to `uniform sampler2D u_scene;`.
+
 
 ### Using the defines flags to use multiple buffer passes
 
