@@ -27,7 +27,7 @@ protected:
     unsigned int m_width;
     unsigned int m_height;
 
-    bool    m_depth;
     bool    m_allocated;
     bool    m_binded;
+    bool    m_depth;
 };
