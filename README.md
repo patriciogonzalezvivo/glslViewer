@@ -114,6 +114,8 @@ brew upgrade
 brew install glslviewer
 ```
 
+** Important Note ** : brew not always have the last version of GlslViewer. If you are searching for the last feautures please compile from source (next paragraph).
+
 If you prefer to compile from source directly from this repository you need to [install GLFW](http://www.glfw.org), `pkg-config` first and then download the code, compile and install.
 
 ```bash
@@ -152,8 +154,6 @@ sudo apt install python-setuptools
 ```bash
 sudo make install_python
 ```
-
-
 
 ## Using glslViewer
 
@@ -244,7 +244,17 @@ Beside for texture uniforms other arguments can be add to `glslViewer`:
 
 Once glslViewer is running the CIN is listening for some commands, so you can pass data through regular *nix pipes.
 
-* `int`, `floats`, `vec2`, `vec3` and `vec4` uniforms can be passed as **comma separated values** (CVS), where the first column is for the name of the uniform and the rest for the numbers of values the uniform have. **Note** that there is a distinction between `int`and `float`so remember to put `.` (floating points) to your values.
+* `[uniform_name],[int|float][,float][,float][,float][,float]` : uniforms ( `int`, `floats`, `vec2`, `vec3` and `vec4`) can be pass as **comma separated values** (CVS), where the first column is for the name of the uniform and the rest for the numbers of values. Values are strong typed (`1` is not the same as `1.0`). Ex: 
+
+```
+u_myInt,13
+u_myfloat,0.5
+u_myVec2,1.0,0.1
+u_myVec3,0.0,0.5,0.0
+...
+```
+
+**Note** that there is a distinction between `int`and `float`so remember to put `.` (floating points) to your values.
 
 * `help`: return this list of commands
 
