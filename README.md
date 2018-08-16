@@ -29,6 +29,8 @@ sudo make install
 
 This was tested with Ubuntu 16.04.
 
+** Important Note ** : Glfw3 library in Ubuntu 18.04 is causing trobles. For that you need to compile gldw3 from source (next paragraph)
+
 These instructions may not work for all users.
 For example, it seems that libglfw3-dev conflicts with the older libglfw-dev.
 The previous Ubuntu install instructions direct you to
@@ -77,6 +79,8 @@ Get [Raspbian](https://www.raspberrypi.org/downloads/raspbian/), a Debian-based 
 ```bash
 sudo apt-get install glslviewer
 ```
+
+** Important Note ** : pushing versions on the official Raspbian distribution takes time. If you are searching for the last feautures please compile from source (next paragraph).
 
 Or, if you want to compile the code yourself:
 
