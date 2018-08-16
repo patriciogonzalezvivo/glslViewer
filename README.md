@@ -218,7 +218,7 @@ Beside for texture uniforms other arguments can be add to `glslViewer`:
 
 * `-o [image.png]` save the viewport to an image file before
 
-* `-l` to draw a 500x500 billboard on the top right corner of the screen that let you see the code and the shader at the same time. (RaspberryPi only)
+* `-l` in the RaspberryPi will draw the viewport in a 500x500 billboard on the top right corner of the screen that let you see the code and the shader at the same time. While in MacOS and Linux will display the windows always-on-top (this requires GLFW 3.2).
 
 * `--cursor` show cursor.
 

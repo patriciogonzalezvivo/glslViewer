@@ -118,6 +118,7 @@ int main(int argc, char **argv){
 
     bool headless = false;
     bool displayHelp = false;
+    bool alwaysOnTop = false;
     for (int i = 1; i < argc ; i++) {
         std::string argument = std::string(argv[i]);
 
@@ -145,13 +146,17 @@ int main(int argc, char **argv){
         else if (   std::string(argv[i]) == "--help" ) {
             displayHelp = true;
         }
-        #ifdef PLATFORM_RPI
+        
         else if (   std::string(argv[i]) == "-l" ||
                     std::string(argv[i]) == "--life-coding" ){
+        #ifdef PLATFORM_RPI
             windowPosAndSize.x = windowPosAndSize.z - 500;
             windowPosAndSize.z = windowPosAndSize.w = 500;
-        }
+        #else
+            alwaysOnTop = true;
         #endif
+        }
+        
     }
 
     if (displayHelp) {
@@ -160,7 +165,7 @@ int main(int argc, char **argv){
     }
 
     // Initialize openGL context
-    initGL (windowPosAndSize, headless);
+    initGL (windowPosAndSize, headless, alwaysOnTop);
 
     Cursor cursor;              // Cursor
     struct stat st;             // for files to watch

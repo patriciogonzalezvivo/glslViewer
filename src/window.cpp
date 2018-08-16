@@ -70,7 +70,7 @@ double getTimeSec() {
 static GLFWwindow* window;
 #endif
 
-void initGL (glm::ivec4 &_viewport, bool _headless) {
+void initGL (glm::ivec4 &_viewport, bool _headless, bool _alwaysOnTop) {
 
     #ifdef PLATFORM_RPI
         // RASPBERRY_PI
@@ -198,6 +198,10 @@ void initGL (glm::ivec4 &_viewport, bool _headless) {
 
         if (_headless) {
             glfwWindowHint(GLFW_VISIBLE, GL_FALSE);
+        }
+
+        if (_alwaysOnTop) {
+            glfwWindowHint(GLFW_FLOATING, GL_TRUE);
         }
 
         window = glfwCreateWindow(_viewport.z, _viewport.w, appTitle.c_str(), NULL, NULL);

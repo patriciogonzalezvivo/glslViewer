@@ -4,7 +4,7 @@
 
 //	GL Context
 //----------------------------------------------
-void initGL(glm::ivec4 &_viewport, bool _headless = false);
+void initGL(glm::ivec4 &_viewport, bool _headless = false, bool _alwaysOnTop = false);
 bool isGL();
 void updateGL();
 void renderGL();
