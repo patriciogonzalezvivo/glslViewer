@@ -2,7 +2,6 @@
 #include <map>
 
 #include "shader.h"
-#include "../tools/text.h"
 
 struct UniformData {
     std::string getType();
