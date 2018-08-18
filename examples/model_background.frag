@@ -6,7 +6,6 @@ uniform sampler2D u_scene;
 uniform sampler2D u_scene_depth;
 
 uniform vec2 u_resolution;
-uniform vec2 u_mouse;
 uniform float u_time;
 
 varying vec4 v_position;

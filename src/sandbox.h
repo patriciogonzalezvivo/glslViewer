@@ -52,8 +52,11 @@ public:
     void        onMouseDrag(float _x, float _y, int _button);
     void        onViewportResize(int _newWidth, int _newHeight);
    
-    // Uniforms
-    UniformList uniforms;
+    // User defined Uniforms 
+    UniformDataList         uniforms_data;
+
+    // Native Uniforms
+    UniformFunctionsList    uniforms_functions;
 
     // Textures
     TextureList textures;
@@ -77,10 +80,8 @@ public:
 private:
     void _updateUniforms( Shader &_shader );
     void _updateTextures( Shader &_shader, int &_textureIndex  );
-    void _updateDependencies(WatchFileList &_files);
     void _updateBuffers();
-    void _updateBackground();
-    void _updatePostprocessing();
+    void _updateDependencies(WatchFileList &_files);
     
     // Main Shader
     std::string         m_frag_source;
@@ -111,6 +112,7 @@ private:
     // Buffers
     std::vector<Fbo>    m_buffers;
     std::vector<Shader> m_buffers_shaders;
+    int                 m_buffers_total;
     
     // Background
     Shader              m_background_shader;

@@ -20,18 +20,7 @@ public:
     const   GLuint  getFragmentShader() const { return m_fragmentShader; };
     const   GLuint  getVertexShader() const { return m_vertexShader; };
     const   GLint   getAttribLocation(const std::string& _attribute) const;
-    const   int 	getTotalBuffers() const { return m_nBuffers; }
-    const   bool    isBackground() const { return m_background; }
-    const   bool    isPostProcessing() const { return m_postprocessing; }
-
-    const   bool    needTime() const { return m_time; };
-    const   bool    needDelta() const { return m_delta; };
-    const   bool    needDate() const { return m_date; };
-    const   bool    needMouse() const { return m_mouse; };
-    const   bool    needMouse4() const { return m_mouse4; };
-    const   bool    needView2d() const { return m_view2d; };
-    const   bool    needView3d() const { return m_view3d; };
-
+    
     void    use() const;
     bool    isInUse() const;
     bool    load(const std::string& _fragmentSrc, const std::string& _vertexSrc, const std::vector<std::string> &_defines, bool _verbose = false);
@@ -67,16 +56,4 @@ private:
     GLuint  m_program;
     GLuint  m_fragmentShader;
     GLuint  m_vertexShader;
-
-    int     m_nBuffers;
-
-    bool    m_time;
-    bool    m_delta;
-    bool    m_date;
-    bool    m_mouse;
-    bool    m_mouse4;
-    bool    m_view2d;
-    bool    m_view3d;
-    bool    m_background;
-    bool    m_postprocessing;
 };

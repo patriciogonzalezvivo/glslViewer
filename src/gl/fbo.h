@@ -17,6 +17,9 @@ public:
     const bool      haveDepthBuffer() const { return m_depth; }
     const GLuint    getDepthTextureId() const { return m_depth_buffer; }
 
+    virtual int				getWidth() const { return m_width; };
+	virtual int				getHeight() const { return m_height; };
+
 protected:
     GLuint  m_id;
     GLuint  m_old_fbo_id;
@@ -24,8 +27,8 @@ protected:
     GLuint  m_texture;
     GLuint  m_depth_buffer;
 
-    unsigned int m_width;
-    unsigned int m_height;
+    int     m_width;
+    int     m_height;
 
     bool    m_allocated;
     bool    m_binded;

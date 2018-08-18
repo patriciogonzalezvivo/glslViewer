@@ -500,7 +500,30 @@ void cinWatcherThread() {
             }
         }
         else if (line == "uniforms") {
-            for (UniformList::iterator it= sandbox.uniforms.begin(); it != sandbox.uniforms.end(); ++it) {
+            // Print Native Uniforms (they carry functions) that are present on the shader
+            for (UniformFunctionsList::iterator it= sandbox.uniforms_functions.begin(); it != sandbox.uniforms_functions.end(); ++it) {                
+                if (it->second.present) {
+                    std::cout << it->first << ',' << it->second.type << "," << it->second.description << std::endl;
+                }
+            }
+
+            // Print user defined uniform data
+            for (UniformDataList::iterator it= sandbox.uniforms_data.begin(); it != sandbox.uniforms_data.end(); ++it) {
+                std::cout << it->first;
+                for (int i = 0; i < it->second.size; i++) {
+                    std::cout << ',' << it->second.value[i];
+                }
+                std::cout << std::endl;
+            }
+        }
+        else if (line == "uniforms_all") {
+            // Print all Native Uniforms (they carry functions)
+            for (UniformFunctionsList::iterator it= sandbox.uniforms_functions.begin(); it != sandbox.uniforms_functions.end(); ++it) {                
+                std::cout << it->first << ',' << it->second.type << "," << it->second.description << std::endl;
+            }
+
+            // Print user defined uniform data
+            for (UniformDataList::iterator it= sandbox.uniforms_data.begin(); it != sandbox.uniforms_data.end(); ++it) {
                 std::cout << it->first;
                 for (int i = 0; i < it->second.size; i++) {
                     std::cout << ',' << it->second.value[i];
@@ -648,8 +671,9 @@ void cinWatcherThread() {
             }
         }
         else {
+            // If nothing match maybe the user is trying to define the content of a uniform
             consoleMutex.lock();
-            parseUniforms(line, &sandbox.uniforms);
+            parseUniformData(line, &sandbox.uniforms_data);
             consoleMutex.unlock();
         }
 

@@ -1,3 +1,4 @@
+
 #include "shader.h"
 
 #include "tools/text.h"
@@ -6,129 +7,17 @@
 #include <chrono>
 #include <algorithm>
 #include <iostream>
-#include <regex>
+
 
 Shader::Shader():
 m_program(0), 
-m_fragmentShader(0),m_vertexShader(0), 
-m_nBuffers(0), 
-m_time(false), m_delta(false), m_date(false), m_mouse(false), m_mouse4(false), m_view2d(false), m_view3d(false), m_background(false) {
+m_fragmentShader(0),m_vertexShader(0) {
 }
 
 Shader::~Shader() {
     if (m_program != 0) {           // Avoid crash when no command line arguments supplied
         glDeleteProgram(m_program);
     }
-}
-
-std::string getLineNumber(const std::string& _source, unsigned _lineNumber){
-    std::string delimiter = "\n";
-    std::string::const_iterator substart = _source.begin(), subend;
-
-    unsigned index = 1;
-    while (true) {
-        subend = search(substart, _source.end(), delimiter.begin(), delimiter.end());
-        std::string sub(substart, subend);
-
-        if (index == _lineNumber) {
-            return sub;
-        }
-        index++;
-
-        if (subend == _source.end()) {
-            break;
-        }
-
-        substart = subend + delimiter.size();
-    }
-
-    return "NOT FOUND";
-}
-
-// Quickly determine if a shader program contains the specified identifier.
-bool find_id(const std::string& program, const char* id) {
-    return std::strstr(program.c_str(), id) != 0;
-}
-
-// TODO: 
-//      - this can be done in a more elegant way
-//
-
-// Count how many BUFFERS are in the shader
-int count_buffers(const std::string &_source) {
-    // Split Source code in lines
-    std::vector<std::string> lines = split(_source, '\n');
-
-    // Group results in a vector to check for duplicates
-    std::vector<std::string> results;
-
-    // Regext to search for #ifdef BUFFER_[NUMBER], #if defined( BUFFER_[NUMBER] ) and #elif defined( BUFFER_[NUMBER] ) occurences
-    std::regex re(R"((?:^\s*#if|^\s*#elif)(?:\s+)(defined\s*\(\s*BUFFER_)(\d+)(?:\s*\))|(?:^\s*#ifdef\s+BUFFER_)(\d+))");
-    std::smatch match;
-
-    // For each line search for
-    for (unsigned int l = 0; l < lines.size(); l++) {
-
-        // if there are matches
-        if (std::regex_search(lines[l], match, re)) {
-            // Depending the case can be in the 2nd or 3rd group
-            std::string number = std::ssub_match(match[2]).str();
-            if (number.size() == 0) {
-                number = std::ssub_match(match[3]).str();
-            }
-
-            // Check if it's already defined
-            bool already = false;
-            for (unsigned int i = 0; i < results.size(); i++) {
-                if (results[i] == number) {
-                    already = true;
-                    break;
-                }
-            }
-
-            // If it's not add it
-            if (!already) {
-                results.push_back(number);
-            }
-        }
-    }
-
-    // return the number of results
-    return results.size();
-}
-
-// Count how many BUFFERS are in the shader
-bool check_for_background(const std::string &_source) {
-    // Split Source code in lines
-    std::vector<std::string> lines = split(_source, '\n');
-
-    std::regex re(R"((?:^\s*#if|^\s*#elif)(?:\s+)(defined\s*\(\s*BACKGROUND)(?:\s*\))|(?:^\s*#ifdef\s+BACKGROUND)|(?:^\s*#ifndef\s+BACKGROUND))");
-    std::smatch match;
-
-    for (unsigned int l = 0; l < lines.size(); l++) {
-        if (std::regex_search(lines[l], match, re)) {
-            return true;
-        }
-    }
-
-    return false;
-}
-
-// Count how many BUFFERS are in the shader
-bool check_for_postprocessing(const std::string &_source) {
-    // Split Source code in lines
-    std::vector<std::string> lines = split(_source, '\n');
-
-    std::regex re(R"((?:^\s*#if|^\s*#elif)(?:\s+)(defined\s*\(\s*POSTPROCESSING)(?:\s*\))|(?:^\s*#ifdef\s+POSTPROCESSING)|(?:^\s*#ifndef\s+POSTPROCESSING))");
-    std::smatch match;
-
-    for (unsigned int l = 0; l < lines.size(); l++) {
-        if (std::regex_search(lines[l], match, re)) {
-            return true;
-        }
-    }
-
-    return false;
 }
 
 bool Shader::load(const std::string& _fragmentSrc, const std::string& _vertexSrc, const std::vector<std::string> &_defines, bool _verbose) {
@@ -149,36 +38,36 @@ bool Shader::load(const std::string& _fragmentSrc, const std::string& _vertexSrc
     else {
         // Check for the precense of:
 
-        // Buffers
-        m_nBuffers = count_buffers(_fragmentSrc);
+        // // Buffers
+        // m_nBuffers = count_buffers(_fragmentSrc);
 
-        // Background pass
-        m_background = check_for_background(_fragmentSrc);
+        // // Background pass
+        // m_background = check_for_background(_fragmentSrc);
 
-        // Postprocessing
-        m_postprocessing = check_for_postprocessing(_fragmentSrc);
+        // // Postprocessing
+        // m_postprocessing = check_for_postprocessing(_fragmentSrc);
 
-        // u_time
-        m_time = find_id(_fragmentSrc, "u_time") || find_id(_vertexSrc, "u_time");
+        // // u_view 2D
+        // m_view2d = find_id(_fragmentSrc, "u_view2d") || find_id(_vertexSrc, "u_view2d");
+
+        // // u_time
+        // m_time = find_id(_fragmentSrc, "u_time") || find_id(_vertexSrc, "u_time");
         
-        // u_delta
-        m_delta = find_id(_fragmentSrc, "u_delta") || find_id(_vertexSrc, "u_delta");
+        // // u_delta
+        // m_delta = find_id(_fragmentSrc, "u_delta") || find_id(_vertexSrc, "u_delta");
         
-        // u_data
-        m_date = find_id(_fragmentSrc, "u_date") || find_id(_vertexSrc, "u_date");
+        // // u_data
+        // m_date = find_id(_fragmentSrc, "u_date") || find_id(_vertexSrc, "u_date");
         
-        /// u_mouse as vec4
-        m_mouse4 = find_id(_fragmentSrc, "vec4 u_mouse") || find_id(_vertexSrc, "vec4 u_mouse");
+        // /// u_mouse as vec4
+        // m_mouse4 = find_id(_fragmentSrc, "vec4 u_mouse") || find_id(_vertexSrc, "vec4 u_mouse");
 
-        // u_mouse as vec2 (Legacy)
-        m_mouse = find_id(_fragmentSrc, "u_mouse") || find_id(_vertexSrc, "u_mouse");
+        // // u_mouse as vec2 (Legacy)
+        // m_mouse = find_id(_fragmentSrc, "u_mouse") || find_id(_vertexSrc, "u_mouse");
 
-        // u_view 2D
-        m_view2d = find_id(_fragmentSrc, "u_view2d") || find_id(_vertexSrc, "u_view2d");
-
-        // u_view 3D
-        m_view3d =  (find_id(_fragmentSrc, "u_eye3d") || find_id(_fragmentSrc, "u_centre3d") || find_id(_fragmentSrc, "u_up3d")) ||
-                    (find_id(_vertexSrc, "u_eye3d") || find_id(_vertexSrc, "u_centre3d") || find_id(_vertexSrc, "u_up3d"));
+        // // u_view 3D
+        // m_view3d =  (find_id(_fragmentSrc, "u_eye3d") || find_id(_fragmentSrc, "u_centre3d") || find_id(_fragmentSrc, "u_up3d")) ||
+        //             (find_id(_vertexSrc, "u_eye3d") || find_id(_vertexSrc, "u_centre3d") || find_id(_vertexSrc, "u_up3d"));
     }
 
     m_program = glCreateProgram();
@@ -260,48 +149,48 @@ GLuint Shader::compileShader(const std::string& _src, const std::vector<std::str
         prolog += "#define " + _defines[i] + "\n";
     }
 
-    // Test if this is a shadertoy.com image shader. If it is, we need to
-    // define some uniforms with different names than the glslViewer standard,
-    // and we need to add prolog and epilog code.
-    if (_type == GL_FRAGMENT_SHADER && find_id(_src, "mainImage")) {
-        prolog +=
-            "uniform vec2 u_resolution;\n"
-            "#define iResolution vec3(u_resolution, 1.0)\n"
-            "\n";
-        m_time = find_id(_src, "iGlobalTime");
-        if (m_time) {
-            prolog +=
-                "uniform float u_time;\n"
-                "#define iGlobalTime u_time\n"
-                "\n";
-        }
-        m_delta = find_id(_src, "iTimeDelta");
-        if (m_delta) {
-            prolog +=
-                "uniform float u_delta;\n"
-                "#define iTimeDelta u_delta\n"
-                "\n";
-        }
-        m_date = find_id(_src, "iDate");
-        if (m_date) {
-            prolog +=
-                "uniform vec4 u_date;\n"
-                "#define iDate u_date\n"
-                "\n";
-        }
-        m_mouse4 = find_id(_src, "iMouse");
-        if (m_mouse4) {
-            prolog +=
-                "uniform vec4 u_mouse;\n"
-                "#define iMouse u_mouse\n"
-                "\n";
-        }
-        epilog =
-            "\n"
-            "void main(void) {\n"
-            "    mainImage(gl_FragColor, gl_FragCoord.st);\n"
-            "}\n";
-    }
+    // // Test if this is a shadertoy.com image shader. If it is, we need to
+    // // define some uniforms with different names than the glslViewer standard,
+    // // and we need to add prolog and epilog code.
+    // if (_type == GL_FRAGMENT_SHADER && find_id(_src, "mainImage")) {
+    //     prolog +=
+    //         "uniform vec2 u_resolution;\n"
+    //         "#define iResolution vec3(u_resolution, 1.0)\n"
+    //         "\n";
+    //     m_time = find_id(_src, "iGlobalTime");
+    //     if (m_time) {
+    //         prolog +=
+    //             "uniform float u_time;\n"
+    //             "#define iGlobalTime u_time\n"
+    //             "\n";
+    //     }
+    //     m_delta = find_id(_src, "iTimeDelta");
+    //     if (m_delta) {
+    //         prolog +=
+    //             "uniform float u_delta;\n"
+    //             "#define iTimeDelta u_delta\n"
+    //             "\n";
+    //     }
+    //     m_date = find_id(_src, "iDate");
+    //     if (m_date) {
+    //         prolog +=
+    //             "uniform vec4 u_date;\n"
+    //             "#define iDate u_date\n"
+    //             "\n";
+    //     }
+    //     m_mouse4 = find_id(_src, "iMouse");
+    //     if (m_mouse4) {
+    //         prolog +=
+    //             "uniform vec4 u_mouse;\n"
+    //             "#define iMouse u_mouse\n"
+    //             "\n";
+    //     }
+    //     epilog =
+    //         "\n"
+    //         "void main(void) {\n"
+    //         "    mainImage(gl_FragColor, gl_FragCoord.st);\n"
+    //         "}\n";
+    // }
 
     prolog += "#line 1\n";
 

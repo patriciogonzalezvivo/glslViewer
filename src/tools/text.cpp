@@ -1,6 +1,7 @@
 #include "tools/text.h"
 
 #include <algorithm>
+#include <regex>
 
 std::string getLower(const std::string& _string) {
     std::string std = _string;
@@ -144,4 +145,111 @@ bool beginsWith(const std::string &_stringA, const std::string &_stringB) {
         }
     }
     return true;
+}
+
+std::string getLineNumber(const std::string& _source, unsigned _lineNumber) {
+    std::string delimiter = "\n";
+    std::string::const_iterator substart = _source.begin(), subend;
+
+    unsigned index = 1;
+    while (true) {
+        subend = search(substart, _source.end(), delimiter.begin(), delimiter.end());
+        std::string sub(substart, subend);
+
+        if (index == _lineNumber) {
+            return sub;
+        }
+        index++;
+
+        if (subend == _source.end()) {
+            break;
+        }
+
+        substart = subend + delimiter.size();
+    }
+
+    return "NOT FOUND";
+}
+
+// Quickly determine if a shader program contains the specified identifier.
+bool find_id(const std::string& program, const char* id) {
+    return std::strstr(program.c_str(), id) != 0;
+}
+
+
+// Count how many BUFFERS are in the shader
+int count_buffers(const std::string &_source) {
+    // Split Source code in lines
+    std::vector<std::string> lines = split(_source, '\n');
+
+    // Group results in a vector to check for duplicates
+    std::vector<std::string> results;
+
+    // Regext to search for #ifdef BUFFER_[NUMBER], #if defined( BUFFER_[NUMBER] ) and #elif defined( BUFFER_[NUMBER] ) occurences
+    std::regex re(R"((?:^\s*#if|^\s*#elif)(?:\s+)(defined\s*\(\s*BUFFER_)(\d+)(?:\s*\))|(?:^\s*#ifdef\s+BUFFER_)(\d+))");
+    std::smatch match;
+
+    // For each line search for
+    for (unsigned int l = 0; l < lines.size(); l++) {
+
+        // if there are matches
+        if (std::regex_search(lines[l], match, re)) {
+            // Depending the case can be in the 2nd or 3rd group
+            std::string number = std::ssub_match(match[2]).str();
+            if (number.size() == 0) {
+                number = std::ssub_match(match[3]).str();
+            }
+
+            // Check if it's already defined
+            bool already = false;
+            for (unsigned int i = 0; i < results.size(); i++) {
+                if (results[i] == number) {
+                    already = true;
+                    break;
+                }
+            }
+
+            // If it's not add it
+            if (!already) {
+                results.push_back(number);
+            }
+        }
+    }
+
+    // return the number of results
+    return results.size();
+}
+
+// Count how many BUFFERS are in the shader
+bool check_for_background(const std::string &_source) {
+    // Split Source code in lines
+    std::vector<std::string> lines = split(_source, '\n');
+
+    std::regex re(R"((?:^\s*#if|^\s*#elif)(?:\s+)(defined\s*\(\s*BACKGROUND)(?:\s*\))|(?:^\s*#ifdef\s+BACKGROUND)|(?:^\s*#ifndef\s+BACKGROUND))");
+    std::smatch match;
+
+    for (unsigned int l = 0; l < lines.size(); l++) {
+        if (std::regex_search(lines[l], match, re)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+// Count how many BUFFERS are in the shader
+bool check_for_postprocessing(const std::string &_source) {
+    // Split Source code in lines
+    std::vector<std::string> lines = split(_source, '\n');
+
+    std::regex re(R"((?:^\s*#if|^\s*#elif)(?:\s+)(defined\s*\(\s*POSTPROCESSING)(?:\s*\))|(?:^\s*#ifdef\s+POSTPROCESSING)|(?:^\s*#ifndef\s+POSTPROCESSING))");
+    std::smatch match;
+
+    for (unsigned int l = 0; l < lines.size(); l++) {
+        if (std::regex_search(lines[l], match, re)) {
+            return true;
+        }
+    }
+
+    return false;
 }

@@ -5,7 +5,28 @@
 
 #include "tools/text.h"
 
-bool parseUniforms(const std::string &_line, UniformList *_uniforms) {
+std::string UniformData::getType() {
+    if (size == 1 && bInt) {
+        return "int";
+    }
+    else if (size == 1 && !bInt) {
+        return "float";
+    }
+    else {
+        return (bInt ? "ivec" : "vec") + toString(size); 
+    }
+}
+
+UniformFunction::UniformFunction() {
+
+}
+
+UniformFunction::UniformFunction(const std::string &_type, const std::string &_description) {
+    type = _type;
+    description = _description;
+}
+
+bool parseUniformData(const std::string &_line, UniformDataList *_uniforms) {
     bool rta = false;
     std::regex re("^(\\w+)\\,");
     std::smatch match;

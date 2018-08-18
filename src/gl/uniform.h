@@ -1,11 +1,29 @@
 #include <string>
 #include <map>
 
-struct Uniform {
-    float value[4];
-    int size;
-    bool bInt = false;
-};
-typedef std::map<std::string, Uniform> UniformList;
+#include "shader.h"
+#include "../tools/text.h"
 
-bool parseUniforms(const std::string &_line, UniformList *_uniforms);
+struct UniformData {
+    std::string getType();
+
+    float   value[4];
+    int     size;
+    bool    bInt = false;
+    bool    change = false;
+};
+typedef std::map<std::string, UniformData> UniformDataList;
+bool parseUniformData(const std::string &_line, UniformDataList *_uniforms);
+
+struct UniformFunction {
+    UniformFunction();
+    UniformFunction(const std::string &_type, const std::string &_description);
+
+    std::string type;
+    std::string description;
+    bool        present    = true;
+};
+
+typedef std::map<std::string, UniformFunction> UniformFunctionsList;
+
+

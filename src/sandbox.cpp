@@ -54,6 +54,16 @@ Sandbox::Sandbox():
     #ifdef PLATFORM_RPI
     defines.push_back("PLATFORM_RPI");
     #endif
+
+    uniforms_functions["u_time"]       = UniformFunction("float", "..");
+    uniforms_functions["u_delta"]      = UniformFunction("float", "..");
+    uniforms_functions["u_mouse"]      = UniformFunction("vec2", "..");
+    uniforms_functions["u_resolution"] = UniformFunction("vec2", "..");
+    uniforms_functions["m_up3d"]       = UniformFunction("vec3", "..");
+    uniforms_functions["u_eye3d"]      = UniformFunction("vec3", "..");
+    uniforms_functions["u_centre3d"]   = UniformFunction("vec3", "..");
+    uniforms_functions["u_date"]       = UniformFunction("vec4", "..");
+    uniforms_functions["u_view2d"]     = UniformFunction("mat3", "..");
 }
 
 void Sandbox::setup( WatchFileList &_files ) {
@@ -90,11 +100,9 @@ void Sandbox::setup( WatchFileList &_files ) {
     if (frag_index != -1) {
         m_frag_source = "";
         m_frag_dependencies.clear();
-
         if ( !loadFromPath(_files[frag_index].path, &m_frag_source, include_folders, &m_frag_dependencies) ) {
             return;
         }
-
     }
     else {
         m_frag_source = m_vbo->getVertexLayout()->getDefaultFragShader();
@@ -134,10 +142,6 @@ void main(void) {\n\
     v_texcoord = a_texcoord;\n\
     gl_Position = v_position;\n\
 }";
-
-    _updateBackground();
-    _updatePostprocessing();
-    _updateBuffers();
 
     // CUBEMAP
     if (m_cubemap) {
@@ -180,14 +184,15 @@ void main(void) {\n\
     // Clear the background
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    // WARNING HACK!!!!
-    // 
-    //  Note: in order to make the multibuffer to work I had to create it and destroy it
+    reload();
+
+    // TODO:
+    //      - this seams to solve the problem of buffers 
+    //      not properly initialize
+    //      - digg deeper
     //
-    //  TODO: 
-    //          - FIX THIS
     m_buffers.clear();
-    m_buffers_shaders.clear();
+    _updateBuffers();
 }
 
 std::string Sandbox::getSource(ShaderType _type) const {
@@ -195,62 +200,64 @@ std::string Sandbox::getSource(ShaderType _type) const {
     else return m_vert_source;
 }
 
-void Sandbox::printDependencies(ShaderType _type) const {
-    if (_type == FRAGMENT) {
-        for (unsigned int i = 0; i < m_frag_dependencies.size(); i++) {
-            std::cout << m_frag_dependencies[i] << std::endl;
-        }
+bool Sandbox::reload() {
+    // Reload the shader
+    m_shader.detach(GL_FRAGMENT_SHADER | GL_VERTEX_SHADER);
+    bool success = m_shader.load(m_frag_source, m_vert_source, defines, verbose);
+
+    // If it doesn't work put a default one
+    if (!success) {
+        std::string default_vert = m_vbo->getVertexLayout()->getDefaultVertShader(); 
+        std::string default_frag = m_vbo->getVertexLayout()->getDefaultFragShader(); 
+        m_shader.load(default_frag, default_vert, defines, false);
     }
+    // If it work check for present uniforms, buffers, background and postprocesing
     else {
-        for (unsigned int i = 0; i < m_vert_dependencies.size(); i++) {
-            std::cout << m_vert_dependencies[i] << std::endl;
+        // Check active native uniforms
+        for (UniformFunctionsList::iterator it = uniforms_functions.begin(); it != uniforms_functions.end(); ++it) {
+            it->second.present = ( find_id(m_frag_source, it->first.c_str()) != 0 || find_id(m_frag_source, it->first.c_str()) != 0 );
+        }
+        // Flag all user defined uniforms as changed
+        for (UniformDataList::iterator it = uniforms_data.begin(); it != uniforms_data.end(); ++it) {
+            it->second.change = true;
+        }
+
+         // Buffers
+        m_buffers_total = count_buffers(m_frag_source);
+        _updateBuffers();
+                
+        // Background pass
+        m_background_enabled = check_for_background(getSource(FRAGMENT));
+        if (m_background_enabled) {
+            // Specific defines for this buffer
+            std::vector<std::string> sub_defines = defines;
+            sub_defines.push_back("BACKGROUND");
+            m_background_shader.load(m_frag_source, m_billboard_vert, sub_defines, verbose);
+        }
+
+        // Postprocessing
+        bool havePostprocessing = check_for_postprocessing(getSource(FRAGMENT));
+        if (m_postprocessing_enabled != havePostprocessing) {
+            m_scene_fbo.allocate(getWindowWidth(), getWindowHeight(), true);
+        }
+        m_postprocessing_enabled = havePostprocessing;
+        if (m_postprocessing_enabled) {
+            // Specific defines for this buffer
+            std::vector<std::string> sub_defines = defines;
+            sub_defines.push_back("POSTPROCESSING");
+            m_postprocessing_shader.load(m_frag_source, m_billboard_vert, sub_defines, verbose);
         }
     }
-}
 
-void Sandbox::print3DView() const {
-    std::cout << "up,"      << toString(m_up3d.x)       << "," << toString(m_up3d.y)   <<  "," << toString(m_up3d.z)        << std::endl;
-    std::cout << "eye,"     << toString(m_eye3d.x)      << "," << toString(m_eye3d.y)  <<  "," << toString(m_eye3d.z)       << std::endl;
-    std::cout << "centre,"  << toString(m_centre3d.x)   << "," + toString(m_centre3d.y) << "," << toString(m_centre3d.z)    << std::endl;           
-}
-
-void Sandbox::_updateBackground() {
-    m_background_enabled = m_shader.isBackground();
-
-    if (m_background_enabled) {
-        // Specific defines for this buffer
-        std::vector<std::string> sub_defines = defines;
-        sub_defines.push_back("BACKGROUND");
-        m_background_shader.load(m_frag_source, m_billboard_vert, sub_defines, verbose);
-    }
-}
-
-void Sandbox::_updatePostprocessing() {
-
-    // If it's new that postprocessing is ON -> allocate the FBL
-    if (m_shader.isPostProcessing() && !m_postprocessing_enabled) {
-        m_scene_fbo.allocate(getWindowWidth(), getWindowHeight(), true);
-    }
-
-    m_postprocessing_enabled = m_shader.isPostProcessing();
-
-    if (m_postprocessing_enabled) {
-        // Specific defines for this buffer
-        std::vector<std::string> sub_defines = defines;
-        sub_defines.push_back("POSTPROCESSING");
-        m_postprocessing_shader.load(m_frag_source, m_billboard_vert, sub_defines, verbose);
-    }
+    return success;
 }
 
 void Sandbox::_updateBuffers() {
-    // Update BUFFERS
-    int totalBuffers = m_shader.getTotalBuffers();
-    
-    if ( totalBuffers != int(m_buffers.size()) ) {
+    if ( m_buffers_total != int(m_buffers.size()) ) {
         m_buffers.clear();
         m_buffers_shaders.clear();
 
-        for (int i = 0; i < totalBuffers; i++) {
+        for (int i = 0; i < m_buffers_total; i++) {
             // New FBO
             m_buffers.push_back( Fbo() );
             m_buffers[i].allocate(getWindowWidth(), getWindowHeight(), false);
@@ -274,12 +281,15 @@ void Sandbox::_updateBuffers() {
             m_buffers_shaders[i].load(m_frag_source, m_billboard_vert, sub_defines, verbose);
         }
     }
- }
+}
 
 void Sandbox::_updateUniforms( Shader &_shader ) {
-    // Pass uniforms
-    _shader.setUniform("u_resolution", getWindowWidth(), getWindowHeight());
-    if (_shader.needTime()) {
+    // Pass Native uniforms 
+    if (uniforms_functions["u_resolution"].present) {
+        _shader.setUniform("u_resolution", getWindowWidth(), getWindowHeight());
+    }
+
+    if (uniforms_functions["u_time"].present) {
         if (m_record) {
             _shader.setUniform("u_time", m_record_head);
         }
@@ -287,7 +297,8 @@ void Sandbox::_updateUniforms( Shader &_shader ) {
             _shader.setUniform("u_time", float(getTime()));
         }
     }
-    if (_shader.needDelta()) {
+
+    if (uniforms_functions["u_delta"].present) {
         if (m_record) {
             _shader.setUniform("u_delta", float(FRAME_DELTA));
         }    
@@ -295,32 +306,37 @@ void Sandbox::_updateUniforms( Shader &_shader ) {
             _shader.setUniform("u_delta", float(getDelta()));
         }
     }
-    if (_shader.needDate()) {
+
+    if (uniforms_functions["u_date"].present) {
         _shader.setUniform("u_date", getDate());
     }
     
-    if (_shader.needMouse4()) {
-        _shader.setUniform("u_mouse", getMouse4());
-    }
-    else if (_shader.needMouse()) {
+    if (uniforms_functions["u_mouse"].present) {
         _shader.setUniform("u_mouse", getMouseX(), getMouseY());
     }
     
-    if (_shader.needView2d()) {
+    if (uniforms_functions["u_view2d"].present) {
         _shader.setUniform("u_view2d", m_view2d);
     }
-    if (_shader.needView3d()) {
+    if (uniforms_functions["m_eye3d"].present) {
         _shader.setUniform("m_eye3d", m_eye3d);
+    }
+    if (uniforms_functions["m_centre3d"].present) {
         _shader.setUniform("m_centre3d", m_centre3d);
+    }
+    if (uniforms_functions["m_up3d"].present) {
         _shader.setUniform("m_up3d", m_up3d);
     }
 
-    for (UniformList::iterator it=uniforms.begin(); it!=uniforms.end(); ++it) {
-        if (it->second.bInt) {
-            _shader.setUniform(it->first, int(it->second.value[0]));
-        }
-        else {
-            _shader.setUniform(it->first, it->second.value, it->second.size);
+    // Pass User defined uniforms
+    for (UniformDataList::iterator it=uniforms_data.begin(); it!=uniforms_data.end(); ++it) {
+        if (it->second.change) {
+            if (it->second.bInt) {
+                _shader.setUniform(it->first, int(it->second.value[0]));
+            }
+            else {
+                _shader.setUniform(it->first, it->second.value, it->second.size);
+            }
         }
     }
 }
@@ -334,13 +350,9 @@ void Sandbox::_updateTextures( Shader &_shader, int &_textureIndex ) {
 }
 
 void Sandbox::draw() {
-    // Need to update Buffers
-    if ( m_shader.getTotalBuffers() != int(m_buffers.size()) ) {
-        _updateBuffers();
-    }
-
     // BUFFERS
     // -----------------------------------------------
+
     int textureIndex = 0;
     for (unsigned int i = 0; i < m_buffers.size(); i++) {
         textureIndex = 0;
@@ -499,19 +511,6 @@ int Sandbox::getRecordedPorcentage() {
     return ((m_record_head - m_record_start) / (m_record_end - m_record_start)) * 100 ;
 }
 
-bool Sandbox::reload() {
-    m_shader.detach(GL_FRAGMENT_SHADER | GL_VERTEX_SHADER);
-    bool success = m_shader.load(m_frag_source, m_vert_source, defines, verbose);
-
-    if (!success) {
-        std::string default_vert = m_vbo->getVertexLayout()->getDefaultVertShader(); 
-        std::string default_frag = m_vbo->getVertexLayout()->getDefaultFragShader(); 
-        m_shader.load(default_frag, default_vert, defines, false);
-    }
-
-    return success;
-}
-
 void Sandbox::onFileChange(WatchFileList &_files, int index) {
     FileType type = _files[index].type;
     std::string filename = _files[index].path;
@@ -533,9 +532,6 @@ void Sandbox::onFileChange(WatchFileList &_files, int index) {
 
         if (loadFromPath(filename, &m_frag_source, include_folders, &m_frag_dependencies)) {
             reload();
-            _updateBuffers();
-            _updateBackground();
-            _updatePostprocessing();
             _updateDependencies(_files);
         }
     }
@@ -545,6 +541,7 @@ void Sandbox::onFileChange(WatchFileList &_files, int index) {
 
         if (loadFromPath(filename, &m_vert_source, include_folders, &m_vert_dependencies)) {
             reload();
+            _updateDependencies(_files);
         }
     }
     else if (type == GEOMETRY) {
@@ -724,4 +721,23 @@ void Sandbox::clean() {
 
     if (m_cubemap)
         delete m_cubemap_vbo;
+}
+
+void Sandbox::printDependencies(ShaderType _type) const {
+    if (_type == FRAGMENT) {
+        for (unsigned int i = 0; i < m_frag_dependencies.size(); i++) {
+            std::cout << m_frag_dependencies[i] << std::endl;
+        }
+    }
+    else {
+        for (unsigned int i = 0; i < m_vert_dependencies.size(); i++) {
+            std::cout << m_vert_dependencies[i] << std::endl;
+        }
+    }
+}
+
+void Sandbox::print3DView() const {
+    std::cout << "up,"      << toString(m_up3d.x)       << "," << toString(m_up3d.y)   <<  "," << toString(m_up3d.z)        << std::endl;
+    std::cout << "eye,"     << toString(m_eye3d.x)      << "," << toString(m_eye3d.y)  <<  "," << toString(m_eye3d.z)       << std::endl;
+    std::cout << "centre,"  << toString(m_centre3d.x)   << "," + toString(m_centre3d.y) << "," << toString(m_centre3d.z)    << std::endl;           
 }
