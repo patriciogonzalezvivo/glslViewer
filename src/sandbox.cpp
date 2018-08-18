@@ -55,15 +55,20 @@ Sandbox::Sandbox():
     defines.push_back("PLATFORM_RPI");
     #endif
 
-    uniforms_functions["u_time"]       = UniformFunction("float", "..");
-    uniforms_functions["u_delta"]      = UniformFunction("float", "..");
-    uniforms_functions["u_mouse"]      = UniformFunction("vec2", "..");
-    uniforms_functions["u_resolution"] = UniformFunction("vec2", "..");
-    uniforms_functions["m_up3d"]       = UniformFunction("vec3", "..");
-    uniforms_functions["u_eye3d"]      = UniformFunction("vec3", "..");
-    uniforms_functions["u_centre3d"]   = UniformFunction("vec3", "..");
-    uniforms_functions["u_date"]       = UniformFunction("vec4", "..");
-    uniforms_functions["u_view2d"]     = UniformFunction("mat3", "..");
+    uniforms_functions["u_time"]                = UniformFunction("float", "..");
+    uniforms_functions["u_delta"]               = UniformFunction("float", "..");
+    uniforms_functions["u_mouse"]               = UniformFunction("vec2", "..");
+    uniforms_functions["u_resolution"]          = UniformFunction("vec2", "..");
+    uniforms_functions["u_eye"]                 = UniformFunction("vec3", "..");
+    uniforms_functions["m_up3d"]                = UniformFunction("vec3", "..");
+    uniforms_functions["u_eye3d"]               = UniformFunction("vec3", "..");
+    uniforms_functions["u_centre3d"]            = UniformFunction("vec3", "..");
+    uniforms_functions["u_date"]                = UniformFunction("vec4", "..");
+    uniforms_functions["u_view2d"]              = UniformFunction("mat3", "..");
+    uniforms_functions["u_normalMatrix"]        = UniformFunction("mat3", "..");
+    uniforms_functions["u_modelMatrix"]         = UniformFunction("mat4", "..");
+    uniforms_functions["u_viewMatrix"]          = UniformFunction("mat4", "..");
+    uniforms_functions["u_projectionMatrix"]    = UniformFunction("mat4", "..");
 }
 
 void Sandbox::setup( WatchFileList &_files ) {
@@ -288,7 +293,6 @@ void Sandbox::_updateUniforms( Shader &_shader ) {
     if (uniforms_functions["u_resolution"].present) {
         _shader.setUniform("u_resolution", getWindowWidth(), getWindowHeight());
     }
-
     if (uniforms_functions["u_time"].present) {
         if (m_record) {
             _shader.setUniform("u_time", m_record_head);
@@ -297,7 +301,6 @@ void Sandbox::_updateUniforms( Shader &_shader ) {
             _shader.setUniform("u_time", float(getTime()));
         }
     }
-
     if (uniforms_functions["u_delta"].present) {
         if (m_record) {
             _shader.setUniform("u_delta", float(FRAME_DELTA));
@@ -306,7 +309,6 @@ void Sandbox::_updateUniforms( Shader &_shader ) {
             _shader.setUniform("u_delta", float(getDelta()));
         }
     }
-
     if (uniforms_functions["u_date"].present) {
         _shader.setUniform("u_date", getDate());
     }
@@ -326,6 +328,21 @@ void Sandbox::_updateUniforms( Shader &_shader ) {
     }
     if (uniforms_functions["m_up3d"].present) {
         _shader.setUniform("m_up3d", m_up3d);
+    }
+    if (uniforms_functions["m_eye"].present) {
+        _shader.setUniform("u_eye", -m_cam.getPosition());
+    }
+    if (uniforms_functions["u_normalMatrix"].present) {
+        _shader.setUniform("u_normalMatrix", m_cam.getNormalMatrix());
+    }
+    if (uniforms_functions["u_modelMatrix"].present) {
+        _shader.setUniform("u_modelMatrix", m_vbo_matrix);
+    }
+    if (uniforms_functions["u_viewMatrix"].present) {
+        _shader.setUniform("u_viewMatrix", m_cam.getViewMatrix());
+    }
+    if (uniforms_functions["u_projectionMatrix"].present) {
+        m_shader.setUniform("u_projectionMatrix", m_cam.getProjectionMatrix());
     }
 
     // Pass User defined uniforms
@@ -448,13 +465,6 @@ void Sandbox::draw() {
     glm::mat4 mvp = glm::mat4(1.);
     // Pass special uniforms
     if (geom_index != -1) {
-        m_shader.setUniform("u_eye", -m_cam.getPosition());
-        m_shader.setUniform("u_normalMatrix", m_cam.getNormalMatrix());
-
-        m_shader.setUniform("u_modelMatrix", m_vbo_matrix);
-        m_shader.setUniform("u_viewMatrix", m_cam.getViewMatrix());
-        m_shader.setUniform("u_projectionMatrix", m_cam.getProjectionMatrix());
-
         mvp = m_cam.getProjectionViewMatrix() * m_vbo_matrix;
     }
     m_shader.setUniform("u_modelViewProjectionMatrix", mvp);
