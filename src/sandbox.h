@@ -5,11 +5,11 @@
 #include "gl/texture.h"
 #include "gl/textureCube.h"
 #include "gl/fbo.h"
-#include "gl/uniform.h"
 
 #include "3d/camera.h"
 
 #include "tools/fs.h"
+#include "tools/uniform.h"
 
 enum ShaderType {
     FRAGMENT = 0,
@@ -43,7 +43,6 @@ public:
     Camera&     getCamera() { return m_cam; }
 
     void        printDependencies(ShaderType _type) const;
-    void        print3DView() const;
     
     // Some events
     void        onFileChange(WatchFileList &_files, int _index);

@@ -3,17 +3,9 @@ precision mediump float;
 #endif
 
 uniform samplerCube u_cubeMap;
-
-uniform mat4 u_modelViewProjectionMatrix;
-uniform mat4 u_modelMatrix;
-uniform mat4 u_viewMatrix;
-uniform mat4 u_projectionMatrix;
-uniform mat4 u_normalMatrix;
-
 uniform vec3 u_eye;
-uniform vec2 u_resolution;
-uniform vec2 u_mouse;
-uniform float u_time;
+uniform vec3 u_eye3d;
+uniform vec3 u_centre3d;
 
 varying vec4 v_position;
 

@@ -69,6 +69,8 @@
         "numeric": "cpp",
         "valarray": "cpp",
         "__functional_base_03": "cpp",
-        "__tuple": "cpp"
+        "__tuple": "cpp",
+        "__functional_03": "cpp",
+        "__string": "cpp"
     }
 }

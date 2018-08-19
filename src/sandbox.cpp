@@ -55,20 +55,70 @@ Sandbox::Sandbox():
     defines.push_back("PLATFORM_RPI");
     #endif
 
-    uniforms_functions["u_time"]                = UniformFunction("float", "..");
-    uniforms_functions["u_delta"]               = UniformFunction("float", "..");
-    uniforms_functions["u_mouse"]               = UniformFunction("vec2", "..");
-    uniforms_functions["u_resolution"]          = UniformFunction("vec2", "..");
-    uniforms_functions["u_eye"]                 = UniformFunction("vec3", "..");
-    uniforms_functions["m_up3d"]                = UniformFunction("vec3", "..");
-    uniforms_functions["u_eye3d"]               = UniformFunction("vec3", "..");
-    uniforms_functions["u_centre3d"]            = UniformFunction("vec3", "..");
-    uniforms_functions["u_date"]                = UniformFunction("vec4", "..");
-    uniforms_functions["u_view2d"]              = UniformFunction("mat3", "..");
-    uniforms_functions["u_normalMatrix"]        = UniformFunction("mat3", "..");
-    uniforms_functions["u_modelMatrix"]         = UniformFunction("mat4", "..");
-    uniforms_functions["u_viewMatrix"]          = UniformFunction("mat4", "..");
-    uniforms_functions["u_projectionMatrix"]    = UniformFunction("mat4", "..");
+    uniforms_functions["u_time"] = UniformFunction( "float", 
+    [this](Shader& _shader) {
+        if (m_record) _shader.setUniform("u_time", m_record_head);
+        else _shader.setUniform("u_time", float(getTime()));
+    }, []() { return toString(getTime()); } );
+
+    uniforms_functions["u_delta"] = UniformFunction("float", 
+    [this](Shader& _shader) {
+        if (m_record) _shader.setUniform("u_delta", float(FRAME_DELTA));
+        else _shader.setUniform("u_delta", float(getDelta()));
+    },
+    []() { return toString(getDelta()); });
+
+    uniforms_functions["u_mouse"] = UniformFunction("vec2", [](Shader& _shader) {
+        _shader.setUniform("u_mouse", getMouseX(), getMouseY());
+    },
+    []() { return toString(getMouseX()) + "," + toString(getMouseY()); } );
+
+    uniforms_functions["u_resolution"]= UniformFunction("vec2", [](Shader& _shader) {
+        _shader.setUniform("u_resolution", getWindowWidth(), getWindowHeight());
+    },
+    []() { return toString(getWindowWidth()) + "," + toString(getWindowHeight()); });
+    
+    uniforms_functions["u_eye"] = UniformFunction("vec3", [this](Shader& _shader) {
+        _shader.setUniform("u_eye", -m_cam.getPosition());
+    },
+    [this]() { return toString(-m_cam.getPosition(), ','); });
+    
+    uniforms_functions["m_up3d"] = UniformFunction("vec3", [this](Shader& _shader) {
+        _shader.setUniform("m_up3d", m_up3d);
+    },
+    [this]() { return toString(m_up3d, ','); });
+
+    uniforms_functions["u_eye3d"] = UniformFunction("vec3", [this](Shader& _shader) {
+        _shader.setUniform("m_eye3d", m_eye3d);
+    },
+    [this]() { return toString(m_eye3d, ','); });
+
+    uniforms_functions["u_centre3d"] = UniformFunction("vec3", [this](Shader& _shader) {
+        _shader.setUniform("m_centre3d", m_centre3d);
+    },
+    [this]() { return toString(m_centre3d, ','); });
+
+    uniforms_functions["u_date"] = UniformFunction("vec4", [](Shader& _shader) {
+        _shader.setUniform("u_date", getDate());
+    },
+    []() { return toString(getDate(), ','); });
+
+    uniforms_functions["u_view2d"] = UniformFunction("mat3", [this](Shader& _shader) {
+        _shader.setUniform("u_view2d", m_view2d);
+    });
+    uniforms_functions["u_normalMatrix"] = UniformFunction("mat3", [this](Shader& _shader) {
+        _shader.setUniform("u_normalMatrix", m_cam.getNormalMatrix());
+    });
+    uniforms_functions["u_modelMatrix"] = UniformFunction("mat4", [this](Shader& _shader) {
+        _shader.setUniform("u_modelMatrix", m_vbo_matrix);
+    });
+    uniforms_functions["u_viewMatrix"] = UniformFunction("mat4", [this](Shader& _shader) {
+        _shader.setUniform("u_viewMatrix", m_cam.getViewMatrix());
+    });
+    uniforms_functions["u_projectionMatrix"] = UniformFunction("mat4", [this](Shader& _shader) {
+        _shader.setUniform("u_projectionMatrix", m_cam.getProjectionMatrix());
+    });
+    uniforms_functions["u_modelViewProjectionMatrix"] = UniformFunction("mat4");
 }
 
 void Sandbox::setup( WatchFileList &_files ) {
@@ -220,7 +270,7 @@ bool Sandbox::reload() {
     else {
         // Check active native uniforms
         for (UniformFunctionsList::iterator it = uniforms_functions.begin(); it != uniforms_functions.end(); ++it) {
-            it->second.present = ( find_id(m_frag_source, it->first.c_str()) != 0 || find_id(m_frag_source, it->first.c_str()) != 0 );
+            it->second.present = ( find_id(m_frag_source, it->first.c_str()) != 0 || find_id(m_vert_source, it->first.c_str()) != 0 );
         }
         // Flag all user defined uniforms as changed
         for (UniformDataList::iterator it = uniforms_data.begin(); it != uniforms_data.end(); ++it) {
@@ -290,59 +340,12 @@ void Sandbox::_updateBuffers() {
 
 void Sandbox::_updateUniforms( Shader &_shader ) {
     // Pass Native uniforms 
-    if (uniforms_functions["u_resolution"].present) {
-        _shader.setUniform("u_resolution", getWindowWidth(), getWindowHeight());
-    }
-    if (uniforms_functions["u_time"].present) {
-        if (m_record) {
-            _shader.setUniform("u_time", m_record_head);
+    for (UniformFunctionsList::iterator it=uniforms_functions.begin(); it!=uniforms_functions.end(); ++it) {
+        if (it->second.present) {
+            if (it->second.assign) {
+                it->second.assign(_shader);
+            }
         }
-        else {
-            _shader.setUniform("u_time", float(getTime()));
-        }
-    }
-    if (uniforms_functions["u_delta"].present) {
-        if (m_record) {
-            _shader.setUniform("u_delta", float(FRAME_DELTA));
-        }    
-        else {
-            _shader.setUniform("u_delta", float(getDelta()));
-        }
-    }
-    if (uniforms_functions["u_date"].present) {
-        _shader.setUniform("u_date", getDate());
-    }
-    
-    if (uniforms_functions["u_mouse"].present) {
-        _shader.setUniform("u_mouse", getMouseX(), getMouseY());
-    }
-    
-    if (uniforms_functions["u_view2d"].present) {
-        _shader.setUniform("u_view2d", m_view2d);
-    }
-    if (uniforms_functions["m_eye3d"].present) {
-        _shader.setUniform("m_eye3d", m_eye3d);
-    }
-    if (uniforms_functions["m_centre3d"].present) {
-        _shader.setUniform("m_centre3d", m_centre3d);
-    }
-    if (uniforms_functions["m_up3d"].present) {
-        _shader.setUniform("m_up3d", m_up3d);
-    }
-    if (uniforms_functions["m_eye"].present) {
-        _shader.setUniform("u_eye", -m_cam.getPosition());
-    }
-    if (uniforms_functions["u_normalMatrix"].present) {
-        _shader.setUniform("u_normalMatrix", m_cam.getNormalMatrix());
-    }
-    if (uniforms_functions["u_modelMatrix"].present) {
-        _shader.setUniform("u_modelMatrix", m_vbo_matrix);
-    }
-    if (uniforms_functions["u_viewMatrix"].present) {
-        _shader.setUniform("u_viewMatrix", m_cam.getViewMatrix());
-    }
-    if (uniforms_functions["u_projectionMatrix"].present) {
-        m_shader.setUniform("u_projectionMatrix", m_cam.getProjectionMatrix());
     }
 
     // Pass User defined uniforms
@@ -615,14 +618,12 @@ void Sandbox::onScroll(float _yoffset) {
 void Sandbox::onMouseDrag(float _x, float _y, int _button) {
     if (_button == 1) {
 
-        if (geom_index != -1) {
-            // Left-button drag is used to rotate geometry.
-            float dist = m_cam.getDistance();
-            m_lat -= getMouseVelX();
-            m_lon -= getMouseVelY()*0.5;
-            m_cam.orbit(m_lat ,m_lon, dist);
-            m_cam.lookAt(glm::vec3(0.0));
-        }
+        // Left-button drag is used to rotate geometry.
+        float dist = m_cam.getDistance();
+        m_lat -= getMouseVelX();
+        m_lon -= getMouseVelY()*0.5;
+        m_cam.orbit(m_lat ,m_lon, dist);
+        m_cam.lookAt(glm::vec3(0.0));
 
         // Left-button drag is used to pan u_view2d.
         m_view2d = glm::translate(m_view2d, -getMouseVelocity());
@@ -647,13 +648,11 @@ void Sandbox::onMouseDrag(float _x, float _y, int _button) {
     } 
     else {
 
-        if (geom_index != -1) {
-            // Right-button drag is used to zoom geometry.
-            float dist = m_cam.getDistance();
-            dist += (-.008f * getMouseVelY());
-            if (dist > 0.0f) {
-                m_cam.setDistance( dist );
-            }
+        // Right-button drag is used to zoom geometry.
+        float dist = m_cam.getDistance();
+        dist += (-.008f * getMouseVelY());
+        if (dist > 0.0f) {
+            m_cam.setDistance( dist );
         }
 
         // TODO: rotate view2d.
@@ -744,10 +743,4 @@ void Sandbox::printDependencies(ShaderType _type) const {
             std::cout << m_vert_dependencies[i] << std::endl;
         }
     }
-}
-
-void Sandbox::print3DView() const {
-    std::cout << "up,"      << toString(m_up3d.x)       << "," << toString(m_up3d.y)   <<  "," << toString(m_up3d.z)        << std::endl;
-    std::cout << "eye,"     << toString(m_eye3d.x)      << "," << toString(m_eye3d.y)  <<  "," << toString(m_eye3d.z)       << std::endl;
-    std::cout << "centre,"  << toString(m_centre3d.x)   << "," + toString(m_centre3d.y) << "," << toString(m_centre3d.z)    << std::endl;           
 }

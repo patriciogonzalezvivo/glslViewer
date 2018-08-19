@@ -3,7 +3,7 @@
 #include <regex>
 #include <sstream>
 
-#include "tools/text.h"
+#include "text.h"
 
 std::string UniformData::getType() {
     if (size == 1 && bInt) {
@@ -18,12 +18,22 @@ std::string UniformData::getType() {
 }
 
 UniformFunction::UniformFunction() {
-
+    type = "-undefined-";
 }
 
-UniformFunction::UniformFunction(const std::string &_type, const std::string &_description) {
+UniformFunction::UniformFunction(const std::string &_type) {
     type = _type;
-    description = _description;
+}
+
+UniformFunction::UniformFunction(const std::string &_type, std::function<void(Shader&)> _assign) {
+    type = _type;
+    assign = _assign;
+}
+
+UniformFunction::UniformFunction(const std::string &_type, std::function<void(Shader&)> _assign, std::function<std::string()> _print) {
+    type = _type;
+    assign = _assign;
+    print = _print;
 }
 
 bool parseUniformData(const std::string &_line, UniformDataList *_uniforms) {

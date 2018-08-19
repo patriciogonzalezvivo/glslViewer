@@ -74,15 +74,14 @@ void printHelp() {
     std::cout << "//" << std::endl; 
     std::cout << "// files          return a list of files" << std::endl;
     std::cout << "// buffers        return a list of buffers as their uniform name." << std::endl;
-    std::cout << "// uniforms       return a list of uniforms and their values." << std::endl;
+    std::cout << "// uniforms       return a list of active uniforms and their values." << std::endl;
+    std::cout << "// uniforms_all   return a list of all uniforms and their values." << std::endl;
     std::cout << "// textures       return a list of textures as their uniform name and path." << std::endl;
     std::cout << "//" << std::endl;
     std::cout << "// defines            return a list of active defines" << std::endl;
     std::cout << "// define,<DEFINE>    add a define to the shader" << std::endl;
     std::cout << "// undefine,<DEFINE>  remove a define on the shader" << std::endl;
     std::cout << "//" << std::endl;
-    std::cout << "// view3d                         returns the position of the camera," << std::endl;
-    std::cout << "//                                the up-vector and the center of model." << std::endl;
     std::cout << "// camera_distance                returns camera to target distance." << std::endl;
     std::cout << "// camera_distance[,distance]     set the camera distance to the target." << std::endl;
     std::cout << "// camera_position                returns the position of the camera." << std::endl;
@@ -453,9 +452,6 @@ void cinWatcherThread() {
             glm::vec4 date = getDate();
             std::cout << date.x << ',' << date.y << ',' << date.z << ',' << date.w << std::endl;
         }
-        else if (line == "view3d") {
-            sandbox.print3DView();
-        }
         else if (beginsWith(line, "frag,")) {
             std::vector<std::string> values = split(line,',');
             if (values.size() == 2) {
@@ -503,7 +499,11 @@ void cinWatcherThread() {
             // Print Native Uniforms (they carry functions) that are present on the shader
             for (UniformFunctionsList::iterator it= sandbox.uniforms_functions.begin(); it != sandbox.uniforms_functions.end(); ++it) {                
                 if (it->second.present) {
-                    std::cout << it->first << ',' << it->second.type << "," << it->second.description << std::endl;
+                    std::cout << it->first << ',' << it->second.type;
+                    if (it->second.print) {
+                        std::cout << "," << it->second.print();
+                    }
+                    std::cout << std::endl;
                 }
             }
 
@@ -519,7 +519,11 @@ void cinWatcherThread() {
         else if (line == "uniforms_all") {
             // Print all Native Uniforms (they carry functions)
             for (UniformFunctionsList::iterator it= sandbox.uniforms_functions.begin(); it != sandbox.uniforms_functions.end(); ++it) {                
-                std::cout << it->first << ',' << it->second.type << "," << it->second.description << std::endl;
+                std::cout << it->first << ',' << it->second.type;
+                if (it->second.print) {
+                    std::cout << "," << it->second.print();
+                }
+                std::cout << std::endl;
             }
 
             // Print user defined uniform data

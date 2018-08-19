@@ -6,14 +6,7 @@ precision mediump float;
 // https://github.com/karimnaaji/hdreffects/blob/master/build/shaders/fresnel.vert
 
 uniform mat4 u_modelViewProjectionMatrix;
-uniform mat4 u_modelMatrix;
-uniform mat4 u_viewMatrix;
-uniform mat4 u_projectionMatrix;
-uniform mat4 u_normalMatrix;
-
 uniform vec3 u_eye;
-uniform float u_time;
-uniform float u_delta;
 
 attribute vec4 a_position;
 attribute vec4 a_color;

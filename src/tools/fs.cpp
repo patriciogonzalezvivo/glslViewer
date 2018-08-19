@@ -133,10 +133,13 @@ std::string toString(FileType _type) {
     else if (_type == GEOMETRY) {
         return "GEOMETRY";
     }
+    else if (_type == CUBEMAP) {
+        return "CUBEMAP";
+    }
     else if (_type == GLSL_DEPENDENCY) {
         return "GLSL_DEPEND";
     }
     else {
-        return "---";
+        return "-undefined-";
     }
 }
