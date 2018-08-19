@@ -20,6 +20,9 @@
 //============================================================================
 //
 std::atomic<bool> bRun(true);
+#ifndef REST_FPS
+#define REST_FPS 33333
+#endif
 
 //  List of FILES to watch and the variable to communicate that between process
 WatchFileList files;
@@ -28,8 +31,10 @@ int fileChanged;
 
 // Console elements
 CommandList commands;
-std::mutex consoleMutex;
-std::string outputFile = "";
+std::mutex  consoleMutex;
+std::string outputFile      = "";
+std::string execute_cmd     = "";       // Execute commands
+bool        execute_exit    = false;
 
 std::string version = "1.5.2";
 std::string name = "GlslViewer";
@@ -80,7 +85,7 @@ void declareCommands() {
         }
         return false;
     },
-    "help[,<command>|<uniform>] print help for a command, a uniform or all"));
+    "help[,<command>]       print help for one or all command"));
 
     commands.push_back(Command("version", [&](const std::string& _line){ 
         if (_line == "version") {
@@ -147,7 +152,7 @@ void declareCommands() {
         }
         return false;
     },
-    "fps        return u_fps, the number of frames per second."));
+    "fps                    return u_fps, the number of frames per second."));
 
     commands.push_back(Command("delta", [&](const std::string& _line){ 
         if (_line == "delta") {
@@ -157,7 +162,7 @@ void declareCommands() {
         }
         return false;
     },
-    "delta      return u_delta, the secs between frames."));
+    "delta                  return u_delta, the secs between frames."));
 
     commands.push_back(Command("time", [&](const std::string& _line){ 
         if (_line == "time") {
@@ -167,7 +172,7 @@ void declareCommands() {
         }
         return false;
     },
-    "time       return u_time, the elapsed time."));
+    "time                   return u_time, the elapsed time."));
 
     commands.push_back(Command("date", [&](const std::string& _line){ 
         if (_line == "date") {
@@ -178,7 +183,7 @@ void declareCommands() {
         }
         return false;
     },
-    "date       return u_date as YYYY, M, D and Secs."));
+    "date                   return u_date as YYYY, M, D and Secs."));
 
     commands.push_back(Command("frag", [&](const std::string& _line){ 
         if (_line == "frag") {
@@ -196,7 +201,7 @@ void declareCommands() {
         }
         return false;
     },
-    "frag[,<filename>]  returns or save the fragment shader source code."));
+    "frag[,<filename>]      returns or save the fragment shader source code."));
 
     commands.push_back(Command("vert", [&](const std::string& _line){ 
         if (_line == "vert") {
@@ -214,7 +219,7 @@ void declareCommands() {
         }
         return false;
     },
-    "vert[,<filename>]  returns or save the vertex shader source code."));
+    "vert[,<filename>]      returns or save the vertex shader source code."));
 
     commands.push_back( Command("dependencies", [&](const std::string& _line){ 
         if (_line == "dependencies") {
@@ -246,7 +251,7 @@ void declareCommands() {
         }
         return false;
     },
-    "files          return a list of files."));
+    "files                  return a list of files."));
 
     commands.push_back(Command("buffers", [&](const std::string& _line){ 
         if (_line == "buffers") {
@@ -257,7 +262,7 @@ void declareCommands() {
         }
         return false;
     },
-    "buffers        return a list of buffers as their uniform name."));
+    "buffers                return a list of buffers as their uniform name."));
 
     commands.push_back(Command("defines", [&](const std::string& _line){ 
         if (_line == "defines") {
@@ -304,7 +309,7 @@ void declareCommands() {
         if (_line == "uniforms,all") {
             // Print all Native Uniforms (they carry functions)
             for (UniformFunctionsList::iterator it= sandbox.uniforms_functions.begin(); it != sandbox.uniforms_functions.end(); ++it) {                
-                std::cout << it->first << ',' << it->second.type;
+                std::cout << it->second.type << ',' << it->first;
                 if (it->second.print) {
                     std::cout << "," << it->second.print();
                 }
@@ -315,7 +320,7 @@ void declareCommands() {
             // Print Native Uniforms (they carry functions) that are present on the shader
             for (UniformFunctionsList::iterator it= sandbox.uniforms_functions.begin(); it != sandbox.uniforms_functions.end(); ++it) {                
                 if (it->second.present) {
-                    std::cout << it->first << ',' << it->second.type;
+                    std::cout << it->second.type << ',' << it->first;
                     if (it->second.print) {
                         std::cout << "," << it->second.print();
                     }
@@ -326,12 +331,23 @@ void declareCommands() {
         
         // Print user defined uniform data
         for (UniformDataList::iterator it= sandbox.uniforms_data.begin(); it != sandbox.uniforms_data.end(); ++it) {
-            std::cout << it->first;
+            std::cout << it->second.getType() << "," << it->first;
             for (int i = 0; i < it->second.size; i++) {
                 std::cout << ',' << it->second.value[i];
             }
             std::cout << std::endl;
         }
+
+        for (int i = 0; i < sandbox.getTotalBuffers(); i++) {
+            std::cout << "sampler2D," << "u_buffer" << i << std::endl;
+        }
+
+        for (TextureList::iterator it = sandbox.textures.begin(); it != sandbox.textures.end(); ++it) {
+            std::cout << "sampler2D," << it->first << ',' << it->second->getFilePath() << std::endl;
+        }
+
+        // TODO
+        //      - Cubemap
 
         return true;
     },
@@ -443,7 +459,7 @@ void declareCommands() {
                     }
                 }
                 std::cout << " ] " << pct << "%" << std::endl;
-                usleep(10000);
+                usleep(REST_FPS);
             }
             return true;
         }
@@ -550,11 +566,12 @@ int main(int argc, char **argv){
     // Initialize openGL context
     initGL (windowPosAndSize, headless, alwaysOnTop);
 
-    Cursor cursor;              // Cursor
-    struct stat st;             // for files to watch
-    float timeLimit = -1.0f;    // Time limit
-    int textureCounter = 0;     // Number of textures to load
-    bool vFlip = true;          // Flip state
+    Cursor      cursor;                     // Cursor
+    struct stat st;                         // for files to watch
+    float       timeLimit       = -1.0f;    // Time limit
+    int         textureCounter  = 0;        // Number of textures to load
+    bool        vFlip           = true;     // Flip state
+    bool        fullFps         = false;
 
     //Load the the resources (textures)
     for (int i = 1; i < argc ; i++){
@@ -590,6 +607,18 @@ int main(int argc, char **argv){
             else {
                 std::cerr << "At the moment screenshots only support PNG formats" << std::endl;
             }
+        }
+        else if ( argument == "-e" ) {
+            i++;
+            execute_cmd = std::string(argv[i]);
+        }
+        else if ( argument == "-E" ) {
+            i++;
+            execute_cmd = std::string(argv[i]);
+            execute_exit = true;
+        }
+        else if (argument == "-F" ) {
+            fullFps = true;
         }
         else if ( sandbox.frag_index == -1 && (haveExt(argument,"frag") || haveExt(argument,"fs") ) ) {
             if ( stat(argument.c_str(), &st) != 0 ) {
@@ -759,6 +788,12 @@ int main(int argc, char **argv){
             filesMutex.unlock();
         }
 
+        // If nothing in the scene change skip the frame and try to keep it at 30fps
+        if (!fullFps && !sandbox.haveChange()) {
+            usleep(REST_FPS);
+            continue;
+        }
+
         // Draw
         sandbox.draw();
 
@@ -851,13 +886,33 @@ void fileWatcherThread() {
                 }
             }
         }
-        usleep(500000);
+        usleep(REST_FPS);
     }
 }
 
 //  Command line Thread
 //============================================================================
 void cinWatcherThread() {
+    while (!sandbox.isReady()) {
+        usleep(REST_FPS);
+    }
+
+    if (execute_cmd.size() > 0) {
+        bool resolve = false;
+        for (unsigned int i = 0; i < commands.size(); i++) {
+            if (beginsWith(execute_cmd, commands[i].begins_with)) {
+                if (commands[i].exec(execute_cmd)) {
+                    resolve = true;
+                    break;
+                }
+            }
+        }
+
+        if (execute_exit && resolve) {
+            bRun.store(false);
+        }
+    }
+
     std::string line;
     std::cout << "// > ";
     while (std::getline(std::cin, line)) {

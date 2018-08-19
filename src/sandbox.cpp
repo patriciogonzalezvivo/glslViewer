@@ -20,7 +20,8 @@ Sandbox::Sandbox():
     verbose(false),
     m_lat(180.0), m_lon(0.0),
     m_background_enabled(false), m_postprocessing_enabled(false),
-    m_cubemap_vbo(nullptr), m_cubemap(nullptr) {
+    m_cubemap_vbo(nullptr), m_cubemap(nullptr),
+    m_change(true), m_ready(false) {
 
     m_view2d = glm::mat3(1.);
 
@@ -119,6 +120,9 @@ Sandbox::Sandbox():
         _shader.setUniform("u_projectionMatrix", m_cam.getProjectionMatrix());
     });
     uniforms_functions["u_modelViewProjectionMatrix"] = UniformFunction("mat4");
+
+    uniforms_functions["u_scene"] = UniformFunction("sampler2D");
+    uniforms_functions["u_scene_depth"] = UniformFunction("sampler2D");
 }
 
 void Sandbox::setup( WatchFileList &_files ) {
@@ -248,6 +252,8 @@ void main(void) {\n\
     //
     m_buffers.clear();
     _updateBuffers();
+
+    m_ready = true;
 }
 
 std::string Sandbox::getSource(ShaderType _type) const {
@@ -304,6 +310,8 @@ bool Sandbox::reload() {
         }
     }
 
+    m_change = true;
+
     return success;
 }
 
@@ -353,9 +361,11 @@ void Sandbox::_updateUniforms( Shader &_shader ) {
         if (it->second.change) {
             if (it->second.bInt) {
                 _shader.setUniform(it->first, int(it->second.value[0]));
+                m_change = true;
             }
             else {
                 _shader.setUniform(it->first, it->second.value, it->second.size);
+                m_change = true;
             }
         }
     }
@@ -367,6 +377,18 @@ void Sandbox::_updateTextures( Shader &_shader, int &_textureIndex ) {
         _shader.setUniformTexture(it->first, it->second, _textureIndex++ );
         _shader.setUniform(it->first+"Resolution", it->second->getWidth(), it->second->getHeight());
     }
+}
+
+bool Sandbox::haveChange() { 
+    return  m_change || 
+            m_record || 
+            uniforms_functions["u_time"].present || 
+            uniforms_functions["u_delta"].present ||
+            uniforms_functions["u_date"].present; 
+}
+
+bool Sandbox::isReady() {
+    return m_ready;
 }
 
 void Sandbox::draw() {
@@ -518,6 +540,8 @@ void Sandbox::draw() {
         onScreenshot(screenshotFile);
         screenshotFile = "";
     }
+
+    m_change = false;
 }
 
 int Sandbox::getRecordedPorcentage() {
@@ -573,6 +597,8 @@ void Sandbox::onFileChange(WatchFileList &_files, int index) {
             m_cubemap->load(filename, _files[index].vFlip);
         }
     }
+
+    m_change = true;
 }
 
 void Sandbox::_updateDependencies(WatchFileList &_files) {
@@ -611,7 +637,9 @@ void Sandbox::onScroll(float _yoffset) {
         m_view2d = glm::translate(m_view2d, -origin);
 
         // zoom view3d
-        m_eye3d = m_centre3d + (m_eye3d - m_centre3d)*z;
+        m_eye3d = m_centre3d + (m_eye3d - m_centre3d) * z;
+        
+        m_change = true;
     }
 }
 
@@ -667,6 +695,8 @@ void Sandbox::onMouseDrag(float _x, float _y, int _button) {
         m_centre3d += hoff;
         m_eye3d += hoff;
     }
+
+     m_change = true;
 }
 
 void Sandbox::onViewportResize(int _newWidth, int _newHeight) {
@@ -681,6 +711,7 @@ void Sandbox::onViewportResize(int _newWidth, int _newHeight) {
     if (m_postprocessing_enabled) {
         m_scene_fbo.allocate(_newWidth, _newHeight, true);
     }
+    m_change = true;
 }
 
 void Sandbox::onScreenshot(std::string _file) {

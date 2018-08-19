@@ -29,6 +29,9 @@ public:
     void        clean();
     bool        reload();
 
+    bool        haveChange();
+    bool        isReady();
+
     void        record(float _start, float _end);
     int         getRecordedPorcentage();
 
@@ -133,4 +136,8 @@ private:
     float               m_record_end;
     int                 m_record_counter;
     bool                m_record;
+
+    // Scene
+    bool                m_change;
+    bool                m_ready;
 };
