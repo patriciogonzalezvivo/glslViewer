@@ -71,6 +71,7 @@
         "__functional_base_03": "cpp",
         "__tuple": "cpp",
         "__functional_03": "cpp",
-        "__string": "cpp"
+        "__string": "cpp",
+        "__mutex_base": "cpp"
     }
 }

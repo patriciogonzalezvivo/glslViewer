@@ -14,6 +14,7 @@
 #include "ui/cursor.h"
 #include "tools/fs.h"
 #include "tools/text.h"
+#include "tools/command.h"
 
 // GLOBAL VARIABLES
 //============================================================================
@@ -25,10 +26,14 @@ WatchFileList files;
 std::mutex filesMutex;
 int fileChanged;
 
+// Console elements
+CommandList commands;
 std::mutex consoleMutex;
 std::string outputFile = "";
 
 std::string version = "1.5.2";
+std::string name = "GlslViewer";
+std::string header = name + " " + version + " by Patricio Gonzalez Vivo ( patriciogonzalezvivo.com )"; 
 
 // Here is where all the magic happens
 Sandbox sandbox;
@@ -40,7 +45,7 @@ void cinWatcherThread();
 //================================================================= Functions
 void onExit();
 void printUsage(char * executableName) {
-    std::cerr << "// GlslViewer " << version << " by Patricio Gonzalez Vivo ( patriciogonzalezvivo.com )" << std::endl;
+    std::cerr << "// " << header << std::endl;
     std::cerr << "// "<< std::endl;
     std::cerr << "// Swiss army knife of GLSL Shaders. Loads frag/vertex shaders, images and " << std::endl;
     std::cerr << "// geometries. Will reload automatically on changes. Support for multi  "<< std::endl;
@@ -53,49 +58,425 @@ void printUsage(char * executableName) {
     std::cerr << "// Usage: " << executableName << " <shader>.frag [<shader>.vert] [<mesh>.(obj/.ply)] [<texture>.(png/jpg)] [-<uniformName> <texture>.(png/jpg/hdr)] [-c <cubemap>.hdr] [-vFlip] [-x <x>] [-y <y>] [-w <width>] [-h <height>] [-l] [--square] [-s/--sec <seconds>] [-o <screenshot_file>.png] [--headless] [--cursor] [-I<include_folder>] [-D<define>] [-v/--version] [--verbose] [--help]\n";
 }
 
-void printHelp() {
-    std::cout << "// GlslViewer " << version << " by Patricio Gonzalez Vivo ( patriciogonzalezvivo.com )" << std::endl; 
-    std::cout << "//" << std::endl;
-    std::cout << "// help           return this list of commands." << std::endl;
-    std::cout << "//" << std::endl;
-    std::cout << "// window_width   return the width of the windows." << std::endl;
-    std::cout << "// window_height  return the height of the windows." << std::endl;
-    std::cout << "// screen_size    return the width and height of the screen." << std::endl;
-    std::cout << "// viewport       return the size of the viewport (u_resolution)." << std::endl;
-    std::cout << "// pixel_density  return the pixel density" << std::endl;
-    std::cout << "//" << std::endl;
-    std::cout << "// date           return u_date as YYYY, M, D and Secs." << std::endl;
-    std::cout << "// time           return u_time, the elapsed time." << std::endl;
-    std::cout << "// delta          return u_delta, the secs between frames." << std::endl;
-    std::cout << "// fps            return u_fps, the number of frames per second." << std::endl;
-    std::cout << "// mouse_x        return the position of the mouse in x." << std::endl;
-    std::cout << "// mouse_y        return the position of the mouse in x." << std::endl;
-    std::cout << "// mouse          return the position of the mouse (u_mouse)." << std::endl;
-    std::cout << "//" << std::endl; 
-    std::cout << "// files          return a list of files" << std::endl;
-    std::cout << "// buffers        return a list of buffers as their uniform name." << std::endl;
-    std::cout << "// uniforms       return a list of active uniforms and their values." << std::endl;
-    std::cout << "// uniforms_all   return a list of all uniforms and their values." << std::endl;
-    std::cout << "// textures       return a list of textures as their uniform name and path." << std::endl;
-    std::cout << "//" << std::endl;
-    std::cout << "// defines            return a list of active defines" << std::endl;
-    std::cout << "// define,<DEFINE>    add a define to the shader" << std::endl;
-    std::cout << "// undefine,<DEFINE>  remove a define on the shader" << std::endl;
-    std::cout << "//" << std::endl;
-    std::cout << "// camera_distance                returns camera to target distance." << std::endl;
-    std::cout << "// camera_distance[,distance]     set the camera distance to the target." << std::endl;
-    std::cout << "// camera_position                returns the position of the camera." << std::endl;
-    std::cout << "// camera_position[,x][,y][,z]    set the position." << std::endl;
-    std::cout << "//" << std::endl;
-    std::cout << "// screenshot[,filename]      saves a screenshot to a filename." << std::endl;
-    std::cout << "// sequence,<A_sec>,<B_sec>   saves a sequence of images from A to B second." << std::endl;
-    std::cout << "// frag[,filename]            returns or save the fragment shader source code." << std::endl;
-    std::cout << "// frag_dependencies          returns all the fragment shader dependencies." << std::endl;
-    std::cout << "// vert[,filename]            return or save the vertex shader source code." << std::endl;
-    std::cout << "// vert_dependencies          returns all the vertex shader dependencies." << std::endl;
-    std::cout << "//" << std::endl;
-    std::cout << "// version        return glslViewer version" << std::endl;
-    std::cout << "// exit           close glslViewer" << std::endl;
+void declareCommands() {
+    commands.push_back(Command("help", [&](const std::string& _line){
+        if (_line == "help") {
+            std::cout << "// " << header << std::endl;
+            std::cout << "// " << std::endl;
+            for (unsigned int i = 0; i < commands.size(); i++) {
+                std::cout << "// " << commands[i].description << std::endl;
+            }
+            return true;
+        }
+        else {
+            std::vector<std::string> values = split(_line,',');
+            if (values.size() == 2) {
+                for (unsigned int i = 0; i < commands.size(); i++) {
+                    if (commands[i].begins_with == values[1]) {
+                        std::cout << "// " << commands[i].description << std::endl;
+                    }
+                }
+            }
+        }
+        return false;
+    },
+    "help[,<command>|<uniform>] print help for a command, a uniform or all"));
+
+    commands.push_back(Command("version", [&](const std::string& _line){ 
+        if (_line == "version") {
+            std::cout << version << std::endl;
+            return true;
+        }
+        return false;
+    },
+    "version                return glslViewer version."));
+
+    commands.push_back(Command("window_height", [&](const std::string& _line){ 
+        if (_line == "window_height") {
+            std::cout << getWindowHeight() << std::endl;
+            return true;
+        }
+        return false;
+    },
+    "window_height          return the height of the windows."));
+
+    commands.push_back(Command("pixel_density", [&](const std::string& _line){ 
+        if (_line == "pixel_density") {
+            std::cout << getPixelDensity() << std::endl;
+            return true;
+        }
+        return false;
+    },
+    "pixel_density          return the pixel density."));
+
+    commands.push_back(Command("screen_size", [&](const std::string& _line){ 
+        if (_line == "screen_size") {
+            glm::ivec2 screen_size = getScreenSize();
+            std::cout << screen_size.x << ',' << screen_size.y << std::endl;
+            return true;
+        }
+        return false;
+    },
+    "screen_size            return the screen size."));
+
+    commands.push_back(Command("viewport", [&](const std::string& _line){ 
+        if (_line == "viewport") {
+            glm::ivec4 viewport = getViewport();
+            std::cout << viewport.x << ',' << viewport.y << ',' << viewport.z << ',' << viewport.w << std::endl;
+            return true;
+        }
+        return false;
+    },
+    "viewport               return the viewport size."));
+
+    commands.push_back(Command("mouse", [&](const std::string& _line){ 
+        if (_line == "mouse") {
+            glm::vec2 pos = getMousePosition();
+            std::cout << pos.x << "," << pos.y << std::endl;
+            return true;
+        }
+        return false;
+    },
+    "mouse                  return the mouse position."));
+    
+    commands.push_back(Command("fps", [&](const std::string& _line){ 
+        if (_line == "fps") {
+            // Force the output in floats
+            printf("%f\n", getFPS());
+            return true;
+        }
+        return false;
+    },
+    "fps        return u_fps, the number of frames per second."));
+
+    commands.push_back(Command("delta", [&](const std::string& _line){ 
+        if (_line == "delta") {
+            // Force the output in floats
+            printf("%f\n", getDelta());
+            return true;
+        }
+        return false;
+    },
+    "delta      return u_delta, the secs between frames."));
+
+    commands.push_back(Command("time", [&](const std::string& _line){ 
+        if (_line == "time") {
+            // Force the output in floats
+            printf("%f\n", getTime());
+            return true;
+        }
+        return false;
+    },
+    "time       return u_time, the elapsed time."));
+
+    commands.push_back(Command("date", [&](const std::string& _line){ 
+        if (_line == "date") {
+            // Force the output in floats
+            glm::vec4 date = getDate();
+            std::cout << date.x << ',' << date.y << ',' << date.z << ',' << date.w << std::endl;
+            return true;
+        }
+        return false;
+    },
+    "date       return u_date as YYYY, M, D and Secs."));
+
+    commands.push_back(Command("frag", [&](const std::string& _line){ 
+        if (_line == "frag") {
+            std::cout << sandbox.getSource(FRAGMENT) << std::endl;
+            return true;
+        }
+        else {
+            std::vector<std::string> values = split(_line,',');
+            if (values.size() == 2) {
+                std::ofstream out(values[1]);
+                out << sandbox.getSource(FRAGMENT);
+                out.close();
+                return true;
+            }
+        }
+        return false;
+    },
+    "frag[,<filename>]  returns or save the fragment shader source code."));
+
+    commands.push_back(Command("vert", [&](const std::string& _line){ 
+        if (_line == "vert") {
+            std::cout << sandbox.getSource(VERTEX) << std::endl;
+            return true;
+        }
+        else {
+            std::vector<std::string> values = split(_line,',');
+            if (values.size() == 2) {
+                std::ofstream out(values[1]);
+                out << sandbox.getSource(VERTEX);
+                out.close();
+                return true;
+            }
+        }
+        return false;
+    },
+    "vert[,<filename>]  returns or save the vertex shader source code."));
+
+    commands.push_back( Command("dependencies", [&](const std::string& _line){ 
+        if (_line == "dependencies") {
+            for (unsigned int i = 0; i < files.size(); i++) { 
+                if (files[i].type == GLSL_DEPENDENCY) {
+                    std::cout << files[i].path << std::endl;
+                }   
+            }
+            return true;
+        }
+        else if (_line == "dependencies,frag") {
+            sandbox.printDependencies(FRAGMENT);
+            return true;
+        }
+        else if (_line == "dependencies,vert") {
+            sandbox.printDependencies(VERTEX);
+            return true;
+        }
+        return false;
+    },
+    "dependencies[,vert|frag]   returns all the dependencies of the vertex o fragment shader or both."));
+
+    commands.push_back(Command("files", [&](const std::string& _line){ 
+        if (_line == "files") {
+            for (unsigned int i = 0; i < files.size(); i++) { 
+                std::cout << std::setw(2) << i << "," << std::setw(12) << toString(files[i].type) << "," << files[i].path << std::endl;
+            }
+            return true;
+        }
+        return false;
+    },
+    "files          return a list of files."));
+
+    commands.push_back(Command("buffers", [&](const std::string& _line){ 
+        if (_line == "buffers") {
+            for (int i = 0; i < sandbox.getTotalBuffers(); i++) {
+                std::cout << "u_buffer" << i << std::endl;
+            }
+            return true;
+        }
+        return false;
+    },
+    "buffers        return a list of buffers as their uniform name."));
+
+    commands.push_back(Command("defines", [&](const std::string& _line){ 
+        if (_line == "defines") {
+            for (unsigned int i = 0; i < sandbox.defines.size(); i++) {
+                std::cout << sandbox.defines[i] << std::endl;
+            }
+            return true;
+        }
+        return false;
+    },
+    "defines                return a list of active defines"));
+
+    commands.push_back( Command("define,", [&](const std::string& _line){ 
+        std::vector<std::string> values = split(_line,',');
+        if (values.size() == 2) {
+            consoleMutex.lock();
+            sandbox.addDefines( values[1] ); 
+            consoleMutex.unlock();
+            filesMutex.lock();
+            fileChanged = sandbox.frag_index;
+            filesMutex.unlock();
+            return true;
+        }
+        return false;
+    },
+    "define,<KEYWORD>       add a define to the shader"));
+
+    commands.push_back( Command("undefine,", [&](const std::string& _line){ 
+        std::vector<std::string> values = split(_line,',');
+        if (values.size() == 2) {
+            consoleMutex.lock();
+            sandbox.delDefines( values[1] ); 
+            consoleMutex.unlock();
+            filesMutex.lock();
+            fileChanged = sandbox.frag_index;
+            filesMutex.unlock();
+            return true;
+        }
+        return false;
+    },
+    "undefine,<KEYWORD>     remove a define on the shader"));
+
+    commands.push_back(Command("uniforms", [&](const std::string& _line){ 
+        if (_line == "uniforms,all") {
+            // Print all Native Uniforms (they carry functions)
+            for (UniformFunctionsList::iterator it= sandbox.uniforms_functions.begin(); it != sandbox.uniforms_functions.end(); ++it) {                
+                std::cout << it->first << ',' << it->second.type;
+                if (it->second.print) {
+                    std::cout << "," << it->second.print();
+                }
+                std::cout << std::endl;
+            }
+        }
+        else {
+            // Print Native Uniforms (they carry functions) that are present on the shader
+            for (UniformFunctionsList::iterator it= sandbox.uniforms_functions.begin(); it != sandbox.uniforms_functions.end(); ++it) {                
+                if (it->second.present) {
+                    std::cout << it->first << ',' << it->second.type;
+                    if (it->second.print) {
+                        std::cout << "," << it->second.print();
+                    }
+                    std::cout << std::endl;
+                }
+            }
+        }
+        
+        // Print user defined uniform data
+        for (UniformDataList::iterator it= sandbox.uniforms_data.begin(); it != sandbox.uniforms_data.end(); ++it) {
+            std::cout << it->first;
+            for (int i = 0; i < it->second.size; i++) {
+                std::cout << ',' << it->second.value[i];
+            }
+            std::cout << std::endl;
+        }
+
+        return true;
+    },
+    "uniforms[,all|active]  return a list of all uniforms and their values or just the one active (default)."));
+
+    commands.push_back(Command("textures", [&](const std::string& _line){ 
+        if (_line == "textures") {
+            for (TextureList::iterator it = sandbox.textures.begin(); it != sandbox.textures.end(); ++it) {
+                std::cout << it->first << ',' << it->second->getFilePath() << std::endl;
+            }
+            return true;
+        }
+        return false;
+    },
+    "textures               return a list of textures as their uniform name and path."));
+
+    commands.push_back(Command("window_width", [&](const std::string& _line){ 
+        if (_line == "window_width") {
+            std::cout << getWindowWidth() << std::endl;
+            return true;
+        }
+        return false;
+    },
+    "window_width           return the width of the windows."));
+
+    commands.push_back(Command("camera_distance", [&](const std::string& _line){ 
+        std::vector<std::string> values = split(_line,',');
+        if (values.size() == 2) {
+            sandbox.getCamera().setDistance(toFloat(values[1]));
+            return true;
+        }
+        else {
+            std::cout << sandbox.getCamera().getDistance() << std::endl;
+            return true;
+        }
+        return false;
+    },
+    "camera_distance[,<dist>]       get or set the camera distance to the target."));
+
+    commands.push_back(Command("camera_position", [&](const std::string& _line){ 
+        std::vector<std::string> values = split(_line,',');
+        if (values.size() == 4) {
+            sandbox.getCamera().setPosition(glm::vec3(toFloat(values[1]),toFloat(values[2]),toFloat(values[3])));
+            return true;
+        }
+        else {
+            glm::vec3 pos = sandbox.getCamera().getPosition();
+            std::cout << pos.x << ',' << pos.y << ',' << pos.z << std::endl;
+            return true;
+        }
+        return false;
+    },
+    "camera_position[,<x>,<y>,<z>]  get or set the camera position."));
+
+    commands.push_back(Command("screenshot", [&](const std::string& _line){ 
+        if (_line == "screenshot" && outputFile != "") {
+            consoleMutex.lock();
+            sandbox.screenshotFile = outputFile;
+            consoleMutex.unlock();
+            return true;
+        }
+        else {
+            std::vector<std::string> values = split(_line,',');
+            if (values.size() == 2) {
+                consoleMutex.lock();
+                sandbox.screenshotFile = values[1];
+                consoleMutex.unlock();
+                return true;
+            }
+        }
+        return false;
+    },
+    "screenshot[,<filename>]        saves a screenshot to a filename."));
+
+     commands.push_back(Command("sequence", [&](const std::string& _line){ 
+        std::vector<std::string> values = split(_line,',');
+        if (values.size() == 3) {
+            float from = toFloat(values[1]);
+            float to = toFloat(values[2]);
+
+            if (from >= to) {
+                from = 0.0;
+            }
+
+            consoleMutex.lock();
+            sandbox.record(from, to);
+            consoleMutex.unlock();
+
+            std::cout << "// " << std::endl;
+
+            int pct = 0;
+            while (pct < 100) {
+                // Delete previous line
+                const std::string deleteLine = "\e[2K\r\e[1A";
+                std::cout << deleteLine;
+
+                // Check progres.
+                consoleMutex.lock();
+                pct = sandbox.getRecordedPorcentage();
+                consoleMutex.unlock();
+                
+                std::cout << "// [ ";
+                for (int i = 0; i < 50; i++) {
+                    if (i < pct/2) {
+                        std::cout << "#";
+                    }
+                    else {
+                        std::cout << ".";
+                    }
+                }
+                std::cout << " ] " << pct << "%" << std::endl;
+                usleep(10000);
+            }
+            return true;
+        }
+        return false;
+    },
+    "sequence,<A_sec>,<B_sec>   saves a sequence of images from A to B second."));
+
+    commands.push_back(Command("q", [&](const std::string& _line){ 
+        if (_line == "q") {
+            bRun.store(false);
+            return true;
+        }
+        return false;
+    },
+    "q                          close glslViewer"));
+
+    commands.push_back(Command("quit", [&](const std::string& _line){ 
+        if (_line == "quit") {
+            bRun.store(false);
+            return true;
+        }
+        return false;
+    },
+    "quit                       close glslViewer"));
+
+    commands.push_back(Command("exit", [&](const std::string& _line){ 
+        if (_line == "exit") {
+            bRun.store(false);
+            return true;
+        }
+        return false;
+    },
+    "exit                       close glslViewer"));
 }
 
 // Main program
@@ -162,6 +543,9 @@ int main(int argc, char **argv){
         printUsage( argv[0] );
         exit(0);
     }
+
+    // Declare commands
+    declareCommands();
 
     // Initialize openGL context
     initGL (windowPosAndSize, headless, alwaysOnTop);
@@ -406,285 +790,8 @@ int main(int argc, char **argv){
     exit(0);
 }
 
-//  Watching Thread
+// Events
 //============================================================================
-void fileWatcherThread() {
-    struct stat st;
-    while ( bRun.load() ) {
-        for ( uint i = 0; i < files.size(); i++ ) {
-            if ( fileChanged == -1 ) {
-                stat( files[i].path.c_str(), &st );
-                int date = st.st_mtime;
-                if ( date != files[i].lastChange ) {
-                    filesMutex.lock();
-                    fileChanged = i;
-                    files[i].lastChange = date;
-                    filesMutex.unlock();
-                }
-            }
-        }
-        usleep(500000);
-    }
-}
-
-void cinWatcherThread() {
-    std::string line;
-    std::cout << "// > ";
-    while (std::getline(std::cin, line)) {
-        // GET ONLY
-        // 
-        if (line == "help") {
-            printHelp();
-        }
-        else if (line == "fps") {
-            // Force the output in floats
-            printf("%f\n", getFPS());
-        }
-        else if (line == "delta") {
-            // Force the output in floats
-            printf("%f\n", getDelta());
-        }
-        else if (line == "time") {
-            // Force the output in floats
-            printf("%f\n", getTime());
-        }
-        else if (line == "date") {
-            glm::vec4 date = getDate();
-            std::cout << date.x << ',' << date.y << ',' << date.z << ',' << date.w << std::endl;
-        }
-        else if (beginsWith(line, "frag,")) {
-            std::vector<std::string> values = split(line,',');
-            if (values.size() == 2) {
-                std::ofstream out(values[1]);
-                out << sandbox.getSource(FRAGMENT);
-                out.close();
-            }
-        }
-        else if (line == "frag") {
-            std::cout << sandbox.getSource(FRAGMENT) << std::endl;
-        }
-        else if (line == "frag_dependencies") {
-            sandbox.printDependencies(FRAGMENT);
-        }
-        else if (beginsWith(line, "vert,")) {
-            std::vector<std::string> values = split(line,',');
-            if (values.size() == 2) {
-                std::ofstream out(values[1]);
-                out << sandbox.getSource(VERTEX);
-                out.close();
-            }
-        }
-        else if (line == "vert") {
-            std::cout << sandbox.getSource(VERTEX) << std::endl;
-        }
-        else if (line == "vert_dependencies") {
-            sandbox.printDependencies(VERTEX);
-        }
-        else if (line == "files") {
-            for (unsigned int i = 0; i < files.size(); i++) { 
-                std::cout << std::setw(2) << i << "," << std::setw(12) << toString(files[i].type) << "," << files[i].path << std::endl;
-            }
-        }
-        else if (line == "buffers") {
-            for (int i = 0; i < sandbox.getTotalBuffers(); i++) {
-                std::cout << "u_buffer" << i << std::endl;
-            }
-        }
-        else if (line == "defines") {
-            for (unsigned int i = 0; i < sandbox.defines.size(); i++) {
-                std::cout << sandbox.defines[i] << std::endl;
-            }
-        }
-        else if (line == "uniforms") {
-            // Print Native Uniforms (they carry functions) that are present on the shader
-            for (UniformFunctionsList::iterator it= sandbox.uniforms_functions.begin(); it != sandbox.uniforms_functions.end(); ++it) {                
-                if (it->second.present) {
-                    std::cout << it->first << ',' << it->second.type;
-                    if (it->second.print) {
-                        std::cout << "," << it->second.print();
-                    }
-                    std::cout << std::endl;
-                }
-            }
-
-            // Print user defined uniform data
-            for (UniformDataList::iterator it= sandbox.uniforms_data.begin(); it != sandbox.uniforms_data.end(); ++it) {
-                std::cout << it->first;
-                for (int i = 0; i < it->second.size; i++) {
-                    std::cout << ',' << it->second.value[i];
-                }
-                std::cout << std::endl;
-            }
-        }
-        else if (line == "uniforms_all") {
-            // Print all Native Uniforms (they carry functions)
-            for (UniformFunctionsList::iterator it= sandbox.uniforms_functions.begin(); it != sandbox.uniforms_functions.end(); ++it) {                
-                std::cout << it->first << ',' << it->second.type;
-                if (it->second.print) {
-                    std::cout << "," << it->second.print();
-                }
-                std::cout << std::endl;
-            }
-
-            // Print user defined uniform data
-            for (UniformDataList::iterator it= sandbox.uniforms_data.begin(); it != sandbox.uniforms_data.end(); ++it) {
-                std::cout << it->first;
-                for (int i = 0; i < it->second.size; i++) {
-                    std::cout << ',' << it->second.value[i];
-                }
-                std::cout << std::endl;
-            }
-        }
-        else if (line == "textures") {
-            for (TextureList::iterator it = sandbox.textures.begin(); it != sandbox.textures.end(); ++it) {
-                std::cout << it->first << ',' << it->second->getFilePath() << std::endl;
-            }
-        }
-        else if (line == "window_width") {
-            std::cout << getWindowWidth() << std::endl;
-        }
-        else if (line == "window_height") {
-            std::cout << getWindowHeight() << std::endl;
-        }
-        else if (line == "pixel_density") {
-            std::cout << getPixelDensity() << std::endl;
-        }
-        else if (line == "screen_size") {
-            glm::ivec2 screen_size = getScreenSize();
-            std::cout << screen_size.x << ',' << screen_size.y << std::endl;
-        }
-        else if (line == "viewport") {
-            glm::ivec4 viewport = getViewport();
-            std::cout << viewport.x << ',' << viewport.y << ',' << viewport.z << ',' << viewport.w << std::endl;
-        }
-        else if (line == "mouse_x") {
-            std::cout << getMouseX() << std::endl;
-        }
-        else if (line == "mouse_y") {
-            std::cout << getMouseY() << std::endl;
-        }
-        else if (line == "mouse") {
-            glm::vec2 pos = getMousePosition();
-            std::cout << pos.x << "," << pos.y << std::endl;
-        }
-        else if (line == "version") {
-            std::cout << version << std::endl;
-        }
-        // GET/SET 
-        //
-        else if (beginsWith(line, "camera_distance")) {
-            std::vector<std::string> values = split(line,',');
-            if (values.size() == 2) {
-                sandbox.getCamera().setDistance(toFloat(values[1]));
-            }
-            else {
-                std::cout << sandbox.getCamera().getDistance() << std::endl;
-            }
-        }
-        else if (beginsWith(line, "camera_position")) {
-            std::vector<std::string> values = split(line,',');
-            if (values.size() == 4) {
-                sandbox.getCamera().setPosition(glm::vec3(toFloat(values[1]),toFloat(values[2]),toFloat(values[3])));
-            }
-            else {
-                glm::vec3 pos = sandbox.getCamera().getPosition();
-                std::cout << pos.x << ',' << pos.y << ',' << pos.z << std::endl;
-            }
-        }
-        // ACTIONS
-        else if (line == "q" || line == "quit" || line == "exit") {
-            bRun.store(false);
-        }
-        else if (beginsWith(line, "screenshot")) {
-            if (line == "screenshot" && outputFile != "") {
-                consoleMutex.lock();
-                sandbox.screenshotFile = outputFile;
-                consoleMutex.unlock();
-            }
-            else {
-                std::vector<std::string> values = split(line,',');
-                if (values.size() == 2) {
-                    consoleMutex.lock();
-                    sandbox.screenshotFile = values[1];
-                    consoleMutex.unlock();
-                }
-            }
-        }
-        else if (beginsWith(line, "sequence")) {
-            std::vector<std::string> values = split(line,',');
-            if (values.size() == 3) {
-                float from = toFloat(values[1]);
-                float to = toFloat(values[2]);
-
-                if (from >= to) {
-                    from = 0.0;
-                }
-
-                consoleMutex.lock();
-                sandbox.record(from, to);
-                consoleMutex.unlock();
-
-                std::cout << "// " << std::endl;
-
-                int pct = 0;
-                while (pct < 100) {
-                    // Delete previous line
-                    const std::string deleteLine = "\e[2K\r\e[1A";
-                    std::cout << deleteLine;
-
-                    // Check progres.
-                    consoleMutex.lock();
-                    pct = sandbox.getRecordedPorcentage();
-                    consoleMutex.unlock();
-                    
-                    std::cout << "// [ ";
-                    for (int i = 0; i < 50; i++) {
-                        if (i < pct/2) {
-                            std::cout << "#";
-                        }
-                        else {
-                            std::cout << ".";
-                        }
-                    }
-                    std::cout << " ] " << pct << "%" << std::endl;
-                    usleep(10000);
-                }
-            }
-        }
-        // SET ONLY
-        else if (beginsWith(line, "define")) {
-            std::vector<std::string> values = split(line,',');
-            if (values.size() == 2) {
-                consoleMutex.lock();
-                sandbox.addDefines( values[1] ); 
-                consoleMutex.unlock();
-                filesMutex.lock();
-                fileChanged = sandbox.frag_index;
-                filesMutex.unlock();
-            }
-        }
-        else if (beginsWith(line, "undefine")) {
-            std::vector<std::string> values = split(line,',');
-            if (values.size() == 2) {
-                consoleMutex.lock();
-                sandbox.delDefines( values[1] ); 
-                consoleMutex.unlock();
-                filesMutex.lock();
-                fileChanged = sandbox.frag_index;
-                filesMutex.unlock();
-            }
-        }
-        else {
-            // If nothing match maybe the user is trying to define the content of a uniform
-            consoleMutex.lock();
-            parseUniformData(line, &sandbox.uniforms_data);
-            consoleMutex.unlock();
-        }
-
-        std::cout << "// > ";
-    }
-}
-
 void onKeyPress (int _key) {
     if (_key == 'q' || _key == 'Q') {
         bRun = false;
@@ -724,4 +831,54 @@ void onExit() {
 
     // Delete the resources of Sandbox
     sandbox.clean();
+}
+
+
+//  Watching Thread
+//============================================================================
+void fileWatcherThread() {
+    struct stat st;
+    while ( bRun.load() ) {
+        for ( uint i = 0; i < files.size(); i++ ) {
+            if ( fileChanged == -1 ) {
+                stat( files[i].path.c_str(), &st );
+                int date = st.st_mtime;
+                if ( date != files[i].lastChange ) {
+                    filesMutex.lock();
+                    fileChanged = i;
+                    files[i].lastChange = date;
+                    filesMutex.unlock();
+                }
+            }
+        }
+        usleep(500000);
+    }
+}
+
+//  Command line Thread
+//============================================================================
+void cinWatcherThread() {
+    std::string line;
+    std::cout << "// > ";
+    while (std::getline(std::cin, line)) {
+
+        bool resolve = false;
+        for (unsigned int i = 0; i < commands.size(); i++) {
+            if (beginsWith(line, commands[i].begins_with)) {
+                if (commands[i].exec(line)) {
+                    resolve = true;
+                    break;
+                }
+            }
+        }
+
+        // If nothing match maybe the user is trying to define the content of a uniform
+        if (!resolve) {
+            consoleMutex.lock();
+            parseUniformData(line, &sandbox.uniforms_data);
+            consoleMutex.unlock();
+        }
+
+        std::cout << "// > ";
+    }
 }
