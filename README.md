@@ -502,6 +502,7 @@ void main(void) {
    vec2 pixel = 1./u_resolution.xy;
 
 #ifdef BACKGROUND
+    // Background pattern
     st = ratio(st, u_resolution);
 
     color.rgb *= vec3(0.75, 0.0, 0.0) * step(0.5, fract((st.x - st.y - u_time * 0.1) * 20.));
@@ -511,13 +512,17 @@ void main(void) {
     color.rgb += vec3(1.0, 0.0, 0.0) * stroke(sdf, 0.75, 0.01);
 
 #elif defined(POSTPROCESSING)
+
+    // Get depth
     float depth = texture2D(u_scene_depth, st).r;
     depth = LinearizeDepth(depth) * 200.0;
 
+    // Define focal point
     float focalDistance = 100.0;
     float focalRange = 50.0;
     depth = min( abs(depth  - focalDistance) / focalRange, 1.0);
     
+    // Cheap box blur
     pixel *= 4.;
     color.rgb = texture2D(u_scene, st + vec2(pixel.x, 0.0)).rgb;
     color.rgb += texture2D(u_scene, st + vec2(0.0, pixel.y)).rgb;
@@ -525,11 +530,14 @@ void main(void) {
     color.rgb += texture2D(u_scene, st + vec2(0.0, -pixel.y)).rgb;
     color.rgb *= 0.25;
 
+    // Mix blur and crisp scene images based on depth
     color.rgb = mix(color.rgb, texture2D(u_scene, st).rgb, 1.0 - depth);
 
     // Debug Depth
     // color.rgb = vec3(1.) * depth;
 #else
+
+    // Material of model
     color.rgb = v_color.rgb;
     float shade = dot(v_normal, normalize(vec3(0.0, 0.75, 0.75)));
     color.rgb *= smoothstep(-1.0, 1.0, shade);
