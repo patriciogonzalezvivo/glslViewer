@@ -212,9 +212,10 @@ class GlslViewer:
             return False
 
         answer = self.write('time')
-        if answer:
-            if answer.replace('.', '', 1).isdigit():
-                self.elapsed_time = float(answer)
+        answer = answer.split('\n')
+        if answer[0]:
+            if answer[0].replace('.', '', 1).isdigit():
+                self.elapsed_time = float(answer[0])
         return self.elapsed_time
 
     def getDelta(self):
@@ -222,9 +223,10 @@ class GlslViewer:
             return False
 
         answer = self.write('delta')
-        if answer:
-            if answer.replace('.', '', 1).isdigit():
-                self.delta = float(answer)
+        answer = answer.split('\n')
+        if answer[0]:
+            if answer[0].replace('.', '', 1).isdigit():
+                self.delta = float(answer[0])
         return self.delta
 
     def getFPS(self):
@@ -232,9 +234,10 @@ class GlslViewer:
             return False
 
         answer = self.write('fps')
-        if answer:
-            if answer.replace('.', '', 1).isdigit():
-                self.fps = float(answer)
+        answer = answer.split('\n')
+        if answer[0]:
+            if answer[0].replace('.', '', 1).isdigit():
+                self.fps = float(answer[0])
         return self.fps
 
     def test(self, duration, record_from=0.0):
