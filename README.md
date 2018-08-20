@@ -206,17 +206,21 @@ glslViewer shader.frag -imageExample image.png
 
 Beside for texture uniforms other arguments can be add to `glslViewer`:
 
-* `-x [pixels]` set the X position of the billboard on the screen
+* `-x <pixels>` set the X position of the billboard on the screen
 
-* `-y [pixels]` set the Y position of the billboard on the screen
+* `-y <pixels>` set the Y position of the billboard on the screen
 
-* `-w [pixels]` or `--width [pixels]`  set the width of the billboard
+* `-w <pixels>` or `--width <pixels>`  set the width of the billboard
 
-* `-h [pixels]` or `--height [pixels]` set the height of the billboard
+* `-h <pixels>` or `--height <pixels>` set the height of the billboard
 
-* `-s [seconds]` exit app after a specific amount of seconds
+* `-s <seconds>` exit app after a specific amount of seconds
 
-* `-o [image.png]` save the viewport to an image file before
+* `-o <image.png>` save the viewport to an image file before
+
+* `-e <command>` excecute command when start
+
+* `-E <command>` excecute command then exit
 
 * `-l` in the RaspberryPi will draw the viewport in a 500x500 billboard on the top right corner of the screen that let you see the code and the shader at the same time. While in MacOS and Linux will display the windows always-on-top (this requires GLFW 3.2).
 
@@ -224,13 +228,13 @@ Beside for texture uniforms other arguments can be add to `glslViewer`:
 
 * `--headless` headless rendering. Very useful for making images or benchmarking.
 
-* `-I[include_folder]` add an include folder to default for `#include` files
+* `-I<include_folder>` add an include folder to default for `#include` files
 
-* `-D[define]` add system `#define`s directly from the console argument
+* `-D<KEYWORD>` add system `#define`s directly from the console argument
 
-* `-[texture_uniform_name] [texture].[png|jpg]`: add textures associated with different `uniform sampler2D`names
+* `-<texture_uniform_name> <texture>.(png|jpg|hdr)`: add textures associated with different `uniform sampler2D` names
 
-* `-c [cubemap].hdr`: load a HDR cubemap
+* `-c <cubemap>.(png/jpg/hdr)`: load a HDR cubemap
 
 * `-vFlip` all textures after will be flipped vertically
 
@@ -256,65 +260,59 @@ u_myVec3,0.0,0.5,0.0
 
 **Note** that there is a distinction between `int`and `float`so remember to put `.` (floating points) to your values.
 
-* `help`: return this list of commands
+* `help[,<command>]`                print help for one or all command
 
-* `date`: return content of `u_date`, return the current year, month, day and seconds
+* `version`                         return glslViewer version.
 
-* `time`: return content of `u_time`, the elapsed time since the app start
+* `window_height`                   return the height of the windows.
 
-* `delta`: return content of `u_delta`, return the last delta time between frames
+* `pixel_density`                   return the pixel density.
 
-* `fps`: return content of `u_fps`, return the number of frames per second
+* `screen_size`                     return the screen size.
 
-* `frag`: return the source of the fragment shader
+* `viewport`                        return the viewport size.
 
-* `vert`: return the source of the vertex shader
+* `mouse`                           return the mouse position.
 
-* `frag[,filename]`: save the source of the fragment shader into a file
+* `fps`                             return `u_fps`, the number of frames per second.
 
-* `vert[,filename]`: save the source of the vertex shader into a file
+* `delta`                           return `u_delta`, the secs between frames.
 
-* `frag_dependencies`: return the the fragment shader dependencies
+* `time`                            return `u_time`, the elapsed time.
 
-* `vert_dependencies`: return the the vertex shader dependencies
+* `date`                            return `u_date` as YYYY, M, D and Secs.
 
-* `file`: return a list of files
+* `frag[,<filename>]`               returns or save the fragment shader source code.
 
-* `buffers`: return a list of active buffers as their sampler2D uniform name
+* `vert[,<filename>]`               returns or save the vertex shader source code.
 
-* `defines`: return a list of active defines
+* `dependencies[,vert|frag]`        returns all the dependencies of the vertex o fragment shader or both.
 
-* `define,[DEFINE]`: add define flag to the shader
+* `files`                           return a list of files.
 
-* `undefine,[DEFINE]`: removes define flag to the shader
+* `buffers`                         return a list of buffers as their uniform name.
 
-* `uniforms`: return a list of active uniforms together with their values in CSV format 
+* `defines`                         return a list of active defines
 
-* `textures`: return a list of active textures as their sampler2D uniform name folowed by the file path to the source image
+* `define,<KEYWORD>`                add a define to the shader
 
-* `window_width`, `window_height`, `screen_size` and `viewport` : return the size of the windows, screen and viewport (content of `u_resolution`)
+* `undefine,<KEYWORD>`              remove a define on the shader
 
-* `pixel_density`: return the pixel density
+* `uniforms[,all|active]`           return a list of all uniforms and their values or just the one active (default).
 
-* `mouse_x`, `mouse_y` and `mouse`: return the position of the mouse (content of `u_mouse`)
+* `textures`                        return a list of textures as their uniform name and path.
 
-* `camera_distance`: returns the distance of the camera to the model.
+* `window_width`                    return the width of the windows.
 
-* `camera_distance[,<distance>]`: set the distance. Ex: `camera_distance,10.0` 
+* `camera_distance[,<dist>]`        get or set the camera distance to the target.
 
-* `camera_position`: returns the position of the camera.
+* `camera_position[,<x>,<y>,<z>]`   get or set the camera position.
 
-* `camera_position[,<x>,<y>,<z>]`: set the position. Ex: `camera_position,0.0,0.0,10.0` 
+* `screenshot[,<filename>]`         saves a screenshot to a filename.
 
-* `view3d`: returns the position of the camera, the up-vector and the center of the object.
+* `sequence,<A_sec>,<B_sec>`        saves a sequence of images from A to B second.
 
-* `screenshot`: save a screenshot of what's being rendered to what was defined after the `-o` argument when glslViewer was launched.
-
-* `screenshot[,<filename>]`: save a screenshot of what's being rendered to a especific file.
-
-* `sequence,<start_sec>,<end_sec>`:   saves a sequence of images from A to B second.
-
-* `q`, `quit` or `exit`: close glslViewer
+* `q`, `quit` or `exit`:            close glslViewer
 
 ## glslViewer conventions
 
@@ -409,7 +407,7 @@ There is a more extense example on `examples/test_multibuffer.frag` and `example
 
 If you load a 3D model or set a shader without opacity you will notice the background is black by defaltt (actually transparent in RaspberryPi). 
 
-It's possible to set a background by adding a `#ifdef BACKGROUND` check and adding your code there. Check the example `examples/head.frag`
+It's possible to set a background by adding a `#ifdef BACKGROUND` check and adding your code there. Check the example `examples/model_background.frag`
 
 ### Examples
 
