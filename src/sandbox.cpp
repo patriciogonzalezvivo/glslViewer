@@ -299,7 +299,7 @@ bool Sandbox::reload() {
         // Postprocessing
         bool havePostprocessing = check_for_postprocessing(getSource(FRAGMENT));
         if (m_postprocessing_enabled != havePostprocessing) {
-            m_scene_fbo.allocate(getWindowWidth(), getWindowHeight(), true);
+            m_scene_fbo.allocate(getWindowWidth(), getWindowHeight(), true, uniforms_functions["u_scene_depth"].present);
         }
         m_postprocessing_enabled = havePostprocessing;
         if (m_postprocessing_enabled) {
@@ -709,7 +709,7 @@ void Sandbox::onViewportResize(int _newWidth, int _newHeight) {
     }
 
     if (m_postprocessing_enabled) {
-        m_scene_fbo.allocate(_newWidth, _newHeight, true);
+        m_scene_fbo.allocate(_newWidth, _newHeight, true, uniforms_functions["u_scene_depth"].present);
     }
     m_change = true;
 }

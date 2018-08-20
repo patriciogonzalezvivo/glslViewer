@@ -9,8 +9,11 @@
                 "/usr/include",
                 "/usr/local/include",
                 "/usr/local/Cellar/glfw/3.2.1/include",
+                "/usr/local/Cellar/glfw/3.2.1/lib",
+                "/Library/Frameworks/GLUI.framework",
                 "/System/Library/Frameworks",
-                "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/"
+                "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/",
+                "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/OpenGL.framework/Headers"
             ],
             "browse": {
                 "limitSymbolsToIncludedHeaders": true,
@@ -21,14 +24,19 @@
                     "/usr/include",
                     "/usr/local/include",
                     "/usr/local/Cellar/glfw/3.2.1/include",
+                    "/usr/local/Cellar/glfw/3.2.1/lib",
+                    "/Library/Frameworks/GLUI.framework",
                     "/System/Library/Frameworks",
-                    "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/"
+                    "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/",
+                    "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/OpenGL.framework/Headers"
                 ]
             },
             "intelliSenseMode": "clang-x64",
             "macFrameworkPath": [
                 "/System/Library/Frameworks",
-                "/Library/Frameworks"
+                "/Library/Frameworks/GLUI.framework",
+                "/Library/Frameworks",
+                "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/OpenGL.framework/Headers"
             ]
         },
         {

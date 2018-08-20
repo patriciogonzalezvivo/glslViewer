@@ -2,16 +2,11 @@
 precision mediump float;
 #endif
 
-uniform sampler2D u_scene;
-uniform sampler2D u_scene_depth;
-
 uniform vec2 u_resolution;
 uniform float u_time;
 
-varying vec4 v_position;
 varying vec4 v_color;
 varying vec3 v_normal;
-varying vec2 v_texcoord;
 
 float stroke(float x, float size, float w) {
     float d = step(size, x+w*.5) - step(size, x-w*.5);
@@ -30,17 +25,10 @@ float rectSDF(vec2 st, vec2 s) {
                 abs(st.y/s.y) );
 }
 
-float LinearizeDepth(float zoverw) {
-	float n = 1.0; //
-	float f = 20000.0;
-	return(2.0 * n) / (f + n - zoverw * (f - n));	
-}
-
 void main(void) {
    vec4 color = vec4(1.0);
    vec2 st = gl_FragCoord.xy/u_resolution.xy;
    vec2 pixel = 1./u_resolution.xy;
-   pixel *= 5.;
 
 #ifdef BACKGROUND
     st = ratio(st, u_resolution);
@@ -50,16 +38,6 @@ void main(void) {
     float sdf = rectSDF(st, vec2(1.0));
     color.rgb *= step(sdf, 0.7);
     color.rgb += vec3(1.0, 0.0, 0.0) * stroke(sdf, 0.75, 0.01);
-
-#elif defined(POSTPROCESSING)
-    color = texture2D(u_scene_depth, st);
-
-    // color = texture2D(u_scene, st + vec2(pixel.x, 0.0));
-    // color += texture2D(u_scene, st + vec2(0.0, pixel.y));
-    // color += texture2D(u_scene, st + vec2(-pixel.x, 0.0));
-    // color += texture2D(u_scene, st + vec2(0.0, -pixel.y));
-    // color *= 0.25;
-
 #else
     color.rgb = v_color.rgb;
     float shade = dot(v_normal, normalize(vec3(0.0, 0.75, 0.75)));

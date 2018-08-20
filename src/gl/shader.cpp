@@ -336,7 +336,7 @@ void Shader::setUniformTexture(const std::string& _name, const Fbo* _fbo, unsign
         glBindTexture(GL_TEXTURE_2D, _fbo->getTextureId());
         glUniform1i(getUniformLocation(_name), _texLoc);
 
-        if (_fbo->haveDepthBuffer()) {
+        if (_fbo->haveDepthTexture()) {
             glActiveTexture(GL_TEXTURE0 + _texLoc + 1);
             glBindTexture(GL_TEXTURE_2D, _fbo->getDepthTextureId() );
             glUniform1i(getUniformLocation(_name + "_depth"), _texLoc + 1);
