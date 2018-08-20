@@ -36,7 +36,7 @@ std::string outputFile      = "";
 std::string execute_cmd     = "";       // Execute commands
 bool        execute_exit    = false;
 
-std::string version = "1.5.2";
+std::string version = "1.5.3";
 std::string name = "GlslViewer";
 std::string header = name + " " + version + " by Patricio Gonzalez Vivo ( patriciogonzalezvivo.com )"; 
 
