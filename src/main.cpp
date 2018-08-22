@@ -185,6 +185,43 @@ void declareCommands() {
     },
     "date                   return u_date as YYYY, M, D and Secs."));
 
+    commands.push_back(Command("culling", [&](const std::string& _line){ 
+        std::vector<std::string> values = split(_line,',');
+        if (values.size() == 1) {
+            if (sandbox.getCulling() == NONE) {
+                std::cout << "none" << std::endl;
+            }
+            else if (sandbox.getCulling() == FRONT) {
+                std::cout << "front" << std::endl;
+            }
+            else if (sandbox.getCulling() == BACK) {
+                std::cout << "back" << std::endl;
+            }
+            else if (sandbox.getCulling() == BOTH) {
+                std::cout << "both" << std::endl;
+            }
+            return true;
+        }
+        else if (values.size() == 2) {
+            if (values[1] == "none") {
+                sandbox.setCulling(NONE);
+            }
+            else if (values[1] == "front") {
+                sandbox.setCulling(FRONT);
+            }
+            else if (values[1] == "back") {
+                sandbox.setCulling(BACK);
+            }
+            else if (values[1] == "both") {
+                sandbox.setCulling(BOTH);
+            }
+            return true;
+        }
+
+        return false;
+    },
+    "culling[,<none|front|back|both>]   get or set the culling modes"));
+
     commands.push_back(Command("frag", [&](const std::string& _line){ 
         if (_line == "frag") {
             std::cout << sandbox.getSource(FRAGMENT) << std::endl;

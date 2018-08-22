@@ -21,6 +21,7 @@ Sandbox::Sandbox():
     m_lat(180.0), m_lon(0.0),
     m_background_enabled(false), m_postprocessing_enabled(false),
     m_cubemap_vbo(nullptr), m_cubemap(nullptr),
+    m_culling(NONE),
     m_change(true), m_ready(false) {
 
     m_view2d = glm::mat3(1.);
@@ -466,6 +467,20 @@ void Sandbox::draw() {
     // Begining of DEPTH for 3D 
     if (geom_index != -1) {
         glEnable(GL_DEPTH_TEST);
+
+        if (m_culling != 0) {
+            glEnable(GL_CULL_FACE);
+
+            if (m_culling == 1) {
+                glCullFace(GL_FRONT);
+            }
+            else if (m_culling == 2) {
+                glCullFace(GL_BACK);
+            }
+            else if (m_culling == 3) {
+                glCullFace(GL_FRONT_AND_BACK);
+            }
+        }
     }
 
     // MAIN SHADER
@@ -499,6 +514,10 @@ void Sandbox::draw() {
     // END OF DEPTH for 3D 
     if (geom_index != -1) {
         glDisable(GL_DEPTH_TEST);
+
+        if (m_culling != 0) {
+            glDisable(GL_CULL_FACE);
+        }
     }
     // ----------------------------------------------- < main scene end
 

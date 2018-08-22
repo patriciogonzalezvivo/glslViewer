@@ -16,6 +16,13 @@ enum ShaderType {
     VERTEX = 1
 };
 
+enum CullingMode {
+    NONE = 0,
+    FRONT = 1,
+    BACK = 2,
+    BOTH = 3
+};
+
 typedef std::vector<std::string> List;
 typedef std::map<std::string,Texture*> TextureList;
 
@@ -39,6 +46,8 @@ public:
     void        delDefines(const std::string &_define);
 
     void        setCubeMap(TextureCube* _cubemap) { m_cubemap = _cubemap; }
+    void        setCulling(CullingMode _culling) { m_culling = _culling; }
+    CullingMode getCulling() { return m_culling; }
 
     // Getting some data out of Sandbox
     std::string getSource(ShaderType _type) const;
@@ -138,6 +147,7 @@ private:
     bool                m_record;
 
     // Scene
+    CullingMode         m_culling;
     bool                m_change;
     bool                m_ready;
 };
