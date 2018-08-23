@@ -20,6 +20,7 @@
 //============================================================================
 //
 std::atomic<bool> bRun(true);
+
 #ifndef REST_FPS
 #define REST_FPS 33333
 #endif
@@ -917,13 +918,13 @@ void fileWatcherThread() {
                 int date = st.st_mtime;
                 if ( date != files[i].lastChange ) {
                     filesMutex.lock();
-                    fileChanged = i;
                     files[i].lastChange = date;
+                    fileChanged = i;
                     filesMutex.unlock();
                 }
             }
         }
-        usleep(REST_FPS);
+        usleep(500000);
     }
 }
 

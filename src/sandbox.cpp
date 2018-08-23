@@ -636,6 +636,7 @@ void Sandbox::_updateDependencies(WatchFileList &_files) {
         WatchFile file;
         file.type = GLSL_DEPENDENCY;
         file.path = new_dependencies[i];
+        stat( file.path.c_str(), &st );
         file.lastChange = st.st_mtime;
         _files.push_back(file);
     }
