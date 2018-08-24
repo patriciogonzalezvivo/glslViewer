@@ -4,7 +4,7 @@
 #include "textureCube.h"
 
 #include "tools/fs.h"
-#include "tools/pixels.h"
+#include "tools/image.h"
 
 TextureCube::TextureCube() {
 }

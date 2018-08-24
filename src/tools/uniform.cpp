@@ -52,12 +52,14 @@ bool parseUniformData(const std::string &_line, UniformDataList *_uniforms) {
             if (index != 0) {
                 (*_uniforms)[name].bInt = !isFloat(item);
                 (*_uniforms)[name].value[index-1] = toFloat(item);
+                (*_uniforms)[name].change = true;
             }
             index++;
         }
 
         // Set total amount of values
         (*_uniforms)[name].size = index-1;
+        rta = true;
     }
     return rta;
 }

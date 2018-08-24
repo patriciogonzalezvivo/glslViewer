@@ -3,16 +3,15 @@
 #include "texture.h"
 
 #include "tools/fs.h"
-#include "tools/pixels.h"
+#include "tools/image.h"
 
 
 // TEXTURE
-
 Texture::Texture():m_path(""), m_width(0), m_height(0), m_id(0) {
 }
 
 Texture::~Texture() {
-	glDeleteTextures(1, &m_id);
+    glDeleteTextures(1, &m_id);
 }
 
 bool Texture::load(const std::string& _path, bool _vFlip) {

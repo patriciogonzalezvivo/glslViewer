@@ -36,6 +36,7 @@ public:
     void        clean();
     bool        reload();
 
+    void        flagChange() { m_change = true; }
     bool        haveChange();
     bool        isReady();
 

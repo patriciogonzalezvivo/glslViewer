@@ -7,7 +7,7 @@
 
 #include "tools/text.h"
 #include "tools/geom.h"
-#include "tools/pixels.h"
+#include "tools/image.h"
 #include "types/shapes.h"
 
 #include "glm/gtx/matrix_transform_2d.hpp"
@@ -368,13 +368,14 @@ void Sandbox::_updateUniforms( Shader &_shader ) {
                 _shader.setUniform(it->first, it->second.value, it->second.size);
                 m_change = true;
             }
+            it->second.change = false;
         }
     }
 }
 
 void Sandbox::_updateTextures( Shader &_shader, int &_textureIndex ) {
     // Pass Textures Uniforms
-    for (TextureList::iterator it = textures.begin(); it!=textures.end(); ++it) {
+    for (TextureList::iterator it = textures.begin(); it != textures.end(); ++it) {
         _shader.setUniformTexture(it->first, it->second, _textureIndex++ );
         _shader.setUniform(it->first+"Resolution", it->second->getWidth(), it->second->getHeight());
     }
@@ -382,7 +383,7 @@ void Sandbox::_updateTextures( Shader &_shader, int &_textureIndex ) {
 
 bool Sandbox::haveChange() { 
     return  m_change || 
-            m_record || 
+            m_record ||
             uniforms_functions["u_time"].present || 
             uniforms_functions["u_delta"].present ||
             uniforms_functions["u_date"].present; 

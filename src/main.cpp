@@ -969,6 +969,7 @@ void cinWatcherThread() {
         if (!resolve) {
             consoleMutex.lock();
             parseUniformData(line, &sandbox.uniforms_data);
+            sandbox.flagChange();
             consoleMutex.unlock();
         }
 
