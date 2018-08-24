@@ -12,6 +12,10 @@ Mesh line (const glm::vec3 &_a, const glm::vec3 &_b) {
     return mesh;
 };
 
+Mesh lineTo(const glm::vec3 &_a, const glm::vec3 &_dir, float _size) {
+    return line(_a, _a + normalize(_dir) * _size );
+}
+
 void drawLine(const glm::vec3 &_a, const glm::vec3 &_b){
 
     GLfloat g_vertex_buffer_data[] = {  _a.x,_a.y,_a.z,
@@ -75,12 +79,11 @@ void drawCross(const glm::vec3 &_pos, float _width ){
     glDrawArrays(GL_LINES, 0, 4);
 }
 
-Mesh crossCube(const std::vector<glm::vec3> &_pts) {
+Mesh crossCube(const std::vector<glm::vec3> &_pts, float _size) {
     glm::vec3 min_v;
     glm::vec3 max_v;
     getBoundingBox( _pts, min_v, max_v);
-    float size = glm::min(glm::length(min_v), glm::length(max_v)) * 0.1;
-    
+    float size = glm::min(glm::length(min_v), glm::length(max_v)) * _size *  0.5;
 
     //    D ---- A
     // C ---- B  |
@@ -99,37 +102,37 @@ Mesh crossCube(const std::vector<glm::vec3> &_pts) {
     glm::vec3 G = glm::vec3(A.x, H.y, H.z);
     glm::vec3 I = glm::vec3(H.x, H.y, A.z);
 
-    Mesh mesh = line(A, glm::normalize(D) * size);
-    mesh.add( line(A, B * size) );
-    mesh.add( line(A, F * size) );
+    Mesh mesh = lineTo(A, normalize(D-A), size);
+    mesh.add( lineTo(A, normalize(B-A), size) );
+    mesh.add( lineTo(A, normalize(F-A), size) );
 
-    mesh.add( line(B, A * size) );
-    mesh.add( line(B, C * size) );
-    mesh.add( line(B, G * size) );
+    mesh.add( lineTo(B, normalize(A-B), size) );
+    mesh.add( lineTo(B, normalize(C-B), size) );
+    mesh.add( lineTo(B, normalize(G-B), size) );
 
-    mesh.add( line(C, D * size) );
-    mesh.add( line(C, B * size) );
-    mesh.add( line(C, H * size) );
+    mesh.add( lineTo(C, normalize(D-C), size) );
+    mesh.add( lineTo(C, normalize(B-C), size) );
+    mesh.add( lineTo(C, normalize(H-C), size) );
+    
+    mesh.add( lineTo(D, normalize(A-D), size) );
+    mesh.add( lineTo(D, normalize(C-D), size) );
+    mesh.add( lineTo(D, normalize(I-D), size) );
 
-    mesh.add( line(D, A * size) );
-    mesh.add( line(D, C * size) );
-    mesh.add( line(D, I * size) );
+    mesh.add( lineTo(F, normalize(G-F), size) );
+    mesh.add( lineTo(F, normalize(A-F), size) );
+    mesh.add( lineTo(F, normalize(I-F), size) );
 
-    mesh.add( line(F, I * size) );
-    mesh.add( line(F, G * size) );
-    mesh.add( line(F, A * size) );
+    mesh.add( lineTo(G, normalize(H-G), size) );
+    mesh.add( lineTo(G, normalize(F-G), size) );
+    mesh.add( lineTo(G, normalize(B-G), size) );
 
-    mesh.add( line(G, F * size) );
-    mesh.add( line(G, H * size) );
-    mesh.add( line(G, B * size) );
+    mesh.add( lineTo(H, normalize(I-H), size) );
+    mesh.add( lineTo(H, normalize(G-H), size) );
+    mesh.add( lineTo(H, normalize(C-H), size) );
 
-    mesh.add( line(H, G * size) );
-    mesh.add( line(H, I * size) );
-    mesh.add( line(H, C * size) );
-
-    mesh.add( line(I, F * size) );
-    mesh.add( line(I, H * size) );
-    mesh.add( line(I, C * size) );
+    mesh.add( lineTo(I, normalize(F-I), size) );
+    mesh.add( lineTo(I, normalize(H-I), size) );
+    mesh.add( lineTo(I, normalize(D-I), size) );
 
     return mesh;
 }

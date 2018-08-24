@@ -13,16 +13,18 @@
 #include "glm/gtx/matrix_transform_2d.hpp"
 #include "glm/gtx/rotate_vector.hpp"
 
+#include "default_shaders.h"
+
 #define FRAME_DELTA 0.03333333333
 
 Sandbox::Sandbox(): 
     frag_index(-1), vert_index(-1), geom_index(-1),
-    verbose(false),
+    verbose(false), debug(false),
     m_lat(180.0), m_lon(0.0),
     m_background_enabled(false), m_postprocessing_enabled(false),
     m_cubemap_vbo(nullptr), m_cubemap(nullptr),
     m_culling(NONE),
-    m_change(true), m_ready(false) {
+    m_change(true), m_ready(false){
 
     m_view2d = glm::mat3(1.);
 
@@ -145,6 +147,10 @@ void Sandbox::setup( WatchFileList &_files ) {
         m_vbo = model.getVbo();
         m_centre3d = getCentroid( model.getVertices() );
         m_vbo_matrix = glm::translate( -m_centre3d );
+        
+        // Build bbox
+        m_bbox_vbo = crossCube( model.getVertices(), 0.25 ).getVbo();
+        m_wireframe_shader.load(wireframe_frag, wireframe_vert, defines, false);
 
         // Init camera
         //
@@ -183,58 +189,11 @@ void Sandbox::setup( WatchFileList &_files ) {
 
     // Init buffers
     m_billboard_vbo = rect(0.0,0.0,1.0,1.0).getVbo();
-    m_billboard_vert = "\n\
-#ifdef GL_ES\n\
-precision mediump float;\n\
-#endif\n\
-\n\
-attribute vec4 a_position;\n\
-attribute vec2 a_texcoord;\n\
-varying vec4 v_position;\n\
-varying vec3 v_color;\n\
-varying vec3 v_normal;\n\
-varying vec2 v_texcoord;\n\
-\n\
-void main(void) {\n\
-    v_position =  a_position;\n\
-    v_color = vec3(1.0);\n\
-    v_normal = vec3(0.0,0.0,1.0);\n\
-    v_texcoord = a_texcoord;\n\
-    gl_Position = v_position;\n\
-}";
 
     // CUBEMAP
     if (m_cubemap) {
         m_cubemap_vbo = cube(1.0f).getVbo();
-
-        std::string vert = "\n\
-#ifdef GL_ES\n\
-precision mediump float;\n\
-#endif\n\
-\n\
-uniform mat4    u_modelViewProjectionMatrix;\n\
-attribute vec4  a_position;\n\
-varying vec4    v_position;\n\
-\n\
-void main(void) {\n\
-    v_position = a_position;\n\
-    gl_Position = u_modelViewProjectionMatrix * vec4(v_position.xyz, 1.0);\n\
-}";
-
-        std::string frag = "\n\
-#ifdef GL_ES\n\
-precision mediump float;\n\
-#endif\n\
-\n\
-uniform samplerCube u_cubeMap;\n\
-\n\
-varying vec4    v_position;\n\
-\n\
-void main(void) {\n\
-    gl_FragColor = textureCube(u_cubeMap, v_position.xyz);\n\
-}";
-
-        m_cubemap_shader.load(frag, vert, defines, false);
+        m_cubemap_shader.load(cube_frag, cube_vert, defines, false);
     }
 
     // Turn on Alpha blending
@@ -294,7 +253,7 @@ bool Sandbox::reload() {
             // Specific defines for this buffer
             std::vector<std::string> sub_defines = defines;
             sub_defines.push_back("BACKGROUND");
-            m_background_shader.load(m_frag_source, m_billboard_vert, sub_defines, verbose);
+            m_background_shader.load(m_frag_source, billboard_vert, sub_defines, verbose);
         }
 
         // Postprocessing
@@ -307,7 +266,7 @@ bool Sandbox::reload() {
             // Specific defines for this buffer
             std::vector<std::string> sub_defines = defines;
             sub_defines.push_back("POSTPROCESSING");
-            m_postprocessing_shader.load(m_frag_source, m_billboard_vert, sub_defines, verbose);
+            m_postprocessing_shader.load(m_frag_source, billboard_vert, sub_defines, verbose);
         }
     }
 
@@ -332,7 +291,7 @@ void Sandbox::_updateBuffers() {
 
             // New SHADER
             m_buffers_shaders.push_back( Shader() );
-            m_buffers_shaders[i].load(m_frag_source, m_billboard_vert, sub_defines, verbose);
+            m_buffers_shaders[i].load(m_frag_source, billboard_vert, sub_defines, verbose);
         }
     }
     else {
@@ -342,7 +301,7 @@ void Sandbox::_updateBuffers() {
             sub_defines.push_back("BUFFER_" + toString(i));
 
             // Reload shader code
-            m_buffers_shaders[i].load(m_frag_source, m_billboard_vert, sub_defines, verbose);
+            m_buffers_shaders[i].load(m_frag_source, billboard_vert, sub_defines, verbose);
         }
     }
 }
@@ -503,8 +462,8 @@ void Sandbox::draw() {
         m_shader.setUniformTexture("u_buffer" + toString(i), &m_buffers[i], textureIndex++ );
     }
 
-    glm::mat4 mvp = glm::mat4(1.);
     // Pass special uniforms
+    glm::mat4 mvp = glm::mat4(1.);
     if (geom_index != -1) {
         mvp = m_cam.getProjectionViewMatrix() * m_vbo_matrix;
     }
@@ -543,6 +502,15 @@ void Sandbox::draw() {
         m_postprocessing_shader.setUniformTexture("u_scene", &m_scene_fbo, textureIndex++ );
 
         m_billboard_vbo->draw( &m_postprocessing_shader );
+    }
+
+    if (debug  && geom_index != -1) {
+        glEnable(GL_DEPTH_TEST);
+        m_wireframe_shader.use();
+        m_wireframe_shader.setUniform("u_color", glm::vec4(1.0, 1.0, 0.0, 1.0));
+        m_wireframe_shader.setUniform("u_modelViewProjectionMatrix", mvp);
+        m_bbox_vbo->draw( &m_wireframe_shader );
+        glDisable(GL_DEPTH_TEST);
     }
 
     // RECORD

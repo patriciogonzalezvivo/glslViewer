@@ -1,16 +1,31 @@
 #include "cursor.h"
 
-#include "types/shapes.h"
-#include "types/rectangle.h"
 #include "window.h"
 #include "tools/text.h"
+#include "types/shapes.h"
+#include "types/rectangle.h"
 
-#ifndef STRINGIFY
-#define STRINGIFY(A) #A
-#endif
+std::string cursor_vert = "\n\
+#ifdef GL_ES\n\
+precision mediump float;\n\
+#endif\n\
+uniform mat4 u_modelViewProjectionMatrix;\n\
+uniform vec2 u_mouse;\n\
+attribute vec4 a_position;\n\
+void main(void) {\n\
+    vec4 position = vec4(u_mouse.x,u_mouse.y,0.0,0.0) + a_position;\n\
+    gl_Position = u_modelViewProjectionMatrix * position;\n\
+}\n";
+
+std::string cursor_frag = "\n\
+#ifdef GL_ES\n\
+precision mediump float;\n\
+#endif\n\
+void main(void) { \n\
+    gl_FragColor = vec4(1.0);\n\
+}\n";
 
 Cursor::Cursor(): m_vbo(NULL) {
-
 }
 
 Cursor::~Cursor(){
@@ -21,27 +36,8 @@ void Cursor::init(){
 
     m_vbo = cross(glm::vec3(0.,0.,0.1), 10.).getVbo();
 
-	std::string vert, frag =
-"#ifdef GL_ES\n"
-"precision mediump float;\n"
-"#endif\n";
-
-	vert += STRINGIFY(
-uniform mat4 u_modelViewProjectionMatrix;
-uniform vec2 u_mouse;
-attribute vec4 a_position;
-void main(void) {
-    vec4 position = vec4(u_mouse.x,u_mouse.y,0.0,0.0) + a_position;
-    gl_Position = u_modelViewProjectionMatrix * position;
-} );
-
-	frag += STRINGIFY(
-void main(void) {
-    gl_FragColor = vec4(1.0);
-} );
-
     std::vector<std::string> defines;
-	m_shader.load(frag, vert, defines);
+	m_shader.load(cursor_frag, cursor_vert, defines);
 }
 
 void Cursor::draw(){

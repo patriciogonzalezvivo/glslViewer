@@ -88,6 +88,7 @@ public:
     int         geom_index;
 
     bool        verbose;
+    bool        debug;
 
 private:
     void _updateUniforms( Shader &_shader );
@@ -116,10 +117,12 @@ private:
     float               m_lat;
     float               m_lon;
 
-
     // Billboard
     Vbo*                m_billboard_vbo;
-    std::string         m_billboard_vert;
+
+    // Bbox
+    Vbo*                m_bbox_vbo;
+    Shader              m_wireframe_shader;
 
     // Buffers
     std::vector<Fbo>    m_buffers;

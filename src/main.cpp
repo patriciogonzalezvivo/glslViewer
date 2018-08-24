@@ -88,6 +88,24 @@ void declareCommands() {
     },
     "help[,<command>]       print help for one or all command"));
 
+    commands.push_back(Command("debug", [&](const std::string& _line){
+        if (_line == "debug") {
+            std::string rta = sandbox.debug ? "on" : "off";
+            std::cout <<  rta << std::endl; 
+            return true;
+        }
+        else {
+            std::vector<std::string> values = split(_line,',');
+            if (values.size() == 2) {
+                consoleMutex.lock();
+                sandbox.debug = (values[1] == "on");
+                consoleMutex.unlock();
+            }
+        }
+        return false;
+    },
+    "debug[,on|off]       print help for one or all command"));
+
     commands.push_back(Command("version", [&](const std::string& _line){ 
         if (_line == "version") {
             std::cout << version << std::endl;
@@ -625,6 +643,9 @@ int main(int argc, char **argv){
         }
         else if (   argument == "--verbose" ) {
             sandbox.verbose = true;
+        }
+        else if (   argument == "--debug" ) {
+            sandbox.debug = true;
         }
         else if ( argument == "--cursor" ) {
             cursor.init();
