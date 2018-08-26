@@ -29,6 +29,9 @@ public:
     const glm::mat4&    getProjectionMatrix() const;
     const glm::mat4&    getProjectionViewMatrix() const;
 
+    float   exposure; 
+    float   ev100;
+
 protected:
 
     virtual void onPositionChanged();

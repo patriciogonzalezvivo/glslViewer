@@ -95,15 +95,20 @@ Sandbox::Sandbox():
     },
     [this]() { return toString(m_light.color, ','); });
 
-    uniforms_functions["m_lightExposure"] = UniformFunction("float", [this](Shader& _shader) {
-        _shader.setUniform("m_lightExposure", m_light.exposure);
+    uniforms_functions["u_camera"] = UniformFunction("vec3", [this](Shader& _shader) {
+        _shader.setUniform("u_camera", -m_cam.getPosition());
     },
-    [this]() { return toString(m_light.exposure); });
+    [this]() { return toString(-m_cam.getPosition(), ','); });
 
-    uniforms_functions["m_lightEv100"] = UniformFunction("float", [this](Shader& _shader) {
-        _shader.setUniform("m_lightEv100", m_light.ev100);
+    uniforms_functions["m_cameraExposure"] = UniformFunction("float", [this](Shader& _shader) {
+        _shader.setUniform("m_cameraExposure", m_cam.exposure);
     },
-    [this]() { return toString(m_light.ev100); });
+    [this]() { return toString(m_cam.exposure); });
+
+    uniforms_functions["m_cameraEv100"] = UniformFunction("float", [this](Shader& _shader) {
+        _shader.setUniform("m_cameraEv100", m_cam.ev100);
+    },
+    [this]() { return toString(m_cam.ev100); });
     
     uniforms_functions["u_model"] = UniformFunction("vec3", [this](Shader& _shader) {
         _shader.setUniform("u_model", m_model_node.getPosition());

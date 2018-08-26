@@ -2,7 +2,7 @@
 
 #include "glm/gtc/matrix_inverse.hpp"
 
-Camera::Camera(): m_target(0.0), m_aspect(4.0f/3.0f), m_fov(45.), m_nearClip(0.01f),m_farClip(100.0f), m_type(CameraType::FREE){
+Camera::Camera(): exposure(1.0), ev100(1.0), m_target(0.0), m_aspect(4.0f/3.0f), m_fov(45.), m_nearClip(0.01f),m_farClip(100.0f), m_type(CameraType::FREE){
     updateCameraSettings();
 }
 
@@ -91,7 +91,7 @@ glm::vec3 Camera::worldToCamera(glm::vec3 _WorldXYZ) const {
     {
 		MVPmatrix = glm::scale(glm::mat4(1.0), glm::vec3(1.f,-1.f,1.f)) * MVPmatrix;
 	}
-    
+
     glm::vec4 camera = MVPmatrix * glm::vec4(_WorldXYZ, 1.0);
 	return glm::vec3(camera) / camera.w;
 }

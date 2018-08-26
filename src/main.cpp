@@ -481,6 +481,40 @@ void declareCommands() {
     },
     "camera_position[,<x>,<y>,<z>]  get or set the camera position."));
 
+    commands.push_back(Command("camera_exposure", [&](const std::string& _line){ 
+        std::vector<std::string> values = split(_line,',');
+        if (values.size() == 2) {
+            consoleMutex.lock();
+            sandbox.getCamera().exposure = toFloat(values[1]);
+            sandbox.flagChange();
+            consoleMutex.unlock();
+            return true;
+        }
+        else {
+            std::cout << sandbox.getCamera().exposure << std::endl;
+            return true;
+        }
+        return false;
+    },
+    "camera_exposure[,<exposure>]    get or set the camera exposure."));
+
+    commands.push_back(Command("camera_ev100", [&](const std::string& _line){ 
+        std::vector<std::string> values = split(_line,',');
+        if (values.size() == 2) {
+            consoleMutex.lock();
+            sandbox.getCamera().ev100 = toFloat(values[1]);
+            sandbox.flagChange();
+            consoleMutex.unlock();
+            return true;
+        }
+        else {
+            std::cout << sandbox.getCamera().ev100 << std::endl;
+            return true;
+        }
+        return false;
+    },
+    "camera_ev100[,<ev100>]          get or set the camera ev100."));
+
     commands.push_back(Command("light_position", [&](const std::string& _line){ 
         std::vector<std::string> values = split(_line,',');
         if (values.size() == 4) {
@@ -516,40 +550,6 @@ void declareCommands() {
         return false;
     },
     "light_color[,<r>,<g>,<b>]      get or set the light color."));
-
-    commands.push_back(Command("light_exposure", [&](const std::string& _line){ 
-        std::vector<std::string> values = split(_line,',');
-        if (values.size() == 2) {
-            consoleMutex.lock();
-            sandbox.getLight().exposure = toFloat(values[1]);
-            sandbox.flagChange();
-            consoleMutex.unlock();
-            return true;
-        }
-        else {
-            std::cout << sandbox.getLight().exposure << std::endl;
-            return true;
-        }
-        return false;
-    },
-    "light_exposure[,<exposure>]    get or set the light exposure."));
-
-    commands.push_back(Command("light_ev100", [&](const std::string& _line){ 
-        std::vector<std::string> values = split(_line,',');
-        if (values.size() == 2) {
-            consoleMutex.lock();
-            sandbox.getLight().ev100 = toFloat(values[1]);
-            sandbox.flagChange();
-            consoleMutex.unlock();
-            return true;
-        }
-        else {
-            std::cout << sandbox.getLight().ev100 << std::endl;
-            return true;
-        }
-        return false;
-    },
-    "light_ev100[,<ev100>]          get or set the light ev100."));
 
     commands.push_back(Command("screenshot", [&](const std::string& _line){ 
         if (_line == "screenshot" && outputFile != "") {
