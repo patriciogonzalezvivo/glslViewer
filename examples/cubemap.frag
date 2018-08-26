@@ -26,6 +26,9 @@ void main(void) {
 
     vec4 reflection = textureCube(u_cubeMap, refle);
 
+    // Reinhard tonemapping
+    reflection = reflection / (reflection + vec4(1.0));
+
     color *= 0.25 + reflection.rgb;
 
     float shade = dot(v_normal, normalize(vec3(0.0, 0.75, 0.75)));
