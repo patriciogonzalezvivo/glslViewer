@@ -665,3 +665,5 @@ Thanks to:
 * [Doug Moen](https://github.com/doug-moen) he help to add the compatibility to ShaderToy shaders and some RayMarching features were added for his integration with his project: [curv](https://github.com/doug-moen/curv).
 
 * [Yvan Sraka](https://github.com/yvan-sraka) for putting the code in shape and setting it up for TravisCI.
+
+* [Andsz](http://andsz.de/) for Spherical Harmonics code from [Spherical Harmonics Playground](https://github.com/ands/spherical_harmonics_playground/)

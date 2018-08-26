@@ -594,7 +594,7 @@ void Sandbox::drawUI() {
 
         if (light_pos.x > 0.0 && light_pos.x < 1.0 &&
             light_pos.y > 0.0 && light_pos.y < 1.0 && 
-            light_pos.z > 0.0 ) {
+            light_pos.z > 0.0 && light_pos.z < 1.0) {
             light_pos.x *= getWindowWidth();
             light_pos.y *= getWindowHeight();
 
