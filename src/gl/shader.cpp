@@ -2,6 +2,7 @@
 #include "shader.h"
 
 #include "tools/text.h"
+#include "glm/gtc/type_ptr.hpp"
 
 #include <cstring>
 #include <chrono>
@@ -34,40 +35,6 @@ bool Shader::load(const std::string& _fragmentSrc, const std::string& _vertexSrc
 
     if (!m_fragmentShader) {
         return false;
-    }
-    else {
-        // Check for the precense of:
-
-        // // Buffers
-        // m_nBuffers = count_buffers(_fragmentSrc);
-
-        // // Background pass
-        // m_background = check_for_background(_fragmentSrc);
-
-        // // Postprocessing
-        // m_postprocessing = check_for_postprocessing(_fragmentSrc);
-
-        // // u_view 2D
-        // m_view2d = find_id(_fragmentSrc, "u_view2d") || find_id(_vertexSrc, "u_view2d");
-
-        // // u_time
-        // m_time = find_id(_fragmentSrc, "u_time") || find_id(_vertexSrc, "u_time");
-        
-        // // u_delta
-        // m_delta = find_id(_fragmentSrc, "u_delta") || find_id(_vertexSrc, "u_delta");
-        
-        // // u_data
-        // m_date = find_id(_fragmentSrc, "u_date") || find_id(_vertexSrc, "u_date");
-        
-        // /// u_mouse as vec4
-        // m_mouse4 = find_id(_fragmentSrc, "vec4 u_mouse") || find_id(_vertexSrc, "vec4 u_mouse");
-
-        // // u_mouse as vec2 (Legacy)
-        // m_mouse = find_id(_fragmentSrc, "u_mouse") || find_id(_vertexSrc, "u_mouse");
-
-        // // u_view 3D
-        // m_view3d =  (find_id(_fragmentSrc, "u_eye3d") || find_id(_fragmentSrc, "u_centre3d") || find_id(_fragmentSrc, "u_up3d")) ||
-        //             (find_id(_vertexSrc, "u_eye3d") || find_id(_vertexSrc, "u_centre3d") || find_id(_vertexSrc, "u_up3d"));
     }
 
     m_program = glCreateProgram();
@@ -148,49 +115,6 @@ GLuint Shader::compileShader(const std::string& _src, const std::vector<std::str
     for (unsigned int i = 0; i < _defines.size(); i++) {
         prolog += "#define " + _defines[i] + "\n";
     }
-
-    // // Test if this is a shadertoy.com image shader. If it is, we need to
-    // // define some uniforms with different names than the glslViewer standard,
-    // // and we need to add prolog and epilog code.
-    // if (_type == GL_FRAGMENT_SHADER && find_id(_src, "mainImage")) {
-    //     prolog +=
-    //         "uniform vec2 u_resolution;\n"
-    //         "#define iResolution vec3(u_resolution, 1.0)\n"
-    //         "\n";
-    //     m_time = find_id(_src, "iGlobalTime");
-    //     if (m_time) {
-    //         prolog +=
-    //             "uniform float u_time;\n"
-    //             "#define iGlobalTime u_time\n"
-    //             "\n";
-    //     }
-    //     m_delta = find_id(_src, "iTimeDelta");
-    //     if (m_delta) {
-    //         prolog +=
-    //             "uniform float u_delta;\n"
-    //             "#define iTimeDelta u_delta\n"
-    //             "\n";
-    //     }
-    //     m_date = find_id(_src, "iDate");
-    //     if (m_date) {
-    //         prolog +=
-    //             "uniform vec4 u_date;\n"
-    //             "#define iDate u_date\n"
-    //             "\n";
-    //     }
-    //     m_mouse4 = find_id(_src, "iMouse");
-    //     if (m_mouse4) {
-    //         prolog +=
-    //             "uniform vec4 u_mouse;\n"
-    //             "#define iMouse u_mouse\n"
-    //             "\n";
-    //     }
-    //     epilog =
-    //         "\n"
-    //         "void main(void) {\n"
-    //         "    mainImage(gl_FragColor, gl_FragCoord.st);\n"
-    //         "}\n";
-    // }
 
     prolog += "#line 1\n";
 
@@ -283,6 +207,24 @@ void Shader::setUniform(const std::string& _name, const float *_array, unsigned 
         else {
             std::cerr << "Passing matrix uniform as array, not supported yet" << std::endl;
         }
+    }
+}
+
+void Shader::setUniform(const std::string& _name, const glm::vec2 *_array, unsigned int _size) {
+    if (isInUse()) {
+        glUniform2fv(getUniformLocation(_name), _size, glm::value_ptr(_array[0]));
+    }
+}
+
+void Shader::setUniform(const std::string& _name, const glm::vec3 *_array, unsigned int _size) {
+    if (isInUse()) {
+        glUniform3fv(getUniformLocation(_name), _size, glm::value_ptr(_array[0]));
+    }
+}
+
+void Shader::setUniform(const std::string& _name, const glm::vec4 *_array, unsigned int _size) {
+    if (isInUse()) {
+        glUniform4fv(getUniformLocation(_name), _size, glm::value_ptr(_array[0]));
     }
 }
 

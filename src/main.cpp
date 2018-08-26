@@ -773,6 +773,7 @@ int main(int argc, char **argv){
 
                     std::cout << "// " << argument << " loaded as: " << std::endl;
                     std::cout << "//    uniform samplerCube u_cubeMap;"<< std::endl;
+                    std::cout << "//    uniform vec3        u_SH[9];"<< std::endl;
                 }
             }
         }

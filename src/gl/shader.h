@@ -38,6 +38,10 @@ public:
     void    setUniform(const std::string& _name, const glm::vec3& _value) { setUniform(_name,_value.x,_value.y,_value.z); }
     void    setUniform(const std::string& _name, const glm::vec4& _value) { setUniform(_name,_value.x,_value.y,_value.z,_value.w); }
 
+    void    setUniform(const std::string& _name, const glm::vec2 *_array, unsigned int _size);
+    void    setUniform(const std::string& _name, const glm::vec3 *_array, unsigned int _size);
+    void    setUniform(const std::string& _name, const glm::vec4 *_array, unsigned int _size);
+
     void    setUniform(const std::string& _name, const glm::mat2& _value, bool transpose = false);
     void    setUniform(const std::string& _name, const glm::mat3& _value, bool transpose = false);
     void    setUniform(const std::string& _name, const glm::mat4& _value, bool transpose = false);

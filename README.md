@@ -568,6 +568,12 @@ $ glslViewer examples/test.frag examples/test.png
 $ glslViewer examples/bunny.frag examples/bunny.vert examples/bunny.ply
 ```
 
+4. Open a Fragment, Geometry and CubeMap with precomputed Spherical Harmonics:
+
+```bash
+glslViewer examples/head.ply examples/spherical_harmonics.frag -c examples/uffizi_cross.hdr
+```
+
 4.  Open a Fragment that use two buffers as a Ping-Pong to do a reaction diffusion example:
 
 ```bash

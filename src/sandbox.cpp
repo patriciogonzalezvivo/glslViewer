@@ -455,6 +455,7 @@ void Sandbox::draw() {
 
     if (m_cubemap != nullptr) {
         m_shader.setUniformTextureCube( "u_cubeMap", (TextureCube*)m_cubemap, textureIndex++ );
+        m_shader.setUniform("u_SH", m_cubemap->SH, 9);
     }
 
     // Pass all buffers
