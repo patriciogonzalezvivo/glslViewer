@@ -2,21 +2,9 @@
 precision mediump float;
 #endif
 
-uniform mat4 u_modelViewProjectionMatrix;
-uniform mat4 u_modelMatrix;
-uniform mat4 u_viewMatrix;
-uniform mat4 u_projectionMatrix;
-uniform mat4 u_normalMatrix;
-
-uniform vec4 u_date;
-uniform vec3 u_centre3d;
-uniform vec3 u_eye3d;
-uniform vec3 u_up3d;
-uniform vec3 u_view2d;
 uniform vec2 u_resolution;
 uniform vec2 u_mouse;
 uniform float u_time;
-uniform float u_delta;
 
 #ifndef BACKGROUND
 varying vec4 v_position;

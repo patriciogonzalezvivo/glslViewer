@@ -2,6 +2,9 @@
 
 #include <string>
 
+// 2D
+// -----------------------------------------------------
+
 std::string billboard_vert = "\n\
 #ifdef GL_ES\n\
 precision mediump float;\n\
@@ -21,6 +24,32 @@ void main(void) {\n\
     v_texcoord = a_texcoord;\n\
     gl_Position = v_position;\n\
 }";
+
+std::string wireframe2D_vert = "\n\
+#ifdef GL_ES\n\
+precision mediump float;\n\
+#endif\n\
+uniform mat4 u_modelViewProjectionMatrix;\n\
+uniform vec2 u_center;\n\
+attribute vec4 a_position;\n\
+void main(void) {\n\
+    vec4 position = vec4(u_center.x,u_center.y,0.0,0.0) + a_position;\n\
+    gl_Position = u_modelViewProjectionMatrix * position;\n\
+}\n";
+
+std::string wireframe2D_frag = "\n\
+#ifdef GL_ES\n\
+precision mediump float;\n\
+#endif\n\
+\n\
+uniform vec4 u_color;\n\
+\n\
+void main(void) { \n\
+    gl_FragColor = u_color;\n\
+}\n";
+
+// 3D
+// -----------------------------------------------------
 
 std::string cube_vert = "\n\
 #ifdef GL_ES\n\
@@ -49,7 +78,7 @@ void main(void) {\n\
     gl_FragColor = textureCube(u_cubeMap, v_position.xyz);\n\
 }";
 
-std::string wireframe_vert = "\n\
+std::string wireframe3D_vert = "\n\
 #ifdef GL_ES\n\
 precision mediump float;\n\
 #endif\n\
@@ -61,7 +90,7 @@ void main(void) {\n\
     gl_Position = u_modelViewProjectionMatrix * a_position;\n\
 }";
 
-std::string wireframe_frag = "\n\
+std::string wireframe3D_frag = "\n\
 #ifdef GL_ES\n\
 precision mediump float;\n\
 #endif\n\

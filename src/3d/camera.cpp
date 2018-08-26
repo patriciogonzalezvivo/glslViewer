@@ -82,6 +82,27 @@ void Camera::updateCameraSettings() {
 
 void Camera::updateProjectionViewMatrix() {
     m_projectionViewMatrix = m_projectionMatrix * getViewMatrix();
-    // m_normalMatrix = glm::inverseTranspose(glm::mat3(getViewMatrix()));
     m_normalMatrix = glm::transpose(glm::inverse(glm::mat3(getViewMatrix())));
+}
+
+glm::vec3 Camera::worldToCamera(glm::vec3 _WorldXYZ) const {
+    glm::mat4 MVPmatrix = m_projectionViewMatrix;
+
+    {
+		MVPmatrix = glm::scale(glm::mat4(1.0), glm::vec3(1.f,-1.f,1.f)) * MVPmatrix;
+	}
+    
+    glm::vec4 camera = MVPmatrix * glm::vec4(_WorldXYZ, 1.0);
+	return glm::vec3(camera) / camera.w;
+}
+
+glm::vec3 Camera::worldToScreen(glm::vec3 _WorldXYZ) const {
+	glm::vec3 CameraXYZ = worldToCamera(_WorldXYZ);
+
+	glm::vec3 ScreenXYZ;
+	ScreenXYZ.x = (CameraXYZ.x + 1.0f) * 0.5f;// * viewport.width + viewport.x;
+	ScreenXYZ.y = (1.0f - CameraXYZ.y) * 0.5f;// * viewport.height + viewport.y;
+	ScreenXYZ.z = CameraXYZ.z;
+
+	return ScreenXYZ;
 }

@@ -11,7 +11,6 @@
 #include "gl/gl.h"
 #include "window.h"
 #include "sandbox.h"
-#include "ui/cursor.h"
 #include "tools/fs.h"
 #include "tools/text.h"
 #include "tools/command.h"
@@ -88,6 +87,15 @@ void declareCommands() {
     },
     "help[,<command>]       print help for one or all command"));
 
+    commands.push_back(Command("version", [&](const std::string& _line){ 
+        if (_line == "version") {
+            std::cout << version << std::endl;
+            return true;
+        }
+        return false;
+    },
+    "version                return glslViewer version."));
+
     commands.push_back(Command("debug", [&](const std::string& _line){
         if (_line == "debug") {
             std::string rta = sandbox.debug ? "on" : "off";
@@ -104,16 +112,25 @@ void declareCommands() {
         }
         return false;
     },
-    "debug[,on|off]       print help for one or all command"));
+    "debug[,on|off]       show/hide debug elements"));
 
-    commands.push_back(Command("version", [&](const std::string& _line){ 
-        if (_line == "version") {
-            std::cout << version << std::endl;
+    commands.push_back(Command("cursor", [&](const std::string& _line){
+        if (_line == "cursor") {
+            std::string rta = sandbox.cursor ? "on" : "off";
+            std::cout <<  rta << std::endl; 
             return true;
+        }
+        else {
+            std::vector<std::string> values = split(_line,',');
+            if (values.size() == 2) {
+                consoleMutex.lock();
+                sandbox.cursor = (values[1] == "on");
+                consoleMutex.unlock();
+            }
         }
         return false;
     },
-    "version                return glslViewer version."));
+    "cursor[,on|off]       show/hide cursor"));
 
     commands.push_back(Command("window_height", [&](const std::string& _line){ 
         if (_line == "window_height") {
@@ -432,7 +449,10 @@ void declareCommands() {
     commands.push_back(Command("camera_distance", [&](const std::string& _line){ 
         std::vector<std::string> values = split(_line,',');
         if (values.size() == 2) {
+            consoleMutex.lock();
             sandbox.getCamera().setDistance(toFloat(values[1]));
+            sandbox.flagChange();
+            consoleMutex.unlock();
             return true;
         }
         else {
@@ -446,7 +466,10 @@ void declareCommands() {
     commands.push_back(Command("camera_position", [&](const std::string& _line){ 
         std::vector<std::string> values = split(_line,',');
         if (values.size() == 4) {
+            consoleMutex.lock();
             sandbox.getCamera().setPosition(glm::vec3(toFloat(values[1]),toFloat(values[2]),toFloat(values[3])));
+            sandbox.flagChange();
+            consoleMutex.unlock();
             return true;
         }
         else {
@@ -457,6 +480,76 @@ void declareCommands() {
         return false;
     },
     "camera_position[,<x>,<y>,<z>]  get or set the camera position."));
+
+    commands.push_back(Command("light_position", [&](const std::string& _line){ 
+        std::vector<std::string> values = split(_line,',');
+        if (values.size() == 4) {
+            consoleMutex.lock();
+            sandbox.getLight().setPosition(glm::vec3(toFloat(values[1]),toFloat(values[2]),toFloat(values[3])));
+            sandbox.flagChange();
+            consoleMutex.unlock();
+            return true;
+        }
+        else {
+            glm::vec3 pos = sandbox.getLight().getPosition();
+            std::cout << pos.x << ',' << pos.y << ',' << pos.z << std::endl;
+            return true;
+        }
+        return false;
+    },
+    "light_position[,<x>,<y>,<z>]  get or set the light position."));
+
+    commands.push_back(Command("light_color", [&](const std::string& _line){ 
+         std::vector<std::string> values = split(_line,',');
+        if (values.size() == 4) {
+            consoleMutex.lock();
+            sandbox.getLight().color = glm::vec3(toFloat(values[1]),toFloat(values[2]),toFloat(values[3]));
+            sandbox.flagChange();
+            consoleMutex.unlock();
+            return true;
+        }
+        else {
+            glm::vec3 color = sandbox.getLight().color;
+            std::cout << color.x << ',' << color.y << ',' << color.z << std::endl;
+            return true;
+        }
+        return false;
+    },
+    "light_color[,<r>,<g>,<b>]      get or set the light color."));
+
+    commands.push_back(Command("light_exposure", [&](const std::string& _line){ 
+        std::vector<std::string> values = split(_line,',');
+        if (values.size() == 2) {
+            consoleMutex.lock();
+            sandbox.getLight().exposure = toFloat(values[1]);
+            sandbox.flagChange();
+            consoleMutex.unlock();
+            return true;
+        }
+        else {
+            std::cout << sandbox.getLight().exposure << std::endl;
+            return true;
+        }
+        return false;
+    },
+    "light_exposure[,<exposure>]    get or set the light exposure."));
+
+    commands.push_back(Command("light_ev100", [&](const std::string& _line){ 
+        std::vector<std::string> values = split(_line,',');
+        if (values.size() == 2) {
+            consoleMutex.lock();
+            sandbox.getLight().ev100 = toFloat(values[1]);
+            sandbox.flagChange();
+            consoleMutex.unlock();
+            return true;
+        }
+        else {
+            std::cout << sandbox.getLight().ev100 << std::endl;
+            return true;
+        }
+        return false;
+    },
+    "light_ev100[,<ev100>]          get or set the light ev100."));
 
     commands.push_back(Command("screenshot", [&](const std::string& _line){ 
         if (_line == "screenshot" && outputFile != "") {
@@ -622,7 +715,6 @@ int main(int argc, char **argv){
     // Initialize openGL context
     initGL (windowPosAndSize, headless, alwaysOnTop);
 
-    Cursor      cursor;                     // Cursor
     struct stat st;                         // for files to watch
     float       timeLimit       = -1.0f;    // Time limit
     int         textureCounter  = 0;        // Number of textures to load
@@ -648,7 +740,7 @@ int main(int argc, char **argv){
             sandbox.debug = true;
         }
         else if ( argument == "--cursor" ) {
-            cursor.init();
+            sandbox.cursor = true;
         }
         else if ( argument == "-s" || argument == "--sec" ) {
             i++;
@@ -857,8 +949,10 @@ int main(int argc, char **argv){
         // Draw
         sandbox.draw();
 
-        // Draw Cursor
-        cursor.draw();
+        // Draw Cursor and Debug elements
+        sandbox.drawUI();
+
+        sandbox.drawDone();
 
         // Swap the buffers
         renderGL();

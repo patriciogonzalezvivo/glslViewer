@@ -18,6 +18,9 @@ public:
     void    setDistance(float _distance);
     void    setTarget(glm::vec3 _target);
 
+    glm::vec3   worldToCamera(glm::vec3 _WorldXYZ) const;
+    glm::vec3   worldToScreen(glm::vec3 _WorldXYZ) const;
+
     //Getting Functions
     float               getDistance() const { return glm::length(getPosition()); }
     const CameraType&   getType() const;

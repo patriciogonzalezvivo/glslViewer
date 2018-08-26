@@ -332,15 +332,13 @@ u_myVec3,0.0,0.5,0.0
 
 * `varying vec2 v_texcoord`: UV of the billboard ( normalized )
 
-* `uniform vec3 u_eye`: Position of the 3d camera when rendering 3d objects
+* `uniform vec3 u_eye`: Position of the camera
+
+* `uniform vec3 u_light`: Position of the light
+
+* `uniform vec3 u_lightColor`: Color of the light
 
 * `uniform vec2 u_view2d`: 2D position of viewport that can be changed by dragging
-
-* `uniform vec3 u_eye3d`: Position of the camera
-
-* `uniform vec3 u_centre3d`: Position of the center of the object
-
-* `uniform vec3 u_up3d`: Up-vector of the camera
 
 ### Including dependent files with `#include`
 

@@ -5,7 +5,7 @@
 
 #include "tools/geom.h"
 
-Node::Node() {
+Node::Node() : m_transformMatrix(1.0), m_position(0.0), m_scale(1.0) {
     setPosition(glm::vec3(0.0));
     setOrientation(glm::vec3(0.0));
     setScale(glm::vec3(1.));

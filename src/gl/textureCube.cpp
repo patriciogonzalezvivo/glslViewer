@@ -7,6 +7,19 @@
 #include "tools/face.h"
 #include "tools/image.h"
 
+
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif 
+
+#ifndef M_2_SQRTPI
+#define M_2_SQRTPI 1.12837916709551257390
+#endif
+
+// A few useful utilities from Filament
+// https://github.com/google/filament/blob/master/tools/cmgen/src/CubemapSH.cpp
+// -----------------------------------------------------------------------------------------------
+
 const GLenum CubeMapFace[6] { 
     GL_TEXTURE_CUBE_MAP_POSITIVE_X, GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 
     GL_TEXTURE_CUBE_MAP_POSITIVE_Y, GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 
@@ -215,7 +228,6 @@ bool TextureCube::load(const std::string &_path, bool _vFlip) {
 
     for (int i = 0; i < 9; i++) {
         SH[i] = SH[i] * (32.0f / (float)sh_samples);
-        // std::cout << SH[i].x << "," << SH[i].y << "," << SH[i].z << std::endl;
     }
 
     glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
