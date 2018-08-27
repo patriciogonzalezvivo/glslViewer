@@ -5,6 +5,9 @@ std::map<GLint, GLuint> VertexLayout::s_enabledAttribs = std::map<GLint, GLuint>
 
 std::string uniforms_common = 
 "uniform mat4 u_modelViewProjectionMatrix;\n"
+"uniform vec3 u_camera;\n"
+"uniform vec3 u_light;\n"
+"uniform vec3 u_lightColor;\n"
 "\n";
 
 VertexLayout::VertexLayout(std::vector<VertexAttrib> _attribs) : m_attribs(_attribs), m_stride(0), m_positionAttribIndex(-1), m_colorAttribIndex(-1), m_normalAttribIndex(-1), m_texCoordAttribIndex(-1) {
@@ -132,7 +135,7 @@ std::string VertexLayout::getDefaultFragShader() {
 
     rta += "\n"
 "void main(void) {\n"
-"   vec3 color = vec3(1.0);\n"
+"    vec3 color = vec3(1.0);\n"
 "\n";
 
     if (m_colorAttribIndex != -1) {
@@ -146,7 +149,7 @@ std::string VertexLayout::getDefaultFragShader() {
     }
 
     if ( m_normalAttribIndex != -1 ){
-        rta += "    float shade = dot(v_" + m_attribs[m_normalAttribIndex].name + ", normalize(vec3(0.0, 0.75, 0.75)));\n"
+        rta += "    float shade = dot(v_" + m_attribs[m_normalAttribIndex].name + ", normalize(u_light));\n"
         "    color *= smoothstep(-1.0, 1.0, shade);\n";
     }
 

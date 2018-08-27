@@ -100,13 +100,13 @@ Sandbox::Sandbox():
     },
     [this]() { return toString(-m_cam.getPosition(), ','); });
 
-    uniforms_functions["m_cameraExposure"] = UniformFunction("float", [this](Shader& _shader) {
-        _shader.setUniform("m_cameraExposure", m_cam.exposure);
+    uniforms_functions["u_cameraExposure"] = UniformFunction("float", [this](Shader& _shader) {
+        _shader.setUniform("u_cameraExposure", m_cam.exposure);
     },
     [this]() { return toString(m_cam.exposure); });
 
-    uniforms_functions["m_cameraEv100"] = UniformFunction("float", [this](Shader& _shader) {
-        _shader.setUniform("m_cameraEv100", m_cam.ev100);
+    uniforms_functions["u_cameraEv100"] = UniformFunction("float", [this](Shader& _shader) {
+        _shader.setUniform("u_cameraEv100", m_cam.ev100);
     },
     [this]() { return toString(m_cam.ev100); });
     
