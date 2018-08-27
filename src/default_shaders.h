@@ -75,7 +75,9 @@ uniform samplerCube u_cubeMap;\n\
 varying vec4    v_position;\n\
 \n\
 void main(void) {\n\
-    gl_FragColor = textureCube(u_cubeMap, v_position.xyz);\n\
+    vec4 reflection = textureCube(u_cubeMap, v_position.xyz);\n\
+    // reflection = reflection / (reflection + vec4(1.0));\n\
+    gl_FragColor = reflection;\n\
 }";
 
 std::string wireframe3D_vert = "\n\

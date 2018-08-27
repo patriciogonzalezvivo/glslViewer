@@ -6,6 +6,7 @@ uniform sampler2D   u_buffer0;
 uniform sampler2D   u_buffer1;
 uniform sampler2D   u_buffer2;
 
+uniform vec3        u_light;
 uniform vec2        u_resolution;
 uniform vec2        u_mouse;
 uniform float       u_time;
@@ -147,7 +148,7 @@ void main() {
     vec3 color = vec3(0.0);
 
     color = texture2D(u_buffer1, st).rgb;
-    color *= dot(normalize(v_normal), normalize(vec3(0.5,0.5,0.))) * 0.95;
+    color *= dot(normalize(v_normal), normalize(vec3(u_light))) * 0.95;
     // color.r = 1.;
     
     gl_FragColor = vec4(color, 1.0);

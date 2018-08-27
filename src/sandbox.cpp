@@ -85,13 +85,13 @@ Sandbox::Sandbox():
     },
     [this]() { return toString(-m_cam.getPosition(), ','); });
 
-    uniforms_functions["m_light"] = UniformFunction("vec3", [this](Shader& _shader) {
-        _shader.setUniform("m_light", m_light.getPosition());
+    uniforms_functions["u_light"] = UniformFunction("vec3", [this](Shader& _shader) {
+        _shader.setUniform("u_light", m_light.getPosition());
     },
     [this]() { return toString(m_light.getPosition(), ','); });
 
-    uniforms_functions["m_lightColor"] = UniformFunction("vec3", [this](Shader& _shader) {
-        _shader.setUniform("m_lightColor", m_light.color);
+    uniforms_functions["u_lightColor"] = UniformFunction("vec3", [this](Shader& _shader) {
+        _shader.setUniform("u_lightColor", m_light.color);
     },
     [this]() { return toString(m_light.color, ','); });
 

@@ -2,6 +2,7 @@
 precision mediump float;
 #endif
 
+uniform vec3 u_light;
 uniform vec2 u_resolution;
 uniform float u_time;
 
@@ -40,7 +41,7 @@ void main(void) {
     color.rgb += vec3(1.0, 0.0, 0.0) * stroke(sdf, 0.75, 0.01);
 #else
     color.rgb = v_color.rgb;
-    float shade = dot(v_normal, normalize(vec3(0.0, 0.75, 0.75)));
+    float shade = dot(v_normal, normalize(vec3(u_light)));
     color.rgb *= smoothstep(-1.0, 1.0, shade);
 #endif
 

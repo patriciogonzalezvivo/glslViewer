@@ -2,6 +2,7 @@
 precision mediump float;
 #endif
 
+uniform vec3 u_light;
 uniform vec2 u_resolution;
 uniform vec2 u_mouse;
 uniform float u_time;
@@ -33,7 +34,7 @@ void main(void) {
     // color.rgb = v_normal * 0.5 + 0.5;
 
     float pct = 1.0 - smoothstep(0.2, 0.8, color.r) * 0.5 ;
-    pct += smoothstep(-1.0,1.0, -dot(normal, normalize(vec3(0.0,1.,0.3) ))) * 0.5;
+    pct += smoothstep(-1.0,1.0, -dot(normal, normalize(u_light))) * 0.5;
     color *= step(pct, fract((st.x - st.y) * 2. + u_time));
 #endif
 

@@ -266,10 +266,24 @@ void declareCommands() {
         else {
             std::vector<std::string> values = split(_line,',');
             if (values.size() == 2) {
-                std::ofstream out(values[1]);
-                out << sandbox.getSource(FRAGMENT);
-                out.close();
+                if (isDigit(values[1])) {
+                    // Line number
+                    std::vector<std::string> lines = split(sandbox.getSource(FRAGMENT),'\n');
+                    std::cout << lines[toInt(values[1])] << std::endl; 
+                }
+                else {
+                    // Write shader into a file
+                    std::ofstream out(values[1]);
+                    out << sandbox.getSource(FRAGMENT);
+                    out.close();
+                }
                 return true;
+            }
+            else if (values.size() > 2) {
+                std::vector<std::string> lines = split(sandbox.getSource(FRAGMENT),'\n');
+                for (unsigned int i = 1; i < values.size(); i++) {
+                    std::cout << lines[toInt(values[i])] << std::endl; 
+                }
             }
         }
         return false;
