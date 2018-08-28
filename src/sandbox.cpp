@@ -88,6 +88,10 @@ Sandbox::Sandbox():
     },
     []() { return toString(getWindowWidth()) + "," + toString(getWindowHeight()); });
 
+    // SCENE
+    uniforms_functions["u_scene"] = UniformFunction("sampler2D");
+    uniforms_functions["u_scene_depth"] = UniformFunction("sampler2D");
+
     // LIGHT UNIFORMS
     //
     uniforms_functions["u_light"] = UniformFunction("vec3", [this](Shader& _shader) {
@@ -113,9 +117,11 @@ Sandbox::Sandbox():
         }
     });
 
-    // SCENE
-    uniforms_functions["u_scene"] = UniformFunction("sampler2D");
-    uniforms_functions["u_scene_depth"] = UniformFunction("sampler2D");
+    uniforms_functions["u_iblLuminance"] = UniformFunction("float", [this](Shader& _shader) {
+        _shader.setUniform("u_iblLuminance", 30000.0f * m_cam.getExposure());
+    },
+    [this]() { return toString(30000.0f * m_cam.getExposure()); });
+    
 
     // CAMERA UNIFORMS
     //
