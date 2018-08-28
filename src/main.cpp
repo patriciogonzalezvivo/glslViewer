@@ -288,7 +288,7 @@ void declareCommands() {
                 for (unsigned int i = 1; i < values.size(); i++) {
                     int lineNumber = toInt(values[i]) - 1;
                     if (lineNumber >= 0 && lineNumber < lines.size()) {
-                        std::cout << lineNumber + 1 << " " << lines[toInt(values[i])] << std::endl; 
+                        std::cout << lineNumber + 1 << " " << lines[lineNumber] << std::endl; 
                     }
                 }
             }
