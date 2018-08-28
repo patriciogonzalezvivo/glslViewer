@@ -56,7 +56,8 @@ Sandbox::Sandbox():
     defines.push_back("PLATFORM_RPI");
     #endif
 
-    // Initialize UNIFORMS lambda functions
+    // TIME UNIFORMS
+    //
     uniforms_functions["u_time"] = UniformFunction( "float", 
     [this](Shader& _shader) {
         if (m_record) _shader.setUniform("u_time", m_record_head);
@@ -70,21 +71,25 @@ Sandbox::Sandbox():
     },
     []() { return toString(getDelta()); });
 
+    uniforms_functions["u_date"] = UniformFunction("vec4", [](Shader& _shader) {
+        _shader.setUniform("u_date", getDate());
+    },
+    []() { return toString(getDate(), ','); });
+
+    // MOUSE
     uniforms_functions["u_mouse"] = UniformFunction("vec2", [](Shader& _shader) {
         _shader.setUniform("u_mouse", getMouseX(), getMouseY());
     },
     []() { return toString(getMouseX()) + "," + toString(getMouseY()); } );
 
+    // VIEWPORT
     uniforms_functions["u_resolution"]= UniformFunction("vec2", [](Shader& _shader) {
         _shader.setUniform("u_resolution", getWindowWidth(), getWindowHeight());
     },
     []() { return toString(getWindowWidth()) + "," + toString(getWindowHeight()); });
-    
-    uniforms_functions["u_eye"] = UniformFunction("vec3", [this](Shader& _shader) {
-        _shader.setUniform("u_eye", -m_cam.getPosition());
-    },
-    [this]() { return toString(-m_cam.getPosition(), ','); });
 
+    // LIGHT UNIFORMS
+    //
     uniforms_functions["u_light"] = UniformFunction("vec3", [this](Shader& _shader) {
         _shader.setUniform("u_light", m_light.getPosition());
     },
@@ -95,30 +100,75 @@ Sandbox::Sandbox():
     },
     [this]() { return toString(m_light.color, ','); });
 
+    // IBL UNIFORM
+    uniforms_functions["u_cubeMap"] = UniformFunction("samplerCube", [this](Shader& _shader) {
+        if (m_cubemap != nullptr) {
+            m_shader.setUniformTextureCube( "u_cubeMap", (TextureCube*)m_cubemap, m_textureIndex++ );
+        }
+    });
+
+    uniforms_functions["u_SH"] = UniformFunction("vec3", [this](Shader& _shader) {
+        if (m_cubemap != nullptr) {
+            m_shader.setUniform("u_SH", m_cubemap->SH, 9);
+        }
+    });
+
+    // SCENE
+    uniforms_functions["u_scene"] = UniformFunction("sampler2D");
+    uniforms_functions["u_scene_depth"] = UniformFunction("sampler2D");
+
+    // CAMERA UNIFORMS
+    //
     uniforms_functions["u_camera"] = UniformFunction("vec3", [this](Shader& _shader) {
         _shader.setUniform("u_camera", -m_cam.getPosition());
     },
     [this]() { return toString(-m_cam.getPosition(), ','); });
 
-    uniforms_functions["u_cameraExposure"] = UniformFunction("float", [this](Shader& _shader) {
-        _shader.setUniform("u_cameraExposure", m_cam.exposure);
+    uniforms_functions["u_cameraDistance"] = UniformFunction("float", [this](Shader& _shader) {
+        _shader.setUniform("u_cameraDistance", m_cam.getDistance());
     },
-    [this]() { return toString(m_cam.exposure); });
+    [this]() { return toString(m_cam.getDistance()); });
+
+    uniforms_functions["u_cameraNearClip"] = UniformFunction("float", [this](Shader& _shader) {
+        _shader.setUniform("u_cameraNearClip", m_cam.getNearClip());
+    },
+    [this]() { return toString(m_cam.getNearClip()); });
+
+    uniforms_functions["u_cameraFarClip"] = UniformFunction("float", [this](Shader& _shader) {
+        _shader.setUniform("u_cameraFarClip", m_cam.getFarClip());
+    },
+    [this]() { return toString(m_cam.getFarClip()); });
 
     uniforms_functions["u_cameraEv100"] = UniformFunction("float", [this](Shader& _shader) {
-        _shader.setUniform("u_cameraEv100", m_cam.ev100);
+        _shader.setUniform("u_cameraEv100", m_cam.getEv100());
     },
-    [this]() { return toString(m_cam.ev100); });
+    [this]() { return toString(m_cam.getEv100()); });
+
+    uniforms_functions["u_cameraExposure"] = UniformFunction("float", [this](Shader& _shader) {
+        _shader.setUniform("u_cameraExposure", m_cam.getExposure());
+    },
+    [this]() { return toString(m_cam.getExposure()); });
+
+    uniforms_functions["u_cameraAperture"] = UniformFunction("float", [this](Shader& _shader) {
+        _shader.setUniform("u_cameraAperture", m_cam.getAperture());
+    },
+    [this]() { return toString(m_cam.getAperture()); });
+
+    uniforms_functions["u_cameraShutterSpeed"] = UniformFunction("float", [this](Shader& _shader) {
+        _shader.setUniform("u_cameraShutterSpeed", m_cam.getShutterSpeed());
+    },
+    [this]() { return toString(m_cam.getShutterSpeed()); });
+
+    uniforms_functions["u_cameraSensitivity"] = UniformFunction("float", [this](Shader& _shader) {
+        _shader.setUniform("u_cameraSensitivity", m_cam.getSensitivity());
+    },
+    [this]() { return toString(m_cam.getSensitivity()); });
     
+    // MATRIX UNIFORMS
     uniforms_functions["u_model"] = UniformFunction("vec3", [this](Shader& _shader) {
         _shader.setUniform("u_model", m_model_node.getPosition());
     },
     [this]() { return toString(m_model_node.getPosition(), ','); });
-
-    uniforms_functions["u_date"] = UniformFunction("vec4", [](Shader& _shader) {
-        _shader.setUniform("u_date", getDate());
-    },
-    []() { return toString(getDate(), ','); });
 
     uniforms_functions["u_view2d"] = UniformFunction("mat3", [this](Shader& _shader) {
         _shader.setUniform("u_view2d", m_view2d);
@@ -136,21 +186,6 @@ Sandbox::Sandbox():
         _shader.setUniform("u_projectionMatrix", m_cam.getProjectionMatrix());
     });
     uniforms_functions["u_modelViewProjectionMatrix"] = UniformFunction("mat4");
-
-    uniforms_functions["u_cubeMap"] = UniformFunction("samplerCube", [this](Shader& _shader) {
-        if (m_cubemap != nullptr) {
-            m_shader.setUniformTextureCube( "u_cubeMap", (TextureCube*)m_cubemap, m_textureIndex++ );
-        }
-    });
-
-    uniforms_functions["u_SH"] = UniformFunction("vec3", [this](Shader& _shader) {
-        if (m_cubemap != nullptr) {
-            m_shader.setUniform("u_SH", m_cubemap->SH, 9);
-        }
-    });
-
-    uniforms_functions["u_scene"] = UniformFunction("sampler2D");
-    uniforms_functions["u_scene_depth"] = UniformFunction("sampler2D");
 }
 
 // ------------------------------------------------------------------------- SET

@@ -5,7 +5,6 @@ precision mediump float;
 uniform samplerCube u_cubeMap;
 uniform vec3        u_SH[9];
 
-uniform vec3        u_eye;
 uniform vec3        u_light;
 
 varying vec4        v_position;

@@ -5,7 +5,7 @@ precision mediump float;
 uniform samplerCube u_cubeMap;
 
 uniform vec3        u_light;
-uniform vec3        u_eye;
+uniform vec3        u_camera;
 
 varying vec4        v_position;
 
@@ -22,7 +22,7 @@ void main(void) {
     color = v_color.rgb;
 #endif
 
-    vec3 refle = reflect(v_position.xyz - u_eye, v_normal);
+    vec3 refle = reflect(v_position.xyz - u_camera, v_normal);
 
     vec4 reflection = textureCube(u_cubeMap, refle);
 

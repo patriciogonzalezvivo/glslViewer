@@ -2,7 +2,14 @@
 
 #include "glm/gtc/matrix_inverse.hpp"
 
-Camera::Camera(): exposure(1.0), ev100(1.0), m_target(0.0), m_aspect(4.0f/3.0f), m_fov(45.), m_nearClip(0.01f),m_farClip(100.0f), m_type(CameraType::FREE){
+// static const float MIN_APERTURE = 0.5f;
+// static const float MAX_APERTURE = 64.0f;
+// static const float MIN_SHUTTER_SPEED = 1.0f / 25000.0f;
+// static const float MAX_SHUTTER_SPEED = 60.0f;
+// static const float MIN_SENSITIVITY = 10.0f;
+// static const float MAX_SENSITIVITY = 204800.0f;
+
+Camera::Camera(): m_target(0.0), m_aspect(4.0f/3.0f), m_fov(45.), m_nearClip(0.01f), m_farClip(100.0f), m_exposure(2.60417e-05), m_ev100(14.9658), m_aperture(16), m_shutterSpeed(1.0f/125.0f), m_sensitivity(100.0f), m_type(CameraType::FREE){
     updateCameraSettings();
 }
 
@@ -42,35 +49,64 @@ void Camera::setDistance(float _distance) {
     lookAt(m_target);
 }
 
-const CameraType& Camera::getType() const {
-    return m_type;
-}
+    /** Sets this camera's exposure (default is 16, 1/125s, 100 ISO)
+     * from https://github.com/google/filament/blob/master/filament/src/Exposure.cpp
+     *
+     * The exposure ultimately controls the scene's brightness, just like with a real camera.
+     * The default values provide adequate exposure for a camera placed outdoors on a sunny day
+     * with the sun at the zenith.
+     *
+     * @param aperture      Aperture in f-stops, clamped between 0.5 and 64.
+     *                      A lower \p aperture value *increases* the exposure, leading to
+     *                      a brighter scene. Realistic values are between 0.95 and 32.
+     *
+     * @param shutterSpeed  Shutter speed in seconds, clamped between 1/25,000 and 60.
+     *                      A lower shutter speed increases the exposure. Realistic values are
+     *                      between 1/8000 and 30.
+     *
+     * @param sensitivity   Sensitivity in ISO, clamped between 10 and 204,800.
+     *                      A higher \p sensitivity increases the exposure. Realistice values are
+     *                      between 50 and 25600.
+     *
+     * @note
+     * With the default parameters, the scene must contain at least one Light of intensity
+     * similar to the sun (e.g.: a 100,000 lux directional light).
+     *
+     * @see Light, Exposure
+     */
 
-const glm::mat3& Camera::getNormalMatrix() const {
-    return m_normalMatrix;
-}
+void  Camera::setExposure(float _aperture, float _shutterSpeed, float _sensitivity) {
+    m_aperture = _aperture;
+    m_shutterSpeed = _shutterSpeed;
+    m_sensitivity = _sensitivity;
+    
+    // With N = aperture, t = shutter speed and S = sensitivity,
+    // we can compute EV100 knowing that:
+    //
+    // EVs = log2(N^2 / t)
+    // and
+    // EVs = EV100 + log2(S / 100)
+    //
+    // We can therefore find:
+    //
+    // EV100 = EVs - log2(S / 100)
+    // EV100 = log2(N^2 / t) - log2(S / 100)
+    // EV100 = log2((N^2 / t) * (100 / S))
+    //
+    // Reference: https://en.wikipedia.org/wiki/Exposure_value
+    m_ev100 = std::log2((_aperture * _aperture) / _shutterSpeed * 100.0f / _sensitivity);
 
-const glm::mat4& Camera::getProjectionMatrix() const {
-    return m_projectionMatrix;
-}
+    // This is equivalent to calling exposure(ev100(N, t, S))
+    // By merging the two calls we can remove extra pow()/log2() calls
+    const float e = (_aperture * _aperture) / _shutterSpeed * 100.0f / _sensitivity;
+    m_exposure = 1.0f / (1.2f * e);
+};
 
-const glm::mat4& Camera::getProjectionViewMatrix() const {
-    return m_projectionViewMatrix;
-}
-
-void Camera::onPositionChanged() {
-    updateProjectionViewMatrix();
-}
-
-void Camera::onOrientationChanged() {
-    updateProjectionViewMatrix();
-}
-
-void Camera::onScaleChanged() {
-    updateProjectionViewMatrix();
-}
+// ---------------------------------------------------------- Convertions
 
 void Camera::updateCameraSettings() {
+    setExposure(getAperture(), getShutterSpeed(), getSensitivity());
+    
     if (m_type == CameraType::ORTHO) {
         m_projectionMatrix = glm::ortho(-1.5f * float(m_aspect), 1.5f * float(m_aspect), -1.5f, 1.5f, -10.0f, 10.f);
     }
@@ -105,4 +141,18 @@ glm::vec3 Camera::worldToScreen(glm::vec3 _WorldXYZ) const {
 	ScreenXYZ.z = CameraXYZ.z;
 
 	return ScreenXYZ;
+}
+
+// ---------------------------------------------------------- Events
+
+void Camera::onPositionChanged() {
+    updateProjectionViewMatrix();
+}
+
+void Camera::onOrientationChanged() {
+    updateProjectionViewMatrix();
+}
+
+void Camera::onScaleChanged() {
+    updateProjectionViewMatrix();
 }

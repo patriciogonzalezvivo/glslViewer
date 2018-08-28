@@ -504,37 +504,20 @@ void declareCommands() {
 
     commands.push_back(Command("camera_exposure", [&](const std::string& _line){ 
         std::vector<std::string> values = split(_line,',');
-        if (values.size() == 2) {
+        if (values.size() == 4) {
             consoleMutex.lock();
-            sandbox.getCamera().exposure = toFloat(values[1]);
+            sandbox.getCamera().setExposure(toFloat(values[1]),toFloat(values[2]),toFloat(values[3]));
             sandbox.flagChange();
             consoleMutex.unlock();
             return true;
         }
         else {
-            std::cout << sandbox.getCamera().exposure << std::endl;
+            std::cout << sandbox.getCamera().getExposure() << std::endl;
             return true;
         }
         return false;
     },
-    "camera_exposure[,<exposure>]    get or set the camera exposure."));
-
-    commands.push_back(Command("camera_ev100", [&](const std::string& _line){ 
-        std::vector<std::string> values = split(_line,',');
-        if (values.size() == 2) {
-            consoleMutex.lock();
-            sandbox.getCamera().ev100 = toFloat(values[1]);
-            sandbox.flagChange();
-            consoleMutex.unlock();
-            return true;
-        }
-        else {
-            std::cout << sandbox.getCamera().ev100 << std::endl;
-            return true;
-        }
-        return false;
-    },
-    "camera_ev100[,<ev100>]          get or set the camera ev100."));
+    "camera_exposure[,<aperture>,<shutterSpeed>,<sensitivity>]  get or set the camera exposure. Defaults: 16, 1/125s, 100 ISO"));
 
     commands.push_back(Command("light_position", [&](const std::string& _line){ 
         std::vector<std::string> values = split(_line,',');
@@ -883,6 +866,8 @@ int main(int argc, char **argv){
                     file.lastChange = st.st_mtime;
                     file.vFlip = vFlip;
                     files.push_back(file);
+
+                    sandbox.addDefines("GLSLVIEWER_IBL");
 
                     std::cout << "// " << argument << " loaded as: " << std::endl;
                     std::cout << "//    uniform samplerCube u_cubeMap;"<< std::endl;

@@ -11,49 +11,63 @@ public:
     Camera();
     virtual ~Camera();
 
-    void    setMode(CameraType cam_mode);
-    void    setFOV(double _fov);
-    void    setViewport(int _width, int _height);
-    void    setClipping(double _near_clip_distance, double _far_clip_distance);
-    void    setDistance(float _distance);
-    void    setTarget(glm::vec3 _target);
+    void        setMode(CameraType cam_mode);
+    void        setFOV(double _fov);
+    void        setViewport(int _width, int _height);
+    void        setClipping(double _near_clip_distance, double _far_clip_distance);
+    void        setDistance(float _distance);
+    void        setTarget(glm::vec3 _target);
+
+    void        setExposure(float _aperture, float _shutterSpeed, float _sensitivity);
 
     glm::vec3   worldToCamera(glm::vec3 _WorldXYZ) const;
     glm::vec3   worldToScreen(glm::vec3 _WorldXYZ) const;
 
     //Getting Functions
-    float               getDistance() const { return glm::length(getPosition()); }
-    const CameraType&   getType() const;
-    const glm::mat3&    getNormalMatrix() const;
-    const glm::mat4&    getViewMatrix() const { return getTransformMatrix(); }
-    const glm::mat4&    getProjectionMatrix() const;
-    const glm::mat4&    getProjectionViewMatrix() const;
+    const float         getFarClip() const { return m_nearClip; }
+    const float         getNearClip() const { return m_nearClip; }
+    const float         getDistance() const { return glm::length(getPosition()); }
 
-    float   exposure; 
-    float   ev100;
+    const float         getEv100() const { return m_ev100; }
+    const float         getExposure() const { return m_exposure; }
+    const float         getAperture() const { return m_aperture; }          //! returns this camera's aperture in f-stops
+    const float         getShutterSpeed() const { return m_shutterSpeed; }  //! returns this camera's shutter speed in seconds
+    const float         getSensitivity() const { return m_sensitivity; }    //! returns this camera's sensitivity in ISO
+    
+    const CameraType&   getType() const { return m_type;};
+    const glm::mat3&    getNormalMatrix() const { return m_normalMatrix; }
+    const glm::mat4&    getViewMatrix() const { return getTransformMatrix(); }
+    const glm::mat4&    getProjectionMatrix() const { return m_projectionMatrix; }
+    const glm::mat4&    getProjectionViewMatrix() const { return m_projectionViewMatrix; }
 
 protected:
 
-    virtual void onPositionChanged();
-    virtual void onOrientationChanged();
-    virtual void onScaleChanged();
+    virtual void    onPositionChanged();
+    virtual void    onOrientationChanged();
+    virtual void    onScaleChanged();
 
-    void    updateCameraSettings();
-    void    updateProjectionViewMatrix();
+    virtual void    updateCameraSettings();
+    virtual void    updateProjectionViewMatrix();
 
 private:
-    glm::mat4 m_projectionViewMatrix;
+    glm::mat4   m_projectionViewMatrix;
 
-    glm::mat4 m_projectionMatrix;
-    glm::mat4 m_viewMatrix;
-    glm::mat3 m_normalMatrix;
+    glm::mat4   m_projectionMatrix;
+    glm::mat4   m_viewMatrix;
+    glm::mat3   m_normalMatrix;
 
-    glm::vec3 m_target;
+    glm::vec3   m_target;
 
-    double m_aspect;
-    double m_fov;
-    double m_nearClip;
-    double m_farClip;
+    double      m_aspect;
+    double      m_fov;
+    double      m_nearClip;
+    double      m_farClip;
 
-    CameraType m_type;
+    float       m_exposure; 
+    float       m_ev100;
+    float       m_aperture;
+    float       m_shutterSpeed;
+    float       m_sensitivity;
+
+    CameraType  m_type;
 };

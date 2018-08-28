@@ -332,7 +332,7 @@ u_myVec3,0.0,0.5,0.0
 
 * `varying vec2 v_texcoord`: UV of the billboard ( normalized )
 
-* `uniform vec3 u_eye`: Position of the camera
+* `uniform vec3 u_camera`: Position of the camera
 
 * `uniform vec3 u_light`: Position of the light
 
