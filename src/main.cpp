@@ -268,8 +268,12 @@ void declareCommands() {
             if (values.size() == 2) {
                 if (isDigit(values[1])) {
                     // Line number
-                    std::vector<std::string> lines = split(sandbox.getSource(FRAGMENT),'\n');
-                    std::cout << lines[toInt(values[1])] << std::endl; 
+                    int lineNumber = toInt(values[1]) - 1;
+                    std::vector<std::string> lines = split(sandbox.getSource(FRAGMENT),'\n', true);
+                    if (lineNumber >= 0 && lineNumber < lines.size()) {
+                        std::cout << lineNumber + 1 << " " << lines[lineNumber] << std::endl; 
+                    }
+                    
                 }
                 else {
                     // Write shader into a file
@@ -280,9 +284,12 @@ void declareCommands() {
                 return true;
             }
             else if (values.size() > 2) {
-                std::vector<std::string> lines = split(sandbox.getSource(FRAGMENT),'\n');
+                std::vector<std::string> lines = split(sandbox.getSource(FRAGMENT),'\n', true);
                 for (unsigned int i = 1; i < values.size(); i++) {
-                    std::cout << lines[toInt(values[i])] << std::endl; 
+                    int lineNumber = toInt(values[i]) - 1;
+                    if (lineNumber >= 0 && lineNumber < lines.size()) {
+                        std::cout << lineNumber + 1 << " " << lines[toInt(values[i])] << std::endl; 
+                    }
                 }
             }
         }

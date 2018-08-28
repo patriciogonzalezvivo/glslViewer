@@ -127,16 +127,16 @@ std::istream& operator>>(std::istream& is, glm::vec3& vec) {
     return is;
 }
 
-std::vector<std::string> split(const std::string &_string, char _sep) {
+std::vector<std::string> split(const std::string &_string, char _sep, bool _tolerate_empty) {
     std::vector<std::string> tokens;
     std::size_t start = 0, end = 0;
     while ((end = _string.find(_sep, start)) != std::string::npos) {
-        if (end != start) {
+        if (end != start || _tolerate_empty) {
           tokens.push_back(_string.substr(start, end - start));
         }
         start = end + 1;
     }
-    if (end != start) {
+    if (end != start || _tolerate_empty) {
        tokens.push_back(_string.substr(start));
     }
     return tokens;
