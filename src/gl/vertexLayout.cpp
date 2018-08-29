@@ -10,7 +10,7 @@ std::string uniforms_common =
 "uniform vec3 u_lightColor;\n"
 "\n";
 
-VertexLayout::VertexLayout(std::vector<VertexAttrib> _attribs) : m_attribs(_attribs), m_stride(0), m_positionAttribIndex(-1), m_colorAttribIndex(-1), m_normalAttribIndex(-1), m_texCoordAttribIndex(-1) {
+VertexLayout::VertexLayout(std::vector<VertexAttrib> _attribs) : m_attribs(_attribs), m_stride(0), m_positionAttribIndex(-1), m_colorAttribIndex(-1), m_normalAttribIndex(-1), m_texCoordAttribIndex(-1), m_tangentAttribIndex(-1){
 
     m_stride = 0;
     for (unsigned int i = 0; i < m_attribs.size(); i++) {
@@ -45,6 +45,9 @@ VertexLayout::VertexLayout(std::vector<VertexAttrib> _attribs) : m_attribs(_attr
         }
         else if ( m_attribs[i].attrType == TEXCOORD_ATTRIBUTE ){
             m_texCoordAttribIndex = i;
+        }
+        else if ( m_attribs[i].attrType == TANGENT_ATTRIBUTE) {
+            m_tangentAttribIndex = i;
         }
 
         m_stride += byteSize;
@@ -141,10 +144,10 @@ std::string VertexLayout::getDefaultFragShader() {
     if (m_colorAttribIndex != -1) {
         rta += "    color = v_" + m_attribs[m_colorAttribIndex].name + ".rgb;\n";
     }
-    else if ( m_normalAttribIndex != -1 ){
+    else if ( m_normalAttribIndex != -1 ) {
         rta += "    color *= v_" + m_attribs[m_normalAttribIndex].name + " * 0.5 + 0.5;\n";
     }
-    else if ( m_texCoordAttribIndex != -1 ){
+    else if ( m_texCoordAttribIndex != -1 ) {
         rta += "    color.xy = v_" + m_attribs[m_texCoordAttribIndex].name + ".xy;\n";
     }
 

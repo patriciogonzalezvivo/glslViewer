@@ -12,6 +12,7 @@ enum AttrType {
     COLOR_ATTRIBUTE,
     NORMAL_ATTRIBUTE,
     TEXCOORD_ATTRIBUTE,
+    TANGENT_ATTRIBUTE,
     OTHER_ATTRIBUTE
 };
 
@@ -48,5 +49,6 @@ private:
     int m_colorAttribIndex;
     int m_normalAttribIndex;
     int m_texCoordAttribIndex;
+    int m_tangentAttribIndex;
 
 };

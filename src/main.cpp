@@ -268,9 +268,9 @@ void declareCommands() {
             if (values.size() == 2) {
                 if (isDigit(values[1])) {
                     // Line number
-                    int lineNumber = toInt(values[1]) - 1;
+                    unsigned int lineNumber = toInt(values[1]) - 1;
                     std::vector<std::string> lines = split(sandbox.getSource(FRAGMENT),'\n', true);
-                    if (lineNumber >= 0 && lineNumber < lines.size()) {
+                    if (lineNumber < lines.size()) {
                         std::cout << lineNumber + 1 << " " << lines[lineNumber] << std::endl; 
                     }
                     
@@ -286,8 +286,8 @@ void declareCommands() {
             else if (values.size() > 2) {
                 std::vector<std::string> lines = split(sandbox.getSource(FRAGMENT),'\n', true);
                 for (unsigned int i = 1; i < values.size(); i++) {
-                    int lineNumber = toInt(values[i]) - 1;
-                    if (lineNumber >= 0 && lineNumber < lines.size()) {
+                    unsigned int lineNumber = toInt(values[i]) - 1;
+                    if (lineNumber < lines.size()) {
                         std::cout << lineNumber + 1 << " " << lines[lineNumber] << std::endl; 
                     }
                 }
@@ -305,10 +305,31 @@ void declareCommands() {
         else {
             std::vector<std::string> values = split(_line,',');
             if (values.size() == 2) {
-                std::ofstream out(values[1]);
-                out << sandbox.getSource(VERTEX);
-                out.close();
+                if (isDigit(values[1])) {
+                    // Line number
+                    unsigned int lineNumber = toInt(values[1]) - 1;
+                    std::vector<std::string> lines = split(sandbox.getSource(VERTEX),'\n', true);
+                    if (lineNumber < lines.size()) {
+                        std::cout << lineNumber + 1 << " " << lines[lineNumber] << std::endl; 
+                    }
+                    
+                }
+                else {
+                    // Write shader into a file
+                    std::ofstream out(values[1]);
+                    out << sandbox.getSource(VERTEX);
+                    out.close();
+                }
                 return true;
+            }
+            else if (values.size() > 2) {
+                std::vector<std::string> lines = split(sandbox.getSource(VERTEX),'\n', true);
+                for (unsigned int i = 1; i < values.size(); i++) {
+                    unsigned int lineNumber = toInt(values[i]) - 1;
+                    if (lineNumber < lines.size()) {
+                        std::cout << lineNumber + 1 << " " << lines[lineNumber] << std::endl; 
+                    }
+                }
             }
         }
         return false;

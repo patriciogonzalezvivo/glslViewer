@@ -11,20 +11,20 @@ public:
     Camera();
     virtual ~Camera();
 
-    void        setMode(CameraType cam_mode);
-    void        setFOV(double _fov);
-    void        setViewport(int _width, int _height);
-    void        setClipping(double _near_clip_distance, double _far_clip_distance);
-    void        setDistance(float _distance);
-    void        setTarget(glm::vec3 _target);
+    virtual void        setMode(CameraType cam_mode);
+    virtual void        setFOV(double _fov);
+    virtual void        setViewport(int _width, int _height);
+    virtual void        setClipping(double _near_clip_distance, double _far_clip_distance);
+    virtual void        setDistance(float _distance);
+    virtual void        setTarget(glm::vec3 _target);
 
-    void        setExposure(float _aperture, float _shutterSpeed, float _sensitivity);
+    virtual void        setExposure(float _aperture, float _shutterSpeed, float _sensitivity);
 
-    glm::vec3   worldToCamera(glm::vec3 _WorldXYZ) const;
-    glm::vec3   worldToScreen(glm::vec3 _WorldXYZ) const;
+    virtual glm::vec3   worldToCamera(glm::vec3 _WorldXYZ) const;
+    virtual glm::vec3   worldToScreen(glm::vec3 _WorldXYZ) const;
 
     //Getting Functions
-    const float         getFarClip() const { return m_nearClip; }
+    const float         getFarClip() const { return m_farClip; }
     const float         getNearClip() const { return m_nearClip; }
     const float         getDistance() const { return glm::length(getPosition()); }
 
@@ -42,12 +42,12 @@ public:
 
 protected:
 
-    virtual void    onPositionChanged();
-    virtual void    onOrientationChanged();
-    virtual void    onScaleChanged();
+    virtual void        onPositionChanged();
+    virtual void        onOrientationChanged();
+    virtual void        onScaleChanged();
 
-    virtual void    updateCameraSettings();
-    virtual void    updateProjectionViewMatrix();
+    virtual void        updateCameraSettings();
+    virtual void        updateProjectionViewMatrix();
 
 private:
     glm::mat4   m_projectionViewMatrix;

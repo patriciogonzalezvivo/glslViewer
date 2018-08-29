@@ -30,6 +30,8 @@ public:
     void    addNormal(const glm::vec3 &_normal);
     void    addNormals(const std::vector<glm::vec3> &_normals );
 
+    void    addTangent(const glm::vec4 &_tangent);
+
     void    addTexCoord(const glm::vec2 &_uv);
     void    addTexCoords(const std::vector<glm::vec2> &_uvs);
 
@@ -45,6 +47,7 @@ public:
     std::vector<glm::ivec3>  getTriangles() const ;
 
     const std::vector<glm::vec4> & getColors() const;
+    const std::vector<glm::vec4> & getTangents() const;
     const std::vector<glm::vec3> & getVertices() const;
     const std::vector<glm::vec3> & getNormals() const;
     const std::vector<glm::vec2> & getTexCoords() const;
@@ -53,10 +56,12 @@ public:
     Vbo*    getVbo();
 
     void    computeNormals();
+    void    computeTangents();
     void    clear();
 
 private:
     std::vector<glm::vec4>  m_colors;
+    std::vector<glm::vec4>  m_tangents;
     std::vector<glm::vec3>  m_vertices;
     std::vector<glm::vec3>  m_normals;
     std::vector<glm::vec2>  m_texCoords;
