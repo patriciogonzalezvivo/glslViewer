@@ -263,7 +263,6 @@ bool Mesh::load(const std::string& _file) {
             }
 
             if (texcoord.size() == m_vertices.size() && getDrawMode() == GL_TRIANGLES) {
-                std::cout << "Try to compute Tangents" << std::endl;
                 computeTangents();
             }
 
