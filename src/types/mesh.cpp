@@ -255,7 +255,7 @@ bool Mesh::load(const std::string& _file) {
             addTexCoords(texcoord);
             addIndices(indices);
 
-            if (normals.size()>0 && ( getDrawMode() == GL_TRIANGLES || getDrawMode() == GL_TRIANGLE_STRIP)) {
+            if (normals.size() > 0 && ( getDrawMode() == GL_TRIANGLES || getDrawMode() == GL_TRIANGLE_STRIP)) {
                 addNormals(normals);
             }
             else {
@@ -340,17 +340,17 @@ bool Mesh::save(const std::string& _file, bool _useBinary) {
             os << "property float x" << std::endl;
             os << "property float y" << std::endl;
             os << "property float z" << std::endl;
-            if (getColors().size()) {
+            if (hasColors()) {
                 os << "property uchar red" << std::endl;
                 os << "property uchar green" << std::endl;
                 os << "property uchar blue" << std::endl;
                 os << "property uchar alpha" << std::endl;
             }
-            if (getTexCoords().size()) {
+            if (hasTexCoords()) {
                 os << "property float u" << std::endl;
                 os << "property float v" << std::endl;
             }
-            if (getNormals().size()) {
+            if (hasNormals()) {
                 os << "property float nx" << std::endl;
                 os << "property float ny" << std::endl;
                 os << "property float nz" << std::endl;
@@ -358,7 +358,7 @@ bool Mesh::save(const std::string& _file, bool _useBinary) {
         }
 
         unsigned char faceSize = 3;
-        if (getIndices().size()) {
+        if (hasIndices()) {
             os << "element face " << getIndices().size() / faceSize << std::endl;
             os << "property list uchar int vertex_indices" << std::endl;
         } 
@@ -376,7 +376,7 @@ bool Mesh::save(const std::string& _file, bool _useBinary) {
             else {
                 os << getVertices()[i].x << " " << getVertices()[i].y << " " << getVertices()[i].z;
             }
-            if (getColors().size()) {
+            if (hasColors()) {
                 // VCG lib / MeshLab don't support float colors, so we have to cast
                 glm::vec4 c = getColors()[i] * glm::vec4(255,255,255,255);
                 glm::ivec4 cur = glm::ivec4(c.r,c.g,c.b,c.a);
@@ -387,7 +387,7 @@ bool Mesh::save(const std::string& _file, bool _useBinary) {
                     os << " " << (int) cur.r << " " << (int) cur.g << " " << (int) cur.b << " " << (int) cur.a;
                 }
             }
-            if (getTexCoords().size()) {
+            if (hasTexCoords()) {
                 if (_useBinary) {
                     os.write((char*) &getTexCoords()[i], sizeof(glm::vec2));
                 } 
@@ -395,7 +395,7 @@ bool Mesh::save(const std::string& _file, bool _useBinary) {
                     os << " " << getTexCoords()[i].x << " " << getTexCoords()[i].y;
                 }
             }
-            if (getNormals().size()) {
+            if (hasNormals()) {
                 glm::vec3 norm = glm::normalize(getNormals()[i]);
                 if (_useBinary) {
                     os.write((char*) &norm, sizeof(glm::vec3));
@@ -409,7 +409,7 @@ bool Mesh::save(const std::string& _file, bool _useBinary) {
             }
         }
 
-        if (getIndices().size()) {
+        if (hasIndices()) {
             for (uint i = 0; i < getIndices().size(); i += faceSize) {
                 if (_useBinary) {
                     os.write((char*) &faceSize, sizeof(unsigned char));
@@ -564,7 +564,7 @@ std::vector<glm::ivec3> Mesh::getTriangles() const {
     std::vector<glm::ivec3> faces;
 
     if (getDrawMode() == GL_TRIANGLES) {
-        if (m_indices.size()>0) {
+        if (hasIndices()) {
             for(unsigned int j = 0; j < m_indices.size(); j += 3) {
                 glm::ivec3 tri;
                 for(int k = 0; k < 3; k++) {
@@ -596,13 +596,19 @@ void Mesh::clear() {
     if (!m_vertices.empty()) {
 		m_vertices.clear();
 	}
-	if (!m_colors.empty()) {
+	if (hasColors()) {
 		m_colors.clear();
 	}
-	if (!m_normals.empty()) {
+	if (hasNormals()) {
 		m_normals.clear();
 	}
-    if (!m_indices.empty()) {
+    if (hasTexCoords()) {
+		m_texCoords.clear();
+	}
+    if (hasTangents()) {
+		m_tangents.clear();
+	}
+    if (hasIndices()) {
 		m_indices.clear();
 	}
 }
@@ -746,28 +752,28 @@ Vbo* Mesh::getVbo() {
     int  nBits = 3;
 
     bool bColor = false;
-    if (getColors().size() > 0 && getColors().size() == m_vertices.size()) {
+    if (hasColors() && getColors().size() == m_vertices.size()) {
         attribs.push_back({"color", 4, GL_FLOAT, COLOR_ATTRIBUTE, false, 0});
         bColor = true;
         nBits += 4;
     }
 
     bool bNormals = false;
-    if (getNormals().size() > 0 && getNormals().size() == m_vertices.size()) {
+    if (hasNormals() > 0 && getNormals().size() == m_vertices.size()) {
         attribs.push_back({"normal", 3, GL_FLOAT, NORMAL_ATTRIBUTE, false, 0});
         bNormals = true;
         nBits += 3;
     }
 
     bool bTexCoords = false;
-    if (getTexCoords().size() > 0 && getTexCoords().size() == m_vertices.size()) {
+    if (hasTexCoords() > 0 && getTexCoords().size() == m_vertices.size()) {
         attribs.push_back({"texcoord", 2, GL_FLOAT, TEXCOORD_ATTRIBUTE, false, 0});
         bTexCoords = true;
         nBits += 2;
     }
 
     bool bTangents = false;
-    if (getTangents().size() > 0 && getTangents().size() == m_vertices.size()) {
+    if (hasTangents() > 0 && getTangents().size() == m_vertices.size()) {
         attribs.push_back({"tangent", 4, GL_FLOAT, TANGENT_ATTRIBUTE, false, 0});
         bTangents = true;
         nBits += 4;
@@ -807,7 +813,7 @@ Vbo* Mesh::getVbo() {
 
     tmpMesh->addVertices((GLbyte*)data.data(), m_vertices.size());
 
-    if (getIndices().size()==0) {
+    if (!hasIndices()) {
         if ( getDrawMode() == GL_LINES ) {
             for (uint i = 0; i < getVertices().size(); i++) {
                 addIndex(i);

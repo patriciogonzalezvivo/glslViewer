@@ -888,7 +888,8 @@ int main(int argc, char **argv){
                     file.vFlip = vFlip;
                     files.push_back(file);
 
-                    sandbox.addDefines("GLSLVIEWER_IBL");
+                    sandbox.addDefines("CUBE_MAP u_cubeMap");
+                    sandbox.addDefines("SH_ARRAY u_SH");
 
                     std::cout << "// " << argument << " loaded as: " << std::endl;
                     std::cout << "//    uniform samplerCube u_cubeMap;"<< std::endl;

@@ -43,6 +43,12 @@ public:
 
     void    add(const Mesh &_mesh);
 
+    const bool    hasColors() const { return m_colors.size() > 0; }
+    const bool    hasNormals() const { return m_normals.size() > 0; }
+    const bool    hasTexCoords() const { return m_texCoords.size() > 0; }
+    const bool    hasTangents() const { return m_tangents.size() > 0; }
+    const bool    hasIndices() const { return m_indices.size() > 0; }
+
     GLenum  getDrawMode() const;
     std::vector<glm::ivec3>  getTriangles() const ;
 
