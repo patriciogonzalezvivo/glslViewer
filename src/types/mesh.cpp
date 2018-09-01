@@ -316,7 +316,10 @@ bool Mesh::load(const std::string& _file) {
                     addTriangle(shapes[i].mesh.indices[3*f+0], shapes[i].mesh.indices[3*f+1],shapes[i].mesh.indices[3*f+2]);
                 }
             }
+        }
 
+        if (hasNormals() && getDrawMode() == GL_TRIANGLES) {
+            computeTangents();
         }
     }
     return false;

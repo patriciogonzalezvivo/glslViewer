@@ -102,13 +102,25 @@ std::string VertexLayout::getDefaultVertShader() {
         rta += "varying vec" + toString(size) + " v_" + m_attribs[i].name + ";\n";
     }
 
-    rta += "\n"
-"void main(void) {\n"
-"\n";
+    rta += "\n\
+\n\
+#ifdef MODEL_HAS_TANGENTS\n\
+varying mat3 v_tangentToWorld;\n\
+#endif\n\
+\n\
+void main(void) {\n\
+\n";
 
     for (uint i = 0; i < m_attribs.size(); i++) {
         rta += "    v_" + m_attribs[i].name + " = a_" + m_attribs[i].name + ";\n";
     }
+
+    rta += "\n\
+#ifdef MODEL_HAS_TANGENTS\n\
+    vec3 worldTangent = a_tangent.xyz;\n\
+    vec3 worldBiTangent = cross(v_normal, worldTangent) * sign(a_tangent.w);\n\
+    v_tangentToWorld = mat3(normalize(worldTangent), normalize(worldBiTangent), normalize(v_normal));\n\
+#endif\n";
 
     if (m_positionAttribIndex != -1 && m_positionAttribIndex < int(m_attribs.size())) {
         rta += "    gl_Position = u_modelViewProjectionMatrix * v_" + m_attribs[m_positionAttribIndex].name + ";\n";

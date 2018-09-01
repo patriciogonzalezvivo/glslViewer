@@ -980,6 +980,7 @@ int main(int argc, char **argv){
         // Draw Cursor and Debug elements
         sandbox.drawUI();
 
+        // Finish drawing
         sandbox.drawDone();
 
         // Swap the buffers

@@ -634,8 +634,11 @@ void Sandbox::draw() {
 }
 
 void Sandbox::drawUI() {
-    if (debug ) {
+    if (debug) {
+
         if (geom_index != -1) {
+
+            // Bounding box
             glEnable(GL_DEPTH_TEST);
             m_wireframe3D_shader.use();
             m_wireframe3D_shader.setUniform("u_color", glm::vec4(1.0, 1.0, 0.0, 1.0));
@@ -644,13 +647,12 @@ void Sandbox::drawUI() {
             glDisable(GL_DEPTH_TEST);
         }
 
+        
+        // Light
         if (m_cross_vbo == nullptr)
             m_cross_vbo = cross(glm::vec3(0.,0.,0.1), 10.).getVbo();
-            
-
         glm::vec4 l = m_model_node.getTransformMatrix() * glm::vec4(m_light.getPosition(), 1.0);
         glm::vec3 light_pos = m_cam.worldToScreen( glm::vec3(l.x, l.y, l.z) );
-
         if (light_pos.x > 0.0 && light_pos.x < 1.0 &&
             light_pos.y > 0.0 && light_pos.y < 1.0 && 
             light_pos.z > 0.0 && light_pos.z < 1.0) {
