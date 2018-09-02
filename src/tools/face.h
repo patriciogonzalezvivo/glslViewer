@@ -1,7 +1,39 @@
 #pragma once
 
+#include <math.h>
+
 #include "gl/gl.h"
 #include "glm/glm.hpp"
+
+#ifndef M_PI
+#define M_PI 3.14159265358979323846f
+#endif
+
+#ifndef M_RPI
+#define M_RPI 0.31830988618379067153f
+#endif
+
+const GLenum CubeMapFace[6] { 
+    GL_TEXTURE_CUBE_MAP_POSITIVE_X, GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 
+    GL_TEXTURE_CUBE_MAP_POSITIVE_Y, GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 
+    GL_TEXTURE_CUBE_MAP_POSITIVE_Z, GL_TEXTURE_CUBE_MAP_NEGATIVE_Z 
+};
+
+const glm::vec3 skyDir[] = {
+    glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(-1.0f, 0.0f, 0.0f),
+    glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f),
+    glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, 0.0f, -1.0f)
+};
+const glm::vec3 skyX[] = {
+    glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, 0.0f, 1.0f),
+    glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f),
+    glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(-1.0f, 0.0f, 0.0f)
+};
+const glm::vec3 skyY[] = {
+    glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f),
+    glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, 0.0f, 1.0f),
+    glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f)
+};
 
 template <typename T> 
 struct Face {
@@ -42,7 +74,7 @@ struct Face {
         data = newData;
     }
 
-    void upload(GLenum _face) {
+    void upload() {
         GLenum type = GL_FLOAT;
 
         if (sizeof(T) == sizeof(char)) {
@@ -55,12 +87,12 @@ struct Face {
         GLenum InternalFormat = GL_RGB;
     #endif
 
-        glTexImage2D(_face, 0, InternalFormat, width, height, 0, GL_RGB, type, data);
+        glTexImage2D(CubeMapFace[id], 0, InternalFormat, width, height, 0, GL_RGB, type, data);
     }
 
     // By @andsz
     // From https://github.com/ands/spherical_harmonics_playground
-    int calculateSH(const glm::vec3 &_skyDir, const glm::vec3 &_skyX, const glm::vec3 &_skyY, glm::vec3 *_sh) {
+    int calculateSH(glm::vec3 *_sh) {
         // Calculate SH coefficients:
         int step = 16;
         int samples = 0;
@@ -68,9 +100,9 @@ struct Face {
             T *p = data + y * width * 3;
             for (int x = 0; x < width; x += step) {
                 glm::vec3 n = (
-                    (   (_skyX * ( 2.0f * ((float)x / ((float)width - 1.0f)) - 1.0f)) +
-                        (_skyY * ( -2.0f * ((float)y / ((float)height - 1.0f)) + 1.0f)) ) +
-                    _skyDir); // texelDirection;
+                    (   (skyX[id] * ( 2.0f * ((float)x / ((float)width - 1.0f)) - 1.0f)) +
+                        (skyY[id] * ( -2.0f * ((float)y / ((float)height - 1.0f)) + 1.0f)) ) +
+                    skyDir[id]); // texelDirection;
                 float l = glm::length(n);
                 glm::vec3 c_light = glm::vec3((float)p[0], (float)p[1], (float)p[2]);
                 
@@ -96,9 +128,95 @@ struct Face {
         return samples;
     }
 
-	int width;
-	int height;
+    int     id;
+	int     width;
+	int     height;
 	// for mem copy purposes only
-	int currentOffset;
-    T   *data;
+	int     currentOffset;
+    T       *data;
 };
+
+///
+///              +----------+
+///              | +---->+x |
+///              | |        |
+///              | |  +y    |
+///              |+z      2 |
+///   +----------+----------+----------+----------+
+///   | +---->+z | +---->+x | +---->-z | +---->-x |
+///   | |        | |        | |        | |        |
+///   | |  -x    | |  +z    | |  +x    | |  -z    |
+///   |-y      1 |-y      4 |-y      0 |-y      5 |
+///   +----------+----------+----------+----------+
+///              | +---->+x |
+///              | |        |
+///              | |  -y    |
+///              |-z      3 |
+///              +----------+
+///
+static const float s_faceUvVectors[6][3][3] =
+{
+    { // +x face
+        {  0.0f,  0.0f, -1.0f }, // u -> -z
+        {  0.0f, -1.0f,  0.0f }, // v -> -y
+        {  1.0f,  0.0f,  0.0f }, // +x face
+    },
+    { // -x face
+        {  0.0f,  0.0f,  1.0f }, // u -> +z
+        {  0.0f, -1.0f,  0.0f }, // v -> -y
+        { -1.0f,  0.0f,  0.0f }, // -x face
+    },
+    { // +y face
+        {  1.0f,  0.0f,  0.0f }, // u -> +x
+        {  0.0f,  0.0f,  1.0f }, // v -> +z
+        {  0.0f,  1.0f,  0.0f }, // +y face
+    },
+    { // -y face
+        {  1.0f,  0.0f,  0.0f }, // u -> +x
+        {  0.0f,  0.0f, -1.0f }, // v -> -z
+        {  0.0f, -1.0f,  0.0f }, // -y face
+    },
+    { // +z face
+        {  1.0f,  0.0f,  0.0f }, // u -> +x
+        {  0.0f, -1.0f,  0.0f }, // v -> -y
+        {  0.0f,  0.0f,  1.0f }, // +z face
+    },
+    { // -z face
+        { -1.0f,  0.0f,  0.0f }, // u -> -x
+        {  0.0f, -1.0f,  0.0f }, // v -> -y
+        {  0.0f,  0.0f, -1.0f }, // -z face
+    }
+};
+
+/// _u and _v should be center adressing and in [-1.0+invSize..1.0-invSize] range.
+static inline void texelCoordToVec(float* _out3f, float _u, float _v, uint8_t _faceId) {
+    // out = u * s_faceUv[0] + v * s_faceUv[1] + s_faceUv[2].
+    _out3f[0] = s_faceUvVectors[_faceId][0][0] * _u + s_faceUvVectors[_faceId][1][0] * _v + s_faceUvVectors[_faceId][2][0];
+    _out3f[1] = s_faceUvVectors[_faceId][0][1] * _u + s_faceUvVectors[_faceId][1][1] * _v + s_faceUvVectors[_faceId][2][1];
+    _out3f[2] = s_faceUvVectors[_faceId][0][2] * _u + s_faceUvVectors[_faceId][1][2] * _v + s_faceUvVectors[_faceId][2][2];
+
+    // Normalize.
+    const float invLen = 1.0f/sqrtf(_out3f[0]*_out3f[0] + _out3f[1]*_out3f[1] + _out3f[2]*_out3f[2]);
+    _out3f[0] *= invLen;
+    _out3f[1] *= invLen;
+    _out3f[2] *= invLen;
+}
+
+static inline void latLongFromVec(float& _u, float& _v, const float _vec[3]) {
+    const float phi = atan2f(_vec[0], _vec[2]);
+    const float theta = acosf(_vec[1]);
+
+    _u = (M_PI + phi) * (0.5f / M_PI);
+    _v = theta * M_RPI;
+}
+
+static inline uint32_t ftou(float _f) { 
+    return uint32_t(int32_t(_f)); 
+}
+
+template <typename T> 
+inline void vec3Mul(T* __restrict _result, const T* __restrict _a, float _b) {
+	_result[0] = _a[0] * _b;
+	_result[1] = _a[1] * _b;
+	_result[2] = _a[2] * _b;
+}
