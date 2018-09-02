@@ -25,6 +25,39 @@ void main(void) {\n\
     gl_Position = v_position;\n\
 }";
 
+std::string dynamic_billboard_vert = "\n\
+#ifdef GL_ES\n\
+precision mediump float;\n\
+#endif\n\
+\n\
+uniform mat4 u_modelViewProjectionMatrix;\n\
+uniform vec2 u_translate;\n\
+uniform float u_scale;\n\
+attribute vec4 a_position;\n\
+attribute vec2 a_texcoord;\n\
+varying vec2 v_texcoord;\n\
+\n\
+void main(void) {\n\
+    vec4 position = a_position;\n\
+    position.xy *= u_scale;\n\
+    position.xy += u_translate;\n\
+    v_texcoord = a_texcoord;\n\
+    gl_Position = position;\n\
+}";
+
+std::string dynamic_billboard_frag = "\n\
+#ifdef GL_ES\n\
+precision mediump float;\n\
+#endif\n\
+\n\
+uniform sampler2D u_tex0;\n\
+varying vec2 v_texcoord;\n\
+\n\
+void main(void) { \n\
+    gl_FragColor = texture2D(u_tex0, v_texcoord);\n\
+}\n";
+
+// wireframe 2D 
 std::string wireframe2D_vert = "\n\
 #ifdef GL_ES\n\
 precision mediump float;\n\

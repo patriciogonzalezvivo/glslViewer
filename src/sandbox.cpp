@@ -273,6 +273,7 @@ void Sandbox::setup( WatchFileList &_files ) {
 
     // Auxiliary Geometries and Shaders
     m_wireframe2D_shader.load(wireframe2D_frag, wireframe2D_vert, defines, false);
+    m_billboard_shader.load(dynamic_billboard_frag, dynamic_billboard_vert, defines, false);
     
     // CUBEMAP
     if (m_cubemap) {
@@ -646,7 +647,6 @@ void Sandbox::drawUI() {
             m_bbox_vbo->draw( &m_wireframe3D_shader );
             glDisable(GL_DEPTH_TEST);
         }
-
         
         // Light
         if (m_cross_vbo == nullptr)
@@ -666,6 +666,33 @@ void Sandbox::drawUI() {
             m_wireframe2D_shader.setUniform("u_modelViewProjectionMatrix", getOrthoMatrix());
             m_cross_vbo->draw(&m_wireframe2D_shader);
             glLineWidth(1.0f);
+        }
+
+        int nTotal = m_buffers.size();
+        if (m_postprocessing_enabled) {
+            nTotal += uniforms_functions["u_scene"].present + uniforms_functions["u_scene_depth"].present;
+        }
+        if (nTotal > 0) {
+            float w = (float)(getWindowWidth());
+            float h = (float)(getWindowHeight());
+            float scale = MIN(1.0f / (float)(nTotal), 0.25);
+            float xStep = w * scale * 2.0;
+            float yStep = h * scale * 2.0;
+            float xMargin = xStep * 0.05;
+            float yMargin = yStep * 0.05;
+            float xOffset = -w + xStep * 0.5 + xMargin;
+            float yOffset = h - yStep * 0.5 - yMargin;
+
+            m_textureIndex = 0;
+            m_billboard_shader.use();
+            for (unsigned int i = 0; i < m_buffers.size(); i++) {
+                m_billboard_shader.setUniform("u_scale", scale);
+                m_billboard_shader.setUniform("u_translate", xOffset/w, yOffset/h);
+                m_billboard_shader.setUniform("u_modelViewProjectionMatrix", getOrthoMatrix());
+                m_billboard_shader.setUniformTexture("u_tex0", &m_buffers[i], m_textureIndex++);
+                m_billboard_vbo->draw(&m_billboard_shader);
+                yOffset -= yStep + yMargin;
+            }
         }
     }
 

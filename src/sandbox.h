@@ -32,43 +32,43 @@ public:
     Sandbox();
     
     // Main stages
-    void        setup(WatchFileList &_files);
-    bool        reload();
-    void        draw();
-    void        drawUI();
-    void        drawDone();
-    void        clean();
+    void                    setup(WatchFileList &_files);
+    bool                    reload();
+    void                    draw();
+    void                    drawUI();
+    void                    drawDone();
+    void                    clean();
     
 
-    void        flagChange() { m_change = true; }
-    bool        haveChange();
-    bool        isReady();
+    void                    flagChange() { m_change = true; }
+    bool                    haveChange();
+    bool                    isReady();
 
-    void        record(float _start, float _end);
-    int         getRecordedPorcentage();
+    void                    record(float _start, float _end);
+    int                     getRecordedPorcentage();
 
-    void        addDefines(const std::string &_define);
-    void        delDefines(const std::string &_define);
+    void                    addDefines(const std::string &_define);
+    void                    delDefines(const std::string &_define);
 
-    void        setCubeMap(TextureCube* _cubemap) { m_cubemap = _cubemap; }
-    void        setCulling(CullingMode _culling) { m_culling = _culling; }
-    CullingMode getCulling() { return m_culling; }
+    void                    setCubeMap(TextureCube* _cubemap) { m_cubemap = _cubemap; }
+    void                    setCulling(CullingMode _culling) { m_culling = _culling; }
+    CullingMode             getCulling() { return m_culling; }
 
     // Getting some data out of Sandbox
-    std::string getSource(ShaderType _type) const;
-    int         getTotalBuffers() const { return m_buffers.size(); }
+    std::string             getSource(ShaderType _type) const;
+    int                     getTotalBuffers() const { return m_buffers.size(); }
 
-    Camera&     getCamera() { return m_cam; }
-    Light&      getLight() { return m_light; }
+    Camera&                 getCamera() { return m_cam; }
+    Light&                  getLight() { return m_light; }
 
-    void        printDependencies(ShaderType _type) const;
+    void                    printDependencies(ShaderType _type) const;
     
     // Some events
-    void        onFileChange(WatchFileList &_files, int _index);
-    void        onScroll(float _yoffset);
-    void        onScreenshot(std::string _file);
-    void        onMouseDrag(float _x, float _y, int _button);
-    void        onViewportResize(int _newWidth, int _newHeight);
+    void                    onFileChange(WatchFileList &_files, int _index);
+    void                    onScroll(float _yoffset);
+    void                    onScreenshot(std::string _file);
+    void                    onMouseDrag(float _x, float _y, int _button);
+    void                    onViewportResize(int _newWidth, int _newHeight);
    
     // User defined Uniforms 
     UniformDataList         uniforms_data;
@@ -77,32 +77,32 @@ public:
     UniformFunctionsList    uniforms_functions;
 
     // Textures
-    TextureList textures;
+    TextureList             textures;
 
     // Defines
-    List        defines;
+    List                    defines;
 
     // Include folders
-    FileList    include_folders;
+    FileList                include_folders;
 
     // Screenshot file
-    std::string screenshotFile;
+    std::string             screenshotFile;
 
     // States
-    int         frag_index;
-    int         vert_index;
-    int         geom_index;
+    int                     frag_index;
+    int                     vert_index;
+    int                     geom_index;
 
-    bool        verbose;
-    bool        cursor;
-    bool        debug;
+    bool                    verbose;
+    bool                    cursor;
+    bool                    debug;
 
 private:
-    void _updateUniforms( Shader &_shader );
-    void _updateTextures( Shader &_shader, int &_textureIndex  );
-    void _updateBuffers();
-    void _updateDependencies(WatchFileList &_files);
-    
+    void                _updateBuffers();
+    void                _updateUniforms(Shader &_shader);
+    void                _updateTextures(Shader &_shader, int &_textureIndex);
+    void                _updateDependencies(WatchFileList &_files);
+
     // Main Shader
     std::string         m_frag_source;
     std::string         m_vert_source;
@@ -146,8 +146,9 @@ private:
     bool                m_postprocessing_enabled;
 
     // Billboard
+    Shader              m_billboard_shader;
     Vbo*                m_billboard_vbo;
-
+    
     // UI
     Shader              m_wireframe2D_shader;
     Vbo*                m_cross_vbo;

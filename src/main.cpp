@@ -60,7 +60,7 @@ void printUsage(char * executableName) {
     std::cerr << "// programs. Compatible with Linux and MacOS, runs from command line with"<< std::endl;
     std::cerr << "// out X11 enviroment on RaspberryPi devices. "<< std::endl;
     std::cerr << "// "<< std::endl;
-    std::cerr << "// Usage: " << executableName << " <shader>.frag [<shader>.vert] [<mesh>.(obj/.ply)] [<texture>.(png/jpg/hdr)] [-<uniformName> <texture>.(png/jpg/hdr)] [-c <cubemap>.(png/jpg/hdr)] [-vFlip] [-x <x>] [-y <y>] [-w <width>] [-h <height>] [-l] [--square] [-s/--sec <seconds>] [-o <screenshot_file>.png] [--headless] [--cursor] [-I<include_folder>] [-D<define>] [-e/-E <command>][-v/--version] [--verbose] [--help]\n";
+    std::cerr << "// Usage: " << executableName << " <shader>.frag [<shader>.vert] [<mesh>.(obj/.ply)] [<texture>.(png/jpg/hdr)] [-<uniformName> <texture>.(png/jpg/hdr)] [-c <enviromental_map>.(png/jpg/hdr)] [-vFlip] [-x <x>] [-y <y>] [-w <width>] [-h <height>] [-l] [--square] [-s/--sec <seconds>] [-o <screenshot_file>.png] [--headless] [--cursor] [-I<include_folder>] [-D<define>] [-e/-E <command>][-v/--version] [--verbose] [--help]\n";
 }
 
 void declareCommands() {
