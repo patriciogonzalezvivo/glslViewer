@@ -17,7 +17,7 @@ Mesh lineTo(const glm::vec3 &_a, const glm::vec3 &_dir, float _size) {
 }
 
 Mesh cross (const glm::vec3 &_pos, float _width) {
-	glm::vec3 linePoints[4] = {glm::vec3(_pos.x,_pos.y,_pos.z),
+    glm::vec3 linePoints[4] = {glm::vec3(_pos.x,_pos.y,_pos.z),
         glm::vec3(_pos.x,_pos.y,_pos.z),
         glm::vec3(_pos.x,_pos.y,_pos.z),
         glm::vec3(_pos.x,_pos.y,_pos.z) };
@@ -33,96 +33,6 @@ Mesh cross (const glm::vec3 &_pos, float _width) {
     return mesh;
 }
 
-Mesh cubeCorners(const std::vector<glm::vec3> &_pts, float _size) {
-    glm::vec3 min_v;
-    glm::vec3 max_v;
-    getBoundingBox( _pts, min_v, max_v);
-    float size = glm::min(glm::length(min_v), glm::length(max_v)) * _size *  0.5;
-
-    //    D ---- A
-    // C ---- B  |
-    // |  |   |  |
-    // |  I --|- F
-    // H .... G
-
-    glm::vec3 A = max_v;
-    glm::vec3 H = min_v;
-
-    glm::vec3 B = glm::vec3(A.x, A.y, H.z);
-    glm::vec3 C = glm::vec3(H.x, A.y, H.z);
-    glm::vec3 D = glm::vec3(H.x, A.y, A.z);
-
-    glm::vec3 F = glm::vec3(A.x, H.y, A.z);
-    glm::vec3 G = glm::vec3(A.x, H.y, H.z);
-    glm::vec3 I = glm::vec3(H.x, H.y, A.z);
-
-    Mesh mesh = lineTo(A, normalize(D-A), size);
-    mesh.add( lineTo(A, normalize(B-A), size) );
-    mesh.add( lineTo(A, normalize(F-A), size) );
-
-    mesh.add( lineTo(B, normalize(A-B), size) );
-    mesh.add( lineTo(B, normalize(C-B), size) );
-    mesh.add( lineTo(B, normalize(G-B), size) );
-
-    mesh.add( lineTo(C, normalize(D-C), size) );
-    mesh.add( lineTo(C, normalize(B-C), size) );
-    mesh.add( lineTo(C, normalize(H-C), size) );
-    
-    mesh.add( lineTo(D, normalize(A-D), size) );
-    mesh.add( lineTo(D, normalize(C-D), size) );
-    mesh.add( lineTo(D, normalize(I-D), size) );
-
-    mesh.add( lineTo(F, normalize(G-F), size) );
-    mesh.add( lineTo(F, normalize(A-F), size) );
-    mesh.add( lineTo(F, normalize(I-F), size) );
-
-    mesh.add( lineTo(G, normalize(H-G), size) );
-    mesh.add( lineTo(G, normalize(F-G), size) );
-    mesh.add( lineTo(G, normalize(B-G), size) );
-
-    mesh.add( lineTo(H, normalize(I-H), size) );
-    mesh.add( lineTo(H, normalize(G-H), size) );
-    mesh.add( lineTo(H, normalize(C-H), size) );
-
-    mesh.add( lineTo(I, normalize(F-I), size) );
-    mesh.add( lineTo(I, normalize(H-I), size) );
-    mesh.add( lineTo(I, normalize(D-I), size) );
-
-    return mesh;
-}
-
-Mesh cube(float _size) {
-    float vertices[] = {
-        -_size,  _size,  _size,
-        -_size, -_size,  _size,
-        _size, -_size,  _size,
-        _size,  _size,  _size,
-        -_size,  _size, -_size,
-        -_size, -_size, -_size,
-        _size, -_size, -_size,
-        _size,  _size, -_size,
-    };
-
-    uint16_t indices[] = {
-        0, 1, 2,
-        0, 2, 3,
-        3, 2, 6,
-        3, 6, 7,
-        0, 4, 7,
-        0, 7, 3,
-        4, 6, 7,
-        4, 6, 5,
-        0, 5, 4,
-        0, 5, 1,
-        1, 6, 5,
-        1, 6, 2,
-    };
-
-    Mesh mesh;
-    mesh.addVertices(reinterpret_cast<glm::vec3*>(vertices), 8);
-    mesh.addIndices(indices, 36);
-    return mesh;
-}
 
 // Billboard
 //============================================================================
@@ -221,8 +131,156 @@ Mesh rectCorners(const Rectangle &_rect, float _width ) {
 }
 
 Mesh polyline (const std::vector<glm::vec3> &_pts ) {
-	Mesh mesh;
+    Mesh mesh;
     mesh.addVertices(_pts);
     mesh.setDrawMode(GL_LINE_STRIP);
+    return mesh;
+}
+
+Mesh cube(float _size) {
+    float vertices[] = {
+        -_size,  _size,  _size,
+        -_size, -_size,  _size,
+        _size, -_size,  _size,
+        _size,  _size,  _size,
+        -_size,  _size, -_size,
+        -_size, -_size, -_size,
+        _size, -_size, -_size,
+        _size,  _size, -_size,
+    };
+
+    uint16_t indices[] = {
+        0, 1, 2,
+        0, 2, 3,
+        3, 2, 6,
+        3, 6, 7,
+        0, 4, 7,
+        0, 7, 3,
+        4, 6, 7,
+        4, 6, 5,
+        0, 5, 4,
+        0, 5, 1,
+        1, 6, 5,
+        1, 6, 2,
+    };
+
+    Mesh mesh;
+    mesh.addVertices(reinterpret_cast<glm::vec3*>(vertices), 8);
+    mesh.addIndices(indices, 36);
+    return mesh;
+}
+
+
+Mesh cubeCorners(const std::vector<glm::vec3> &_pts, float _size) {
+    glm::vec3 min_v;
+    glm::vec3 max_v;
+    getBoundingBox( _pts, min_v, max_v);
+    float size = glm::min(glm::length(min_v), glm::length(max_v)) * _size *  0.5;
+
+    //    D ---- A
+    // C ---- B  |
+    // |  |   |  |
+    // |  I --|- F
+    // H .... G
+
+    glm::vec3 A = max_v;
+    glm::vec3 H = min_v;
+
+    glm::vec3 B = glm::vec3(A.x, A.y, H.z);
+    glm::vec3 C = glm::vec3(H.x, A.y, H.z);
+    glm::vec3 D = glm::vec3(H.x, A.y, A.z);
+
+    glm::vec3 F = glm::vec3(A.x, H.y, A.z);
+    glm::vec3 G = glm::vec3(A.x, H.y, H.z);
+    glm::vec3 I = glm::vec3(H.x, H.y, A.z);
+
+    Mesh mesh;
+    mesh.setDrawMode(GL_LINES);
+    mesh.add( lineTo(A, normalize(D-A), size) );
+    mesh.add( lineTo(A, normalize(B-A), size) );
+    mesh.add( lineTo(A, normalize(F-A), size) );
+
+    mesh.add( lineTo(B, normalize(A-B), size) );
+    mesh.add( lineTo(B, normalize(C-B), size) );
+    mesh.add( lineTo(B, normalize(G-B), size) );
+
+    mesh.add( lineTo(C, normalize(D-C), size) );
+    mesh.add( lineTo(C, normalize(B-C), size) );
+    mesh.add( lineTo(C, normalize(H-C), size) );
+    
+    mesh.add( lineTo(D, normalize(A-D), size) );
+    mesh.add( lineTo(D, normalize(C-D), size) );
+    mesh.add( lineTo(D, normalize(I-D), size) );
+
+    mesh.add( lineTo(F, normalize(G-F), size) );
+    mesh.add( lineTo(F, normalize(A-F), size) );
+    mesh.add( lineTo(F, normalize(I-F), size) );
+
+    mesh.add( lineTo(G, normalize(H-G), size) );
+    mesh.add( lineTo(G, normalize(F-G), size) );
+    mesh.add( lineTo(G, normalize(B-G), size) );
+
+    mesh.add( lineTo(H, normalize(I-H), size) );
+    mesh.add( lineTo(H, normalize(G-H), size) );
+    mesh.add( lineTo(H, normalize(C-H), size) );
+
+    mesh.add( lineTo(I, normalize(F-I), size) );
+    mesh.add( lineTo(I, normalize(H-I), size) );
+    mesh.add( lineTo(I, normalize(D-I), size) );
+
+    return mesh;
+}
+
+Mesh grid (float _width, float _height, int _columns, int _rows) {
+    Mesh mesh;
+    mesh.setDrawMode(GL_LINES);
+
+    // the origin of the plane is at the center //
+    float halfW = _width  * 0.5f;
+    float halfH = _height * 0.5f;
+
+    glm::vec3 vert;
+
+    //  . --- A
+    //  |     |
+    //  B --- .
+
+    glm::vec3 A = glm::vec3(halfW, 0.0, halfH);
+    glm::vec3 B = glm::vec3(-halfW, 0.0, -halfH);
+
+    // add the vertexes //
+    for(int iy = 0; iy != _rows; iy++) {
+        float pct = ((float)iy/((float)_rows-1));
+
+        glm::vec3 left = glm::mix(A, B, glm::vec3(0.0, 0.0, pct));
+        glm::vec3 right = glm::mix(A, B, glm::vec3(1.0, 0.0, pct));
+
+        mesh.add( line(left, right) );
+    }
+
+    for(int ix = 0; ix != _columns; ix++) {
+        float pct = ((float)ix/((float)_columns-1));
+
+        glm::vec3 top = glm::mix(A, B, glm::vec3(pct, 0.0, 0.0));
+        glm::vec3 down = glm::mix(A, B, glm::vec3(pct, 0.0, 1.0));
+
+        mesh.add( line(top, down) );
+    }
+
+    return mesh;
+}
+
+Mesh grid(float _size, int _segments) {
+    return grid(_size, _size, _segments, _segments);
+}
+
+Mesh axis(float _size) {
+    Mesh mesh;
+    mesh.setDrawMode(GL_LINES);
+
+    mesh.add( line(glm::vec3(_size,0.0,0.0), glm::vec3(-_size,0.0,0.0)));
+    mesh.add( line(glm::vec3(0.0, _size, 0.0), glm::vec3(0.0, -_size, 0.0)));
+    mesh.add( line(glm::vec3(0.0, 0.0, _size), glm::vec3(0.0, 0.0, -_size)));
+
     return mesh;
 }

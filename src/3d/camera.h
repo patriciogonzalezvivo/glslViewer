@@ -24,6 +24,7 @@ public:
     virtual glm::vec3   worldToScreen(glm::vec3 _WorldXYZ) const;
 
     //Getting Functions
+    const float         getFOV() const { return m_fov; }
     const float         getFarClip() const { return m_farClip; }
     const float         getNearClip() const { return m_nearClip; }
     const float         getDistance() const { return glm::length(getPosition()); }

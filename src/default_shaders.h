@@ -144,7 +144,7 @@ precision mediump float;\n\
 uniform vec4 u_color;\n\
 \n\
 void main(void) {\n\
-    gl_FragColor = vec4(1.0, 1.0, 0.0, 1.0);\n\
+    gl_FragColor = u_color;\n\
 }";
 
 std::string light_vert = "\n\
@@ -182,7 +182,7 @@ precision mediump float;\n\
 uniform vec4    u_color;\n\
 varying vec2    v_texcoord;\n\
 \n\
-#define AA_EDGE .001\n\
+#define AA_EDGE .007\n\
 float stroke(float x, float size, float w, float edge) {\n\
     float d = smoothstep(size - edge, size + edge, x + w * .5) - smoothstep(size - edge, size + edge, x - w * .5);\n\
     return clamp(d, 0., 1.);\n\
@@ -214,14 +214,14 @@ void main(){\n\
     vec2 st = v_texcoord;\n\
     \n\
     float sdf = circleSDF(st);\n\
-    alpha += stroke((st.y+st.x)*0.5, .5, .025);\n\
-    alpha += stroke((st.x-st.y+0.5), .5, .05);\n\
+    alpha += stroke((st.y+st.x)*0.5, .5, .03);\n\
+    alpha += stroke((st.x-st.y+0.5), .5, .06);\n\
     alpha *= fill(sdf, .9);\n\
-    alpha += stroke(st.x, .5, .04);\n\
-    alpha += stroke(st.y, .5, .04);\n\
-    alpha *= fill(sdf, .98);\n\
-    alpha *= step(.5, sdf);\n\
-    alpha += stroke(sdf, .35, .09);\n\
+    alpha += stroke(st.x, .5, .05);\n\
+    alpha += stroke(st.y, .5, .05);\n\
+    alpha *= fill(sdf, .95);\n\
+    alpha *= smoothstep(.57, .58, sdf);\n\
+    alpha += stroke(sdf, .4, .15);\n\
     \n\
     gl_FragColor = vec4(color, alpha);\n\
 }";

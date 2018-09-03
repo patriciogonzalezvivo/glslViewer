@@ -61,6 +61,7 @@ public:
 
     Camera&                 getCamera() { return m_cam; }
     Light&                  getLight() { return m_light; }
+    Node&                   getModel() { return m_model_node; }
 
     void                    printDependencies(ShaderType _type) const;
     
@@ -150,10 +151,17 @@ private:
     Shader              m_billboard_shader;
     Vbo*                m_billboard_vbo;
     
-    // UI
+    // Light
     Shader              m_light_shader;
+    Vbo*                m_light_vbo;
+
+    // Cursor
     Shader              m_wireframe2D_shader;
     Vbo*                m_cross_vbo;
+
+    // Grid
+    Vbo*                m_grid_vbo;
+    Vbo*                m_axis_vbo;
     
     // Bbox
     Shader              m_wireframe3D_shader;

@@ -505,6 +505,23 @@ void declareCommands() {
     },
     "camera_distance[,<dist>]       get or set the camera distance to the target."));
 
+    commands.push_back(Command("camera_fov", [&](const std::string& _line){ 
+        std::vector<std::string> values = split(_line,',');
+        if (values.size() == 2) {
+            consoleMutex.lock();
+            sandbox.getCamera().setFOV(toFloat(values[1]));
+            sandbox.flagChange();
+            consoleMutex.unlock();
+            return true;
+        }
+        else {
+            std::cout << sandbox.getCamera().getFOV() << std::endl;
+            return true;
+        }
+        return false;
+    },
+    "camera_fov[,<field_of_view>]   get or set the camera field of view."));
+
     commands.push_back(Command("camera_position", [&](const std::string& _line){ 
         std::vector<std::string> values = split(_line,',');
         if (values.size() == 4) {
@@ -575,6 +592,24 @@ void declareCommands() {
         return false;
     },
     "light_color[,<r>,<g>,<b>]      get or set the light color."));
+
+    commands.push_back(Command("model_position", [&](const std::string& _line){ 
+        std::vector<std::string> values = split(_line,',');
+        if (values.size() == 4) {
+            consoleMutex.lock();
+            sandbox.getModel().setPosition(glm::vec3(toFloat(values[1]),toFloat(values[2]),toFloat(values[3])));
+            sandbox.flagChange();
+            consoleMutex.unlock();
+            return true;
+        }
+        else {
+            glm::vec3 pos = sandbox.getModel().getPosition();
+            std::cout << pos.x << ',' << pos.y << ',' << pos.z << std::endl;
+            return true;
+        }
+        return false;
+    },
+    "model_position[,<x>,<y>,<z>]  get or set the model position."));
 
     commands.push_back(Command("screenshot", [&](const std::string& _line){ 
         if (_line == "screenshot" && outputFile != "") {
