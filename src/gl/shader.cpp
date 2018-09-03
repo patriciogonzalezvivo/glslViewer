@@ -108,6 +108,10 @@ bool Shader::isInUse() const {
     return (getProgram() == (GLuint)currentProgram);
 }
 
+bool Shader::isLoaded() const {
+    return m_program != 0;
+}
+
 GLuint Shader::compileShader(const std::string& _src, const std::vector<std::string> &_defines, GLenum _type) {
     std::string prolog = "";
     const char* epilog = "";

@@ -222,8 +222,7 @@ void Sandbox::setup( WatchFileList &_files ) {
         m_model_node.setPosition( -getCentroid( model.getVertices() ) );
         // 
         // Build bbox
-        m_bbox_vbo = crossCube( model.getVertices(), 0.25 ).getVbo();
-        m_wireframe3D_shader.load(wireframe3D_frag, wireframe3D_vert, defines, false);
+        m_bbox_vbo = cubeCorners( model.getVertices(), 0.25 ).getVbo();
         
         float size = getSize( model.getVertices() );
         m_cam.setDistance( size * 2.0 );
@@ -270,10 +269,6 @@ void Sandbox::setup( WatchFileList &_files ) {
 
     m_shader.load(m_frag_source, m_vert_source, defines, verbose);
     _updateDependencies( _files );
-
-    // Auxiliary Geometries and Shaders
-    m_wireframe2D_shader.load(wireframe2D_frag, wireframe2D_vert, defines, false);
-    m_billboard_shader.load(dynamic_billboard_frag, dynamic_billboard_vert, defines, false);
     
     // CUBEMAP
     if (m_cubemap) {
@@ -630,44 +625,43 @@ void Sandbox::draw() {
 
         m_billboard_vbo->draw( &m_postprocessing_shader );
     }
-
-    
 }
 
-void Sandbox::drawUI() {
+void Sandbox::drawDebug3D() {
     if (debug) {
-
         if (geom_index != -1) {
 
             // Bounding box
+            if (!m_wireframe3D_shader.isLoaded())
+                m_wireframe3D_shader.load(wireframe3D_frag, wireframe3D_vert, defines, false);
+
             glEnable(GL_DEPTH_TEST);
+            glLineWidth(2.0f);
             m_wireframe3D_shader.use();
             m_wireframe3D_shader.setUniform("u_color", glm::vec4(1.0, 1.0, 0.0, 1.0));
             m_wireframe3D_shader.setUniform("u_modelViewProjectionMatrix", m_mvp);
             m_bbox_vbo->draw( &m_wireframe3D_shader );
+            glLineWidth(1.0f);
+            
+            if (!m_light_shader.isLoaded())
+                m_light_shader.load(light_frag, light_vert, defines, false);
+
+            m_light_shader.use();
+            m_light_shader.setUniform("u_scale", 24, 24);
+            m_light_shader.setUniform("u_translate", m_light.getPosition());
+            m_light_shader.setUniform("u_color", glm::vec4(m_light.color, 1.0));
+            m_light_shader.setUniform("u_viewMatrix", m_cam.getViewMatrix());
+            m_light_shader.setUniform("u_modelViewProjectionMatrix", m_mvp);
+            m_billboard_vbo->draw( &m_light_shader );
+
             glDisable(GL_DEPTH_TEST);
         }
-        
-        // Light
-        if (m_cross_vbo == nullptr)
-            m_cross_vbo = cross(glm::vec3(0.,0.,0.1), 10.).getVbo();
-        glm::vec4 l = m_model_node.getTransformMatrix() * glm::vec4(m_light.getPosition(), 1.0);
-        glm::vec3 light_pos = m_cam.worldToScreen( glm::vec3(l.x, l.y, l.z) );
-        if (light_pos.x > 0.0 && light_pos.x < 1.0 &&
-            light_pos.y > 0.0 && light_pos.y < 1.0 && 
-            light_pos.z > 0.0 && light_pos.z < 1.0) {
-            light_pos.x *= getWindowWidth();
-            light_pos.y *= getWindowHeight();
+    }
+}
 
-            glLineWidth(2.0f);
-            m_wireframe2D_shader.use();
-            m_wireframe2D_shader.setUniform("u_color", glm::vec4(m_light.color, 1.0));
-            m_wireframe2D_shader.setUniform("u_center", light_pos.x, light_pos.y);
-            m_wireframe2D_shader.setUniform("u_modelViewProjectionMatrix", getOrthoMatrix());
-            m_cross_vbo->draw(&m_wireframe2D_shader);
-            glLineWidth(1.0f);
-        }
-
+void Sandbox::drawDebug2D() {
+    if (debug) {        
+        // DEBUG BUFFERS
         int nTotal = m_buffers.size();
         if (m_postprocessing_enabled) {
             nTotal += uniforms_functions["u_scene"].present + uniforms_functions["u_scene_depth"].present;
@@ -675,23 +669,36 @@ void Sandbox::drawUI() {
         if (nTotal > 0) {
             float w = (float)(getWindowWidth());
             float h = (float)(getWindowHeight());
-            float scale = MIN(1.0f / (float)(nTotal), 0.25);
-            float xStep = w * scale * 2.0;
-            float yStep = h * scale * 2.0;
-            float xMargin = xStep * 0.05;
-            float yMargin = yStep * 0.05;
-            float xOffset = -w + xStep * 0.5 + xMargin;
-            float yOffset = h - yStep * 0.5 - yMargin;
+            float scale = MIN(1.0f / (float)(nTotal), 0.25) * 0.5;
+            float xStep = w * scale;
+            float yStep = h * scale;
+            float margin = 5.0;
+            float xOffset = xStep + margin;
+            float yOffset = h - yStep - margin;
 
             m_textureIndex = 0;
+
+            if (!m_billboard_shader.isLoaded())
+                m_billboard_shader.load(dynamic_billboard_frag, dynamic_billboard_vert, defines, false);
+
             m_billboard_shader.use();
             for (unsigned int i = 0; i < m_buffers.size(); i++) {
-                m_billboard_shader.setUniform("u_scale", scale);
-                m_billboard_shader.setUniform("u_translate", xOffset/w, yOffset/h);
+                m_billboard_shader.setUniform("u_scale", xStep, yStep);
+                m_billboard_shader.setUniform("u_translate", xOffset, yOffset);
                 m_billboard_shader.setUniform("u_modelViewProjectionMatrix", getOrthoMatrix());
                 m_billboard_shader.setUniformTexture("u_tex0", &m_buffers[i], m_textureIndex++);
                 m_billboard_vbo->draw(&m_billboard_shader);
-                yOffset -= yStep + yMargin;
+                yOffset -= yStep * 2.0 + margin;
+            }
+            if (m_postprocessing_enabled) {
+                if (uniforms_functions["u_scene"].present) {
+                    m_billboard_shader.setUniform("u_scale", xStep, yStep);
+                    m_billboard_shader.setUniform("u_translate", xOffset, yOffset);
+                    m_billboard_shader.setUniform("u_modelViewProjectionMatrix", getOrthoMatrix());
+                    m_billboard_shader.setUniformTexture("u_tex0", &m_scene_fbo, m_textureIndex++);
+                    m_billboard_vbo->draw(&m_billboard_shader);
+                    yOffset -= yStep * 2.0 + margin;
+                }
             }
         }
     }
@@ -700,10 +707,14 @@ void Sandbox::drawUI() {
         if (m_cross_vbo == nullptr)
             m_cross_vbo = cross(glm::vec3(0.,0.,0.1), 10.).getVbo();
 
+        if (!m_wireframe2D_shader.isLoaded())
+            m_wireframe2D_shader.load(wireframe2D_frag, wireframe2D_vert, defines, false);
+
         glLineWidth(2.0f);
         m_wireframe2D_shader.use();
         m_wireframe2D_shader.setUniform("u_color", glm::vec4(1.0));
-        m_wireframe2D_shader.setUniform("u_center", getMouseX(), getMouseY());
+        m_wireframe2D_shader.setUniform("u_scale", 1.0, 1.0);
+        m_wireframe2D_shader.setUniform("u_translate", getMouseX(), getMouseY());
         m_wireframe2D_shader.setUniform("u_modelViewProjectionMatrix", getOrthoMatrix());
         m_cross_vbo->draw(&m_wireframe2D_shader);
         glLineWidth(1.0f);

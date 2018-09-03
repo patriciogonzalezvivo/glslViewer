@@ -16,24 +16,6 @@ Mesh lineTo(const glm::vec3 &_a, const glm::vec3 &_dir, float _size) {
     return line(_a, _a + normalize(_dir) * _size );
 }
 
-void drawLine(const glm::vec3 &_a, const glm::vec3 &_b){
-
-    GLfloat g_vertex_buffer_data[] = {  _a.x,_a.y,_a.z,
-                                        _b.x,_b.y,_b.z  };
-
-    glVertexAttribPointer(
-                        0,                      //vertexPosition_modelspaceID,
-                        3,                      // size
-                        GL_FLOAT,               // type
-                        GL_FALSE,               // normalized?
-                        0,                      // stride
-                        g_vertex_buffer_data    // (void*)0
-                );
-
-    glEnableVertexAttribArray ( 0 );
-    glDrawArrays(GL_LINES, 0, 2);
-};
-
 Mesh cross (const glm::vec3 &_pos, float _width) {
 	glm::vec3 linePoints[4] = {glm::vec3(_pos.x,_pos.y,_pos.z),
         glm::vec3(_pos.x,_pos.y,_pos.z),
@@ -51,35 +33,7 @@ Mesh cross (const glm::vec3 &_pos, float _width) {
     return mesh;
 }
 
-
-void drawCross(const glm::vec3 &_pos, float _width ){
-    glm::vec3 linePoints[4] = { glm::vec3(_pos.x,_pos.y,_pos.z),
-                                glm::vec3(_pos.x,_pos.y,_pos.z),
-                                glm::vec3(_pos.x,_pos.y,_pos.z),
-                                glm::vec3(_pos.x,_pos.y,_pos.z) };
-    linePoints[0].x -= _width;
-    linePoints[1].x += _width;
-    linePoints[2].y -= _width;
-    linePoints[3].y += _width;
-
-    // glEnableClientState(GL_VERTEX_ARRAY);
-    // glVertexPointer(3, GL_FLOAT, 0, &linePoints[0].x);
-    // glDrawArrays(GL_LINES, 0, 4);
-
-    glVertexAttribPointer(
-                        0,                  // vertexPosition_modelspaceID,
-                        3,                  // size
-                        GL_FLOAT,           // type
-                        GL_FALSE,           // normalized?
-                        0,                  // stride
-                        (void*)&linePoints[0].x // (void*)0
-                        );
-
-    glEnableVertexAttribArray( 0 );
-    glDrawArrays(GL_LINES, 0, 4);
-}
-
-Mesh crossCube(const std::vector<glm::vec3> &_pts, float _size) {
+Mesh cubeCorners(const std::vector<glm::vec3> &_pts, float _size) {
     glm::vec3 min_v;
     glm::vec3 max_v;
     getBoundingBox( _pts, min_v, max_v);
@@ -205,7 +159,7 @@ Mesh rect (float _x, float _y, float _w, float _h) {
     return mesh;
 }
 
-Mesh rect (const Rectangle &_rect){
+Mesh rect (const Rectangle &_rect) {
     Mesh mesh;
     mesh.addVertex(_rect.getBottomLeft());
     mesh.addColor(glm::vec4(1.0));
@@ -233,7 +187,7 @@ Mesh rect (const Rectangle &_rect){
     return mesh;
 }
 
-Mesh rectBorders(const Rectangle &_rect){
+Mesh rectBorders(const Rectangle &_rect) {
     glm::vec3 linePoints[5] = {_rect.getTopLeft(), _rect.getTopRight(), _rect.getBottomRight(), _rect.getBottomLeft(), _rect.getTopLeft()};
 
     Mesh mesh;
@@ -242,23 +196,7 @@ Mesh rectBorders(const Rectangle &_rect){
     return mesh;
 }
 
-void drawBorders( const Rectangle &_rect ){
-    glm::vec3 linePoints[5] = { _rect.getTopLeft(), _rect.getTopRight(), _rect.getBottomRight(), _rect.getBottomLeft(), _rect.getTopLeft()};
-
-    glVertexAttribPointer(
-                        0,                  //vertexPosition_modelspaceID,
-                        3,                  // size
-                        GL_FLOAT,           // type
-                        GL_FALSE,           // normalized?
-                        0,                  // stride
-                        &linePoints[0].x    // (void*)0
-                        );
-
-    glEnableVertexAttribArray ( 0 );
-    glDrawArrays(GL_LINE_STRIP, 0, 5);
-}
-
-Mesh rectCorners(const Rectangle &_rect, float _width ){
+Mesh rectCorners(const Rectangle &_rect, float _width ) {
     glm::vec3 linePoints[16] = {_rect.getTopLeft(), _rect.getTopLeft(),_rect.getTopLeft(), _rect.getTopLeft(),
                                 _rect.getTopRight(), _rect.getTopRight(),_rect.getTopRight(), _rect.getTopRight(),
                                 _rect.getBottomRight(), _rect.getBottomRight(), _rect.getBottomRight(), _rect.getBottomRight(),
@@ -282,53 +220,9 @@ Mesh rectCorners(const Rectangle &_rect, float _width ){
     return mesh;
 }
 
-void drawCorners(const Rectangle &_rect, float _width){
-    glm::vec3 linePoints[16] = {_rect.getTopLeft(), _rect.getTopLeft(),_rect.getTopLeft(), _rect.getTopLeft(),
-                                _rect.getTopRight(), _rect.getTopRight(),_rect.getTopRight(), _rect.getTopRight(),
-                                _rect.getBottomRight(), _rect.getBottomRight(), _rect.getBottomRight(), _rect.getBottomRight(),
-                                _rect.getBottomLeft(), _rect.getBottomLeft(),_rect.getBottomLeft(), _rect.getBottomLeft() };
-    linePoints[0].x += _width;
-    linePoints[3].y += _width;
-
-    linePoints[4].x -= _width;
-    linePoints[7].y += _width;
-
-    linePoints[8].x -= _width;
-    linePoints[11].y -= _width;
-
-    linePoints[12].x += _width;
-    linePoints[15].y -= _width;
-
-    glVertexAttribPointer(
-                        0,                  //vertexPosition_modelspaceID,
-                        3,                  // size
-                        GL_FLOAT,           // type
-                        GL_FALSE,           // normalized?
-                        0,                  // stride
-                        &linePoints[0].x    // (void*)0
-                        );
-
-    glEnableVertexAttribArray ( 0 );
-    glDrawArrays(GL_LINES, 0, 16);
-}
-
 Mesh polyline (const std::vector<glm::vec3> &_pts ) {
 	Mesh mesh;
     mesh.addVertices(_pts);
     mesh.setDrawMode(GL_LINE_STRIP);
     return mesh;
-}
-
-void drawPolyline(const std::vector<glm::vec3> &_pts ){
-    glVertexAttribPointer(
-                        0,          //vertexPosition_modelspaceID,
-                        3,          // size
-                        GL_FLOAT,   // type
-                        GL_FALSE,   // normalized?
-                        0,          // stride
-                        &_pts[0].x  // (void*)0
-                        );
-
-    glEnableVertexAttribArray ( 0 );
-    glDrawArrays(GL_LINE_STRIP, 0, _pts.size());
 }

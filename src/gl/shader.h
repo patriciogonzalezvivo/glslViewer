@@ -21,8 +21,10 @@ public:
     const   GLuint  getVertexShader() const { return m_vertexShader; };
     const   GLint   getAttribLocation(const std::string& _attribute) const;
     
-    void    use() const;
     bool    isInUse() const;
+    bool    isLoaded() const;
+   
+    void    use() const;
     bool    load(const std::string& _fragmentSrc, const std::string& _vertexSrc, const std::vector<std::string> &_defines, bool _verbose = false);
 
     void    setUniform(const std::string& _name, int _x);

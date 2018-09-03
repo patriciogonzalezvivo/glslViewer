@@ -974,11 +974,14 @@ int main(int argc, char **argv){
             continue;
         }
 
-        // Draw
+        // Draw Scene
         sandbox.draw();
 
-        // Draw Cursor and Debug elements
-        sandbox.drawUI();
+        // Draw 3D Debug elements
+        sandbox.drawDebug3D();
+
+        // Draw Cursor and 2D Debug elements
+        sandbox.drawDebug2D();
 
         // Finish drawing
         sandbox.drawDone();

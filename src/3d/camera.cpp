@@ -9,7 +9,7 @@
 // static const float MIN_SENSITIVITY = 10.0f;
 // static const float MAX_SENSITIVITY = 204800.0f;
 
-Camera::Camera(): m_target(0.0), m_aspect(4.0f/3.0f), m_fov(45.), m_nearClip(0.01f), m_farClip(100.0f), m_exposure(2.60417e-05), m_ev100(14.9658), m_aperture(16), m_shutterSpeed(1.0f/125.0f), m_sensitivity(100.0f), m_type(CameraType::FREE){
+Camera::Camera(): m_target(0.0), m_aspect(4.0f/3.0f), m_fov(45.), m_nearClip(0.01f), m_farClip(1000.0f), m_exposure(2.60417e-05), m_ev100(14.9658), m_aperture(16), m_shutterSpeed(1.0f/125.0f), m_sensitivity(100.0f), m_type(CameraType::FREE){
     updateCameraSettings();
 }
 

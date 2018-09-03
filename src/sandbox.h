@@ -35,7 +35,8 @@ public:
     void                    setup(WatchFileList &_files);
     bool                    reload();
     void                    draw();
-    void                    drawUI();
+    void                    drawDebug2D();
+    void                    drawDebug3D();
     void                    drawDone();
     void                    clean();
     
@@ -150,6 +151,7 @@ private:
     Vbo*                m_billboard_vbo;
     
     // UI
+    Shader              m_light_shader;
     Shader              m_wireframe2D_shader;
     Vbo*                m_cross_vbo;
     
