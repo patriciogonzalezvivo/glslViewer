@@ -1012,9 +1012,6 @@ int main(int argc, char **argv){
         // Draw Scene
         sandbox.draw();
 
-        // Draw 3D Debug elements
-        sandbox.drawDebug3D();
-
         // Draw Cursor and 2D Debug elements
         sandbox.drawDebug2D();
 
