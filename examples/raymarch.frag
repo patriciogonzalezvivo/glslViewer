@@ -2,19 +2,15 @@
 precision mediump float;
 #endif
 
-#include "glslLib/header/camera.glsl"
-
-uniform vec3        u_camera;
-uniform float        u_cameraFarClip;
-uniform float        u_cameraNearClip;
-
 uniform sampler2D   u_scene;
 uniform sampler2D   u_sceneDepth;
 
-uniform vec3        u_model;
+uniform vec3        u_camera;
+uniform float       u_cameraFarClip;
+uniform float       u_cameraNearClip;
+
 uniform vec3        u_light;
 uniform vec3        u_lightColor;
-uniform mat4        u_viewMatrix;
 uniform vec2        u_resolution;
 
 varying vec4        v_position;
