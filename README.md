@@ -185,7 +185,7 @@ vim test.frag
 You can also load both fragments and vertex shaders. Of course modifying a vertex shader makes no sense unless you load an interesting geometry. That's why `glslViewer` can load `.ply` files. Try doing:
 
 ```bash
-glslViewer bunny.frag bunny.vert bunny.ply
+glslViewer examples/head.frag examples/head.vert examples/head.ply
 ```
 
 ### 3. Loading Textures
@@ -193,7 +193,7 @@ glslViewer bunny.frag bunny.vert bunny.ply
 You can load PNGs and JPEGs images to a shader. They will be automatically loaded and assigned to a uniform name according to the order they are passed as arguments: ex. `u_tex0`, `u_tex1`, etc. Also the resolution will be assigned to `vec2` uniform according to the texture uniform's name: ex. `u_tex0Resolution`, `u_tex1Resolution`, etc.
 
 ```bash
-glslViewer test.frag test.png
+glslViewer examples/test.frag examples/test.png
 ```
 
 In case you want to assign custom names to your textures uniforms you must specify the name with a flag before the texture file. For example to pass the following uniforms `uniform sampled2D imageExample;` and  `uniform vec2 imageExampleResolution;` is defined in this way:
@@ -563,7 +563,7 @@ $ glslViewer examples/test.frag examples/test.png
 3. Open a Fragment and Vertex shader with a geometry:
 
 ```bash
-$ glslViewer examples/bunny.frag examples/bunny.vert examples/bunny.ply
+$ glslViewer examples/head.frag examples/head.vert examples/head.ply
 ```
 
 4. Open a Fragment, Geometry and CubeMap with precomputed Spherical Harmonics:
@@ -638,6 +638,12 @@ $ glslViewer example/head.ply head_default.frag
 
 ```bash
 $ glslViewer examples/head.ply examples/fresnel.vert examples/fresnel.frag -c uffizi_cross.hdr
+```
+
+13. Load a PLY file and mix it with a Iq's RayMarching scene. Note the model postion is set to 0,0,0 so it match the model matrix on the scene
+
+```hash
+$ glslViewer examples/head.ply examples/raymarch.frag -e model_position,0,0,0 
 ```
 
 ## Using glslLoader
