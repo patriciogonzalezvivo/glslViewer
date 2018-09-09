@@ -34,6 +34,7 @@ public:
     const float         getAperture() const { return m_aperture; }          //! returns this camera's aperture in f-stops
     const float         getShutterSpeed() const { return m_shutterSpeed; }  //! returns this camera's shutter speed in seconds
     const float         getSensitivity() const { return m_sensitivity; }    //! returns this camera's sensitivity in ISO
+    const glm::vec3     getTarget() const { return m_target; }
     
     const CameraType&   getType() const { return m_type;};
     const glm::mat3&    getNormalMatrix() const { return m_normalMatrix; }

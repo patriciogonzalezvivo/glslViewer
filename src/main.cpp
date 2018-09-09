@@ -527,6 +527,7 @@ void declareCommands() {
         if (values.size() == 4) {
             consoleMutex.lock();
             sandbox.getCamera().setPosition(glm::vec3(toFloat(values[1]),toFloat(values[2]),toFloat(values[3])));
+            sandbox.getCamera().lookAt(sandbox.getCamera().getTarget());
             sandbox.flagChange();
             consoleMutex.unlock();
             return true;
