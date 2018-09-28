@@ -130,7 +130,7 @@ void splitFacesHorizontal(T *_data, int _width, int _height, Face<T> **_faces ) 
 // From
 // https://github.com/dariomanesku/cmft/blob/master/src/cmft/image.cpp#L3124
 template <typename T> 
-void splitFacesFromEquilateral(T *_data, int _width, int _height, Face<T> **_faces ) {
+void splitFacesFromEquilateral(T *_data, unsigned int _width, unsigned int _height, Face<T> **_faces ) {
     // Alloc data.
     const uint32_t faceWidth = (_height + 1)/2;
     const uint32_t faceHeight = faceWidth;
