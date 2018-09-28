@@ -1116,7 +1116,6 @@ void cinWatcherThread() {
         usleep(REST_FPS);
     }
 
-
     if (execute_cmd.size() > 0) {
         bool resolve = false;
         for (unsigned int j = 0; j < execute_cmd.size(); j++) {
