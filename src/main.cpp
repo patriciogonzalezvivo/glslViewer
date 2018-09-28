@@ -33,10 +33,10 @@ int fileChanged;
 CommandList commands;
 std::mutex  consoleMutex;
 std::string outputFile      = "";
-std::string execute_cmd     = "";       // Execute commands
+std::vector<std::string> execute_cmd;       // Execute commands
 bool        execute_exit    = false;
 
-std::string version = "1.5.5";
+std::string version = "1.5.6";
 std::string name = "GlslViewer";
 std::string header = name + " " + version + " by Patricio Gonzalez Vivo ( patriciogonzalezvivo.com )"; 
 
@@ -822,11 +822,11 @@ int main(int argc, char **argv){
         }
         else if ( argument == "-e" ) {
             i++;
-            execute_cmd = std::string(argv[i]);
+            execute_cmd.push_back(std::string(argv[i]));
         }
         else if ( argument == "-E" ) {
             i++;
-            execute_cmd = std::string(argv[i]);
+            execute_cmd.push_back(std::string(argv[i]));
             execute_exit = true;
         }
         else if (argument == "-F" ) {
@@ -1116,16 +1116,20 @@ void cinWatcherThread() {
         usleep(REST_FPS);
     }
 
+
     if (execute_cmd.size() > 0) {
         bool resolve = false;
-        for (unsigned int i = 0; i < commands.size(); i++) {
-            if (beginsWith(execute_cmd, commands[i].begins_with)) {
-                if (commands[i].exec(execute_cmd)) {
-                    resolve = true;
-                    break;
+        for (unsigned int j = 0; j < execute_cmd.size(); j++) {
+            for (unsigned int i = 0; i < commands.size(); i++) {
+                if (beginsWith(execute_cmd[j], commands[i].begins_with)) {
+                    if (commands[i].exec(execute_cmd[j])) {
+                        resolve = true;
+                        break;
+                    }
                 }
             }
         }
+        execute_cmd.clear();
 
         if (execute_exit && resolve) {
             bRun.store(false);
