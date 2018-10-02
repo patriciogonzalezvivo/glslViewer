@@ -37,7 +37,7 @@ TextureCube::~TextureCube() {
 }
 
 template <typename T> 
-void splitFacesVertical(T *_data, int _width, int _height, Face<T> **_faces ) {
+void splitFacesVerticalCross(T *_data, int _width, int _height, Face<T> **_faces ) {
     int faceWidth = _width / 3;
     int faceHeight = _height / 4;
 
@@ -83,7 +83,7 @@ void splitFacesVertical(T *_data, int _width, int _height, Face<T> **_faces ) {
 }
 
 template <typename T> 
-void splitFacesHorizontal(T *_data, int _width, int _height, Face<T> **_faces ) {
+void splitFacesFromHorizontalCross(T *_data, int _width, int _height, Face<T> **_faces ) {
     int faceWidth = _width / 4;
     int faceHeight = _height / 3;
 
@@ -115,6 +115,78 @@ void splitFacesHorizontal(T *_data, int _width, int _height, Face<T> **_faces ) 
             if (iFace == 1 && jFace == 2) face = _faces[3]; // NEG_X
             if (iFace == 1 && jFace == 1) face = _faces[4]; // POS_Z
             if (iFace == 3 && jFace == 1) face = _faces[5]; // NEG_Z
+
+            if (face) {
+                // the number of components to copy
+                int n = sizeof(T) * faceWidth * 3;
+
+                std::memcpy(face->data + face->currentOffset, _data + offset, n);
+                face->currentOffset += (3 * faceWidth);
+            }
+        }
+    }
+}
+
+template <typename T> 
+void splitFacesFromHorizontalRow(T *_data, int _width, int _height, Face<T> **_faces ) {
+    int faceWidth = _width / 6;
+    int faceHeight = _height;
+
+    for (int i = 0; i < 6; i++) {
+        _faces[i] = new Face<T>();
+        _faces[i]->id = i;
+        _faces[i]->data = new T[3 * faceWidth * faceHeight];
+        _faces[i]->width = faceWidth;
+        _faces[i]->height = faceHeight;
+        _faces[i]->currentOffset = 0;
+    }
+
+    for (int l = 0; l < _height; l++) {
+        // int jFace = (l - (l % faceHeight)) / faceHeight;
+        for (int iFace = 0; iFace < 6; iFace++) {
+            Face<T> *face = NULL;
+            int offset = 3 * (faceWidth * iFace + l * _width);
+
+            //   0   1   2   3   4   5 i      
+            //  +X  -X  +Y  -Y  +Z  -Z 
+            //
+            face = _faces[iFace];
+
+            if (face) {
+                // the number of components to copy
+                int n = sizeof(T) * faceWidth * 3;
+
+                std::memcpy(face->data + face->currentOffset, _data + offset, n);
+                face->currentOffset += (3 * faceWidth);
+            }
+        }
+    }
+}
+
+template <typename T> 
+void splitFacesFromVerticalRow(T *_data, int _width, int _height, Face<T> **_faces ) {
+    int faceWidth = _width;
+    int faceHeight = _height/6;
+
+    for (int i = 0; i < 6; i++) {
+        _faces[i] = new Face<T>();
+        _faces[i]->id = i;
+        _faces[i]->data = new T[3 * faceWidth * faceHeight];
+        _faces[i]->width = faceWidth;
+        _faces[i]->height = faceHeight;
+        _faces[i]->currentOffset = 0;
+    }
+
+    for (int l = 0; l < _height; l++) {
+        int jFace = (l - (l % faceHeight)) / faceHeight;
+        for (int iFace = 0; iFace < 6; iFace++) {
+            Face<T> *face = NULL;
+            int offset = 3 * (faceWidth * iFace + l * _width);
+
+            //   0   1   2   3   4   5 j      
+            //  +X  -X  +Y  -Y  +Z  -Z 
+            //
+            face = _faces[jFace];
 
             if (face) {
                 // the number of components to copy
@@ -243,7 +315,8 @@ bool TextureCube::load(const std::string &_path, bool _vFlip) {
         Face<unsigned char> **faces = new Face<unsigned char>*[6];
 
         if (m_height > m_width) {
-            splitFacesVertical<unsigned char>(data, m_width, m_height, faces);
+            // Vertical Cross
+            splitFacesVerticalCross<unsigned char>(data, m_width, m_height, faces);
 
             // adjust NEG_Z face
             if (_vFlip) {
@@ -252,11 +325,17 @@ bool TextureCube::load(const std::string &_path, bool _vFlip) {
             }
         }
         else {
-            if (m_width/2 == m_height)  {
+            if (m_width/2 == m_height) {
+                // Equilateral
                 splitFacesFromEquilateral<unsigned char>(data, m_width, m_height, faces);
             }
+            else if (m_width/6 == m_height) {
+                // Horizontal Row
+                splitFacesFromHorizontalRow<unsigned char>(data, m_width, m_height, faces);
+            }
             else {
-                splitFacesHorizontal<unsigned char>(data, m_width, m_height, faces);
+                // Horizontal Cross
+                splitFacesFromHorizontalCross<unsigned char>(data, m_width, m_height, faces);
             }
         }
         
@@ -281,7 +360,7 @@ bool TextureCube::load(const std::string &_path, bool _vFlip) {
         Face<float> **faces = new Face<float>*[6];
 
         if (m_height > m_width) {
-            splitFacesVertical<float>(data, m_width, m_height, faces);
+            splitFacesVerticalCross<float>(data, m_width, m_height, faces);
 
             // adjust NEG_Z face
             if (_vFlip) {
@@ -292,10 +371,16 @@ bool TextureCube::load(const std::string &_path, bool _vFlip) {
         else {
 
             if (m_width/2 == m_height)  {
+                // Equilatera
                 splitFacesFromEquilateral<float>(data, m_width, m_height, faces);
             }
+            else if (m_width/6 == m_height) {
+                // Horizontal Row
+                splitFacesFromHorizontalRow<float>(data, m_width, m_height, faces);
+            }
             else {
-                splitFacesHorizontal<float>(data, m_width, m_height, faces);
+                // Horizontal Cross
+                splitFacesFromHorizontalCross<float>(data, m_width, m_height, faces);
             }
         }
 

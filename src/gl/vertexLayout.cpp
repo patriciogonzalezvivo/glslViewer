@@ -5,9 +5,6 @@ std::map<GLint, GLuint> VertexLayout::s_enabledAttribs = std::map<GLint, GLuint>
 
 std::string uniforms_common = 
 "uniform mat4 u_modelViewProjectionMatrix;\n"
-"uniform vec3 u_camera;\n"
-"uniform vec3 u_light;\n"
-"uniform vec3 u_lightColor;\n"
 "\n";
 
 VertexLayout::VertexLayout(std::vector<VertexAttrib> _attribs) : m_attribs(_attribs), m_stride(0), m_positionAttribIndex(-1), m_colorAttribIndex(-1), m_normalAttribIndex(-1), m_texCoordAttribIndex(-1), m_tangentAttribIndex(-1){

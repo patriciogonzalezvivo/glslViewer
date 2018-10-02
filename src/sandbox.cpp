@@ -27,7 +27,7 @@ Sandbox::Sandbox():
     // Camera.
     m_mvp(1.0), m_view2d(1.0), m_lat(180.0), m_lon(0.0),
     // CubeMap
-    m_cubemap_vbo(nullptr), m_cubemap(nullptr),
+    m_cubemap_vbo(nullptr), m_cubemap(nullptr), m_cubemap_draw(false),
     // Background
     m_background_enabled(false),
     // Buffers
@@ -272,7 +272,7 @@ void Sandbox::setup( WatchFileList &_files ) {
     _updateDependencies( _files );
     
     // CUBEMAP
-    if (m_cubemap) {
+    if (m_cubemap_draw) {
         m_cubemap_vbo = cube(1.0f).getVbo();
         m_cubemap_shader.load(cube_frag, cube_vert, defines, false);
     }
@@ -539,7 +539,7 @@ void Sandbox::draw() {
         m_billboard_vbo->draw( &m_background_shader );
     }
     // CUBEMAP
-    else if (geom_index != -1 && m_cubemap) {
+    else if (geom_index != -1 && m_cubemap_draw) {
         m_textureIndex = 0;
         m_cubemap_shader.use();
 

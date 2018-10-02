@@ -2,11 +2,11 @@
 
 #include "node.h"
 
-enum class CameraType {
+enum CameraType {
     ORTHO, FREE
 };
 
-class Camera : public Node {
+class Camera: public Node {
 public:
     Camera();
     virtual ~Camera();

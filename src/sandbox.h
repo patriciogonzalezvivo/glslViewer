@@ -51,7 +51,7 @@ public:
     void                    addDefines(const std::string &_define);
     void                    delDefines(const std::string &_define);
 
-    void                    setCubeMap(TextureCube* _cubemap) { m_cubemap = _cubemap; }
+    void                    setCubeMap(TextureCube* _cubemap, bool _draw = true) { m_cubemap = _cubemap; m_cubemap_draw = _draw; }
     void                    setCulling(CullingMode _culling) { m_culling = _culling; }
     CullingMode             getCulling() { return m_culling; }
 
@@ -132,6 +132,7 @@ private:
     Shader              m_cubemap_shader;
     Vbo*                m_cubemap_vbo;
     TextureCube*        m_cubemap;
+    bool                m_cubemap_draw;
     
     // Background
     Shader              m_background_shader;
