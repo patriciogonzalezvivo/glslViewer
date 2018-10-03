@@ -37,7 +37,7 @@ TextureCube::~TextureCube() {
 }
 
 template <typename T> 
-void splitFacesVerticalCross(T *_data, int _width, int _height, Face<T> **_faces ) {
+void splitFacesFromVerticalCross(T *_data, int _width, int _height, Face<T> **_faces ) {
     int faceWidth = _width / 3;
     int faceHeight = _height / 4;
 
@@ -315,14 +315,22 @@ bool TextureCube::load(const std::string &_path, bool _vFlip) {
         Face<unsigned char> **faces = new Face<unsigned char>*[6];
 
         if (m_height > m_width) {
-            // Vertical Cross
-            splitFacesVerticalCross<unsigned char>(data, m_width, m_height, faces);
 
-            // adjust NEG_Z face
-            if (_vFlip) {
-                faces[5]->flipHorizontal();
-                faces[5]->flipVertical();
+            if (m_width/6 == m_height) {
+                // Vertical Row
+                splitFacesFromVerticalRow<unsigned char>(data, m_width, m_height, faces);
             }
+            else {
+                // Vertical Cross
+                splitFacesFromVerticalCross<unsigned char>(data, m_width, m_height, faces);
+
+                // adjust NEG_Z face
+                if (_vFlip) {
+                    faces[5]->flipHorizontal();
+                    faces[5]->flipVertical();
+                }
+            }
+            
         }
         else {
             if (m_width/2 == m_height) {
@@ -360,12 +368,19 @@ bool TextureCube::load(const std::string &_path, bool _vFlip) {
         Face<float> **faces = new Face<float>*[6];
 
         if (m_height > m_width) {
-            splitFacesVerticalCross<float>(data, m_width, m_height, faces);
+            if (m_width/6 == m_height) {
+                // Vertical Row
+                splitFacesFromVerticalRow<float>(data, m_width, m_height, faces);
+            }
+            else {
+                // Vertical Cross
+                splitFacesFromVerticalCross<float>(data, m_width, m_height, faces);
 
-            // adjust NEG_Z face
-            if (_vFlip) {
-                faces[5]->flipHorizontal();
-                faces[5]->flipVertical();
+                // adjust NEG_Z face
+                if (_vFlip) {
+                    faces[5]->flipHorizontal();
+                    faces[5]->flipVertical();
+                }
             }
         }
         else {
