@@ -105,6 +105,11 @@ private:
     void                _updateTextures(Shader &_shader, int &_textureIndex);
     void                _updateDependencies(WatchFileList &_files);
 
+    void                _renderShadowMap();
+    void                _renderBuffers();
+    void                _renderBackground();
+    void                _renderGeometry();
+
     // Main Shader
     std::string         m_frag_source;
     std::string         m_vert_source;
@@ -127,6 +132,8 @@ private:
 
     // Ligth
     Light               m_light;
+    Fbo                 m_light_depthfbo;
+    // Shader              m_light_depthshader;
 
     // CubeMap
     Shader              m_cubemap_shader;

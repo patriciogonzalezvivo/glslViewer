@@ -3,10 +3,6 @@
 
 std::map<GLint, GLuint> VertexLayout::s_enabledAttribs = std::map<GLint, GLuint>();
 
-std::string uniforms_common = 
-"uniform mat4 u_modelViewProjectionMatrix;\n"
-"\n";
-
 VertexLayout::VertexLayout(std::vector<VertexAttrib> _attribs) : m_attribs(_attribs), m_stride(0), m_positionAttribIndex(-1), m_colorAttribIndex(-1), m_normalAttribIndex(-1), m_texCoordAttribIndex(-1), m_tangentAttribIndex(-1){
 
     m_stride = 0;
@@ -86,9 +82,9 @@ std::string VertexLayout::getDefaultVertShader() {
     std::string rta =
 "#ifdef GL_ES\n"
 "precision mediump float;\n"
-"#endif\n";
-
-    rta += uniforms_common;
+"#endif\n"
+"uniform mat4 u_modelViewProjectionMatrix;\n"
+"\n";
 
     for (uint i = 0; i < m_attribs.size(); i++) {
         int size = m_attribs[i].size;
@@ -133,9 +129,10 @@ std::string VertexLayout::getDefaultFragShader() {
 "#ifdef GL_ES\n"
 "precision mediump float;\n"
 "#endif\n"
+"\n"
+"uniform vec3 u_light;\n"
 "\n";
 
-    rta += uniforms_common;
 
     for (uint i = 0; i < m_attribs.size(); i++) {
         int size = m_attribs[i].size;

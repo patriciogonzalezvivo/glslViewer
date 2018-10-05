@@ -48,8 +48,9 @@ public:
     void    setUniform(const std::string& _name, const glm::mat3& _value, bool transpose = false);
     void    setUniform(const std::string& _name, const glm::mat4& _value, bool transpose = false);
 
-    void    setUniformTexture(const std::string& _name, const Fbo* _fbo, unsigned int _texLoc);
     void    setUniformTexture(const std::string& _name, const Texture* _tex, unsigned int _texLoc);
+    void    setUniformTexture(const std::string& _name, const Fbo* _fbo, unsigned int _texLoc);
+    void    setUniformDepthTexture(const std::string& _name, const Fbo* _fbo, unsigned int _texLoc);
     void    setUniformTextureCube(const std::string& _name, const TextureCube* _tex, unsigned int _texLoc);
 
     void    detach(GLenum type);

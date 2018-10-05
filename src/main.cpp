@@ -563,6 +563,7 @@ void declareCommands() {
         if (values.size() == 4) {
             consoleMutex.lock();
             sandbox.getLight().setPosition(glm::vec3(toFloat(values[1]),toFloat(values[2]),toFloat(values[3])));
+            sandbox.getLight().bChange = true;
             sandbox.flagChange();
             consoleMutex.unlock();
             return true;
@@ -599,6 +600,7 @@ void declareCommands() {
         if (values.size() == 4) {
             consoleMutex.lock();
             sandbox.getModel().setPosition(glm::vec3(toFloat(values[1]),toFloat(values[2]),toFloat(values[3])));
+            sandbox.getLight().bChange = true;
             sandbox.flagChange();
             consoleMutex.unlock();
             return true;

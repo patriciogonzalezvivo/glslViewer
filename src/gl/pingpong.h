@@ -7,7 +7,7 @@ public:
     PingPong();
     virtual ~PingPong();
 
-    void allocate(int _width, int _height, bool _depth = true);
+    void allocate(int _width, int _height, FboType _type);
     void swap();
     void clear(float _alpha = 0.0);
 

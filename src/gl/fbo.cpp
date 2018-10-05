@@ -26,7 +26,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "fbo.h"
 #include <iostream>
 
-Fbo::Fbo():m_id(0), m_old_fbo_id(0), m_texture(0), m_depth_buffer(0), m_depth_texture(0), m_width(0), m_height(0), m_allocated(false), m_binded(false), m_depth(false) {
+Fbo::Fbo():m_id(0), m_old_fbo_id(0), m_texture(0), m_depth_buffer(0), m_depth_texture(0), m_type(COLOR_TEXTURE), m_width(0), m_height(0), m_allocated(false), m_binded(false), m_depth(false) {
 }
 
 Fbo::~Fbo() {
@@ -39,17 +39,45 @@ Fbo::~Fbo() {
     }
 }
 
-void Fbo::allocate(const uint _width, const uint _height, bool _depth, bool _depth_texture) {
-    m_depth = _depth;
+void Fbo::allocate(const uint _width, const uint _height, FboType _type) {
+    m_type = _type;
+
+    bool color_texture = true;
+    bool depth_texture = false;
+
+    switch(_type) {
+        case COLOR_TEXTURE:
+            m_depth = false;
+            color_texture = true;
+            depth_texture = false;
+        break;
+        case COLOR_TEXTURE_DEPTH_BUFFER:
+            m_depth = true;
+            color_texture = true;
+            depth_texture = false;
+        break;
+        case COLOR_DEPTH_TEXTURES:
+            m_depth = true;
+            color_texture = true;
+            depth_texture = true;
+        break;
+        case DEPTH_TEXTURE:
+            m_depth = true;
+            color_texture = false;
+            depth_texture = true;
+        break;
+    }
 
     if (!m_allocated) {
         // Create a frame buffer
         glGenFramebuffers(1, &m_id);
 
-        // Generate a texture to hold the colour buffer
-        glGenTextures(1, &m_texture);
+        if (color_texture) {
+            // Generate a texture to hold the colour buffer
+            glGenTextures(1, &m_texture);
+        }
 
-        if (_depth) {
+        if (m_depth) {
             // Create a texture to hold the depth buffer
             glGenRenderbuffers(1, &m_depth_buffer);
         }
@@ -61,17 +89,19 @@ void Fbo::allocate(const uint _width, const uint _height, bool _depth, bool _dep
 
         bind();
 
-        // Color
-        glBindTexture(GL_TEXTURE_2D, m_texture);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_width, m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+        if (color_texture) {
+            // Color
+            glBindTexture(GL_TEXTURE_2D, m_texture);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_width, m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 
-        // glGenerateMipmap(GL_TEXTURE_2D);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_texture, 0);
+            // glGenerateMipmap(GL_TEXTURE_2D);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_texture, 0);
+        }
 
         // Depth Buffer
         if (m_depth) {
@@ -84,7 +114,7 @@ void Fbo::allocate(const uint _width, const uint _height, bool _depth, bool _dep
 #endif
             glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_depth_buffer);
 
-            if (_depth_texture) {
+            if (depth_texture) {
 
                 // Generate a texture to hold the depth buffer
                 if (m_depth_texture == 0) {

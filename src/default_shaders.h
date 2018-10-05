@@ -52,11 +52,29 @@ precision mediump float;\n\
 \n\
 uniform sampler2D u_tex0;\n\
 uniform vec4 u_color;\n\
+uniform float u_depth;\n\
+uniform float u_cameraNearClip;\n\
+uniform float u_cameraFarClip;\n\
+uniform float u_cameraDistance;\n\
+\n\
 varying vec2 v_texcoord;\n\
+\n\
+float linearizeDepth(float zoverw) {\n\
+	return (2.0 * u_cameraNearClip) / (u_cameraFarClip + u_cameraNearClip - zoverw * (u_cameraFarClip - u_cameraNearClip));\n\
+}\n\
+\n\
+vec3 heatmap(float v) {\n\
+    vec3 r = v * 2.1 - vec3(1.8, 1.14, 0.3);\n\
+    return 1.0 - r * r;\n\
+}\n\
 \n\
 void main(void) { \n\
     vec4 color = u_color;\n\
     color += texture2D(u_tex0, v_texcoord);\n\
+    if (u_depth > 0.0) {\n\
+        color.r = linearizeDepth(color.r) * u_cameraFarClip;\n\
+        color.rgb = heatmap(1.0 - (color.r - u_cameraDistance) * 0.01);\n\
+    }\n\
     gl_FragColor = color;\n\
 }\n";
 

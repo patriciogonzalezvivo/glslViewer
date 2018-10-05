@@ -7,9 +7,9 @@ PingPong::PingPong() {
 PingPong::~PingPong() {
 }
 
-void PingPong::allocate(int _width, int _height, bool _depth) {
+void PingPong::allocate(int _width, int _height, FboType _type) {
     for(int i = 0; i < 2; i++){
-        m_fbos[i].allocate(_width, _height, _depth);
+        m_fbos[i].allocate(_width, _height, _type);
     }
 
     clear();

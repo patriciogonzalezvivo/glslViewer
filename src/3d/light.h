@@ -8,11 +8,20 @@ enum LightType {
 
 class Light : public Node {
 public:
-    Light(): color(1.0), m_type(LIGHT_POINT){};
-    virtual ~Light() {}
+    Light();
+    virtual ~Light();
 
-    const LightType&   getType() const { return m_type; }
+    const LightType&    getType() const { return m_type; }
+    glm::mat4           getMVPMatrix( glm::mat4 _model );
+
     glm::vec3   color;
+
+    bool        bChange;
+
+protected:
+    virtual void        onPositionChanged() { bChange = true; };
+    virtual void        onOrientationChanged() { bChange = true; };
+    virtual void        onScaleChanged() { bChange = true; };
 
 private:
     LightType m_type;
