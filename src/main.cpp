@@ -21,7 +21,7 @@
 std::atomic<bool> bRun(true);
 
 #ifndef REST_FPS
-#define REST_FPS 33333
+#define REST_FPS 15000
 #endif
 
 //  List of FILES to watch and the variable to communicate that between process
