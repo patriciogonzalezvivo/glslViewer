@@ -4,7 +4,6 @@ precision mediump float;
 
 uniform sampler2D   u_scene;
 uniform sampler2D   u_sceneDepth;
-uniform sampler2D   u_sceneNormal;
 
 uniform vec2        u_resolution;
 
