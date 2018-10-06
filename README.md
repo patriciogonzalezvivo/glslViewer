@@ -649,7 +649,7 @@ $ glslViewer examples/head.ply examples/raymarch.frag -e model_position,0,0,0
 14. Load a PLY and use the shadowmap buffer and light position and matrix to cast a shadow.
 
 ```
-$ glslViewer examples/shadow.vert examples/shadow.frag examples/head.ply -e light_position,-10,20,10
+$ glslViewer examples/shadow.frag examples/head.ply -e light_position,-10,20,10
 ```
 
 ## Using glslLoader

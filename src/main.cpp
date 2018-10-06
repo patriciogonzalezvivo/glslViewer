@@ -874,6 +874,9 @@ int main(int argc, char **argv){
                 file.lastChange = st.st_mtime;
                 files.push_back(file);
 
+                sandbox.addDefines("SHADOW_MAP u_ligthShadowMap");
+                sandbox.addDefines("SHADOW_MAP_SIZE 1024.0");
+
                 sandbox.geom_index = files.size()-1;
             }
         }

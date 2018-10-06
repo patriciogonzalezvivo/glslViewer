@@ -80,25 +80,30 @@ void VertexLayout::enable(const Shader* _program) {
 
 std::string VertexLayout::getDefaultVertShader() {
     std::string rta =
-"#ifdef GL_ES\n"
-"precision mediump float;\n"
-"#endif\n"
-"uniform mat4 u_modelViewProjectionMatrix;\n"
-"\n";
+"#ifdef GL_ES\n\
+precision mediump float;\n\
+#endif\n\
+uniform mat4 u_modelViewProjectionMatrix;\n\
+\n";
 
     for (uint i = 0; i < m_attribs.size(); i++) {
         int size = m_attribs[i].size;
         if (m_positionAttribIndex == int(i)) {
             size = 4;
         }
-        rta += "attribute vec" + toString(size) + " a_" + m_attribs[i].name + ";\n";
-        rta += "varying vec" + toString(size) + " v_" + m_attribs[i].name + ";\n";
+        rta += "attribute vec" + toString(size) + "  a_" + m_attribs[i].name + ";\n";
+        rta += "varying vec" + toString(size) + "    v_" + m_attribs[i].name + ";\n";
     }
 
     rta += "\n\
 \n\
+#ifdef SHADOW_MAP\n\
+uniform mat4    u_lightMatrix;\n\
+varying vec4    v_lightcoord;\n\
+#endif\n\
+\n\
 #ifdef MODEL_HAS_TANGENTS\n\
-varying mat3 v_tangentToWorld;\n\
+varying mat3    v_tangentToWorld;\n\
 #endif\n\
 \n\
 void main(void) {\n\
@@ -113,7 +118,12 @@ void main(void) {\n\
     vec3 worldTangent = a_tangent.xyz;\n\
     vec3 worldBiTangent = cross(v_normal, worldTangent) * sign(a_tangent.w);\n\
     v_tangentToWorld = mat3(normalize(worldTangent), normalize(worldBiTangent), normalize(v_normal));\n\
-#endif\n";
+#endif\n\
+    \n\
+#ifdef SHADOW_MAP\n\
+    v_lightcoord = u_lightMatrix * v_position;\n\
+#endif\n\
+    \n";
 
     if (m_positionAttribIndex != -1 && m_positionAttribIndex < int(m_attribs.size())) {
         rta += "    gl_Position = u_modelViewProjectionMatrix * v_" + m_attribs[m_positionAttribIndex].name + ";\n";
@@ -126,12 +136,16 @@ void main(void) {\n\
 
 std::string VertexLayout::getDefaultFragShader() {
     std::string rta =
-"#ifdef GL_ES\n"
-"precision mediump float;\n"
-"#endif\n"
-"\n"
-"uniform vec3 u_light;\n"
-"\n";
+"#ifdef GL_ES\n\
+precision mediump float;\n\
+#endif\n\
+\n\
+uniform vec3    u_light;\n\
+#ifdef SHADOW_MAP\n\
+uniform sampler2DShadow   u_ligthShadowMap;\n\
+varying vec4    v_lightcoord;\n\
+#endif\n\
+\n";
 
 
     for (uint i = 0; i < m_attribs.size(); i++) {
@@ -158,8 +172,13 @@ std::string VertexLayout::getDefaultFragShader() {
     }
 
     if ( m_normalAttribIndex != -1 ){
-        rta += "    float shade = dot(v_" + m_attribs[m_normalAttribIndex].name + ", normalize(u_light));\n"
-        "    color *= smoothstep(-1.0, 1.0, shade);\n";
+        rta += 
+"    float shade = dot(v_" + m_attribs[m_normalAttribIndex].name + ", normalize(u_light));\n\
+    shade *= smoothstep(-1.0, 1.0, shade);\n\
+    #ifdef SHADOW_MAP\n\
+    shade *= 1.0 - step(shadow2DProj(u_ligthShadowMap, v_lightcoord).r, v_lightcoord.z - 0.005) * 0.5;\n\
+    #endif\n\
+    color *= shade;";
     }
 
     rta +=  "    gl_FragColor = vec4(color, 1.0);\n"

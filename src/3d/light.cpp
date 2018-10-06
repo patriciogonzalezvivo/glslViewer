@@ -1,6 +1,6 @@
 #include "light.h"
 
-Light::Light(): color(1.0), bChange(true), m_type(LIGHT_DIRECTIONAL) {
+Light::Light(): color(1.0), bChange(true), m_mvp(1.0), m_mvp_biased(1.0), m_type(LIGHT_DIRECTIONAL) {
 
 }
 

@@ -25,7 +25,8 @@ protected:
     virtual void        onScaleChanged() { bChange = true; };
 
 private:
-    LightType   m_type;
     glm::mat4   m_mvp;
     glm::mat4   m_mvp_biased;
+    
+    LightType   m_type;
 };
