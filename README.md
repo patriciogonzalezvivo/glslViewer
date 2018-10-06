@@ -652,6 +652,12 @@ $ glslViewer examples/head.ply examples/raymarch.frag -e model_position,0,0,0
 $ glslViewer examples/shadow.frag examples/head.ply -e light_position,-10,20,10
 ```
 
+15. Load a PLY and apply a SSAO on the postprocessing shader
+
+```
+$ glslViewer examples/head.ply examples/ssao.frag
+```
+
 ## Using glslLoader
 
 ```glslLoader``` is a python script that is installed together with ```glslViewer``` binary which let you download any shader made with [The book of shaders editor (editor.thebookofshaders.com) ](http://editor.thebookofshaders.com/). Just pass as argument the ***log number***
