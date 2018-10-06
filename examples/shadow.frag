@@ -5,8 +5,6 @@ precision mediump float;
 uniform vec3        u_light;
 uniform sampler2D   u_ligthShadowMap;
 
-uniform sampler2D   u_occlusionMap;
-
 varying vec4        v_position;
 varying vec3        v_normal;
 varying vec2        v_texcoord;
@@ -25,11 +23,8 @@ void main(void) {
 
     color = v_color.rgb;
 
-    float ao = texture2D(u_occlusionMap, uv).r;
-
     vec3 shadowCoord = v_lightcoord.xyz / v_lightcoord.w;
     float shadowMap = texture2D(u_ligthShadowMap, shadowCoord.xy).r;
-
 
     // From http://www.opengl-tutorial.org/intermediate-tutorials/tutorial-16-shadow-mapping/
     float cosTheta = dot(v_normal, normalize(u_light));
@@ -48,7 +43,6 @@ void main(void) {
     shadow = pow(shadow, 2.5);
     
     color *= 0.5 + shadow * 0.5;
-    color *= ao;    
 
     gl_FragColor = vec4(color, 1.0);
 }
