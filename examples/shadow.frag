@@ -4,13 +4,12 @@ precision mediump float;
 
 uniform vec3        u_light;
 uniform sampler2D   u_ligthShadowMap;
-
-varying vec4        v_position;
-varying vec3        v_normal;
-varying vec2        v_texcoord;
 varying vec4        v_lightcoord;
 
+varying vec4        v_position;
 varying vec4        v_color;
+varying vec3        v_normal;
+varying vec2        v_texcoord;
 
 #ifdef MODEL_HAS_TANGENTS
 varying vec4        v_tangent;
@@ -34,14 +33,8 @@ void main(void) {
     bias *= tan(acos(cosTheta));
     bias = clamp(bias, 0.0, 0.01);
 
-    float shadow = 1.0;
-    if ( shadowMap < shadowCoord.z - bias) {
-        shadow = 0.5;
-    }
+    float shadow = 1.0 - step( shadowMap, shadowCoord.z - bias) * 0.5;
     shadow *= shade;
-    
-    shadow = pow(shadow, 2.5);
-    
     color *= 0.5 + shadow * 0.5;
 
     gl_FragColor = vec4(color, 1.0);
