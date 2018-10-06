@@ -12,7 +12,8 @@ public:
     virtual ~Light();
 
     const LightType&    getType() const { return m_type; }
-    glm::mat4           getMVPMatrix( glm::mat4 _model );
+    glm::mat4           getMVPMatrix( const glm::mat4 &_model, float _area );
+    glm::mat4           getBiasMVPMatrix();
 
     glm::vec3   color;
 
@@ -24,5 +25,7 @@ protected:
     virtual void        onScaleChanged() { bChange = true; };
 
 private:
-    LightType m_type;
+    LightType   m_type;
+    glm::mat4   m_mvp;
+    glm::mat4   m_mvp_biased;
 };

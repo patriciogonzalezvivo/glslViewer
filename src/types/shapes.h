@@ -24,4 +24,5 @@ Mesh grid(float _size, int _segments);
 Mesh grid(float _width, float _height, int _columns, int _rows);
 
 Mesh cube(float _size);
+Mesh cubeCorners(const glm::vec3 &_min_v, const glm::vec3 &_max_v, float _size);
 Mesh cubeCorners(const std::vector<glm::vec3> &_pts, float _size = 1.0);

@@ -170,12 +170,8 @@ Mesh cube(float _size) {
     return mesh;
 }
 
-
-Mesh cubeCorners(const std::vector<glm::vec3> &_pts, float _size) {
-    glm::vec3 min_v;
-    glm::vec3 max_v;
-    getBoundingBox( _pts, min_v, max_v);
-    float size = glm::min(glm::length(min_v), glm::length(max_v)) * _size *  0.5;
+Mesh cubeCorners(const glm::vec3 &_min_v, const glm::vec3 &_max_v, float _size) {
+    float size = glm::min(glm::length(_min_v), glm::length(_max_v)) * _size *  0.5;
 
     //    D ---- A
     // C ---- B  |
@@ -183,8 +179,8 @@ Mesh cubeCorners(const std::vector<glm::vec3> &_pts, float _size) {
     // |  I --|- F
     // H .... G
 
-    glm::vec3 A = max_v;
-    glm::vec3 H = min_v;
+    glm::vec3 A = _max_v;
+    glm::vec3 H = _min_v;
 
     glm::vec3 B = glm::vec3(A.x, A.y, H.z);
     glm::vec3 C = glm::vec3(H.x, A.y, H.z);
@@ -229,6 +225,13 @@ Mesh cubeCorners(const std::vector<glm::vec3> &_pts, float _size) {
     mesh.add( lineTo(I, normalize(D-I), size) );
 
     return mesh;
+}
+
+Mesh cubeCorners(const std::vector<glm::vec3> &_pts, float _size) {
+    glm::vec3 min_v;
+    glm::vec3 max_v;
+    getBoundingBox( _pts, min_v, max_v);
+    return cubeCorners(min_v, max_v, _size);
 }
 
 Mesh grid (float _width, float _height, int _columns, int _rows) {

@@ -23,7 +23,7 @@ Sandbox::Sandbox():
     verbose(false), cursor(false), debug(false),
     // Main Vert/Frag/Geom
     m_frag_source(""), m_vert_source(""),
-    m_model_vbo(nullptr), // m_model_matrix(1.0),
+    m_model_vbo(nullptr), m_model_area(0.0),
     // Camera.
     m_mvp(1.0), m_view2d(1.0), m_lat(180.0), m_lon(0.0),
     // CubeMap
@@ -114,17 +114,11 @@ Sandbox::Sandbox():
     [this]() { return toString(m_light.color, ','); });
 
      uniforms_functions["u_lightMatrix"] = UniformFunction("mat4", [this](Shader& _shader) {
-         glm::mat4 biasMatrix(
-            0.5, 0.0, 0.0, 0.0,
-            0.0, 0.5, 0.0, 0.0,
-            0.0, 0.0, 0.5, 0.0,
-            0.5, 0.5, 0.5, 1.0
-        );
-        _shader.setUniform("u_lightMatrix", biasMatrix * m_light.getMVPMatrix( m_model_node.getTransformMatrix() ) );
+        _shader.setUniform("u_lightMatrix", m_light.getBiasMVPMatrix() );
     });
 
     uniforms_functions["u_ligthShadowMap"] = UniformFunction("sampler2D", [this](Shader& _shader) {
-        if (m_light_depthfbo.getTextureId()) {
+        if (m_light_depthfbo.getDepthTextureId()) {
             _shader.setUniformDepthTexture("u_ligthShadowMap", &m_light_depthfbo, m_textureIndex++ );
         }
     });
@@ -246,9 +240,14 @@ void Sandbox::setup( WatchFileList &_files ) {
         model.load( _files[geom_index].path );
         m_model_vbo = model.getVbo();
         m_model_node.setPosition( -getCentroid( model.getVertices() ) );
+        
         // 
         // Build bbox
-        m_bbox_vbo = cubeCorners( model.getVertices(), 0.25 ).getVbo();
+        glm::vec3 min_v;
+        glm::vec3 max_v;
+        getBoundingBox( model.getVertices(), min_v, max_v);
+        m_model_area = glm::min(glm::length(min_v), glm::length(max_v));
+        m_bbox_vbo = cubeCorners( min_v, max_v, 0.25 ).getVbo();
         
         float size = getSize( model.getVertices() );
         m_cam.setDistance( size * 2.0 );
@@ -504,12 +503,14 @@ void Sandbox::_updateDependencies(WatchFileList &_files) {
 
 // ------------------------------------------------------------------------- DRAW
 void Sandbox::_renderShadowMap() {
-    m_textureIndex = 0;
+    if (geom_index != -1 &&
+        uniforms_functions["u_ligthShadowMap"].present && 
+        m_light.bChange) {
 
-    if (uniforms_functions["u_ligthShadowMap"].present && m_light.bChange) {
+        m_textureIndex = 0;
 
         // Temporally move the MVP matrix from the view of the light 
-        m_mvp = m_light.getMVPMatrix( m_model_node.getTransformMatrix() );
+        m_mvp = m_light.getMVPMatrix( m_model_node.getTransformMatrix(), m_model_area );
         if (m_light_depthfbo.getDepthTextureId() == 0) {
             m_light_depthfbo.allocate(1024, 1024, COLOR_DEPTH_TEXTURES);
         }
@@ -517,8 +518,6 @@ void Sandbox::_renderShadowMap() {
         m_light_depthfbo.bind();
         _renderGeometry();
         m_light_depthfbo.unbind();
-
-        m_light.bChange = false;
     }
 
 }
@@ -799,7 +798,7 @@ void Sandbox::drawDebug2D() {
             }
 
 
-            if (uniforms_functions["u_ligthShadowMap"].present && m_light_depthfbo.getTextureId() ) {
+            if (uniforms_functions["u_ligthShadowMap"].present && m_light_depthfbo.getDepthTextureId() ) {
                 m_billboard_shader.setUniform("u_scale", xStep, yStep);
                 m_billboard_shader.setUniform("u_translate", xOffset, yOffset);
                 m_billboard_shader.setUniform("u_depth", float(0.0));
@@ -810,14 +809,6 @@ void Sandbox::drawDebug2D() {
                 m_billboard_shader.setUniformDepthTexture("u_tex0", &m_light_depthfbo, m_textureIndex++);
                 m_billboard_vbo->draw(&m_billboard_shader);
                 yOffset -= yStep * 2.0 + margin;
-
-                // m_billboard_shader.setUniform("u_scale", xStep, yStep);
-                // m_billboard_shader.setUniform("u_translate", xOffset, yOffset);
-                // m_billboard_shader.setUniform("u_depth", float(0.0));
-                // m_billboard_shader.setUniform("u_modelViewProjectionMatrix", getOrthoMatrix());
-                // m_billboard_shader.setUniformTexture("u_tex0", &m_light_depthfbo, m_textureIndex++);
-                // m_billboard_vbo->draw(&m_billboard_shader);
-                // yOffset -= yStep * 2.0 + margin;
             }
         }
     }

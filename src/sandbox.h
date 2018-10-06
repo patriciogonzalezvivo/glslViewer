@@ -122,6 +122,7 @@ private:
     // Geometry
     Vbo*                m_model_vbo;
     Node                m_model_node;
+    float               m_model_area;
 
     // Camera
     Camera              m_cam;
