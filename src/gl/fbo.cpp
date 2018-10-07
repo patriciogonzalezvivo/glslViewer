@@ -107,7 +107,7 @@ void Fbo::allocate(const uint _width, const uint _height, FboType _type) {
         glBindRenderbuffer(GL_RENDERBUFFER, m_depth_buffer);
 
 #ifdef PLATFORM_RPI
-        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16, m_width, m_height);
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, m_width, m_height);
 #else
         glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, m_width, m_height);
 #endif
