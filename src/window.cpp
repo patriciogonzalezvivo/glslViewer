@@ -19,7 +19,6 @@ typedef struct {
 } Mouse;
 struct timeval tv;
 static Mouse mouse;
-static bool left_mouse_button_down = false;
 static glm::vec4 mouse4 = {0.0, 0.0, 0.0, 0.0};
 static glm::ivec4 viewport;
 static double fTime = 0.0f;
@@ -68,6 +67,7 @@ double getTimeSec() {
 // OSX/Linux globals
 //----------------------------------------------------
 static GLFWwindow* window;
+static bool left_mouse_button_down = false;
 #endif
 
 void initGL (glm::ivec4 &_viewport, bool _headless, bool _alwaysOnTop) {

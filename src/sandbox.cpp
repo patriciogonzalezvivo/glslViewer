@@ -512,7 +512,11 @@ void Sandbox::_renderShadowMap() {
         // Temporally move the MVP matrix from the view of the light 
         m_mvp = m_light.getMVPMatrix( m_model_node.getTransformMatrix(), m_model_area );
         if (m_light_depthfbo.getDepthTextureId() == 0) {
+#ifdef PLATFORM_RPI
+            m_light_depthfbo.allocate(512, 512, COLOR_DEPTH_TEXTURES);
+#else
             m_light_depthfbo.allocate(1024, 1024, COLOR_DEPTH_TEXTURES);
+#endif
         }
 
         m_light_depthfbo.bind();

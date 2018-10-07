@@ -875,8 +875,11 @@ int main(int argc, char **argv){
                 files.push_back(file);
 
                 sandbox.addDefines("SHADOW_MAP u_ligthShadowMap");
+#ifdef PLATFORM_RPI
+                sandbox.addDefines("SHADOW_MAP_SIZE 512.0");
+#else
                 sandbox.addDefines("SHADOW_MAP_SIZE 1024.0");
-
+#endif
                 sandbox.geom_index = files.size()-1;
             }
         }
