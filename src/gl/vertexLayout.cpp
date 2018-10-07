@@ -141,10 +141,6 @@ precision mediump float;\n\
 #endif\n\
 \n\
 uniform vec3    u_light;\n\
-#ifdef SHADOW_MAP\n\
-uniform sampler2DShadow   u_ligthShadowMap;\n\
-varying vec4    v_lightcoord;\n\
-#endif\n\
 \n";
 
 
@@ -175,9 +171,6 @@ varying vec4    v_lightcoord;\n\
         rta += 
 "    float shade = dot(v_" + m_attribs[m_normalAttribIndex].name + ", normalize(u_light));\n\
     shade *= smoothstep(-1.0, 1.0, shade);\n\
-    #ifdef SHADOW_MAP\n\
-    shade *= 1.0 - step(shadow2DProj(u_ligthShadowMap, v_lightcoord).r, v_lightcoord.z - 0.005) * 0.5;\n\
-    #endif\n\
     color *= shade;";
     }
 
