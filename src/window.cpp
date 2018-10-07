@@ -66,8 +66,8 @@ double getTimeSec() {
 
 // OSX/Linux globals
 //----------------------------------------------------
-static GLFWwindow* window;
 static bool left_mouse_button_down = false;
+static GLFWwindow* window;
 #endif
 
 void initGL (glm::ivec4 &_viewport, bool _headless, bool _alwaysOnTop) {
