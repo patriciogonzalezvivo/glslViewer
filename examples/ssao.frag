@@ -42,7 +42,7 @@ float calcAO( float depth, float dw, float dh ) {
     return (step(readDepth( v_texcoord + vv), depth) + step(readDepth( v_texcoord - vv), depth) ) * 0.5;
 }
 
-// Thanks to Paul Haeberli ( @GraficaObscura ) for this code
+// Thanks to Paul Haeberli ( @GraficaObscura ) for this code derived from the three.js ambient occlusion example
 float ssao(vec2 st) {
     vec2 noise = SSAO_RANDOM_FNC( st ) * SSAO_NOISE_AMOUNT; 
     float depth = readDepth( st ); 
@@ -65,8 +65,9 @@ float ssao(vec2 st) {
             z = z - dz; 
             l = l + SSAO_DL; 
         } 
-        ao = 1.0 - ao / float( SSAO_SAMPLES ); 
-        ao = clamp( 1.98 * ( 1.0 - ao ), 0.0, 1.0 );
+
+        ao = ao / float( SSAO_SAMPLES );
+        ao = clamp( 1.98 * ao, 0.0, 1.0 ); // 1.98 scaling is to make it so the ambient occlusion calculation does not brighten exposed details 
     }
     return ao;
 }
