@@ -72,6 +72,25 @@ sudo dpkg -i glslviewer_1.5_amd64.deb
 
 This was tested with the Debian testing distribution on January 28th 2018.
 
+### Installing on Fedora
+
+Install the GLFW 3 library, build tools are already included in the base install.
+
+```bash
+sudo dnf install mesa-libGLU-devel glfw-devel libXi-devel
+```
+
+Download the glslViewer code, compile and install:
+
+```bash
+git clone http://github.com/patriciogonzalezvivo/glslViewer
+cd glslViewer
+make
+sudo make install
+```
+
+This was tested on Fedora 28.
+
 ### Installing on Raspberry Pi
 
 Get [Raspbian](https://www.raspberrypi.org/downloads/raspbian/), a Debian-based Linux distribution made for Raspberry Pi and then do:
