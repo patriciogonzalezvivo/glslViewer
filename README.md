@@ -218,7 +218,7 @@ Beside for texture uniforms other arguments can be add to `glslViewer`:
 
 * `-o <image.png>` save the viewport to an image file before
 
-* `-e <command>` excecute command when start
+* `-e <command>` excecute command when start. Multiple `-e` flags can be chained
 
 * `-E <command>` excecute command then exit
 
