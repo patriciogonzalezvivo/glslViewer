@@ -1,6 +1,6 @@
 # glslViewer [![Build Status](https://travis-ci.org/patriciogonzalezvivo/glslViewer.svg?branch=master)](https://travis-ci.org/patriciogonzalezvivo/glslViewer)
 
-![](https://patriciogonzalezvivo.com/images/glslViewer-00.gif)
+![](http://patriciogonzalezvivo.com/images/glslViewer-00.gif)
 
 [![Donate](https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=4BQMKQJDQ9XH6)
 
@@ -178,7 +178,7 @@ sudo make install_python
 
 ### 1. Loading a single Fragment shader
 
-![](https://patriciogonzalezvivo.com/images/glslViewer.gif)
+![](http://patriciogonzalezvivo.com/images/glslViewer.gif)
 
 In the most simple scenario you just want to load a fragment shader. For that you need to:
 
@@ -201,7 +201,7 @@ vim test.frag
 
 ### 2. Loading a Vertex shader and a geometrie
 
-![](https://patriciogonzalezvivo.com/images/glslViewer-3D.gif)
+![](http://patriciogonzalezvivo.com/images/glslViewer-3D.gif)
 
 You can also load both fragments and vertex shaders. Of course modifying a vertex shader makes no sense unless you load an interesting geometry. That's why `glslViewer` can load `.ply` files. Try doing:
 
@@ -267,7 +267,7 @@ Beside for texture uniforms other arguments can be add to `glslViewer`:
 
 ### Console IN commands
 
-![](https://patriciogonzalezvivo.com/images/glslViewer-01.gif)
+![](http://patriciogonzalezvivo.com/images/glslViewer-01.gif)
 
 Once glslViewer is running the CIN is listening for some commands, so you can pass data through regular *nix pipes.
 
@@ -480,7 +480,7 @@ void main(void) {
 
 ### Using the defines flags to draw the a postprocessing layer
 
-![](https://patriciogonzalezvivo.com/images/glslViewer-dof.gif)
+![](http://patriciogonzalezvivo.com/images/glslViewer-dof.gif)
 
 Also when loading 3D models it's posible to add a postprocessing layer adding a `#ifdef POSTPROCESSING` to branch the logic of the shader. To apply a postprocessing layer you need to read the scene as a texture, this is saved on the `uniform sampler2D u_scene;` texture together with a depth render pass of the scene loacated in `uniform sampler2D u_scene_depth;`. Here is an example of a cheap DoF at `examples/model_postprocessing.frag`
 
