@@ -296,15 +296,15 @@ void initGL (glm::ivec4 &_viewport, bool _headless, bool _alwaysOnTop) {
             // Lunch events
             if (mouse.button == 0 && button != mouse.button) {
                 mouse.button = button;
-                onMouseClick(mouse.x,mouse.y,mouse.button);
+                onMouseClick(mouse.x, mouse.y, mouse.button);
             }
             else {
                 mouse.button = button;
             }
 
             if (mouse.velX != 0.0 || mouse.velY != 0.0) {
-                if (button != 0) onMouseDrag(mouse.x,mouse.y,mouse.button);
-                else onMouseMove(mouse.x,mouse.y);
+                if (button != 0) onMouseDrag(mouse.x, mouse.y, mouse.button);
+                else onMouseMove(mouse.x, mouse.y);
             }
         });
 

@@ -39,7 +39,7 @@ Sandbox::Sandbox():
     // Record
     m_record_start(0.0f), m_record_head(0.0f), m_record_end(0.0f), m_record_counter(0), m_record(false),
     // Scene
-    m_culling(NONE), m_textureIndex(0), m_change(true), m_ready(false) {
+    m_culling(NONE), m_textureIndex(0), m_frame(0), m_change(true) {
 
     // Adding default deines
     defines.push_back("GLSLVIEWER 1");
@@ -318,7 +318,7 @@ void Sandbox::setup( WatchFileList &_files ) {
     m_buffers.clear();
     _updateBuffers();
 
-    m_ready = true;
+    m_change = true;
 }
 
 void Sandbox::addDefines(const std::string &_define) {
@@ -336,7 +336,7 @@ void Sandbox::delDefines(const std::string &_define) {
 // ------------------------------------------------------------------------- GET
 
 bool Sandbox::isReady() {
-    return m_ready;
+    return m_frame > 0;
 }
 
 bool Sandbox::haveChange() { 
@@ -583,9 +583,6 @@ void Sandbox::_renderBackground() {
 }
 
 void Sandbox::_renderGeometry() {
-    // Clear the background
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    
     m_textureIndex = 0;
     
     // Begining of DEPTH for 3D 
@@ -652,6 +649,9 @@ void Sandbox::draw() {
     if (m_postprocessing_enabled) {
         m_scene_fbo.bind();
     }
+
+    // Clear the background
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // RENDER BACKGROUND
     _renderBackground();
@@ -855,6 +855,7 @@ void Sandbox::drawDone() {
         screenshotFile = "";
     }
 
+    m_frame++;
     m_change = false;
 }
 
@@ -994,12 +995,11 @@ void Sandbox::onScroll(float _yoffset) {
 
 void Sandbox::onMouseDrag(float _x, float _y, int _button) {
     if (_button == 1) {
-
         // Left-button drag is used to rotate geometry.
         float dist = m_cam.getDistance();
         m_lat -= getMouseVelX();
-        m_lon -= getMouseVelY()*0.5;
-        m_cam.orbit(m_lat ,m_lon, dist);
+        m_lon -= getMouseVelY() * 0.5;
+        m_cam.orbit(m_lat, m_lon, dist);
         m_cam.lookAt(glm::vec3(0.0));
 
         // Left-button drag is used to pan u_view2d.
@@ -1013,8 +1013,6 @@ void Sandbox::onMouseDrag(float _x, float _y, int _button) {
         if (dist > 0.0f) {
             m_cam.setDistance( dist );
         }
-
-        // TODO: rotate view2d.
 
     }
 

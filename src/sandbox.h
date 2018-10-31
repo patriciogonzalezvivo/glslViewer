@@ -186,6 +186,6 @@ private:
     // Scene
     CullingMode         m_culling;
     int                 m_textureIndex;
+    unsigned int        m_frame;
     bool                m_change;
-    bool                m_ready;
 };
