@@ -4,7 +4,7 @@
 
 [![Donate](https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=4BQMKQJDQ9XH6)
 
-Swiss army knife of GLSL Shaders. Loads frag/vertex shaders, images and geometries. Will reload automatically on changes. Support for multi buffers, baground and postprocessing passes. Can render headlessly and into a file. Use POSIX STANDARD CONSOLE IN/OUT to comunicate (uniforms, camera position, scene description and commands) to and with other programs. Compatible with Linux and MacOS, runs from command line with out X11 enviroment on RaspberryPi devices. 
+Swiss army knife of GLSL Shaders. Loads frag/vertex shaders, images and geometries. Will reload automatically on changes. Support for multi buffers, background and postprocessing passes. Can render headlessly and into a file. Use POSIX STANDARD CONSOLE IN/OUT to communicate (uniforms, camera position, scene description and commands) to and with other programs. Compatible with Linux and MacOS, runs from command line with out X11 environment on RaspberryPi devices. 
 
 ## Install
 
@@ -29,7 +29,7 @@ sudo make install
 
 This was tested with Ubuntu 16.04.
 
-** Important Note ** : Glfw3 library in Ubuntu 18.04 is causing trobles. For that you need to compile gldw3 from source (next paragraph)
+** Important Note ** : Glfw3 library in Ubuntu 18.04 is causing troubles. For that you need to compile glfw3 from source (next paragraph)
 
 These instructions may not work for all users.
 For example, it seems that libglfw3-dev conflicts with the older libglfw-dev.
@@ -99,7 +99,7 @@ Get [Raspbian](https://www.raspberrypi.org/downloads/raspbian/), a Debian-based 
 sudo apt-get install glslviewer
 ```
 
-** Important Note ** : pushing versions on the official Raspbian distribution takes time. If you are searching for the last feautures please compile from source (next paragraph).
+** Important Note ** : pushing versions on the official Raspbian distribution takes time. If you are searching for the last features please compile from source (next paragraph).
 
 Or, if you want to compile the code yourself:
 
@@ -133,7 +133,7 @@ brew upgrade
 brew install glslviewer
 ```
 
-** Important Note ** : brew not always have the last version of GlslViewer. If you are searching for the last feautures please compile from source (next paragraph).
+** Important Note ** : brew not always have the last version of GlslViewer. If you are searching for the last features please compile from source (next paragraph).
 
 If you prefer to compile from source directly from this repository you need to [install GLFW](http://www.glfw.org), `pkg-config` first and then download the code, compile and install.
 
@@ -160,7 +160,7 @@ make install
 
 ### Install Python wrapper
 
-GlslViewer now ships with a Python package. It's essentially a wrapper that allows to compile, benchmaark and render shaders from a Python script.
+GlslViewer now ships with a Python package. It's essentially a wrapper that allows to compile, benchmark and render shaders from a Python script.
 
 1. First make sure you have the setup tools
 
@@ -168,7 +168,7 @@ GlslViewer now ships with a Python package. It's essentially a wrapper that allo
 sudo apt install python-setuptools
 ```
 
-2. Once you compile the binnaries do
+2. Once you compile the binaries do
 
 ```bash
 sudo make install_python
@@ -199,7 +199,7 @@ vim test.frag
 
 **Note**: On Linux and macOS you may used to edit your shaders with Sublime Text, if that's your case you should try this [Sublime Text 2 plugin that launch glslViewer every time you open a shader](https://packagecontrol.io/packages/glslViewer).
 
-### 2. Loading a Vertex shader and a geometrie
+### 2. Loading a Vertex shader and a geometry
 
 ![](http://patriciogonzalezvivo.com/images/glslViewer-3D.gif)
 
@@ -239,9 +239,9 @@ Beside for texture uniforms other arguments can be add to `glslViewer`:
 
 * `-o <image.png>` save the viewport to an image file before
 
-* `-e <command>` excecute command when start. Multiple `-e` flags can be chained
+* `-e <command>` execute command when start. Multiple `-e` flags can be chained
 
-* `-E <command>` excecute command then exit
+* `-E <command>` execute command then exit
 
 * `-l` in the RaspberryPi will draw the viewport in a 500x500 billboard on the top right corner of the screen that let you see the code and the shader at the same time. While in MacOS and Linux will display the windows always-on-top (this requires GLFW 3.2).
 
@@ -255,7 +255,7 @@ Beside for texture uniforms other arguments can be add to `glslViewer`:
 
 * `-<texture_uniform_name> <texture>.(png|jpg|hdr)`: add textures associated with different `uniform sampler2D` names
 
-* `-c <enviromental_map>.(png/jpg/hdr)`: load a enviromental map (cubemap or sphericalmap) 
+* `-c <environmental_map>.(png/jpg/hdr)`: load a environmental map (cubemap or sphericalmap) 
 
 * `-vFlip` all textures after will be flipped vertically
 
@@ -381,7 +381,7 @@ Beside the defines you can pass as an argument using `-D[define]` you can relay 
 
 * `PLATFORM_LINUX`: added only in i86 and 64bit Linux platforms.
 
-* `BUFFER_[NUMBER]`: added extra buffer passes trough branching subshader. Each one renders to `uniform sampler2D u_buffer[NUMBER];`. (Readmore more about it in the next section)
+* `BUFFER_[NUMBER]`: added extra buffer passes trough branching subshader. Each one renders to `uniform sampler2D u_buffer[NUMBER];`. (Read more about it in the next section)
 
 * `BACKGROUND`: added a background subshader when rendering a 3D geometry.
 
@@ -422,7 +422,7 @@ You can use multiple buffers by forking the code using `#ifdef BUFFER_[number]`,
     }
 ```
 
-There is a more extense example on `examples/test_multibuffer.frag` and `examples/grayscott.frag`.
+There is an extended example on `examples/test_multibuffer.frag` and `examples/grayscott.frag`.
 
 ### Using the defines flags to draw the background
 
@@ -482,7 +482,7 @@ void main(void) {
 
 ![](http://patriciogonzalezvivo.com/images/glslViewer-dof.gif)
 
-Also when loading 3D models it's posible to add a postprocessing layer adding a `#ifdef POSTPROCESSING` to branch the logic of the shader. To apply a postprocessing layer you need to read the scene as a texture, this is saved on the `uniform sampler2D u_scene;` texture together with a depth render pass of the scene loacated in `uniform sampler2D u_scene_depth;`. Here is an example of a cheap DoF at `examples/model_postprocessing.frag`
+Also when loading 3D models it's possible to add a postprocessing layer adding a `#ifdef POSTPROCESSING` to branch the logic of the shader. To apply a postprocessing layer you need to read the scene as a texture, this is saved on the `uniform sampler2D u_scene;` texture together with a depth render pass of the scene located in `uniform sampler2D u_scene_depth;`. Here is an example of a cheap DoF at `examples/model_postprocessing.frag`
 
 ```glsl
 uniform sampler2D u_scene;          // Scene RGB
@@ -609,7 +609,7 @@ $ glslViewer examples/grayscott.frag
 $ glslViewer examples/test_platform.frag
 ```
 
-6. Make an image secuence of 500x500 pixel each from an animating shader from second 0 to second 1
+6. Make an image sequence of 500x500 pixel each from an animating shader from second 0 to second 1
 
 ```bash
 $ glslViewer examples/cross.frag -w 500 -h 500 
@@ -665,7 +665,7 @@ $ glslViewer example/head.ply head_default.frag
 $ glslViewer examples/head.ply examples/fresnel.vert examples/fresnel.frag -c uffizi_cross.hdr
 ```
 
-13. Load a PLY file and mix it with a Iq's RayMarching scene. Note the model postion is set to 0,0,0 so it match the model matrix on the scene
+13. Load a PLY file and mix it with a Iq's RayMarching scene. Note the model position is set to 0,0,0 so it match the model matrix on the scene
 
 ```hash
 $ glslViewer examples/head.ply examples/raymarch.frag -e model_position,0,0,0 
