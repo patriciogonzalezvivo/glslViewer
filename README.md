@@ -309,11 +309,11 @@ u_myVec3,0.0,0.5,0.0
 
 * `date`                            return `u_date` as YYYY, M, D and Secs.
 
-* `frag[,<filename>]`               returns or save the fragment shader source code.
+* `frag[,<line_number>|<filename>]` returns a line or save the entire fragment shader source code.
 
-* `vert[,<filename>]`               returns or save the vertex shader source code.
+* `vert[,<line_number>|<filename>]` returns a line or save the entire vertex shader source code.
 
-* `dependencies[,vert|frag]`        returns all the dependencies of the vertex o fragment shader or both.
+* `dependencies[,vert|frag]`        returns a list of all the dependencies of the vertex o fragment shader or both.
 
 * `files`                           return a list of files.
 
