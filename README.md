@@ -199,7 +199,7 @@ vim test.frag
 
 **Note**: On Linux and macOS you may used to edit your shaders with Sublime Text, if that's your case you should try this [Sublime Text 2 plugin that launch glslViewer every time you open a shader](https://packagecontrol.io/packages/glslViewer).
 
-### 2. Loading a Vertex shader and a geometrie
+### 2. Loading geometry and a vertex shader
 
 ![](http://patriciogonzalezvivo.com/images/glslViewer-3D.gif)
 
