@@ -359,11 +359,34 @@ u_myVec3,0.0,0.5,0.0
 
 * `uniform vec3 u_camera`: Position of the camera
 
+* `uniform float u_cameraFarClip`: far clipping
+
+* `uniform float u_cameraNearClip`: near clipping
+
+* `uniform float u_cameraDistance`: camera distance to target (0,0,0)
+
+* `uniform mat3 u_normalMatrix`: Normal Matrix
+
+* `uniform mat4 u_modelMatrix`: Model Matrix
+
+* `uniform mat4 u_viewMatrix`: View Matrix
+
+* `uniform mat4 u_projectionMatrix`: Projection Matrix
+
+* `uniform mat4 u_modelViewProjectionMatrix`: Model + View + Projection Matrix
+
 * `uniform vec3 u_light`: Position of the light
 
 * `uniform vec3 u_lightColor`: Color of the light
 
-* `uniform vec2 u_view2d`: 2D position of viewport that can be changed by dragging
+* `uniform mat4 u_lightMatrix`: Light Matrix for reprojecting shadows
+
+* `uniform sampler2DShadow u_ligthShadowMap`: Shadow map
+
+* `uniform samplerCube u_cubeMap`:  loaded cubemap
+
+* `uniform vec3 u_SH[9]`: Pre computed Spherical Harmonics of the loaded cubemap
+
 
 ### Including dependent files with `#include`
 
@@ -377,18 +400,31 @@ Beside the defines you can pass as an argument using `-D[define]` you can relay 
 
 * `GLSLVIEWER`: you can use it to tell your shader it's being render in GlslViewer.
 
+Depending on the platform
+
 * `PLATFORM_OSX`: added only on MacOS/OSX platforms.
 
 * `PLATFORM_RPI`: added only only on RaspberryPi devices.
 
 * `PLATFORM_LINUX`: added only in i86 and 64bit Linux platforms.
 
+Depending on the geometry:
+
+* `MODEL_HAS_TEXCOORDS`
+
+* `MODEL_HAS_NORMALS`
+
+* `MODEL_HAS_COLORS`
+
+* `MODEL_HAS_TANGENTS`
+
+The following defines fork and reuse the same shader program in different passes
+
 * `BUFFER_[NUMBER]`: added extra buffer passes trough branching subshader. Each one renders to `uniform sampler2D u_buffer[NUMBER];`. (Readmore more about it in the next section)
 
 * `BACKGROUND`: added a background subshader when rendering a 3D geometry.
 
 * `POSTPROCESSING`: added a post-processing pass where the main scene have been render to `uniform sampler2D u_scene;`.
-
 
 ### Using the defines flags to use multiple buffer passes
 
