@@ -199,7 +199,8 @@ vim test.frag
 
 **Note**: On Linux and macOS you may used to edit your shaders with Sublime Text, if that's your case you should try this [Sublime Text 2 plugin that launch glslViewer every time you open a shader](https://packagecontrol.io/packages/glslViewer).
 
-### 2. Loading a Vertex shader and a geometry
+
+### 2. Loading geometry and a vertex shader
 
 ![](http://patriciogonzalezvivo.com/images/glslViewer-3D.gif)
 
@@ -287,6 +288,10 @@ u_myVec3,0.0,0.5,0.0
 
 * `version`                         return glslViewer version.
 
+* `debug,[on|off]`                  turn debug mode on or off.
+
+* `window_width`                    return the width of the windows.
+
 * `window_height`                   return the height of the windows.
 
 * `pixel_density`                   return the pixel density.
@@ -305,11 +310,11 @@ u_myVec3,0.0,0.5,0.0
 
 * `date`                            return `u_date` as YYYY, M, D and Secs.
 
-* `frag[,<filename>]`               returns or save the fragment shader source code.
+* `frag[,<line_number>|<filename>]` returns a line or save the entire fragment shader source code.
 
-* `vert[,<filename>]`               returns or save the vertex shader source code.
+* `vert[,<line_number>|<filename>]` returns a line or save the entire vertex shader source code.
 
-* `dependencies[,vert|frag]`        returns all the dependencies of the vertex o fragment shader or both.
+* `dependencies[,vert|frag]`        returns a list of all the dependencies of the vertex o fragment shader or both.
 
 * `files`                           return a list of files.
 
@@ -324,8 +329,6 @@ u_myVec3,0.0,0.5,0.0
 * `uniforms[,all|active]`           return a list of all uniforms and their values or just the one active (default).
 
 * `textures`                        return a list of textures as their uniform name and path.
-
-* `window_width`                    return the width of the windows.
 
 * `camera_distance[,<dist>]`        get or set the camera distance to the target.
 
@@ -357,11 +360,34 @@ u_myVec3,0.0,0.5,0.0
 
 * `uniform vec3 u_camera`: Position of the camera
 
+* `uniform float u_cameraFarClip`: far clipping
+
+* `uniform float u_cameraNearClip`: near clipping
+
+* `uniform float u_cameraDistance`: camera distance to target (0,0,0)
+
+* `uniform mat3 u_normalMatrix`: Normal Matrix
+
+* `uniform mat4 u_modelMatrix`: Model Matrix
+
+* `uniform mat4 u_viewMatrix`: View Matrix
+
+* `uniform mat4 u_projectionMatrix`: Projection Matrix
+
+* `uniform mat4 u_modelViewProjectionMatrix`: Model + View + Projection Matrix
+
 * `uniform vec3 u_light`: Position of the light
 
 * `uniform vec3 u_lightColor`: Color of the light
 
-* `uniform vec2 u_view2d`: 2D position of viewport that can be changed by dragging
+* `uniform mat4 u_lightMatrix`: Light Matrix for reprojecting shadows
+
+* `uniform sampler2DShadow u_ligthShadowMap`: Shadow map
+
+* `uniform samplerCube u_cubeMap`:  loaded cubemap
+
+* `uniform vec3 u_SH[9]`: Pre computed Spherical Harmonics of the loaded cubemap
+
 
 ### Including dependent files with `#include`
 
@@ -375,18 +401,31 @@ Beside the defines you can pass as an argument using `-D[define]` you can relay 
 
 * `GLSLVIEWER`: you can use it to tell your shader it's being render in GlslViewer.
 
+Depending on the platform
+
 * `PLATFORM_OSX`: added only on MacOS/OSX platforms.
 
 * `PLATFORM_RPI`: added only only on RaspberryPi devices.
 
 * `PLATFORM_LINUX`: added only in i86 and 64bit Linux platforms.
 
+Depending on the geometry:
+
+* `MODEL_HAS_TEXCOORDS`
+
+* `MODEL_HAS_NORMALS`
+
+* `MODEL_HAS_COLORS`
+
+* `MODEL_HAS_TANGENTS`
+
+The following defines fork and reuse the same shader program in different passes
+
 * `BUFFER_[NUMBER]`: added extra buffer passes trough branching subshader. Each one renders to `uniform sampler2D u_buffer[NUMBER];`. (Read more about it in the next section)
 
 * `BACKGROUND`: added a background subshader when rendering a 3D geometry.
 
 * `POSTPROCESSING`: added a post-processing pass where the main scene have been render to `uniform sampler2D u_scene;`.
-
 
 ### Using the defines flags to use multiple buffer passes
 
