@@ -287,7 +287,9 @@ u_myVec3,0.0,0.5,0.0
 
 * `version`                         return glslViewer version.
 
-* `debug,[on|off]`                  turn debug mode on or off 
+* `debug,[on|off]`                  turn debug mode on or off.
+
+* `window_width`                    return the width of the windows.
 
 * `window_height`                   return the height of the windows.
 
@@ -326,8 +328,6 @@ u_myVec3,0.0,0.5,0.0
 * `uniforms[,all|active]`           return a list of all uniforms and their values or just the one active (default).
 
 * `textures`                        return a list of textures as their uniform name and path.
-
-* `window_width`                    return the width of the windows.
 
 * `camera_distance[,<dist>]`        get or set the camera distance to the target.
 
