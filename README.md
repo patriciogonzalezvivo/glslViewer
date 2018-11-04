@@ -287,7 +287,7 @@ u_myVec3,0.0,0.5,0.0
 
 * `version`                         return glslViewer version.
 
-* 'debug,[on|off]'                  turn debug mode on or off 
+* `debug,[on|off]`                  turn debug mode on or off 
 
 * `window_height`                   return the height of the windows.
 
