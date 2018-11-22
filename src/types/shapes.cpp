@@ -242,8 +242,6 @@ Mesh grid (float _width, float _height, int _columns, int _rows) {
     float halfW = _width  * 0.5f;
     float halfH = _height * 0.5f;
 
-    glm::vec3 vert;
-
     //  . --- A
     //  |     |
     //  B --- .

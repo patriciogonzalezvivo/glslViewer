@@ -196,6 +196,7 @@ void initGL (glm::ivec4 &_viewport, bool _headless, bool _alwaysOnTop) {
             exit(-1);
         }
 
+
         if (_headless) {
             glfwWindowHint(GLFW_VISIBLE, GL_FALSE);
         }
@@ -450,7 +451,22 @@ void renderGL(){
     #else
         // OSX/LINUX
         glfwSwapBuffers(window);
+
+        // Temporal fix for MacOS Mojave error on GLFW
+        // https://github.com/glfw/glfw/issues/1337
+        #ifdef PLATFORM_OSX
+        static bool macMoved = false;
+
+        if(!macMoved) {
+            int x, y;
+            glfwGetWindowPos(window, &x, &y);
+            glfwSetWindowPos(window, ++x, y);
+            macMoved = true;
+        }
+        #endif
     #endif
+
+    
 }
 
 void closeGL(){

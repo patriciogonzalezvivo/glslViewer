@@ -73,5 +73,6 @@
         "__functional_03": "cpp",
         "__string": "cpp",
         "__mutex_base": "cpp"
-    }
+    },
+    "python.pythonPath": "/usr/local/bin/python"
 }

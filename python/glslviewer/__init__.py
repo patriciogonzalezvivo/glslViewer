@@ -262,6 +262,5 @@ class GlslViewer:
     def screenshot(self, filename):
         if not self.isRunning():
             return False
-
-        answer = self.write('screenshot ' + filename)
+        answer = self.write('screenshot,' + filename)
         return answer

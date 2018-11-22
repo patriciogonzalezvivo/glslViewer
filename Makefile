@@ -49,7 +49,7 @@ else ifeq ($(PLATFORM),Darwin)
 CXX = /usr/bin/clang++
 ARCH = -arch x86_64
 CFLAGS += $(ARCH) -DPLATFORM_OSX -stdlib=libc++ $(shell pkg-config --cflags glfw3)
-INCLUDES += -I/Library/Frameworks/GLUI.framework
+INCLUDES += -I/System/Library/Frameworks/GLUI.framework
 LDFLAGS += $(ARCH) -framework OpenGL -framework Cocoa -framework CoreVideo -framework IOKit $(shell pkg-config --libs glfw3)
 
 endif
