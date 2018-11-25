@@ -158,6 +158,22 @@ make
 make install
 ```
 
+** Note if you are using MOJAVE ** : there are some issues if you are using MacOS Mojave if you experiencing black screens please recompile GLFW3 from source ('mojave-fixes' branch) and then recompile GlslViewerfollowing this instructions.
+
+```bash
+git clone https://github.com/glfw/glfw.git
+cd glfw
+git checkout mojave-fixes
+cmake .
+make
+sudo make install
+cd ..
+git clone http://github.com/patriciogonzalezvivo/glslViewer
+cd glslViewer
+make
+make install
+```
+
 ### Install Python wrapper
 
 GlslViewer now ships with a Python package. It's essentially a wrapper that allows to compile, benchmark and render shaders from a Python script.
