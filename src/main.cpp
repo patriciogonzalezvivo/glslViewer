@@ -1090,7 +1090,7 @@ int main(int argc, char **argv){
             filesMutex.unlock();
         }
 
-        // If nothing in the scene change skip the frame and try to keep it at 30fps
+        // If nothing in the scene change skip the frame and try to keep it at 60fps
         if (!fullFps && !sandbox.haveChange()) {
             usleep(REST_FPS);
             continue;

@@ -2,6 +2,7 @@
 
 #include <time.h>
 #include <sys/time.h>
+#include <unistd.h>
 
 #include "gl/gl.h"
 #include "glm/gtc/matrix_transform.hpp"
@@ -358,6 +359,15 @@ void updateGL(){
     #else
         // OSX/LINUX
         double now = glfwGetTime();
+
+        // Fix the FPS to a max of 60fps
+        float diff = now - fTime;
+        float target = 0.016;
+        if (diff < target) {
+            usleep(uint((target - diff) * 1000000));
+        }
+        now = glfwGetTime();
+
     #endif
     fDelta = now - fTime;
     fTime = now;
