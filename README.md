@@ -686,7 +686,7 @@ $ glslViewer examples/temp.frag
 8. Animate the value of a uniform by piping the output of a script that fetch  the CPU temperature of your Raspberry PI:
 
 ```bash
-$ examples/.temp.sh | glslViewer examples/temp.frag
+$ examples/temp.sh | glslViewer examples/temp.frag
 ```
 
 9. Run a headless instance of glslViewer that exits after 1 second outputting a high resolution PNG image:
