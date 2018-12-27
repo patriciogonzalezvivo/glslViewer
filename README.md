@@ -676,17 +676,17 @@ $ glslViewer examples/cross.frag -w 500 -h 500
 
 ```bash
 $ glslViewer examples/temp.frag
-// > u_temp,30
-// > u_temp,40
-// > u_temp,50
-// > u_temp,60
-// > u_temp,70
+// > u_temp,30.
+// > u_temp,40.
+// > u_temp,50.
+// > u_temp,60.
+// > u_temp,70.
 ```
 
 8. Animate the value of a uniform by piping the output of a script that fetch  the CPU temperature of your Raspberry PI:
 
 ```bash
-$ examples/.temp.sh | glslViewer examples/temp.frag
+$ examples/temp.sh | glslViewer examples/temp.frag
 ```
 
 9. Run a headless instance of glslViewer that exits after 1 second outputting a high resolution PNG image:
