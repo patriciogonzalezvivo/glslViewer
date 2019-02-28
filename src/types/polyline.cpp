@@ -42,9 +42,9 @@ Polyline::Polyline(const Rectangle &_rect, float _radiants){
     }
 }
 
-//Polyline::~Polyline(){
-//    m_points.clear();
-//}
+Polyline::~Polyline(){
+   m_points.clear();
+}
 
 int Polyline::size() const {
     return m_points.size();

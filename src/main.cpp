@@ -20,10 +20,6 @@
 //
 std::atomic<bool> bRun(true);
 
-#ifndef REST_FPS
-#define REST_FPS 15000
-#endif
-
 //  List of FILES to watch and the variable to communicate that between process
 WatchFileList files;
 std::mutex filesMutex;
@@ -39,6 +35,8 @@ bool        execute_exit    = false;
 std::string version = "1.5.6";
 std::string name = "GlslViewer";
 std::string header = name + " " + version + " by Patricio Gonzalez Vivo ( patriciogonzalezvivo.com )"; 
+
+const unsigned int micro_wait = REST_SEC * 1000000;
 
 // Here is where all the magic happens
 Sandbox sandbox;
@@ -697,7 +695,7 @@ void declareCommands() {
                     }
                 }
                 std::cout << " ] " << pct << "%" << std::endl;
-                usleep(REST_FPS);
+                usleep( micro_wait );
             }
             return true;
         }
@@ -1092,7 +1090,7 @@ int main(int argc, char **argv){
 
         // If nothing in the scene change skip the frame and try to keep it at 60fps
         if (!fullFps && !sandbox.haveChange()) {
-            usleep(REST_FPS);
+            usleep( micro_wait );
             continue;
         }
 
@@ -1199,7 +1197,7 @@ void fileWatcherThread() {
 //============================================================================
 void cinWatcherThread() {
     while (!sandbox.isReady()) {
-        usleep(REST_FPS);
+        usleep( micro_wait );
     }
 
     if (execute_cmd.size() > 0) {

@@ -360,14 +360,13 @@ void updateGL(){
         // OSX/LINUX
         double now = glfwGetTime();
 
-        // Fix the FPS to a max of 60fps
+        // Fix the FPS to a max of 60fps (REST_SEC)
         float diff = now - fTime;
-        float target = 0.016;
-        if (diff < target) {
-            usleep(uint((target - diff) * 1000000));
+        if (diff < REST_SEC) {
+            usleep(int((REST_SEC - diff) * 1000000));
+            now = glfwGetTime();
         }
-        now = glfwGetTime();
-
+        
     #endif
     fDelta = now - fTime;
     fTime = now;

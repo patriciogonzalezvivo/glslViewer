@@ -2,6 +2,10 @@
 
 #include "glm/glm.hpp"
 
+#ifndef REST_SEC
+#define REST_SEC 0.016 // 60fps
+#endif
+
 //	GL Context
 //----------------------------------------------
 void initGL(glm::ivec4 &_viewport, bool _headless = false, bool _alwaysOnTop = false);

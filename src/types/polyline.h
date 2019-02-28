@@ -9,7 +9,7 @@ public:
     Polyline(const Polyline &_poly);
     Polyline(const std::vector<glm::vec3> &_points);
     Polyline(const Rectangle &_rect, float _radiants = 0);
-//    virtual ~Polyline();
+    virtual ~Polyline();
 
     virtual void add(const glm::vec3 &_point);
     void    add(const std::vector<glm::vec3> &_points);
