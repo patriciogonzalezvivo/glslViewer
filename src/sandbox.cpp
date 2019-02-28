@@ -1037,22 +1037,8 @@ void Sandbox::onViewportResize(int _newWidth, int _newHeight) {
 void Sandbox::onScreenshot(std::string _file) {
     if (_file != "" && isGL()) {
         unsigned char* pixels = new unsigned char[getWindowWidth() * getWindowHeight()*4];
-        
-        glGetError();
-        GLint currentBuffer;
-        glGetIntegerv(GL_READ_BUFFER, &currentBuffer);
-
-        glReadBuffer(GL_FRONT);
-        {
-            glPixelStorei(GL_PACK_ALIGNMENT, 1);
-            glReadPixels(0, 0, getWindowWidth(), getWindowHeight(), GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-            GLenum err;
-            while ( (err = glGetError()) != GL_NO_ERROR ) {
-                std::cout << "// Error in saving screenshot: 0x" << std::hex << err << std::endl;
-            }
-            savePixels(_file, pixels, getWindowWidth(), getWindowHeight());
-        }
-        glReadBuffer(currentBuffer);
+        glReadPixels(0, 0, getWindowWidth(), getWindowHeight(), GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+        savePixels(_file, pixels, getWindowWidth(), getWindowHeight());
 
         if (!m_record) {
             std::cout << "// Screenshot saved to " << _file << std::endl;
