@@ -1100,11 +1100,11 @@ int main(int argc, char **argv){
         // Draw Cursor and 2D Debug elements
         sandbox.drawDebug2D();
 
-        // Swap the buffers
-        renderGL();
-
         // Finish drawing
         sandbox.drawDone();
+
+        // Swap the buffers
+        renderGL();
 
         if ( timeLimit >= 0.0 && getTime() >= timeLimit ) {
             bRun.store(false);
