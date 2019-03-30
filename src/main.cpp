@@ -638,6 +638,15 @@ void declareCommands() {
     },
     "model_position[,<x>,<y>,<z>]  get or set the model position."));
 
+    commands.push_back(Command("wait", [&](const std::string& _line){ 
+        std::vector<std::string> values = split(_line,',');
+        if (values.size() == 2) {
+            usleep( toFloat(values[1])*1000000 ); 
+        }
+        return false;
+    },
+    "wait,<seconds>        wait for X <seconds> before excecuting another command."));
+
     commands.push_back(Command("screenshot", [&](const std::string& _line){ 
         if (_line == "screenshot" && outputFile != "") {
             consoleMutex.lock();
