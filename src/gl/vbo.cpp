@@ -136,10 +136,12 @@ void Vbo::draw(const Shader* _shader) {
     // Enable vertex attribs via vertex layout object
     m_vertexLayout->enable(_shader);
 
+#ifndef PLATFORM_RPI
     if (m_drawMode == GL_POINTS) {
         glEnable(GL_POINT_SPRITE);
         glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
     }
+#endif
 
     // Draw as elements or arrays
     if (m_nIndices > 0) {
