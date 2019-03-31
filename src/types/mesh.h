@@ -7,6 +7,12 @@
 
 #include "../gl/vbo.h"
 
+#ifdef PLATFORM_RPI
+#define INDEX_TYPE uint16_t
+#else
+#define INDEX_TYPE uint32_t
+#endif
+
 class Mesh {
 public:
 
@@ -35,11 +41,11 @@ public:
     void    addTexCoord(const glm::vec2 &_uv);
     void    addTexCoords(const std::vector<glm::vec2> &_uvs);
 
-    void    addIndex(uint16_t _i);
-    void    addIndices(const std::vector<uint16_t>& _inds);
-    void    addIndices(const uint16_t* _inds, int _amt);
+    void    addIndex(INDEX_TYPE _i);
+    void    addIndices(const std::vector<INDEX_TYPE>& _inds);
+    void    addIndices(const INDEX_TYPE* _inds, int _amt);
 
-    void    addTriangle(uint16_t index1, uint16_t index2, uint16_t index3);
+    void    addTriangle(INDEX_TYPE index1, INDEX_TYPE index2, INDEX_TYPE index3);
 
     void    add(const Mesh &_mesh);
 
@@ -57,7 +63,7 @@ public:
     const std::vector<glm::vec3> & getVertices() const;
     const std::vector<glm::vec3> & getNormals() const;
     const std::vector<glm::vec2> & getTexCoords() const;
-    const std::vector<uint16_t>  & getIndices() const;
+    const std::vector<INDEX_TYPE>  & getIndices() const;
 
     Vbo*    getVbo();
 
@@ -71,7 +77,7 @@ private:
     std::vector<glm::vec3>  m_vertices;
     std::vector<glm::vec3>  m_normals;
     std::vector<glm::vec2>  m_texCoords;
-    std::vector<uint16_t>   m_indices;
+    std::vector<INDEX_TYPE>   m_indices;
 
     GLenum    m_drawMode;
 };

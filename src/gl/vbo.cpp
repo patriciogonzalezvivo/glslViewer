@@ -54,32 +54,32 @@ void Vbo::addVertices(GLbyte* _vertices, int _nVertices) {
         return;
     }
 
-    // Only add up to 65535 vertices, any more will overflow our 16-bit indices
-    int indexSpace = MAX_INDEX_VALUE - m_nVertices;
-    if (_nVertices > indexSpace) {
-        _nVertices = indexSpace;
-        std::cout << "WARNING: Tried to add more vertices than available in index space" << std::endl;
-    }
+    // // Only add up to 65535 vertices, any more will overflow our 16-bit indices
+    // int indexSpace = MAX_INDEX_VALUE - m_nVertices;
+    // if (_nVertices > indexSpace) {
+    //     _nVertices = indexSpace;
+    //     std::cout << "WARNING: Tried to add more vertices than available in index space" << std::endl;
+    // }
 
     int vertexBytes = m_vertexLayout->getStride() * _nVertices;
     m_vertexData.insert(m_vertexData.end(), _vertices, _vertices + vertexBytes);
     m_nVertices += _nVertices;
 }
 
-void Vbo::addIndex(GLushort* _index) {
+void Vbo::addIndex(INDEX_TYPE_GL* _index) {
     addIndices(_index, 1);
 }
 
-void Vbo::addIndices(GLushort* _indices, int _nIndices) {
+void Vbo::addIndices(INDEX_TYPE_GL* _indices, int _nIndices) {
     if (m_isUploaded) {
         std::cout << "Vbo cannot add indices after upload!" << std::endl;
         return;
     }
 
-    if (m_nVertices >= MAX_INDEX_VALUE) {
-        std::cout << "WARNING: Vertex buffer full, not adding indices" << std::endl;
-        return;
-    }
+    // if (m_nVertices >= MAX_INDEX_VALUE) {
+    //     std::cout << "WARNING: Vertex buffer full, not adding indices" << std::endl;
+    //     return;
+    // }
 
     m_indices.insert(m_indices.end(), _indices, _indices + _nIndices);
     m_nIndices += _nIndices;
@@ -105,7 +105,7 @@ void Vbo::upload() {
 
         // Buffer element index data
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_glIndexBuffer);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_indices.size() * sizeof(GLushort), m_indices.data(), GL_STATIC_DRAW);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_indices.size() * sizeof(INDEX_TYPE_GL), m_indices.data(), GL_STATIC_DRAW);
     }
 
     m_vertexData.clear();
@@ -136,9 +136,20 @@ void Vbo::draw(const Shader* _shader) {
     // Enable vertex attribs via vertex layout object
     m_vertexLayout->enable(_shader);
 
+#ifndef PLATFORM_RPI
+    if (m_drawMode == GL_POINTS) {
+        glEnable(GL_POINT_SPRITE);
+        glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
+    }
+#endif
+
     // Draw as elements or arrays
     if (m_nIndices > 0) {
+        #ifdef PLATFORM_RPI
         glDrawElements(m_drawMode, m_nIndices, GL_UNSIGNED_SHORT, 0);
+        #else
+        glDrawElements(m_drawMode, m_nIndices, GL_UNSIGNED_INT, 0);
+        #endif
     } else if (m_nVertices > 0) {
         glDrawArrays(m_drawMode, 0, m_nVertices);
     }
