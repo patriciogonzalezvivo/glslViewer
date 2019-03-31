@@ -645,7 +645,7 @@ void declareCommands() {
         }
         return false;
     },
-    "wait,<seconds>        wait for X <seconds> before excecuting another command."));
+    "wait,<seconds>                 wait for X <seconds> before excecuting another command."));
 
     commands.push_back(Command("screenshot", [&](const std::string& _line){ 
         if (_line == "screenshot" && outputFile != "") {
