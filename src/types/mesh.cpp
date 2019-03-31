@@ -253,16 +253,23 @@ bool Mesh::load(const std::string& _file) {
             addColors(colors);
             addVertices(vertices);
             addTexCoords(texcoord);
-            addIndices(indices);
 
-            if (normals.size() > 0 && ( getDrawMode() == GL_TRIANGLES || getDrawMode() == GL_TRIANGLE_STRIP)) {
-                addNormals(normals);
+            if ( indices.size() > 0 ){
+                addIndices( indices );
             }
             else {
+                setDrawMode( GL_POINTS );
+            }
+            
+
+            if ( normals.size() > 0 ) {
+                addNormals( normals );
+            }
+            else if ( getDrawMode() == GL_TRIANGLES ) {
                 computeNormals();
             }
 
-            if (texcoord.size() == m_vertices.size() && getDrawMode() == GL_TRIANGLES) {
+            if ( texcoord.size() == m_vertices.size() && getDrawMode() == GL_TRIANGLES ) {
                 computeTangents();
             }
 
