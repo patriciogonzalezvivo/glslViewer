@@ -54,12 +54,12 @@ void Vbo::addVertices(GLbyte* _vertices, int _nVertices) {
         return;
     }
 
-    // Only add up to 65535 vertices, any more will overflow our 16-bit indices
-    int indexSpace = MAX_INDEX_VALUE - m_nVertices;
-    if (_nVertices > indexSpace) {
-        _nVertices = indexSpace;
-        std::cout << "WARNING: Tried to add more vertices than available in index space" << std::endl;
-    }
+    // // Only add up to 65535 vertices, any more will overflow our 16-bit indices
+    // int indexSpace = MAX_INDEX_VALUE - m_nVertices;
+    // if (_nVertices > indexSpace) {
+    //     _nVertices = indexSpace;
+    //     std::cout << "WARNING: Tried to add more vertices than available in index space" << std::endl;
+    // }
 
     int vertexBytes = m_vertexLayout->getStride() * _nVertices;
     m_vertexData.insert(m_vertexData.end(), _vertices, _vertices + vertexBytes);
@@ -76,10 +76,10 @@ void Vbo::addIndices(GLushort* _indices, int _nIndices) {
         return;
     }
 
-    if (m_nVertices >= MAX_INDEX_VALUE) {
-        std::cout << "WARNING: Vertex buffer full, not adding indices" << std::endl;
-        return;
-    }
+    // if (m_nVertices >= MAX_INDEX_VALUE) {
+    //     std::cout << "WARNING: Vertex buffer full, not adding indices" << std::endl;
+    //     return;
+    // }
 
     m_indices.insert(m_indices.end(), _indices, _indices + _nIndices);
     m_nIndices += _nIndices;
@@ -135,6 +135,11 @@ void Vbo::draw(const Shader* _shader) {
 
     // Enable vertex attribs via vertex layout object
     m_vertexLayout->enable(_shader);
+
+    if (m_drawMode == GL_POINTS) {
+        glEnable(GL_POINT_SPRITE);
+        glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
+    }
 
     // Draw as elements or arrays
     if (m_nIndices > 0) {
