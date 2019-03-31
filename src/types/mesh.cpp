@@ -60,7 +60,7 @@ bool Mesh::load(const std::string& _file) {
             std::vector<glm::vec3> vertices;
             std::vector<glm::vec3> normals;
             std::vector<glm::vec2> texcoord;
-            std::vector<uint16_t> indices;
+            std::vector<uint32_t> indices;
 
             std::getline(is,line);
             lineNum++;
@@ -505,19 +505,19 @@ void Mesh::addTexCoords(const std::vector<glm::vec2> &_uvs) {
     m_texCoords.insert(m_texCoords.end(), _uvs.begin(), _uvs.end());
 }
 
-void Mesh::addIndex(uint16_t _i) {
+void Mesh::addIndex(uint32_t _i) {
     m_indices.push_back(_i);
 }
 
-void Mesh::addIndices(const std::vector<uint16_t>& inds) {
+void Mesh::addIndices(const std::vector<uint32_t>& inds) {
 	m_indices.insert(m_indices.end(),inds.begin(),inds.end());
 }
 
-void Mesh::addIndices(const uint16_t* inds, int amt) {
+void Mesh::addIndices(const uint32_t* inds, int amt) {
 	m_indices.insert(m_indices.end(),inds,inds+amt);
 }
 
-void Mesh::addTriangle(uint16_t index1, uint16_t index2, uint16_t index3) {
+void Mesh::addTriangle(uint32_t index1, uint32_t index2, uint32_t index3) {
     addIndex(index1);
     addIndex(index2);
     addIndex(index3);
@@ -530,7 +530,7 @@ void Mesh::add(const Mesh &_mesh) {
         return;
     }
 
-    uint16_t indexOffset = (uint16_t)getVertices().size();
+    uint32_t indexOffset = (uint32_t)getVertices().size();
 
     addColors(_mesh.getColors());
     addVertices(_mesh.getVertices());
@@ -566,7 +566,7 @@ const std::vector<glm::vec2> & Mesh::getTexCoords() const{
     return m_texCoords;
 }
 
-const std::vector<uint16_t> & Mesh::getIndices() const{
+const std::vector<uint32_t> & Mesh::getIndices() const{
     return m_indices;
 }
 

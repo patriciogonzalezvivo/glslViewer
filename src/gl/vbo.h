@@ -44,13 +44,13 @@ public:
     /*
      * Adds a single index to the mesh; indices are unsigned shorts
      */
-    void addIndex(GLushort* _index);
+    void addIndex(GLuint* _index);
 
     /*
      * Adds _nIndices indices to the mesh; _indices must be a pointer to the beginning of a contiguous
      * block of _nIndices unsigned short indices
      */
-    void addIndices(GLushort* _indices, int _nIndices);
+    void addIndices(GLuint* _indices, int _nIndices);
 
     int numIndices() const { return m_indices.size(); };
     int numVertices() const { return m_nVertices; };
@@ -76,7 +76,7 @@ private:
     GLuint  m_glVertexBuffer;
     int     m_nVertices;
 
-    std::vector<GLushort> m_indices;
+    std::vector<GLuint> m_indices;
     GLuint  m_glIndexBuffer;
     int     m_nIndices;
 

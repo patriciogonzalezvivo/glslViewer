@@ -35,11 +35,11 @@ public:
     void    addTexCoord(const glm::vec2 &_uv);
     void    addTexCoords(const std::vector<glm::vec2> &_uvs);
 
-    void    addIndex(uint16_t _i);
-    void    addIndices(const std::vector<uint16_t>& _inds);
-    void    addIndices(const uint16_t* _inds, int _amt);
+    void    addIndex(uint32_t _i);
+    void    addIndices(const std::vector<uint32_t>& _inds);
+    void    addIndices(const uint32_t* _inds, int _amt);
 
-    void    addTriangle(uint16_t index1, uint16_t index2, uint16_t index3);
+    void    addTriangle(uint32_t index1, uint32_t index2, uint32_t index3);
 
     void    add(const Mesh &_mesh);
 
@@ -57,7 +57,7 @@ public:
     const std::vector<glm::vec3> & getVertices() const;
     const std::vector<glm::vec3> & getNormals() const;
     const std::vector<glm::vec2> & getTexCoords() const;
-    const std::vector<uint16_t>  & getIndices() const;
+    const std::vector<uint32_t>  & getIndices() const;
 
     Vbo*    getVbo();
 
@@ -71,7 +71,7 @@ private:
     std::vector<glm::vec3>  m_vertices;
     std::vector<glm::vec3>  m_normals;
     std::vector<glm::vec2>  m_texCoords;
-    std::vector<uint16_t>   m_indices;
+    std::vector<uint32_t>   m_indices;
 
     GLenum    m_drawMode;
 };
