@@ -5,6 +5,12 @@
 #include "gl.h"
 #include "vertexLayout.h"
 
+#ifdef PLATFORM_RPI
+#define INDEX_TYPE_GL GLushort
+#else
+#define INDEX_TYPE_GL GLuint
+#endif
+
 #define MAX_INDEX_VALUE 65535
 
 /*
@@ -44,13 +50,13 @@ public:
     /*
      * Adds a single index to the mesh; indices are unsigned shorts
      */
-    void addIndex(GLuint* _index);
+    void addIndex(INDEX_TYPE_GL* _index);
 
     /*
      * Adds _nIndices indices to the mesh; _indices must be a pointer to the beginning of a contiguous
      * block of _nIndices unsigned short indices
      */
-    void addIndices(GLuint* _indices, int _nIndices);
+    void addIndices(INDEX_TYPE_GL* _indices, int _nIndices);
 
     int numIndices() const { return m_indices.size(); };
     int numVertices() const { return m_nVertices; };
@@ -76,7 +82,7 @@ private:
     GLuint  m_glVertexBuffer;
     int     m_nVertices;
 
-    std::vector<GLuint> m_indices;
+    std::vector<INDEX_TYPE_GL> m_indices;
     GLuint  m_glIndexBuffer;
     int     m_nIndices;
 

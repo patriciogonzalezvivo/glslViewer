@@ -66,11 +66,11 @@ void Vbo::addVertices(GLbyte* _vertices, int _nVertices) {
     m_nVertices += _nVertices;
 }
 
-void Vbo::addIndex(GLuint* _index) {
+void Vbo::addIndex(INDEX_TYPE_GL* _index) {
     addIndices(_index, 1);
 }
 
-void Vbo::addIndices(GLuint* _indices, int _nIndices) {
+void Vbo::addIndices(INDEX_TYPE_GL* _indices, int _nIndices) {
     if (m_isUploaded) {
         std::cout << "Vbo cannot add indices after upload!" << std::endl;
         return;
@@ -105,7 +105,7 @@ void Vbo::upload() {
 
         // Buffer element index data
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_glIndexBuffer);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_indices.size() * sizeof(GLuint), m_indices.data(), GL_STATIC_DRAW);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_indices.size() * sizeof(INDEX_TYPE_GL), m_indices.data(), GL_STATIC_DRAW);
     }
 
     m_vertexData.clear();
@@ -145,7 +145,11 @@ void Vbo::draw(const Shader* _shader) {
 
     // Draw as elements or arrays
     if (m_nIndices > 0) {
+        #ifdef PLATFORM_RPI
+        glDrawElements(m_drawMode, m_nIndices, GL_UNSIGNED_SHORT, 0);
+        #else
         glDrawElements(m_drawMode, m_nIndices, GL_UNSIGNED_INT, 0);
+        #endif
     } else if (m_nVertices > 0) {
         glDrawArrays(m_drawMode, 0, m_nVertices);
     }

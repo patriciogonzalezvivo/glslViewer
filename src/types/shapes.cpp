@@ -149,7 +149,7 @@ Mesh cube(float _size) {
         _size,  _size, -_size,
     };
 
-    uint32_t indices[] = {
+    INDEX_TYPE indices[] = {
         0, 1, 2,
         0, 2, 3,
         3, 2, 6,
