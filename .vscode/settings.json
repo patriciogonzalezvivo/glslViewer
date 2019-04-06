@@ -72,7 +72,8 @@
         "__tuple": "cpp",
         "__functional_03": "cpp",
         "__string": "cpp",
-        "__mutex_base": "cpp"
+        "__mutex_base": "cpp",
+        "random": "cpp"
     },
     "python.pythonPath": "/usr/local/bin/python"
 }

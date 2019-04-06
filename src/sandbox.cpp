@@ -997,10 +997,16 @@ void Sandbox::onMouseDrag(float _x, float _y, int _button) {
     if (_button == 1) {
         // Left-button drag is used to rotate geometry.
         float dist = m_cam.getDistance();
-        m_lat -= getMouseVelX();
-        m_lon -= getMouseVelY() * 0.5;
-        m_cam.orbit(m_lat, m_lon, dist);
-        m_cam.lookAt(glm::vec3(0.0));
+
+        float vel_x = getMouseVelX();
+        float vel_y = getMouseVelY();
+
+        if (abs(vel_x) < 50.0 && abs(vel_y) < 50.0) {
+            m_lat -= vel_x;
+            m_lon -= vel_y * 0.5;
+            m_cam.orbit(m_lat, m_lon, dist);
+            m_cam.lookAt(glm::vec3(0.0));
+        }
 
         // Left-button drag is used to pan u_view2d.
         m_view2d = glm::translate(m_view2d, -getMouseVelocity());
