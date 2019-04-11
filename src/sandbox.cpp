@@ -113,7 +113,7 @@ Sandbox::Sandbox():
     },
     [this]() { return toString(m_light.color, ','); });
 
-     uniforms_functions["u_lightMatrix"] = UniformFunction("mat4", [this](Shader& _shader) {
+    uniforms_functions["u_lightMatrix"] = UniformFunction("mat4", [this](Shader& _shader) {
         _shader.setUniform("u_lightMatrix", m_light.getBiasMVPMatrix() );
     });
 

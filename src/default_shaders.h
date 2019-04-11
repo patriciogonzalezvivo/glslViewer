@@ -12,16 +12,27 @@ precision mediump float;\n\
 \n\
 attribute vec4 a_position;\n\
 attribute vec2 a_texcoord;\n\
+\n\
 varying vec4 v_position;\n\
-varying vec3 v_color;\n\
+varying vec4 v_color;\n\
 varying vec3 v_normal;\n\
 varying vec2 v_texcoord;\n\
 \n\
+#ifdef SHADOW_MAP\n\
+uniform mat4    u_lightMatrix;\n\
+varying vec4    v_lightcoord;\n\
+#endif\n\
+\n\
 void main(void) {\n\
     v_position =  a_position;\n\
-    v_color = vec3(1.0);\n\
+    v_color = vec4(1.0);\n\
     v_normal = vec3(0.0,0.0,1.0);\n\
     v_texcoord = a_texcoord;\n\
+    \n\
+#ifdef SHADOW_MAP\n\
+    v_lightcoord = u_lightMatrix * v_position;\n\
+#endif\n\
+    \n\
     gl_Position = v_position;\n\
 }";
 
@@ -71,10 +82,12 @@ vec3 heatmap(float v) {\n\
 void main(void) { \n\
     vec4 color = u_color;\n\
     color += texture2D(u_tex0, v_texcoord);\n\
+    \n\
     if (u_depth > 0.0) {\n\
         color.r = linearizeDepth(color.r) * u_cameraFarClip;\n\
         color.rgb = heatmap(1.0 - (color.r - u_cameraDistance) * 0.01);\n\
     }\n\
+    \n\
     gl_FragColor = color;\n\
 }\n";
 
