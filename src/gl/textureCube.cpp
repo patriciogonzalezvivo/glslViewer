@@ -462,14 +462,14 @@ bool TextureCube::generate(SkyBox* _skybox, int _width ) {
     );
 
     float maxSample = 0.00001f;
-    for (unsigned int y = 0; y < m_height; y++) {
+    for (int y = 0; y < m_height; y++) {
         float v = (y + 0.5f) / m_height;
         float theta = float(M_PI * v);
 
         if (theta > M_PI_2) 
             continue;
             
-        for (unsigned int x = 0; x < m_width; x++) {
+        for (int x = 0; x < m_width; x++) {
             float u = (x + 0.5f) / m_width;
             float phi = float(-2.0 * M_PI * u + M_PI + _skybox->azimuth);
 
@@ -502,8 +502,8 @@ bool TextureCube::generate(SkyBox* _skybox, int _width ) {
 
     float hdrScale = 1.0f / (normalize ? maxSample : maxSample / 16.0f);
 
-    for (unsigned int y = 0; y < m_height; y++) {
-        for (unsigned int x = 0; x < m_width; x++) {
+    for (int y = 0; y < m_height; y++) {
+        for (int x = 0; x < m_width; x++) {
             int i = (y * m_width * 3) + x * 3;
 
             if (y >= m_height / 2) {
