@@ -27,7 +27,7 @@ Sandbox::Sandbox():
     // Camera.
     m_mvp(1.0), m_view2d(1.0), m_lat(180.0), m_lon(0.0),
     // CubeMap
-    m_cubemap_vbo(nullptr), m_cubemap(nullptr), m_cubemap_draw(false),
+    m_cubemap_vbo(nullptr), m_cubemap(nullptr), m_cubemap_skybox(nullptr), m_cubemap_draw(false),
     // Background
     m_background_enabled(false),
     // Buffers
@@ -294,12 +294,6 @@ void Sandbox::setup( WatchFileList &_files ) {
 
     m_shader.load(m_frag_source, m_vert_source, defines, verbose);
     _updateDependencies( _files );
-    
-    // CUBEMAP
-    if (m_cubemap_draw) {
-        m_cubemap_vbo = cube(1.0f).getVbo();
-        m_cubemap_shader.load(cube_frag, cube_vert, defines, false);
-    }
 
     // Turn on Alpha blending
     glEnable(GL_BLEND);
@@ -553,6 +547,17 @@ void Sandbox::_renderBuffers() {
 }
 
 void Sandbox::_renderBackground() {
+    // If there is a skybox and it had changes re generate
+    if (m_cubemap_skybox) {
+        if (m_cubemap_skybox->change) {
+            if (!m_cubemap) {
+                m_cubemap = new TextureCube();
+            }
+            m_cubemap->generate(m_cubemap_skybox);
+            m_cubemap_skybox->change = false;
+        }
+    }
+
     if (m_background_enabled) {
         m_textureIndex = 0;
         m_background_shader.use();
@@ -571,7 +576,13 @@ void Sandbox::_renderBackground() {
         m_billboard_vbo->draw( &m_background_shader );
     }
     // CUBEMAP
-    else if (geom_index != -1 && m_cubemap_draw) {
+    else if (geom_index != -1 && m_cubemap && m_cubemap_draw) {
+
+        if (!m_cubemap_vbo) {
+            m_cubemap_vbo = cube(1.0f).getVbo();
+            m_cubemap_shader.load(cube_frag, cube_vert, defines, false);
+        }
+
         m_textureIndex = 0;
         m_cubemap_shader.use();
 
@@ -702,7 +713,7 @@ void Sandbox::drawDebug3D() {
                 m_wireframe3D_shader.load(wireframe3D_frag, wireframe3D_vert, defines, false);
             glLineWidth(3.0f);
             m_wireframe3D_shader.use();
-            m_wireframe3D_shader.setUniform("u_color", glm::vec4(1.0));
+            m_wireframe3D_shader.setUniform("u_color", glm::vec4(1.0,1.0,0.0,1.0));
             m_wireframe3D_shader.setUniform("u_modelViewProjectionMatrix", m_mvp);
             m_bbox_vbo->draw( &m_wireframe3D_shader );
         }

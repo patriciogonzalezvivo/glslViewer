@@ -65,10 +65,10 @@ bool Texture::load(const std::string& _path, bool _vFlip) {
 }
 
 void Texture::bind() {
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, m_id);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, m_id);
 }
 
 void Texture::unbind() {
-	glBindTexture(GL_TEXTURE_2D, 0);
+    glBindTexture(GL_TEXTURE_2D, 0);
 }

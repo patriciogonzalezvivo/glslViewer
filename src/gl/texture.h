@@ -6,27 +6,27 @@
 
 class Texture {
 public:
-	Texture();
-	virtual ~Texture();
+    Texture();
+    virtual ~Texture();
 
-	virtual bool	load(const std::string& _filepath, bool _vFlip);
+    virtual bool    load(const std::string& _filepath, bool _vFlip);
 
-	virtual const GLuint	getId() const { return m_id; };
-	virtual std::string	 	getFilePath() const { return m_path; };
-	virtual int				getWidth() const { return m_width; };
-	virtual int				getHeight() const { return m_height; };
+    virtual const GLuint    getId() const { return m_id; };
+    virtual std::string     getFilePath() const { return m_path; };
+    virtual int             getWidth() const { return m_width; };
+    virtual int             getHeight() const { return m_height; };
 
-	/* Bind/Unbind the texture to GPU */
-    virtual void 	bind();
-    virtual void 	unbind();
+    /* Bind/Unbind the texture to GPU */
+    virtual void    bind();
+    virtual void    unbind();
 
 protected:
-	// virtual void	glHandleError();
+    // virtual void glHandleError();
 
-	std::string		m_path;
+    std::string     m_path;
 
-	int				m_width;
-	int				m_height;
+    int             m_width;
+    int             m_height;
 
-	GLuint 			m_id;
+    GLuint          m_id;
 };

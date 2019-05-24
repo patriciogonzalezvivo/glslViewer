@@ -23,8 +23,8 @@ public:
     const bool      haveDepthTexture() const { return m_depth_texture != 0; }
     const GLuint    getDepthTextureId() const { return m_depth_texture; }
 
-    virtual int		getWidth() const { return m_width; };
-	virtual int		getHeight() const { return m_height; };
+    virtual int     getWidth() const { return m_width; };
+    virtual int     getHeight() const { return m_height; };
 
 protected:
     GLuint  m_id;

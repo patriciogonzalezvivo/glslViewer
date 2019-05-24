@@ -13,6 +13,7 @@
 #include "sandbox.h"
 #include "tools/fs.h"
 #include "tools/text.h"
+#include "tools/skybox.h"
 #include "tools/command.h"
 
 // GLOBAL VARIABLES
@@ -35,6 +36,8 @@ bool        execute_exit    = false;
 std::string version = "1.5.6";
 std::string name = "GlslViewer";
 std::string header = name + " " + version + " by Patricio Gonzalez Vivo ( patriciogonzalezvivo.com )"; 
+
+SkyBox skybox;
 
 const unsigned int micro_wait = REST_SEC * 1000000;
 
@@ -619,6 +622,129 @@ void declareCommands() {
     },
     "light_color[,<r>,<g>,<b>]      get or set the light color."));
 
+    commands.push_back(Command("skybox_ground", [&](const std::string& _line){ 
+        std::vector<std::string> values = split(_line,',');
+        if (values.size() == 4) {
+            consoleMutex.lock();
+
+            skybox.groundAlbedo = glm::vec3(toFloat(values[1]),toFloat(values[2]),toFloat(values[3]));
+            sandbox.setCubeMap(&skybox);
+
+            sandbox.flagChange();
+            consoleMutex.unlock();
+            return true;
+        }
+        else {
+            std::cout << skybox.groundAlbedo.x << ',' << skybox.groundAlbedo.y << ',' << skybox.groundAlbedo.z << std::endl;
+            return true;
+        }
+        return false;
+    },
+    "skybox_ground[,<r>,<g>,<b>]      get or set the ground color of the skybox."));
+
+    commands.push_back(Command("skybox_elevation", [&](const std::string& _line){ 
+        std::vector<std::string> values = split(_line,',');
+        if (values.size() == 2) {
+            consoleMutex.lock();
+
+            skybox.elevation = toFloat(values[1]);
+            sandbox.setCubeMap(&skybox);
+
+            sandbox.flagChange();
+            consoleMutex.unlock();
+            return true;
+        }
+        else {
+            std::cout << skybox.elevation << std::endl;
+            return true;
+        }
+        return false;
+    },
+    "skybox_elevation[,<sun_elevation>]  get or set the sun elevation (in rads) of the skybox."));
+
+    commands.push_back(Command("skybox_azimuth", [&](const std::string& _line){ 
+        std::vector<std::string> values = split(_line,',');
+        if (values.size() == 2) {
+            consoleMutex.lock();
+
+            skybox.azimuth = toFloat(values[1]);
+            sandbox.setCubeMap(&skybox);
+
+            sandbox.flagChange();
+            consoleMutex.unlock();
+            return true;
+        }
+        else {
+            std::cout << skybox.azimuth << std::endl;
+            return true;
+        }
+        return false;
+    },
+    "skybox_azimuth[,<sun_azimuth>]  get or set the sun azimuth (in rads) of the skybox."));
+
+    commands.push_back(Command("skybox_turbidity", [&](const std::string& _line){ 
+        std::vector<std::string> values = split(_line,',');
+        if (values.size() == 2) {
+            consoleMutex.lock();
+
+            skybox.turbidity = toFloat(values[1]);
+            sandbox.setCubeMap(&skybox);
+
+            sandbox.flagChange();
+            consoleMutex.unlock();
+            return true;
+        }
+        else {
+            std::cout << skybox.turbidity << std::endl;
+            return true;
+        }
+        return false;
+    },
+    "skybox_turbidity[,<sky_turbidty>]  get or set the sky turbidity of the skybox."));
+
+    commands.push_back(Command("skybox", [&](const std::string& _line){
+        if (_line == "skybox") {
+            std::string rta = sandbox.getCubeMapVisible() ? "on" : "off";
+            std::cout << rta << std::endl; 
+            return true;
+        }
+        else {
+            std::vector<std::string> values = split(_line,',');
+            if (values.size() == 2) {
+                consoleMutex.lock();
+
+                sandbox.setCubeMap(&skybox);
+                sandbox.setCubeMapVisible( values[1] == "on" );
+
+                consoleMutex.unlock();
+            }
+        }
+        return false;
+    },
+    "skybox[,on|off]       show/hide skybox"));
+
+
+    commands.push_back(Command("cubemap", [&](const std::string& _line){
+        if (_line == "cubemap") {
+            std::string rta = sandbox.getCubeMapVisible() ? "on" : "off";
+            std::cout << rta << std::endl; 
+            return true;
+        }
+        else {
+            std::vector<std::string> values = split(_line,',');
+            if (values.size() == 2) {
+                consoleMutex.lock();
+
+                sandbox.setCubeMapVisible( values[1] == "on" );
+
+                consoleMutex.unlock();
+            }
+        }
+        return false;
+    },
+    "cubemap[,on|off]       show/hide cubemap"));
+    
+
     commands.push_back(Command("model_position", [&](const std::string& _line){ 
         std::vector<std::string> values = split(_line,',');
         if (values.size() == 4) {
@@ -956,7 +1082,8 @@ int main(int argc, char **argv){
             else {
                 TextureCube* tex = new TextureCube();
                 if ( tex->load(argument, vFlip) ) {
-                    sandbox.setCubeMap(tex, false);
+                    sandbox.setCubeMap(tex);
+                    sandbox.setCubeMapVisible(false);
 
                     WatchFile file;
                     file.type = CUBEMAP;
@@ -983,7 +1110,8 @@ int main(int argc, char **argv){
             else {
                 TextureCube* tex = new TextureCube();
                 if ( tex->load(argument, vFlip) ) {
-                    sandbox.setCubeMap(tex, true);
+                    sandbox.setCubeMap(tex);
+                    sandbox.setCubeMapVisible(true);
 
                     WatchFile file;
                     file.type = CUBEMAP;
@@ -1010,7 +1138,8 @@ int main(int argc, char **argv){
             else {
                 TextureCube* tex = new TextureCube();
                 if ( tex->load(argument, vFlip) ) {
-                    sandbox.setCubeMap(tex, false);
+                    sandbox.setCubeMap(tex);
+                    sandbox.setCubeMapVisible(false);
 
                     WatchFile file;
                     file.type = CUBEMAP;

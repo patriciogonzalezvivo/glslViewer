@@ -6,21 +6,13 @@
 #include "tools/fs.h"
 #include "tools/face.h"
 #include "tools/image.h"
-
-
-#ifndef M_PI
-#define M_PI 3.14159265358979323846
-#endif 
-
-#ifndef M_2_SQRTPI
-#define M_2_SQRTPI 1.12837916709551257390
-#endif
-
-#ifndef M_MIN
-#define M_MIN(_a, _b) ((_a)<(_b)?(_a):(_b))
-#endif
+#include "tools/math.h"
 
 #define USE_BILINEAR_INTERPOLATION
+
+// extern "C" {
+#include "skylight/ArHosekSkyModel.h"
+// }
 
 // A few useful utilities from Filament
 // https://github.com/google/filament/blob/master/tools/cmgen/src/CubemapSH.cpp
@@ -291,17 +283,19 @@ void splitFacesFromEquilateral(T *_data, unsigned int _width, unsigned int _heig
 
 bool TextureCube::load(const std::string &_path, bool _vFlip) {
 
-    // Init
-    glGenTextures(1, &m_id);
+    if (m_id != 0) {
+        // Init
+        glGenTextures(1, &m_id);
 
-    glBindTexture(GL_TEXTURE_CUBE_MAP, m_id);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-#ifndef PLATFORM_RPI
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-#endif
+        glBindTexture(GL_TEXTURE_CUBE_MAP, m_id);
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    #ifndef PLATFORM_RPI
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    #endif
+    }
 
     int sh_samples = 0;
     if (haveExt(_path,"png") || haveExt(_path,"PNG") ||
@@ -423,7 +417,136 @@ bool TextureCube::load(const std::string &_path, bool _vFlip) {
     return true;
 }
 
+bool TextureCube::generate(SkyBox* _skybox, int _width ) {
+
+    if (m_id != 0) {
+        // Init
+        glGenTextures(1, &m_id);
+
+        glBindTexture(GL_TEXTURE_CUBE_MAP, m_id);
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    #ifndef PLATFORM_RPI
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    #endif
+    }
+
+    int sh_samples = 0;
+
+    m_width = _width;
+    m_height = int(_width/2);
+    int nPixels = m_width * m_height * 3;
+
+    float *data = new float[nPixels]; 
+
+    // FILAMENT SKYGEN 
+    // https://github.com/google/filament/blob/master/tools/skygen/src/main.cpp
+    //
+    float solarElevation = _skybox->elevation;
+    float sunTheta = float(M_PI_2 - solarElevation);
+    float sunPhi = 0.0f;
+    bool normalize = true;
+
+    ArHosekSkyModelState* skyState[9] = {
+        arhosek_xyz_skymodelstate_alloc_init(_skybox->turbidity, _skybox->groundAlbedo.r, solarElevation),
+        arhosek_xyz_skymodelstate_alloc_init(_skybox->turbidity, _skybox->groundAlbedo.g, solarElevation),
+        arhosek_xyz_skymodelstate_alloc_init(_skybox->turbidity, _skybox->groundAlbedo.b, solarElevation)
+    };
+
+    glm::mat3 XYZ_sRGB = glm::mat3(
+            3.2404542f, -0.9692660f,  0.0556434f,
+            -1.5371385f,  1.8760108f, -0.2040259f,
+            -0.4985314f,  0.0415560f,  1.0572252f
+    );
+
+    float maxSample = 0.00001f;
+    for (unsigned int y = 0; y < m_height; y++) {
+        float v = (y + 0.5f) / m_height;
+        float theta = float(M_PI * v);
+
+        if (theta > M_PI_2) 
+            continue;
+            
+        for (unsigned int x = 0; x < m_width; x++) {
+            float u = (x + 0.5f) / m_width;
+            float phi = float(-2.0 * M_PI * u + M_PI + _skybox->azimuth);
+
+            float gamma = angleBetween(theta, phi, sunTheta, sunPhi);
+
+            glm::vec3 sample = glm::vec3(
+                arhosek_tristim_skymodel_radiance(skyState[0], theta, gamma, 0),
+                arhosek_tristim_skymodel_radiance(skyState[1], theta, gamma, 1),
+                arhosek_tristim_skymodel_radiance(skyState[2], theta, gamma, 2)
+            );
+
+            if (normalize) {
+                sample *= float(4.0 * M_PI / 683.0);
+            }
+
+            maxSample = std::max(maxSample, sample.y);
+            sample = XYZ_sRGB * sample;
+
+            int index = (y * m_width * 3) + x * 3;
+            data[index] = sample.r;
+            data[index + 1] = sample.g;
+            data[index + 2] = sample.b;
+        }
+    }
+
+    // cleanup sky data
+    arhosekskymodelstate_free(skyState[0]);
+    arhosekskymodelstate_free(skyState[1]);
+    arhosekskymodelstate_free(skyState[2]);
+
+    float hdrScale = 1.0f / (normalize ? maxSample : maxSample / 16.0f);
+
+    for (unsigned int y = 0; y < m_height; y++) {
+        for (unsigned int x = 0; x < m_width; x++) {
+            int i = (y * m_width * 3) + x * 3;
+
+            if (y >= m_height / 2) {
+                data[i] = _skybox->groundAlbedo.r;
+                data[i + 1] = _skybox->groundAlbedo.g;
+                data[i + 2] = _skybox->groundAlbedo.b;
+            }
+            else {
+                data[i] *= hdrScale;
+                data[i + 1] *= hdrScale;
+                data[i + 2] *= hdrScale;
+            }
+        }
+    }
+
+    // LOAD FACES
+    Face<float> **faces = new Face<float>*[6];
+    splitFacesFromEquilateral<float>(data, m_width, m_height, faces);
+    
+    for (int i = 0; i < 6; i++) {
+        faces[i]->upload();
+        sh_samples += faces[i]->calculateSH(SH);
+    }
+
+    for(int i = 0; i < 6; ++i) {
+        delete[] faces[i]->data;
+        delete faces[i];
+    }
+    delete[] faces;
+    // delete[] data;
+
+    for (int i = 0; i < 9; i++) {
+        SH[i] = SH[i] * (32.0f / (float)sh_samples);
+        // cout << SH[i].x << "," << SH[i].y << "," << SH[i].z << endlxw;
+    }
+
+    glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+
+    return true;
+}
+
 void TextureCube::bind() {
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, m_id);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, m_id);
 }

@@ -10,6 +10,7 @@
 #include "3d/light.h"
 
 #include "tools/fs.h"
+#include "tools/skybox.h"
 #include "tools/uniform.h"
 
 enum ShaderType {
@@ -51,7 +52,12 @@ public:
     void                    addDefines(const std::string &_define);
     void                    delDefines(const std::string &_define);
 
-    void                    setCubeMap(TextureCube* _cubemap, bool _draw = true) { m_cubemap = _cubemap; m_cubemap_draw = _draw; }
+    void                    setCubeMap(SkyBox* _skybox) { m_cubemap_skybox = _skybox; m_cubemap_skybox->change = true; }
+    void                    setCubeMap(TextureCube* _cubemap) {  m_cubemap = _cubemap; }
+    TextureCube*            getCubeMap() { return m_cubemap; }
+    void                    setCubeMapVisible(bool _draw) {  m_cubemap_draw = _draw; }
+    bool                    getCubeMapVisible() { return m_cubemap_draw; }
+
     void                    setCulling(CullingMode _culling) { m_culling = _culling; }
     CullingMode             getCulling() { return m_culling; }
 
@@ -140,6 +146,7 @@ private:
     Shader              m_cubemap_shader;
     Vbo*                m_cubemap_vbo;
     TextureCube*        m_cubemap;
+    SkyBox*             m_cubemap_skybox;
     bool                m_cubemap_draw;
     
     // Background

@@ -7,13 +7,6 @@
 #include <iostream>
 #include <iomanip>
 
-// #include <cctype>
-// #include <iomanip>
-// #include <math.h>
-
-// #include <limits.h>
-// #include <stdlib.h>
-
 #include "glm/glm.hpp"
 
 // Search for one apearance
