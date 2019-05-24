@@ -2,6 +2,7 @@
 
 #include <sys/stat.h>   // stat
 #include <algorithm>    // std::find
+#include <math.h>
 
 #include "window.h"
 
@@ -1012,7 +1013,7 @@ void Sandbox::onMouseDrag(float _x, float _y, int _button) {
         float vel_x = getMouseVelX();
         float vel_y = getMouseVelY();
 
-        if (abs(vel_x) < 50.0 && abs(vel_y) < 50.0) {
+        if (fabs(vel_x) < 50.0 && fabs(vel_y) < 50.0) {
             m_lat -= vel_x;
             m_lon -= vel_y * 0.5;
             m_cam.orbit(m_lat, m_lon, dist);
