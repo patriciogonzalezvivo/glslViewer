@@ -1057,6 +1057,7 @@ void Sandbox::onScreenshot(std::string _file) {
         unsigned char* pixels = new unsigned char[getWindowWidth() * getWindowHeight()*4];
         glReadPixels(0, 0, getWindowWidth(), getWindowHeight(), GL_RGBA, GL_UNSIGNED_BYTE, pixels);
         savePixels(_file, pixels, getWindowWidth(), getWindowHeight());
+        delete[] pixels;
 
         if (!m_record) {
             std::cout << "// Screenshot saved to " << _file << std::endl;

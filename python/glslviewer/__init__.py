@@ -31,13 +31,14 @@ class GlslViewer:
 
         # compose and excecute a glslViewer command
         self.cmd = [self.COMMAND]
-        self.cmd.append(filename)
+
+        if 'geometry' in options:
+            self.cmd.append(options['geometry'])
 
         if 'vertex' in options:
             self.cmd.append(options['vertex'])
 
-        if 'geometry' in options:
-            self.cmd.append(options['geometry'])
+        self.cmd.append(filename)
 
         if 'headless' in options:
             if options['headless']:
@@ -285,4 +286,10 @@ class GlslViewer:
         if not self.isRunning():
             return False
         answer = self.write('sequence,' + str(start_second) + ',' + str(end_second))
+        return answer
+
+    def setCamera(self, x, y, z):
+        if not self.isRunning():
+            return False
+        answer = self.write('camera_position,' + str(x) + ',' + str(y) + ',' + str(z))
         return answer

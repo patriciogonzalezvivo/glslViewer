@@ -38,7 +38,8 @@ bool Texture::load(const std::string& _path, bool _vFlip) {
 
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_width, m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 
-        delete[] pixels;
+        // delete[] pixels;
+        delete pixels;
     }
 
     else if (haveExt(_path, "hdr") || haveExt(_path,"HDR")) {
@@ -52,7 +53,8 @@ bool Texture::load(const std::string& _path, bool _vFlip) {
 
         glTexImage2D(GL_TEXTURE_2D, 0, InternalFormat, m_width, m_height, 0, GL_RGB, GL_FLOAT, pixels);
 
-        delete[] pixels;
+        // delete[] pixels;
+        delete pixels;
     }
 
     glGenerateMipmap(GL_TEXTURE_2D);
