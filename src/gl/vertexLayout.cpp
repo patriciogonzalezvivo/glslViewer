@@ -141,6 +141,7 @@ precision mediump float;\n\
 #endif\n\
 \n\
 uniform vec3    u_light;\n\
+uniform vec3    u_camera;\n\
 \n";
 
 
@@ -168,10 +169,22 @@ uniform vec3    u_light;\n\
     }
 
     if ( m_normalAttribIndex != -1 ){
-        rta += 
-"    float shade = dot(v_" + m_attribs[m_normalAttribIndex].name + ", normalize(u_light));\n\
-    shade *= smoothstep(-1.0, 1.0, shade);\n\
-    color *= shade;";
+        rta += "\
+    vec3 l = normalize(u_light);\n\
+    vec3 n = normalize(v_" + m_attribs[m_normalAttribIndex].name + ");\n\
+    vec3 v = normalize(u_camera);\n\
+    vec3 h = normalize(l + v);\n\
+    \n\
+    float t = dot(n, l) * 0.5 + 0.5;\n\
+    float s = max(0.0, dot(n, h));\n\
+    s = pow(s, 20.0);\n\
+    \n\
+    // Gooch Light Model (w Blinn specular)\n\
+    color = mix(mix(vec3(0.0, 0.0, .3) + color * 0.255, \n\
+                    vec3(0.35, 0.25, 0.0) + color * 0.255, \n\
+                    t), \n\
+                vec3(1.0, 1.0, 1.0), \n\
+                s);\n";
     }
 
     rta +=  "    gl_FragColor = vec4(color, 1.0);\n"

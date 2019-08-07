@@ -853,7 +853,7 @@ void Sandbox::drawDebug2D() {
 void Sandbox::drawDone() {
     // RECORD
     if (m_record) {
-        onScreenshot(toString(m_record_counter,0,3,'0') + ".png");
+        onScreenshot(toString(m_record_counter, 0, 5, '0') + ".png");
         m_record_head += FRAME_DELTA;
         m_record_counter++;
 
