@@ -522,11 +522,15 @@ void Sandbox::_renderShadowMap() {
 }
 
 void Sandbox::_renderBuffers() {
+    glBlendFunc(GL_ONE, GL_ONE);
+
     m_textureIndex = 0;
     for (unsigned int i = 0; i < m_buffers.size(); i++) {
         m_textureIndex = 0;
         m_buffers[i].bind();
         m_buffers_shaders[i].use();
+
+        
 
         // Update uniforms variables
         _updateUniforms( m_buffers_shaders[i] );
@@ -545,6 +549,8 @@ void Sandbox::_renderBuffers() {
 
         m_buffers[i].unbind();
     }
+
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
 void Sandbox::_renderBackground() {
@@ -654,7 +660,10 @@ void Sandbox::draw() {
     
     // BUFFERS
     // -----------------------------------------------
-    _renderBuffers();
+    if (m_buffers.size() > 0) {
+        _renderBuffers();
+    }
+    
 
     // MAIN SCENE
     // ----------------------------------------------- < main scene start
