@@ -522,7 +522,7 @@ void Sandbox::_renderShadowMap() {
 }
 
 void Sandbox::_renderBuffers() {
-    glBlendFunc(GL_ONE, GL_ONE);
+    glDisable(GL_BLEND);
 
     m_textureIndex = 0;
     for (unsigned int i = 0; i < m_buffers.size(); i++) {
@@ -550,6 +550,7 @@ void Sandbox::_renderBuffers() {
         m_buffers[i].unbind();
     }
 
+    glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
