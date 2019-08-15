@@ -530,8 +530,6 @@ void Sandbox::_renderBuffers() {
         m_buffers[i].bind();
         m_buffers_shaders[i].use();
 
-        
-
         // Update uniforms variables
         _updateUniforms( m_buffers_shaders[i] );
 

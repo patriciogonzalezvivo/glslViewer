@@ -150,7 +150,7 @@ uniform vec3    u_camera;\n\
         if (m_positionAttribIndex == int(i)) {
             size = 4;
         }
-        rta += "varying vec" + toString(size) + " v_" + m_attribs[i].name + ";\n";
+        rta += "varying vec" + toString(size) + "    v_" + m_attribs[i].name + ";\n";
     }
 
     rta += "\n"
