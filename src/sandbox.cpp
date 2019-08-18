@@ -27,6 +27,8 @@ Sandbox::Sandbox():
     m_model_vbo(nullptr), m_model_area(0.0),
     // Camera.
     m_mvp(1.0), m_view2d(1.0), m_lat(180.0), m_lon(0.0),
+    // Light
+    m_light_vbo(nullptr), m_dynamicShadows(false),
     // CubeMap
     m_cubemap_vbo(nullptr), m_cubemap(nullptr), m_cubemap_skybox(nullptr), m_cubemap_draw(false),
     // Background
@@ -36,7 +38,7 @@ Sandbox::Sandbox():
     // PostProcessing
     m_postprocessing_enabled(false),
     // Geometry helpers
-    m_billboard_vbo(nullptr), m_light_vbo(nullptr), m_cross_vbo(nullptr), m_grid_vbo(nullptr), m_axis_vbo(nullptr), m_bbox_vbo(nullptr),
+    m_billboard_vbo(nullptr), m_cross_vbo(nullptr), m_grid_vbo(nullptr), m_axis_vbo(nullptr), m_bbox_vbo(nullptr),
     // Record
     m_record_start(0.0f), m_record_head(0.0f), m_record_end(0.0f), m_record_counter(0), m_record(false),
     // Scene
@@ -500,7 +502,7 @@ void Sandbox::_updateDependencies(WatchFileList &_files) {
 void Sandbox::_renderShadowMap() {
     if (geom_index != -1 &&
         uniforms_functions["u_ligthShadowMap"].present && 
-        m_light.bChange) {
+        (m_light.bChange || m_dynamicShadows) ) {
 
         m_textureIndex = 0;
 

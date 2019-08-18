@@ -621,6 +621,25 @@ void declareCommands() {
         return false;
     },
     "light_color[,<r>,<g>,<b>]      get or set the light color."));
+    
+
+    commands.push_back(Command("dynamic_shadows", [&](const std::string& _line){ 
+        if (_line == "dynamic_shadows") {
+            std::string rta = sandbox.getDynamicShadows() ? "on" : "off";
+            std::cout <<  rta << std::endl; 
+            return true;
+        }
+        else {
+            std::vector<std::string> values = split(_line,',');
+            if (values.size() == 2) {
+                consoleMutex.lock();
+                sandbox.setDynamicShadows( (values[1] == "on") );
+                consoleMutex.unlock();
+            }
+        }
+        return false;
+    },
+    "dynamic_shadows[on|off]        get or set dynamic shadows"));
 
     commands.push_back(Command("skybox_ground", [&](const std::string& _line){ 
         std::vector<std::string> values = split(_line,',');

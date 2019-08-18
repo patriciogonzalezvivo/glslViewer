@@ -61,6 +61,9 @@ public:
     void                    setCulling(CullingMode _culling) { m_culling = _culling; }
     CullingMode             getCulling() { return m_culling; }
 
+    void                    setDynamicShadows(bool _dynamic) { m_dynamicShadows = _dynamic; }
+    bool                    getDynamicShadows() { return m_dynamicShadows; }
+
     // Getting some data out of Sandbox
     std::string             getSource(ShaderType _type) const;
     int                     getTotalBuffers() const { return m_buffers.size(); }
@@ -139,8 +142,10 @@ private:
 
     // Ligth
     Light               m_light;
+    Vbo*                m_light_vbo;
+    Shader              m_light_shader;
     Fbo                 m_light_depthfbo;
-    // Shader              m_light_depthshader;
+    bool                m_dynamicShadows;
 
     // CubeMap
     Shader              m_cubemap_shader;
@@ -167,9 +172,6 @@ private:
     Shader              m_billboard_shader;
     Vbo*                m_billboard_vbo;
     
-    // Light
-    Shader              m_light_shader;
-    Vbo*                m_light_vbo;
 
     // Cursor
     Shader              m_wireframe2D_shader;
