@@ -1231,6 +1231,7 @@ int main(int argc, char **argv){
     filesMutex.unlock();
 
     // Render Loop
+    bool timeOut = false;
     while ( isGL() && bRun.load() ) {
         // Update
         updateGL();
@@ -1251,6 +1252,12 @@ int main(int argc, char **argv){
             continue;
         }
 
+        
+        if ( timeLimit >= 0.0 && getTime() >= timeLimit ) {
+            timeOut = true;
+            sandbox.screenshotFile = outputFile;
+        }
+
         // Draw Scene
         sandbox.draw();
 
@@ -1260,11 +1267,12 @@ int main(int argc, char **argv){
         // Finish drawing
         sandbox.drawDone();
 
-        // Swap the buffers
-        renderGL();
-
-        if ( timeLimit >= 0.0 && getTime() >= timeLimit ) {
+        if ( timeOut ) {
             bRun.store(false);
+        }
+        else {
+             // Swap the buffers
+            renderGL();
         }
     }
 
@@ -1315,9 +1323,6 @@ void onViewportResize(int _newWidth, int _newHeight) {
 }
 
 void onExit() {
-    // Take a screenshot if it need
-    sandbox.onScreenshot(outputFile);
-
     // clear screen
     glClear( GL_COLOR_BUFFER_BIT );
 
