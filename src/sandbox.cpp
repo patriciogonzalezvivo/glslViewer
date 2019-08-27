@@ -671,6 +671,12 @@ void Sandbox::draw() {
     if (m_postprocessing_enabled) {
         m_scene_fbo.bind();
     }
+    else if (screenshotFile != "" || m_record) {
+        if (!m_record_fbo.isAllocated()) {
+            m_record_fbo.allocate(getWindowWidth(), getWindowHeight(), COLOR_TEXTURE_DEPTH_BUFFER);
+        }
+        m_record_fbo.bind();
+    }
 
     // Clear the background
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -692,6 +698,13 @@ void Sandbox::draw() {
     // POST PROCESSING
     if (m_postprocessing_enabled) {
         m_scene_fbo.unbind();
+
+        if (screenshotFile != "" || m_record) {
+             if (!m_record_fbo.isAllocated()) {
+                m_record_fbo.allocate(getWindowWidth(), getWindowHeight(), COLOR_TEXTURE_DEPTH_BUFFER);
+            }
+            m_record_fbo.bind();
+        }
     
         m_textureIndex = 0;
         m_postprocessing_shader.use();
@@ -708,6 +721,10 @@ void Sandbox::draw() {
         }
 
         m_billboard_vbo->draw( &m_postprocessing_shader );
+    }
+    
+    if (screenshotFile != "" || m_record) {
+        m_record_fbo.unbind();
     }
 }
 
@@ -861,9 +878,11 @@ void Sandbox::drawDebug2D() {
 }
 
 void Sandbox::drawDone() {
+
     // RECORD
     if (m_record) {
         onScreenshot(toString(m_record_counter, 0, 5, '0') + ".png");
+
         m_record_head += FRAME_DELTA;
         m_record_counter++;
 
@@ -1059,11 +1078,18 @@ void Sandbox::onViewportResize(int _newWidth, int _newHeight) {
     if (m_postprocessing_enabled) {
         m_scene_fbo.allocate(_newWidth, _newHeight, uniforms_functions["u_sceneDepth"].present ? COLOR_DEPTH_TEXTURES : COLOR_TEXTURE_DEPTH_BUFFER);
     }
+
+    if (m_record_fbo.isAllocated()) {
+        m_scene_fbo.allocate(_newWidth, _newHeight, COLOR_TEXTURE_DEPTH_BUFFER);
+    }
+
     m_change = true;
 }
 
 void Sandbox::onScreenshot(std::string _file) {
     if (_file != "" && isGL()) {
+        glBindFramebuffer(GL_FRAMEBUFFER, m_record_fbo.getId());
+
         unsigned char* pixels = new unsigned char[getWindowWidth() * getWindowHeight()*4];
         glReadPixels(0, 0, getWindowWidth(), getWindowHeight(), GL_RGBA, GL_UNSIGNED_BYTE, pixels);
         savePixels(_file, pixels, getWindowWidth(), getWindowHeight());
@@ -1073,6 +1099,8 @@ void Sandbox::onScreenshot(std::string _file) {
             std::cout << "// Screenshot saved to " << _file << std::endl;
             std::cout << "// > ";
         }
+
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 }
 

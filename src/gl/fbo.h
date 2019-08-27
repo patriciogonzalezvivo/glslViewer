@@ -19,6 +19,7 @@ public:
     const FboType&  getType() const { return m_type; }
     const GLuint    getTextureId() const { return m_texture; }
 
+    const bool      isAllocated() const { return m_allocated; }
     const bool      haveDepthBuffer() const { return m_depth; }
     const bool      haveDepthTexture() const { return m_depth_texture != 0; }
     const GLuint    getDepthTextureId() const { return m_depth_texture; }

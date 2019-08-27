@@ -186,6 +186,7 @@ private:
     Vbo*                m_bbox_vbo;
     
     // Recording
+    Fbo                 m_record_fbo;
     float               m_record_start;
     float               m_record_head;
     float               m_record_end;

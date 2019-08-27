@@ -461,8 +461,6 @@ void renderGL(){
         // OSX/LINUX
         glfwSwapBuffers(window);
     #endif
-
-    
 }
 
 void closeGL(){
