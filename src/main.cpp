@@ -81,7 +81,7 @@ void printUsage(char * executableName) {
     std::cerr << "// [-s/--sec <seconds>] - exit app after a specific amount of seconds" << std::endl;
     std::cerr << "// [-o <file>.png] - save the viewport to an image file before" << std::endl;
     std::cerr << "// [--headless] - headless rendering. Very useful for making images or benchmarking." << std::endl;
-    std::cerr << "// [--cursor] - show cursor" << std::endl;
+    std::cerr << "// [--nocursor] - hide cursor" << std::endl;
     std::cerr << "// [-I<include_folder>] - add an include folder to default for #include files" << std::endl;
     std::cerr << "// [-D<define>] - add system #defines directly from the console argument" << std::endl;
     std::cerr << "// [-e/-E <command>] - execute command when start. Multiple -e flags can be chained" << std::endl;

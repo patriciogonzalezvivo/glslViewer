@@ -17,10 +17,10 @@ Mesh lineTo(const glm::vec3 &_a, const glm::vec3 &_dir, float _size) {
 }
 
 Mesh cross (const glm::vec3 &_pos, float _width) {
-    glm::vec3 linePoints[4] = {glm::vec3(_pos.x,_pos.y,_pos.z),
-        glm::vec3(_pos.x,_pos.y,_pos.z),
-        glm::vec3(_pos.x,_pos.y,_pos.z),
-        glm::vec3(_pos.x,_pos.y,_pos.z) };
+    glm::vec3 linePoints[4] = { glm::vec3(_pos.x,_pos.y,_pos.z),
+                                glm::vec3(_pos.x,_pos.y,_pos.z),
+                                glm::vec3(_pos.x,_pos.y,_pos.z),
+                                glm::vec3(_pos.x,_pos.y,_pos.z) };
 
     linePoints[0].x -= _width;
     linePoints[1].x += _width;
@@ -28,8 +28,12 @@ Mesh cross (const glm::vec3 &_pos, float _width) {
     linePoints[3].y += _width;
 
     Mesh mesh;
-    mesh.addVertices(linePoints,4);
     mesh.setDrawMode(GL_LINES);
+    mesh.addVertices(linePoints, 4);
+
+    // mesh.add( line(linePoints[0] , linePoints[1]) );
+    // mesh.add( line(linePoints[2] , linePoints[3]) );
+
     return mesh;
 }
 

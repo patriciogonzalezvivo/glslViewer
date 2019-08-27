@@ -73,7 +73,22 @@
         "__functional_03": "cpp",
         "__string": "cpp",
         "__mutex_base": "cpp",
-        "random": "cpp"
+        "random": "cpp",
+        "__debug": "cpp",
+        "__errc": "cpp",
+        "__hash_table": "cpp",
+        "__node_handle": "cpp",
+        "__threading_support": "cpp",
+        "codecvt": "cpp",
+        "csignal": "cpp",
+        "future": "cpp",
+        "queue": "cpp",
+        "stack": "cpp",
+        "variant": "cpp",
+        "hash_map": "cpp",
+        "bit": "cpp",
+        "memory_resource": "cpp",
+        "cfenv": "cpp"
     },
     "python.pythonPath": "/usr/local/bin/python"
 }

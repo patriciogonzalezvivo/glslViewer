@@ -101,14 +101,11 @@ uniform mat4 u_modelViewProjectionMatrix;\n\
 uniform vec2 u_translate;\n\
 uniform vec2 u_scale;\n\
 attribute vec4 a_position;\n\
-attribute vec2 a_texcoord;\n\
-varying vec2 v_texcoord;\n\
 \n\
 void main(void) {\n\
     vec4 position = a_position;\n\
     position.xy *= u_scale;\n\
     position.xy += u_translate;\n\
-    v_texcoord = a_texcoord;\n\
     gl_Position = u_modelViewProjectionMatrix * position;\n\
 }\n";
 

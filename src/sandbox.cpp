@@ -21,7 +21,7 @@
 // ------------------------------------------------------------------------- CONTRUCTOR
 Sandbox::Sandbox(): 
     frag_index(-1), vert_index(-1), geom_index(-1),
-    verbose(false), cursor(false), debug(false),
+    verbose(false), cursor(true), debug(false),
     // Main Vert/Frag/Geom
     m_frag_source(""), m_vert_source(""),
     m_model_vbo(nullptr), m_model_area(0.0),
@@ -786,6 +786,8 @@ void Sandbox::drawDebug3D() {
 
 void Sandbox::drawDebug2D() {
     if (debug) {        
+        glDisable(GL_DEPTH_TEST);
+
         // DEBUG BUFFERS
         int nTotal = m_buffers.size();
         if (m_postprocessing_enabled) {
@@ -818,6 +820,7 @@ void Sandbox::drawDebug2D() {
                 m_billboard_vbo->draw(&m_billboard_shader);
                 yOffset -= yStep * 2.0 + margin;
             }
+
             if (m_postprocessing_enabled) {
                 if (uniforms_functions["u_scene"].present) {
                     m_billboard_shader.setUniform("u_depth", float(0.0));
@@ -860,8 +863,8 @@ void Sandbox::drawDebug2D() {
     }
 
     if (cursor) {
-        if (m_cross_vbo == nullptr)
-            m_cross_vbo = cross(glm::vec3(0.,0.,0.1), 10.).getVbo();
+        if (m_cross_vbo == nullptr) 
+            m_cross_vbo = cross(glm::vec3(0.0, 0.0, 0.0), 10.).getVbo();
 
         if (!m_wireframe2D_shader.isLoaded())
             m_wireframe2D_shader.load(wireframe2D_frag, wireframe2D_vert, defines, false);
@@ -869,7 +872,7 @@ void Sandbox::drawDebug2D() {
         glLineWidth(2.0f);
         m_wireframe2D_shader.use();
         m_wireframe2D_shader.setUniform("u_color", glm::vec4(1.0));
-        m_wireframe2D_shader.setUniform("u_scale", 1.0, 1.0);
+        m_wireframe2D_shader.setUniform("u_scale", 1.0f, 1.0f);
         m_wireframe2D_shader.setUniform("u_translate", getMouseX(), getMouseY());
         m_wireframe2D_shader.setUniform("u_modelViewProjectionMatrix", getOrthoMatrix());
         m_cross_vbo->draw(&m_wireframe2D_shader);

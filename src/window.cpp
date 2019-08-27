@@ -214,6 +214,8 @@ void initGL (glm::ivec4 &_viewport, bool _headless, bool _alwaysOnTop) {
             exit(-1);
         }
 
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+
         setWindowSize(_viewport.z, _viewport.w);
 
         glfwMakeContextCurrent(window);
