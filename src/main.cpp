@@ -926,11 +926,11 @@ void onExit() {
     // clear screen
     glClear( GL_COLOR_BUFFER_BIT );
 
+    // Delete the resources of Sandbox
+    sandbox.clear();
+
     // close openGL instance
     closeGL();
-
-    // Delete the resources of Sandbox
-    sandbox.clean();
 }
 
 
@@ -955,7 +955,7 @@ void fileWatcherThread() {
     }
 }
 
-void runCmd(const std::string &_cmd) {
+void runCmd(const std::string &_cmd, std::mutex &_mutex) {
     bool resolve = false;
 
     // Check if _cmd is present in the list of commands
@@ -964,13 +964,13 @@ void runCmd(const std::string &_cmd) {
 
             // Do require mutex the thread?
             if (commands[i].mutex)
-                consoleMutex.lock();
+                _mutex.lock();
 
             // Execute de command
             resolve = commands[i].exec(_cmd);
 
             if (commands[i].mutex)
-                consoleMutex.unlock();
+                _mutex.unlock();
 
             // If got resolved stop searching
             if (resolve) {
@@ -981,10 +981,10 @@ void runCmd(const std::string &_cmd) {
 
     // If nothing match maybe the user is trying to define the content of a uniform
     if (!resolve) {
-        consoleMutex.lock();
+        _mutex.lock();
         sandbox.uniforms.parseLine(_cmd);
         sandbox.flagChange();
-        consoleMutex.unlock();
+        _mutex.unlock();
     }
 }
 
@@ -998,7 +998,7 @@ void cinWatcherThread() {
     // Argument commands to execute comming from -e or -E
     if (arguments_cmds.size() > 0) {
         for (unsigned int i = 0; i < arguments_cmds.size(); i++) {
-            runCmd(arguments_cmds[i]);
+            runCmd(arguments_cmds[i], consoleMutex);
         }
         arguments_cmds.clear();
 
@@ -1012,7 +1012,7 @@ void cinWatcherThread() {
     std::string console_line;
     std::cout << "// > ";
     while (std::getline(std::cin, console_line)) {
-        runCmd(console_line);
+        runCmd(console_line, consoleMutex);
         std::cout << "// > ";
     }
 }

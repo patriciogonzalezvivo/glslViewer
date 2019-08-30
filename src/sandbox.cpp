@@ -118,7 +118,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         }
         return false;
     },
-    "defines                return a list of active defines"));
+    "defines                return a list of active defines", false));
 
     _commands.push_back(Command("uniforms", [&](const std::string& _line){ 
         uniforms.print(_line == "uniforms,all");
@@ -128,7 +128,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
 
         return true;
     },
-    "uniforms[,all|active]  return a list of all uniforms and their values or just the one active (default)."));
+    "uniforms[,all|active]  return a list of all uniforms and their values or just the one active (default).", false));
 
     _commands.push_back(Command("textures", [&](const std::string& _line){ 
         if (_line == "textures") {
@@ -137,7 +137,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         }
         return false;
     },
-    "textures               return a list of textures as their uniform name and path."));
+    "textures               return a list of textures as their uniform name and path.", false));
 
     _commands.push_back(Command("buffers", [&](const std::string& _line){ 
         if (_line == "buffers") {
@@ -146,7 +146,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         }
         return false;
     },
-    "buffers                return a list of buffers as their uniform name."));
+    "buffers                return a list of buffers as their uniform name.", false));
 
     // Prepare viewport
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
@@ -612,21 +612,22 @@ void Sandbox::drawDone() {
     }
 
     m_frame++;
-    m_change = false;
+    unfalgChange();
 }
 
 // ------------------------------------------------------------------------- ACTIONS
 
-void Sandbox::clean() {
+void Sandbox::clear() {
     uniforms.clear();
+
+    if (geom_index != -1)
+        m_scene.clear();
 
     if (m_billboard_vbo)
         delete m_billboard_vbo;
 
     if (m_cross_vbo)
         delete m_cross_vbo;
-
-    m_scene.clear();
 }
 
 void Sandbox::record(float _start, float _end) {
@@ -724,7 +725,8 @@ void Sandbox::onScroll(float _yoffset) {
 }
 
 void Sandbox::onMouseDrag(float _x, float _y, int _button) {
-    m_scene.onMouseDrag(_x, _y, _button);
+    if (geom_index != -1)
+        m_scene.onMouseDrag(_x, _y, _button);
 
     if (_button == 1) {
         // Left-button drag is used to pan u_view2d.
@@ -734,7 +736,8 @@ void Sandbox::onMouseDrag(float _x, float _y, int _button) {
 }
 
 void Sandbox::onViewportResize(int _newWidth, int _newHeight) {
-    m_scene.onViewportResize(_newWidth, _newHeight);
+    if (geom_index != -1)
+        m_scene.onViewportResize(_newWidth, _newHeight);
     
     for (unsigned int i = 0; i < uniforms.buffers.size(); i++) {
         uniforms.buffers[i].allocate(_newWidth, _newHeight, COLOR_TEXTURE);

@@ -126,8 +126,10 @@ void Uniforms::flagChange() {
 void Uniforms::clear() {
     // Delete Textures
     for (TextureList::iterator i = textures.begin(); i != textures.end(); ++i) {
-        delete i->second;
-        i->second = NULL;
+        if (i->second) {
+            delete i->second;
+            i->second = nullptr;
+        }
     }
     textures.clear();
 }

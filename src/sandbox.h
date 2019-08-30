@@ -25,7 +25,7 @@ public:
     void                    drawUI();
     void                    drawDone();
 
-    void                    clean();
+    void                    clear();
     
     bool                    isReady();
 

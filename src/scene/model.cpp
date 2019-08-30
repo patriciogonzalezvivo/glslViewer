@@ -9,14 +9,19 @@ Model::Model():
 }
 
 Model::~Model() {
+    clear();
 }
 
 void Model::clear() {
-    if (m_model_vbo != nullptr)
+    if (m_model_vbo) {
         delete m_model_vbo;
+        m_model_vbo = nullptr;
+    }
 
-    if (m_bbox_vbo != nullptr)
+    if (m_bbox_vbo) {
         delete m_bbox_vbo;
+        m_bbox_vbo = nullptr;
+    }
 }
 
 void Model::load(const std::string &_path, List &_defines) {

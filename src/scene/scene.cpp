@@ -328,13 +328,13 @@ void Scene::setup(CommandList &_commands, Uniforms &_uniforms) {
 
     // IBL UNIFORM
     _uniforms.functions["u_cubeMap"] = UniformFunction("samplerCube", [this](Shader& _shader) {
-        if (m_cubemap != nullptr) {
+        if (m_cubemap) {
             _shader.setUniformTextureCube("u_cubeMap", (TextureCube*)m_cubemap);
         }
     });
 
     _uniforms.functions["u_SH"] = UniformFunction("vec3", [this](Shader& _shader) {
-        if (m_cubemap != nullptr) {
+        if (m_cubemap) {
             _shader.setUniform("u_SH", m_cubemap->SH, 9);
         }
     });
@@ -417,23 +417,30 @@ void Scene::setup(CommandList &_commands, Uniforms &_uniforms) {
 void Scene::clear() {
     m_model.clear();
 
-    if (m_light_vbo != nullptr)
+    if (m_light_vbo) {
         delete m_light_vbo;
+        m_light_vbo = nullptr;
+    }
 
-    if (m_cubemap != nullptr)
+    if (m_cubemap) {
         delete m_cubemap;
+        m_cubemap = nullptr;
+    }
 
-    if (m_cubemap_vbo != nullptr)
+    if (m_cubemap_vbo) {
         delete m_cubemap_vbo;
+        m_cubemap_vbo = nullptr;
+    }
 
-    // if (m_cubemap_skybox != nullptr)
-    //     delete m_cubemap_skybox;
-
-    if (m_grid_vbo != nullptr)
+    if (m_grid_vbo) {
         delete m_grid_vbo;
+        m_grid_vbo = nullptr;
+    }
 
-    if (m_axis_vbo != nullptr)
+    if (m_axis_vbo) {
         delete m_axis_vbo;
+        m_axis_vbo = nullptr;
+    }
 }
 
 void Scene::loadModel( const std::string &_path, List &defines ) {
@@ -509,7 +516,7 @@ void Scene::renderShadowMap(Shader &_shader, Uniforms &_uniforms) {
 
 void Scene::renderCubeMap() {
     // If there is a skybox and it had changes re generate
-    if (m_cubemap_skybox != nullptr) {
+    if (m_cubemap_skybox) {
         if (m_cubemap_skybox->change) {
             if (!m_cubemap) {
                 m_cubemap = new TextureCube();
@@ -542,7 +549,7 @@ void Scene::renderDebug() {
     if (!m_wireframe3D_shader.isLoaded())
         m_wireframe3D_shader.load(wireframe3D_frag, wireframe3D_vert, m_defines, false);
 
-    if (m_model.getBboxVbo() != nullptr) {
+    if (m_model.getBboxVbo()) {
         // Bounding box
         glLineWidth(3.0f);
         m_wireframe3D_shader.use();
