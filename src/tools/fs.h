@@ -28,6 +28,7 @@ bool haveExt(const std::string &_filename, const std::string &_ext);
 bool loadFromPath(const std::string &_filename, std::string *_into, const FileList &_include_folders, FileList *_dependencies);
 
 std::string toString(FileType _type);
+std::string getBaseDir (const std::string& filepath);
 std::string getAbsPath (const std::string &_filename);
 std::string urlResolve(const std::string &_filename, const std::string &_pwd, const FileList &_include_folders);
 

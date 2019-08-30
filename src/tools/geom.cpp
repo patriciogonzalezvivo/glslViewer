@@ -321,3 +321,18 @@ float mapValue(const float &_value, const float &_inputMin, const float &_inputM
         return outVal;
     }
 }
+
+void getNormal(const glm::vec3 &v0, const glm::vec3 &v1, const glm::vec3 &v2, glm::vec3 &N) {
+    glm::vec3 v10 = v1 - v0;
+    glm::vec3 v20 = v2 - v0;
+
+    N.x = v20.x * v10.z - v20.z * v10.y;
+    N.y = v20.z * v10.x - v20.x * v10.z;
+    N.z = v20.x * v10.y - v20.y * v10.x;
+
+    float len2 = N.x * N.x + N.y * N.y + N.z * N.z;
+    if (len2 > 0.0f) {
+        float len = sqrtf(len2);
+        N /= len;
+    }
+}

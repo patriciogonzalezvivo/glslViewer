@@ -64,5 +64,7 @@ std::vector<glm::vec3> getSimplify(const std::vector<glm::vec3> &_pts, float _to
 std::vector<glm::vec3> getConvexHull(std::vector<glm::vec3> &_pts);
 std::vector<glm::vec3> getConvexHull(const std::vector<glm::vec3> &_pts);
 
+void getNormal(const glm::vec3 &v0, const glm::vec3 &v1, const glm::vec3 &v2, glm::vec3 &N);
+
 //---------------------------------------- Conversions
 float mapValue(const float &_value, const float &_inputMin, const float &_inputMax, const float &_outputMin, const float &_outputMax, bool _clamp = true );

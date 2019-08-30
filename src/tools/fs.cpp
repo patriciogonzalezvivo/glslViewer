@@ -17,6 +17,23 @@ bool urlExists(const std::string& name) {
     return (stat (name.c_str(), &buffer) == 0);
 }
 
+std::string getBaseDir(const std::string& filepath) {
+    std::string base_dir = "";
+
+    if (filepath.find_last_of("/\\") != std::string::npos)
+        base_dir =  filepath.substr(0, filepath.find_last_of("/\\"));
+    else 
+        base_dir = ".";
+    
+#ifdef PLATFORM_WIN32
+    base_dir += "\\";
+#else
+    base_dir += "/";
+#endif
+
+    return base_dir;
+}
+
 std::string getAbsPath(const std::string& _path) {
     std::string abs_path = realpath(_path.c_str(), NULL);
     std::size_t found = abs_path.find_last_of("\\/");
