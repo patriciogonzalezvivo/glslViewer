@@ -60,11 +60,11 @@ protected:
     virtual void        onScaleChanged() {};
 
 private:
-    glm::mat4   m_transformMatrix;
-    glm::vec3   m_axis[3];
+    glm::mat4           m_transformMatrix;
+    glm::vec3           m_axis[3];
 
-    glm::vec3   m_position;
-    glm::quat   m_orientation;
-    glm::vec3   m_scale;
+    glm::vec3           m_position;
+    glm::quat           m_orientation;
+    glm::vec3           m_scale;
 
 };

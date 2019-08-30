@@ -1,10 +1,13 @@
 #pragma once
 
 #include <map>
+#include <vector>
 #include <string>
 #include <functional>
 
+#include "../gl/fbo.h"
 #include "../gl/shader.h"
+#include "../gl/texture.h"
 
 struct UniformData {
     std::string getType();
@@ -30,5 +33,24 @@ struct UniformFunction {
 };
 
 typedef std::map<std::string, UniformFunction> UniformFunctionsList;
+
+typedef std::map<std::string, Texture*> TextureList;
+
+struct Uniforms {
+    UniformDataList         data;
+    TextureList             textures;
+    UniformFunctionsList    functions;
+    std::vector<Fbo>        buffers;
+
+    bool                    parseLine( const std::string &_line );
+    void                    checkPresenceIn( const std::string &_vert_src, const std::string &_frag_src );
+    bool                    feedTo( Shader &_shader );
+    void                    print(bool _all);
+    void                    printBuffers();
+    void                    printTextures();
+
+    void                    flagChange();
+    void                    clear();
+};
 
 

@@ -63,3 +63,120 @@ bool parseUniformData(const std::string &_line, UniformDataList *_uniforms) {
     }
     return rta;
 }
+
+bool Uniforms::parseLine( const std::string &_line ) {
+    return parseUniformData(_line, &data);
+}
+
+void Uniforms::checkPresenceIn( const std::string &_vert_src, const std::string &_frag_src ) {
+    // Check active native uniforms
+    for (UniformFunctionsList::iterator it = functions.begin(); it != functions.end(); ++it) {
+        it->second.present = ( find_id(_vert_src, it->first.c_str()) != 0 || find_id(_frag_src, it->first.c_str()) != 0 );
+    }
+}
+
+bool Uniforms::feedTo( Shader &_shader ) {
+    bool change = false;
+
+    // Pass Native uniforms 
+    for (UniformFunctionsList::iterator it=functions.begin(); it!=functions.end(); ++it) {
+        if (it->second.present) {
+            if (it->second.assign) {
+                it->second.assign(_shader);
+            }
+        }
+    }
+
+    // Pass User defined uniforms
+    for (UniformDataList::iterator it=data.begin(); it!=data.end(); ++it) {
+        if (it->second.change) {
+            if (it->second.bInt) {
+                _shader.setUniform(it->first, int(it->second.value[0]));
+                change = true;
+            }
+            else {
+                _shader.setUniform(it->first, it->second.value, it->second.size);
+                change = true;
+            }
+            it->second.change = false;
+        }
+    }
+
+    // Pass Textures Uniforms
+    for (TextureList::iterator it = textures.begin(); it != textures.end(); ++it) {
+        _shader.setUniformTexture(it->first, it->second, _shader.textureIndex++ );
+        _shader.setUniform(it->first+"Resolution", it->second->getWidth(), it->second->getHeight());
+    }
+
+    // Pass Buffers Uniforms
+    for (unsigned int i = 0; i < buffers.size(); i++) {
+        _shader.setUniformTexture("u_buffer" + toString(i), &buffers[i], _shader.textureIndex++ );
+    }
+
+    return change;
+}
+
+void Uniforms::flagChange() {
+    // Flag all user defined uniforms as changed
+    for (UniformDataList::iterator it = data.begin(); it != data.end(); ++it) {
+        it->second.change = true;
+    }
+}
+
+void Uniforms::clear() {
+    // Delete Textures
+    for (TextureList::iterator i = textures.begin(); i != textures.end(); ++i) {
+        delete i->second;
+        i->second = NULL;
+    }
+    textures.clear();
+}
+
+void Uniforms::print(bool _all) {
+    if (_all) {
+        // Print all Native Uniforms (they carry functions)
+        for (UniformFunctionsList::iterator it= functions.begin(); it != functions.end(); ++it) {                
+            std::cout << it->second.type << ',' << it->first;
+            if (it->second.print) {
+                std::cout << "," << it->second.print();
+            }
+            std::cout << std::endl;
+        }
+    }
+    else {
+        // Print Native Uniforms (they carry functions) that are present on the shader
+        for (UniformFunctionsList::iterator it= functions.begin(); it != functions.end(); ++it) {                
+            if (it->second.present) {
+                std::cout << it->second.type << ',' << it->first;
+                if (it->second.print) {
+                    std::cout << "," << it->second.print();
+                }
+                std::cout << std::endl;
+            }
+        }
+    }
+    
+    // Print user defined uniform data
+    for (UniformDataList::iterator it= data.begin(); it != data.end(); ++it) {
+        std::cout << it->second.getType() << "," << it->first;
+        for (int i = 0; i < it->second.size; i++) {
+            std::cout << ',' << it->second.value[i];
+        }
+        std::cout << std::endl;
+    }
+
+    printBuffers();
+    printTextures();
+}
+
+void Uniforms::printBuffers() {
+    for (int i = 0; i < buffers.size(); i++) {
+        std::cout << "sampler2D," << "u_buffer" << i << std::endl;
+    }
+}
+
+void Uniforms::printTextures(){
+     for (TextureList::iterator it = textures.begin(); it != textures.end(); ++it) {
+        std::cout << "sampler2D," << it->first << ',' << it->second->getFilePath() << std::endl;
+    }
+}

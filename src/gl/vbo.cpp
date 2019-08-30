@@ -131,7 +131,7 @@ void Vbo::draw(const Shader* _shader) {
     }
 
     // Enable shader program
-    _shader->use();
+    // _shader->use();
 
     // Enable vertex attribs via vertex layout object
     m_vertexLayout->enable(_shader);

@@ -96,9 +96,10 @@ const GLint Shader::getAttribLocation(const std::string& _attribute) const {
     return glGetAttribLocation(m_program, _attribute.c_str());
 }
 
-void Shader::use() const {
+void Shader::use() {
     if (!isInUse()) {
         glUseProgram(getProgram());
+        textureIndex = 0;
     }
 }
 
@@ -290,6 +291,22 @@ void Shader::setUniformDepthTexture(const std::string& _name, const Fbo* _fbo, u
         glBindTexture(GL_TEXTURE_2D, _fbo->getDepthTextureId());
         glUniform1i(getUniformLocation(_name), _texLoc);
     }
+}
+
+void Shader::setUniformTexture(const std::string& _name, const Texture* _tex) {
+    setUniformTexture(_name, _tex, textureIndex++);
+}
+
+void  Shader::setUniformTexture(const std::string& _name, const Fbo* _fbo) {
+    setUniformTexture(_name, _fbo, textureIndex++);
+}
+
+void  Shader::setUniformDepthTexture(const std::string& _name, const Fbo* _fbo) {
+    setUniformDepthTexture(_name, _fbo, textureIndex++);
+}
+
+void  Shader::setUniformTextureCube(const std::string& _name, const TextureCube* _tex) {
+    setUniformTextureCube(_name, _tex, textureIndex++);
 }
 
 void Shader::setUniform(const std::string& _name, const glm::mat2& _value, bool _transpose) {

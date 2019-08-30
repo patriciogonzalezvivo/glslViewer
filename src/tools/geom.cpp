@@ -1,4 +1,4 @@
-#include "tools/geom.h"
+#include "geom.h"
 
 #include <algorithm>
 #include <iostream>

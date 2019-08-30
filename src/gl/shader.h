@@ -16,6 +16,9 @@ public:
     Shader();
     virtual ~Shader();
 
+    void    use();
+    bool    load(const std::string& _fragmentSrc, const std::string& _vertexSrc, const std::vector<std::string> &_defines, bool _verbose = false);
+    
     const   GLuint  getProgram() const { return m_program; };
     const   GLuint  getFragmentShader() const { return m_fragmentShader; };
     const   GLuint  getVertexShader() const { return m_vertexShader; };
@@ -24,9 +27,6 @@ public:
     bool    isInUse() const;
     bool    isLoaded() const;
    
-    void    use() const;
-    bool    load(const std::string& _fragmentSrc, const std::string& _vertexSrc, const std::vector<std::string> &_defines, bool _verbose = false);
-
     void    setUniform(const std::string& _name, int _x);
 
     void    setUniform(const std::string& _name, float _x);
@@ -48,12 +48,19 @@ public:
     void    setUniform(const std::string& _name, const glm::mat3& _value, bool transpose = false);
     void    setUniform(const std::string& _name, const glm::mat4& _value, bool transpose = false);
 
+    void    setUniformTexture(const std::string& _name, const Texture* _tex);
+    void    setUniformTexture(const std::string& _name, const Fbo* _fbo);
+    void    setUniformDepthTexture(const std::string& _name, const Fbo* _fbo);
+    void    setUniformTextureCube(const std::string& _name, const TextureCube* _tex);
+
     void    setUniformTexture(const std::string& _name, const Texture* _tex, unsigned int _texLoc);
     void    setUniformTexture(const std::string& _name, const Fbo* _fbo, unsigned int _texLoc);
     void    setUniformDepthTexture(const std::string& _name, const Fbo* _fbo, unsigned int _texLoc);
     void    setUniformTextureCube(const std::string& _name, const TextureCube* _tex, unsigned int _texLoc);
 
     void    detach(GLenum type);
+
+    unsigned int    textureIndex;
 
 private:
 

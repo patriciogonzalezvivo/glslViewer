@@ -1,5 +1,5 @@
 #include "shapes.h"
-#include "../tools/geom.h"
+#include "geom.h"
 
 Mesh line (const glm::vec3 &_a, const glm::vec3 &_b) {
     glm::vec3 linePoints[2];
