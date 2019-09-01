@@ -1,8 +1,8 @@
 #pragma once
 
-#include "camera.h"
 #include "light.h"
 #include "model.h"
+#include "camera.h"
 
 #include "gl/vbo.h"
 #include "gl/fbo.h"
@@ -10,7 +10,6 @@
 #include "gl/textureCube.h"
 
 #include "tools/skybox.h"
-#include "tools/uniform.h"
 #include "tools/command.h"
 #include "tools/skybox.h"
 
@@ -30,21 +29,19 @@ public:
     void            setup(CommandList &_commands, Uniforms &_uniforms);
     void            clear();
 
-    void            flagChange() { m_change = true; }
-    void            unfalgChange() { m_change = false; }
-    bool            haveChange() { return m_change; }
+    bool            loadGeometry(const std::string &_geometryFile);
+    bool            loadShaders(const std::string &_fragmentShader, const std::string &_vertexShader, bool _verbose);
 
-    void            loadModel( const std::string &_path, List &_defines);
-    Model&          getModel() { return m_model; }
+    void            addDefine(const std::string &_define, const std::string &_value);
+    void            delDefine(const std::string &_define);
+    void            printDefines();
 
     void            setCamera( glm::vec3 _position, glm::vec2 _viewport );
-    // Camera&         getCamera() { return m_camera; }
 
     void            setCulling(CullingMode _culling) { m_culling = _culling; }
     CullingMode     getCulling() { return m_culling; }
 
     void            setLight( glm::vec3 _position,  glm::vec3 _color );
-    // Light&          getLight() { return m_light; }
     Fbo&            getLightMap() { return m_light_depthfbo; }
 
     void            setDynamicShadows(bool _dynamic) { m_dynamicShadows = _dynamic; }
@@ -56,27 +53,28 @@ public:
     void            setCubeMapVisible( bool _draw ) {  m_cubemap_draw = _draw; }
     bool            getCubeMapVisible() { return m_cubemap_draw; }
 
-    void            render(Shader &_shader, Uniforms &_uniforms);
+    void            unflagChange();
+    bool            haveChange() const;
+
+    void            render(Uniforms &_uniforms);
     void            renderDebug();
     void            renderCubeMap();
-    void            renderGeometry(Shader &_shader, Uniforms &_uniforms);
-    void            renderShadowMap(Shader &_shader, Uniforms &_uniforms);
+    void            renderGeometry(Uniforms &_uniforms);
+    void            renderShadowMap(Uniforms &_uniforms);
 
     void            onMouseDrag(float _x, float _y, int _button);
     void            onViewportResize(int _newWidth, int _newHeight);
 
 protected:
-
-    // Defines
-    List            m_defines;
-
      // Geometry
-    Model           m_model;
+    std::vector<Model*> m_models;
+    Node            m_origin;
+    glm::mat4       m_mvp;
+    float           m_area;
 
     // Camera
     Camera          m_camera;
     CullingMode     m_culling;
-    glm::mat4       m_mvp;
     float           m_lat;
     float           m_lon;
 
@@ -102,6 +100,4 @@ protected:
     
     // UI Bbox
     Shader          m_wireframe3D_shader;
-    
-    bool            m_change;
 };

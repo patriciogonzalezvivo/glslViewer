@@ -12,63 +12,61 @@ enum ShaderType {
 class Sandbox {
 public:
     Sandbox();
+    virtual ~Sandbox();
     
     // Main stages
-    void                    setup(WatchFileList &_files, CommandList &_commands);
-    bool                    reload();
+    void                setup(WatchFileList &_files, CommandList &_commands);
+    bool                reloadShaders();
 
-    void                    flagChange() { m_change = true; }
-    bool                    haveChange();
-    void                    unfalgChange(); 
+    void                flagChange();
+    void                unflagChange(); 
+    bool                haveChange();
 
-    void                    draw();
-    void                    drawUI();
-    void                    drawDone();
+    void                draw();
+    void                drawUI();
+    void                drawDone();
 
-    void                    clear();
+    void                clear();
     
-    bool                    isReady();
+    bool                isReady();
 
-    void                    record( float _start, float _end );
-    int                     getRecordedPorcentage();
+    void                record( float _start, float _end );
+    int                 getRecordedPorcentage();
 
-    void                    addDefine( const std::string &_define );
-    void                    delDefine( const std::string &_define );
+    void                addDefine( const std::string &_define, const std::string &_value = "");
+    void                delDefine( const std::string &_define );
 
     // Getting some data out of Sandbox
-    std::string             getSource( ShaderType _type ) const;
+    std::string         getSource( ShaderType _type ) const;
 
-    void                    printDependencies( ShaderType _type ) const;
+    void                printDependencies( ShaderType _type ) const;
 
-    Scene&                  getScene() { return m_scene; }
+    Scene&              getScene() { return m_scene; }
     
     // Some events
-    void                    onFileChange( WatchFileList &_files, int _index );
-    void                    onScroll( float _yoffset );
-    void                    onScreenshot( std::string _file );
-    void                    onMouseDrag( float _x, float _y, int _button );
-    void                    onViewportResize( int _newWidth, int _newHeight );
+    void                onFileChange( WatchFileList &_files, int _index );
+    void                onScroll( float _yoffset );
+    void                onScreenshot( std::string _file );
+    void                onMouseDrag( float _x, float _y, int _button );
+    void                onViewportResize( int _newWidth, int _newHeight );
    
     // Include folders
-    FileList                include_folders;
-
-    // Defines
-    List                    defines;
+    List                include_folders;
 
     // Uniforms
-    Uniforms                uniforms;
+    Uniforms            uniforms;
 
     // Screenshot file
-    std::string             screenshotFile;
+    std::string         screenshotFile;
 
     // States
-    int                     frag_index;
-    int                     vert_index;
-    int                     geom_index;
+    int                 frag_index;
+    int                 vert_index;
+    int                 geom_index;
 
-    bool                    verbose;
-    bool                    cursor;
-    bool                    debug;
+    bool                verbose;
+    bool                cursor;
+    bool                debug;
 
 private:
     void                _updateBuffers();
@@ -82,10 +80,9 @@ private:
     std::string         m_vert_source;
 
     // Dependencies
-    FileList            m_vert_dependencies;
-    FileList            m_frag_dependencies;
+    List                m_vert_dependencies;
+    List                m_frag_dependencies;
     Shader              m_shader;
-    Vbo*                m_vbo;
  
     // Background
     Shader              m_background_shader;

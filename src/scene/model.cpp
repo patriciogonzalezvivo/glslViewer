@@ -5,7 +5,70 @@
 
 Model::Model():
     m_model_vbo(nullptr), m_bbox_vbo(nullptr), 
+    m_bbmin(100000.0), m_bbmax(-1000000.),
     m_area(0.0f) {
+}
+
+Model::Model(Mesh &_mesh):
+    m_model_vbo(nullptr), m_bbox_vbo(nullptr), 
+    m_area(0.0f) {
+    loadGeom(_mesh);
+}
+
+Model::Model(Mesh &_mesh, const std::string &_fragStr, const std::string &_vertStr, bool verbose):
+    m_model_vbo(nullptr), m_bbox_vbo(nullptr), 
+    m_area(0.0f) {
+    loadGeom(_mesh);
+    loadShader(_fragStr, _vertStr, verbose);
+}
+
+
+void Model::addDefine(const std::string &_define, const std::string &_value) { 
+    m_shader.addDefine(_define, _value); 
+}
+
+void Model::delDefine(const std::string &_define) { 
+    m_shader.delDefine(_define); 
+};
+
+void Model::printDefines() {
+    m_shader.printDefines();
+}
+
+bool Model::loadGeom(Mesh &_mesh) {
+    // Load Geometry VBO
+    m_model_vbo = _mesh.getVbo();
+
+    getBoundingBox( _mesh.getVertices(), m_bbmin, m_bbmax);
+    m_area = glm::min(glm::length(m_bbmin), glm::length(m_bbmax));
+    m_bbox_vbo = cubeCorners( m_bbmin, m_bbmax, 0.25 ).getVbo();
+
+    // Setup Shader and GEOMETRY DEFINE FLAGS
+    if (_mesh.hasColors())
+        addDefine("MODEL_HAS_COLORS");
+
+    if (_mesh.hasNormals())
+        addDefine("MODEL_HAS_NORMALS");
+
+    if (_mesh.hasTexCoords())
+        addDefine("MODEL_HAS_TEXCOORDS");
+
+    if (_mesh.hasTangents())
+        addDefine("MODEL_HAS_TANGENTS");
+
+    addDefine("SHADOW_MAP", "u_ligthShadowMap");
+#ifdef PLATFORM_RPI                
+    addDefine("SHADOW_MAP_SIZE", "512.0");
+#else
+    addDefine("SHADOW_MAP_SIZE", "1024.0");
+#endif
+}
+
+bool Model::loadShader(const std::string &_fragStr, const std::string &_vertStr, bool verbose) {
+    if (m_shader.isLoaded())
+        m_shader.detach(GL_FRAGMENT_SHADER | GL_VERTEX_SHADER);
+
+    return m_shader.load( _fragStr, _vertStr, verbose);
 }
 
 Model::~Model() {
@@ -24,36 +87,19 @@ void Model::clear() {
     }
 }
 
-void Model::load(const std::string &_path, List &_defines) {
-    Mesh mesh;
-    mesh.load( _path );
-    m_model_vbo = mesh.getVbo();
-    setPosition( -getCentroid( mesh.getVertices() ) );
+void Model::draw(Uniforms &_uniforms, const glm::mat4 &_viewProjectionMatrix) {
 
-    glm::vec3 min_v;
-    glm::vec3 max_v;
-    getBoundingBox( mesh.getVertices(), min_v, max_v);
-    m_area = glm::min(glm::length(min_v), glm::length(max_v));
-    m_bbox_vbo = cubeCorners( min_v, max_v, 0.25 ).getVbo();
+    // If the model and the shader are loaded
+    if ( m_model_vbo && m_shader.isLoaded() ) {
 
-    if (mesh.hasColors()) {
-        _defines.push_back("MODEL_HAS_COLORS");
+        // bind the shader
+        m_shader.use();
+
+        // Update Uniforms and textures variables to the shader
+        _uniforms.feedTo( m_shader);
+
+        // Pass special uniforms
+        m_shader.setUniform( "u_modelViewProjectionMatrix", _viewProjectionMatrix );
+        m_model_vbo->draw( &m_shader );
     }
-
-    if (mesh.hasNormals()) {
-        _defines.push_back("MODEL_HAS_NORMALS");
-    }
-
-    if (mesh.hasTexCoords()) {
-        _defines.push_back("MODEL_HAS_TEXCOORDS");
-    }
-
-    if (mesh.hasTangents()) {
-        _defines.push_back("MODEL_HAS_TANGENTS");
-    }
-
-}
-
-void Model::draw(){
-
 }

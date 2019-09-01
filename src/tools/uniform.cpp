@@ -64,19 +64,33 @@ bool parseUniformData(const std::string &_line, UniformDataList *_uniforms) {
     return rta;
 }
 
+Uniforms::Uniforms():
+    m_change(false) {
+}
+
+Uniforms::~Uniforms(){
+
+}
+
 bool Uniforms::parseLine( const std::string &_line ) {
-    return parseUniformData(_line, &data);
+    bool somethingChange = parseUniformData(_line, &data);
+    m_change += somethingChange;
+    return somethingChange;
 }
 
 void Uniforms::checkPresenceIn( const std::string &_vert_src, const std::string &_frag_src ) {
     // Check active native uniforms
     for (UniformFunctionsList::iterator it = functions.begin(); it != functions.end(); ++it) {
-        it->second.present = ( find_id(_vert_src, it->first.c_str()) != 0 || find_id(_frag_src, it->first.c_str()) != 0 );
+        bool present = ( find_id(_vert_src, it->first.c_str()) != 0 || find_id(_frag_src, it->first.c_str()) != 0 );
+        if ( it->second.present != present) {
+            it->second.present = present;
+            m_change = true;
+        } 
     }
 }
 
 bool Uniforms::feedTo( Shader &_shader ) {
-    bool change = false;
+    bool update = false;
 
     // Pass Native uniforms 
     for (UniformFunctionsList::iterator it=functions.begin(); it!=functions.end(); ++it) {
@@ -88,39 +102,60 @@ bool Uniforms::feedTo( Shader &_shader ) {
     }
 
     // Pass User defined uniforms
-    for (UniformDataList::iterator it=data.begin(); it!=data.end(); ++it) {
-        if (it->second.change) {
-            if (it->second.bInt) {
-                _shader.setUniform(it->first, int(it->second.value[0]));
-                change = true;
+    if (m_change) {
+        for (UniformDataList::iterator it=data.begin(); it!=data.end(); ++it) {
+            if (it->second.change) {
+                if (it->second.bInt) {
+                    _shader.setUniform(it->first, int(it->second.value[0]));
+                    update = true;
+                }
+                else {
+                    _shader.setUniform(it->first, it->second.value, it->second.size);
+                    update = true;
+                }
+                // it->second.change = false;
             }
-            else {
-                _shader.setUniform(it->first, it->second.value, it->second.size);
-                change = true;
-            }
-            it->second.change = false;
         }
-    }
-
-    // Pass Textures Uniforms
-    for (TextureList::iterator it = textures.begin(); it != textures.end(); ++it) {
-        _shader.setUniformTexture(it->first, it->second, _shader.textureIndex++ );
-        _shader.setUniform(it->first+"Resolution", it->second->getWidth(), it->second->getHeight());
+    
+        // Pass Textures Uniforms
+        for (TextureList::iterator it = textures.begin(); it != textures.end(); ++it) {
+            _shader.setUniformTexture(it->first, it->second, _shader.textureIndex++ );
+            _shader.setUniform(it->first+"Resolution", it->second->getWidth(), it->second->getHeight());
+        }
     }
 
     // Pass Buffers Uniforms
     for (unsigned int i = 0; i < buffers.size(); i++) {
         _shader.setUniformTexture("u_buffer" + toString(i), &buffers[i], _shader.textureIndex++ );
     }
-
-    return change;
+    
+    return update;
 }
 
 void Uniforms::flagChange() {
-    // Flag all user defined uniforms as changed
+    // Flag all user uniforms as changed
     for (UniformDataList::iterator it = data.begin(); it != data.end(); ++it) {
         it->second.change = true;
     }
+    m_change = true;
+}
+
+void Uniforms::unflagChange() {
+    if (m_change) {
+        // Flag all user uniforms as NOT changed
+        for (UniformDataList::iterator it = data.begin(); it != data.end(); ++it) {
+            it->second.change = false;
+        }
+        m_change = false;
+    }
+}
+
+bool Uniforms::haveChange() { 
+    return  m_change || 
+            functions["u_time"].present || 
+            functions["u_delta"].present ||
+            functions["u_mouse"].present ||
+            functions["u_date"].present;
 }
 
 void Uniforms::clear() {

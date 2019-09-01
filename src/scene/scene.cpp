@@ -3,34 +3,71 @@
 
 #include <unistd.h>
 
+#include "tools/fs.h"
+#include "tools/geom.h"
 #include "tools/text.h"
 #include "tools/shapes.h"
 
 #include "default_scene_shaders.h"
+#include "tinyobjloader/tiny_obj_loader.h"
 
 Scene::Scene(): 
     // Camera.
-    m_culling(NONE), m_mvp(1.0), m_lat(180.0), m_lon(0.0),
+    m_culling(NONE), m_lat(180.0), m_lon(0.0),
     // Light
     m_light_vbo(nullptr), m_dynamicShadows(false),
     // CubeMap
     m_cubemap_vbo(nullptr), m_cubemap(nullptr), m_cubemap_skybox(nullptr), m_cubemap_draw(false), 
     // UI
-    m_grid_vbo(nullptr), m_axis_vbo(nullptr),
-    // State
-    m_change(true) {
+    m_grid_vbo(nullptr), m_axis_vbo(nullptr) {
 }
 
 Scene::~Scene(){
     clear();
 }
 
+void Scene::clear() {
+    for (unsigned int i = 0; i < m_models.size(); i++) 
+        delete m_models[i];
+
+    m_models.clear();
+
+    if (m_light_vbo) {
+        delete m_light_vbo;
+        m_light_vbo = nullptr;
+    }
+
+    if (m_cubemap) {
+        delete m_cubemap;
+        m_cubemap = nullptr;
+    }
+
+    if (m_cubemap_vbo) {
+        delete m_cubemap_vbo;
+        m_cubemap_vbo = nullptr;
+    }
+
+    if (m_grid_vbo) {
+        delete m_grid_vbo;
+        m_grid_vbo = nullptr;
+    }
+
+    if (m_axis_vbo) {
+        delete m_axis_vbo;
+        m_axis_vbo = nullptr;
+    }
+}
+
 void Scene::setup(CommandList &_commands, Uniforms &_uniforms) {
+    // Set up camera
     m_camera.setViewport(getWindowWidth(), getWindowHeight());
     m_camera.setPosition(glm::vec3(0.0,0.0,-3.));
+
+    // Setup light
     m_light.setPosition(glm::vec3(0.0,100.0,100.0));
 
-    // COMMANDS 
+    // ADD COMMANDS
+    // ----------------------------------------- 
     _commands.push_back(Command("culling", [&](const std::string& _line){ 
         std::vector<std::string> values = split(_line,',');
         if (values.size() == 1) {
@@ -72,7 +109,6 @@ void Scene::setup(CommandList &_commands, Uniforms &_uniforms) {
         std::vector<std::string> values = split(_line,',');
         if (values.size() == 2) {
             m_camera.setDistance(toFloat(values[1]));
-            flagChange();
             return true;
         }
         else {
@@ -87,7 +123,6 @@ void Scene::setup(CommandList &_commands, Uniforms &_uniforms) {
         std::vector<std::string> values = split(_line,',');
         if (values.size() == 2) {
             m_camera.setFOV(toFloat(values[1]));
-            flagChange();
             return true;
         }
         else {
@@ -103,7 +138,6 @@ void Scene::setup(CommandList &_commands, Uniforms &_uniforms) {
         if (values.size() == 4) {
             m_camera.setPosition(glm::vec3(toFloat(values[1]),toFloat(values[2]),toFloat(values[3])));
             m_camera.lookAt(m_camera.getTarget());
-            flagChange();
             return true;
         }
         else {
@@ -119,7 +153,6 @@ void Scene::setup(CommandList &_commands, Uniforms &_uniforms) {
         std::vector<std::string> values = split(_line,',');
         if (values.size() == 4) {
             m_camera.setExposure(toFloat(values[1]),toFloat(values[2]),toFloat(values[3]));
-            flagChange();
             return true;
         }
         else {
@@ -134,8 +167,6 @@ void Scene::setup(CommandList &_commands, Uniforms &_uniforms) {
         std::vector<std::string> values = split(_line,',');
         if (values.size() == 4) {
             m_light.setPosition(glm::vec3(toFloat(values[1]),toFloat(values[2]),toFloat(values[3])));
-            m_light.bChange = true;
-            flagChange();
             return true;
         }
         else {
@@ -151,7 +182,7 @@ void Scene::setup(CommandList &_commands, Uniforms &_uniforms) {
          std::vector<std::string> values = split(_line,',');
         if (values.size() == 4) {
             m_light.color = glm::vec3(toFloat(values[1]),toFloat(values[2]),toFloat(values[3]));
-            flagChange();
+            m_light.bChange = true;
             return true;
         }
         else {
@@ -163,7 +194,6 @@ void Scene::setup(CommandList &_commands, Uniforms &_uniforms) {
     },
     "light_color[,<r>,<g>,<b>]      get or set the light color."));
     
-
     _commands.push_back(Command("dynamic_shadows", [&](const std::string& _line){ 
         if (_line == "dynamic_shadows") {
             std::string rta = getDynamicShadows() ? "on" : "off";
@@ -185,7 +215,6 @@ void Scene::setup(CommandList &_commands, Uniforms &_uniforms) {
         if (values.size() == 4) {
             m_skybox.groundAlbedo = glm::vec3(toFloat(values[1]),toFloat(values[2]),toFloat(values[3]));
             setCubeMap(&m_skybox);
-            flagChange();
             return true;
         }
         else {
@@ -201,7 +230,6 @@ void Scene::setup(CommandList &_commands, Uniforms &_uniforms) {
         if (values.size() == 2) {
             m_skybox.elevation = toFloat(values[1]);
             setCubeMap(&m_skybox);
-            flagChange();
             return true;
         }
         else {
@@ -217,8 +245,6 @@ void Scene::setup(CommandList &_commands, Uniforms &_uniforms) {
         if (values.size() == 2) {
             m_skybox.azimuth = toFloat(values[1]);
             setCubeMap(&m_skybox);
-
-            flagChange();
             return true;
         }
         else {
@@ -234,7 +260,6 @@ void Scene::setup(CommandList &_commands, Uniforms &_uniforms) {
         if (values.size() == 2) {
             m_skybox.turbidity = toFloat(values[1]);
             setCubeMap(&m_skybox);
-            flagChange();
             return true;
         }
         else {
@@ -281,13 +306,12 @@ void Scene::setup(CommandList &_commands, Uniforms &_uniforms) {
     _commands.push_back(Command("model_position", [&](const std::string& _line){ 
         std::vector<std::string> values = split(_line,',');
         if (values.size() == 4) {
-            m_model.setPosition( glm::vec3(toFloat(values[1]),toFloat(values[2]),toFloat(values[3])) );
+            m_origin.setPosition( glm::vec3(toFloat(values[1]),toFloat(values[2]),toFloat(values[3])) );
             m_light.bChange = true;
-            flagChange();
             return true;
         }
         else {
-            glm::vec3 pos = m_model.getPosition();
+            glm::vec3 pos = m_origin.getPosition();
             std::cout << pos.x << ',' << pos.y << ',' << pos.z << std::endl;
             return true;
         }
@@ -393,16 +417,16 @@ void Scene::setup(CommandList &_commands, Uniforms &_uniforms) {
     
     // MATRIX UNIFORMS
     _uniforms.functions["u_model"] = UniformFunction("vec3", [this](Shader& _shader) {
-        _shader.setUniform("u_model", m_model.getPosition());
+        _shader.setUniform("u_model", m_origin.getPosition());
     },
-    [this]() { return toString(m_model.getPosition(), ','); });
+    [this]() { return toString(m_origin.getPosition(), ','); });
 
     _uniforms.functions["u_normalMatrix"] = UniformFunction("mat3", [this](Shader& _shader) {
         _shader.setUniform("u_normalMatrix", m_camera.getNormalMatrix());
     });
 
     _uniforms.functions["u_modelMatrix"] = UniformFunction("mat4", [this](Shader& _shader) {
-        _shader.setUniform("u_modelMatrix", m_model.getTransformMatrix() );
+        _shader.setUniform("u_modelMatrix", m_origin.getTransformMatrix() );
     });
 
     _uniforms.functions["u_viewMatrix"] = UniformFunction("mat4", [this](Shader& _shader) {
@@ -414,53 +438,123 @@ void Scene::setup(CommandList &_commands, Uniforms &_uniforms) {
     });
 }
 
-void Scene::clear() {
-    m_model.clear();
-
-    if (m_light_vbo) {
-        delete m_light_vbo;
-        m_light_vbo = nullptr;
-    }
-
-    if (m_cubemap) {
-        delete m_cubemap;
-        m_cubemap = nullptr;
-    }
-
-    if (m_cubemap_vbo) {
-        delete m_cubemap_vbo;
-        m_cubemap_vbo = nullptr;
-    }
-
-    if (m_grid_vbo) {
-        delete m_grid_vbo;
-        m_grid_vbo = nullptr;
-    }
-
-    if (m_axis_vbo) {
-        delete m_axis_vbo;
-        m_axis_vbo = nullptr;
+void Scene::addDefine(const std::string &_define, const std::string &_value) {
+    for (unsigned int i = 0; i < m_models.size(); i++) {
+        m_models[i]->addDefine(_define, _value);
     }
 }
 
-void Scene::loadModel( const std::string &_path, List &defines ) {
-    m_model.load( _path, defines );
-    m_camera.setDistance( m_model.getArea() * 2.0 );
-    flagChange();
-}
-
-void Scene::render(Shader &_shader, Uniforms &_uniforms) {
-    // RENDER GEOMETRY WITH MAIN SHADER 
-    m_mvp = m_camera.getProjectionViewMatrix();
-
-    if (m_model.loaded()) {
-        m_mvp = m_mvp * m_model.getTransformMatrix();
+void Scene::delDefine(const std::string &_define) {
+    for (unsigned int i = 0; i < m_models.size(); i++) {
+        m_models[i]->delDefine(_define);
     }
-    
-    renderGeometry(_shader, _uniforms);
 }
 
-void Scene::renderGeometry(Shader &_shader, Uniforms &_uniforms) {
+void Scene::printDefines() {
+    for (unsigned int i = 0; i < m_models.size(); i++) {
+        std::cout << " --- "<< std::endl;
+        m_models[i]->printDefines();
+    }
+}
+
+bool Scene::loadGeometry( const std::string &_file ) {
+
+    // If the geometry is a PLY it's easy because is only one mesh
+    if ( haveExt(_file,"ply") || haveExt(_file,"PLY") ) {
+        Mesh mesh;
+        bool ret = mesh.load(_file);
+
+        if (!ret) {
+            std::cerr << "Failed to load " << _file.c_str() << std::endl;
+            return false;
+        }
+
+        m_models.push_back( new Model( mesh ) );
+    }
+
+    // If it's a OBJ could be more complicated because they can contain several meshes
+    else if ( haveExt(_file,"obj") || haveExt(_file,"OBJ") ) {
+        tinyobj::attrib_t attrib;
+        std::vector<tinyobj::shape_t> shapes;
+        std::vector<tinyobj::material_t> materials;
+
+        std::string warn;
+        std::string err;
+        std::string base_dir = getBaseDir(_file.c_str());
+        bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, _file.c_str(), base_dir.c_str());
+
+        if (!warn.empty()) {
+            std::cout << "WARN: " << warn << std::endl;
+        }
+        if (!err.empty()) {
+            std::cerr << err << std::endl;
+        }
+        if (!ret) {
+            std::cerr << "Failed to load " << _file.c_str() << std::endl;
+            return false;
+        }
+
+        printf("# of vertices  = %d\n", (int)(attrib.vertices.size()) / 3);
+        printf("# of normals   = %d\n", (int)(attrib.normals.size()) / 3);
+        printf("# of texcoords = %d\n", (int)(attrib.texcoords.size()) / 2);
+        printf("# of materials = %d\n", (int)materials.size());
+        printf("# of shapes    = %d\n", (int)shapes.size());
+
+        // Append `default` material
+        materials.push_back(tinyobj::material_t());
+
+        for (size_t i = 0; i < materials.size(); i++) {
+            printf("material[%d].diffuse_texname = %s\n", int(i), materials[i].diffuse_texname.c_str());
+        }
+
+        // TODO Load diffuse textures
+        INDEX_TYPE index = 0;
+        for (size_t s = 0; s < shapes.size(); s++) {
+        }
+    }
+
+    // Calculate the total area
+    glm::vec3 min_v;
+    glm::vec3 max_v;
+    for (unsigned int i = 0; i < m_models.size(); i++) {
+        expandBoundingBox( m_models[i]->getMinBoundingBox(), min_v, max_v);
+        expandBoundingBox( m_models[i]->getMaxBoundingBox(), min_v, max_v);
+    }
+    m_area = glm::min(glm::length(min_v), glm::length(max_v));
+    glm::vec3 centroid = (min_v + max_v) / 2.0f;
+    m_origin.setPosition( -centroid );
+
+    // set the right distance to the camera
+    m_camera.setDistance( m_area * 2.0 );
+}
+
+
+bool Scene::loadShaders(const std::string &_fragmentShader, 
+                        const std::string &_vertexShader, 
+                        bool _verbose) {
+
+    bool rta = true;
+    for (unsigned int i = 0; i < m_models.size(); i++) {
+        rta += m_models[i]->loadShader( _fragmentShader, 
+                                        _vertexShader, 
+                                        _verbose);
+    }
+    return rta;
+}
+
+bool Scene::haveChange() const {
+    return  m_light.bChange ||
+            m_camera.bChange ||
+            m_origin.bChange;
+}
+
+void Scene::unflagChange() { 
+    m_light.bChange = false;
+    m_camera.bChange = false;
+    m_origin.bChange = false;
+}
+
+void Scene::render(Uniforms &_uniforms) {
     // Begining of DEPTH for 3D 
     glEnable(GL_DEPTH_TEST);
 
@@ -478,15 +572,12 @@ void Scene::renderGeometry(Shader &_shader, Uniforms &_uniforms) {
         }
     }
 
-    // Load main shader
-    _shader.use();
-
-    // Update Uniforms and textures variables
-    _uniforms.feedTo( _shader);
-
-    // Pass special uniforms
-    _shader.setUniform("u_modelViewProjectionMatrix", m_mvp);
-    m_model.getVbo()->draw( &_shader );
+    if (m_camera.bChange || m_origin.bChange)
+        m_mvp = m_camera.getProjectionViewMatrix() * m_origin.getTransformMatrix(); 
+    
+    for (unsigned int i = 0; i < m_models.size(); i++) {
+        m_models[i]->draw(_uniforms, m_mvp);
+    }
 
     glDisable(GL_DEPTH_TEST);
 
@@ -495,11 +586,12 @@ void Scene::renderGeometry(Shader &_shader, Uniforms &_uniforms) {
     }
 }
 
-void Scene::renderShadowMap(Shader &_shader, Uniforms &_uniforms) {
-    if ( m_light.bChange || m_dynamicShadows ) {
+void Scene::renderShadowMap(Uniforms &_uniforms) {
+    if ( m_origin.bChange || m_light.bChange ||  m_dynamicShadows ) {
 
         // Temporally move the MVP matrix from the view of the light 
-        m_mvp = m_light.getMVPMatrix( m_model.getTransformMatrix(), m_model.getArea() );
+        glm::mat4 mvp = m_light.getMVPMatrix( m_origin.getTransformMatrix(), m_area );
+
         if (m_light_depthfbo.getDepthTextureId() == 0) {
 #ifdef PLATFORM_RPI
             m_light_depthfbo.allocate(512, 512, COLOR_DEPTH_TEXTURES);
@@ -509,7 +601,18 @@ void Scene::renderShadowMap(Shader &_shader, Uniforms &_uniforms) {
         }
 
         m_light_depthfbo.bind();
-        renderGeometry(_shader, _uniforms);
+
+        glEnable(GL_DEPTH_TEST);
+        glEnable(GL_CULL_FACE);
+        // glCullFace(GL_FRONT);
+
+        for (unsigned int i = 0; i < m_models.size(); i++) {
+            m_models[i]->draw(_uniforms, mvp);
+        }
+
+        glDisable(GL_DEPTH_TEST);
+        glDisable(GL_CULL_FACE);
+
         m_light_depthfbo.unbind();
     }
 }
@@ -530,7 +633,7 @@ void Scene::renderCubeMap() {
 
         if (!m_cubemap_vbo) {
             m_cubemap_vbo = cube(1.0f).getVbo();
-            m_cubemap_shader.load(cube_frag, cube_vert, m_defines, false);
+            m_cubemap_shader.load(cube_frag, cube_vert, false);
         }
 
         m_cubemap_shader.use();
@@ -547,15 +650,17 @@ void Scene::renderDebug() {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 
     if (!m_wireframe3D_shader.isLoaded())
-        m_wireframe3D_shader.load(wireframe3D_frag, wireframe3D_vert, m_defines, false);
+        m_wireframe3D_shader.load(wireframe3D_frag, wireframe3D_vert, false);
 
-    if (m_model.getBboxVbo()) {
-        // Bounding box
+    // Draw Bounding boxes
+    {
         glLineWidth(3.0f);
         m_wireframe3D_shader.use();
         m_wireframe3D_shader.setUniform("u_color", glm::vec4(1.0,1.0,0.0,1.0));
-        m_wireframe3D_shader.setUniform("u_modelViewProjectionMatrix", m_mvp);
-        m_model.getBboxVbo()->draw( &m_wireframe3D_shader );
+        m_wireframe3D_shader.setUniform("u_modelViewProjectionMatrix", m_mvp );
+        for (unsigned int i = 0; i < m_models.size(); i++) {
+            m_models[i]->getBboxVbo()->draw( &m_wireframe3D_shader );
+        }
     }
     
     // Axis
@@ -565,7 +670,7 @@ void Scene::renderDebug() {
     glLineWidth(2.0f);
     m_wireframe3D_shader.use();
     m_wireframe3D_shader.setUniform("u_color", glm::vec4(0.75));
-    m_wireframe3D_shader.setUniform("u_modelViewProjectionMatrix", m_mvp);
+    m_wireframe3D_shader.setUniform("u_modelViewProjectionMatrix", m_mvp );
     m_axis_vbo->draw( &m_wireframe3D_shader );
     
     // Grid
@@ -574,12 +679,12 @@ void Scene::renderDebug() {
     glLineWidth(1.0f);
     m_wireframe3D_shader.use();
     m_wireframe3D_shader.setUniform("u_color", glm::vec4(0.5));
-    m_wireframe3D_shader.setUniform("u_modelViewProjectionMatrix", m_mvp);
+    m_wireframe3D_shader.setUniform("u_modelViewProjectionMatrix", m_mvp );
     m_grid_vbo->draw( &m_wireframe3D_shader );
 
     // Light
     if (!m_light_shader.isLoaded())
-        m_light_shader.load(light_frag, light_vert, m_defines, false);
+        m_light_shader.load(light_frag, light_vert, false);
 
     if (m_light_vbo == nullptr)
         m_light_vbo = rect(0.0,0.0,0.0,0.0).getVbo();
@@ -590,7 +695,7 @@ void Scene::renderDebug() {
     m_light_shader.setUniform("u_translate", m_light.getPosition());
     m_light_shader.setUniform("u_color", glm::vec4(m_light.color, 1.0));
     m_light_shader.setUniform("u_viewMatrix", m_camera.getViewMatrix());
-    m_light_shader.setUniform("u_modelViewProjectionMatrix", m_mvp);
+    m_light_shader.setUniform("u_modelViewProjectionMatrix", m_mvp );
 
     m_light_vbo->draw( &m_light_shader );
 
@@ -621,8 +726,6 @@ void Scene::onMouseDrag(float _x, float _y, int _button) {
             m_camera.setDistance( dist );
         }
     }
-
-    flagChange();
 }
 
 void Scene::onViewportResize(int _newWidth, int _newHeight) {

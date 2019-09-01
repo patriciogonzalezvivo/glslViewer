@@ -114,7 +114,7 @@ void Vbo::upload() {
     m_isUploaded = true;
 }
 
-void Vbo::draw(const Shader* _shader) {
+void Vbo::draw(Shader* _shader) {
 
     // Ensure that geometry is buffered into GPU
     if (!m_isUploaded) {
@@ -131,7 +131,7 @@ void Vbo::draw(const Shader* _shader) {
     }
 
     // Enable shader program
-    // _shader->use();
+    _shader->use();
 
     // Enable vertex attribs via vertex layout object
     m_vertexLayout->enable(_shader);

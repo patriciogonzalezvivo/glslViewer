@@ -358,7 +358,18 @@ void declareCommands() {
         std::vector<std::string> values = split(_line,',');
         if (values.size() == 2) {
             consoleMutex.lock();
-            sandbox.addDefine( values[1] );
+            std::vector<std::string> v = split(values[1],' ');
+            sandbox.addDefine( v[0], v[1] );
+            consoleMutex.unlock();
+
+            filesMutex.lock();
+            fileChanged = sandbox.frag_index;
+            filesMutex.unlock();
+            return true;
+        }
+        else if (values.size() == 3) {
+            consoleMutex.lock();
+            sandbox.addDefine( values[1], values[2] );
             consoleMutex.unlock();
 
             filesMutex.lock();
@@ -581,8 +592,8 @@ int main(int argc, char **argv){
         else if (   argument == "--debug" ) {
             sandbox.debug = true;
         }
-        else if ( argument == "--cursor" ) {
-            sandbox.cursor = true;
+        else if ( argument == "--nocursor" ) {
+            sandbox.cursor = false;
         }
         else if ( argument == "-s" || argument == "--sec" ) {
             i++;
@@ -651,13 +662,7 @@ int main(int argc, char **argv){
                 file.type = GEOMETRY;
                 file.path = argument;
                 file.lastChange = st.st_mtime;
-                files.push_back(file);
-                sandbox.addDefine("SHADOW_MAP u_ligthShadowMap");
-#ifdef PLATFORM_RPI                
-                sandbox.addDefine("SHADOW_MAP_SIZE 512.0");
-#else                
-                sandbox.addDefine("SHADOW_MAP_SIZE 1024.0");
-#endif                
+                files.push_back(file); 
                 sandbox.geom_index = files.size()-1;
             }
         }
@@ -711,9 +716,6 @@ int main(int argc, char **argv){
                     file.vFlip = vFlip;
                     files.push_back(file);
 
-                    sandbox.addDefine("CUBE_MAP u_cubeMap");
-                    sandbox.addDefine("SH_ARRAY u_SH");
-
                     std::cout << "// " << argument << " loaded as: " << std::endl;
                     std::cout << "//    uniform samplerCube u_cubeMap;"<< std::endl;
                     std::cout << "//    uniform vec3        u_SH[9];"<< std::endl;
@@ -738,9 +740,6 @@ int main(int argc, char **argv){
                     file.lastChange = st.st_mtime;
                     file.vFlip = vFlip;
                     files.push_back(file);
-
-                    sandbox.addDefine("CUBE_MAP u_cubeMap");
-                    sandbox.addDefine("SH_ARRAY u_SH");
 
                     std::cout << "// " << argument << " loaded as: " << std::endl;
                     std::cout << "//    uniform samplerCube u_cubeMap;"<< std::endl;
@@ -767,16 +766,18 @@ int main(int argc, char **argv){
                     file.vFlip = vFlip;
                     files.push_back(file);
 
-                    sandbox.addDefine("SH_ARRAY u_SH");
-
                     std::cout << "// " << argument << " loaded as: " << std::endl;
                     std::cout << "//    uniform vec3        u_SH[9];"<< std::endl;
                 }
             }
         }
         else if ( argument.find("-D") == 0 ) {
-            std::string define = argument.substr(2);
-            sandbox.defines.push_back(define);
+            // Defines are added/remove once existing shaders
+            // On multiple meshes files like OBJ, there can be multiple 
+            // variations of meshes, that only get created after loading the sece
+            // to work arround that defines are add post-loading as argument commands
+            std::string define = std::string("define,") + argument.substr(2);
+            arguments_cmds.push_back(define);
         }
         else if ( argument.find("-I") == 0 ) {
             std::string include = argument.substr(2);
@@ -830,6 +831,9 @@ int main(int argc, char **argv){
     sandbox.setup(files, commands);
     filesMutex.unlock();
 
+    if (sandbox.debug) {
+        std::cout << "Starting Render Loop" << std::endl; 
+    }
     // Render Loop
     bool timeOut = false;
     while ( isGL() && bRun.load() ) {
@@ -983,7 +987,6 @@ void runCmd(const std::string &_cmd, std::mutex &_mutex) {
     if (!resolve) {
         _mutex.lock();
         sandbox.uniforms.parseLine(_cmd);
-        sandbox.flagChange();
         _mutex.unlock();
     }
 }

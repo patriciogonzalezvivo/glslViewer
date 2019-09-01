@@ -22,7 +22,7 @@ Sandbox::Sandbox():
     frag_index(-1), vert_index(-1), geom_index(-1),
     verbose(false), cursor(true), debug(false),
     // Main Vert/Frag/Geom
-    m_frag_source(""), m_vert_source(""), m_vbo(nullptr),
+    m_frag_source(""), m_vert_source(""),
     // Background
     m_background_enabled(false),
     // Buffers
@@ -35,21 +35,6 @@ Sandbox::Sandbox():
     m_record_start(0.0f), m_record_head(0.0f), m_record_end(0.0f), m_record_counter(0), m_record(false),
     // Scene
     m_view2d(1.0), m_frame(0), m_change(true) {
-
-    // Adding default deines
-    addDefine("GLSLVIEWER 1");
-    // Define PLATFORM
-    #ifdef PLATFORM_OSX
-    addDefine("PLATFORM_OSX");
-    #endif
-
-    #ifdef PLATFORM_LINUX
-    addDefine("PLATFORM_LINUX");
-    #endif
-
-    #ifdef PLATFORM_RPI
-    addDefine("PLATFORM_RPI");
-    #endif
 
     // TIME UNIFORMS
     //
@@ -103,17 +88,22 @@ Sandbox::Sandbox():
     uniforms.functions["u_modelViewProjectionMatrix"] = UniformFunction("mat4");
 }
 
+Sandbox::~Sandbox() {
+}
+
 // ------------------------------------------------------------------------- SET
 
 void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
 
     // Add Sandbox Commands
-    //
+    // ----------------------------------------
+
     _commands.push_back(Command("defines", [&](const std::string& _line){ 
         if (_line == "defines") {
-            for (unsigned int i = 0; i < defines.size(); i++) {
-                std::cout << defines[i] << std::endl;
-            }
+            if (geom_index == -1)
+                m_shader.printDefines();
+            else
+                m_scene.printDefines();
             return true;
         }
         return false;
@@ -122,10 +112,6 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
 
     _commands.push_back(Command("uniforms", [&](const std::string& _line){ 
         uniforms.print(_line == "uniforms,all");
-
-        // TODO
-        //      - Cubemap
-
         return true;
     },
     "uniforms[,all|active]  return a list of all uniforms and their values or just the one active (default).", false));
@@ -148,30 +134,23 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     },
     "buffers                return a list of buffers as their uniform name.", false));
 
-    // Prepare viewport
-    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
+    // LOAD SHACER 
+    // -----------------------------------------------
 
-    glDisable(GL_DEPTH_TEST);
-    glFrontFace(GL_CCW);
+    if (vert_index != -1) {
+        // If there is a Vertex shader load it
+        m_vert_source = "";
+        m_vert_dependencies.clear();
 
-    // Init Scene elements
-    m_billboard_vbo = rect(0.0,0.0,1.0,1.0).getVbo();
-
-    //  Load Geometry
-    //
-    if (geom_index != -1) {
-        m_scene.setup(_commands, uniforms);
-        m_scene.loadModel( _files[geom_index].path, defines );
-        m_vbo = m_scene.getModel().getVbo();
+        loadFromPath(_files[vert_index].path, &m_vert_source, include_folders, &m_vert_dependencies);
     }
     else {
-        m_vbo = m_billboard_vbo;
+        // If there is no use the default one
+        m_vert_source = default_vert;
     }
 
-    //  Build shader
-    //
     if (frag_index != -1) {
+        // If there is a Fragment shader load it
         m_frag_source = "";
         m_frag_dependencies.clear();
 
@@ -180,21 +159,41 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         }
     }
     else {
-        m_frag_source = m_vbo->getVertexLayout()->getDefaultFragShader();
+        // If there is no use the default one
+        m_frag_source = default_frag;
     }
 
-    if (vert_index != -1) {
-        m_vert_source = "";
-        m_vert_dependencies.clear();
+    // Init Scene elements
+    m_billboard_vbo = rect(0.0,0.0,1.0,1.0).getVbo();
 
-        loadFromPath(_files[vert_index].path, &m_vert_source, include_folders, &m_vert_dependencies);
+    // LOAD GEOMETRY
+    // -----------------------------------------------
+
+    if (geom_index == -1) {
+
+        m_shader.addDefine("MODEL_HAS_COLORS");
+        m_shader.addDefine("MODEL_HAS_NORMALS");
+        m_shader.addDefine("MODEL_HAS_TEXCOORDS");
+        m_shader.addDefine("MODEL_HAS_TANGENTS");
     }
     else {
-        m_vert_source = m_vbo->getVertexLayout()->getDefaultVertShader();
+        m_scene.setup( _commands, uniforms);
+        m_scene.loadGeometry( _files[geom_index].path );
     }
 
-    m_shader.load(m_frag_source, m_vert_source, defines, verbose);
+    // Update uniforms and dependencies
+    uniforms.checkPresenceIn(m_vert_source, m_frag_source);
     _updateDependencies( _files );
+
+    // FINISH SCENE SETUP
+    // -------------------------------------------------
+
+    // Prepare viewport
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    glDisable(GL_DEPTH_TEST);
+    glFrontFace(GL_CCW);
 
     // Turn on Alpha blending
     glEnable(GL_BLEND);
@@ -203,7 +202,8 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     // Clear the background
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    reload();
+    // LOAD SHADERS
+    reloadShaders();
 
     // TODO:
     //      - this seams to solve the problem of buffers not properly initialize
@@ -215,16 +215,34 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     flagChange();
 }
 
-void Sandbox::addDefine(const std::string &_define) {
-    defines.push_back(_define);
+void Sandbox::addDefine(const std::string &_define, const std::string &_value) {
+    m_shader.addDefine(_define);
+    m_billboard_shader.addDefine(_define, _value);
+    m_background_shader.addDefine(_define, _value);
+    m_wireframe2D_shader.addDefine(_define, _value);
+    for (int i = 0; i < m_buffers_total; i++) {
+        m_buffers_shaders[i].addDefine(_define, _value);
+    }
+
+    if (geom_index != -1)
+        m_scene.addDefine(_define, _value);
+
+    m_postprocessing_shader.addDefine(_define, _value);
 }
 
 void Sandbox::delDefine(const std::string &_define) {
-    for (int i = (int)defines.size() - 1; i >= 0 ; i--) {
-        if ( defines[i] == _define ) {
-            defines.erase(defines.begin() + i);
-        }
+    m_shader.delDefine(_define);
+    m_billboard_shader.delDefine(_define);
+    m_background_shader.delDefine(_define);
+    m_wireframe2D_shader.delDefine(_define);
+    for (int i = 0; i < m_buffers_total; i++) {
+        m_buffers_shaders[i].delDefine(_define);
     }
+
+    if (geom_index != -1)
+        m_scene.delDefine(_define);
+
+    m_postprocessing_shader.delDefine(_define);
 }
 
 // ------------------------------------------------------------------------- GET
@@ -233,17 +251,21 @@ bool Sandbox::isReady() {
     return m_frame > 0;
 }
 
-bool Sandbox::haveChange() { 
-    return  m_change || m_record ||
-            uniforms.functions["u_time"].present || 
-            uniforms.functions["u_delta"].present ||
-            uniforms.functions["u_date"].present ||
-            m_scene.haveChange(); 
+void Sandbox::flagChange() { 
+    m_change = true; 
 }
 
-void Sandbox::unfalgChange() {
+void Sandbox::unflagChange() {
     m_change = false;
-    m_scene.unfalgChange();
+    m_scene.unflagChange();
+    uniforms.unflagChange();
+}
+
+bool Sandbox::haveChange() { 
+    return  m_change || 
+            m_record ||
+            m_scene.haveChange() ||
+            uniforms.haveChange();
 }
 
 std::string Sandbox::getSource(ShaderType _type) const {
@@ -257,95 +279,79 @@ int Sandbox::getRecordedPorcentage() {
 
 // ------------------------------------------------------------------------- RELOAD SHADER
 
-bool Sandbox::reload() {
-    // Reload the shader
-    m_shader.detach(GL_FRAGMENT_SHADER | GL_VERTEX_SHADER);
-    bool success = m_shader.load(m_frag_source, m_vert_source, defines, verbose);
+bool Sandbox::reloadShaders() {
+    bool success = false;
+    flagChange();
 
-    // If it doesn't work put a default one
-    if (!success) {
-        std::string default_vert;
-        std::string default_frag;
+    // UPDATE scene shaders of models (materials)
+    if (geom_index == -1) {
 
-        default_vert = m_vbo->getVertexLayout()->getDefaultVertShader(); 
-        default_frag = m_vbo->getVertexLayout()->getDefaultFragShader();
-        
-        m_shader.load(default_frag, default_vert, defines, false);
+        if (verbose)
+            std::cout << "// Reload 2D shaders" << std::endl;
+
+        // Reload the shader
+        m_shader.detach(GL_FRAGMENT_SHADER | GL_VERTEX_SHADER);
+        success = m_shader.load(m_frag_source, m_vert_source, verbose);
+
+         if (!success) {
+            m_shader.load(default_frag, default_vert, false);
+            return false;
+         }
     }
-    // If it work check for present uniforms, buffers, background and postprocesing
     else {
-        // Check active native uniforms
-        uniforms.checkPresenceIn(m_vert_source, m_frag_source);
+        if (verbose)
+            std::cout << "// Reload 3D scene shaders" << std::endl;
 
-        // Flag all user defined uniforms as changed
-        uniforms.flagChange();
+        if (m_scene.getCubeMap()) {
+            m_scene.addDefine("SH_ARRAY", "u_SH");
+            if (m_scene.getCubeMapVisible())
+                m_scene.addDefine("CUBE_MAP", "u_cubeMap");
+        }
 
-         // Buffers
-        m_buffers_total = count_buffers(m_frag_source);
-        _updateBuffers();
-        
-        // Background pass
+        success = m_scene.loadShaders(m_frag_source, m_vert_source, verbose);
+
+        if (!success) {
+            m_scene.loadShaders(default_frag, default_vert, false);
+            return false;
+        }
+    }
+
+    // UPDATE uniforms
+    uniforms.checkPresenceIn(m_vert_source, m_frag_source); // Check active native uniforms
+    uniforms.flagChange();                                  // Flag all user defined uniforms as changed
+
+    // UPDATE Buffers
+    m_buffers_total = count_buffers(m_frag_source);
+    _updateBuffers();
+    
+    if (geom_index != -1) {
+        // UPDATE Background pass
         m_background_enabled = check_for_background(getSource(FRAGMENT));
         if (m_background_enabled) {
             // Specific defines for this buffer
-            std::vector<std::string> sub_defines = defines;
-            sub_defines.push_back("BACKGROUND");
-            m_background_shader.load(m_frag_source, billboard_vert, sub_defines, verbose);
-        }
-
-        // Postprocessing
-        bool havePostprocessing = check_for_postprocessing(getSource(FRAGMENT));
-        if (m_postprocessing_enabled != havePostprocessing) {
-            m_scene_fbo.allocate(getWindowWidth(), getWindowHeight(), uniforms.functions["u_sceneDepth"].present ? COLOR_DEPTH_TEXTURES : COLOR_TEXTURE_DEPTH_BUFFER );
-        }
-        m_postprocessing_enabled = havePostprocessing;
-        if (m_postprocessing_enabled) {
-            // Specific defines for this buffer
-            std::vector<std::string> sub_defines = defines;
-            sub_defines.push_back("POSTPROCESSING");
-            m_postprocessing_shader.load(m_frag_source, billboard_vert, sub_defines, verbose);
+            m_background_shader.addDefine("BACKGROUND");
+            m_background_shader.load(m_frag_source, billboard_vert, false);
         }
     }
 
-    flagChange();
+    // UPDATE Postprocessing
+    bool havePostprocessing = check_for_postprocessing(getSource(FRAGMENT));
+    if (m_postprocessing_enabled != havePostprocessing) {
+        m_scene_fbo.allocate(getWindowWidth(), getWindowHeight(), uniforms.functions["u_sceneDepth"].present ? COLOR_DEPTH_TEXTURES : COLOR_TEXTURE_DEPTH_BUFFER );
+    }
+    m_postprocessing_enabled = havePostprocessing;
+    if (m_postprocessing_enabled) {
+        // Specific defines for this buffer
+        m_postprocessing_shader.addDefine("POSTPROCESSING");
+        m_postprocessing_shader.load(m_frag_source, billboard_vert, false);
+    }
 
-    return success;
+    return true;
 }
 
 // ------------------------------------------------------------------------- UPDATE
-void Sandbox::_updateBuffers() {
-    if ( m_buffers_total != int(uniforms.buffers.size()) ) {
-        uniforms.buffers.clear();
-        m_buffers_shaders.clear();
-
-        for (int i = 0; i < m_buffers_total; i++) {
-            // New FBO
-            uniforms.buffers.push_back( Fbo() );
-            uniforms.buffers[i].allocate(getWindowWidth(), getWindowHeight(), COLOR_TEXTURE);
-            
-            // Specific defines for this buffer
-            std::vector<std::string> sub_defines = defines;
-            sub_defines.push_back("BUFFER_" + toString(i));
-
-            // New SHADER
-            m_buffers_shaders.push_back( Shader() );
-            m_buffers_shaders[i].load(m_frag_source, billboard_vert, sub_defines, verbose);
-        }
-    }
-    else {
-        for (unsigned int i = 0; i < m_buffers_shaders.size(); i++) {
-            // Specific defines for this buffer
-            std::vector<std::string> sub_defines = defines;
-            sub_defines.push_back("BUFFER_" + toString(i));
-
-            // Reload shader code
-            m_buffers_shaders[i].load(m_frag_source, billboard_vert, sub_defines, verbose);
-        }
-    }
-}
-
 void Sandbox::_updateDependencies(WatchFileList &_files) {
-    FileList new_dependencies = mergeList(m_frag_dependencies, m_vert_dependencies);
+    List new_dependencies = merge(m_frag_dependencies, m_vert_dependencies);
 
     // remove old dependencies
     for (int i = _files.size() - 1; i >= 0; i--) {
@@ -363,9 +369,41 @@ void Sandbox::_updateDependencies(WatchFileList &_files) {
         stat( file.path.c_str(), &st );
         file.lastChange = st.st_mtime;
         _files.push_back(file);
+
+        if (verbose)
+            std::cout << " Watching file " << new_dependencies[i] << " as a dependency " << std::endl;
     }
 }
 
+void Sandbox::_updateBuffers() {
+    if ( m_buffers_total != int(uniforms.buffers.size()) ) {
+
+        if (verbose)
+            std::cout << " Creating/Removing " << uniforms.buffers.size() << " buffers to " << m_buffers_total << std::endl;
+
+        uniforms.buffers.clear();
+        m_buffers_shaders.clear();
+
+        for (int i = 0; i < m_buffers_total; i++) {
+            // New FBO
+            uniforms.buffers.push_back( Fbo() );
+            uniforms.buffers[i].allocate(getWindowWidth(), getWindowHeight(), COLOR_TEXTURE);
+            
+            // New Shader
+            m_buffers_shaders.push_back( Shader() );
+            m_buffers_shaders[i].addDefine("BUFFER_" + toString(i));
+            m_buffers_shaders[i].load(m_frag_source, billboard_vert, false);
+        }
+    }
+    else {
+        for (unsigned int i = 0; i < m_buffers_shaders.size(); i++) {
+
+            // Reload shader code
+            m_buffers_shaders[i].addDefine("BUFFER_" + toString(i));
+            m_buffers_shaders[i].load(m_frag_source, billboard_vert, false);
+        }
+    }
+}
 
 // ------------------------------------------------------------------------- DRAW
 void Sandbox::_renderBuffers() {
@@ -419,7 +457,7 @@ void Sandbox::draw() {
     // -----------------------------------------------
     if (geom_index != -1) {
         if (uniforms.functions["u_ligthShadowMap"].present)
-            m_scene.renderShadowMap(m_shader, uniforms);
+            m_scene.renderShadowMap(uniforms);
     }
     
     // BUFFERS
@@ -456,10 +494,10 @@ void Sandbox::draw() {
 
         // Pass special uniforms
         m_shader.setUniform("u_modelViewProjectionMatrix", glm::mat4(1.));
-        m_vbo->draw( &m_shader );
+        m_billboard_vbo->draw( &m_shader );
     }
     else {
-        m_scene.render(m_shader, uniforms);
+        m_scene.render(uniforms);
         if (debug)
             m_scene.renderDebug();
     }
@@ -518,7 +556,7 @@ void Sandbox::drawUI() {
             float yOffset = h - yStep - margin;
 
             if (!m_billboard_shader.isLoaded())
-                m_billboard_shader.load(dynamic_billboard_frag, dynamic_billboard_vert, defines, false);
+                m_billboard_shader.load(dynamic_billboard_frag, dynamic_billboard_vert, false);
 
             m_billboard_shader.use();
             uniforms.feedTo(m_billboard_shader);
@@ -548,9 +586,6 @@ void Sandbox::drawUI() {
                     m_billboard_shader.setUniform("u_scale", xStep, yStep);
                     m_billboard_shader.setUniform("u_translate", xOffset, yOffset);
                     m_billboard_shader.setUniform("u_depth", float(1.0));
-                    // m_billboard_shader.setUniform("u_cameraNearClip", m_scene.getCamera().getNearClip());
-                    // m_billboard_shader.setUniform("u_cameraFarClip", m_scene.getCamera().getFarClip());
-                    // m_billboard_shader.setUniform("u_cameraDistance", m_scene.getCamera().getDistance());
                     m_billboard_shader.setUniform("u_modelViewProjectionMatrix", getOrthoMatrix());
                     m_billboard_shader.setUniformDepthTexture("u_tex0", &m_scene_fbo);
                     m_billboard_vbo->draw(&m_billboard_shader);
@@ -563,9 +598,6 @@ void Sandbox::drawUI() {
                 m_billboard_shader.setUniform("u_scale", xStep, yStep);
                 m_billboard_shader.setUniform("u_translate", xOffset, yOffset);
                 m_billboard_shader.setUniform("u_depth", float(0.0));
-                // m_billboard_shader.setUniform("u_cameraNearClip", m_scene.getCamera().getNearClip());
-                // m_billboard_shader.setUniform("u_cameraFarClip", m_scene.getCamera().getFarClip());
-                // m_billboard_shader.setUniform("u_cameraDistance", m_scene.getCamera().getDistance());
                 m_billboard_shader.setUniform("u_modelViewProjectionMatrix", getOrthoMatrix());
                 m_billboard_shader.setUniformDepthTexture("u_tex0", &m_scene.getLightMap());
                 m_billboard_vbo->draw(&m_billboard_shader);
@@ -579,7 +611,7 @@ void Sandbox::drawUI() {
             m_cross_vbo = cross(glm::vec3(0.0, 0.0, 0.0), 10.).getVbo();
 
         if (!m_wireframe2D_shader.isLoaded())
-            m_wireframe2D_shader.load(wireframe2D_frag, wireframe2D_vert, defines, false);
+            m_wireframe2D_shader.load(wireframe2D_frag, wireframe2D_vert, false);
 
         glLineWidth(2.0f);
         m_wireframe2D_shader.use();
@@ -612,7 +644,8 @@ void Sandbox::drawDone() {
     }
 
     m_frame++;
-    unfalgChange();
+
+    unflagChange();
 }
 
 // ------------------------------------------------------------------------- ACTIONS
@@ -672,8 +705,8 @@ void Sandbox::onFileChange(WatchFileList &_files, int index) {
         m_frag_source = "";
         m_frag_dependencies.clear();
 
-        if (loadFromPath(filename, &m_frag_source, include_folders, &m_frag_dependencies)) {
-            reload();
+        if ( loadFromPath(filename, &m_frag_source, include_folders, &m_frag_dependencies) ) {
+            reloadShaders();
             _updateDependencies(_files);
         }
     }
@@ -681,8 +714,8 @@ void Sandbox::onFileChange(WatchFileList &_files, int index) {
         m_vert_source = "";
         m_vert_dependencies.clear();
 
-        if (loadFromPath(filename, &m_vert_source, include_folders, &m_vert_dependencies)) {
-            reload();
+        if ( loadFromPath(filename, &m_vert_source, include_folders, &m_vert_dependencies) ) {
+            reloadShaders();
             _updateDependencies(_files);
         }
     }
@@ -703,7 +736,7 @@ void Sandbox::onFileChange(WatchFileList &_files, int index) {
         }
     }
 
-    m_change = true;
+    flagChange();
 }
 
 void Sandbox::onScroll(float _yoffset) {

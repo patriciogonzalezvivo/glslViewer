@@ -29,18 +29,17 @@ struct UniformFunction {
     std::function<void(Shader&)>    assign;
     std::function<std::string()>    print;
     std::string                     type;
-    bool                            present = true;
+    bool                            present = false;
 };
 
 typedef std::map<std::string, UniformFunction> UniformFunctionsList;
 
 typedef std::map<std::string, Texture*> TextureList;
 
-struct Uniforms {
-    UniformDataList         data;
-    TextureList             textures;
-    UniformFunctionsList    functions;
-    std::vector<Fbo>        buffers;
+class Uniforms {
+public:
+    Uniforms();
+    virtual ~Uniforms();
 
     bool                    parseLine( const std::string &_line );
     void                    checkPresenceIn( const std::string &_vert_src, const std::string &_frag_src );
@@ -50,7 +49,17 @@ struct Uniforms {
     void                    printTextures();
 
     void                    flagChange();
+    void                    unflagChange();
+    bool                    haveChange();
     void                    clear();
+
+    UniformDataList         data;
+    TextureList             textures;
+    UniformFunctionsList    functions;
+    std::vector<Fbo>        buffers;
+
+protected:
+    bool                    m_change;
 };
 
 

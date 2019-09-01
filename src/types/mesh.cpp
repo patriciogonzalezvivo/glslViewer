@@ -78,7 +78,7 @@ void computeSmoothingNormals(const tinyobj::attrib_t& attrib, const tinyobj::sha
 
     // Normalize the normals, that is, make them unit vectors
     for (iter = smoothVertexNormals.begin(); iter != smoothVertexNormals.end(); iter++) {
-        glm::normalize(iter->second);
+        iter->second = glm::normalize(iter->second);
     }
 
 }  // computeSmoothingNormals
@@ -349,8 +349,6 @@ bool Mesh::load(const std::string& _file) {
         tinyobj::attrib_t attrib;
         std::vector<tinyobj::shape_t> shapes;
         std::vector<tinyobj::material_t> materials;
-        float bmin[3];
-        float bmax[3];
 
         std::string warn;
         std::string err;
@@ -378,14 +376,10 @@ bool Mesh::load(const std::string& _file) {
         materials.push_back(tinyobj::material_t());
 
         for (size_t i = 0; i < materials.size(); i++) {
-            printf("material[%d].diffuse_texname = %s\n", int(i),
-                materials[i].diffuse_texname.c_str());
+            printf("material[%d].diffuse_texname = %s\n", int(i), materials[i].diffuse_texname.c_str());
         }
 
         // TODO Load diffuse textures
-
-        bmin[0] = bmin[1] = bmin[2] = std::numeric_limits<float>::max();
-        bmax[0] = bmax[1] = bmax[2] = -std::numeric_limits<float>::max();
 
         INDEX_TYPE index = 0;
         for (size_t s = 0; s < shapes.size(); s++) {
@@ -414,32 +408,6 @@ bool Mesh::load(const std::string& _file) {
                     diffuse[i] = materials[current_material_id].diffuse[i];
                 }
 
-                glm::vec2 tc[3];
-                if (attrib.texcoords.size() > 0) {
-                    if ((idx0.texcoord_index < 0) || (idx1.texcoord_index < 0) || (idx2.texcoord_index < 0)) {
-                        // face does not contain valid uv index.
-                        tc[0] = glm::vec2(0.0f);
-                        tc[1] = glm::vec2(0.0f);
-                        tc[2] = glm::vec2(0.0f);
-                    } else {
-                        assert(attrib.texcoords.size() >
-                            size_t(2 * idx0.texcoord_index + 1));
-                        assert(attrib.texcoords.size() >
-                            size_t(2 * idx1.texcoord_index + 1));
-                        assert(attrib.texcoords.size() >
-                            size_t(2 * idx2.texcoord_index + 1));
-
-                        // Flip Y coord.
-                        tc[0] = glm::vec2(attrib.texcoords[2 * idx0.texcoord_index], 1.0f - attrib.texcoords[2 * idx0.texcoord_index + 1]);
-                        tc[1] = glm::vec2(attrib.texcoords[2 * idx1.texcoord_index], 1.0f - attrib.texcoords[2 * idx1.texcoord_index + 1]);
-                        tc[2] = glm::vec2(attrib.texcoords[2 * idx2.texcoord_index], 1.0f - attrib.texcoords[2 * idx2.texcoord_index + 1]);
-                    }
-                } else {
-                    tc[0] = glm::vec2(0.0f);
-                    tc[1] = glm::vec2(0.0f);
-                    tc[2] = glm::vec2(0.0f);
-                }
-
                 glm::vec3 v[3];
                 for (int k = 0; k < 3; k++) {
                     int f0 = idx0.vertex_index;
@@ -452,12 +420,6 @@ bool Mesh::load(const std::string& _file) {
                     v[0][k] = attrib.vertices[3 * f0 + k];
                     v[1][k] = attrib.vertices[3 * f1 + k];
                     v[2][k] = attrib.vertices[3 * f2 + k];
-                    bmin[k] = std::min(v[0][k], bmin[k]);
-                    bmin[k] = std::min(v[1][k], bmin[k]);
-                    bmin[k] = std::min(v[2][k], bmin[k]);
-                    bmax[k] = std::max(v[0][k], bmax[k]);
-                    bmax[k] = std::max(v[1][k], bmax[k]);
-                    bmax[k] = std::max(v[2][k], bmax[k]);
                 }
 
                 glm::vec3 n[3];
@@ -507,10 +469,29 @@ bool Mesh::load(const std::string& _file) {
                     }
                 }
 
+                glm::vec2 tc[3];
+                if (attrib.texcoords.size() > 0) {
+                    if ((idx0.texcoord_index < 0) || (idx1.texcoord_index < 0) || (idx2.texcoord_index < 0)) {
+                        // face does not contain valid uv index.
+                        tc[0] = glm::vec2(0.0f);
+                        tc[1] = glm::vec2(0.0f);
+                        tc[2] = glm::vec2(0.0f);
+                    } else {
+                        assert(attrib.texcoords.size() > size_t(2 * idx0.texcoord_index + 1));
+                        assert(attrib.texcoords.size() > size_t(2 * idx1.texcoord_index + 1));
+                        assert(attrib.texcoords.size() > size_t(2 * idx2.texcoord_index + 1));
+
+                        // Flip Y coord.
+                        tc[0] = glm::vec2(attrib.texcoords[2 * idx0.texcoord_index], 1.0f - attrib.texcoords[2 * idx0.texcoord_index + 1]);
+                        tc[1] = glm::vec2(attrib.texcoords[2 * idx1.texcoord_index], 1.0f - attrib.texcoords[2 * idx1.texcoord_index + 1]);
+                        tc[2] = glm::vec2(attrib.texcoords[2 * idx2.texcoord_index], 1.0f - attrib.texcoords[2 * idx2.texcoord_index + 1]);
+                    }
+                }
+
                 for (int k = 0; k < 3; k++) {
                     addVertex( v[k] );
                     addNormal( n[k] );
-                    addColor( glm::vec4(1.0) );
+                    addColor( diffuse );
                     addTexCoord( tc[k] );
                     addIndex(index);
                     index++;
@@ -518,13 +499,19 @@ bool Mesh::load(const std::string& _file) {
             }
         }
 
-        if (hasNormals() && getDrawMode() == GL_TRIANGLES) {
-            computeTangents();
+        std::cout << "V: " << getVertices().size() << std::endl;
+        std::cout << "N: " << getNormals().size() << std::endl;
+        std::cout << "T: " << getTexCoords().size() << std::endl;
+
+        if ( !hasNormals() ) {
+            std::cout << "Compute normals" << std::endl;
+            computeNormals();
         }
 
-        std::cout << "Vertices: " << getVertices().size() << std::endl;
-        std::cout << "Normals: " << getNormals().size() << std::endl;
-        std::cout << "Texcoords: " << getTexCoords().size() << std::endl;
+        if (hasNormals() && getDrawMode() == GL_TRIANGLES) {
+            std::cout << "Compute tangents" << std::endl;
+            computeTangents();
+        }
 
         return true;
     }
@@ -993,7 +980,7 @@ Vbo* Mesh::getVbo() {
     tmpMesh->setDrawMode(getDrawMode());
 
     std::vector<GLfloat> data;
-    for(uint i = 0; i < m_vertices.size(); i++) {
+    for (unsigned int i = 0; i < m_vertices.size(); i++) {
         data.push_back(m_vertices[i].x);
         data.push_back(m_vertices[i].y);
         data.push_back(m_vertices[i].z);
@@ -1020,7 +1007,31 @@ Vbo* Mesh::getVbo() {
         }
     }
 
+
+    
     tmpMesh->addVertices((GLbyte*)data.data(), m_vertices.size());
+
+    // std::vector<INDEX_TYPE> indices;
+    // if (m_indices.size() > 0) {
+    //     for (unsigned int i = 1; i < m_indices.size(); i++) {
+    //         indices.push_back(m_indices[i]);
+    //     }
+    // }
+    // else {
+    //     if ( getDrawMode() == GL_LINE_STRIP ) {
+    //         for (unsigned int i = 1; i < getVertices().size(); i++) {
+    //             indices.push_back(i-1);
+    //             indices.push_back(i);
+    //         }
+    //     }
+    //     else {
+    //         // POINTS, LINES, TRIANGLES
+    //         for (unsigned int i = 0; i < getVertices().size(); i++) {
+    //             indices.push_back((INDEX_TYPE)i);
+    //         }
+    //     }
+    // }
+    // tmpMesh->addIndices(indices.data(), indices.size());
 
     if (!hasIndices()) {
         if ( getDrawMode() == GL_LINES ) {
@@ -1036,7 +1047,7 @@ Vbo* Mesh::getVbo() {
         }
     }
 
-    tmpMesh->addIndices(m_indices.data(), m_indices.size());
+    tmpMesh->addIndices(m_indices.data(), m_indices.size());    
 
     return tmpMesh;
 }

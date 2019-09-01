@@ -55,6 +55,7 @@ public:
     const bool    hasTangents() const { return m_tangents.size() > 0; }
     const bool    hasIndices() const { return m_indices.size() > 0; }
 
+    Vbo*    getVbo();
     GLenum  getDrawMode() const;
     std::vector<glm::ivec3>  getTriangles() const ;
 
@@ -64,8 +65,6 @@ public:
     const std::vector<glm::vec3> & getNormals() const;
     const std::vector<glm::vec2> & getTexCoords() const;
     const std::vector<INDEX_TYPE>  & getIndices() const;
-
-    Vbo*    getVbo();
 
     void    computeNormals();
     void    computeTangents();

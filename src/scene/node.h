@@ -51,6 +51,8 @@ public:
     virtual void        orbit(float _longitude, float _latitude, float _radius, const glm::vec3& _centerPoint = glm::vec3(0.0));
     virtual void        reset();
 
+    bool    bChange;
+
 protected:
     virtual void        createMatrix();
     virtual void        updateAxis();
@@ -66,5 +68,4 @@ private:
     glm::vec3           m_position;
     glm::quat           m_orientation;
     glm::vec3           m_scale;
-
 };
