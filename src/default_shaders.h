@@ -101,10 +101,11 @@ varying vec4    v_tangent;\n\
 void main(void) {\n\
     vec3 color = vec3(1.0);\n\
     \n\
-    #ifdef MODEL_HAS_COLORS\n\
+#ifdef MODEL_HAS_COLORS\n\
     color = v_color.rgb;\n\
-    #endif\n\
+#endif\n\
     \n\
+#ifdef MODEL_HAS_NORMALS\n\
     vec3 l = normalize(u_light);\n\
     vec3 n = normalize(v_normal);\n\
     vec3 v = normalize(u_camera);\n\
@@ -120,6 +121,9 @@ void main(void) {\n\
                     t), \n\
                 vec3(1.0, 1.0, 1.0), \n\
                 s);\n\
+#elif defined(MODEL_HAS_TEXCOORDS)\n\
+    color.rg *= v_texcoord;\n\
+#endif\n\
     \n\
     gl_FragColor = vec4(color, 1.0);\n\
 }\n\

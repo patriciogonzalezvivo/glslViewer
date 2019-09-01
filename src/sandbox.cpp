@@ -170,11 +170,10 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     // -----------------------------------------------
 
     if (geom_index == -1) {
-
-        m_shader.addDefine("MODEL_HAS_COLORS");
-        m_shader.addDefine("MODEL_HAS_NORMALS");
+        // m_shader.addDefine("MODEL_HAS_COLORS");
+        // m_shader.addDefine("MODEL_HAS_NORMALS");
         m_shader.addDefine("MODEL_HAS_TEXCOORDS");
-        m_shader.addDefine("MODEL_HAS_TANGENTS");
+        // m_shader.addDefine("MODEL_HAS_TANGENTS");
     }
     else {
         m_scene.setup( _commands, uniforms);
