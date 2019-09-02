@@ -3,6 +3,7 @@
 #include <vector>
 
 #include "glm/glm.hpp"
+#include "tinyobjloader/tiny_obj_loader.h"
 
 #ifndef PI
 #define PI       3.14159265358979323846
@@ -70,3 +71,7 @@ void getNormal(const glm::vec3 &v0, const glm::vec3 &v1, const glm::vec3 &v2, gl
 
 //---------------------------------------- Conversions
 float mapValue(const float &_value, const float &_inputMin, const float &_inputMax, const float &_outputMin, const float &_outputMax, bool _clamp = true );
+
+//---------------------------------------- tinyOBJ
+bool hasSmoothingGroup(const tinyobj::shape_t& shape);
+void computeSmoothingNormals(const tinyobj::attrib_t& attrib, const tinyobj::shape_t& shape, std::map<int, glm::vec3>& smoothVertexNormals);

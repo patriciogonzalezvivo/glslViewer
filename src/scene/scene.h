@@ -9,9 +9,9 @@
 #include "gl/shader.h"
 #include "gl/textureCube.h"
 
+#include "tools/fs.h"
 #include "tools/skybox.h"
 #include "tools/command.h"
-#include "tools/skybox.h"
 
 enum CullingMode {
     NONE = 0,
@@ -29,7 +29,7 @@ public:
     void            setup(CommandList &_commands, Uniforms &_uniforms);
     void            clear();
 
-    bool            loadGeometry(const std::string &_geometryFile);
+    bool            loadGeometry(WatchFileList &_files, int _index, bool _verbose);
     bool            loadShaders(const std::string &_fragmentShader, const std::string &_vertexShader, bool _verbose);
 
     void            addDefine(const std::string &_define, const std::string &_value);

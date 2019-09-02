@@ -177,12 +177,9 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     }
     else {
         m_scene.setup( _commands, uniforms);
-        m_scene.loadGeometry( _files[geom_index].path );
+        // m_scene.loadGeometry( _files, geom_index, verbose );
+        m_scene.loadGeometry( _files, geom_index, true );
     }
-
-    // Update uniforms and dependencies
-    uniforms.checkPresenceIn(m_vert_source, m_frag_source);
-    _updateDependencies( _files );
 
     // FINISH SCENE SETUP
     // -------------------------------------------------
@@ -202,7 +199,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // LOAD SHADERS
-    reloadShaders();
+    reloadShaders( _files );
 
     // TODO:
     //      - this seams to solve the problem of buffers not properly initialize
@@ -278,9 +275,10 @@ int Sandbox::getRecordedPorcentage() {
 
 // ------------------------------------------------------------------------- RELOAD SHADER
 
-bool Sandbox::reloadShaders() {
-    bool success = false;
+bool Sandbox::reloadShaders( WatchFileList &_files ) {
     flagChange();
+
+    bool success = false;
 
     // UPDATE scene shaders of models (materials)
     if (geom_index == -1) {
@@ -315,6 +313,32 @@ bool Sandbox::reloadShaders() {
         }
     }
 
+    // UPDATE shaders dependencies
+    {
+        List new_dependencies = merge(m_frag_dependencies, m_vert_dependencies);
+
+        // remove old dependencies
+        for (int i = _files.size() - 1; i >= 0; i--) {
+            if (_files[i].type == GLSL_DEPENDENCY) {
+                _files.erase( _files.begin() + i);
+            }
+        }
+
+        // Add new dependencies
+        struct stat st;
+        for (unsigned int i = 0; i < new_dependencies.size(); i++) {
+            WatchFile file;
+            file.type = GLSL_DEPENDENCY;
+            file.path = new_dependencies[i];
+            stat( file.path.c_str(), &st );
+            file.lastChange = st.st_mtime;
+            _files.push_back(file);
+
+            if (verbose)
+                std::cout << " Watching file " << new_dependencies[i] << " as a dependency " << std::endl;
+        }
+    }
+
     // UPDATE uniforms
     uniforms.checkPresenceIn(m_vert_source, m_frag_source); // Check active native uniforms
     uniforms.flagChange();                                  // Flag all user defined uniforms as changed
@@ -323,8 +347,9 @@ bool Sandbox::reloadShaders() {
     m_buffers_total = count_buffers(m_frag_source);
     _updateBuffers();
     
+    // UPDATE Background pass
     if (geom_index != -1) {
-        // UPDATE Background pass
+        
         m_background_enabled = check_for_background(getSource(FRAGMENT));
         if (m_background_enabled) {
             // Specific defines for this buffer
@@ -349,31 +374,6 @@ bool Sandbox::reloadShaders() {
 }
 
 // ------------------------------------------------------------------------- UPDATE
-void Sandbox::_updateDependencies(WatchFileList &_files) {
-    List new_dependencies = merge(m_frag_dependencies, m_vert_dependencies);
-
-    // remove old dependencies
-    for (int i = _files.size() - 1; i >= 0; i--) {
-        if (_files[i].type == GLSL_DEPENDENCY) {
-            _files.erase( _files.begin() + i);
-        }
-    }
-
-    // Add new dependencies
-    struct stat st;
-    for (unsigned int i = 0; i < new_dependencies.size(); i++) {
-        WatchFile file;
-        file.type = GLSL_DEPENDENCY;
-        file.path = new_dependencies[i];
-        stat( file.path.c_str(), &st );
-        file.lastChange = st.st_mtime;
-        _files.push_back(file);
-
-        if (verbose)
-            std::cout << " Watching file " << new_dependencies[i] << " as a dependency " << std::endl;
-    }
-}
-
 void Sandbox::_updateBuffers() {
     if ( m_buffers_total != int(uniforms.buffers.size()) ) {
 
@@ -422,7 +422,7 @@ void Sandbox::_renderBuffers() {
             }
         }
 
-        m_billboard_vbo->draw( &m_buffers_shaders[i] );
+        m_billboard_vbo->render( &m_buffers_shaders[i] );
 
         uniforms.buffers[i].unbind();
     }
@@ -443,7 +443,7 @@ void Sandbox::_renderBackground() {
             m_background_shader.setUniformTexture("u_buffer" + toString(i), &uniforms.buffers[i]);
         }
 
-        m_billboard_vbo->draw( &m_background_shader );
+        m_billboard_vbo->render( &m_background_shader );
     }
     // CUBEMAP
     else if (geom_index != -1) {
@@ -451,7 +451,7 @@ void Sandbox::_renderBackground() {
     }
 }
 
-void Sandbox::draw() {
+void Sandbox::render() {
     // RENDER SHADOW MAP
     // -----------------------------------------------
     if (geom_index != -1) {
@@ -484,6 +484,7 @@ void Sandbox::draw() {
     // RENDER BACKGROUND
     _renderBackground();
 
+    // RENDER CONTENT
     if (geom_index == -1) {
         // Load main shader
         m_shader.use();
@@ -493,7 +494,7 @@ void Sandbox::draw() {
 
         // Pass special uniforms
         m_shader.setUniform("u_modelViewProjectionMatrix", glm::mat4(1.));
-        m_billboard_vbo->draw( &m_shader );
+        m_billboard_vbo->render( &m_shader );
     }
     else {
         m_scene.render(uniforms);
@@ -524,7 +525,7 @@ void Sandbox::draw() {
             m_postprocessing_shader.setUniformTexture("u_buffer" + toString(i), &uniforms.buffers[i]);
         }
 
-        m_billboard_vbo->draw( &m_postprocessing_shader );
+        m_billboard_vbo->render( &m_postprocessing_shader );
     }
     
     if (screenshotFile != "" || m_record) {
@@ -533,7 +534,7 @@ void Sandbox::draw() {
 }
 
 
-void Sandbox::drawUI() {
+void Sandbox::renderUI() {
     if (debug) {        
         glDisable(GL_DEPTH_TEST);
 
@@ -566,7 +567,7 @@ void Sandbox::drawUI() {
                 m_billboard_shader.setUniform("u_translate", xOffset, yOffset);
                 m_billboard_shader.setUniform("u_modelViewProjectionMatrix", getOrthoMatrix());
                 m_billboard_shader.setUniformTexture("u_tex0", &uniforms.buffers[i]);
-                m_billboard_vbo->draw(&m_billboard_shader);
+                m_billboard_vbo->render(&m_billboard_shader);
                 yOffset -= yStep * 2.0 + margin;
             }
 
@@ -577,7 +578,7 @@ void Sandbox::drawUI() {
                     m_billboard_shader.setUniform("u_translate", xOffset, yOffset);
                     m_billboard_shader.setUniform("u_modelViewProjectionMatrix", getOrthoMatrix());
                     m_billboard_shader.setUniformTexture("u_tex0", &m_scene_fbo);
-                    m_billboard_vbo->draw(&m_billboard_shader);
+                    m_billboard_vbo->render(&m_billboard_shader);
                     yOffset -= yStep * 2.0 + margin;
                 }
 
@@ -587,7 +588,7 @@ void Sandbox::drawUI() {
                     m_billboard_shader.setUniform("u_depth", float(1.0));
                     m_billboard_shader.setUniform("u_modelViewProjectionMatrix", getOrthoMatrix());
                     m_billboard_shader.setUniformDepthTexture("u_tex0", &m_scene_fbo);
-                    m_billboard_vbo->draw(&m_billboard_shader);
+                    m_billboard_vbo->render(&m_billboard_shader);
                     yOffset -= yStep * 2.0 + margin;
                 }
             }
@@ -599,7 +600,7 @@ void Sandbox::drawUI() {
                 m_billboard_shader.setUniform("u_depth", float(0.0));
                 m_billboard_shader.setUniform("u_modelViewProjectionMatrix", getOrthoMatrix());
                 m_billboard_shader.setUniformDepthTexture("u_tex0", &m_scene.getLightMap());
-                m_billboard_vbo->draw(&m_billboard_shader);
+                m_billboard_vbo->render(&m_billboard_shader);
                 yOffset -= yStep * 2.0 + margin;
             }
         }
@@ -618,12 +619,12 @@ void Sandbox::drawUI() {
         m_wireframe2D_shader.setUniform("u_scale", 1.0f, 1.0f);
         m_wireframe2D_shader.setUniform("u_translate", getMouseX(), getMouseY());
         m_wireframe2D_shader.setUniform("u_modelViewProjectionMatrix", getOrthoMatrix());
-        m_cross_vbo->draw(&m_wireframe2D_shader);
+        m_cross_vbo->render(&m_wireframe2D_shader);
         glLineWidth(1.0f);
     }
 }
 
-void Sandbox::drawDone() {
+void Sandbox::renderDone() {
 
     // RECORD
     if (m_record) {
@@ -705,8 +706,7 @@ void Sandbox::onFileChange(WatchFileList &_files, int index) {
         m_frag_dependencies.clear();
 
         if ( loadFromPath(filename, &m_frag_source, include_folders, &m_frag_dependencies) ) {
-            reloadShaders();
-            _updateDependencies(_files);
+            reloadShaders(_files);
         }
     }
     else if (type == VERT_SHADER) {
@@ -714,8 +714,7 @@ void Sandbox::onFileChange(WatchFileList &_files, int index) {
         m_vert_dependencies.clear();
 
         if ( loadFromPath(filename, &m_vert_source, include_folders, &m_vert_dependencies) ) {
-            reloadShaders();
-            _updateDependencies(_files);
+            reloadShaders(_files);
         }
     }
     else if (type == GEOMETRY) {

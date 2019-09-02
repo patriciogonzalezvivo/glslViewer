@@ -2,8 +2,6 @@
 
 #include "scene/scene.h"
 
-#include "tools/fs.h"
-
 enum ShaderType {
     FRAGMENT = 0,
     VERTEX = 1
@@ -16,15 +14,15 @@ public:
     
     // Main stages
     void                setup(WatchFileList &_files, CommandList &_commands);
-    bool                reloadShaders();
+    bool                reloadShaders(WatchFileList &_files);
 
     void                flagChange();
     void                unflagChange(); 
     bool                haveChange();
 
-    void                draw();
-    void                drawUI();
-    void                drawDone();
+    void                render();
+    void                renderUI();
+    void                renderDone();
 
     void                clear();
     
@@ -70,8 +68,6 @@ public:
 
 private:
     void                _updateBuffers();
-    void                _updateDependencies(WatchFileList &_files);
-
     void                _renderBuffers();
     void                _renderBackground();
 

@@ -66,8 +66,8 @@ public:
     const std::vector<glm::vec2> & getTexCoords() const;
     const std::vector<INDEX_TYPE>  & getIndices() const;
 
-    void    computeNormals();
-    void    computeTangents();
+    bool    computeNormals();
+    bool    computeTangents();
     void    clear();
 
 private:

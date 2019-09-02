@@ -863,13 +863,13 @@ int main(int argc, char **argv){
         }
 
         // Draw Scene
-        sandbox.draw();
+        sandbox.render();
 
         // Draw Cursor and 2D Debug elements
-        sandbox.drawUI();
+        sandbox.renderUI();
 
         // Finish drawing
-        sandbox.drawDone();
+        sandbox.renderDone();
 
         if ( timeOut ) {
             bRun.store(false);

@@ -114,7 +114,7 @@ void Vbo::upload() {
     m_isUploaded = true;
 }
 
-void Vbo::draw(Shader* _shader) {
+void Vbo::render(Shader* _shader) {
 
     // Ensure that geometry is buffered into GPU
     if (!m_isUploaded) {

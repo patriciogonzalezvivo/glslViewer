@@ -8,8 +8,6 @@
 #include "tools/text.h"
 #include "gl/vertexLayout.h"
 
-#include "tinyobjloader/tiny_obj_loader.h"
-
 Mesh::Mesh():m_drawMode(GL_TRIANGLES) {
 
 }
@@ -21,67 +19,6 @@ Mesh::Mesh(const Mesh &_mother):m_drawMode(_mother.getDrawMode()) {
 Mesh::~Mesh() {
 
 }
-
-// Check if `mesh_t` contains smoothing group id.
-bool hasSmoothingGroup(const tinyobj::shape_t& shape) {
-    for (size_t i = 0; i < shape.mesh.smoothing_group_ids.size(); i++) {
-        if (shape.mesh.smoothing_group_ids[i] > 0) {
-            return true;
-        }
-    }
-    return false;
-}
-
-void computeSmoothingNormals(const tinyobj::attrib_t& attrib, const tinyobj::shape_t& shape, std::map<int, glm::vec3>& smoothVertexNormals) {
-    smoothVertexNormals.clear();
-
-    std::map<int, glm::vec3>::iterator iter;
-
-    for (size_t f = 0; f < shape.mesh.indices.size() / 3; f++) {
-        // Get the three indexes of the face (all faces are triangular)
-        tinyobj::index_t idx0 = shape.mesh.indices[3 * f + 0];
-        tinyobj::index_t idx1 = shape.mesh.indices[3 * f + 1];
-        tinyobj::index_t idx2 = shape.mesh.indices[3 * f + 2];
-
-        // Get the three vertex indexes and coordinates
-        int vi[3];      // indexes
-        glm::vec3 v[3];  // coordinates
-
-        for (int k = 0; k < 3; k++) {
-            vi[0] = idx0.vertex_index;
-            vi[1] = idx1.vertex_index;
-            vi[2] = idx2.vertex_index;
-            assert(vi[0] >= 0);
-            assert(vi[1] >= 0);
-            assert(vi[2] >= 0);
-
-            v[0][k] = attrib.vertices[3 * vi[0] + k];
-            v[1][k] = attrib.vertices[3 * vi[1] + k];
-            v[2][k] = attrib.vertices[3 * vi[2] + k];
-        }
-
-        // Compute the normal of the face
-        glm::vec3 normal;
-        getNormal(v[0], v[1], v[2], normal);
-
-        // Add the normal to the three vertexes
-        for (size_t i = 0; i < 3; ++i) {
-            iter = smoothVertexNormals.find(vi[i]);
-            if (iter != smoothVertexNormals.end()) {
-                // add
-                iter->second += normal;
-            } else {
-                smoothVertexNormals[vi[i]] = normal;
-            }
-        }
-    }  // f
-
-    // Normalize the normals, that is, make them unit vectors
-    for (iter = smoothVertexNormals.begin(); iter != smoothVertexNormals.end(); iter++) {
-        iter->second = glm::normalize(iter->second);
-    }
-
-}  // computeSmoothingNormals
 
 bool Mesh::load(const std::string& _file) {
     if ( haveExt(_file,"ply") || haveExt(_file,"PLY") ) {
@@ -325,13 +262,11 @@ bool Mesh::load(const std::string& _file) {
             if ( normals.size() > 0 ) {
                 addNormals( normals );
             }
-            else if ( getDrawMode() == GL_TRIANGLES ) {
+            else {
                 computeNormals();
             }
 
-            if ( texcoord.size() == m_vertices.size() && getDrawMode() == GL_TRIANGLES ) {
-                computeTangents();
-            }
+            computeTangents();
 
             return true;
 
@@ -345,6 +280,7 @@ bool Mesh::load(const std::string& _file) {
         std::cout << "ERROR glMesh, can not load  " << _file << std::endl;
         return false;
     } 
+
     else if ( haveExt(_file,"obj") || haveExt(_file,"OBJ") ) {
         tinyobj::attrib_t attrib;
         std::vector<tinyobj::shape_t> shapes;
@@ -384,7 +320,7 @@ bool Mesh::load(const std::string& _file) {
         INDEX_TYPE index = 0;
         for (size_t s = 0; s < shapes.size(); s++) {
 
-            // TODO: Check for smoothing group and compute smoothing normals
+            // Check for smoothing group and compute smoothing normals
             std::map<int, glm::vec3> smoothVertexNormals;
             if (hasSmoothingGroup(shapes[s]) > 0) {
                 std::cout << "Compute smoothingNormal for shape [" << s << "]" << std::endl;
@@ -503,15 +439,10 @@ bool Mesh::load(const std::string& _file) {
         std::cout << "N: " << getNormals().size() << std::endl;
         std::cout << "T: " << getTexCoords().size() << std::endl;
 
-        if ( !hasNormals() ) {
-            std::cout << "Compute normals" << std::endl;
+        if ( !hasNormals() )
             computeNormals();
-        }
 
-        if (hasNormals() && getDrawMode() == GL_TRIANGLES) {
-            std::cout << "Compute tangents" << std::endl;
-            computeTangents();
-        }
+        computeTangents();
 
         return true;
     }
@@ -809,134 +740,129 @@ void Mesh::clear() {
 	}
 }
 
-void Mesh::computeNormals() {
+bool Mesh::computeNormals() {
+    if (getDrawMode() != GL_TRIANGLES) 
+        return false;
 
-    if (getDrawMode() == GL_TRIANGLES) {
-        //The number of the vertices
-        int nV = m_vertices.size();
+    //The number of the vertices
+    int nV = m_vertices.size();
 
-        //The number of the triangles
-        int nT = m_indices.size() / 3;
+    //The number of the triangles
+    int nT = m_indices.size() / 3;
 
-        std::vector<glm::vec3> norm( nV ); //Array for the normals
+    std::vector<glm::vec3> norm( nV ); //Array for the normals
 
-        //Scan all the triangles. For each triangle add its
-        //normal to norm's vectors of triangle's vertices
-        for (int t=0; t<nT; t++) {
+    //Scan all the triangles. For each triangle add its
+    //normal to norm's vectors of triangle's vertices
+    for (int t=0; t<nT; t++) {
 
-            //Get indices of the triangle t
-            int i1 = m_indices[ 3 * t ];
-            int i2 = m_indices[ 3 * t + 1 ];
-            int i3 = m_indices[ 3 * t + 2 ];
+        //Get indices of the triangle t
+        int i1 = m_indices[ 3 * t ];
+        int i2 = m_indices[ 3 * t + 1 ];
+        int i3 = m_indices[ 3 * t + 2 ];
 
-            //Get vertices of the triangle
-            const glm::vec3 &v1 = m_vertices[ i1 ];
-            const glm::vec3 &v2 = m_vertices[ i2 ];
-            const glm::vec3 &v3 = m_vertices[ i3 ];
+        //Get vertices of the triangle
+        const glm::vec3 &v1 = m_vertices[ i1 ];
+        const glm::vec3 &v2 = m_vertices[ i2 ];
+        const glm::vec3 &v3 = m_vertices[ i3 ];
 
-            //Compute the triangle's normal
-            glm::vec3 dir = glm::normalize(glm::cross(v2-v1,v3-v1));
+        //Compute the triangle's normal
+        glm::vec3 dir = glm::normalize(glm::cross(v2-v1,v3-v1));
 
-            //Accumulate it to norm array for i1, i2, i3
-            norm[ i1 ] += dir;
-            norm[ i2 ] += dir;
-            norm[ i3 ] += dir;
-        }
-
-        //Normalize the normal's length and add it.
-        m_normals.clear();
-        for (int i=0; i<nV; i++) {
-            addNormal( glm::normalize(norm[i]) );
-        }
-
+        //Accumulate it to norm array for i1, i2, i3
+        norm[ i1 ] += dir;
+        norm[ i2 ] += dir;
+        norm[ i3 ] += dir;
     }
-    else {
-        //  TODO
-        //
-        std::cout << "ERROR: computeNormals(): Mesh only add GL_TRIANGLES for NOW !!" << std::endl;
+
+    //Normalize the normal's length and add it.
+    m_normals.clear();
+    for (int i=0; i<nV; i++) {
+        addNormal( glm::normalize(norm[i]) );
     }
+
+    return true;
 }
 
 // http://www.terathon.com/code/tangent.html
-void Mesh::computeTangents() {
+bool Mesh::computeTangents() {
+    //The number of the vertices
+    int nV = m_vertices.size();
 
-    if (getDrawMode() == GL_TRIANGLES) {
-        //The number of the vertices
-        int nV = m_vertices.size();
+    if (m_texCoords.size() != nV || 
+        m_normals.size() != nV || 
+        getDrawMode() != GL_TRIANGLES)
+        return false;
 
-        //The number of the triangles
-        int nT = m_indices.size() / 3;
+    //The number of the triangles
+    int nT = m_indices.size() / 3;
 
-        std::vector<glm::vec3> tan1( nV );
-        std::vector<glm::vec3> tan2( nV );
+    std::vector<glm::vec3> tan1( nV );
+    std::vector<glm::vec3> tan2( nV );
 
-        //Scan all the triangles. For each triangle add its
-        //normal to norm's vectors of triangle's vertices
-        for (int t = 0; t < nT; t++) {
+    //Scan all the triangles. For each triangle add its
+    //normal to norm's vectors of triangle's vertices
+    for (int t = 0; t < nT; t++) {
 
-            //Get indices of the triangle t
-            int i1 = m_indices[ 3 * t ];
-            int i2 = m_indices[ 3 * t + 1 ];
-            int i3 = m_indices[ 3 * t + 2 ];
+        //Get indices of the triangle t
+        int i1 = m_indices[ 3 * t ];
+        int i2 = m_indices[ 3 * t + 1 ];
+        int i3 = m_indices[ 3 * t + 2 ];
 
-            //Get vertices of the triangle
-            const glm::vec3 &v1 = m_vertices[ i1 ];
-            const glm::vec3 &v2 = m_vertices[ i2 ];
-            const glm::vec3 &v3 = m_vertices[ i3 ];
+        //Get vertices of the triangle
+        const glm::vec3 &v1 = m_vertices[ i1 ];
+        const glm::vec3 &v2 = m_vertices[ i2 ];
+        const glm::vec3 &v3 = m_vertices[ i3 ];
 
-            const glm::vec2 &w1 = m_texCoords[i1];
-            const glm::vec2 &w2 = m_texCoords[i2];
-            const glm::vec2 &w3 = m_texCoords[i3];
+        const glm::vec2 &w1 = m_texCoords[i1];
+        const glm::vec2 &w2 = m_texCoords[i2];
+        const glm::vec2 &w3 = m_texCoords[i3];
 
-            float x1 = v2.x - v1.x;
-            float x2 = v3.x - v1.x;
-            float y1 = v2.y - v1.y;
-            float y2 = v3.y - v1.y;
-            float z1 = v2.z - v1.z;
-            float z2 = v3.z - v1.z;
-            
-            float s1 = w2.x - w1.x;
-            float s2 = w3.x - w1.x;
-            float t1 = w2.y - w1.y;
-            float t2 = w3.y - w1.y;
-            
-            float r = 1.0f / (s1 * t2 - s2 * t1);
-            glm::vec3 sdir( (t2 * x1 - t1 * x2) * r, 
-                            (t2 * y1 - t1 * y2) * r, 
-                            (t2 * z1 - t1 * z2) * r);
-            glm::vec3 tdir( (s1 * x2 - s2 * x1) * r, 
-                            (s1 * y2 - s2 * y1) * r, 
-                            (s1 * z2 - s2 * z1) * r);
-            
-            tan1[i1] += sdir;
-            tan1[i2] += sdir;
-            tan1[i3] += sdir;
-            
-            tan2[i1] += tdir;
-            tan2[i2] += tdir;
-            tan2[i3] += tdir;
-        }
-
-        //Normalize the normal's length and add it.
-        m_tangents.clear();
-        for (int i = 0; i < nV; i++) {
-            const glm::vec3 &n = m_normals[i];
-            const glm::vec3 &t = tan1[i];
-            
-            // Gram-Schmidt orthogonalize
-            glm::vec3 tangent = t - n * glm::normalize( glm::dot(n, t));
-    
-            // Calculate handedness
-            float hardedness = (glm::dot( glm::cross(n, t), tan2[i]) < 0.0f) ? -1.0f : 1.0f;
-
-            addTangent(glm::vec4(tangent, hardedness));
-        }
+        float x1 = v2.x - v1.x;
+        float x2 = v3.x - v1.x;
+        float y1 = v2.y - v1.y;
+        float y2 = v3.y - v1.y;
+        float z1 = v2.z - v1.z;
+        float z2 = v3.z - v1.z;
+        
+        float s1 = w2.x - w1.x;
+        float s2 = w3.x - w1.x;
+        float t1 = w2.y - w1.y;
+        float t2 = w3.y - w1.y;
+        
+        float r = 1.0f / (s1 * t2 - s2 * t1);
+        glm::vec3 sdir( (t2 * x1 - t1 * x2) * r, 
+                        (t2 * y1 - t1 * y2) * r, 
+                        (t2 * z1 - t1 * z2) * r);
+        glm::vec3 tdir( (s1 * x2 - s2 * x1) * r, 
+                        (s1 * y2 - s2 * y1) * r, 
+                        (s1 * z2 - s2 * z1) * r);
+        
+        tan1[i1] += sdir;
+        tan1[i2] += sdir;
+        tan1[i3] += sdir;
+        
+        tan2[i1] += tdir;
+        tan2[i2] += tdir;
+        tan2[i3] += tdir;
     }
-    else {
-        //  TODO
-        //
-        std::cout << "ERROR: computeTangents(): Mesh only add GL_TRIANGLES for NOW !!" << std::endl;
+
+    //Normalize the normal's length and add it.
+    m_tangents.clear();
+    for (int i = 0; i < nV; i++) {
+        const glm::vec3 &n = m_normals[i];
+        const glm::vec3 &t = tan1[i];
+        
+        // Gram-Schmidt orthogonalize
+        glm::vec3 tangent = t - n * glm::normalize( glm::dot(n, t));
+
+        // Calculate handedness
+        float hardedness = (glm::dot( glm::cross(n, t), tan2[i]) < 0.0f) ? -1.0f : 1.0f;
+
+        addTangent(glm::vec4(tangent, hardedness));
     }
+
+    return true;
 }
 
 Vbo* Mesh::getVbo() {

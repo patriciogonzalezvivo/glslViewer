@@ -344,3 +344,66 @@ void getNormal(const glm::vec3 &v0, const glm::vec3 &v1, const glm::vec3 &v2, gl
         N /= len;
     }
 }
+
+//---------------------------------------- tinyOBJ
+
+// Check if `mesh_t` contains smoothing group id.
+bool hasSmoothingGroup(const tinyobj::shape_t& shape) {
+    for (size_t i = 0; i < shape.mesh.smoothing_group_ids.size(); i++) {
+        if (shape.mesh.smoothing_group_ids[i] > 0) {
+            return true;
+        }
+    }
+    return false;
+}
+
+void computeSmoothingNormals(const tinyobj::attrib_t& attrib, const tinyobj::shape_t& shape, std::map<int, glm::vec3>& smoothVertexNormals) {
+    smoothVertexNormals.clear();
+
+    std::map<int, glm::vec3>::iterator iter;
+
+    for (size_t f = 0; f < shape.mesh.indices.size() / 3; f++) {
+        // Get the three indexes of the face (all faces are triangular)
+        tinyobj::index_t idx0 = shape.mesh.indices[3 * f + 0];
+        tinyobj::index_t idx1 = shape.mesh.indices[3 * f + 1];
+        tinyobj::index_t idx2 = shape.mesh.indices[3 * f + 2];
+
+        // Get the three vertex indexes and coordinates
+        int vi[3];      // indexes
+        glm::vec3 v[3];  // coordinates
+
+        for (int k = 0; k < 3; k++) {
+            vi[0] = idx0.vertex_index;
+            vi[1] = idx1.vertex_index;
+            vi[2] = idx2.vertex_index;
+            assert(vi[0] >= 0);
+            assert(vi[1] >= 0);
+            assert(vi[2] >= 0);
+
+            v[0][k] = attrib.vertices[3 * vi[0] + k];
+            v[1][k] = attrib.vertices[3 * vi[1] + k];
+            v[2][k] = attrib.vertices[3 * vi[2] + k];
+        }
+
+        // Compute the normal of the face
+        glm::vec3 normal;
+        getNormal(v[0], v[1], v[2], normal);
+
+        // Add the normal to the three vertexes
+        for (size_t i = 0; i < 3; ++i) {
+            iter = smoothVertexNormals.find(vi[i]);
+            if (iter != smoothVertexNormals.end()) {
+                // add
+                iter->second += normal;
+            } else {
+                smoothVertexNormals[vi[i]] = normal;
+            }
+        }
+    }  // f
+
+    // Normalize the normals, that is, make them unit vectors
+    for (iter = smoothVertexNormals.begin(); iter != smoothVertexNormals.end(); iter++) {
+        iter->second = glm::normalize(iter->second);
+    }
+
+}  // computeSmoothingNormals

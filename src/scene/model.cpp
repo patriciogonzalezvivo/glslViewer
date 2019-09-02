@@ -1,27 +1,30 @@
 #include "model.h"
 
+#include "tools/text.h"
 #include "tools/geom.h"
 #include "tools/shapes.h"
 
 Model::Model():
     m_model_vbo(nullptr), m_bbox_vbo(nullptr), 
     m_bbmin(100000.0), m_bbmax(-1000000.),
-    m_area(0.0f) {
+    m_name(""), m_area(0.0f) {
 }
 
-Model::Model(Mesh &_mesh):
+Model::Model(const std::string& _name, Mesh &_mesh):
     m_model_vbo(nullptr), m_bbox_vbo(nullptr), 
     m_area(0.0f) {
+    setName(_name);
     loadGeom(_mesh);
 }
 
-Model::Model(Mesh &_mesh, const std::string &_fragStr, const std::string &_vertStr, bool verbose):
-    m_model_vbo(nullptr), m_bbox_vbo(nullptr), 
-    m_area(0.0f) {
-    loadGeom(_mesh);
-    loadShader(_fragStr, _vertStr, verbose);
+void Model::setName(const std::string& _str) {
+    if (!m_name.empty())
+        delDefine( "MODEL_" + toUpper(toUnderscore( purifyString(m_name))) );
+    if (!_str.empty()) {
+        m_name = _str;
+        addDefine( "MODEL_" + toUpper(toUnderscore( purifyString(m_name))) );
+    }
 }
-
 
 void Model::addDefine(const std::string &_define, const std::string &_value) { 
     m_shader.addDefine(_define, _value); 
@@ -57,11 +60,13 @@ bool Model::loadGeom(Mesh &_mesh) {
         addDefine("MODEL_HAS_TANGENTS");
 
     addDefine("SHADOW_MAP", "u_ligthShadowMap");
-#ifdef PLATFORM_RPI                
+#ifdef PLATFORM_RPI
     addDefine("SHADOW_MAP_SIZE", "512.0");
 #else
     addDefine("SHADOW_MAP_SIZE", "1024.0");
 #endif
+
+    return true;
 }
 
 bool Model::loadShader(const std::string &_fragStr, const std::string &_vertStr, bool verbose) {
@@ -100,6 +105,6 @@ void Model::draw(Uniforms &_uniforms, const glm::mat4 &_viewProjectionMatrix) {
 
         // Pass special uniforms
         m_shader.setUniform( "u_modelViewProjectionMatrix", _viewProjectionMatrix );
-        m_model_vbo->draw( &m_shader );
+        m_model_vbo->render( &m_shader );
     }
 }
