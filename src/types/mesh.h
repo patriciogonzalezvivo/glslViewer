@@ -20,9 +20,6 @@ public:
     Mesh(const Mesh &_mother);
     virtual ~Mesh();
 
-    bool    load(const std::string& _file);
-    bool    save(const std::string& _file, bool _useBinary = false);
-
     void    setDrawMode(GLenum _drawMode = GL_TRIANGLES);
 
     void    setColor(const glm::vec4 &_color);

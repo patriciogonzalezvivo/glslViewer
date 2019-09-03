@@ -18,10 +18,10 @@ Mesh rectCorners(const Rectangle &_rect, float _width = 4.);
 
 Mesh polyline(const std::vector<glm::vec3> &_pts );
 
-Mesh axis(float _size);
+Mesh axis(float _size, float _y = 0.0);
 
-Mesh grid(float _size, int _segments);
-Mesh grid(float _width, float _height, int _columns, int _rows);
+Mesh grid(float _size, int _segments, float _y = 0.0);
+Mesh grid(float _width, float _height, int _columns, int _rows, float _y = 0.0);
 
 Mesh cube(float _size);
 Mesh cubeCorners(const glm::vec3 &_min_v, const glm::vec3 &_max_v, float _size);

@@ -855,7 +855,6 @@ int main(int argc, char **argv){
             usleep( micro_wait );
             continue;
         }
-
         
         if ( timeLimit >= 0.0 && getTime() >= timeLimit ) {
             timeOut = true;

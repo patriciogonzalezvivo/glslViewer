@@ -8,7 +8,9 @@
 #include "tools/text.h"
 #include "tools/shapes.h"
 
-#include "default_scene_shaders.h"
+#include "shaders/light.h"
+#include "shaders/cubemap.h"
+#include "shaders/wireframe3D.h"
 
 Scene::Scene(): 
     // Camera.
@@ -458,215 +460,16 @@ void Scene::printDefines() {
     }
 }
 
-bool Scene::loadGeometry( WatchFileList &filenames, int _index, bool _verbose) {
-
-    std::string filename = filenames[_index].path;
+bool Scene::loadGeometry( WatchFileList& _files, int _index, bool _verbose) {
 
     // If the geometry is a PLY it's easy because is only one mesh
-    if ( haveExt(filename,"ply") || haveExt(filename,"PLY") ) {
-        Mesh mesh;
-        bool ret = mesh.load(filename);
-
-        if (!ret) {
-            std::cerr << "Failed to load " << filename.c_str() << std::endl;
-            return false;
-        }
-
-        m_models.push_back( new Model("", mesh ) );
-    }
+    if ( haveExt(_files[_index].path,"ply") || haveExt(_files[_index].path,"PLY") )
+        loadPLY(m_models, _files, _index, _verbose);
 
     // If it's a OBJ could be more complicated because they can contain several meshes
-    else if ( haveExt(filename,"obj") || haveExt(filename,"OBJ") ) {
-        tinyobj::attrib_t attrib;
-        std::vector<tinyobj::shape_t> shapes;
-        std::vector<tinyobj::material_t> materials;
+    else if ( haveExt(_files[_index].path,"obj") || haveExt(_files[_index].path,"OBJ") )
+        loadOBJ(m_models, _files, _index, _verbose);
 
-        std::string warn;
-        std::string err;
-        std::string base_dir = getBaseDir(filename.c_str());
-        bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, filename.c_str(), base_dir.c_str());
-
-        if (!warn.empty()) {
-            std::cout << "WARN: " << warn << std::endl;
-        }
-        if (!err.empty()) {
-            std::cerr << err << std::endl;
-        }
-        if (!ret) {
-            std::cerr << "Failed to load " << filename.c_str() << std::endl;
-            return false;
-        }
-
-        // Append `default` material
-        // materials.push_back(tinyobj::material_t());
-
-        if (_verbose) {
-            std::cerr << "Loading " << filename.c_str() << std::endl;
-            printf("    Total ertices   = %d\n", (int)(attrib.vertices.size()) / 3);
-            printf("    Total normals   = %d\n", (int)(attrib.normals.size()) / 3);
-            printf("    Total texcoords = %d\n", (int)(attrib.texcoords.size()) / 2);
-            printf("    Total materials = %d\n", (int)materials.size());
-            printf("    Total shapes    = %d\n", (int)shapes.size());
-
-            // std::cerr << "Materials: " << filename.c_str() << std::endl;
-            // for (size_t i = 0; i < materials.size(); i++) {
-
-            //     printf("material[%d].diffuse_texname = %s\n", int(i), materials[i].diffuse_texname.c_str());
-            // }
-
-            std::cerr << "Shapes: " << std::endl;
-        }
-
-        // TODO Load diffuse textures
-        for (size_t s = 0; s < shapes.size(); s++) {
-
-            std::string name = shapes[s].name;
-            if (name.empty())
-                name = toString(s);
-
-            if (_verbose)
-                std::cerr << name << std::endl;
-
-            // Check for smoothing group and compute smoothing normals
-            std::map<int, glm::vec3> smoothVertexNormals;
-            if (hasSmoothingGroup(shapes[s]) > 0) {
-                std::cout << "  Compute smoothingNormal" << std::endl;
-                computeSmoothingNormals(attrib, shapes[s], smoothVertexNormals);
-            }
-
-            Mesh mesh;
-            mesh.setDrawMode(GL_TRIANGLES);
-
-            INDEX_TYPE index = 0;
-            std::vector<glm::vec4> colors;
-            std::vector<glm::vec3> normals;
-            std::vector<glm::vec2> uvs;
-
-            for (size_t f = 0; f < shapes[s].mesh.indices.size() / 3; f++) {
-                tinyobj::index_t idx0 = shapes[s].mesh.indices[3 * f + 0];
-                tinyobj::index_t idx1 = shapes[s].mesh.indices[3 * f + 1];
-                tinyobj::index_t idx2 = shapes[s].mesh.indices[3 * f + 2];
-
-                int current_material_id = shapes[s].mesh.material_ids[f];
-
-                if ((current_material_id >= 0) && (current_material_id < static_cast<int>(materials.size()))) {
-                    // Extract vertex color
-                    glm::vec4 c = glm::vec4(1.0, 1.0, 1.0, 1.0);
-                    for (size_t i = 0; i < 3; i++) {
-                        c[i] = materials[current_material_id].diffuse[i];
-                    }
-                    std::cout << "    Diffuse color: " << c.x << "," << c.y << "," << c.z << "," << c.w << std::endl;
-                    colors.push_back(c);
-                    colors.push_back(c);
-                    colors.push_back(c);
-                }
-
-                glm::vec3 v[3];
-                for (int k = 0; k < 3; k++) {
-                    int f0 = idx0.vertex_index;
-                    int f1 = idx1.vertex_index;
-                    int f2 = idx2.vertex_index;
-                    assert(f0 >= 0);
-                    assert(f1 >= 0);
-                    assert(f2 >= 0);
-
-                    v[0][k] = attrib.vertices[3 * f0 + k];
-                    v[1][k] = attrib.vertices[3 * f1 + k];
-                    v[2][k] = attrib.vertices[3 * f2 + k];
-                }
-                
-                bool invalid_normal_index = false;
-                if (attrib.normals.size() > 0) {
-                    int nf0 = idx0.normal_index;
-                    int nf1 = idx1.normal_index;
-                    int nf2 = idx2.normal_index;
-
-                    if ((nf0 < 0) || (nf1 < 0) || (nf2 < 0)) {
-                            // normal index is missing from this face.
-                            invalid_normal_index = true;
-                    } 
-                    else {
-                        glm::vec3 n[3];
-                        for (int k = 0; k < 3; k++) {
-                            assert(size_t(3 * nf0 + k) < attrib.normals.size());
-                            assert(size_t(3 * nf1 + k) < attrib.normals.size());
-                            assert(size_t(3 * nf2 + k) < attrib.normals.size());
-                            n[0][k] = attrib.normals[3 * nf0 + k];
-                            n[1][k] = attrib.normals[3 * nf1 + k];
-                            n[2][k] = attrib.normals[3 * nf2 + k];
-                        }
-                        normals.push_back(n[0]);
-                        normals.push_back(n[1]);
-                        normals.push_back(n[2]);
-                    }
-                }
-                else {
-                    invalid_normal_index = true;
-                }
-
-                if (invalid_normal_index && !smoothVertexNormals.empty()) {
-                    // Use smoothing normals
-                    int f0 = idx0.vertex_index;
-                    int f1 = idx1.vertex_index;
-                    int f2 = idx2.vertex_index;
-
-                    if (f0 >= 0 && f1 >= 0 && f2 >= 0) {
-                        normals.push_back( smoothVertexNormals[f0] );
-                        normals.push_back( smoothVertexNormals[f1] );
-                        normals.push_back( smoothVertexNormals[f2] );
-                        invalid_normal_index = false;
-                    }
-                }
-
-                if (attrib.texcoords.size() > 0) {
-                    if ((idx0.texcoord_index >= 0) && (idx1.texcoord_index >= 0) && (idx2.texcoord_index >= 0)) {
-                        assert(attrib.texcoords.size() > size_t(2 * idx0.texcoord_index + 1));
-                        assert(attrib.texcoords.size() > size_t(2 * idx1.texcoord_index + 1));
-                        assert(attrib.texcoords.size() > size_t(2 * idx2.texcoord_index + 1));
-
-                        // Flip Y coord.
-                        uvs.push_back( glm::vec2(attrib.texcoords[2 * idx0.texcoord_index], 1.0f - attrib.texcoords[2 * idx0.texcoord_index + 1]) );
-                        uvs.push_back( glm::vec2(attrib.texcoords[2 * idx1.texcoord_index], 1.0f - attrib.texcoords[2 * idx1.texcoord_index + 1]) );
-                        uvs.push_back( glm::vec2(attrib.texcoords[2 * idx2.texcoord_index], 1.0f - attrib.texcoords[2 * idx2.texcoord_index + 1]) );
-                    }
-                }
-
-                for (int k = 0; k < 3; k++) {
-                    mesh.addVertex( v[k] );
-                    mesh.addIndex(index);
-                    index++;
-                }
-            }
-
-            if (colors.size() == mesh.getVertices().size())
-                mesh.addColors(colors);
-
-            if (normals.size() == mesh.getVertices().size())
-                mesh.addNormals(normals);
-
-            if (uvs.size() == mesh.getVertices().size())
-                mesh.addTexCoords(uvs);
-
-            if (_verbose) {
-                std::cout << "    vertices = " << mesh.getVertices().size() << std::endl;
-                std::cout << "    colors   = " << mesh.getColors().size() << std::endl;
-                std::cout << "    normals  = " << mesh.getNormals().size() << std::endl;
-                std::cout << "    uvs      = " << mesh.getTexCoords().size() << std::endl;
-            }
-
-            if ( !mesh.hasNormals() ) {
-                if (mesh.computeNormals())
-                    if (_verbose)
-                        std::cout << "    . Compute normals" << std::endl;
-            }
-
-            if ( mesh.computeTangents() )
-                if (_verbose)
-                    std::cout << "    . Compute tangents" << std::endl;
-
-            m_models.push_back( new Model(name, mesh) );
-        }
-    }
 
     // Calculate the total area
     glm::vec3 min_v;
@@ -678,6 +481,7 @@ bool Scene::loadGeometry( WatchFileList &filenames, int _index, bool _verbose) {
     m_area = glm::min(glm::length(min_v), glm::length(max_v));
     glm::vec3 centroid = (min_v + max_v) / 2.0f;
     m_origin.setPosition( -centroid );
+    m_floor = min_v.y;
 
     // set the right distance to the camera
     m_camera.setDistance( m_area * 2.0 );
@@ -819,7 +623,7 @@ void Scene::renderDebug() {
     
     // Axis
     if (m_axis_vbo == nullptr)
-        m_axis_vbo = axis(m_camera.getFarClip()).getVbo();
+        m_axis_vbo = axis(m_camera.getFarClip(), m_floor).getVbo();
 
     glLineWidth(2.0f);
     m_wireframe3D_shader.use();
@@ -829,7 +633,7 @@ void Scene::renderDebug() {
     
     // Grid
     if (m_grid_vbo == nullptr)
-        m_grid_vbo = grid(m_camera.getFarClip(), m_camera.getFarClip() / 20.0).getVbo();
+        m_grid_vbo = grid(m_camera.getFarClip(), m_camera.getFarClip() / 20.0, m_floor).getVbo();
     glLineWidth(1.0f);
     m_wireframe3D_shader.use();
     m_wireframe3D_shader.setUniform("u_color", glm::vec4(0.5));

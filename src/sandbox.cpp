@@ -13,7 +13,10 @@
 #include "glm/gtx/matrix_transform_2d.hpp"
 #include "glm/gtx/rotate_vector.hpp"
 
-#include "default_shaders.h"
+#include "shaders/default.h"
+#include "shaders/default_scene.h"
+#include "shaders/billboard.h"
+#include "shaders/wireframe2D.h"
 
 #define FRAME_DELTA 0.03333333333
 
@@ -146,7 +149,10 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     }
     else {
         // If there is no use the default one
-        m_vert_source = default_vert;
+        if (geom_index == -1)
+            m_vert_source = default_vert;
+        else
+            m_vert_source = default_scene_vert;
     }
 
     if (frag_index != -1) {
@@ -160,7 +166,10 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     }
     else {
         // If there is no use the default one
-        m_frag_source = default_frag;
+        if (geom_index == -1)
+            m_frag_source = default_frag;
+        else
+            m_frag_source = default_scene_frag;
     }
 
     // Init Scene elements
@@ -308,7 +317,7 @@ bool Sandbox::reloadShaders( WatchFileList &_files ) {
         success = m_scene.loadShaders(m_frag_source, m_vert_source, verbose);
 
         if (!success) {
-            m_scene.loadShaders(default_frag, default_vert, false);
+            m_scene.loadShaders(default_scene_frag, default_scene_vert, false);
             return false;
         }
     }
@@ -349,7 +358,6 @@ bool Sandbox::reloadShaders( WatchFileList &_files ) {
     
     // UPDATE Background pass
     if (geom_index != -1) {
-        
         m_background_enabled = check_for_background(getSource(FRAGMENT));
         if (m_background_enabled) {
             // Specific defines for this buffer

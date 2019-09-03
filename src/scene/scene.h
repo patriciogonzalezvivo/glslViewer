@@ -3,13 +3,13 @@
 #include "light.h"
 #include "model.h"
 #include "camera.h"
+#include "sceneLoader.h"
 
 #include "gl/vbo.h"
 #include "gl/fbo.h"
 #include "gl/shader.h"
 #include "gl/textureCube.h"
 
-#include "tools/fs.h"
 #include "tools/skybox.h"
 #include "tools/command.h"
 
@@ -71,6 +71,7 @@ protected:
     Node            m_origin;
     glm::mat4       m_mvp;
     float           m_area;
+    float           m_floor;
 
     // Camera
     Camera          m_camera;
