@@ -840,6 +840,12 @@ int main(int argc, char **argv){
         // Update
         updateGL();
 
+        // Calculate if timeout required
+        if ( timeLimit >= 0.0 && getTime() >= timeLimit ) {
+            timeOut = true;
+            sandbox.screenshotFile = outputFile;
+        }
+
         glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
         // Something change??
@@ -851,14 +857,9 @@ int main(int argc, char **argv){
         }
 
         // If nothing in the scene change skip the frame and try to keep it at 60fps
-        if (!fullFps && !sandbox.haveChange()) {
+        if (!timeOut && !fullFps && !sandbox.haveChange()) {
             usleep( micro_wait );
             continue;
-        }
-        
-        if ( timeLimit >= 0.0 && getTime() >= timeLimit ) {
-            timeOut = true;
-            sandbox.screenshotFile = outputFile;
         }
 
         // Draw Scene
