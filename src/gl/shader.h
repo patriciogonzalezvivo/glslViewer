@@ -21,6 +21,11 @@ public:
     bool        reload(bool _verbose = false);
     
     void        addDefine( const std::string &_define, const std::string &_value = "");
+    void        addDefine( const std::string &_define, int _n );
+    void        addDefine( const std::string &_define, float _n );
+    void        addDefine( const std::string &_define, glm::vec2 _v );
+    void        addDefine( const std::string &_define, glm::vec3 _v );
+    void        addDefine( const std::string &_define, glm::vec4 _v );
     void        delDefine( const std::string &_define );
     void        mergeDefines( const DefinesList &_defines );
     void        replaceDefines( const DefinesList &_defines );

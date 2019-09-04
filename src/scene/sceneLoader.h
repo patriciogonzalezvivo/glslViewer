@@ -3,7 +3,7 @@
 #include <vector>
 
 #include "model.h"
-#include "../tools/fs.h"
+#include "../tools/uniform.h"
 
-bool loadPLY(std::vector<Model*>& _models, WatchFileList& _files, int _index, bool _verbose);
-bool loadOBJ(std::vector<Model*>& _models, WatchFileList& _files, int _index, bool _verbose);
+bool loadPLY(Uniforms& _uniforms, WatchFileList& _files, std::vector<Material>& _materials, std::vector<Model*>& _models, int _index, bool _verbose);
+bool loadOBJ(Uniforms& _uniforms, WatchFileList& _files, std::vector<Material>& _materials, std::vector<Model*>& _models, int _index, bool _verbose);

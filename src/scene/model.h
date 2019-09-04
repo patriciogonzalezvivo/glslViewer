@@ -1,6 +1,7 @@
 #pragma once
 
 #include "node.h"
+#include "material.h"
 
 #include "gl/vbo.h"
 #include "gl/shader.h"
@@ -12,11 +13,12 @@
 class Model : public Node {
 public:
     Model();
-    Model(const std::string& _name, Mesh& _mesh);
+    Model(const std::string& _name, Mesh& _mesh, const Material& _mat);
     virtual ~Model();
 
     bool        loadGeom(Mesh &_mesh);
     bool        loadShader(const std::string& _fragStr, const std::string& _vertStr, bool verbose);
+    bool        loadMaterial(const Material &_material);
 
     bool        loaded() const { return m_model_vbo != nullptr; }
     void        clear();

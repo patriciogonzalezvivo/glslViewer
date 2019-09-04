@@ -7,13 +7,16 @@
 
 #include "../tools/geom.h"
 #include "../tools/text.h"
+
+#define TINYOBJLOADER_IMPLEMENTATION
 #include "tinyobjloader/tiny_obj_loader.h"
 
-bool loadPLY(std::vector<Model*>& _models, WatchFileList &filenames, int _index, bool _verbose) {
+bool loadPLY(Uniforms& _uniforms, WatchFileList &filenames, std::vector<Material>& _materials, std::vector<Model*>& _models, int _index, bool _verbose) {
     std::string filename = filenames[_index].path;
     std::fstream is(filename.c_str(), std::ios::in);
     if (is.is_open()) {
 
+        Material default_material;
         Mesh mesh;
 
         std::string line;
@@ -44,6 +47,8 @@ bool loadPLY(std::vector<Model*>& _models, WatchFileList &filenames, int _index,
         State state = Header;
 
         int lineNum = 0;
+
+        std::string name;
 
         std::vector<glm::vec4> colors;
         std::vector<glm::vec3> vertices;
@@ -258,6 +263,15 @@ bool loadPLY(std::vector<Model*>& _models, WatchFileList &filenames, int _index,
 
         mesh.computeTangents();
 
+        _materials.push_back(default_material);
+        if (mesh.getDrawMode() == GL_POINTS)
+            name = "points";
+        else if (mesh.getDrawMode() == GL_LINES)
+            name = "lines";
+        else
+            name = "mesh";
+        _models.push_back( new Model(name, mesh, default_material) );
+
         return true;
 
     clean:
@@ -274,57 +288,81 @@ bool loadPLY(std::vector<Model*>& _models, WatchFileList &filenames, int _index,
 
 // ------------------------------------------------------------------------------------- 
 
+glm::vec3 getVertex(const tinyobj::attrib_t& _attrib, int _index) {
+    return glm::vec3(   _attrib.vertices[3 * _index + 0],
+                        _attrib.vertices[3 * _index + 1],
+                        _attrib.vertices[3 * _index + 2]);
+}
+
+glm::vec4 getColor(const tinyobj::attrib_t& _attrib, int _index) {
+    return glm::vec4(   _attrib.colors[3 * _index + 0],
+                        _attrib.colors[3 * _index + 1],
+                        _attrib.colors[3 * _index + 2],
+                        1.0);
+}
+
+glm::vec3 getNormal(const tinyobj::attrib_t& _attrib, int _index) {
+    return glm::vec3(   _attrib.normals[3 * _index + 0],
+                        _attrib.normals[3 * _index + 1],
+                        _attrib.normals[3 * _index + 2]);
+}
+
+void getNormal(const tinyobj::attrib_t& _attrib, const std::map<int, glm::vec3>& _smoothVertexNormals, const tinyobj::index_t& _index, std::vector<glm::vec3>& _normals) {
+    // There is normal
+    if (((int)_attrib.normals.size() > 0) &&
+        (_index.normal_index >= 0) && 
+        (_index.normal_index < (int)_attrib.normals.size()))
+            _normals.push_back( getNormal(_attrib, _index.normal_index) );
+
+    // There is smoothnormal
+    else if ((int)_smoothVertexNormals.size() > 0)
+        if ( _smoothVertexNormals.find(_index.vertex_index) != _smoothVertexNormals.end() )
+            _normals.push_back( _smoothVertexNormals.at(_index.vertex_index) );
+}
+
+
 // Check if `mesh_t` contains smoothing group id.
 bool hasSmoothingGroup(const tinyobj::shape_t& shape) {
-    for (size_t i = 0; i < shape.mesh.smoothing_group_ids.size(); i++) {
-        if (shape.mesh.smoothing_group_ids[i] > 0) {
+    for (size_t i = 0; i < shape.mesh.smoothing_group_ids.size(); i++)
+        if (shape.mesh.smoothing_group_ids[i] > 0)
             return true;
-        }
-    }
+        
     return false;
 }
 
-void computeSmoothingNormals(const tinyobj::attrib_t& attrib, const tinyobj::shape_t& shape, std::map<int, glm::vec3>& smoothVertexNormals) {
+void computeSmoothingNormals(const tinyobj::attrib_t& _attrib, const tinyobj::shape_t& _shape, std::map<int, glm::vec3>& smoothVertexNormals) {
     smoothVertexNormals.clear();
 
     std::map<int, glm::vec3>::iterator iter;
 
-    for (size_t f = 0; f < shape.mesh.indices.size() / 3; f++) {
+    for (size_t f = 0; f < _shape.mesh.indices.size() / 3; f++) {
         // Get the three indexes of the face (all faces are triangular)
-        tinyobj::index_t idx0 = shape.mesh.indices[3 * f + 0];
-        tinyobj::index_t idx1 = shape.mesh.indices[3 * f + 1];
-        tinyobj::index_t idx2 = shape.mesh.indices[3 * f + 2];
+        tinyobj::index_t idx0 = _shape.mesh.indices[3 * f + 0];
+        tinyobj::index_t idx1 = _shape.mesh.indices[3 * f + 1];
+        tinyobj::index_t idx2 = _shape.mesh.indices[3 * f + 2];
 
         // Get the three vertex indexes and coordinates
         int vi[3];      // indexes
+        vi[0] = idx0.vertex_index;
+        vi[1] = idx1.vertex_index;
+        vi[2] = idx2.vertex_index;
+
         glm::vec3 v[3];  // coordinates
-
-        for (int k = 0; k < 3; k++) {
-            vi[0] = idx0.vertex_index;
-            vi[1] = idx1.vertex_index;
-            vi[2] = idx2.vertex_index;
-            assert(vi[0] >= 0);
-            assert(vi[1] >= 0);
-            assert(vi[2] >= 0);
-
-            v[0][k] = attrib.vertices[3 * vi[0] + k];
-            v[1][k] = attrib.vertices[3 * vi[1] + k];
-            v[2][k] = attrib.vertices[3 * vi[2] + k];
-        }
+        for (size_t i = 0; i < 3; i++)
+            v[i] = getVertex(_attrib, vi[i]);
 
         // Compute the normal of the face
         glm::vec3 normal;
-        getNormal(v[0], v[1], v[2], normal);
+        calcNormal(v[0], v[1], v[2], normal);
 
         // Add the normal to the three vertexes
         for (size_t i = 0; i < 3; ++i) {
             iter = smoothVertexNormals.find(vi[i]);
-            if (iter != smoothVertexNormals.end()) {
-                // add
+            // add
+            if (iter != smoothVertexNormals.end())
                 iter->second += normal;
-            } else {
+            else
                 smoothVertexNormals[vi[i]] = normal;
-            }
         }
     }  // f
 
@@ -332,53 +370,92 @@ void computeSmoothingNormals(const tinyobj::attrib_t& attrib, const tinyobj::sha
     for (iter = smoothVertexNormals.begin(); iter != smoothVertexNormals.end(); iter++) {
         iter->second = glm::normalize(iter->second);
     }
-
 }
 
-glm::vec3 getVertex(const tinyobj::attrib_t& _attrib, int _index) {
-    glm::vec3 v = glm::vec3(0.0);
-    if ((_index >= 0) && (3 * _index + 2 < (int)_attrib.vertices.size()) )
-        for (int i = 0; i < 3; i++)
-            v[i] = _attrib.vertices[3 * _index + i];
-    
-    return v;
-}
-
-void getNormal(const tinyobj::attrib_t& _attrib, const std::map<int, glm::vec3>& _smoothVertexNormals, const tinyobj::index_t& _index, std::vector<glm::vec3>& _normals) {
-    // There is normal
-    if (((int)_attrib.normals.size() > 0) &&
-        (_index.normal_index >= 0) && 
-        (_index.normal_index < (int)_attrib.normals.size())) {
-            glm::vec3 n = glm::vec3(0.0);
-            for (int i = 0; i < 3; i++)
-                n[i] = _attrib.normals[3 * _index.normal_index + i];
-            _normals.push_back(n);
-        }
-
-    // There is smoothnormal
-    else if ((int)_smoothVertexNormals.size() > 0)
-        if ( _smoothVertexNormals.find(_index.vertex_index) != _smoothVertexNormals.end() ) {
-            _normals.push_back( _smoothVertexNormals.at(_index.vertex_index) );
-        }
+glm::vec2 getTexCoords(const tinyobj::attrib_t& _attrib, int _index) {
+    return glm::vec2(   _attrib.texcoords[2 * _index], 
+                        1.0f - _attrib.texcoords[2 * _index + 1]);
 }
 
 void getTexCoords(const tinyobj::attrib_t& _attrib, const tinyobj::index_t& _index, std::vector<glm::vec2>& _texcoords) {
     if (_attrib.texcoords.size() > 0)
         if ((_index.texcoord_index >= 0) &&
             (_attrib.texcoords.size() > size_t(2 * _index.texcoord_index + 1)))
-                _texcoords.push_back( glm::vec2(_attrib.texcoords[2 * _index.texcoord_index], 
-                                                1.0f - _attrib.texcoords[2 * _index.texcoord_index + 1]) );
+                _texcoords.push_back( getTexCoords(_attrib, _index.texcoord_index) );
 }
 
-
-glm::vec4 getDiffuse(const tinyobj::material_t& _material) {
-    glm::vec4 c = glm::vec4(1.0);
+glm::vec3 getAmbient(const tinyobj::material_t& _material) {
+    glm::vec3 c = glm::vec4(1.0);
     for (int i = 0; i < 3; i++)
-        c[i] = _material.diffuse[i];
+        c[i] = (float)_material.ambient[i];
     return c;
 }
 
-bool loadOBJ(std::vector<Model*>& _models, WatchFileList& _files, int _index, bool _verbose) {
+glm::vec3 getDiffuse(const tinyobj::material_t& _material) {
+    glm::vec3 c = glm::vec4(1.0);
+    for (int i = 0; i < 3; i++)
+        c[i] = (float)_material.diffuse[i];
+    return c;
+}
+
+glm::vec3 getSpecular(const tinyobj::material_t& _material) {
+    glm::vec4 c = glm::vec4(1.0);
+    for (int i = 0; i < 3; i++)
+        c[i] = (float)_material.specular[i];
+    return c;
+}
+
+glm::vec3 getTransmittance(const tinyobj::material_t& _material) {
+    glm::vec3 c = glm::vec4(1.0);
+    for (int i = 0; i < 3; i++)
+        c[i] = (float)_material.transmittance[i];
+    return c;
+}
+
+glm::vec3 getEmission(const tinyobj::material_t& _material) {
+    glm::vec3 c = glm::vec4(1.0);
+    for (int i = 0; i < 3; i++)
+        c[i] = (float)_material.emission[i];
+    return c;
+}
+
+Material getMaterial (const tinyobj::material_t& _material) {
+    Material mat;
+    mat.name = toLower( toUnderscore( purifyString( _material.name ) ) );
+    mat.ambient = getAmbient(_material);
+    mat.diffuse = getDiffuse(_material);
+    mat.specular = getSpecular(_material);
+    mat.transmittance = getTransmittance(_material);
+    mat.emission = getEmission(_material);
+    mat.shininess = _material.shininess;
+    mat.ior = _material.ior;
+    mat.dissolve = _material.dissolve;
+    mat.illum = _material.illum;
+    mat.ambientMap = _material.ambient_texname;
+    mat.diffuseMap = _material.diffuse_texname;
+    mat.specularMap = _material.specular_texname;
+    mat.specular_highlightMap = _material.specular_highlight_texname;
+    mat.bumpMap = _material.bump_texname;
+    mat.displacementMap = _material.displacement_texname;
+    mat.alphaMap = _material.alpha_texname;
+    mat.reflectionMap = _material.reflection_texname;
+    mat.roughness = _material.roughness;
+    mat.metallic = _material.metallic;
+    mat.sheen = _material.sheen;
+    mat.clearcoat_thickness = _material.clearcoat_roughness;
+    mat.clearcoat_roughness = _material.clearcoat_roughness;
+    mat.anisotropy = _material.anisotropy;
+    mat.anisotropy_rotation = _material.anisotropy_rotation;
+    mat.roughnessMap = _material.roughness_texname;
+    mat.metallicMap = _material.metallic_texname;
+    mat.sheenMap = _material.sheen_texname;
+    mat.emissiveMap = _material.emissive_texname;
+    mat.normalMap = _material.normal_texname;
+
+    return mat;
+}
+
+bool loadOBJ(Uniforms& _uniforms, WatchFileList& _files, std::vector<Material>& _materials, std::vector<Model*>& _models, int _index, bool _verbose) {
     std::string filename = _files[_index].path;
 
     tinyobj::attrib_t attrib;
@@ -407,6 +484,7 @@ bool loadOBJ(std::vector<Model*>& _models, WatchFileList& _files, int _index, bo
     if (_verbose) {
         std::cerr << "Loading " << filename.c_str() << std::endl;
         printf("    Total vertices  = %d\n", (int)(attrib.vertices.size()) / 3);
+        printf("    Total colors    = %d\n", (int)(attrib.colors.size()) / 3);
         printf("    Total normals   = %d\n", (int)(attrib.normals.size()) / 3);
         printf("    Total texcoords = %d\n", (int)(attrib.texcoords.size()) / 2);
         printf("    Total materials = %d\n", (int)materials.size());
@@ -415,8 +493,13 @@ bool loadOBJ(std::vector<Model*>& _models, WatchFileList& _files, int _index, bo
         std::cerr << "Shapes: " << std::endl;
     }
 
-    
-    // TODO Load diffuse textures
+    for (size_t m = 0; m < materials.size(); m++) {
+        std::cout << "Material " << materials[m].name << std::endl;
+        Material mat = getMaterial( materials[m] );
+        mat.loadTextures(_uniforms, _files, base_dir);
+        _materials.push_back( mat );
+    }
+
     for (size_t s = 0; s < shapes.size(); s++) {
 
         std::string name = shapes[s].name;
@@ -437,79 +520,126 @@ bool loadOBJ(std::vector<Model*>& _models, WatchFileList& _files, int _index, bo
         Mesh mesh;
         mesh.setDrawMode(GL_TRIANGLES);
 
-        // If there is no normals or texcoords we can optimizie the model (NAIVE)
-        if (( (int)attrib.normals.size() == 0 ) &&
-            ( ( (int)attrib.texcoords.size() == 0 ) ) ) {
+        Material mat;
+        int mi = -1;
+        std::map<int, tinyobj::index_t> unique_indices;
+        std::map<int, tinyobj::index_t>::iterator iter;
 
-            if (_verbose)
-                std::cout << "    . fast load" << std::endl;
+        INDEX_TYPE counter = 0;
+        for (size_t i = 0; i < shapes[s].mesh.indices.size(); i++) {
+            tinyobj::index_t index = shapes[s].mesh.indices[i];
 
-            for (size_t i = 0; i < attrib.vertices.size(); i++) {
-                mesh.addVertex( getVertex(attrib, i) );
+            int vi = index.vertex_index;
+            int ni = index.normal_index;
+            int ti = index.texcoord_index;
+
+            bool reuse = false;
+            iter = unique_indices.find(vi);
+
+            // if already exist 
+            if (iter != unique_indices.end())
+                // and have the same attributes
+                if ((iter->second.normal_index == ni) &&
+                    (iter->second.texcoord_index == ti) )
+                    reuse = true;
+
+            if (shapes[s].mesh.material_ids.size() > 0) {
+                mi = shapes[s].mesh.material_ids[floor(i/3)];
+                mat = _materials[mi];
             }
+            
+            // Re use the vertex
+            if (reuse)
+                mesh.addIndex( (INDEX_TYPE)iter->second.vertex_index );
+            // Other wise create a new one
+            else {
+                unique_indices[vi].vertex_index = (int)counter;
+                unique_indices[vi].normal_index = ni;
+                unique_indices[vi].texcoord_index = ti;
+                
+                
 
-            for (size_t i = 0; i < shapes[s].mesh.indices.size(); i++) {
-                mesh.addIndex( (INDEX_TYPE)shapes[s].mesh.indices[i].vertex_index );
-            }
+                mesh.addVertex( getVertex(attrib, vi) );
 
-        }
-        // If model have normals or texcoords we have to parse each face individually
-        else {
-            INDEX_TYPE index = 0;
-            std::vector<glm::vec4> colors;
-            std::vector<glm::vec3> normals;
-            std::vector<glm::vec2> uvs;
+                // If the model have color use 
+                if ((attrib.colors.size() > 0) && 
+                    (attrib.colors.size() == attrib.vertices.size()))
+                    mesh.addColor( getColor(attrib, vi) );
 
-            for (size_t f = 0; f < shapes[s].mesh.indices.size() / 3; f++) {
-                tinyobj::index_t idx0 = shapes[s].mesh.indices[3 * f + 0];
-                tinyobj::index_t idx1 = shapes[s].mesh.indices[3 * f + 1];
-                tinyobj::index_t idx2 = shapes[s].mesh.indices[3 * f + 2];
-                int current_material_id = shapes[s].mesh.material_ids[f];
-
-                // Vertices
-                mesh.addVertex( getVertex(attrib, idx0.vertex_index) );
-                mesh.addVertex( getVertex(attrib, idx1.vertex_index) );
-                mesh.addVertex( getVertex(attrib, idx2.vertex_index) );
-
-                // Color
-                if ((current_material_id >= 0) && (current_material_id < static_cast<int>(materials.size()))) {
-                    // Extract vertex color
-                    glm::vec4 c = getDiffuse(materials[current_material_id]);
-                    colors.push_back(c);
-                    colors.push_back(c);
-                    colors.push_back(c);
+                // other whise try to extract them from the material
+                else if ((mi >= 0) && (mi < static_cast<int>(materials.size()))) {
+                    glm::vec3 c = getDiffuse(materials[mi]);
+                    mesh.addColor( glm::vec4(c.r, c.g, c.b, 1.0) );
                 }
 
-                getNormal(attrib, smoothVertexNormals, idx0, normals);
-                getNormal(attrib, smoothVertexNormals, idx1, normals);
-                getNormal(attrib, smoothVertexNormals, idx2, normals);
+                // If there is normals add them
+                if (attrib.normals.size() > 0)
+                    mesh.addNormal( getNormal(attrib, ni) );
 
-                getTexCoords(attrib, idx0, uvs);
-                getTexCoords(attrib, idx1, uvs);
-                getTexCoords(attrib, idx2, uvs);
+                // If there is texcoords add them
+                if (attrib.texcoords.size() > 0)
+                    mesh.addTexCoord( getTexCoords(attrib, ti) );
 
-                mesh.addIndex(index++);
-                mesh.addIndex(index++);
-                mesh.addIndex(index++);
+                mesh.addIndex( counter++ );
             }
-
-            if (colors.size() == mesh.getVertices().size())
-                mesh.addColors(colors);
-
-            if (normals.size() == mesh.getVertices().size())
-                mesh.addNormals(normals);
-
-            if (uvs.size() == mesh.getVertices().size())
-                mesh.addTexCoords(uvs);
-
-            if (_verbose) {
-                std::cout << "    vertices = " << mesh.getVertices().size() << std::endl;
-                std::cout << "    colors   = " << mesh.getColors().size() << std::endl;
-                std::cout << "    normals  = " << mesh.getNormals().size() << std::endl;
-                std::cout << "    uvs      = " << mesh.getTexCoords().size() << std::endl;
-            }
+            
         }
+        // // If model have normals or texcoords we have to parse each face individually
+        // else {
+        //     INDEX_TYPE index = 0;
+        //     std::vector<glm::vec4> colors;
+        //     std::vector<glm::vec3> normals;
+        //     std::vector<glm::vec2> uvs;
 
+        //     for (size_t f = 0; f < shapes[s].mesh.indices.size() / 3; f++) {
+        //         tinyobj::index_t idx0 = shapes[s].mesh.indices[3 * f + 0];
+        //         tinyobj::index_t idx1 = shapes[s].mesh.indices[3 * f + 1];
+        //         tinyobj::index_t idx2 = shapes[s].mesh.indices[3 * f + 2];
+        //         int current_material_id = shapes[s].mesh.material_ids[f];
+
+        //         // Vertices
+        //         mesh.addVertex( getVertex(attrib, idx0.vertex_index) );
+        //         mesh.addVertex( getVertex(attrib, idx1.vertex_index) );
+        //         mesh.addVertex( getVertex(attrib, idx2.vertex_index) );
+
+        //         // Color
+        //         if ((current_material_id >= 0) && (current_material_id < static_cast<int>(materials.size()))) {
+        //             // Extract vertex color
+        //             glm::vec4 c = getDiffuse(materials[current_material_id]);
+        //             colors.push_back(c);
+        //             colors.push_back(c);
+        //             colors.push_back(c);
+        //         }
+
+        //         getNormal(attrib, smoothVertexNormals, idx0, normals);
+        //         getNormal(attrib, smoothVertexNormals, idx1, normals);
+        //         getNormal(attrib, smoothVertexNormals, idx2, normals);
+
+        //         getTexCoords(attrib, idx0, uvs);
+        //         getTexCoords(attrib, idx1, uvs);
+        //         getTexCoords(attrib, idx2, uvs);
+
+        //         mesh.addIndex(index++);
+        //         mesh.addIndex(index++);
+        //         mesh.addIndex(index++);
+        //     }
+
+        //     if (colors.size() == mesh.getVertices().size())
+        //         mesh.addColors(colors);
+
+        //     if (normals.size() == mesh.getVertices().size())
+        //         mesh.addNormals(normals);
+
+        //     if (uvs.size() == mesh.getVertices().size())
+        //         mesh.addTexCoords(uvs);
+        // }
+
+        if (_verbose) {
+            std::cout << "    vertices = " << mesh.getVertices().size() << std::endl;
+            std::cout << "    colors   = " << mesh.getColors().size() << std::endl;
+            std::cout << "    normals  = " << mesh.getNormals().size() << std::endl;
+            std::cout << "    uvs      = " << mesh.getTexCoords().size() << std::endl;
+        }
 
         if ( !mesh.hasNormals() )
             if ( mesh.computeNormals() )
@@ -520,7 +650,7 @@ bool loadOBJ(std::vector<Model*>& _models, WatchFileList& _files, int _index, bo
             if ( _verbose )
                 std::cout << "    . Compute tangents" << std::endl;
 
-        _models.push_back( new Model(name, mesh) );
+        _models.push_back( new Model(name, mesh, mat) );
     }
 
     return true;

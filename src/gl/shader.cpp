@@ -128,6 +128,25 @@ void Shader::addDefine(const std::string &_define, const std::string &_value) {
     }
 }
 
+void Shader::addDefine( const std::string &_define, int _n ) {
+    addDefine(_define, toString(_n));
+}
+void Shader::addDefine( const std::string &_define, float _n ) {
+    addDefine(_define, toString(_n, 3));
+}
+
+void Shader::addDefine( const std::string &_define, glm::vec2 _v ) {
+    addDefine(_define, "vec2(" + toString(_v, ',') + ")");
+}
+
+void Shader::addDefine( const std::string &_define, glm::vec3 _v ) {
+    addDefine(_define, "vec3(" + toString(_v, ',') + ")");
+}
+
+void Shader::addDefine( const std::string &_define, glm::vec4 _v ) {
+    addDefine(_define, "vec4(" + toString(_v, ',') + ")");
+}
+
 void Shader::delDefine(const std::string &_define) {
     if (m_defines.find(_define) == m_defines.end()) {
         m_defines.erase(_define);

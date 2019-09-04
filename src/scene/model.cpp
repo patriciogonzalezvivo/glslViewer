@@ -10,27 +10,29 @@ Model::Model():
     m_name(""), m_area(0.0f) {
 }
 
-Model::Model(const std::string& _name, Mesh &_mesh):
+Model::Model(const std::string& _name, Mesh &_mesh, const Material &_mat):
     m_model_vbo(nullptr), m_bbox_vbo(nullptr), 
     m_area(0.0f) {
     setName(_name);
     loadGeom(_mesh);
+    loadMaterial(_mat);
 }
 
 void Model::setName(const std::string& _str) {
     if (!m_name.empty())
-        delDefine( "MODEL_" + toUpper(toUnderscore( purifyString(m_name))) );
+        delDefine( "MODEL_" + toUpper( toUnderscore( purifyString(m_name) ) ) );
+
     if (!_str.empty()) {
-        m_name = _str;
-        addDefine( "MODEL_" + toUpper(toUnderscore( purifyString(m_name))) );
+        m_name = toLower( toUnderscore( purifyString(_str) ) );
+        addDefine( "MODEL_" + toUpper( m_name ) );
     }
 }
 
-void Model::addDefine(const std::string &_define, const std::string &_value) { 
+void Model::addDefine(const std::string& _define, const std::string& _value) { 
     m_shader.addDefine(_define, _value); 
 }
 
-void Model::delDefine(const std::string &_define) { 
+void Model::delDefine(const std::string& _define) { 
     m_shader.delDefine(_define); 
 };
 
@@ -38,7 +40,7 @@ void Model::printDefines() {
     m_shader.printDefines();
 }
 
-bool Model::loadGeom(Mesh &_mesh) {
+bool Model::loadGeom(Mesh& _mesh) {
     // Load Geometry VBO
     m_model_vbo = _mesh.getVbo();
 
@@ -69,7 +71,11 @@ bool Model::loadGeom(Mesh &_mesh) {
     return true;
 }
 
-bool Model::loadShader(const std::string &_fragStr, const std::string &_vertStr, bool verbose) {
+bool Model::loadMaterial(const Material &_material) {
+    return _material.feedProperties(m_shader);
+}
+
+bool Model::loadShader(const std::string& _fragStr, const std::string& _vertStr, bool verbose) {
     if (m_shader.isLoaded())
         m_shader.detach(GL_FRAGMENT_SHADER | GL_VERTEX_SHADER);
 
@@ -92,7 +98,7 @@ void Model::clear() {
     }
 }
 
-void Model::draw(Uniforms &_uniforms, const glm::mat4 &_viewProjectionMatrix) {
+void Model::draw(Uniforms& _uniforms, const glm::mat4& _viewProjectionMatrix) {
 
     // If the model and the shader are loaded
     if ( m_model_vbo && m_shader.isLoaded() ) {

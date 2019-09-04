@@ -29,7 +29,7 @@ public:
     void            setup(CommandList &_commands, Uniforms &_uniforms);
     void            clear();
 
-    bool            loadGeometry(WatchFileList &_files, int _index, bool _verbose);
+    bool            loadGeometry(Uniforms& _uniforms, WatchFileList &_files, int _index, bool _verbose);
     bool            loadShaders(const std::string &_fragmentShader, const std::string &_vertexShader, bool _verbose);
 
     void            addDefine(const std::string &_define, const std::string &_value);
@@ -67,7 +67,9 @@ public:
 
 protected:
      // Geometry
-    std::vector<Model*> m_models;
+    std::vector<Model*>     m_models;
+    std::vector<Material>   m_materials;
+
     Node            m_origin;
     glm::mat4       m_mvp;
     float           m_area;

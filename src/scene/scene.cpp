@@ -69,6 +69,41 @@ void Scene::setup(CommandList &_commands, Uniforms &_uniforms) {
 
     // ADD COMMANDS
     // ----------------------------------------- 
+    _commands.push_back(Command("models", [&](const std::string& _line){ 
+        if (_line == "models") {
+            for (unsigned int i = 0; i < m_models.size(); i++) {
+                std::cout << m_models[i]->getName() << std::endl;
+            }
+            return true;
+        }
+
+        return false;
+    },
+    "models                             print all the names of the models"));
+
+    _commands.push_back(Command("material", [&](const std::string& _line){ 
+        if (_line == "materials") {
+            for (unsigned int i = 0; i < m_models.size(); i++) {
+                std::cout << m_materials[i].name << std::endl;
+            }
+            return true;
+        }
+        else {
+            std::vector<std::string> values = split(_line,',');
+            if (values.size() == 2 && values[0] == "material")
+                for (unsigned int i = 0; i < m_models.size(); i++)
+                    if (m_materials[i].name == values[1]) {
+                        m_materials[i].printProperties();
+                        return true;
+                    }
+                
+            
+        }
+
+        return false;
+    },
+    "models                             print all the names of the models"));
+
     _commands.push_back(Command("culling", [&](const std::string& _line){ 
         std::vector<std::string> values = split(_line,',');
         if (values.size() == 1) {
@@ -454,22 +489,23 @@ void Scene::delDefine(const std::string &_define) {
 void Scene::printDefines() {
     for (unsigned int i = 0; i < m_models.size(); i++) {
         std::cout << std::endl;
-        std::cout << m_models[i]-> getName() << std::endl;
+        std::cout << m_models[i]->getName() << std::endl;
         std::cout << " -------------- " << std::endl;
         m_models[i]->printDefines();
     }
 }
 
-bool Scene::loadGeometry( WatchFileList& _files, int _index, bool _verbose) {
+bool Scene::loadGeometry(Uniforms& _uniforms, WatchFileList& _files, int _index, bool _verbose) {
 
     // If the geometry is a PLY it's easy because is only one mesh
-    if ( haveExt(_files[_index].path,"ply") || haveExt(_files[_index].path,"PLY") )
-        loadPLY(m_models, _files, _index, _verbose);
+    if ( haveExt(_files[_index].path,"ply") || haveExt(_files[_index].path,"PLY") ) {
+        loadPLY(_uniforms, _files, m_materials, m_models, _index, _verbose);
+
+    }
 
     // If it's a OBJ could be more complicated because they can contain several meshes
     else if ( haveExt(_files[_index].path,"obj") || haveExt(_files[_index].path,"OBJ") )
-        loadOBJ(m_models, _files, _index, _verbose);
-
+        loadOBJ(_uniforms, _files, m_materials, m_models, _index, _verbose);
 
     // Calculate the total area
     glm::vec3 min_v;

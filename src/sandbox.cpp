@@ -186,8 +186,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     }
     else {
         m_scene.setup( _commands, uniforms);
-        // m_scene.loadGeometry( _files, geom_index, verbose );
-        m_scene.loadGeometry( _files, geom_index, true );
+        m_scene.loadGeometry( uniforms, _files, geom_index, verbose );
     }
 
     // FINISH SCENE SETUP

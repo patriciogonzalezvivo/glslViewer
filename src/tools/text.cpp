@@ -113,19 +113,25 @@ std::string toString(bool _bool) {
 
 std::string toString(const glm::vec2 &_vec, char _sep) {
     std::ostringstream strStream;
-    strStream<< _vec.x << _sep << _vec.y << _sep;
+    strStream << std::fixed << std::setprecision(3) << _vec.x << _sep;
+    strStream << std::fixed << std::setprecision(3) << _vec.y << _sep;
     return strStream.str();
 }
 
 std::string toString(const glm::vec3 &_vec, char _sep) {
     std::ostringstream strStream;
-    strStream<< _vec.x << _sep << _vec.y << _sep << _vec.z;
+    strStream << std::fixed << std::setprecision(3) << _vec.x << _sep;
+    strStream << std::fixed << std::setprecision(3) << _vec.y << _sep; 
+    strStream << std::fixed << std::setprecision(3) << _vec.z;
     return strStream.str();
 }
 
 std::string toString(const glm::vec4 &_vec, char _sep) {
     std::ostringstream strStream;
-    strStream<< _vec.x << _sep << _vec.y << _sep << _vec.z << _sep << _vec.w;
+    strStream << std::fixed << std::setprecision(3) << _vec.x << _sep;
+    strStream << std::fixed << std::setprecision(3) << _vec.y << _sep;
+    strStream << std::fixed << std::setprecision(3) << _vec.z << _sep; 
+    strStream << std::fixed << std::setprecision(3) << _vec.w;
     return strStream.str();
 }
 
