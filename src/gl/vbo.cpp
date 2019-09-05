@@ -118,7 +118,7 @@ void Vbo::printInfo() {
     std::cout << "Vertices  = " << m_nVertices << std::endl;
     std::cout << "Indices   = " << m_nIndices << std::endl;
     if (m_vertexLayout) {
-        std::cout << "Vertex Layout:" << m_nIndices << std::endl;
+        std::cout << "Vertex Layout:" << std::endl;
         m_vertexLayout->printAttrib();
     }
 }

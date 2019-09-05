@@ -208,9 +208,8 @@ bool Material::feedProperties(Shader& _shader) const {
     if (dissolve != 1.0)
         _shader.addDefine( "MATERIAL_DISSOLVE", dissolve );
     
-    if (ior != 1.0)
-        _shader.addDefine( "MATERIAL_IOR", ior );
-
+    if (ior 0.00.0)
+        _shader.addDefine( "MATERIAL_IOR", ior 0.0
     return true;
 }
 
