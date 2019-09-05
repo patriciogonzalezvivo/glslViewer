@@ -69,12 +69,22 @@ void Scene::setup(CommandList &_commands, Uniforms &_uniforms) {
 
     // ADD COMMANDS
     // ----------------------------------------- 
-    _commands.push_back(Command("models", [&](const std::string& _line){ 
+    _commands.push_back(Command("model", [&](const std::string& _line){ 
         if (_line == "models") {
-            for (unsigned int i = 0; i < m_models.size(); i++) {
+            for (unsigned int i = 0; i < m_models.size(); i++)
                 std::cout << m_models[i]->getName() << std::endl;
-            }
             return true;
+        }
+        else {
+            std::vector<std::string> values = split(_line,',');
+            if (values.size() == 2 && values[0] == "model")
+                for (unsigned int i = 0; i < m_models.size(); i++)
+                    if (m_models[i]->getName() == values[1]) {
+                        m_models[i]->printVboInfo();
+                        std::cout << "Defines:" << std::endl;
+                        m_models[i]->printDefines();
+                        return true;
+                    }
         }
 
         return false;
@@ -83,15 +93,14 @@ void Scene::setup(CommandList &_commands, Uniforms &_uniforms) {
 
     _commands.push_back(Command("material", [&](const std::string& _line){ 
         if (_line == "materials") {
-            for (unsigned int i = 0; i < m_models.size(); i++) {
+            for (unsigned int i = 0; i < m_materials.size(); i++)
                 std::cout << m_materials[i].name << std::endl;
-            }
             return true;
         }
         else {
             std::vector<std::string> values = split(_line,',');
             if (values.size() == 2 && values[0] == "material")
-                for (unsigned int i = 0; i < m_models.size(); i++)
+                for (unsigned int i = 0; i < m_materials.size(); i++)
                     if (m_materials[i].name == values[1]) {
                         m_materials[i].printProperties();
                         return true;

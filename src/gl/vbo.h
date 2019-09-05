@@ -73,6 +73,7 @@ public:
      * been uploaded it will be uploaded at this point
      */
     void render(Shader* _shader);
+    void printInfo();
 
 private:
 

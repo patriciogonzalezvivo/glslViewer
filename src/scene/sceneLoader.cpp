@@ -524,115 +524,119 @@ bool loadOBJ(Uniforms& _uniforms, WatchFileList& _files, std::vector<Material>& 
         int mi = -1;
         std::map<int, tinyobj::index_t> unique_indices;
         std::map<int, tinyobj::index_t>::iterator iter;
+        
+        if (true) {
+            INDEX_TYPE counter = 0;
+            for (size_t i = 0; i < shapes[s].mesh.indices.size(); i++) {
+                tinyobj::index_t index = shapes[s].mesh.indices[i];
 
-        INDEX_TYPE counter = 0;
-        for (size_t i = 0; i < shapes[s].mesh.indices.size(); i++) {
-            tinyobj::index_t index = shapes[s].mesh.indices[i];
+                int vi = index.vertex_index;
+                int ni = index.normal_index;
+                int ti = index.texcoord_index;
 
-            int vi = index.vertex_index;
-            int ni = index.normal_index;
-            int ti = index.texcoord_index;
+                bool reuse = false;
+                iter = unique_indices.find(vi);
 
-            bool reuse = false;
-            iter = unique_indices.find(vi);
+                // if already exist 
+                if (iter != unique_indices.end())
+                    // and have the same attributes
+                    if ((iter->second.normal_index == ni) &&
+                        (iter->second.texcoord_index == ti) )
+                        reuse = true;
 
-            // if already exist 
-            if (iter != unique_indices.end())
-                // and have the same attributes
-                if ((iter->second.normal_index == ni) &&
-                    (iter->second.texcoord_index == ti) )
-                    reuse = true;
+                if (shapes[s].mesh.material_ids.size() > 0) {
+                    mi = shapes[s].mesh.material_ids[floor(i/3)];
+                    mat = _materials[mi];
+                }
+                
+                // Re use the vertex
+                if (reuse)
+                    mesh.addIndex( (INDEX_TYPE)iter->second.vertex_index );
+                // Other wise create a new one
+                else {
+                    unique_indices[vi].vertex_index = (int)counter;
+                    unique_indices[vi].normal_index = ni;
+                    unique_indices[vi].texcoord_index = ti;
+                    
+                    mesh.addVertex( getVertex(attrib, vi) );
 
-            if (shapes[s].mesh.material_ids.size() > 0) {
-                mi = shapes[s].mesh.material_ids[floor(i/3)];
-                mat = _materials[mi];
+                    // If the model have color use 
+                    if ((attrib.colors.size() > 0) && 
+                        (attrib.colors.size() == attrib.vertices.size()))
+                        mesh.addColor( getColor(attrib, vi) );
+
+                    // other whise try to extract them from the material
+                    else if ((mi >= 0) && (mi < static_cast<int>(materials.size()))) {
+                        glm::vec3 c = getDiffuse(materials[mi]);
+                        mesh.addColor( glm::vec4(c.r, c.g, c.b, 1.0) );
+                    }
+
+                    // If there is normals add them
+                    if (attrib.normals.size() > 0)
+                        mesh.addNormal( getNormal(attrib, ni) );
+
+                    // If there is texcoords add them
+                    if (attrib.texcoords.size() > 0)
+                        mesh.addTexCoord( getTexCoords(attrib, ti) );
+
+                    mesh.addIndex( counter++ );
+                }
+                
             }
-            
-            // Re use the vertex
-            if (reuse)
-                mesh.addIndex( (INDEX_TYPE)iter->second.vertex_index );
-            // Other wise create a new one
-            else {
-                unique_indices[vi].vertex_index = (int)counter;
-                unique_indices[vi].normal_index = ni;
-                unique_indices[vi].texcoord_index = ti;
+        }
+        // If model have normals or texcoords we have to parse each face individually
+        else {
+            INDEX_TYPE index = 0;
+            std::vector<glm::vec4> colors;
+            std::vector<glm::vec3> normals;
+            std::vector<glm::vec2> uvs;
+            int current_material_id = -1;
+
+            for (size_t f = 0; f < shapes[s].mesh.indices.size() / 3; f++) {
+                tinyobj::index_t idx0 = shapes[s].mesh.indices[3 * f + 0];
+                tinyobj::index_t idx1 = shapes[s].mesh.indices[3 * f + 1];
+                tinyobj::index_t idx2 = shapes[s].mesh.indices[3 * f + 2];
                 
-                
 
-                mesh.addVertex( getVertex(attrib, vi) );
-
-                // If the model have color use 
-                if ((attrib.colors.size() > 0) && 
-                    (attrib.colors.size() == attrib.vertices.size()))
-                    mesh.addColor( getColor(attrib, vi) );
-
-                // other whise try to extract them from the material
-                else if ((mi >= 0) && (mi < static_cast<int>(materials.size()))) {
-                    glm::vec3 c = getDiffuse(materials[mi]);
-                    mesh.addColor( glm::vec4(c.r, c.g, c.b, 1.0) );
+                if (shapes[s].mesh.material_ids.size() > 0) {
+                    current_material_id = shapes[s].mesh.material_ids[f];
+                    mat = _materials[current_material_id];
                 }
 
-                // If there is normals add them
-                if (attrib.normals.size() > 0)
-                    mesh.addNormal( getNormal(attrib, ni) );
+                // Vertices
+                mesh.addVertex( getVertex(attrib, idx0.vertex_index) );
+                mesh.addVertex( getVertex(attrib, idx1.vertex_index) );
+                mesh.addVertex( getVertex(attrib, idx2.vertex_index) );
 
-                // If there is texcoords add them
-                if (attrib.texcoords.size() > 0)
-                    mesh.addTexCoord( getTexCoords(attrib, ti) );
+                if ((attrib.colors.size() > 0) && 
+                    (attrib.colors.size() == attrib.vertices.size())) {
+                    mesh.addColor( getColor(attrib, idx0.vertex_index) );
+                    mesh.addColor( getColor(attrib, idx1.vertex_index) );
+                    mesh.addColor( getColor(attrib, idx2.vertex_index) );
+                }
 
-                mesh.addIndex( counter++ );
+                getNormal(attrib, smoothVertexNormals, idx0, normals);
+                getNormal(attrib, smoothVertexNormals, idx1, normals);
+                getNormal(attrib, smoothVertexNormals, idx2, normals);
+
+                getTexCoords(attrib, idx0, uvs);
+                getTexCoords(attrib, idx1, uvs);
+                getTexCoords(attrib, idx2, uvs);
+
+                mesh.addIndex(index++);
+                mesh.addIndex(index++);
+                mesh.addIndex(index++);
             }
-            
+
+            if (colors.size() == mesh.getVertices().size())
+                mesh.addColors(colors);
+
+            if (normals.size() == mesh.getVertices().size())
+                mesh.addNormals(normals);
+
+            if (uvs.size() == mesh.getVertices().size())
+                mesh.addTexCoords(uvs);
         }
-        // // If model have normals or texcoords we have to parse each face individually
-        // else {
-        //     INDEX_TYPE index = 0;
-        //     std::vector<glm::vec4> colors;
-        //     std::vector<glm::vec3> normals;
-        //     std::vector<glm::vec2> uvs;
-
-        //     for (size_t f = 0; f < shapes[s].mesh.indices.size() / 3; f++) {
-        //         tinyobj::index_t idx0 = shapes[s].mesh.indices[3 * f + 0];
-        //         tinyobj::index_t idx1 = shapes[s].mesh.indices[3 * f + 1];
-        //         tinyobj::index_t idx2 = shapes[s].mesh.indices[3 * f + 2];
-        //         int current_material_id = shapes[s].mesh.material_ids[f];
-
-        //         // Vertices
-        //         mesh.addVertex( getVertex(attrib, idx0.vertex_index) );
-        //         mesh.addVertex( getVertex(attrib, idx1.vertex_index) );
-        //         mesh.addVertex( getVertex(attrib, idx2.vertex_index) );
-
-        //         // Color
-        //         if ((current_material_id >= 0) && (current_material_id < static_cast<int>(materials.size()))) {
-        //             // Extract vertex color
-        //             glm::vec4 c = getDiffuse(materials[current_material_id]);
-        //             colors.push_back(c);
-        //             colors.push_back(c);
-        //             colors.push_back(c);
-        //         }
-
-        //         getNormal(attrib, smoothVertexNormals, idx0, normals);
-        //         getNormal(attrib, smoothVertexNormals, idx1, normals);
-        //         getNormal(attrib, smoothVertexNormals, idx2, normals);
-
-        //         getTexCoords(attrib, idx0, uvs);
-        //         getTexCoords(attrib, idx1, uvs);
-        //         getTexCoords(attrib, idx2, uvs);
-
-        //         mesh.addIndex(index++);
-        //         mesh.addIndex(index++);
-        //         mesh.addIndex(index++);
-        //     }
-
-        //     if (colors.size() == mesh.getVertices().size())
-        //         mesh.addColors(colors);
-
-        //     if (normals.size() == mesh.getVertices().size())
-        //         mesh.addNormals(normals);
-
-        //     if (uvs.size() == mesh.getVertices().size())
-        //         mesh.addTexCoords(uvs);
-        // }
 
         if (_verbose) {
             std::cout << "    vertices = " << mesh.getVertices().size() << std::endl;

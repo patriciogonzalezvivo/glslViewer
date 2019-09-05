@@ -29,8 +29,9 @@ public:
     void        addDefine(const std::string& _define, const std::string& _value = "");
     void        delDefine(const std::string& _define);
     void        printDefines();
+    void        printVboInfo();
 
-    Vbo*        getVbo() { return m_model_vbo; }
+    // Vbo*        getVbo() { return m_model_vbo; }
     Vbo*        getBboxVbo() { return m_bbox_vbo; }
 
     float       getArea() const { return m_area; }

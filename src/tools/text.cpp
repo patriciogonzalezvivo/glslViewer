@@ -28,8 +28,11 @@ std::string toUnderscore(const std::string& _string){
 std::string purifyString(const std::string& _string) {
     std::string std = _string;
     for (std::string::iterator it = std.begin(), itEnd = std.end(); it!=itEnd; ++it) {
-        if (static_cast<uint>(*it) < 32 || static_cast<uint>(*it) > 127) {
-            (*it) = ' ';
+        if (static_cast<uint>(*it) < 32 || 
+            static_cast<uint>(*it) > 127 || 
+            *it == '.' ||
+            *it == '-' ) {
+            (*it) = '_';
         }
     }
     return std;

@@ -13,6 +13,7 @@
 #include "glm/gtx/matrix_transform_2d.hpp"
 #include "glm/gtx/rotate_vector.hpp"
 
+#include "shaders/error.h"
 #include "shaders/default.h"
 #include "shaders/default_scene.h"
 #include "shaders/billboard.h"
@@ -299,7 +300,7 @@ bool Sandbox::reloadShaders( WatchFileList &_files ) {
         success = m_shader.load(m_frag_source, m_vert_source, verbose);
 
          if (!success) {
-            m_shader.load(default_frag, default_vert, false);
+            m_shader.load(error_frag, default_vert, false);
             return false;
          }
     }
@@ -316,7 +317,7 @@ bool Sandbox::reloadShaders( WatchFileList &_files ) {
         success = m_scene.loadShaders(m_frag_source, m_vert_source, verbose);
 
         if (!success) {
-            m_scene.loadShaders(default_scene_frag, default_scene_vert, false);
+            m_scene.loadShaders(error_frag, default_scene_vert, false);
             return false;
         }
     }

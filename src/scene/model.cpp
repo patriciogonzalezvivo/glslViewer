@@ -40,6 +40,11 @@ void Model::printDefines() {
     m_shader.printDefines();
 }
 
+void Model::printVboInfo() {
+    if (m_model_vbo)
+        m_model_vbo->printInfo();
+}
+
 bool Model::loadGeom(Mesh& _mesh) {
     // Load Geometry VBO
     m_model_vbo = _mesh.getVbo();
