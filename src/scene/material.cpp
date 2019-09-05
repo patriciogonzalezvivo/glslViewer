@@ -1,6 +1,5 @@
 #include "material.h"
 
-#include <sys/stat.h>
 #include "../tools/text.h"
 
 Material::Material(): 
@@ -215,238 +214,55 @@ bool Material::feedProperties(Shader& _shader) const {
 }
 
 bool Material::loadTextures(Uniforms& _uniforms, WatchFileList& _files, const std::string& _folder) const {
-    struct stat st;
 
-    if (!ambientMap.empty()) {
-        std::string uname = getUniformName( ambientMap );
-        if (_uniforms.textures.find(uname) == _uniforms.textures.end()) {
-            std::string filename = _folder + ambientMap;
-            Texture* tex = new Texture();
-            if (tex->load(filename, true)) {
-                _uniforms.textures[ uname ] = tex;
-                WatchFile file;
-                file.type = IMAGE;
-                file.path = filename;
-                file.lastChange = st.st_mtime;
-                file.vFlip = true;
-                _files.push_back(file);
-            }
-        }        
-    }
+    if (!ambientMap.empty())
+        _uniforms.addTexture(getUniformName( ambientMap ), _folder + ambientMap, _files);
 
-    if (!diffuseMap.empty()) {
-        std::string uname = getUniformName( diffuseMap );
-        if (_uniforms.textures.find(uname) == _uniforms.textures.end()) {
-            std::string filename = _folder + diffuseMap;
-            Texture* tex = new Texture();
-            if (tex->load(filename, true)) {
-                _uniforms.textures[ uname ] = tex;
-                WatchFile file;
-                file.type = IMAGE;
-                file.path = filename;
-                file.lastChange = st.st_mtime;
-                file.vFlip = true;
-                _files.push_back(file);
-            }
-        }
-    }
+    if (!diffuseMap.empty())
+        _uniforms.addTexture(getUniformName( diffuseMap ), _folder + diffuseMap, _files);
     
-    if (!specularMap.empty()) {
-        std::string uname = getUniformName( specularMap );
-        if (_uniforms.textures.find(uname) == _uniforms.textures.end()) {
-            std::string filename = _folder + specularMap;
-            Texture* tex = new Texture();
-            if (tex->load(filename, true)) {
-                _uniforms.textures[ uname ] = tex;
-                WatchFile file;
-                file.type = IMAGE;
-                file.path = filename;
-                file.lastChange = st.st_mtime;
-                file.vFlip = true;
-                _files.push_back(file);
-            }
-        }
-    }
+    if (!specularMap.empty())
+        _uniforms.addTexture(getUniformName( specularMap ), _folder + specularMap, _files);
 
     // specular_highlightMap,
-    if (!specular_highlightMap.empty()) {
-        std::string uname = getUniformName( specular_highlightMap );
-        if (_uniforms.textures.find(uname) == _uniforms.textures.end()) {
-            std::string filename = _folder + specular_highlightMap;
-            Texture* tex = new Texture();
-            if (tex->load(filename, true)) {
-                _uniforms.textures[ uname ] = tex;
-                WatchFile file;
-                file.type = IMAGE;
-                file.path = filename;
-                file.lastChange = st.st_mtime;
-                file.vFlip = true;
-                _files.push_back(file);
-            }
-        }
-    }
+    if (!specular_highlightMap.empty())
+        _uniforms.addTexture(getUniformName( specular_highlightMap ), _folder + specular_highlightMap, _files);
 
     // bumpMap,
-    if (!bumpMap.empty()) {
-        std::string uname = getUniformName( bumpMap );
-        if (_uniforms.textures.find(uname) == _uniforms.textures.end()) {
-            std::string filename = _folder + bumpMap;
-            Texture* tex = new Texture();
-            if (tex->load(filename, true)) {
-                _uniforms.textures[ uname ] = tex;
-                WatchFile file;
-                file.type = IMAGE;
-                file.path = filename;
-                file.lastChange = st.st_mtime;
-                file.vFlip = true;
-                _files.push_back(file);
-            }
-        }
-    }
+    if (!bumpMap.empty())
+        _uniforms.addTexture(getUniformName( bumpMap ), _folder + bumpMap, _files);
 
     // displacementMap,
-    if (!displacementMap.empty()) {
-        std::string uname = getUniformName( displacementMap );
-        if (_uniforms.textures.find(uname) == _uniforms.textures.end()) {
-            std::string filename = _folder + displacementMap;
-            Texture* tex = new Texture();
-            if (tex->load(filename, true)) {
-                _uniforms.textures[ uname ] = tex;
-                WatchFile file;
-                file.type = IMAGE;
-                file.path = filename;
-                file.lastChange = st.st_mtime;
-                file.vFlip = true;
-                _files.push_back(file);
-            }
-        }
-    }
+    if (!displacementMap.empty())
+        _uniforms.addTexture(getUniformName( displacementMap ), _folder + displacementMap, _files);
 
     // alphaMap,
-    if (!alphaMap.empty()) {
-        std::string uname = getUniformName( alphaMap );
-        if (_uniforms.textures.find(uname) == _uniforms.textures.end()) {
-            std::string filename = _folder + alphaMap;
-            Texture* tex = new Texture();
-            if (tex->load(filename, true)) {
-                _uniforms.textures[ uname ] = tex;
-                WatchFile file;
-                file.type = IMAGE;
-                file.path = filename;
-                file.lastChange = st.st_mtime;
-                file.vFlip = true;
-                _files.push_back(file);
-            }
-        }
-    }
+    if (!alphaMap.empty())
+        _uniforms.addTexture(getUniformName( alphaMap ), _folder + alphaMap, _files);
 
     // reflectionMap,
-    if (!reflectionMap.empty()) {
-        std::string uname = getUniformName( reflectionMap );
-        if (_uniforms.textures.find(uname) == _uniforms.textures.end()) {
-            std::string filename = _folder + reflectionMap;
-            Texture* tex = new Texture();
-            if (tex->load(filename, true)) {
-                _uniforms.textures[ uname ] = tex;
-                WatchFile file;
-                file.type = IMAGE;
-                file.path = filename;
-                file.lastChange = st.st_mtime;
-                file.vFlip = true;
-                _files.push_back(file);
-            }
-        }
-    }
+    if (!reflectionMap.empty())
+        _uniforms.addTexture(getUniformName( reflectionMap ), _folder + reflectionMap, _files);
 
     // roughnessMap,
-    if (!roughnessMap.empty()) {
-        std::string uname = getUniformName( roughnessMap );
-        if (_uniforms.textures.find(uname) == _uniforms.textures.end()) {
-            std::string filename = _folder + roughnessMap;
-            Texture* tex = new Texture();
-            if (tex->load(filename, true)) {
-                _uniforms.textures[ uname ] = tex;
-                WatchFile file;
-                file.type = IMAGE;
-                file.path = filename;
-                file.lastChange = st.st_mtime;
-                file.vFlip = true;
-                _files.push_back(file);
-            }
-        }
-    }
+    if (!roughnessMap.empty())
+        _uniforms.addTexture(getUniformName( roughnessMap ), _folder + roughnessMap, _files);
 
     // metallicMap,
-    if (!metallicMap.empty()) {
-        std::string uname = getUniformName( metallicMap );
-        if (_uniforms.textures.find(uname) == _uniforms.textures.end()) {
-            std::string filename = _folder + metallicMap;
-            Texture* tex = new Texture();
-            if (tex->load(filename, true)) {
-                _uniforms.textures[ uname ] = tex;
-                WatchFile file;
-                file.type = IMAGE;
-                file.path = filename;
-                file.lastChange = st.st_mtime;
-                file.vFlip = true;
-                _files.push_back(file);
-            }
-        }
-    }
+    if (!metallicMap.empty())
+        _uniforms.addTexture(getUniformName( metallicMap ), _folder + metallicMap, _files);
 
     // sheenMap,
-    if (!sheenMap.empty()) {
-        std::string uname = getUniformName( sheenMap );
-        if (_uniforms.textures.find(uname) == _uniforms.textures.end()) {
-            std::string filename = _folder + sheenMap;
-            Texture* tex = new Texture();
-            if (tex->load(filename, true)) {
-                _uniforms.textures[ uname ] = tex;
-                WatchFile file;
-                file.type = IMAGE;
-                file.path = filename;
-                file.lastChange = st.st_mtime;
-                file.vFlip = true;
-                _files.push_back(file);
-            }
-        }
-    }
+    if (!sheenMap.empty())
+        _uniforms.addTexture(getUniformName( sheenMap ), _folder + sheenMap, _files);
 
     // emissiveMap,
-    if (!emissiveMap.empty()) {
-        std::string uname = getUniformName( emissiveMap );
-        if (_uniforms.textures.find(uname) == _uniforms.textures.end()) {
-            std::string filename = _folder + emissiveMap;
-            Texture* tex = new Texture();
-            if (tex->load(filename, true)) {
-                _uniforms.textures[ uname ] = tex;
-                WatchFile file;
-                file.type = IMAGE;
-                file.path = filename;
-                file.lastChange = st.st_mtime;
-                file.vFlip = true;
-                _files.push_back(file);
-            }
-        }
-    }
+    if (!emissiveMap.empty())
+        _uniforms.addTexture(getUniformName( emissiveMap ), _folder + emissiveMap, _files);
 
     // normalMap
-    if (!normalMap.empty()) {
-        std::string uname = getUniformName( normalMap );
-        if (_uniforms.textures.find(uname) == _uniforms.textures.end()) {
-            std::string filename = _folder + normalMap;
-            Texture* tex = new Texture();
-            if (tex->load(filename, true)) {
-                _uniforms.textures[ uname ] = tex;
-                WatchFile file;
-                file.type = IMAGE;
-                file.path = filename;
-                file.lastChange = st.st_mtime;
-                file.vFlip = true;
-                _files.push_back(file);
-            }
-        }
-    }
+    if (!normalMap.empty())
+        _uniforms.addTexture(getUniformName( normalMap ), _folder + normalMap, _files);
 
     return true;
 }

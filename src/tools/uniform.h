@@ -5,6 +5,7 @@
 #include <string>
 #include <functional>
 
+#include "fs.h"
 #include "../gl/fbo.h"
 #include "../gl/shader.h"
 #include "../gl/texture.h"
@@ -42,6 +43,7 @@ public:
     virtual ~Uniforms();
 
     bool                    parseLine( const std::string &_line );
+    bool                    addTexture( const std::string& _name, const std::string& _path, WatchFileList& _files, bool _flip = true, bool _verbose = true);
     void                    checkPresenceIn( const std::string &_vert_src, const std::string &_frag_src );
     bool                    feedTo( Shader &_shader );
     void                    print(bool _all);

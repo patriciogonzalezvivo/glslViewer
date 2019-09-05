@@ -2,13 +2,14 @@
 #include "window.h"
 
 #include <unistd.h>
+#include <sys/stat.h>
 
 #include "tools/fs.h"
 #include "tools/geom.h"
 #include "tools/text.h"
 #include "tools/shapes.h"
 
-#include "shaders/light.h"
+#include "shaders/ui_light.h"
 #include "shaders/cubemap.h"
 #include "shaders/wireframe3D.h"
 
@@ -492,6 +493,46 @@ void Scene::addDefine(const std::string &_define, const std::string &_value) {
 void Scene::delDefine(const std::string &_define) {
     for (unsigned int i = 0; i < m_models.size(); i++) {
         m_models[i]->delDefine(_define);
+    }
+}
+
+void Scene::setCubeMap( SkyBox* _skybox ) { 
+    if (m_cubemap_skybox)
+        delete m_cubemap_skybox;
+    m_cubemap_skybox = _skybox; 
+    m_cubemap_skybox->change = true;
+}
+
+void Scene::setCubeMap( TextureCube* _cubemap ) {
+    if (m_cubemap)
+        delete m_cubemap;
+    m_cubemap = _cubemap;
+}
+
+void Scene::setCubeMap( const std::string& _filename, WatchFileList &_files, bool _visible, bool _verbose ) {
+
+    struct stat st;
+    if ( stat(_filename.c_str(), &st) != 0 ) {
+        std::cerr << "Error watching for cubefile: " << _filename << std::endl;
+    }
+    else {
+        TextureCube* tex = new TextureCube();
+        if ( tex->load(_filename, true) ) {
+
+            setCubeMap(tex);
+            setCubeMapVisible(_visible);
+
+            WatchFile file;
+            file.type = CUBEMAP;
+            file.path = _filename;
+            file.lastChange = st.st_mtime;
+            file.vFlip = true;
+            _files.push_back(file);
+
+            std::cout << "// " << _filename << " loaded as: " << std::endl;
+            std::cout << "//    uniform samplerCube u_cubeMap;"<< std::endl;
+            std::cout << "//    uniform vec3        u_SH[9];"<< std::endl;
+        }
     }
 }
 

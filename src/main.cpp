@@ -652,8 +652,8 @@ int main(int argc, char **argv){
                 sandbox.vert_index = files.size()-1;
             }
         }
-        else if ( sandbox.geom_index == -1 && (  haveExt(argument,"ply") || haveExt(argument,"PLY") ||
-                                            haveExt(argument,"obj") || haveExt(argument,"OBJ") ) ) {
+        else if ( sandbox.geom_index == -1 && ( haveExt(argument,"ply") || haveExt(argument,"PLY") ||
+                                                haveExt(argument,"obj") || haveExt(argument,"OBJ") ) ) {
             if ( stat(argument.c_str(), &st) != 0) {
                 std::cerr << "Error watching file " << argument << std::endl;
             }
@@ -673,103 +673,19 @@ int main(int argc, char **argv){
                     haveExt(argument,"png") || haveExt(argument,"PNG") ||
                     haveExt(argument,"jpg") || haveExt(argument,"JPG") ||
                     haveExt(argument,"jpeg") || haveExt(argument,"JPEG")) {
-            if ( stat(argument.c_str(), &st) != 0 ) {
-                std::cerr << "Error watching file " << argument << std::endl;
-            }
-            else {
-                Texture* tex = new Texture();
 
-                if ( tex->load(argument, vFlip) ) {
-                    std::string name = "u_tex"+toString(textureCounter);
-                    sandbox.uniforms.textures[name] = tex;
-
-                    WatchFile file;
-                    file.type = IMAGE;
-                    file.path = argument;
-                    file.lastChange = st.st_mtime;
-                    file.vFlip = vFlip;
-                    files.push_back(file);
-
-                    std::cout << "// " << argument << " loaded as: " << std::endl;
-                    std::cout << "//    uniform sampler2D " << name  << ";"<< std::endl;
-                    std::cout << "//    uniform vec2 " << name  << "Resolution;"<< std::endl;
-                    textureCounter++;
-                }
-            }
+            if ( sandbox.uniforms.addTexture("u_tex"+toString(textureCounter), argument, files, vFlip) )
+                textureCounter++;
         }
-        else if ( argument == "-c" ) {
+        else if ( argument == "-c" || argument == "-sh" ) {
             i++;
             argument = std::string(argv[i]);
-            if ( stat(argument.c_str(), &st) != 0 ) {
-                std::cerr << "Error watching cubefile: " << argument << std::endl;
-            }
-            else {
-                TextureCube* tex = new TextureCube();
-                if ( tex->load(argument, vFlip) ) {
-                    sandbox.getScene().setCubeMap(tex);
-                    sandbox.getScene().setCubeMapVisible(false);
-
-                    WatchFile file;
-                    file.type = CUBEMAP;
-                    file.path = argument;
-                    file.lastChange = st.st_mtime;
-                    file.vFlip = vFlip;
-                    files.push_back(file);
-
-                    std::cout << "// " << argument << " loaded as: " << std::endl;
-                    std::cout << "//    uniform samplerCube u_cubeMap;"<< std::endl;
-                    std::cout << "//    uniform vec3        u_SH[9];"<< std::endl;
-                }
-            }
+            sandbox.getScene().setCubeMap(argument, files, false);
         }
         else if ( argument == "-C" ) {
             i++;
             argument = std::string(argv[i]);
-            if ( stat(argument.c_str(), &st) != 0 ) {
-                std::cerr << "Error watching cubefile: " << argument << std::endl;
-            }
-            else {
-                TextureCube* tex = new TextureCube();
-                if ( tex->load(argument, vFlip) ) {
-                    sandbox.getScene().setCubeMap(tex);
-                    sandbox.getScene().setCubeMapVisible(true);
-
-                    WatchFile file;
-                    file.type = CUBEMAP;
-                    file.path = argument;
-                    file.lastChange = st.st_mtime;
-                    file.vFlip = vFlip;
-                    files.push_back(file);
-
-                    std::cout << "// " << argument << " loaded as: " << std::endl;
-                    std::cout << "//    uniform samplerCube u_cubeMap;"<< std::endl;
-                    std::cout << "//    uniform vec3        u_SH[9];"<< std::endl;
-                }
-            }
-        }
-        else if ( argument == "-sh" ) {
-            i++;
-            argument = std::string(argv[i]);
-            if ( stat(argument.c_str(), &st) != 0 ) {
-                std::cerr << "Error watching cubefile: " << argument << std::endl;
-            }
-            else {
-                TextureCube* tex = new TextureCube();
-                if ( tex->load(argument, vFlip) ) {
-                    sandbox.getScene().setCubeMap(tex);
-                    sandbox.getScene().setCubeMapVisible(false);
-
-                    WatchFile file;
-                    file.type = CUBEMAP;
-                    file.path = argument;
-                    file.lastChange = st.st_mtime;
-                    file.vFlip = vFlip;
-                    files.push_back(file);
-
-                    std::cout << "// " << argument << " loaded as: " << std::endl;
-                    std::cout << "//    uniform vec3        u_SH[9];"<< std::endl;
-                }
-            }
+            sandbox.getScene().setCubeMap(argument, files, true);
         }
         else if ( argument.find("-D") == 0 ) {
             // Defines are added/remove once existing shaders
@@ -791,26 +707,7 @@ int main(int argc, char **argv){
             std::string parameterPair = argument.substr( argument.find_last_of('-') + 1 );
             i++;
             argument = std::string(argv[i]);
-            if ( stat(argument.c_str(), &st) != 0 ) {
-                std::cerr << "Error watching file " << argument << std::endl;
-            }
-            else {
-                Texture* tex = new Texture();
-                if (tex->load(argument, vFlip)) {
-                    sandbox.uniforms.textures[parameterPair] = tex;
-
-                    WatchFile file;
-                    file.type = IMAGE;
-                    file.path = argument;
-                    file.lastChange = st.st_mtime;
-                    file.vFlip = vFlip;
-                    files.push_back(file);
-
-                    std::cout << "// " << argument << " loaded as: " << std::endl;
-                    std::cout << "//     uniform sampler2D " << parameterPair  << ";"<< std::endl;
-                    std::cout << "//     uniform vec2 " << parameterPair  << "Resolution;"<< std::endl;
-                }
-            }
+            sandbox.uniforms.addTexture(parameterPair, argument, files, vFlip);
         }
     }
 

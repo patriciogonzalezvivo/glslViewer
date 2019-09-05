@@ -2,6 +2,7 @@
 
 #include <regex>
 #include <sstream>
+#include <sys/stat.h>
 
 #include "text.h"
 
@@ -76,6 +77,46 @@ bool Uniforms::parseLine( const std::string &_line ) {
     bool somethingChange = parseUniformData(_line, &data);
     m_change += somethingChange;
     return somethingChange;
+}
+
+bool Uniforms::addTexture(const std::string& _name, const std::string& _path, WatchFileList& _files, bool _flip, bool _verbose) {
+    if (textures.find(_name) == textures.end()) {
+        struct stat st;
+
+        // If we can not get file stamp proably is not a file
+        if (stat(_path.c_str(), &st) != 0 )
+            std::cerr << "Error watching for file " << _path << std::endl;
+        
+        // If we can lets proceed creating a texgure
+        else {
+            Texture* tex = new Texture();
+            // load an image into the texture
+            if (tex->load(_path, true)) {
+
+                // the image is loaded finish add the texture to the uniform list
+                textures[ _name ] = tex;
+
+                // and the file to the watch list
+                WatchFile file;
+                file.type = IMAGE;
+                file.path = _path;
+                file.lastChange = st.st_mtime;
+                file.vFlip = _flip;
+                _files.push_back(file);
+
+                if (_verbose) {
+                    std::cout << "// " << _path << " loaded as: " << std::endl;
+                    std::cout << "//    uniform sampler2D " << _name  << ";"<< std::endl;
+                    std::cout << "//    uniform vec2 " << _name  << "Resolution;"<< std::endl;
+                }
+
+                return true;
+            }
+            else
+                delete tex;
+        }
+    }
+    return false;
 }
 
 void Uniforms::checkPresenceIn( const std::string &_vert_src, const std::string &_frag_src ) {

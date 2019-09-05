@@ -36,8 +36,6 @@ public:
     void            delDefine(const std::string &_define);
     void            printDefines();
 
-    void            setCamera( glm::vec3 _position, glm::vec2 _viewport );
-
     void            setCulling(CullingMode _culling) { m_culling = _culling; }
     CullingMode     getCulling() { return m_culling; }
 
@@ -47,8 +45,9 @@ public:
     void            setDynamicShadows(bool _dynamic) { m_dynamicShadows = _dynamic; }
     bool            getDynamicShadows() { return m_dynamicShadows; }
 
-    void            setCubeMap( SkyBox* _skybox ) { m_cubemap_skybox = _skybox; m_cubemap_skybox->change = true; }
-    void            setCubeMap( TextureCube* _cubemap ) {  m_cubemap = _cubemap; }
+    void            setCubeMap( SkyBox* _skybox );
+    void            setCubeMap( TextureCube* _cubemap );
+    void            setCubeMap( const std::string& _filename, WatchFileList &_files, bool _visible, bool _verbose = true);
     TextureCube*    getCubeMap() { return m_cubemap; }
     void            setCubeMapVisible( bool _draw ) {  m_cubemap_draw = _draw; }
     bool            getCubeMapVisible() { return m_cubemap_draw; }
