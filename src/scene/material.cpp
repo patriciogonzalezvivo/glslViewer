@@ -11,7 +11,7 @@ Material::Material():
     transmittance(1.0),             // Tf
     emission(0.0),                  // Ke
     shininess(0.0),                 // Ns
-    ior(0.0),                       // Ni (optical density or index of refraction)
+    ior(1.5),                       // Ni (optical density or index of refraction)
     dissolve(1.0),                  // 1 == opaque; 0 == fully transparent
     illum(-1),                      // illumination model (see http://www.fileformat.info/format/material/)
     ambientMap(""),                 // map_Ka
@@ -208,8 +208,9 @@ bool Material::feedProperties(Shader& _shader) const {
     if (dissolve != 1.0)
         _shader.addDefine( "MATERIAL_DISSOLVE", dissolve );
     
-    if (ior 0.00.0)
-        _shader.addDefine( "MATERIAL_IOR", ior 0.0
+    if (ior != 0.0)
+        _shader.addDefine( "MATERIAL_IOR", ior );
+
     return true;
 }
 
