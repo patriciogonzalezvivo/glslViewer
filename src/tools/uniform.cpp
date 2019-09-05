@@ -207,7 +207,7 @@ void Uniforms::print(bool _all) {
 }
 
 void Uniforms::printBuffers() {
-    for (int i = 0; i < buffers.size(); i++) {
+    for (size_t i = 0; i < buffers.size(); i++) {
         std::cout << "sampler2D," << "u_buffer" << i << std::endl;
     }
 }

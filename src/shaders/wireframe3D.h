@@ -23,4 +23,4 @@ uniform vec4 u_color;\n\
 \n\
 void main(void) {\n\
     gl_FragColor = u_color;\n\
-}";
+}\n";

@@ -232,7 +232,7 @@ bool Mesh::computeNormals() {
 // http://www.terathon.com/code/tangent.html
 bool Mesh::computeTangents() {
     //The number of the vertices
-    int nV = m_vertices.size();
+    size_t nV = m_vertices.size();
 
     if (m_texCoords.size() != nV || 
         m_normals.size() != nV || 

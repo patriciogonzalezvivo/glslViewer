@@ -215,7 +215,6 @@ bool Material::feedProperties(Shader& _shader) const {
 }
 
 bool Material::loadTextures(Uniforms& _uniforms, WatchFileList& _files, const std::string& _folder) const {
-    
     struct stat st;
 
     if (!ambientMap.empty()) {

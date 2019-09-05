@@ -67,5 +67,4 @@ void main(void) {\n\
     color = vec3(st.x,st.y,abs(sin(u_time)));\n\
     \n\
     gl_FragColor = vec4(color, 1.0);\n\
-}\n\
-";
+}\n";

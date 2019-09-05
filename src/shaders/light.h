@@ -79,4 +79,4 @@ void main(){\n\
     alpha += stroke(sdf, .4, .15);\n\
     \n\
     gl_FragColor = vec4(color, alpha);\n\
-}";
+}\n";

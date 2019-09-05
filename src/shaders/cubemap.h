@@ -30,4 +30,4 @@ void main(void) {\n\
     //reflection = reflection / (reflection + vec4(1.0));\n\
     //reflection.rgb = pow(reflection.rgb, vec3(0.4545454545));\n\
     gl_FragColor = reflection;\n\
-}";
+}\n";
