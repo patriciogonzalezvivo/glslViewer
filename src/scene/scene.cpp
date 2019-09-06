@@ -18,6 +18,8 @@ Scene::Scene():
     m_culling(NONE), m_lat(180.0), m_lon(0.0),
     // Light
     m_light_vbo(nullptr), m_dynamicShadows(false),
+    // Background
+    m_background_vbo(nullptr), m_background_draw(false), 
     // CubeMap
     m_cubemap_vbo(nullptr), m_cubemap(nullptr), m_cubemap_skybox(nullptr), m_cubemap_draw(false), 
     // UI
@@ -94,20 +96,21 @@ void Scene::setup(CommandList &_commands, Uniforms &_uniforms) {
 
     _commands.push_back(Command("material", [&](const std::string& _line){ 
         if (_line == "materials") {
-            for (unsigned int i = 0; i < m_materials.size(); i++)
-                std::cout << m_materials[i].name << std::endl;
+            for (std::map<std::string,Material>::iterator it = m_materials.begin(); it != m_materials.end(); it++) {
+                std::cout << it->second.name << std::endl;
+            }
             return true;
         }
         else {
             std::vector<std::string> values = split(_line,',');
-            if (values.size() == 2 && values[0] == "material")
-                for (unsigned int i = 0; i < m_materials.size(); i++)
-                    if (m_materials[i].name == values[1]) {
-                        m_materials[i].printProperties();
+            if (values.size() == 2 && values[0] == "material") {
+                for (std::map<std::string,Material>::iterator it = m_materials.begin(); it != m_materials.end(); it++){
+                    if (it->second.name == values[1]) {
+                        it->second.printProperties();
                         return true;
                     }
-                
-            
+                }
+            }
         }
 
         return false;
@@ -485,12 +488,14 @@ void Scene::setup(CommandList &_commands, Uniforms &_uniforms) {
 }
 
 void Scene::addDefine(const std::string &_define, const std::string &_value) {
+    m_background_shader.addDefine(_define, _value);
     for (unsigned int i = 0; i < m_models.size(); i++) {
         m_models[i]->addDefine(_define, _value);
     }
 }
 
 void Scene::delDefine(const std::string &_define) {
+    m_background_shader.delDefine(_define);
     for (unsigned int i = 0; i < m_models.size(); i++) {
         m_models[i]->delDefine(_define);
     }
@@ -576,13 +581,21 @@ bool Scene::loadGeometry(Uniforms& _uniforms, WatchFileList& _files, int _index,
 }
 
 bool Scene::loadShaders(const std::string &_fragmentShader, const std::string &_vertexShader, bool _verbose) {
-
     bool rta = true;
     for (unsigned int i = 0; i < m_models.size(); i++) {
-        rta += m_models[i]->loadShader( _fragmentShader, 
-                                        _vertexShader, 
-                                        _verbose);
+        if ( !m_models[i]->loadShader( _fragmentShader, _vertexShader, _verbose) ) {
+            m_models[i]->loadShader( error_frag, error_vert, false); 
+            rta = false;
+        }
     }
+
+    m_background_draw = check_for_background(_fragmentShader);
+    if (m_background_draw) {
+        // Specific defines for this buffer
+        m_background_shader.addDefine("BACKGROUND");
+        m_background_shader.load(_fragmentShader, billboard_vert, false);
+    }
+
     return rta;
 }
 
@@ -599,6 +612,9 @@ void Scene::unflagChange() {
 }
 
 void Scene::render(Uniforms &_uniforms) {
+    // Render Background
+    renderBackground(_uniforms);
+
     // Begining of DEPTH for 3D 
     glEnable(GL_DEPTH_TEST);
 
@@ -661,7 +677,7 @@ void Scene::renderShadowMap(Uniforms &_uniforms) {
     }
 }
 
-void Scene::renderCubeMap() {
+void Scene::renderBackground(Uniforms &_uniforms) {
     // If there is a skybox and it had changes re generate
     if (m_cubemap_skybox) {
         if (m_cubemap_skybox->change) {
@@ -673,8 +689,18 @@ void Scene::renderCubeMap() {
         }
     }
 
-    if (m_cubemap && m_cubemap_draw) {
+    if (m_background_draw) {
+        m_background_shader.use();
 
+        // Update Uniforms and textures
+        _uniforms.feedTo( m_background_shader );
+
+        if (!m_background_vbo)
+            m_background_vbo = rect(0.0,0.0,1.0,1.0).getVbo();
+        m_background_vbo->render( &m_background_shader );
+    }
+
+    else if (m_cubemap && m_cubemap_draw) {
         if (!m_cubemap_vbo) {
             m_cubemap_vbo = cube(1.0f).getVbo();
             m_cubemap_shader.load(cube_frag, cube_vert, false);
@@ -688,6 +714,7 @@ void Scene::renderCubeMap() {
         m_cubemap_vbo->render( &m_cubemap_shader );
     }
 }
+
 
 void Scene::renderDebug() {
     glEnable(GL_DEPTH_TEST);
@@ -746,6 +773,8 @@ void Scene::renderDebug() {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glDisable(GL_DEPTH_TEST);
 }
+
+// ------------------------------------------------------ EVENTS
 
 void Scene::onMouseDrag(float _x, float _y, int _button) {
     if (_button == 1) {

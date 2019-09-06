@@ -13,6 +13,9 @@
 #include "tools/skybox.h"
 #include "tools/command.h"
 
+#include "shaders/billboard.h"
+#include "shaders/default_error.h"
+
 enum CullingMode {
     NONE = 0,
     FRONT = 1,
@@ -56,18 +59,18 @@ public:
     bool            haveChange() const;
 
     void            render(Uniforms &_uniforms);
-    void            renderDebug();
-    void            renderCubeMap();
     void            renderGeometry(Uniforms &_uniforms);
     void            renderShadowMap(Uniforms &_uniforms);
+    void            renderBackground(Uniforms &_uniforms);
+    void            renderDebug();
 
     void            onMouseDrag(float _x, float _y, int _button);
     void            onViewportResize(int _newWidth, int _newHeight);
 
 protected:
      // Geometry
-    std::vector<Model*>     m_models;
-    std::vector<Material>   m_materials;
+    std::vector<Model*>             m_models;
+    std::map<std::string,Material>  m_materials;
 
     Node            m_origin;
     glm::mat4       m_mvp;
@@ -86,6 +89,11 @@ protected:
     Shader          m_light_shader;
     Fbo             m_light_depthfbo;
     bool            m_dynamicShadows;
+
+    // Background
+    Shader          m_background_shader;
+    Vbo*            m_background_vbo;
+    bool            m_background_draw;
 
     // CubeMap
     Shader          m_cubemap_shader;

@@ -5,7 +5,7 @@
 
 // DEFAULT SHADERS
 // -----------------------------------------------------
-std::string default_vert = "\n\
+const std::string default_vert = "\n\
 #ifdef GL_ES\n\
 precision mediump float;\n\
 #endif\n\
@@ -50,7 +50,7 @@ void main(void) {\n\
 }\n\
 ";
 
-std::string default_frag = "\n\
+const std::string default_frag = "\n\
 #ifdef GL_ES\n\
 precision mediump float;\n\
 #endif\n\

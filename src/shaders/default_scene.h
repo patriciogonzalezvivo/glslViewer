@@ -5,7 +5,7 @@
 
 // DEFAULT SHADERS
 // -----------------------------------------------------
-std::string default_scene_vert = "\n\
+const std::string default_scene_vert = "\n\
 #ifdef GL_ES\n\
 precision mediump float;\n\
 #endif\n\

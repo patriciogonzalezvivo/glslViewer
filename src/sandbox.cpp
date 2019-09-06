@@ -13,10 +13,9 @@
 #include "glm/gtx/matrix_transform_2d.hpp"
 #include "glm/gtx/rotate_vector.hpp"
 
-#include "shaders/error.h"
 #include "shaders/default.h"
 #include "shaders/default_scene.h"
-#include "shaders/billboard.h"
+#include "shaders/dynamic_billboard.h"
 #include "shaders/wireframe2D.h"
 
 #define FRAME_DELTA 0.03333333333
@@ -27,8 +26,6 @@ Sandbox::Sandbox():
     verbose(false), cursor(true), debug(false),
     // Main Vert/Frag/Geom
     m_frag_source(""), m_vert_source(""),
-    // Background
-    m_background_enabled(false),
     // Buffers
     m_buffers_total(0),
     // PostProcessing
@@ -105,7 +102,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     _commands.push_back(Command("defines", [&](const std::string& _line){ 
         if (_line == "defines") {
             if (geom_index == -1)
-                m_shader.printDefines();
+                m_canvas_shader.printDefines();
             else
                 m_scene.printDefines();
             return true;
@@ -180,10 +177,10 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     // -----------------------------------------------
 
     if (geom_index == -1) {
-        // m_shader.addDefine("MODEL_HAS_COLORS");
-        // m_shader.addDefine("MODEL_HAS_NORMALS");
-        m_shader.addDefine("MODEL_HAS_TEXCOORDS");
-        // m_shader.addDefine("MODEL_HAS_TANGENTS");
+        // m_canvas_shader.addDefine("MODEL_HAS_COLORS");
+        // m_canvas_shader.addDefine("MODEL_HAS_NORMALS");
+        m_canvas_shader.addDefine("MODEL_HAS_TEXCOORDS");
+        // m_canvas_shader.addDefine("MODEL_HAS_TANGENTS");
     }
     else {
         m_scene.setup( _commands, uniforms);
@@ -221,9 +218,8 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
 }
 
 void Sandbox::addDefine(const std::string &_define, const std::string &_value) {
-    m_shader.addDefine(_define);
+    m_canvas_shader.addDefine(_define);
     m_billboard_shader.addDefine(_define, _value);
-    m_background_shader.addDefine(_define, _value);
     m_wireframe2D_shader.addDefine(_define, _value);
     for (int i = 0; i < m_buffers_total; i++) {
         m_buffers_shaders[i].addDefine(_define, _value);
@@ -236,9 +232,8 @@ void Sandbox::addDefine(const std::string &_define, const std::string &_value) {
 }
 
 void Sandbox::delDefine(const std::string &_define) {
-    m_shader.delDefine(_define);
+    m_canvas_shader.delDefine(_define);
     m_billboard_shader.delDefine(_define);
-    m_background_shader.delDefine(_define);
     m_wireframe2D_shader.delDefine(_define);
     for (int i = 0; i < m_buffers_total; i++) {
         m_buffers_shaders[i].delDefine(_define);
@@ -296,11 +291,11 @@ bool Sandbox::reloadShaders( WatchFileList &_files ) {
             std::cout << "// Reload 2D shaders" << std::endl;
 
         // Reload the shader
-        m_shader.detach(GL_FRAGMENT_SHADER | GL_VERTEX_SHADER);
-        success = m_shader.load(m_frag_source, m_vert_source, verbose);
+        m_canvas_shader.detach(GL_FRAGMENT_SHADER | GL_VERTEX_SHADER);
+        success = m_canvas_shader.load(m_frag_source, m_vert_source, verbose);
 
          if (!success) {
-            m_shader.load(error_frag, default_vert, false);
+            m_canvas_shader.load(error_frag, error_vert, false);
             return false;
          }
     }
@@ -316,10 +311,10 @@ bool Sandbox::reloadShaders( WatchFileList &_files ) {
 
         success = m_scene.loadShaders(m_frag_source, m_vert_source, verbose);
 
-        if (!success) {
-            m_scene.loadShaders(error_frag, default_scene_vert, false);
-            return false;
-        }
+        // if (!success) {
+        //     m_scene.loadShaders(error_frag, default_scene_vert, true);
+        //     return false;
+        // }
     }
 
     // UPDATE shaders dependencies
@@ -356,16 +351,6 @@ bool Sandbox::reloadShaders( WatchFileList &_files ) {
     m_buffers_total = count_buffers(m_frag_source);
     _updateBuffers();
     
-    // UPDATE Background pass
-    if (geom_index != -1) {
-        m_background_enabled = check_for_background(getSource(FRAGMENT));
-        if (m_background_enabled) {
-            // Specific defines for this buffer
-            m_background_shader.addDefine("BACKGROUND");
-            m_background_shader.load(m_frag_source, billboard_vert, false);
-        }
-    }
-
     // UPDATE Postprocessing
     bool havePostprocessing = check_for_postprocessing(getSource(FRAGMENT));
     if (m_postprocessing_enabled != havePostprocessing) {
@@ -439,26 +424,6 @@ void Sandbox::_renderBuffers() {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
-void Sandbox::_renderBackground() {
-    if (m_background_enabled) {
-        m_background_shader.use();
-
-        // Update Uniforms and textures
-        uniforms.feedTo( m_background_shader );
-
-        // Pass all buffers
-        for (unsigned int i = 0; i < uniforms.buffers.size(); i++) {
-            m_background_shader.setUniformTexture("u_buffer" + toString(i), &uniforms.buffers[i]);
-        }
-
-        m_billboard_vbo->render( &m_background_shader );
-    }
-    // CUBEMAP
-    else if (geom_index != -1) {
-        m_scene.renderCubeMap();
-    }
-}
-
 void Sandbox::render() {
     // RENDER SHADOW MAP
     // -----------------------------------------------
@@ -489,20 +454,17 @@ void Sandbox::render() {
     // Clear the background
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    // RENDER BACKGROUND
-    _renderBackground();
-
     // RENDER CONTENT
     if (geom_index == -1) {
         // Load main shader
-        m_shader.use();
+        m_canvas_shader.use();
 
         // Update Uniforms and textures variables
-        uniforms.feedTo( m_shader );
+        uniforms.feedTo( m_canvas_shader );
 
         // Pass special uniforms
-        m_shader.setUniform("u_modelViewProjectionMatrix", glm::mat4(1.));
-        m_billboard_vbo->render( &m_shader );
+        m_canvas_shader.setUniform("u_modelViewProjectionMatrix", glm::mat4(1.));
+        m_billboard_vbo->render( &m_canvas_shader );
     }
     else {
         m_scene.render(uniforms);

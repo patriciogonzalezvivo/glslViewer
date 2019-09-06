@@ -69,7 +69,6 @@ public:
 private:
     void                _updateBuffers();
     void                _renderBuffers();
-    void                _renderBackground();
 
     // Main Shader
     std::string         m_frag_source;
@@ -78,17 +77,15 @@ private:
     // Dependencies
     List                m_vert_dependencies;
     List                m_frag_dependencies;
-    Shader              m_shader;
- 
-    // Background
-    Shader              m_background_shader;
-    bool                m_background_enabled;
 
     // Buffers
     std::vector<Shader> m_buffers_shaders;
     int                 m_buffers_total;
 
-    // Scene
+    // A. CANVAS
+    Shader              m_canvas_shader;
+
+    // B. SCENE
     Scene               m_scene;
     Fbo                 m_scene_fbo;
 

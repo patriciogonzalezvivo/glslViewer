@@ -10,7 +10,7 @@ Material::Material():
     transmittance(1.0),             // Tf
     emission(0.0),                  // Ke
     shininess(0.0),                 // Ns
-    ior(1.5),                       // Ni (optical density or index of refraction)
+    ior(0.0),                       // Ni (optical density or index of refraction)
     dissolve(1.0),                  // 1 == opaque; 0 == fully transparent
     illum(-1),                      // illumination model (see http://www.fileformat.info/format/material/)
     ambientMap(""),                 // map_Ka
@@ -201,7 +201,7 @@ bool Material::feedProperties(Shader& _shader) const {
     if (!alphaMap.empty())
         _shader.addDefine( "MATERIAL_ALPHAMAP", getUniformName( alphaMap ) );
 
-    if (transmittance != glm::vec3(0.0))
+    if (transmittance != glm::vec3(1.0))
         _shader.addDefine( "MATERIAL_TRANSMITTANCE", transmittance );
 
     if (dissolve != 1.0)

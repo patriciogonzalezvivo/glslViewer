@@ -2,7 +2,7 @@
 
 #include <string>
 
-std::string wireframe3D_vert = "\n\
+const std::string wireframe3D_vert = "\n\
 #ifdef GL_ES\n\
 precision mediump float;\n\
 #endif\n\
@@ -14,7 +14,7 @@ void main(void) {\n\
     gl_Position = u_modelViewProjectionMatrix * a_position;\n\
 }";
 
-std::string wireframe3D_frag = "\n\
+const std::string wireframe3D_frag = "\n\
 #ifdef GL_ES\n\
 precision mediump float;\n\
 #endif\n\

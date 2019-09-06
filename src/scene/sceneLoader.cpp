@@ -11,7 +11,7 @@
 #define TINYOBJLOADER_IMPLEMENTATION
 #include "tinyobjloader/tiny_obj_loader.h"
 
-bool loadPLY(Uniforms& _uniforms, WatchFileList &filenames, std::vector<Material>& _materials, std::vector<Model*>& _models, int _index, bool _verbose) {
+bool loadPLY(Uniforms& _uniforms, WatchFileList &filenames, std::map<std::string,Material>& _materials, std::vector<Model*>& _models, int _index, bool _verbose) {
     std::string filename = filenames[_index].path;
     std::fstream is(filename.c_str(), std::ios::in);
     if (is.is_open()) {
@@ -263,7 +263,8 @@ bool loadPLY(Uniforms& _uniforms, WatchFileList &filenames, std::vector<Material
 
         mesh.computeTangents();
 
-        _materials.push_back(default_material);
+        _materials[default_material.name] = default_material;
+
         if (mesh.getDrawMode() == GL_POINTS)
             name = "points";
         else if (mesh.getDrawMode() == GL_LINES)
@@ -455,7 +456,7 @@ Material getMaterial (const tinyobj::material_t& _material) {
     return mat;
 }
 
-bool loadOBJ(Uniforms& _uniforms, WatchFileList& _files, std::vector<Material>& _materials, std::vector<Model*>& _models, int _index, bool _verbose) {
+bool loadOBJ(Uniforms& _uniforms, WatchFileList& _files, std::map<std::string,Material>& _materials, std::vector<Model*>& _models, int _index, bool _verbose) {
     std::string filename = _files[_index].path;
 
     tinyobj::attrib_t attrib;
@@ -494,10 +495,14 @@ bool loadOBJ(Uniforms& _uniforms, WatchFileList& _files, std::vector<Material>& 
     }
 
     for (size_t m = 0; m < materials.size(); m++) {
-        std::cout << "Material " << materials[m].name << std::endl;
-        Material mat = getMaterial( materials[m] );
-        mat.loadTextures(_uniforms, _files, base_dir);
-        _materials.push_back( mat );
+        if (_materials.find( materials[m].name ) == _materials.end()) {
+            if (_verbose)
+                std::cout << "Add Material " << materials[m].name << std::endl;
+
+            Material mat = getMaterial( materials[m] );
+            mat.loadTextures(_uniforms, _files, base_dir);
+            _materials[ materials[m].name ] = mat;
+        }
     }
 
     for (size_t s = 0; s < shapes.size(); s++) {
@@ -528,8 +533,9 @@ bool loadOBJ(Uniforms& _uniforms, WatchFileList& _files, std::vector<Material>& 
         if (true) {
             INDEX_TYPE counter = 0;
             for (size_t i = 0; i < shapes[s].mesh.indices.size(); i++) {
-                tinyobj::index_t index = shapes[s].mesh.indices[i];
+                int f = (int)floor(i/3);
 
+                tinyobj::index_t index = shapes[s].mesh.indices[i];
                 int vi = index.vertex_index;
                 int ni = index.normal_index;
                 int ti = index.texcoord_index;
@@ -544,9 +550,13 @@ bool loadOBJ(Uniforms& _uniforms, WatchFileList& _files, std::vector<Material>& 
                         (iter->second.texcoord_index == ti) )
                         reuse = true;
 
+                
                 if (shapes[s].mesh.material_ids.size() > 0) {
-                    mi = shapes[s].mesh.material_ids[floor(i/3)];
-                    mat = _materials[mi];
+                    int m = shapes[s].mesh.material_ids[f];
+                    if (mi != m) {
+                        mi = m;
+                        mat = _materials[ materials[mi].name ];
+                    }
                 }
                 
                 // Re use the vertex
@@ -559,17 +569,7 @@ bool loadOBJ(Uniforms& _uniforms, WatchFileList& _files, std::vector<Material>& 
                     unique_indices[vi].texcoord_index = ti;
                     
                     mesh.addVertex( getVertex(attrib, vi) );
-
-                    // If the model have color use 
-                    if ((attrib.colors.size() > 0) && 
-                        (attrib.colors.size() == attrib.vertices.size()))
-                        mesh.addColor( getColor(attrib, vi) );
-
-                    // other whise try to extract them from the material
-                    else if ((mi >= 0) && (mi < static_cast<int>(materials.size()))) {
-                        glm::vec3 c = getDiffuse(materials[mi]);
-                        mesh.addColor( glm::vec4(c.r, c.g, c.b, 1.0) );
-                    }
+                    mesh.addColor( getColor(attrib, vi) );
 
                     // If there is normals add them
                     if (attrib.normals.size() > 0)
@@ -600,7 +600,7 @@ bool loadOBJ(Uniforms& _uniforms, WatchFileList& _files, std::vector<Material>& 
 
                 if (shapes[s].mesh.material_ids.size() > 0) {
                     current_material_id = shapes[s].mesh.material_ids[f];
-                    mat = _materials[current_material_id];
+                    mat = _materials[ materials[current_material_id].name ];
                 }
 
                 // Vertices
