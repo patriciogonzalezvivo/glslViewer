@@ -240,14 +240,14 @@ bool Mesh::computeTangents() {
         return false;
 
     //The number of the triangles
-    int nT = m_indices.size() / 3;
+    size_t nT = m_indices.size() / 3;
 
     std::vector<glm::vec3> tan1( nV );
     std::vector<glm::vec3> tan2( nV );
 
     //Scan all the triangles. For each triangle add its
     //normal to norm's vectors of triangle's vertices
-    for (int t = 0; t < nT; t++) {
+    for (size_t t = 0; t < nT; t++) {
 
         //Get indices of the triangle t
         int i1 = m_indices[ 3 * t ];
@@ -294,7 +294,7 @@ bool Mesh::computeTangents() {
 
     //Normalize the normal's length and add it.
     m_tangents.clear();
-    for (int i = 0; i < nV; i++) {
+    for (size_t i = 0; i < nV; i++) {
         const glm::vec3 &n = m_normals[i];
         const glm::vec3 &t = tan1[i];
         
