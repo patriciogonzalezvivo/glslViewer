@@ -7,7 +7,7 @@ Material::Material():
     ambient(0.0),                   // Ka
     diffuse(0.0),                   // Kd
     specular(0.0),                  // Ks
-    transmittance(1.0),             // Tf
+    transmittance(0.0),             // Tf
     emission(0.0),                  // Ke
     shininess(0.0),                 // Ns
     ior(0.0),                       // Ni (optical density or index of refraction)
@@ -76,7 +76,7 @@ void Material::printProperties() {
     if (shininess != 0.0)
         std::cout << " Shininess        = " << shininess << std::endl;
 
-    if (sheen != 1.0)
+    if (sheen != 0.0)
         std::cout << " Sheen            = " << sheen << std::endl;
     if (!sheenMap.empty())
         std::cout << " SheenMap         = " << sheenMap << std::endl;
@@ -109,7 +109,7 @@ void Material::printProperties() {
 
     if (!alphaMap.empty())
         std::cout << " AlphaMap         = " << alphaMap << std::endl;
-    if (transmittance != glm::vec3(1.0))
+    if (transmittance != glm::vec3(0.0))
         std::cout << " Transmittance    = " << toString(transmittance) << std::endl;
 
     if (dissolve != 1.0)

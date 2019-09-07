@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <iostream>
 
+#include "shaders/default_error.h"
 
 Shader::Shader():
     m_program(0), 
@@ -37,16 +38,19 @@ Shader::~Shader() {
 bool Shader::load(const std::string& _fragmentSrc, const std::string& _vertexSrc, bool _verbose) {
     std::chrono::time_point<std::chrono::steady_clock> start_time, end_time;
     start_time = std::chrono::steady_clock::now();
+    m_defineChange = false;
 
     m_vertexShader = compileShader(_vertexSrc, GL_VERTEX_SHADER, _verbose);
 
     if (!m_vertexShader) {
+        load(error_frag, error_vert, false);
         return false;
     }
 
     m_fragmentShader = compileShader(_fragmentSrc, GL_FRAGMENT_SHADER, _verbose);
 
     if (!m_fragmentShader) {
+        load(error_frag, error_vert, false);
         return false;
     }
 
@@ -58,7 +62,6 @@ bool Shader::load(const std::string& _fragmentSrc, const std::string& _vertexSrc
 
     m_fragmentSource = _fragmentSrc;
     m_vertexSource = _vertexSrc;
-    m_defineChange = false;
 
     end_time = std::chrono::steady_clock::now();
     std::chrono::duration<double> load_time = end_time - start_time;
@@ -82,6 +85,7 @@ bool Shader::load(const std::string& _fragmentSrc, const std::string& _vertexSrc
             std::cerr << (unsigned)toInt(lineNum) << ": " << getLineNumber(_fragmentSrc,(unsigned)toInt(lineNum)) << std::endl;
         }
         glDeleteProgram(m_program);
+        load(error_frag, error_vert, false);
         return false;
     } 
     else {
@@ -104,7 +108,6 @@ bool Shader::load(const std::string& _fragmentSrc, const std::string& _vertexSrc
 #endif
             std::cerr << std::endl;
         }
-
         return true;
     }
 }
@@ -175,7 +178,7 @@ const GLint Shader::getAttribLocation(const std::string& _attribute) const {
 
 void Shader::use() {
     if (m_defineChange)
-        reload(true);
+        reload(false);
 
     if (!isInUse()) {
         glUseProgram(getProgram());

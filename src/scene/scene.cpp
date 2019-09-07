@@ -506,6 +506,7 @@ void Scene::setCubeMap( SkyBox* _skybox ) {
         delete m_cubemap_skybox;
     m_cubemap_skybox = _skybox; 
     m_cubemap_skybox->change = true;
+    addDefine("CUBE_MAP", "u_cubeMap");
 }
 
 void Scene::setCubeMap( TextureCube* _cubemap ) {
@@ -515,7 +516,6 @@ void Scene::setCubeMap( TextureCube* _cubemap ) {
 }
 
 void Scene::setCubeMap( const std::string& _filename, WatchFileList &_files, bool _visible, bool _verbose ) {
-
     struct stat st;
     if ( stat(_filename.c_str(), &st) != 0 ) {
         std::cerr << "Error watching for cubefile: " << _filename << std::endl;
@@ -537,6 +537,9 @@ void Scene::setCubeMap( const std::string& _filename, WatchFileList &_files, boo
             std::cout << "// " << _filename << " loaded as: " << std::endl;
             std::cout << "//    uniform samplerCube u_cubeMap;"<< std::endl;
             std::cout << "//    uniform vec3        u_SH[9];"<< std::endl;
+        }
+        else {
+            delete tex;
         }
     }
 }
@@ -582,12 +585,10 @@ bool Scene::loadGeometry(Uniforms& _uniforms, WatchFileList& _files, int _index,
 
 bool Scene::loadShaders(const std::string &_fragmentShader, const std::string &_vertexShader, bool _verbose) {
     bool rta = true;
-    for (unsigned int i = 0; i < m_models.size(); i++) {
-        if ( !m_models[i]->loadShader( _fragmentShader, _vertexShader, _verbose) ) {
-            m_models[i]->loadShader( error_frag, error_vert, false); 
+    for (unsigned int i = 0; i < m_models.size(); i++)
+        if ( !m_models[i]->loadShader( _fragmentShader, _vertexShader, _verbose) )
             rta = false;
-        }
-    }
+
 
     m_background_draw = check_for_background(_fragmentShader);
     if (m_background_draw) {

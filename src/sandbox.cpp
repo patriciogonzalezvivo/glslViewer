@@ -293,11 +293,6 @@ bool Sandbox::reloadShaders( WatchFileList &_files ) {
         // Reload the shader
         m_canvas_shader.detach(GL_FRAGMENT_SHADER | GL_VERTEX_SHADER);
         success = m_canvas_shader.load(m_frag_source, m_vert_source, verbose);
-
-         if (!success) {
-            m_canvas_shader.load(error_frag, error_vert, false);
-            return false;
-         }
     }
     else {
         if (verbose)
@@ -310,12 +305,10 @@ bool Sandbox::reloadShaders( WatchFileList &_files ) {
         }
 
         success = m_scene.loadShaders(m_frag_source, m_vert_source, verbose);
-
-        // if (!success) {
-        //     m_scene.loadShaders(error_frag, default_scene_vert, true);
-        //     return false;
-        // }
     }
+    
+    // if (!success)
+    //     return false;
 
     // UPDATE shaders dependencies
     {

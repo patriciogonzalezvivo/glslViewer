@@ -14,7 +14,6 @@
 #include "tools/command.h"
 
 #include "shaders/billboard.h"
-#include "shaders/default_error.h"
 
 enum CullingMode {
     NONE = 0,

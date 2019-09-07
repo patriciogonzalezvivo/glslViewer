@@ -157,12 +157,12 @@ bool Uniforms::feedTo( Shader &_shader ) {
                 // it->second.change = false;
             }
         }
-    
-        // Pass Textures Uniforms
-        for (TextureList::iterator it = textures.begin(); it != textures.end(); ++it) {
-            _shader.setUniformTexture(it->first, it->second, _shader.textureIndex++ );
-            _shader.setUniform(it->first+"Resolution", it->second->getWidth(), it->second->getHeight());
-        }
+    }
+
+    // Pass Textures Uniforms
+    for (TextureList::iterator it = textures.begin(); it != textures.end(); ++it) {
+        _shader.setUniformTexture(it->first, it->second, _shader.textureIndex++ );
+        _shader.setUniform(it->first+"Resolution", it->second->getWidth(), it->second->getHeight());
     }
 
     // Pass Buffers Uniforms

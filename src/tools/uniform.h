@@ -42,17 +42,26 @@ public:
     Uniforms();
     virtual ~Uniforms();
 
+    // Ingest new uniforms
     bool                    parseLine( const std::string &_line );
     bool                    addTexture( const std::string& _name, const std::string& _path, WatchFileList& _files, bool _flip = true, bool _verbose = true);
+    
+    // Check presence of uniforms on shaders
     void                    checkPresenceIn( const std::string &_vert_src, const std::string &_frag_src );
+
+    // Feed uniforms to a specific shader
     bool                    feedTo( Shader &_shader );
+
+    // Debug
     void                    print(bool _all);
     void                    printBuffers();
     void                    printTextures();
 
+    // Change state
     void                    flagChange();
     void                    unflagChange();
     bool                    haveChange();
+
     void                    clear();
 
     UniformDataList         data;
