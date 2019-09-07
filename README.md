@@ -1,6 +1,6 @@
 # glslViewer [![Build Status](https://travis-ci.org/patriciogonzalezvivo/glslViewer.svg?branch=master)](https://travis-ci.org/patriciogonzalezvivo/glslViewer)
 
-![](http://patriciogonzalezvivo.com/images/glslViewer-00.gif)
+![](00.gif)
 
 [![Donate](https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=4BQMKQJDQ9XH6)
 
@@ -192,9 +192,10 @@ sudo make install_python
 
 ## Using glslViewer
 
-### 1. Loading a single Fragment shader
+![](images/scene.png)
 
-![](http://patriciogonzalezvivo.com/images/glslViewer.gif)
+
+### 1. Loading a single Fragment shader
 
 In the most simple scenario you just want to load a fragment shader. For that you need to:
 
@@ -217,8 +218,6 @@ vim test.frag
 
 
 ### 2. Loading geometry and a vertex shader
-
-![](http://patriciogonzalezvivo.com/images/glslViewer-3D.gif)
 
 You can also load both fragments and vertex shaders. Of course modifying a vertex shader makes no sense unless you load an interesting geometry. That's why `glslViewer` can load `.ply` files. Try doing:
 
@@ -425,16 +424,6 @@ Depending on the platform
 
 * `PLATFORM_LINUX`: added only in i86 and 64bit Linux platforms.
 
-Depending on the geometry:
-
-* `MODEL_HAS_TEXCOORDS`
-
-* `MODEL_HAS_NORMALS`
-
-* `MODEL_HAS_COLORS`
-
-* `MODEL_HAS_TANGENTS`
-
 The following defines fork and reuse the same shader program in different passes
 
 * `BUFFER_[NUMBER]`: added extra buffer passes trough branching subshader. Each one renders to `uniform sampler2D u_buffer[NUMBER];`. (Read more about it in the next section)
@@ -442,6 +431,103 @@ The following defines fork and reuse the same shader program in different passes
 * `BACKGROUND`: added a background subshader when rendering a 3D geometry.
 
 * `POSTPROCESSING`: added a post-processing pass where the main scene have been render to `uniform sampler2D u_scene;`.
+
+Depending on the geometry:
+
+* `MODEL_NAME_[NAME]`: only OBJ file import a name. Default is `MODEL_NAME_MESH`
+
+* `MODEL_HAS_COLORS`
+
+* `MODEL_HAS_NORMALS`
+
+* `MODEL_HAS_TEXCOORDS`
+
+* `MODEL_HAS_TANGENTS`
+
+Depending on the material (only OBJ import materials):
+
+* `MATERIAL_NAME_[NAME]`: only OBJ file import a name. Default is `MATERIAL_NAME_DEFAULT`
+
+* `MATERIAL_ILLUM`: integer between 0 to 10: 
+
+````
+    0 Color on and Ambient off
+    1 Color on and Ambient on
+    2 Highlight on
+    3 Reflection on and Ray trace on
+    4 Transparency: Glass on
+
+    Reflection: Ray trace on
+    5 Reflection: Fresnel on and Ray trace on
+    6 Transparency: Refraction on
+
+    Reflection: Fresnel off and Ray trace on
+    7 Transparency: Refraction on
+
+    Reflection: Fresnel on and Ray trace on
+    8 Reflection on and Ray trace off
+    9 Transparency: Glass on
+
+    Reflection: Ray trace off
+    10 Casts shadows onto invisible surfaces
+````
+
+* `MATERIAL_AMBIENT`: a color as `vec3`
+
+* `MATERIAL_AMBIENTMAP`: the name of a `samplerd2D`
+
+* `MATERIAL_DIFFUSE`: a color as `vec3`
+
+* `MATERIAL_DIFFUSEMAP`: the name of a `samplerd2D`
+
+* `MATERIAL_SPECULAR`: a color as `vec3`
+
+* `MATERIAL_SPECULARMAP`: the name of a `samplerd2D`
+
+* `MATERIAL_ROUGHNESS`: a normalize float value
+
+* `MATERIAL_ROUGHNESSMAP`: the name of a `samplerd2D`
+
+* `MATERIAL_METALLIC`: a normalize float value
+
+* `MATERIAL_METALLICMAP`: the name of a `samplerd2D`
+
+* `MATERIAL_SHININESS`: a scallar factor for speculars
+
+* `MATERIAL_SHEEN`: a normalize float value
+
+* `MATERIAL_SHEENMAP`: the name of a `samplerd2D`
+
+* `MATERIAL_SPECULAR_HIGHLIGHTMAP`: the name of a `samplerd2D`
+
+* `MATERIAL_REFLECTIONMAP`: the name of a `samplerd2D`
+
+* `MATERIAL_CLEARCOAT_THICKNESS`: a normalize float value
+
+* `MATERIAL_CLEARCOAT_ROUGHNESS`: a normalize float value
+
+* `MATERIAL_ANISOTROPY`: a normalize float value
+
+* `MATERIAL_ANISOTROPY_ROTATION`: float value
+
+* `MATERIAL_EMISSION`: a color as `vec3`
+
+* `MATERIAL_EMISSIVEMAP`: the name of a `samplerd2D`
+
+* `MATERIAL_NORMALMAP`: the name of a `samplerd2D`
+
+* `MATERIAL_BUMPMAP`: the name of a `samplerd2D`
+
+* `MATERIAL_DISPLACEMENTMAP`: the name of a `samplerd2D`
+
+* `MATERIAL_ALPHAMAP`: the name of a `samplerd2D`
+
+* `MATERIAL_TRANSMITTANCE`: a color as `vec3`
+
+* `MATERIAL_DISSOLVE`: a normalize float value
+
+* `MATERIAL_IOR`: a normalize float value
+
 
 ### Using the defines flags to use multiple buffer passes
 
@@ -466,18 +552,19 @@ You can use multiple buffers by forking the code using `#ifdef BUFFER_[number]`,
     #else
         color.b = abs(sin(u_time));
 
-        color = mix(color, 
-                    mix(texture2D(u_buffer0, st).rgb, 
-                        texture2D(u_buffer1, st).rgb, 
-                        step(0.5, st.x) ), 
+        color = mix(color,
+                    mix(texture2D(u_buffer0, st).rgb,
+                        texture2D(u_buffer1, st).rgb,
+                        step(0.5, st.x) ),
                     step(0.5, st.y));
     #endif
-        
+
         gl_FragColor = vec4(color, 1.0);
     }
 ```
 
 There is an extended example on `examples/test_multibuffer.frag` and `examples/grayscott.frag`.
+
 
 ### Using the defines flags to draw the background
 
@@ -535,7 +622,7 @@ void main(void) {
 
 ### Using the defines flags to draw the a postprocessing layer
 
-![](http://patriciogonzalezvivo.com/images/glslViewer-dof.gif)
+![](images/dof.gif)
 
 Also when loading 3D models it's possible to add a postprocessing layer adding a `#ifdef POSTPROCESSING` to branch the logic of the shader. To apply a postprocessing layer you need to read the scene as a texture, this is saved on the `uniform sampler2D u_scene;` texture together with a depth render pass of the scene located in `uniform sampler2D u_scene_depth;`. Here is an example of a cheap DoF at `examples/model_postprocessing.frag`
 
@@ -765,5 +852,9 @@ Thanks to:
 * [Yvan Sraka](https://github.com/yvan-sraka) for putting the code in shape and setting it up for TravisCI.
 
 * [Andsz](http://andsz.de/) for Spherical Harmonics code from [Spherical Harmonics Playground](https://github.com/ands/spherical_harmonics_playground/)
+
+* [Syoyo Fujita](syoyo.wordpress.com) for the work on [tinyobjloader v1.0.x](https://github.com/syoyo/tinyobjloader)
+
+* [Morgan McGuire](https://casual-effects.com)'s for the OBJ models on [Computer Graphics Archive](https://casual-effects.com/data)
 
 * [Philip Rideout](http://prideout.net/) and [Romain Guy](http://www.curious-creature.com/) general generosity to share their code and experience
