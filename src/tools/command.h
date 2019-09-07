@@ -7,21 +7,17 @@
 struct Command {
     Command() {}
 
-    Command(const std::string &_begins_width, std::function<bool(const std::string&)> _do) {
-        begins_with = _begins_width;
-        exec = _do;
-    }
-
-    Command(const std::string &_begins_width, std::function<bool(const std::string&)> _do, const std::string &_description ) {
+    Command(const std::string &_begins_width, std::function<bool(const std::string&)> _do, const std::string &_description, bool _mutex = true) {
         begins_with = _begins_width;
         exec = _do;
         description = _description;
+        mutex = _mutex;
     }
 
-
     std::string                             begins_with;
-    std::function<bool(const std::string&)> exec;
     std::string                             description;
+    std::function<bool(const std::string&)> exec;
+    bool                                    mutex;
 };
 
 typedef std::vector<Command> CommandList;

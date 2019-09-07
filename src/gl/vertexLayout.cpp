@@ -78,6 +78,16 @@ void VertexLayout::enable(const Shader* _program) {
     }
 }
 
+void VertexLayout::printAttrib() {
+    for (unsigned int i = 0; i < m_attribs.size(); i++) {
+        int size = m_attribs[i].size;
+        if (m_positionAttribIndex == int(i)) {
+            size = 4;
+        }
+        std::cout << "vec" << toString(size) << "  a_" << m_attribs[i].name << std::endl;
+    }
+}
+
 std::string VertexLayout::getDefaultVertShader() {
     std::string rta =
 "#ifdef GL_ES\n\

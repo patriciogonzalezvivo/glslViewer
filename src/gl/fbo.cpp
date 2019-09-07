@@ -26,7 +26,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "fbo.h"
 #include <iostream>
 
-Fbo::Fbo():m_id(0), m_old_fbo_id(0), m_texture(0), m_depth_buffer(0), m_depth_texture(0), m_type(COLOR_TEXTURE), m_width(0), m_height(0), m_allocated(false), m_binded(false), m_depth(false) {
+Fbo::Fbo():
+    m_id(0), m_old_fbo_id(0), 
+    m_texture(0), m_depth_buffer(0), m_depth_texture(0), 
+    m_type(COLOR_TEXTURE), m_width(0), m_height(0), 
+    m_allocated(false), m_binded(false), m_depth(false) {
 }
 
 Fbo::~Fbo() {

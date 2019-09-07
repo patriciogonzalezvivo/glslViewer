@@ -44,9 +44,9 @@ void main() {
 #endif
 
     if ( u_tex0Resolution != vec2(0.0) ){
-    	float imgAspect = u_tex0Resolution.x/u_tex0Resolution.y;
-		vec4 img = texture2D(u_tex0,st*vec2(1.,imgAspect));
-	    color = mix(color,img.rgb,img.a);
+        float imgAspect = u_tex0Resolution.x/u_tex0Resolution.y;
+        vec4 img = texture2D(u_tex0,st*vec2(1.,imgAspect));
+        color = mix(color,img.rgb,img.a);
     }
     
     gl_FragColor = vec4(color, 1.0);

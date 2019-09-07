@@ -38,6 +38,8 @@ public:
     std::string getDefaultVertShader();
     std::string getDefaultFragShader();
 
+    void        printAttrib();
+
 private:
 
     static std::map<GLint, GLuint> s_enabledAttribs; // Map from attrib locations to bound shader program

@@ -1,14 +1,8 @@
 #include "mesh.h"
 
 #include <iostream>
-#include <fstream> 
 
-#include "tools/fs.h"
-#include "tools/geom.h"
-#include "tools/text.h"
 #include "gl/vertexLayout.h"
-
-#include "tinyobjloader/tiny_obj_loader.h"
 
 Mesh::Mesh():m_drawMode(GL_TRIANGLES) {
 
@@ -20,438 +14,6 @@ Mesh::Mesh(const Mesh &_mother):m_drawMode(_mother.getDrawMode()) {
 
 Mesh::~Mesh() {
 
-}
-
-bool Mesh::load(const std::string& _file) {
-    if ( haveExt(_file,"ply") || haveExt(_file,"PLY") ) {
-        std::fstream is(_file.c_str(), std::ios::in);
-        if (is.is_open()) {
-
-            std::string line;
-            std::string error;
-
-            int orderVertices=-1;
-            int orderIndices=-1;
-
-            int vertexCoordsFound=0;
-            int colorCompsFound=0;
-            int texCoordsFound=0;
-            int normalsCoordsFound=0;
-
-            int currentVertex = 0;
-            int currentFace = 0;
-
-            bool floatColor = false;
-
-            enum State{
-                Header,
-                VertexDef,
-                FaceDef,
-                Vertices,
-                Normals,
-                Faces
-            };
-
-            State state = Header;
-
-            int lineNum = 0;
-
-            std::vector<glm::vec4> colors;
-            std::vector<glm::vec3> vertices;
-            std::vector<glm::vec3> normals;
-            std::vector<glm::vec2> texcoord;
-            std::vector<INDEX_TYPE> indices;
-
-            std::getline(is,line);
-            lineNum++;
-            if (line!="ply") {
-                error = "wrong format, expecting 'ply'";
-                goto clean;
-            }
-
-            std::getline(is,line);
-            lineNum++;
-            if (line!="format ascii 1.0") {
-                error = "wrong format, expecting 'format ascii 1.0'";
-                goto clean;
-            }
-
-            while(std::getline(is,line)) {
-                lineNum++;
-                if (line.find("comment")==0) {
-                    continue;
-                }
-
-                if ((state==Header || state==FaceDef) && line.find("element vertex")==0) {
-                    state = VertexDef;
-                    orderVertices = MAX(orderIndices, 0)+1;
-                    vertices.resize(toInt(line.substr(15)));
-                    continue;
-                }
-
-                if ((state==Header || state==VertexDef) && line.find("element face")==0) {
-                    state = FaceDef;
-                    orderIndices = MAX(orderVertices, 0)+1;
-                    indices.resize(toInt(line.substr(13))*3);
-                    continue;
-                }
-
-                if (state==VertexDef && (line.find("property float x")==0 || line.find("property float y")==0 || line.find("property float z")==0)) {
-                    vertexCoordsFound++;
-                    continue;
-                }
-
-                if (state==VertexDef && (line.find("property float nx")==0 || line.find("property float ny")==0 || line.find("property float nz")==0)) {
-                    normalsCoordsFound++;
-                    if (normalsCoordsFound==3) normals.resize(vertices.size());
-                    continue;
-                }
-
-                if (state==VertexDef && (line.find("property float r")==0 || line.find("property float g")==0 || line.find("property float b")==0 || line.find("property float a")==0)) {
-                    colorCompsFound++;
-                    colors.resize(vertices.size());
-                    floatColor = true;
-                    continue;
-                }
-                else if (state==VertexDef && (line.find("property uchar red")==0 || line.find("property uchar green")==0 || line.find("property uchar blue")==0 || line.find("property uchar alpha")==0)) {
-                    colorCompsFound++;
-                    colors.resize(vertices.size());
-                    floatColor = false;
-                    continue;
-                }
-
-                if (state==VertexDef && (line.find("property float u")==0 || line.find("property float v")==0)) {
-                    texCoordsFound++;
-                    texcoord.resize(vertices.size());
-                    continue;
-                }
-                else if (state==VertexDef && (line.find("property float texture_u")==0 || line.find("property float texture_v")==0)) {
-                    texCoordsFound++;
-                    texcoord.resize(vertices.size());
-                    continue;
-                }
-
-                if (state==FaceDef && line.find("property list")!=0 && line!="end_header") {
-                    error = "wrong face definition";
-                    goto clean;
-                }
-
-                if (line=="end_header") {
-                    if (colors.size() && colorCompsFound!=3 && colorCompsFound!=4) {
-                        error =  "data has color coordiantes but not correct number of components. Found " + toString(colorCompsFound) + " expecting 3 or 4";
-                        goto clean;
-                    }
-                    if (normals.size() && normalsCoordsFound!=3) {
-                        error = "data has normal coordiantes but not correct number of components. Found " + toString(normalsCoordsFound) + " expecting 3";
-                        goto clean;
-                    }
-                    if (!vertices.size()) {
-                        std::cout << "ERROR glMesh, load(): mesh loaded from \"" << _file << "\" has no vertices" << std::endl;
-                    }
-                    if (orderVertices==-1) orderVertices=9999;
-                    if (orderIndices==-1) orderIndices=9999;
-
-                    if (orderVertices < orderIndices) {
-                        state = Vertices;
-                    }
-                    else {
-                        state = Faces;
-                    }
-                    continue;
-                }
-
-                if (state==Vertices) {
-                    std::stringstream sline;
-                    sline.str(line);
-                    glm::vec3 v;
-                    sline >> v.x;
-                    sline >> v.y;
-                    if ( vertexCoordsFound > 2) sline >> v.z;
-                    vertices[currentVertex] = v;
-
-                    if (normalsCoordsFound > 0) {
-                        glm::vec3 n;
-                        sline >> n.x;
-                        sline >> n.y;
-                        sline >> n.z;
-                        normals[currentVertex] = n;
-                    }
-
-                    if (colorCompsFound > 0) {
-                        if (floatColor) {
-                            glm::vec4 c;
-                            sline >> c.r;
-                            sline >> c.g;
-                            sline >> c.b;
-                            if (colorCompsFound > 3) sline >> c.a;
-                            colors[currentVertex] = c;
-                        }
-                        else {
-                            float r, g, b, a = 255;
-                            sline >> r;
-                            sline >> g;
-                            sline >> b;
-                            if (colorCompsFound > 3) sline >> a;
-                            colors[currentVertex] = glm::vec4(r/255.0, g/255.0, b/255.0, a/255.0);
-                        }
-                    }
-
-                    if (texCoordsFound>0) {
-                        glm::vec2 uv;
-                        sline >> uv.x;
-                        sline >> uv.y;
-                        texcoord[currentVertex] = uv;
-                    }
-
-                    currentVertex++;
-                    if ((uint)currentVertex==vertices.size()) {
-                        if (orderVertices<orderIndices) {
-                            state = Faces;
-                        }
-                        else{
-                            state = Vertices;
-                        }
-                    }
-                    continue;
-                }
-
-                if (state==Faces) {
-                    std::stringstream sline;
-                    sline.str(line);
-                    int numV;
-                    sline >> numV;
-                    if (numV!=3) {
-                        error = "face not a triangle";
-                        goto clean;
-                    }
-                    int i;
-                    sline >> i;
-                    indices[currentFace*3] = i;
-                    sline >> i;
-                    indices[currentFace*3+1] = i;
-                    sline >> i;
-                    indices[currentFace*3+2] = i;
-
-                    currentFace++;
-                    if ((uint)currentFace==indices.size()/3) {
-                        if (orderVertices<orderIndices) {
-                            state = Vertices;
-                        }
-                        else {
-                            state = Faces;
-                        }
-                    }
-                    continue;
-                }
-            }
-            is.close();
-
-            //  Succed loading the PLY data
-            //  (proceed replacing the data on mesh)
-            //
-            clear();
-            addColors(colors);
-            addVertices(vertices);
-            addTexCoords(texcoord);
-
-            if ( indices.size() > 0 ){
-                addIndices( indices );
-            }
-            else {
-                setDrawMode( GL_POINTS );
-            }
-            
-
-            if ( normals.size() > 0 ) {
-                addNormals( normals );
-            }
-            else if ( getDrawMode() == GL_TRIANGLES ) {
-                computeNormals();
-            }
-
-            if ( texcoord.size() == m_vertices.size() && getDrawMode() == GL_TRIANGLES ) {
-                computeTangents();
-            }
-
-            return true;
-
-        clean:
-            std::cout << "ERROR glMesh, load(): " << lineNum << ":" << error << std::endl;
-            std::cout << "ERROR glMesh, load(): \"" << line << "\"" << std::endl;
-
-        }
-
-        is.close();
-        std::cout << "ERROR glMesh, can not load  " << _file << std::endl;
-        return false;
-    } 
-    else if ( haveExt(_file,"obj") || haveExt(_file,"OBJ") ) {
-        std::vector<tinyobj::shape_t> shapes;
-        std::vector<tinyobj::material_t> materials;
-        std::string err = tinyobj::LoadObj(shapes, materials, _file.c_str(), NULL);
-        if (!err.empty()) {
-            std::cerr << err << std::endl;
-            return false;
-        }
-
-        for (size_t i = 0; i < shapes.size(); i++) {
-            if ((shapes[i].mesh.positions.size() % 3) == 0) {
-                for (size_t v = 0; v < shapes[i].mesh.positions.size() / 3; v++) {
-                    addVertex(glm::vec3(shapes[i].mesh.positions[3*v+0],
-                                        shapes[i].mesh.positions[3*v+1],
-                                        shapes[i].mesh.positions[3*v+2]));
-                }
-            }
-
-            if ( (shapes[i].mesh.normals.size() % 3) == 0) {
-                for (size_t v = 0; v < shapes[i].mesh.normals.size() / 3; v++) {
-                    addNormal(glm::vec3(shapes[i].mesh.normals[3*v+0],
-                                        shapes[i].mesh.normals[3*v+1],
-                                        shapes[i].mesh.normals[3*v+2]));
-                }
-            }
-
-            if ( (shapes[i].mesh.texcoords.size() % 2) == 0) {
-                for (size_t v = 0; v < shapes[i].mesh.texcoords.size() / 2; v++) {
-                    addTexCoord(glm::vec2(  shapes[i].mesh.texcoords[2*v+0],
-                                            shapes[i].mesh.texcoords[2*v+1] ));
-                }
-            }
-
-            if ( (shapes[i].mesh.indices.size() % 3) == 0) {
-                for (size_t f = 0; f < shapes[i].mesh.indices.size() / 3; f++) {
-                    addTriangle(shapes[i].mesh.indices[3*f+0], shapes[i].mesh.indices[3*f+1],shapes[i].mesh.indices[3*f+2]);
-                }
-            }
-        }
-
-        if (hasNormals() && getDrawMode() == GL_TRIANGLES) {
-            computeTangents();
-        }
-    }
-    return false;
-}
-
-bool Mesh::save(const std::string& _file, bool _useBinary) {
-    if (haveExt(_file,"ply")) {
-        std::ios_base::openmode binary_mode = _useBinary ? std::ios::binary : (std::ios_base::openmode)0;
-        std::fstream os(_file.c_str(), std::ios::out | binary_mode);
-
-        os << "ply" << std::endl;
-        if (_useBinary) {
-            os << "format binary_little_endian 1.0" << std::endl;
-        }
-        else {
-            os << "format ascii 1.0" << std::endl;
-        }
-
-        if (getVertices().size()) {
-            os << "element vertex " << getVertices().size() << std::endl;
-            os << "property float x" << std::endl;
-            os << "property float y" << std::endl;
-            os << "property float z" << std::endl;
-            if (hasColors()) {
-                os << "property uchar red" << std::endl;
-                os << "property uchar green" << std::endl;
-                os << "property uchar blue" << std::endl;
-                os << "property uchar alpha" << std::endl;
-            }
-            if (hasTexCoords()) {
-                os << "property float u" << std::endl;
-                os << "property float v" << std::endl;
-            }
-            if (hasNormals()) {
-                os << "property float nx" << std::endl;
-                os << "property float ny" << std::endl;
-                os << "property float nz" << std::endl;
-            }
-        }
-
-        unsigned char faceSize = 3;
-        if (hasIndices()) {
-            os << "element face " << getIndices().size() / faceSize << std::endl;
-            os << "property list uchar int vertex_indices" << std::endl;
-        } 
-        else if (getDrawMode() == GL_TRIANGLES) {
-            os << "element face " << getIndices().size() / faceSize << std::endl;
-            os << "property list uchar int vertex_indices" << std::endl;
-        }
-
-        os << "end_header" << std::endl;
-
-        for(uint i = 0; i < getVertices().size(); i++) {
-            if (_useBinary) {
-                os.write((char*) &getVertices()[i], sizeof(glm::vec3));
-            } 
-            else {
-                os << getVertices()[i].x << " " << getVertices()[i].y << " " << getVertices()[i].z;
-            }
-            if (hasColors()) {
-                // VCG lib / MeshLab don't support float colors, so we have to cast
-                glm::vec4 c = getColors()[i] * glm::vec4(255,255,255,255);
-                glm::ivec4 cur = glm::ivec4(c.r,c.g,c.b,c.a);
-                if (_useBinary) {
-                    os.write((char*) &cur, sizeof(glm::ivec4));
-                }
-                else {
-                    os << " " << (int) cur.r << " " << (int) cur.g << " " << (int) cur.b << " " << (int) cur.a;
-                }
-            }
-            if (hasTexCoords()) {
-                if (_useBinary) {
-                    os.write((char*) &getTexCoords()[i], sizeof(glm::vec2));
-                } 
-                else {
-                    os << " " << getTexCoords()[i].x << " " << getTexCoords()[i].y;
-                }
-            }
-            if (hasNormals()) {
-                glm::vec3 norm = glm::normalize(getNormals()[i]);
-                if (_useBinary) {
-                    os.write((char*) &norm, sizeof(glm::vec3));
-                }
-                else {
-                    os << " " << norm.x << " " << norm.y << " " << norm.z;
-                }
-            }
-            if (!_useBinary) {
-                os << std::endl;
-            }
-        }
-
-        if (hasIndices()) {
-            for (uint i = 0; i < getIndices().size(); i += faceSize) {
-                if (_useBinary) {
-                    os.write((char*) &faceSize, sizeof(unsigned char));
-                    for(int j = 0; j < faceSize; j++) {
-                        int curIndex = getIndices()[i + j];
-                        os.write((char*) &curIndex, sizeof(int));
-                    }
-                }
-                else {
-                    os << (int) faceSize << " " << getIndices()[i] << " " << getIndices()[i+1] << " " << getIndices()[i+2] << std::endl;
-                }
-            }
-        }
-        else if (getDrawMode() == GL_TRIANGLES) {
-            for(uint i = 0; i < getVertices().size(); i += faceSize) {
-                uint indices[] = {i, i + 1, i + 2};
-                if (_useBinary) {
-                    os.write((char*) &faceSize, sizeof(unsigned char));
-                    for(int j = 0; j < faceSize; j++) {
-                        os.write((char*) &indices[j], sizeof(int));
-                    }
-                }
-                else {
-                    os << (int) faceSize << " " << indices[0] << " " << indices[1] << " " << indices[2] << std::endl;
-                }
-            }
-        }
-
-        os.close();
-        return true;
-    }
-    return false;
 }
 
 void Mesh::setDrawMode(GLenum _drawMode) {
@@ -510,11 +72,11 @@ void Mesh::addIndex(INDEX_TYPE _i) {
 }
 
 void Mesh::addIndices(const std::vector<INDEX_TYPE>& inds) {
-	m_indices.insert(m_indices.end(),inds.begin(),inds.end());
+    m_indices.insert(m_indices.end(),inds.begin(),inds.end());
 }
 
 void Mesh::addIndices(const INDEX_TYPE* inds, int amt) {
-	m_indices.insert(m_indices.end(),inds,inds+amt);
+    m_indices.insert(m_indices.end(),inds,inds+amt);
 }
 
 void Mesh::addTriangle(INDEX_TYPE index1, INDEX_TYPE index2, INDEX_TYPE index3) {
@@ -555,7 +117,7 @@ const std::vector<glm::vec4> & Mesh::getTangents() const {
 }
 
 const std::vector<glm::vec3> & Mesh::getVertices() const{
-	return m_vertices;
+    return m_vertices;
 }
 
 const std::vector<glm::vec3> & Mesh::getNormals() const{
@@ -604,153 +166,148 @@ std::vector<glm::ivec3> Mesh::getTriangles() const {
 
 void Mesh::clear() {
     if (!m_vertices.empty()) {
-		m_vertices.clear();
-	}
-	if (hasColors()) {
-		m_colors.clear();
-	}
-	if (hasNormals()) {
-		m_normals.clear();
-	}
+        m_vertices.clear();
+    }
+    if (hasColors()) {
+        m_colors.clear();
+    }
+    if (hasNormals()) {
+        m_normals.clear();
+    }
     if (hasTexCoords()) {
-		m_texCoords.clear();
-	}
+        m_texCoords.clear();
+    }
     if (hasTangents()) {
-		m_tangents.clear();
-	}
+        m_tangents.clear();
+    }
     if (hasIndices()) {
-		m_indices.clear();
-	}
+        m_indices.clear();
+    }
 }
 
-void Mesh::computeNormals() {
+bool Mesh::computeNormals() {
+    if (getDrawMode() != GL_TRIANGLES) 
+        return false;
 
-    if (getDrawMode() == GL_TRIANGLES) {
-        //The number of the vertices
-        int nV = m_vertices.size();
+    //The number of the vertices
+    int nV = m_vertices.size();
 
-        //The number of the triangles
-        int nT = m_indices.size() / 3;
+    //The number of the triangles
+    int nT = m_indices.size() / 3;
 
-        std::vector<glm::vec3> norm( nV ); //Array for the normals
+    std::vector<glm::vec3> norm( nV ); //Array for the normals
 
-        //Scan all the triangles. For each triangle add its
-        //normal to norm's vectors of triangle's vertices
-        for (int t=0; t<nT; t++) {
+    //Scan all the triangles. For each triangle add its
+    //normal to norm's vectors of triangle's vertices
+    for (int t=0; t<nT; t++) {
 
-            //Get indices of the triangle t
-            int i1 = m_indices[ 3 * t ];
-            int i2 = m_indices[ 3 * t + 1 ];
-            int i3 = m_indices[ 3 * t + 2 ];
+        //Get indices of the triangle t
+        int i1 = m_indices[ 3 * t ];
+        int i2 = m_indices[ 3 * t + 1 ];
+        int i3 = m_indices[ 3 * t + 2 ];
 
-            //Get vertices of the triangle
-            const glm::vec3 &v1 = m_vertices[ i1 ];
-            const glm::vec3 &v2 = m_vertices[ i2 ];
-            const glm::vec3 &v3 = m_vertices[ i3 ];
+        //Get vertices of the triangle
+        const glm::vec3 &v1 = m_vertices[ i1 ];
+        const glm::vec3 &v2 = m_vertices[ i2 ];
+        const glm::vec3 &v3 = m_vertices[ i3 ];
 
-            //Compute the triangle's normal
-            glm::vec3 dir = glm::normalize(glm::cross(v2-v1,v3-v1));
+        //Compute the triangle's normal
+        glm::vec3 dir = glm::normalize(glm::cross(v2-v1,v3-v1));
 
-            //Accumulate it to norm array for i1, i2, i3
-            norm[ i1 ] += dir;
-            norm[ i2 ] += dir;
-            norm[ i3 ] += dir;
-        }
-
-        //Normalize the normal's length and add it.
-        m_normals.clear();
-        for (int i=0; i<nV; i++) {
-            addNormal( glm::normalize(norm[i]) );
-        }
-
+        //Accumulate it to norm array for i1, i2, i3
+        norm[ i1 ] += dir;
+        norm[ i2 ] += dir;
+        norm[ i3 ] += dir;
     }
-    else {
-        //  TODO
-        //
-        std::cout << "ERROR: computeNormals(): Mesh only add GL_TRIANGLES for NOW !!" << std::endl;
+
+    //Normalize the normal's length and add it.
+    m_normals.clear();
+    for (int i=0; i<nV; i++) {
+        addNormal( glm::normalize(norm[i]) );
     }
+
+    return true;
 }
 
 // http://www.terathon.com/code/tangent.html
-void Mesh::computeTangents() {
+bool Mesh::computeTangents() {
+    //The number of the vertices
+    size_t nV = m_vertices.size();
 
-    if (getDrawMode() == GL_TRIANGLES) {
-        //The number of the vertices
-        int nV = m_vertices.size();
+    if (m_texCoords.size() != nV || 
+        m_normals.size() != nV || 
+        getDrawMode() != GL_TRIANGLES)
+        return false;
 
-        //The number of the triangles
-        int nT = m_indices.size() / 3;
+    //The number of the triangles
+    size_t nT = m_indices.size() / 3;
 
-        std::vector<glm::vec3> tan1( nV );
-        std::vector<glm::vec3> tan2( nV );
+    std::vector<glm::vec3> tan1( nV );
+    std::vector<glm::vec3> tan2( nV );
 
-        //Scan all the triangles. For each triangle add its
-        //normal to norm's vectors of triangle's vertices
-        for (int t = 0; t < nT; t++) {
+    //Scan all the triangles. For each triangle add its
+    //normal to norm's vectors of triangle's vertices
+    for (size_t t = 0; t < nT; t++) {
 
-            //Get indices of the triangle t
-            int i1 = m_indices[ 3 * t ];
-            int i2 = m_indices[ 3 * t + 1 ];
-            int i3 = m_indices[ 3 * t + 2 ];
+        //Get indices of the triangle t
+        int i1 = m_indices[ 3 * t ];
+        int i2 = m_indices[ 3 * t + 1 ];
+        int i3 = m_indices[ 3 * t + 2 ];
 
-            //Get vertices of the triangle
-            const glm::vec3 &v1 = m_vertices[ i1 ];
-            const glm::vec3 &v2 = m_vertices[ i2 ];
-            const glm::vec3 &v3 = m_vertices[ i3 ];
+        //Get vertices of the triangle
+        const glm::vec3 &v1 = m_vertices[ i1 ];
+        const glm::vec3 &v2 = m_vertices[ i2 ];
+        const glm::vec3 &v3 = m_vertices[ i3 ];
 
-            const glm::vec2 &w1 = m_texCoords[i1];
-            const glm::vec2 &w2 = m_texCoords[i2];
-            const glm::vec2 &w3 = m_texCoords[i3];
+        const glm::vec2 &w1 = m_texCoords[i1];
+        const glm::vec2 &w2 = m_texCoords[i2];
+        const glm::vec2 &w3 = m_texCoords[i3];
 
-            float x1 = v2.x - v1.x;
-            float x2 = v3.x - v1.x;
-            float y1 = v2.y - v1.y;
-            float y2 = v3.y - v1.y;
-            float z1 = v2.z - v1.z;
-            float z2 = v3.z - v1.z;
-            
-            float s1 = w2.x - w1.x;
-            float s2 = w3.x - w1.x;
-            float t1 = w2.y - w1.y;
-            float t2 = w3.y - w1.y;
-            
-            float r = 1.0f / (s1 * t2 - s2 * t1);
-            glm::vec3 sdir( (t2 * x1 - t1 * x2) * r, 
-                            (t2 * y1 - t1 * y2) * r, 
-                            (t2 * z1 - t1 * z2) * r);
-            glm::vec3 tdir( (s1 * x2 - s2 * x1) * r, 
-                            (s1 * y2 - s2 * y1) * r, 
-                            (s1 * z2 - s2 * z1) * r);
-            
-            tan1[i1] += sdir;
-            tan1[i2] += sdir;
-            tan1[i3] += sdir;
-            
-            tan2[i1] += tdir;
-            tan2[i2] += tdir;
-            tan2[i3] += tdir;
-        }
-
-        //Normalize the normal's length and add it.
-        m_tangents.clear();
-        for (int i = 0; i < nV; i++) {
-            const glm::vec3 &n = m_normals[i];
-            const glm::vec3 &t = tan1[i];
-            
-            // Gram-Schmidt orthogonalize
-            glm::vec3 tangent = t - n * glm::normalize( glm::dot(n, t));
-    
-            // Calculate handedness
-            float hardedness = (glm::dot( glm::cross(n, t), tan2[i]) < 0.0f) ? -1.0f : 1.0f;
-
-            addTangent(glm::vec4(tangent, hardedness));
-        }
+        float x1 = v2.x - v1.x;
+        float x2 = v3.x - v1.x;
+        float y1 = v2.y - v1.y;
+        float y2 = v3.y - v1.y;
+        float z1 = v2.z - v1.z;
+        float z2 = v3.z - v1.z;
+        
+        float s1 = w2.x - w1.x;
+        float s2 = w3.x - w1.x;
+        float t1 = w2.y - w1.y;
+        float t2 = w3.y - w1.y;
+        
+        float r = 1.0f / (s1 * t2 - s2 * t1);
+        glm::vec3 sdir( (t2 * x1 - t1 * x2) * r, 
+                        (t2 * y1 - t1 * y2) * r, 
+                        (t2 * z1 - t1 * z2) * r);
+        glm::vec3 tdir( (s1 * x2 - s2 * x1) * r, 
+                        (s1 * y2 - s2 * y1) * r, 
+                        (s1 * z2 - s2 * z1) * r);
+        
+        tan1[i1] += sdir;
+        tan1[i2] += sdir;
+        tan1[i3] += sdir;
+        
+        tan2[i1] += tdir;
+        tan2[i2] += tdir;
+        tan2[i3] += tdir;
     }
-    else {
-        //  TODO
-        //
-        std::cout << "ERROR: computeTangents(): Mesh only add GL_TRIANGLES for NOW !!" << std::endl;
+
+    //Normalize the normal's length and add it.
+    m_tangents.clear();
+    for (size_t i = 0; i < nV; i++) {
+        const glm::vec3 &n = m_normals[i];
+        const glm::vec3 &t = tan1[i];
+        
+        // Gram-Schmidt orthogonalize
+        glm::vec3 tangent = t - n * glm::normalize( glm::dot(n, t));
+
+        // Calculate handedness
+        float hardedness = (glm::dot( glm::cross(n, t), tan2[i]) < 0.0f) ? -1.0f : 1.0f;
+
+        addTangent(glm::vec4(tangent, hardedness));
     }
+
+    return true;
 }
 
 Vbo* Mesh::getVbo() {
@@ -794,7 +351,7 @@ Vbo* Mesh::getVbo() {
     tmpMesh->setDrawMode(getDrawMode());
 
     std::vector<GLfloat> data;
-    for(uint i = 0; i < m_vertices.size(); i++) {
+    for (unsigned int i = 0; i < m_vertices.size(); i++) {
         data.push_back(m_vertices[i].x);
         data.push_back(m_vertices[i].y);
         data.push_back(m_vertices[i].z);
@@ -823,6 +380,28 @@ Vbo* Mesh::getVbo() {
 
     tmpMesh->addVertices((GLbyte*)data.data(), m_vertices.size());
 
+    // std::vector<INDEX_TYPE> indices;
+    // if (m_indices.size() > 0) {
+    //     for (unsigned int i = 1; i < m_indices.size(); i++) {
+    //         indices.push_back(m_indices[i]);
+    //     }
+    // }
+    // else {
+    //     if ( getDrawMode() == GL_LINE_STRIP ) {
+    //         for (unsigned int i = 1; i < getVertices().size(); i++) {
+    //             indices.push_back(i-1);
+    //             indices.push_back(i);
+    //         }
+    //     }
+    //     else {
+    //         // POINTS, LINES, TRIANGLES
+    //         for (unsigned int i = 0; i < getVertices().size(); i++) {
+    //             indices.push_back((INDEX_TYPE)i);
+    //         }
+    //     }
+    // }
+    // tmpMesh->addIndices(indices.data(), indices.size());
+
     if (!hasIndices()) {
         if ( getDrawMode() == GL_LINES ) {
             for (uint i = 0; i < getVertices().size(); i++) {
@@ -837,7 +416,7 @@ Vbo* Mesh::getVbo() {
         }
     }
 
-    tmpMesh->addIndices(m_indices.data(), m_indices.size());
+    tmpMesh->addIndices(m_indices.data(), m_indices.size());    
 
     return tmpMesh;
 }

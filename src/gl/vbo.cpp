@@ -114,7 +114,16 @@ void Vbo::upload() {
     m_isUploaded = true;
 }
 
-void Vbo::draw(const Shader* _shader) {
+void Vbo::printInfo() {
+    std::cout << "Vertices  = " << m_nVertices << std::endl;
+    std::cout << "Indices   = " << m_nIndices << std::endl;
+    if (m_vertexLayout) {
+        std::cout << "Vertex Layout:" << std::endl;
+        m_vertexLayout->printAttrib();
+    }
+}
+
+void Vbo::render(Shader* _shader) {
 
     // Ensure that geometry is buffered into GPU
     if (!m_isUploaded) {

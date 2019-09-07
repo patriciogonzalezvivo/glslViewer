@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <regex>
 
-std::string getLower(const std::string& _string) {
+std::string toLower(const std::string& _string) {
     std::string std = _string;
     for (int i = 0; _string[i]; i++) {
         std[i] = tolower(_string[i]);
@@ -11,12 +11,31 @@ std::string getLower(const std::string& _string) {
     return std;
 }
 
-void purifyString(std::string& _string) {
-    for (std::string::iterator it = _string.begin(), itEnd = _string.end(); it!=itEnd; ++it) {
-        if (static_cast<uint>(*it) < 32 || static_cast<uint>(*it) > 127) {
-            (*it) = ' ';
+std::string toUpper(const std::string& _string) {
+    std::string std = _string;
+    for (int i = 0; _string[i]; i++) {
+        std[i] = toupper(_string[i]);
+    }
+    return std;
+}
+
+std::string toUnderscore(const std::string& _string){
+    std::string std = _string;
+    std::replace(std.begin(), std.end(), ' ', '_');
+    return std;
+}
+
+std::string purifyString(const std::string& _string) {
+    std::string std = _string;
+    for (std::string::iterator it = std.begin(), itEnd = std.end(); it!=itEnd; ++it) {
+        if (static_cast<uint>(*it) < 32 || 
+            static_cast<uint>(*it) > 127 || 
+            *it == '.' ||
+            *it == '-' ) {
+            (*it) = '_';
         }
     }
+    return std;
 }
 
 bool isDigit(const std::string &_string) {
@@ -67,7 +86,7 @@ bool toBool(const std::string &_string) {
     static const std::string trueString = "true";
     static const std::string falseString = "false";
 
-    std::string lower = getLower(_string);
+    std::string lower = toLower(_string);
 
     if(lower == trueString) {
         return true;
@@ -97,19 +116,25 @@ std::string toString(bool _bool) {
 
 std::string toString(const glm::vec2 &_vec, char _sep) {
     std::ostringstream strStream;
-    strStream<< _vec.x << _sep << _vec.y << _sep;
+    strStream << std::fixed << std::setprecision(3) << _vec.x << _sep;
+    strStream << std::fixed << std::setprecision(3) << _vec.y << _sep;
     return strStream.str();
 }
 
 std::string toString(const glm::vec3 &_vec, char _sep) {
     std::ostringstream strStream;
-    strStream<< _vec.x << _sep << _vec.y << _sep << _vec.z;
+    strStream << std::fixed << std::setprecision(3) << _vec.x << _sep;
+    strStream << std::fixed << std::setprecision(3) << _vec.y << _sep; 
+    strStream << std::fixed << std::setprecision(3) << _vec.z;
     return strStream.str();
 }
 
 std::string toString(const glm::vec4 &_vec, char _sep) {
     std::ostringstream strStream;
-    strStream<< _vec.x << _sep << _vec.y << _sep << _vec.z << _sep << _vec.w;
+    strStream << std::fixed << std::setprecision(3) << _vec.x << _sep;
+    strStream << std::fixed << std::setprecision(3) << _vec.y << _sep;
+    strStream << std::fixed << std::setprecision(3) << _vec.z << _sep; 
+    strStream << std::fixed << std::setprecision(3) << _vec.w;
     return strStream.str();
 }
 

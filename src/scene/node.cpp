@@ -5,11 +5,16 @@
 
 #include "tools/geom.h"
 
-Node::Node() : m_transformMatrix(1.0), m_position(0.0), m_scale(1.0) {
+Node::Node(): 
+    bChange(true),
+    m_transformMatrix(1.0), 
+    m_position(0.0), 
+    m_scale(1.0) {
     setPosition(glm::vec3(0.0));
     setOrientation(glm::vec3(0.0));
     setScale(glm::vec3(1.));
 }
+
 Node::~Node() {
 
 }
@@ -34,6 +39,8 @@ void Node::setPosition(const glm::vec3& _pos) {
     m_transformMatrix[3][0] = _pos.x;
     m_transformMatrix[3][1] = _pos.y;
     m_transformMatrix[3][2] = _pos.z;
+    bChange = true;
+    
     onPositionChanged();
 }
 
@@ -197,4 +204,6 @@ void Node::updateAxis() {
     if(m_scale[2]>0) {
         m_axis[2] = glm::vec3(glm::row(getTransformMatrix(),2))/m_scale[2];
     }
+
+    bChange = true;
 }

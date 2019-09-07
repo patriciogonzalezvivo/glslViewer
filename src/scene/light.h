@@ -17,8 +17,6 @@ public:
 
     glm::vec3   color;
 
-    bool        bChange;
-
 protected:
     virtual void        onPositionChanged() { bChange = true; };
     virtual void        onOrientationChanged() { bChange = true; };
