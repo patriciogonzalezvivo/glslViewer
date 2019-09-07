@@ -17,6 +17,23 @@ bool urlExists(const std::string& name) {
     return (stat (name.c_str(), &buffer) == 0);
 }
 
+std::string getBaseDir(const std::string& filepath) {
+    std::string base_dir = "";
+
+    if (filepath.find_last_of("/\\") != std::string::npos)
+        base_dir =  filepath.substr(0, filepath.find_last_of("/\\"));
+    else 
+        base_dir = ".";
+    
+#ifdef PLATFORM_WIN32
+    base_dir += "\\";
+#else
+    base_dir += "/";
+#endif
+
+    return base_dir;
+}
+
 std::string getAbsPath(const std::string& _path) {
     std::string abs_path = realpath(_path.c_str(), NULL);
     std::size_t found = abs_path.find_last_of("\\/");
@@ -24,7 +41,7 @@ std::string getAbsPath(const std::string& _path) {
     else return "";
 }
 
-std::string urlResolve(const std::string& _path, const std::string& _pwd, const FileList &_include_folders) {
+std::string urlResolve(const std::string& _path, const std::string& _pwd, const List &_include_folders) {
     std::string url = _pwd +'/'+ _path;
 
     // If the path is not in the same directory
@@ -55,7 +72,7 @@ bool extractDependency(const std::string &_line, std::string *_dependency) {
     return false;
 }
 
-bool alreadyInclude(const std::string &_path, FileList *_dependencies) {
+bool alreadyInclude(const std::string &_path, List *_dependencies) {
     for (unsigned int i = 0; i < _dependencies->size(); i++) {
         if ( _path == (*_dependencies)[i]) {
             return true;
@@ -64,7 +81,7 @@ bool alreadyInclude(const std::string &_path, FileList *_dependencies) {
     return false;
 }
 
-bool loadFromPath(const std::string &_path, std::string *_into, const std::vector<std::string> &_include_folders, FileList *_dependencies) {
+bool loadFromPath(const std::string &_path, std::string *_into, const std::vector<std::string> &_include_folders, List *_dependencies) {
     std::ifstream file;
     file.open(_path.c_str());
 
@@ -105,19 +122,6 @@ bool loadFromPath(const std::string &_path, std::string *_into, const std::vecto
 
     file.close();
     return true;
-}
-
-FileList mergeList(const FileList &_A, const FileList &_B) {
-    FileList rta;
-    std::merge( _A.begin(), _A.end(),
-                _B.begin(), _B.end(),
-                std::back_inserter(rta) );
-
-    FileList::iterator pte = std::unique(rta.begin(), rta.end());
-    // dups now in [pte, vecC.end()), so optionally erase:
-    rta.erase(pte, rta.end());    
-
-    return rta;
 }
 
 std::string toString(FileType _type) {

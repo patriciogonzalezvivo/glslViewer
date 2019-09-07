@@ -1,7 +1,9 @@
 #include "pingpong.h"
 #include <iostream>
 
-PingPong::PingPong() {
+PingPong::PingPong(): 
+    src(nullptr), dst(nullptr), 
+    m_flag(0) {
 }
 
 PingPong::~PingPong() {

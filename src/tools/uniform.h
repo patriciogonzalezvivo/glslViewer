@@ -1,10 +1,14 @@
 #pragma once
 
 #include <map>
+#include <vector>
 #include <string>
 #include <functional>
 
+#include "fs.h"
+#include "../gl/fbo.h"
 #include "../gl/shader.h"
+#include "../gl/texture.h"
 
 struct UniformData {
     std::string getType();
@@ -26,9 +30,47 @@ struct UniformFunction {
     std::function<void(Shader&)>    assign;
     std::function<std::string()>    print;
     std::string                     type;
-    bool                            present = true;
+    bool                            present = false;
 };
 
 typedef std::map<std::string, UniformFunction> UniformFunctionsList;
+
+typedef std::map<std::string, Texture*> TextureList;
+
+class Uniforms {
+public:
+    Uniforms();
+    virtual ~Uniforms();
+
+    // Ingest new uniforms
+    bool                    parseLine( const std::string &_line );
+    bool                    addTexture( const std::string& _name, const std::string& _path, WatchFileList& _files, bool _flip = true, bool _verbose = true);
+    
+    // Check presence of uniforms on shaders
+    void                    checkPresenceIn( const std::string &_vert_src, const std::string &_frag_src );
+
+    // Feed uniforms to a specific shader
+    bool                    feedTo( Shader &_shader );
+
+    // Debug
+    void                    print(bool _all);
+    void                    printBuffers();
+    void                    printTextures();
+
+    // Change state
+    void                    flagChange();
+    void                    unflagChange();
+    bool                    haveChange();
+
+    void                    clear();
+
+    UniformDataList         data;
+    TextureList             textures;
+    UniformFunctionsList    functions;
+    std::vector<Fbo>        buffers;
+
+protected:
+    bool                    m_change;
+};
 
 

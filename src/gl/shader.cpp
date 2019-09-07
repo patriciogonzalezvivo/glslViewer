@@ -9,10 +9,24 @@
 #include <algorithm>
 #include <iostream>
 
+#include "shaders/default_error.h"
 
 Shader::Shader():
-m_program(0), 
-m_fragmentShader(0),m_vertexShader(0) {
+    m_program(0), 
+    m_fragmentShader(0),m_vertexShader(0),
+    m_defineChange(true) {
+
+    // Adding default defines
+    addDefine("GLSLVIEWER", "1");
+
+    // Define PLATFORM
+    #ifdef PLATFORM_OSX
+    addDefine("PLATFORM_OSX");
+    #elif defined(PLATFORM_LINUX)
+    addDefine("PLATFORM_LINUX");
+    #elif defined(PLATFORM_RPI)
+    addDefine("PLATFORM_RPI");
+    #endif
 }
 
 Shader::~Shader() {
@@ -21,19 +35,22 @@ Shader::~Shader() {
     }
 }
 
-bool Shader::load(const std::string& _fragmentSrc, const std::string& _vertexSrc, const std::vector<std::string> &_defines, bool _verbose) {
+bool Shader::load(const std::string& _fragmentSrc, const std::string& _vertexSrc, bool _verbose) {
     std::chrono::time_point<std::chrono::steady_clock> start_time, end_time;
     start_time = std::chrono::steady_clock::now();
+    m_defineChange = false;
 
-    m_vertexShader = compileShader(_vertexSrc, _defines, GL_VERTEX_SHADER);
+    m_vertexShader = compileShader(_vertexSrc, GL_VERTEX_SHADER, _verbose);
 
     if (!m_vertexShader) {
+        load(error_frag, error_vert, false);
         return false;
     }
 
-    m_fragmentShader = compileShader(_fragmentSrc, _defines, GL_FRAGMENT_SHADER);
+    m_fragmentShader = compileShader(_fragmentSrc, GL_FRAGMENT_SHADER, _verbose);
 
     if (!m_fragmentShader) {
+        load(error_frag, error_vert, false);
         return false;
     }
 
@@ -42,6 +59,9 @@ bool Shader::load(const std::string& _fragmentSrc, const std::string& _vertexSrc
     glAttachShader(m_program, m_vertexShader);
     glAttachShader(m_program, m_fragmentShader);
     glLinkProgram(m_program);
+
+    m_fragmentSource = _fragmentSrc;
+    m_vertexSource = _vertexSrc;
 
     end_time = std::chrono::steady_clock::now();
     std::chrono::duration<double> load_time = end_time - start_time;
@@ -65,6 +85,7 @@ bool Shader::load(const std::string& _fragmentSrc, const std::string& _vertexSrc
             std::cerr << (unsigned)toInt(lineNum) << ": " << getLineNumber(_fragmentSrc,(unsigned)toInt(lineNum)) << std::endl;
         }
         glDeleteProgram(m_program);
+        load(error_frag, error_vert, false);
         return false;
     } 
     else {
@@ -87,18 +108,81 @@ bool Shader::load(const std::string& _fragmentSrc, const std::string& _vertexSrc
 #endif
             std::cerr << std::endl;
         }
-
         return true;
     }
+}
+
+bool Shader::reload(bool _verbose) {
+    return load(m_fragmentSource, m_vertexSource, _verbose);
+}
+
+void Shader::addDefine(const std::string &_define, const std::string &_value) {
+    // if doesn't exist
+    if (m_defines.find(_define) == m_defines.end()) {
+        // add it
+        m_defines[_define] = _value;
+        m_defineChange = true;
+    }
+    // if its different
+    else if ( m_defines[_define] != _value){
+        // change it
+        m_defines[_define] = _value;
+        m_defineChange = true;
+    }
+}
+
+void Shader::addDefine( const std::string &_define, int _n ) {
+    addDefine(_define, toString(_n));
+}
+void Shader::addDefine( const std::string &_define, float _n ) {
+    addDefine(_define, toString(_n, 3));
+}
+
+void Shader::addDefine( const std::string &_define, glm::vec2 _v ) {
+    addDefine(_define, "vec2(" + toString(_v, ',') + ")");
+}
+
+void Shader::addDefine( const std::string &_define, glm::vec3 _v ) {
+    addDefine(_define, "vec3(" + toString(_v, ',') + ")");
+}
+
+void Shader::addDefine( const std::string &_define, glm::vec4 _v ) {
+    addDefine(_define, "vec4(" + toString(_v, ',') + ")");
+}
+
+void Shader::delDefine(const std::string &_define) {
+    if (m_defines.find(_define) == m_defines.end()) {
+        m_defines.erase(_define);
+        m_defineChange = true;
+    }
+}
+
+void Shader::printDefines() {
+    for (DefinesList_cit it = m_defines.begin(); it != m_defines.end(); ++it) {
+        std::cout << it->first << " " << it->second << std::endl;
+    }
+}
+
+void Shader::mergeDefines(const DefinesList &_defines) {
+    m_defineChange += merge(_defines, m_defines);
+}
+
+void Shader::replaceDefines(const DefinesList &_defines) {
+    m_defines = _defines;
+    m_defineChange = true;
 }
 
 const GLint Shader::getAttribLocation(const std::string& _attribute) const {
     return glGetAttribLocation(m_program, _attribute.c_str());
 }
 
-void Shader::use() const {
+void Shader::use() {
+    if (m_defineChange)
+        reload(false);
+
     if (!isInUse()) {
         glUseProgram(getProgram());
+        textureIndex = 0;
     }
 }
 
@@ -112,24 +196,33 @@ bool Shader::isLoaded() const {
     return m_program != 0;
 }
 
-GLuint Shader::compileShader(const std::string& _src, const std::vector<std::string> &_defines, GLenum _type) {
+GLuint Shader::compileShader(const std::string& _src, GLenum _type, bool _verbose) {
     std::string prolog = "";
-    const char* epilog = "";
 
-    for (unsigned int i = 0; i < _defines.size(); i++) {
-        prolog += "#define " + _defines[i] + "\n";
+    for(DefinesList_it it = m_defines.begin(); it != m_defines.end(); it++) {
+        prolog += "#define " + it->first + " " + it->second + '\n';
+    }
+
+    if (_verbose) {
+        if (_type == GL_VERTEX_SHADER) {
+            std::cout << "// ---------- Vertex Shader" << std::endl;
+        }
+        else {
+            std::cout << "// ---------- Fragment Shader" << std::endl;
+        }
+        std::cout << prolog << std::endl;
+        std::cout << _src << std::endl;
     }
 
     prolog += "#line 1\n";
 
-    const GLchar* sources[3] = {
+    const GLchar* sources[2] = {
         (const GLchar*) prolog.c_str(),
-        (const GLchar*) _src.c_str(),
-        (const GLchar*) epilog,
+        (const GLchar*) _src.c_str()
     };
 
     GLuint shader = glCreateShader(_type);
-    glShaderSource(shader, 3, sources, NULL);
+    glShaderSource(shader, 2, sources, NULL);
     glCompileShader(shader);
 
     GLint isCompiled;
@@ -290,6 +383,22 @@ void Shader::setUniformDepthTexture(const std::string& _name, const Fbo* _fbo, u
         glBindTexture(GL_TEXTURE_2D, _fbo->getDepthTextureId());
         glUniform1i(getUniformLocation(_name), _texLoc);
     }
+}
+
+void Shader::setUniformTexture(const std::string& _name, const Texture* _tex) {
+    setUniformTexture(_name, _tex, textureIndex++);
+}
+
+void  Shader::setUniformTexture(const std::string& _name, const Fbo* _fbo) {
+    setUniformTexture(_name, _fbo, textureIndex++);
+}
+
+void  Shader::setUniformDepthTexture(const std::string& _name, const Fbo* _fbo) {
+    setUniformDepthTexture(_name, _fbo, textureIndex++);
+}
+
+void  Shader::setUniformTextureCube(const std::string& _name, const TextureCube* _tex) {
+    setUniformTextureCube(_name, _tex, textureIndex++);
 }
 
 void Shader::setUniform(const std::string& _name, const glm::mat2& _value, bool _transpose) {

@@ -88,7 +88,11 @@
         "hash_map": "cpp",
         "bit": "cpp",
         "memory_resource": "cpp",
-        "cfenv": "cpp"
+        "cfenv": "cpp",
+        "shared_mutex": "cpp",
+        "*.ipp": "cpp",
+        "unordered_set": "cpp",
+        "__memory": "cpp"
     },
     "python.pythonPath": "/usr/local/bin/python"
 }

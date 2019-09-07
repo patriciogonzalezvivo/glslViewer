@@ -1,5 +1,7 @@
 #include "shapes.h"
-#include "../tools/geom.h"
+#include "geom.h"
+#include <iostream>
+#include "tinyobjloader/tiny_obj_loader.h"
 
 Mesh line (const glm::vec3 &_a, const glm::vec3 &_b) {
     glm::vec3 linePoints[2];
@@ -238,7 +240,7 @@ Mesh cubeCorners(const std::vector<glm::vec3> &_pts, float _size) {
     return cubeCorners(min_v, max_v, _size);
 }
 
-Mesh grid (float _width, float _height, int _columns, int _rows) {
+Mesh grid (float _width, float _height, int _columns, int _rows, float _y) {
     Mesh mesh;
     mesh.setDrawMode(GL_LINES);
 
@@ -250,15 +252,15 @@ Mesh grid (float _width, float _height, int _columns, int _rows) {
     //  |     |
     //  B --- .
 
-    glm::vec3 A = glm::vec3(halfW, 0.0, halfH);
-    glm::vec3 B = glm::vec3(-halfW, 0.0, -halfH);
+    glm::vec3 A = glm::vec3(halfW, _y, halfH);
+    glm::vec3 B = glm::vec3(-halfW, _y, -halfH);
 
     // add the vertexes //
     for(int iy = 0; iy != _rows; iy++) {
         float pct = ((float)iy/((float)_rows-1));
 
-        glm::vec3 left = glm::mix(A, B, glm::vec3(0.0, 0.0, pct));
-        glm::vec3 right = glm::mix(A, B, glm::vec3(1.0, 0.0, pct));
+        glm::vec3 left = glm::mix(A, B, glm::vec3(0.0, _y, pct));
+        glm::vec3 right = glm::mix(A, B, glm::vec3(1.0, _y, pct));
 
         mesh.add( line(left, right) );
     }
@@ -266,8 +268,8 @@ Mesh grid (float _width, float _height, int _columns, int _rows) {
     for(int ix = 0; ix != _columns; ix++) {
         float pct = ((float)ix/((float)_columns-1));
 
-        glm::vec3 top = glm::mix(A, B, glm::vec3(pct, 0.0, 0.0));
-        glm::vec3 down = glm::mix(A, B, glm::vec3(pct, 0.0, 1.0));
+        glm::vec3 top = glm::mix(A, B, glm::vec3(pct, _y, 0.0));
+        glm::vec3 down = glm::mix(A, B, glm::vec3(pct, _y, 1.0));
 
         mesh.add( line(top, down) );
     }
@@ -275,17 +277,17 @@ Mesh grid (float _width, float _height, int _columns, int _rows) {
     return mesh;
 }
 
-Mesh grid(float _size, int _segments) {
-    return grid(_size, _size, _segments, _segments);
+Mesh grid(float _size, int _segments, float _y) {
+    return grid(_size, _size, _segments, _segments, _y);
 }
 
-Mesh axis(float _size) {
+Mesh axis(float _size, float _y) {
     Mesh mesh;
     mesh.setDrawMode(GL_LINES);
 
-    mesh.add( line(glm::vec3(_size,0.0,0.0), glm::vec3(-_size,0.0,0.0)));
+    mesh.add( line(glm::vec3(_size,_y,0.0), glm::vec3(-_size,_y,0.0)));
     mesh.add( line(glm::vec3(0.0, _size, 0.0), glm::vec3(0.0, -_size, 0.0)));
-    mesh.add( line(glm::vec3(0.0, 0.0, _size), glm::vec3(0.0, 0.0, -_size)));
+    mesh.add( line(glm::vec3(0.0, _y, _size), glm::vec3(0.0, _y, -_size)));
 
     return mesh;
 }

@@ -20,9 +20,6 @@ public:
     Mesh(const Mesh &_mother);
     virtual ~Mesh();
 
-    bool    load(const std::string& _file);
-    bool    save(const std::string& _file, bool _useBinary = false);
-
     void    setDrawMode(GLenum _drawMode = GL_TRIANGLES);
 
     void    setColor(const glm::vec4 &_color);
@@ -55,6 +52,7 @@ public:
     const bool    hasTangents() const { return m_tangents.size() > 0; }
     const bool    hasIndices() const { return m_indices.size() > 0; }
 
+    Vbo*    getVbo();
     GLenum  getDrawMode() const;
     std::vector<glm::ivec3>  getTriangles() const ;
 
@@ -65,10 +63,8 @@ public:
     const std::vector<glm::vec2> & getTexCoords() const;
     const std::vector<INDEX_TYPE>  & getIndices() const;
 
-    Vbo*    getVbo();
-
-    void    computeNormals();
-    void    computeTangents();
+    bool    computeNormals();
+    bool    computeTangents();
     void    clear();
 
 private:

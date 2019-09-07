@@ -9,7 +9,11 @@
 // static const float MIN_SENSITIVITY = 10.0f;
 // static const float MAX_SENSITIVITY = 204800.0f;
 
-Camera::Camera(): m_target(0.0), m_aspect(4.0f/3.0f), m_fov(45.), m_nearClip(0.01f), m_farClip(1000.0f), m_exposure(2.60417e-05), m_ev100(14.9658), m_aperture(16), m_shutterSpeed(1.0f/125.0f), m_sensitivity(100.0f), m_type(CameraType::FREE){
+Camera::Camera(): 
+    m_target(0.0), 
+    m_aspect(4.0f/3.0f), m_fov(45.), m_nearClip(0.01f), m_farClip(1000.0f), 
+    m_exposure(2.60417e-05), m_ev100(14.9658), m_aperture(16), m_shutterSpeed(1.0f/125.0f), m_sensitivity(100.0f), 
+    m_type(CameraType::FREE) {
     updateCameraSettings();
 }
 
@@ -42,6 +46,7 @@ void Camera::setClipping(double _near_clip_distance, double _far_clip_distance) 
 
 void Camera::setTarget(glm::vec3 _target) {
     m_target = _target;
+    bChange = true;
 }
 
 void Camera::setDistance(float _distance) {
@@ -100,6 +105,8 @@ void  Camera::setExposure(float _aperture, float _shutterSpeed, float _sensitivi
     // By merging the two calls we can remove extra pow()/log2() calls
     const float e = (_aperture * _aperture) / _shutterSpeed * 100.0f / _sensitivity;
     m_exposure = 1.0f / (1.2f * e);
+
+    bChange = true;
 };
 
 // ---------------------------------------------------------- Convertions
@@ -119,28 +126,29 @@ void Camera::updateCameraSettings() {
 void Camera::updateProjectionViewMatrix() {
     m_projectionViewMatrix = m_projectionMatrix * getViewMatrix();
     m_normalMatrix = glm::transpose(glm::inverse(glm::mat3(getViewMatrix())));
+    bChange = true;
 }
 
 glm::vec3 Camera::worldToCamera(glm::vec3 _WorldXYZ) const {
     glm::mat4 MVPmatrix = m_projectionViewMatrix;
 
     {
-		MVPmatrix = glm::scale(glm::mat4(1.0), glm::vec3(1.f,-1.f,1.f)) * MVPmatrix;
-	}
+        MVPmatrix = glm::scale(glm::mat4(1.0), glm::vec3(1.f,-1.f,1.f)) * MVPmatrix;
+    }
 
     glm::vec4 camera = MVPmatrix * glm::vec4(_WorldXYZ, 1.0);
-	return glm::vec3(camera) / camera.w;
+    return glm::vec3(camera) / camera.w;
 }
 
 glm::vec3 Camera::worldToScreen(glm::vec3 _WorldXYZ) const {
-	glm::vec3 CameraXYZ = worldToCamera(_WorldXYZ);
+    glm::vec3 CameraXYZ = worldToCamera(_WorldXYZ);
 
-	glm::vec3 ScreenXYZ;
-	ScreenXYZ.x = (CameraXYZ.x + 1.0f) * 0.5f;// * viewport.width + viewport.x;
-	ScreenXYZ.y = (1.0f - CameraXYZ.y) * 0.5f;// * viewport.height + viewport.y;
-	ScreenXYZ.z = CameraXYZ.z;
+    glm::vec3 ScreenXYZ;
+    ScreenXYZ.x = (CameraXYZ.x + 1.0f) * 0.5f;// * viewport.width + viewport.x;
+    ScreenXYZ.y = (1.0f - CameraXYZ.y) * 0.5f;// * viewport.height + viewport.y;
+    ScreenXYZ.z = CameraXYZ.z;
 
-	return ScreenXYZ;
+    return ScreenXYZ;
 }
 
 // ---------------------------------------------------------- Events
