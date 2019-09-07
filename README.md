@@ -449,7 +449,7 @@ Depending on the material (only OBJ import materials):
 
 * `MATERIAL_NAME_[NAME]`: only OBJ file import a name. Default is `MATERIAL_NAME_DEFAULT`
 
-* `MATERIAL_ILLUM`: integer between 0 to 10: 
+* `MATERIAL_ILLUM`: integer between 0 to 10. Specs from [here](http://www.fileformat.info/format/material/) 
 
 ````
     0 Color on and Ambient off
