@@ -212,7 +212,7 @@ void main(void) {\n\
     diffuse += sh * 0.2;\n\
 #endif\n\
 \n\
-#if defined(SHADOW_MAP) && defined(SHADOW_MAP_SIZE)\n\
+#if defined(SHADOW_MAP) && defined(SHADOW_MAP_SIZE) && !defined(PLATFORM_RPI)\n\
     float bias = 0.005;\n\
     t *= clamp( 0.5 + textureShadowPCF(u_ligthShadowMap, vec2(SHADOW_MAP_SIZE), v_lightcoord.xy, v_lightcoord.z - bias), 0., 1.);\n\
 #endif\n\

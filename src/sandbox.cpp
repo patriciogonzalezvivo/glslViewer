@@ -282,8 +282,6 @@ int Sandbox::getRecordedPorcentage() {
 bool Sandbox::reloadShaders( WatchFileList &_files ) {
     flagChange();
 
-    bool success = false;
-
     // UPDATE scene shaders of models (materials)
     if (geom_index == -1) {
 
@@ -292,7 +290,7 @@ bool Sandbox::reloadShaders( WatchFileList &_files ) {
 
         // Reload the shader
         m_canvas_shader.detach(GL_FRAGMENT_SHADER | GL_VERTEX_SHADER);
-        success = m_canvas_shader.load(m_frag_source, m_vert_source, verbose);
+        m_canvas_shader.load(m_frag_source, m_vert_source, verbose);
     }
     else {
         if (verbose)
@@ -304,11 +302,8 @@ bool Sandbox::reloadShaders( WatchFileList &_files ) {
                 m_scene.addDefine("CUBE_MAP", "u_cubeMap");
         }
 
-        success = m_scene.loadShaders(m_frag_source, m_vert_source, verbose);
+        m_scene.loadShaders(m_frag_source, m_vert_source, verbose);
     }
-    
-    // if (!success)
-    //     return false;
 
     // UPDATE shaders dependencies
     {

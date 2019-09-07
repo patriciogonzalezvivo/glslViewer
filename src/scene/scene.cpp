@@ -648,17 +648,16 @@ void Scene::render(Uniforms &_uniforms) {
 }
 
 void Scene::renderShadowMap(Uniforms &_uniforms) {
+#ifdef PLATFORM_RPI
+    return;
+#else
     if ( m_origin.bChange || m_light.bChange ||  m_dynamicShadows ) {
 
         // Temporally move the MVP matrix from the view of the light 
         glm::mat4 mvp = m_light.getMVPMatrix( m_origin.getTransformMatrix(), m_area );
 
         if (m_light_depthfbo.getDepthTextureId() == 0) {
-#ifdef PLATFORM_RPI
-            m_light_depthfbo.allocate(512, 512, COLOR_DEPTH_TEXTURES);
-#else
             m_light_depthfbo.allocate(1024, 1024, COLOR_DEPTH_TEXTURES);
-#endif
         }
 
         m_light_depthfbo.bind();
@@ -676,6 +675,7 @@ void Scene::renderShadowMap(Uniforms &_uniforms) {
 
         m_light_depthfbo.unbind();
     }
+#endif
 }
 
 void Scene::renderBackground(Uniforms &_uniforms) {
