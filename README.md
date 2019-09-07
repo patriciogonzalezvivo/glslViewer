@@ -193,7 +193,7 @@ sudo make install_python
 ## Using glslViewer
 
 
-![](http://patriciogonzalezvivo.com/images/glslViewer/scene.png)
+![](images/scene.png)
 
 
 ### 1. Loading a single Fragment shader
@@ -284,7 +284,7 @@ Beside for texture uniforms other arguments can be add to `glslViewer`:
 
 ### Console IN commands
 
-![](http://patriciogonzalezvivo.com/images/glslViewer/01.gif)
+![](images/01.gif)
 
 Once glslViewer is running the CIN is listening for some commands, so you can pass data through regular *nix pipes.
 
@@ -623,7 +623,7 @@ void main(void) {
 
 ### Using the defines flags to draw the a postprocessing layer
 
-![](http://patriciogonzalezvivo.com/images/glslViewer/dof.gif)
+![](images/dof.gif)
 
 Also when loading 3D models it's possible to add a postprocessing layer adding a `#ifdef POSTPROCESSING` to branch the logic of the shader. To apply a postprocessing layer you need to read the scene as a texture, this is saved on the `uniform sampler2D u_scene;` texture together with a depth render pass of the scene located in `uniform sampler2D u_scene_depth;`. Here is an example of a cheap DoF at `examples/model_postprocessing.frag`
 
