@@ -12,10 +12,11 @@
 #include "shaders/ui_light.h"
 #include "shaders/cubemap.h"
 #include "shaders/wireframe3D.h"
+#include "shaders/default_floor.h"
 
 Scene::Scene(): 
     // Debug State
-    showGrid(false), showAxis(false), showBBoxes(false), showCubebox(false),
+    showGrid(false), showAxis(false), showFloor(false), showBBoxes(false), showCubebox(false), 
     // Camera.
     m_culling(NONE), m_lat(180.0), m_lon(0.0),
     // Light
@@ -24,6 +25,8 @@ Scene::Scene():
     m_background_vbo(nullptr), m_background_draw(false), 
     // CubeMap
     m_cubemap_vbo(nullptr), m_cubemap(nullptr), m_cubemap_skybox(nullptr),
+    // Floor
+    m_floor_vbo(nullptr), m_floor(0.0),
     // UI
     m_grid_vbo(nullptr), m_axis_vbo(nullptr) 
     {
@@ -376,21 +379,21 @@ void Scene::setup(CommandList &_commands, Uniforms &_uniforms) {
     },
     "model_position[,<x>,<y>,<z>]  get or set the model position."));
 
-    _commands.push_back(Command("cubemap", [&](const std::string& _line){
-        if (_line == "cubemap") {
-            std::string rta = showCubebox ? "on" : "off";
+    _commands.push_back(Command("floor", [&](const std::string& _line){
+        if (_line == "floor") {
+            std::string rta = showFloor ? "on" : "off";
             std::cout << rta << std::endl; 
             return true;
         }
         else {
             std::vector<std::string> values = split(_line,',');
             if (values.size() == 2) {
-                showCubebox = values[1] == "on";
+                showFloor = values[1] == "on";
             }
         }
         return false;
     },
-    "cubemap[,on|off]       show/hide cubemap"));
+    "floor[,on|off]         show/hide floor"));
 
     _commands.push_back(Command("grid", [&](const std::string& _line){
         if (_line == "grid") {
@@ -552,6 +555,7 @@ void Scene::setup(CommandList &_commands, Uniforms &_uniforms) {
 
 void Scene::addDefine(const std::string &_define, const std::string &_value) {
     m_background_shader.addDefine(_define, _value);
+    m_floor_shader.addDefine(_define, _value);
     for (unsigned int i = 0; i < m_models.size(); i++) {
         m_models[i]->addDefine(_define, _value);
     }
@@ -559,6 +563,7 @@ void Scene::addDefine(const std::string &_define, const std::string &_value) {
 
 void Scene::delDefine(const std::string &_define) {
     m_background_shader.delDefine(_define);
+    m_floor_shader.delDefine(_define);
     for (unsigned int i = 0; i < m_models.size(); i++) {
         m_models[i]->delDefine(_define);
     }
@@ -608,6 +613,20 @@ void Scene::setCubeMap( const std::string& _filename, WatchFileList &_files, boo
 }
 
 void Scene::printDefines() {
+    if (m_background_draw) {
+        std::cout << std::endl;
+        std::cout << " BACKGROUND" << std::endl;
+        std::cout << " -------------- " << std::endl;
+        m_background_shader.printDefines();
+    }
+
+    if (showFloor) {
+        std::cout << std::endl;
+        std::cout << " FLOOR" << std::endl;
+        std::cout << " -------------- " << std::endl;
+        m_floor_shader.printDefines();
+    }
+
     for (unsigned int i = 0; i < m_models.size(); i++) {
         std::cout << std::endl;
         std::cout << m_models[i]->getName() << std::endl;
@@ -660,6 +679,12 @@ bool Scene::loadShaders(const std::string &_fragmentShader, const std::string &_
         m_background_shader.load(_fragmentShader, billboard_vert, false);
     }
 
+    showFloor = check_for_floor(_fragmentShader) || check_for_floor(_vertexShader);
+    if (showFloor) {
+        m_floor_shader.addDefine("FLOOR");
+        m_floor_shader.load(_fragmentShader, _vertexShader, false);
+    }
+
     return rta;
 }
 
@@ -681,6 +706,9 @@ void Scene::render(Uniforms &_uniforms) {
 
     // Begining of DEPTH for 3D 
     glEnable(GL_DEPTH_TEST);
+
+    if (showFloor)
+        renderFloor(_uniforms);
 
     if (m_culling != 0) {
         glEnable(GL_CULL_FACE);
@@ -724,6 +752,8 @@ void Scene::renderShadowMap(Uniforms &_uniforms) {
         }
 
         m_light_depthfbo.bind();
+
+        renderFloor(_uniforms);
 
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_CULL_FACE);
@@ -778,6 +808,33 @@ void Scene::renderBackground(Uniforms &_uniforms) {
         m_cubemap_vbo->render( &m_cubemap_shader );
     }
 }
+void Scene::renderFloor(Uniforms &_uniforms) {
+    //  Floor
+    if (m_floor_vbo == nullptr) {
+        m_floor_vbo = floor(m_area * 3.0, 1.0, m_floor - 0.0001).getVbo();
+
+        m_floor_shader.addDefine("MODEL_HAS_COLORS");
+        m_floor_shader.addDefine("MODEL_HAS_NORMALS");
+        m_floor_shader.addDefine("MODEL_HAS_TEXCOORDS");
+        addDefine("SHADOW_MAP", "u_ligthShadowMap");
+        #ifdef PLATFORM_RPI
+            m_floor_shader.addDefine("SHADOW_MAP_SIZE", "512.0");
+        #else
+            m_floor_shader.addDefine("SHADOW_MAP_SIZE", "1024.0");
+        #endif
+    }
+
+    if (!m_floor_shader.isLoaded()) 
+        m_floor_shader.load(default_floor_frag, default_floor_vert, false);
+
+    glLineWidth(1.0f);
+    m_floor_shader.use();
+
+    _uniforms.feedTo( m_floor_shader );
+    
+    m_floor_shader.setUniform("u_modelViewProjectionMatrix", m_mvp );
+    m_floor_vbo->render( &m_floor_shader );
+}
 
 
 void Scene::renderDebug() {
@@ -820,6 +877,8 @@ void Scene::renderDebug() {
         m_wireframe3D_shader.setUniform("u_modelViewProjectionMatrix", m_mvp );
         m_grid_vbo->render( &m_wireframe3D_shader );
     }
+
+    
 
     // Light
     if (!m_light_shader.isLoaded())

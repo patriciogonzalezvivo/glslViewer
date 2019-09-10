@@ -56,6 +56,7 @@ public:
     bool            haveChange() const;
 
     void            render(Uniforms &_uniforms);
+    void            renderFloor(Uniforms &_uniforms);
     void            renderGeometry(Uniforms &_uniforms);
     void            renderShadowMap(Uniforms &_uniforms);
     void            renderBackground(Uniforms &_uniforms);
@@ -66,6 +67,7 @@ public:
 
     bool            showGrid;
     bool            showAxis;
+    bool            showFloor;
     bool            showBBoxes;
     bool            showCubebox;
 
@@ -77,7 +79,6 @@ protected:
     Node            m_origin;
     glm::mat4       m_mvp;
     float           m_area;
-    float           m_floor;
 
     // Camera
     Camera          m_camera;
@@ -104,6 +105,10 @@ protected:
     SkyBox*         m_cubemap_skybox;
 
     SkyBox          m_skybox;
+
+    Shader          m_floor_shader;
+    Vbo*            m_floor_vbo;
+    float           m_floor;
 
     // UI Grid
     Vbo*            m_grid_vbo;

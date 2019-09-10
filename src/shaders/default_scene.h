@@ -1,6 +1,7 @@
 #pragma once
 
-#include <string>
+#include "textureShadow.h"
+#include "sphericalHarmonics.h"
 
 
 // DEFAULT SHADERS
@@ -77,11 +78,12 @@ std::string default_scene_frag = "\n\
 precision mediump float;\n\
 #endif\n\
 \n\
-uniform samplerCube u_cubeMap;\n\
-uniform vec3        u_SH[9];\n\
-\n\
 #ifdef MATERIAL_DIFFUSEMAP\n\
 uniform sampler2D MATERIAL_DIFFUSEMAP;\n\
+#endif\n\
+\n\
+#ifdef MATERIAL_BUMPMAP_NORMALMAP\n\
+uniform sampler2D MATERIAL_BUMPMAP_NORMALMAP;\n\
 #endif\n\
 \n\
 uniform vec3    u_light;\n\
@@ -106,63 +108,13 @@ varying mat3    v_tangentToWorld;\n\
 varying vec4    v_tangent;\n\
 #endif\n\
 \n\
-#if defined(SHADOW_MAP) && defined(SHADOW_MAP_SIZE)\n\
-uniform sampler2D u_ligthShadowMap;\n\
-varying vec4    v_lightcoord;\n\
-\n\
-float textureShadow(const sampler2D depths, vec2 uv, float compare){\n\
-    return step(compare, texture2D(depths, uv).r );\n\
-}\n\
-\n\
-float textureShadowLerp(sampler2D depths, vec2 size, vec2 uv, float compare){\n\
-    vec2 texelSize = vec2(1.0)/size;\n\
-    vec2 f = fract(uv*size+0.5);\n\
-    vec2 centroidUV = floor(uv*size+0.5)/size;\n\
-    float lb = textureShadow(depths, centroidUV+texelSize*vec2(0.0, 0.0), compare);\n\
-    float lt = textureShadow(depths, centroidUV+texelSize*vec2(0.0, 1.0), compare);\n\
-    float rb = textureShadow(depths, centroidUV+texelSize*vec2(1.0, 0.0), compare);\n\
-    float rt = textureShadow(depths, centroidUV+texelSize*vec2(1.0, 1.0), compare);\n\
-    float a = mix(lb, lt, f.y);\n\
-    float b = mix(rb, rt, f.y);\n\
-    float c = mix(a, b, f.x);\n\
-    return c;\n\
-}\n\
-\n\
-float textureShadowPCF(sampler2D depths, vec2 size, vec2 uv, float compare) {\n\
-    float result = 0.0;\n\
-    for(int x=-2; x<=2; x++){\n\
-        for(int y=-2; y<=2; y++){\n\
-            vec2 off = vec2(x,y)/size;\n\
-            // result += sampleShadow(depths, uv+off, compare);\n\
-            result += textureShadowLerp(depths, size, uv+off, compare);\n\
-        }\n\
-    }\n\
-    return result/25.0;\n\
-}\n\
-#endif\n\
+\n" + textureShadow + "\n\
 \n\
 #define saturate(x)        clamp(x, 0.0, 1.0)\n\
+float   myPow(float a, float b) { return a / ((1. - b) * a + b); }\n\
+vec3    myPow(vec3 a, float b) { return a / ((1. - b) * a + b); }\n\
 \n\
-float myPow(float a, float b) {\n\
-        return a / ((1. - b) * a + b);\n\
-}\n\
-\n\
-vec3 myPow(vec3 a, float b) {\n\
-        return a / ((1. - b) * a + b);\n\
-}\n\
-\n\
-vec3 tonemap(const vec3 x) {\n\
-    return x / (x + 0.155) * 1.019;\n\
-}\n\
-\n\
-vec3 sphericalHarmonics(const vec3 n) {\n\
-    return max(\n\
-           0.282095 * u_SH[0]\n\
-        + -0.488603 * u_SH[1] * (n.y)\n\
-        +  0.488603 * u_SH[2] * (n.z)\n\
-        + -0.488603 * u_SH[3] * (n.x)\n\
-        , 0.0);\n\
-}\n\
+\n" + sphericalHarmonics + "\n\
 \n\
 void main(void) {\n\
     vec3 color = vec3(0.5);\n\
@@ -172,10 +124,6 @@ void main(void) {\n\
 \n\
 #ifdef MATERIAL_AMBIENT\n\
     ambient = MATERIAL_AMBIENT;\n\
-#endif\n\
-\n\
-#ifdef MATERIAL_AMBIENTMAP\n\
-    ambient *= texture2D(MATERIAL_AMBIENTMAP, v_texcoord.xy).rgb;\n\
 #endif\n\
 \n\
 #ifdef MATERIAL_DIFFUSE\n\
@@ -206,8 +154,14 @@ void main(void) {\n\
 \n\
 #ifdef MODEL_HAS_NORMALS\n\
     vec3 l = normalize(u_light);\n\
-    vec3 n = normalize(v_normal);\n\
     vec3 e = normalize(u_camera);\n\
+    vec3 n = v_normal;\n\
+    #if defined(MODEL_HAS_TANGENTS) && defined(MATERIAL_BUMPMAP_NORMALMAP)\n\
+    n = (texture2D(MATERIAL_BUMPMAP_NORMALMAP, v_texcoord.xy).xyz * 2.0 - 1.0);\n\
+    n = v_tangentToWorld * n;\n\
+    #endif\n\
+    n = normalize(n);\n\
+    \n\
     float t = dot(n, l) * 0.5 + 0.5;\n\
 \n\
 #ifdef SH_ARRAY\n\

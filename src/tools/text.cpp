@@ -31,7 +31,9 @@ std::string purifyString(const std::string& _string) {
         if (static_cast<uint>(*it) < 32 || 
             static_cast<uint>(*it) > 127 || 
             *it == '.' ||
-            *it == '-' ) {
+            *it == '-' ||
+            *it == '\\'||
+            *it == '/' ) {
             (*it) = '_';
         }
     }
@@ -255,6 +257,23 @@ bool check_for_background(const std::string &_source) {
     std::vector<std::string> lines = split(_source, '\n');
 
     std::regex re(R"((?:^\s*#if|^\s*#elif)(?:\s+)(defined\s*\(\s*BACKGROUND)(?:\s*\))|(?:^\s*#ifdef\s+BACKGROUND)|(?:^\s*#ifndef\s+BACKGROUND))");
+    std::smatch match;
+
+    for (unsigned int l = 0; l < lines.size(); l++) {
+        if (std::regex_search(lines[l], match, re)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+// Count how many BUFFERS are in the shader
+bool check_for_floor(const std::string &_source) {
+    // Split Source code in lines
+    std::vector<std::string> lines = split(_source, '\n');
+
+    std::regex re(R"((?:^\s*#if|^\s*#elif)(?:\s+)(defined\s*\(\s*FLOOR)(?:\s*\))|(?:^\s*#ifdef\s+FLOOR)|(?:^\s*#ifndef\s+FLOOR))");
     std::smatch match;
 
     for (unsigned int l = 0; l < lines.size(); l++) {

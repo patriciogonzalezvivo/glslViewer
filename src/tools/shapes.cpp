@@ -240,6 +240,17 @@ Mesh cubeCorners(const std::vector<glm::vec3> &_pts, float _size) {
     return cubeCorners(min_v, max_v, _size);
 }
 
+Mesh axis(float _size, float _y) {
+    Mesh mesh;
+    mesh.setDrawMode(GL_LINES);
+
+    mesh.add( line(glm::vec3(_size,_y,0.0), glm::vec3(-_size,_y,0.0)));
+    mesh.add( line(glm::vec3(0.0, _size, 0.0), glm::vec3(0.0, -_size, 0.0)));
+    mesh.add( line(glm::vec3(0.0, _y, _size), glm::vec3(0.0, _y, -_size)));
+
+    return mesh;
+}
+
 Mesh grid (float _width, float _height, int _columns, int _rows, float _y) {
     Mesh mesh;
     mesh.setDrawMode(GL_LINES);
@@ -281,13 +292,37 @@ Mesh grid(float _size, int _segments, float _y) {
     return grid(_size, _size, _segments, _segments, _y);
 }
 
-Mesh axis(float _size, float _y) {
-    Mesh mesh;
-    mesh.setDrawMode(GL_LINES);
+Mesh floor(float _area, int _subD, float _y) {
 
-    mesh.add( line(glm::vec3(_size,_y,0.0), glm::vec3(-_size,_y,0.0)));
-    mesh.add( line(glm::vec3(0.0, _size, 0.0), glm::vec3(0.0, -_size, 0.0)));
-    mesh.add( line(glm::vec3(0.0, _y, _size), glm::vec3(0.0, _y, -_size)));
+    float x = -_area * 0.5f;
+    float z = -_area * 0.5f;
+    float w = _area;
+    float h = _area;
+
+    Mesh mesh;
+    mesh.addVertex( glm::vec3(x, _y, z) );
+    mesh.addColor(glm::vec4(0.251, 0.251, 0.251, 1.0));
+    mesh.addNormal(glm::vec3(0.0, 1.0, 0.0));
+    mesh.addTexCoord(glm::vec2(0.0, 0.0));
+
+    mesh.addVertex(glm::vec3(x+w, _y, z));
+    mesh.addColor(glm::vec4(0.251, 0.251, 0.251, 1.0));
+    mesh.addNormal(glm::vec3(0.0, 1.0, 0.0));
+    mesh.addTexCoord(glm::vec2(1.0, 0.0));
+
+    mesh.addVertex(glm::vec3(x+w, _y, z+h));
+    mesh.addColor(glm::vec4(0.251, 0.251, 0.251, 1.0));
+    mesh.addNormal(glm::vec3(0.0, 1.0, 0.0));
+    mesh.addTexCoord(glm::vec2(1.0, 1.0));
+
+    mesh.addVertex(glm::vec3(x, _y, z+h));
+    mesh.addColor(glm::vec4(0.251, 0.251, 0.251, 1.0));
+    mesh.addNormal(glm::vec3(0.0, 1.0, 0.0));
+    mesh.addTexCoord(glm::vec2(0.0, 1.0));
+
+    mesh.addIndex(0);   mesh.addIndex(1);   mesh.addIndex(2);
+    mesh.addIndex(2);   mesh.addIndex(3);   mesh.addIndex(0);
 
     return mesh;
 }
+
