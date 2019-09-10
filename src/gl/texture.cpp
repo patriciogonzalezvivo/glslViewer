@@ -99,7 +99,7 @@ bool Texture::loadBump(const std::string& _path, bool _vFlip) {
             data[i] = pixels[i] * m;
         }
 
-        float _scale = -1.0;
+        float _scale = -10.0;
 
         const int w = m_width - 1;
         const int h = m_height - 1;
@@ -111,10 +111,10 @@ bool Texture::loadBump(const std::string& _path, bool _vFlip) {
             for (int x0 = 0; x0 < w; x0++) {
                 const int x1 = x0 + 1;
                 const float xc = x0 + 0.5f;
-                const float z00 = data[y0 * m_width + x0] * -_scale;
-                const float z01 = data[y1 * m_width + x0] * -_scale;
-                const float z10 = data[y0 * m_width + x1] * -_scale;
-                const float z11 = data[y1 * m_width + x1] * -_scale;
+                const float z00 = data[y0 * w + x0] * -_scale;
+                const float z01 = data[y1 * w + x0] * -_scale;
+                const float z10 = data[y0 * w + x1] * -_scale;
+                const float z11 = data[y1 * w + x1] * -_scale;
                 const float zc = (z00 + z01 + z10 + z11) / 4.f;
                 const glm::vec3 p00(x0, y0, z00);
                 const glm::vec3 p01(x0, y1, z01);

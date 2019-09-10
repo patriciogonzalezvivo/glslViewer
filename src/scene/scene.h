@@ -51,8 +51,6 @@ public:
     void            setCubeMap( TextureCube* _cubemap );
     void            setCubeMap( const std::string& _filename, WatchFileList &_files, bool _visible, bool _verbose = true);
     TextureCube*    getCubeMap() { return m_cubemap; }
-    void            setCubeMapVisible( bool _draw ) {  m_cubemap_draw = _draw; }
-    bool            getCubeMapVisible() { return m_cubemap_draw; }
 
     void            unflagChange();
     bool            haveChange() const;
@@ -65,6 +63,11 @@ public:
 
     void            onMouseDrag(float _x, float _y, int _button);
     void            onViewportResize(int _newWidth, int _newHeight);
+
+    bool            showGrid;
+    bool            showAxis;
+    bool            showBBoxes;
+    bool            showCubebox;
 
 protected:
      // Geometry
@@ -99,7 +102,6 @@ protected:
     Vbo*            m_cubemap_vbo;
     TextureCube*    m_cubemap;
     SkyBox*         m_cubemap_skybox;
-    bool            m_cubemap_draw;
 
     SkyBox          m_skybox;
 

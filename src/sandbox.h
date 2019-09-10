@@ -64,7 +64,6 @@ public:
 
     bool                verbose;
     bool                cursor;
-    bool                debug;
 
 private:
     void                _updateBuffers();
@@ -113,4 +112,6 @@ private:
     glm::mat3           m_view2d;
     unsigned int        m_frame;
     bool                m_change;
+    bool                m_showTextures;
+    bool                m_showPasses;
 };

@@ -119,42 +119,6 @@ void declareCommands() {
     },
     "version                return glslViewer version.", false));
 
-    commands.push_back(Command("debug", [&](const std::string& _line){
-        if (_line == "debug") {
-            std::string rta = sandbox.debug ? "on" : "off";
-            std::cout <<  rta << std::endl; 
-            return true;
-        }
-        else {
-            std::vector<std::string> values = split(_line,',');
-            if (values.size() == 2) {
-                consoleMutex.lock();
-                sandbox.debug = (values[1] == "on");
-                consoleMutex.unlock();
-            }
-        }
-        return false;
-    },
-    "debug[,on|off]       show/hide debug elements", false));
-
-    commands.push_back(Command("cursor", [&](const std::string& _line){
-        if (_line == "cursor") {
-            std::string rta = sandbox.cursor ? "on" : "off";
-            std::cout <<  rta << std::endl; 
-            return true;
-        }
-        else {
-            std::vector<std::string> values = split(_line,',');
-            if (values.size() == 2) {
-                consoleMutex.lock();
-                sandbox.cursor = (values[1] == "on");
-                consoleMutex.unlock();
-            }
-        }
-        return false;
-    },
-    "cursor[,on|off]       show/hide cursor", false));
-
     commands.push_back(Command("window_height", [&](const std::string& _line){ 
         if (_line == "window_height") {
             std::cout << getWindowHeight() << std::endl;
@@ -354,48 +318,75 @@ void declareCommands() {
     },
     "dependencies[,vert|frag]   returns all the dependencies of the vertex o fragment shader or both.", false));
 
-    commands.push_back( Command("define,", [&](const std::string& _line){ 
+    // commands.push_back( Command("define,", [&](const std::string& _line){ 
+    //     std::vector<std::string> values = split(_line,',');
+    //     if (values.size() == 2) {
+    //         consoleMutex.lock();
+    //         std::vector<std::string> v = split(values[1],' ');
+    //         sandbox.addDefine( v[0], v[1] );
+    //         consoleMutex.unlock();
+
+    //         filesMutex.lock();
+    //         fileChanged = sandbox.frag_index;
+    //         filesMutex.unlock();
+    //         return true;
+    //     }
+    //     else if (values.size() == 3) {
+    //         consoleMutex.lock();
+    //         sandbox.addDefine( values[1], values[2] );
+    //         consoleMutex.unlock();
+
+    //         filesMutex.lock();
+    //         fileChanged = sandbox.frag_index;
+    //         filesMutex.unlock();
+    //         return true;
+    //     }
+    //     return false;
+    // },
+    // "define,<KEYWORD>       add a define to the shader", false));
+
+    // commands.push_back( Command("undefine,", [&](const std::string& _line){ 
+    //     std::vector<std::string> values = split(_line,',');
+    //     if (values.size() == 2) {
+    //         consoleMutex.lock();
+    //         sandbox.delDefine( values[1] );
+    //         consoleMutex.unlock();
+
+    //         filesMutex.lock();
+    //         fileChanged = sandbox.frag_index;
+    //         filesMutex.unlock();
+    //         return true;
+    //     }
+    //     return false;
+    // },
+    // "undefine,<KEYWORD>     remove a define on the shader", false));
+
+    commands.push_back(Command("wait", [&](const std::string& _line){ 
         std::vector<std::string> values = split(_line,',');
         if (values.size() == 2) {
-            consoleMutex.lock();
-            std::vector<std::string> v = split(values[1],' ');
-            sandbox.addDefine( v[0], v[1] );
-            consoleMutex.unlock();
-
-            filesMutex.lock();
-            fileChanged = sandbox.frag_index;
-            filesMutex.unlock();
-            return true;
-        }
-        else if (values.size() == 3) {
-            consoleMutex.lock();
-            sandbox.addDefine( values[1], values[2] );
-            consoleMutex.unlock();
-
-            filesMutex.lock();
-            fileChanged = sandbox.frag_index;
-            filesMutex.unlock();
-            return true;
+            usleep( toFloat(values[1])*1000000 ); 
         }
         return false;
     },
-    "define,<KEYWORD>       add a define to the shader", false));
+    "wait,<seconds>                 wait for X <seconds> before excecuting another command."));
 
-    commands.push_back( Command("undefine,", [&](const std::string& _line){ 
-        std::vector<std::string> values = split(_line,',');
-        if (values.size() == 2) {
-            consoleMutex.lock();
-            sandbox.delDefine( values[1] );
-            consoleMutex.unlock();
-
-            filesMutex.lock();
-            fileChanged = sandbox.frag_index;
-            filesMutex.unlock();
+    commands.push_back(Command("cursor", [&](const std::string& _line){
+        if (_line == "cursor") {
+            std::string rta = sandbox.cursor ? "on" : "off";
+            std::cout <<  rta << std::endl; 
             return true;
+        }
+        else {
+            std::vector<std::string> values = split(_line,',');
+            if (values.size() == 2) {
+                consoleMutex.lock();
+                sandbox.cursor = (values[1] == "on");
+                consoleMutex.unlock();
+            }
         }
         return false;
     },
-    "undefine,<KEYWORD>     remove a define on the shader", false));
+    "cursor[,on|off]       show/hide cursor", false));
 
     commands.push_back(Command("screenshot", [&](const std::string& _line){ 
         if (_line == "screenshot" && outputFile != "") {
@@ -589,9 +580,6 @@ int main(int argc, char **argv){
         else if (   argument == "--verbose" ) {
             sandbox.verbose = true;
         }
-        else if (   argument == "--debug" ) {
-            sandbox.debug = true;
-        }
         else if ( argument == "--nocursor" ) {
             sandbox.cursor = false;
         }
@@ -728,9 +716,9 @@ int main(int argc, char **argv){
     sandbox.setup(files, commands);
     filesMutex.unlock();
 
-    if (sandbox.debug) {
+    if (sandbox.verbose)
         std::cout << "Starting Render Loop" << std::endl; 
-    }
+    
     // Render Loop
     bool timeOut = false;
     while ( isGL() && bRun.load() ) {

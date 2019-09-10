@@ -151,7 +151,7 @@ void Shader::addDefine( const std::string &_define, glm::vec4 _v ) {
 }
 
 void Shader::delDefine(const std::string &_define) {
-    if (m_defines.find(_define) == m_defines.end()) {
+    if (m_defines.find(_define) != m_defines.end()) {
         m_defines.erase(_define);
         m_defineChange = true;
     }

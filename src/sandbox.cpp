@@ -23,7 +23,7 @@
 // ------------------------------------------------------------------------- CONTRUCTOR
 Sandbox::Sandbox(): 
     frag_index(-1), vert_index(-1), geom_index(-1),
-    verbose(false), cursor(true), debug(false),
+    verbose(false), cursor(true),
     // Main Vert/Frag/Geom
     m_frag_source(""), m_vert_source(""),
     // Buffers
@@ -35,7 +35,9 @@ Sandbox::Sandbox():
     // Record
     m_record_start(0.0f), m_record_head(0.0f), m_record_end(0.0f), m_record_counter(0), m_record(false),
     // Scene
-    m_view2d(1.0), m_frame(0), m_change(true) {
+    m_view2d(1.0), m_frame(0), m_change(true),
+    m_showTextures(false), m_showPasses(false)
+{
 
     // TIME UNIFORMS
     //
@@ -98,6 +100,37 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
 
     // Add Sandbox Commands
     // ----------------------------------------
+    _commands.push_back(Command("debug", [&](const std::string& _line){
+        if (_line == "debug") {
+            std::string rta = m_showPasses ? "on" : "off";
+            std::cout << "buffers," << rta << std::endl; 
+            rta = m_showTextures ? "on" : "off";
+            std::cout << "textures," << rta << std::endl; 
+            if (geom_index != -1) {
+                rta = m_scene.showGrid ? "on" : "off";
+                std::cout << "grid," << rta << std::endl; 
+                rta = m_scene.showAxis ? "on" : "off";
+                std::cout << "axis," << rta << std::endl; 
+                rta = m_scene.showBBoxes ? "on" : "off";
+                std::cout << "bboxes," << rta << std::endl;
+            }
+            return true;
+        }
+        else {
+            std::vector<std::string> values = split(_line,',');
+            if (values.size() == 2) {
+                m_showPasses = (values[1] == "on");
+                m_showTextures = (values[1] == "on");
+                if (geom_index != -1) {
+                    m_scene.showGrid = (values[1] == "on");
+                    m_scene.showAxis = (values[1] == "on");
+                    m_scene.showBBoxes = (values[1] == "on");
+                }
+            }
+        }
+        return false;
+    },
+    "debug[,on|off]       show/hide passes and textures elements", false));
 
     _commands.push_back(Command("defines", [&](const std::string& _line){ 
         if (_line == "defines") {
@@ -110,6 +143,31 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         return false;
     },
     "defines                return a list of active defines", false));
+    
+    _commands.push_back( Command("define,", [&](const std::string& _line){ 
+        std::vector<std::string> values = split(_line,',');
+        if (values.size() == 2) {
+            std::vector<std::string> v = split(values[1],' ');
+            addDefine( v[0], v[1] );
+            return true;
+        }
+        else if (values.size() == 3) {
+            addDefine( values[1], values[2] );
+            return true;
+        }
+        return false;
+    },
+    "define,<KEYWORD>       add a define to the shader", false));
+
+    _commands.push_back( Command("undefine,", [&](const std::string& _line){ 
+        std::vector<std::string> values = split(_line,',');
+        if (values.size() == 2) {
+            delDefine( values[1] );
+            return true;
+        }
+        return false;
+    },
+    "undefine,<KEYWORD>     remove a define on the shader", false));
 
     _commands.push_back(Command("uniforms", [&](const std::string& _line){ 
         uniforms.print(_line == "uniforms,all");
@@ -122,6 +180,12 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
             uniforms.printTextures();
             return true;
         }
+        else {
+            std::vector<std::string> values = split(_line,',');
+            if (values.size() == 2) {
+                m_showTextures = (values[1] == "on");
+            }
+        }
         return false;
     },
     "textures               return a list of textures as their uniform name and path.", false));
@@ -130,6 +194,12 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         if (_line == "buffers") {
             uniforms.printBuffers();
             return true;
+        }
+        else {
+            std::vector<std::string> values = split(_line,',');
+            if (values.size() == 2) {
+                m_showPasses = (values[1] == "on");
+            }
         }
         return false;
     },
@@ -218,28 +288,24 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
 }
 
 void Sandbox::addDefine(const std::string &_define, const std::string &_value) {
-    m_canvas_shader.addDefine(_define);
-    m_billboard_shader.addDefine(_define, _value);
-    m_wireframe2D_shader.addDefine(_define, _value);
-    for (int i = 0; i < m_buffers_total; i++) {
+    for (int i = 0; i < m_buffers_total; i++)
         m_buffers_shaders[i].addDefine(_define, _value);
-    }
 
-    if (geom_index != -1)
+    if (geom_index == -1)
+        m_canvas_shader.addDefine(_define);
+    else
         m_scene.addDefine(_define, _value);
 
     m_postprocessing_shader.addDefine(_define, _value);
 }
 
 void Sandbox::delDefine(const std::string &_define) {
-    m_canvas_shader.delDefine(_define);
-    m_billboard_shader.delDefine(_define);
-    m_wireframe2D_shader.delDefine(_define);
-    for (int i = 0; i < m_buffers_total; i++) {
+    for (int i = 0; i < m_buffers_total; i++)
         m_buffers_shaders[i].delDefine(_define);
-    }
 
-    if (geom_index != -1)
+    if (geom_index == -1)
+        m_canvas_shader.delDefine(_define);
+    else
         m_scene.delDefine(_define);
 
     m_postprocessing_shader.delDefine(_define);
@@ -298,7 +364,7 @@ bool Sandbox::reloadShaders( WatchFileList &_files ) {
 
         if (m_scene.getCubeMap()) {
             m_scene.addDefine("SH_ARRAY", "u_SH");
-            if (m_scene.getCubeMapVisible())
+            if (m_scene.showCubebox)
                 m_scene.addDefine("CUBE_MAP", "u_cubeMap");
         }
 
@@ -456,7 +522,7 @@ void Sandbox::render() {
     }
     else {
         m_scene.render(uniforms);
-        if (debug)
+        if (m_scene.showGrid || m_scene.showAxis || m_scene.showBBoxes)
             m_scene.renderDebug();
     }
     
@@ -493,7 +559,7 @@ void Sandbox::render() {
 
 
 void Sandbox::renderUI() {
-    if (debug) {        
+    if (m_showPasses) {        
         glDisable(GL_DEPTH_TEST);
 
         // DEBUG BUFFERS
@@ -517,7 +583,7 @@ void Sandbox::renderUI() {
                 m_billboard_shader.load(dynamic_billboard_frag, dynamic_billboard_vert, false);
 
             m_billboard_shader.use();
-            uniforms.feedTo(m_billboard_shader);
+            // uniforms.feedTo(m_billboard_shader);
 
             for (unsigned int i = 0; i < uniforms.buffers.size(); i++) {
                 m_billboard_shader.setUniform("u_depth", float(0.0));
@@ -535,7 +601,7 @@ void Sandbox::renderUI() {
                     m_billboard_shader.setUniform("u_scale", xStep, yStep);
                     m_billboard_shader.setUniform("u_translate", xOffset, yOffset);
                     m_billboard_shader.setUniform("u_modelViewProjectionMatrix", getOrthoMatrix());
-                    m_billboard_shader.setUniformTexture("u_tex0", &m_scene_fbo);
+                    m_billboard_shader.setUniformTexture("u_tex0", &m_scene_fbo, 0);
                     m_billboard_vbo->render(&m_billboard_shader);
                     yOffset -= yStep * 2.0 + margin;
                 }
@@ -564,8 +630,12 @@ void Sandbox::renderUI() {
                 yOffset -= yStep * 2.0 + margin;
             }
         }
+    }
 
-        nTotal = uniforms.textures.size();
+    if (m_showTextures) {        
+        glDisable(GL_DEPTH_TEST);
+
+        int nTotal = uniforms.textures.size();
         if (nTotal > 0) {
             float w = (float)(getWindowWidth());
             float h = (float)(getWindowHeight());
@@ -585,7 +655,7 @@ void Sandbox::renderUI() {
                 m_billboard_shader.setUniform("u_scale", xStep, yStep);
                 m_billboard_shader.setUniform("u_translate", xOffset, yOffset);
                 m_billboard_shader.setUniform("u_modelViewProjectionMatrix", getOrthoMatrix());
-                m_billboard_shader.setUniformTexture("u_tex0", it->second );
+                m_billboard_shader.setUniformTexture("u_tex0", it->second, 0);
                 m_billboard_vbo->render(&m_billboard_shader);
                 yOffset -= yStep * 2.0;
             }

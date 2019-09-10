@@ -14,6 +14,8 @@
 #include "shaders/wireframe3D.h"
 
 Scene::Scene(): 
+    // Debug State
+    showGrid(false), showAxis(false), showBBoxes(false), showCubebox(false),
     // Camera.
     m_culling(NONE), m_lat(180.0), m_lon(0.0),
     // Light
@@ -21,9 +23,10 @@ Scene::Scene():
     // Background
     m_background_vbo(nullptr), m_background_draw(false), 
     // CubeMap
-    m_cubemap_vbo(nullptr), m_cubemap(nullptr), m_cubemap_skybox(nullptr), m_cubemap_draw(false), 
+    m_cubemap_vbo(nullptr), m_cubemap(nullptr), m_cubemap_skybox(nullptr),
     // UI
-    m_grid_vbo(nullptr), m_axis_vbo(nullptr) {
+    m_grid_vbo(nullptr), m_axis_vbo(nullptr) 
+    {
 }
 
 Scene::~Scene(){
@@ -326,7 +329,7 @@ void Scene::setup(CommandList &_commands, Uniforms &_uniforms) {
 
     _commands.push_back(Command("skybox", [&](const std::string& _line){
         if (_line == "skybox") {
-            std::string rta = getCubeMapVisible() ? "on" : "off";
+            std::string rta = showCubebox ? "on" : "off";
             std::cout << rta << std::endl; 
             return true;
         }
@@ -334,7 +337,7 @@ void Scene::setup(CommandList &_commands, Uniforms &_uniforms) {
             std::vector<std::string> values = split(_line,',');
             if (values.size() == 2) {
                 setCubeMap(&m_skybox);
-                setCubeMapVisible( values[1] == "on" );
+                showCubebox = values[1] == "on";
             }
         }
         return false;
@@ -343,14 +346,14 @@ void Scene::setup(CommandList &_commands, Uniforms &_uniforms) {
 
     _commands.push_back(Command("cubemap", [&](const std::string& _line){
         if (_line == "cubemap") {
-            std::string rta = getCubeMapVisible() ? "on" : "off";
+            std::string rta = showCubebox ? "on" : "off";
             std::cout << rta << std::endl; 
             return true;
         }
         else {
             std::vector<std::string> values = split(_line,',');
             if (values.size() == 2) {
-                setCubeMapVisible( values[1] == "on" );
+                showCubebox = values[1] == "on";
             }
         }
         return false;
@@ -373,14 +376,69 @@ void Scene::setup(CommandList &_commands, Uniforms &_uniforms) {
     },
     "model_position[,<x>,<y>,<z>]  get or set the model position."));
 
-    _commands.push_back(Command("wait", [&](const std::string& _line){ 
-        std::vector<std::string> values = split(_line,',');
-        if (values.size() == 2) {
-            usleep( toFloat(values[1])*1000000 ); 
+    _commands.push_back(Command("cubemap", [&](const std::string& _line){
+        if (_line == "cubemap") {
+            std::string rta = showCubebox ? "on" : "off";
+            std::cout << rta << std::endl; 
+            return true;
+        }
+        else {
+            std::vector<std::string> values = split(_line,',');
+            if (values.size() == 2) {
+                showCubebox = values[1] == "on";
+            }
         }
         return false;
     },
-    "wait,<seconds>                 wait for X <seconds> before excecuting another command."));
+    "cubemap[,on|off]       show/hide cubemap"));
+
+    _commands.push_back(Command("grid", [&](const std::string& _line){
+        if (_line == "grid") {
+            std::string rta = showGrid ? "on" : "off";
+            std::cout << rta << std::endl; 
+            return true;
+        }
+        else {
+            std::vector<std::string> values = split(_line,',');
+            if (values.size() == 2) {
+                showGrid = values[1] == "on";
+            }
+        }
+        return false;
+    },
+    "grid[,on|off]          show/hide grid"));
+
+    _commands.push_back(Command("axis", [&](const std::string& _line){
+        if (_line == "grid") {
+            std::string rta = showAxis ? "on" : "off";
+            std::cout << rta << std::endl; 
+            return true;
+        }
+        else {
+            std::vector<std::string> values = split(_line,',');
+            if (values.size() == 2) {
+                showAxis = values[1] == "on";
+            }
+        }
+        return false;
+    },
+    "axis[,on|off]          show/hide axis"));
+
+    _commands.push_back(Command("bboxes", [&](const std::string& _line){
+        if (_line == "bboxes") {
+            std::string rta = showBBoxes ? "on" : "off";
+            std::cout << rta << std::endl; 
+            return true;
+        }
+        else {
+            std::vector<std::string> values = split(_line,',');
+            if (values.size() == 2) {
+                showBBoxes = values[1] == "on";
+            }
+        }
+        return false;
+    },
+    "bboxes[,on|off]        show/hide models bounding boxes"));
 
     // LIGHT UNIFORMS
     //
@@ -530,7 +588,7 @@ void Scene::setCubeMap( const std::string& _filename, WatchFileList &_files, boo
         if ( tex->load(_filename, true) ) {
 
             setCubeMap(tex);
-            setCubeMapVisible(_visible);
+            showCubebox = _visible;
 
             WatchFile file;
             file.type = CUBEMAP;
@@ -706,7 +764,7 @@ void Scene::renderBackground(Uniforms &_uniforms) {
         m_background_vbo->render( &m_background_shader );
     }
 
-    else if (m_cubemap && m_cubemap_draw) {
+    else if (m_cubemap && showCubebox) {
         if (!m_cubemap_vbo) {
             m_cubemap_vbo = cube(1.0f).getVbo();
             m_cubemap_shader.load(cube_frag, cube_vert, false);
@@ -730,7 +788,7 @@ void Scene::renderDebug() {
         m_wireframe3D_shader.load(wireframe3D_frag, wireframe3D_vert, false);
 
     // Draw Bounding boxes
-    {
+    if (showBBoxes) {
         glLineWidth(3.0f);
         m_wireframe3D_shader.use();
         m_wireframe3D_shader.setUniform("u_color", glm::vec4(1.0,1.0,0.0,1.0));
@@ -741,23 +799,27 @@ void Scene::renderDebug() {
     }
     
     // Axis
-    if (m_axis_vbo == nullptr)
-        m_axis_vbo = axis(m_camera.getFarClip(), m_floor).getVbo();
+    if (showAxis) {
+        if (m_axis_vbo == nullptr)
+            m_axis_vbo = axis(m_camera.getFarClip(), m_floor).getVbo();
 
-    glLineWidth(2.0f);
-    m_wireframe3D_shader.use();
-    m_wireframe3D_shader.setUniform("u_color", glm::vec4(0.75));
-    m_wireframe3D_shader.setUniform("u_modelViewProjectionMatrix", m_mvp );
-    m_axis_vbo->render( &m_wireframe3D_shader );
+        glLineWidth(2.0f);
+        m_wireframe3D_shader.use();
+        m_wireframe3D_shader.setUniform("u_color", glm::vec4(0.75));
+        m_wireframe3D_shader.setUniform("u_modelViewProjectionMatrix", m_mvp );
+        m_axis_vbo->render( &m_wireframe3D_shader );
+    }
     
     // Grid
-    if (m_grid_vbo == nullptr)
-        m_grid_vbo = grid(m_camera.getFarClip(), m_camera.getFarClip() / 20.0, m_floor).getVbo();
-    glLineWidth(1.0f);
-    m_wireframe3D_shader.use();
-    m_wireframe3D_shader.setUniform("u_color", glm::vec4(0.5));
-    m_wireframe3D_shader.setUniform("u_modelViewProjectionMatrix", m_mvp );
-    m_grid_vbo->render( &m_wireframe3D_shader );
+    if (showGrid) {
+        if (m_grid_vbo == nullptr)
+            m_grid_vbo = grid(m_camera.getFarClip(), m_camera.getFarClip() / 20.0, m_floor).getVbo();
+        glLineWidth(1.0f);
+        m_wireframe3D_shader.use();
+        m_wireframe3D_shader.setUniform("u_color", glm::vec4(0.5));
+        m_wireframe3D_shader.setUniform("u_modelViewProjectionMatrix", m_mvp );
+        m_grid_vbo->render( &m_wireframe3D_shader );
+    }
 
     // Light
     if (!m_light_shader.isLoaded())
