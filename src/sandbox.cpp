@@ -509,7 +509,7 @@ void Sandbox::renderUI() {
             float scale = fmin(1.0f / (float)(nTotal), 0.25) * 0.5;
             float xStep = w * scale;
             float yStep = h * scale;
-            float margin = 5.0;
+            float margin = 0.0;
             float xOffset = xStep + margin;
             float yOffset = h - yStep - margin;
 
@@ -544,13 +544,15 @@ void Sandbox::renderUI() {
                     m_billboard_shader.setUniform("u_scale", xStep, yStep);
                     m_billboard_shader.setUniform("u_translate", xOffset, yOffset);
                     m_billboard_shader.setUniform("u_depth", float(1.0));
+                    uniforms.functions["u_cameraNearClip"].assign(m_billboard_shader);
+                    uniforms.functions["u_cameraFarClip"].assign(m_billboard_shader);
+                    uniforms.functions["u_cameraDistance"].assign(m_billboard_shader);
                     m_billboard_shader.setUniform("u_modelViewProjectionMatrix", getOrthoMatrix());
                     m_billboard_shader.setUniformDepthTexture("u_tex0", &m_scene_fbo);
                     m_billboard_vbo->render(&m_billboard_shader);
                     yOffset -= yStep * 2.0 + margin;
                 }
             }
-
 
             if (uniforms.functions["u_ligthShadowMap"].present && m_scene.getLightMap().getDepthTextureId() ) {
                 m_billboard_shader.setUniform("u_scale", xStep, yStep);
@@ -560,6 +562,32 @@ void Sandbox::renderUI() {
                 m_billboard_shader.setUniformDepthTexture("u_tex0", &m_scene.getLightMap());
                 m_billboard_vbo->render(&m_billboard_shader);
                 yOffset -= yStep * 2.0 + margin;
+            }
+        }
+
+        nTotal = uniforms.textures.size();
+        if (nTotal > 0) {
+            float w = (float)(getWindowWidth());
+            float h = (float)(getWindowHeight());
+            float scale = fmin(1.0f / (float)(nTotal), 0.25) * 0.5;
+            float yStep = h * scale;
+            float xStep = h * scale;
+            float xOffset = w - xStep;
+            float yOffset = h - yStep;
+
+            if (!m_billboard_shader.isLoaded())
+                m_billboard_shader.load(dynamic_billboard_frag, dynamic_billboard_vert, false);
+
+            m_billboard_shader.use();
+
+            for (std::map<std::string, Texture*>::iterator it = uniforms.textures.begin(); it != uniforms.textures.end(); it++) {
+                m_billboard_shader.setUniform("u_depth", float(0.0));
+                m_billboard_shader.setUniform("u_scale", xStep, yStep);
+                m_billboard_shader.setUniform("u_translate", xOffset, yOffset);
+                m_billboard_shader.setUniform("u_modelViewProjectionMatrix", getOrthoMatrix());
+                m_billboard_shader.setUniformTexture("u_tex0", it->second );
+                m_billboard_vbo->render(&m_billboard_shader);
+                yOffset -= yStep * 2.0;
             }
         }
     }

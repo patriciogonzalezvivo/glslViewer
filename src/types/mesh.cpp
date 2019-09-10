@@ -379,29 +379,7 @@ Vbo* Mesh::getVbo() {
     }
 
     tmpMesh->addVertices((GLbyte*)data.data(), m_vertices.size());
-
-    // std::vector<INDEX_TYPE> indices;
-    // if (m_indices.size() > 0) {
-    //     for (unsigned int i = 1; i < m_indices.size(); i++) {
-    //         indices.push_back(m_indices[i]);
-    //     }
-    // }
-    // else {
-    //     if ( getDrawMode() == GL_LINE_STRIP ) {
-    //         for (unsigned int i = 1; i < getVertices().size(); i++) {
-    //             indices.push_back(i-1);
-    //             indices.push_back(i);
-    //         }
-    //     }
-    //     else {
-    //         // POINTS, LINES, TRIANGLES
-    //         for (unsigned int i = 0; i < getVertices().size(); i++) {
-    //             indices.push_back((INDEX_TYPE)i);
-    //         }
-    //     }
-    // }
-    // tmpMesh->addIndices(indices.data(), indices.size());
-
+    
     if (!hasIndices()) {
         if ( getDrawMode() == GL_LINES ) {
             for (uint i = 0; i < getVertices().size(); i++) {

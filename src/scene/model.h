@@ -8,7 +8,7 @@
 
 #include "types/mesh.h"
 
-#include "tools/uniform.h"
+#include "../uniform.h"
 
 class Model : public Node {
 public:

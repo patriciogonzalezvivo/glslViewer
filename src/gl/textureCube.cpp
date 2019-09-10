@@ -355,7 +355,7 @@ bool TextureCube::load(const std::string &_path, bool _vFlip) {
     }
 
     else if (haveExt(_path, "hdr") || haveExt(_path,"HDR")) {
-        float* data = loadFloatPixels(_path, &m_width, &m_height, false);
+        float* data = loadHDRFloatPixels(_path, &m_width, &m_height, false);
 
         // LOAD FACES
         Face<float> **faces = new Face<float>*[6];

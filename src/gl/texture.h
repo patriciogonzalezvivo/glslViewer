@@ -10,6 +10,7 @@ public:
     virtual ~Texture();
 
     virtual bool    load(const std::string& _filepath, bool _vFlip);
+    virtual bool    loadBump(const std::string& _filepath, bool _vFlip);
 
     virtual const GLuint    getId() const { return m_id; };
     virtual std::string     getFilePath() const { return m_path; };

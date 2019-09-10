@@ -3,8 +3,8 @@
 #include <string>
 #include "glm/glm.hpp"
 
+#include "../uniform.h"
 #include "../tools/fs.h"
-#include "../tools/uniform.h"
 #include "../gl/shader.h"
 
 struct Material {

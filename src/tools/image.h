@@ -10,5 +10,6 @@ enum Channels {
 };
 
 bool 	        savePixels(const std::string& _path, unsigned char* _pixels, int _width, int _height);
-float*          loadFloatPixels(const std::string& _path, int *_width, int *_height, bool _vFlip = true);
 unsigned char*  loadPixels(const std::string& _path, int *_width, int *_height, Channels _channels = RGB, bool _vFlip = true);
+uint16_t *      loadPixels16(const std::string& _path, int *_width, int *_height, Channels _channels = RGB, bool _vFlip = true);
+float*          loadHDRFloatPixels(const std::string& _path, int *_width, int *_height, bool _vFlip = true);

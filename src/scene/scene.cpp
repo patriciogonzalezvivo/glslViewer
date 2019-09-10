@@ -41,6 +41,11 @@ void Scene::clear() {
         m_light_vbo = nullptr;
     }
 
+    if (!m_background_vbo) {
+        delete m_background_vbo;
+        m_background_vbo = nullptr;
+    }
+
     if (m_cubemap) {
         delete m_cubemap;
         m_cubemap = nullptr;

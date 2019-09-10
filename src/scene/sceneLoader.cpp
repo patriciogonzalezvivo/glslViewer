@@ -11,6 +11,34 @@
 #define TINYOBJLOADER_IMPLEMENTATION
 #include "tinyobjloader/tiny_obj_loader.h"
 
+void addModel (std::vector<Model*>& _models, const std::string& _name, Mesh& _mesh, Material& _mat, bool _verbose) {
+        if (_verbose) {
+            std::cout << "    vertices = " << _mesh.getVertices().size() << std::endl;
+            std::cout << "    colors   = " << _mesh.getColors().size() << std::endl;
+            std::cout << "    normals  = " << _mesh.getNormals().size() << std::endl;
+            std::cout << "    uvs      = " << _mesh.getTexCoords().size() << std::endl;
+            std::cout << "    indices  = " << _mesh.getIndices().size() << std::endl;
+
+            if (_mesh.getDrawMode() == GL_TRIANGLES) {
+                std::cout << "    triang.  = " << _mesh.getIndices().size()/3 << std::endl;
+            }
+            else if (_mesh.getDrawMode() == GL_LINES ) {
+                std::cout << "    lines    = " << _mesh.getIndices().size()/2 << std::endl;
+            }
+        }
+
+        if ( !_mesh.hasNormals() )
+            if ( _mesh.computeNormals() )
+                if ( _verbose )
+                    std::cout << "    . Compute normals" << std::endl;
+
+        if ( _mesh.computeTangents() )
+            if ( _verbose )
+                std::cout << "    . Compute tangents" << std::endl;
+
+        _models.push_back( new Model(_name, _mesh, _mat) );
+}
+
 bool loadPLY(Uniforms& _uniforms, WatchFileList &filenames, std::map<std::string,Material>& _materials, std::vector<Model*>& _models, int _index, bool _verbose) {
     std::string filename = filenames[_index].path;
     std::fstream is(filename.c_str(), std::ios::in);
@@ -308,20 +336,6 @@ glm::vec3 getNormal(const tinyobj::attrib_t& _attrib, int _index) {
                         _attrib.normals[3 * _index + 2]);
 }
 
-void getNormal(const tinyobj::attrib_t& _attrib, const std::map<int, glm::vec3>& _smoothVertexNormals, const tinyobj::index_t& _index, std::vector<glm::vec3>& _normals) {
-    // There is normal
-    if (((int)_attrib.normals.size() > 0) &&
-        (_index.normal_index >= 0) && 
-        (_index.normal_index < (int)_attrib.normals.size()))
-            _normals.push_back( getNormal(_attrib, _index.normal_index) );
-
-    // There is smoothnormal
-    else if ((int)_smoothVertexNormals.size() > 0)
-        if ( _smoothVertexNormals.find(_index.vertex_index) != _smoothVertexNormals.end() )
-            _normals.push_back( _smoothVertexNormals.at(_index.vertex_index) );
-}
-
-
 // Check if `mesh_t` contains smoothing group id.
 bool hasSmoothingGroup(const tinyobj::shape_t& shape) {
     for (size_t i = 0; i < shape.mesh.smoothing_group_ids.size(); i++)
@@ -376,13 +390,6 @@ void computeSmoothingNormals(const tinyobj::attrib_t& _attrib, const tinyobj::sh
 glm::vec2 getTexCoords(const tinyobj::attrib_t& _attrib, int _index) {
     return glm::vec2(   _attrib.texcoords[2 * _index], 
                         1.0f - _attrib.texcoords[2 * _index + 1]);
-}
-
-void getTexCoords(const tinyobj::attrib_t& _attrib, const tinyobj::index_t& _index, std::vector<glm::vec2>& _texcoords) {
-    if (_attrib.texcoords.size() > 0)
-        if ((_index.texcoord_index >= 0) &&
-            (_attrib.texcoords.size() > size_t(2 * _index.texcoord_index + 1)))
-                _texcoords.push_back( getTexCoords(_attrib, _index.texcoord_index) );
 }
 
 glm::vec3 getAmbient(const tinyobj::material_t& _material) {
@@ -526,135 +533,90 @@ bool loadOBJ(Uniforms& _uniforms, WatchFileList& _files, std::map<std::string,Ma
         mesh.setDrawMode(GL_TRIANGLES);
 
         Material mat;
-        int mi = -1;
         std::map<int, tinyobj::index_t> unique_indices;
         std::map<int, tinyobj::index_t>::iterator iter;
         
-        if (true) {
-            INDEX_TYPE counter = 0;
-            for (size_t i = 0; i < shapes[s].mesh.indices.size(); i++) {
-                int f = (int)floor(i/3);
+        int mi = -1;
+        int mCounter = 0;
+        INDEX_TYPE iCounter = 0;
+        for (size_t i = 0; i < shapes[s].mesh.indices.size(); i++) {
+            int f = (int)floor(i/3);
 
-                tinyobj::index_t index = shapes[s].mesh.indices[i];
-                int vi = index.vertex_index;
-                int ni = index.normal_index;
-                int ti = index.texcoord_index;
+            tinyobj::index_t index = shapes[s].mesh.indices[i];
+            int vi = index.vertex_index;
+            int ni = index.normal_index;
+            int ti = index.texcoord_index;
 
-                bool reuse = false;
-                iter = unique_indices.find(vi);
+            // Associate w material
+            if (shapes[s].mesh.material_ids.size() > 0) {
+                int material_index = shapes[s].mesh.material_ids[f];
+                if (mi != material_index) {
 
-                // if already exist 
-                if (iter != unique_indices.end())
-                    // and have the same attributes
-                    if ((iter->second.normal_index == ni) &&
-                        (iter->second.texcoord_index == ti) )
-                        reuse = true;
+                    // If there is a switch of material start a new mesh
+                    if (mi != -1 && mesh.getVertices().size() > 0) {
 
-                
-                if (shapes[s].mesh.material_ids.size() > 0) {
-                    int m = shapes[s].mesh.material_ids[f];
-                    if (mi != m) {
-                        mi = m;
-                        mat = _materials[ materials[mi].name ];
+                        // std::cout << "Adding model " << name  << "_" << toString(mCounter, 3, '0') << " w new material " << mat.name << std::endl;
+                        
+                        // Add the model to the stack 
+                        addModel(_models, name + "_"+ toString(mCounter,3,'0'), mesh, mat, _verbose);
+                        mCounter++;
+
+                        // Restart the mesh
+                        iCounter = 0;
+                        mesh.clear();
+                        unique_indices.clear();
                     }
+
+                    // assign the current material
+                    mi = material_index;
+                    mat = _materials[ materials[material_index].name ];
                 }
-                
-                // Re use the vertex
-                if (reuse)
-                    mesh.addIndex( (INDEX_TYPE)iter->second.vertex_index );
-                // Other wise create a new one
-                else {
-                    unique_indices[vi].vertex_index = (int)counter;
-                    unique_indices[vi].normal_index = ni;
-                    unique_indices[vi].texcoord_index = ti;
-                    
-                    mesh.addVertex( getVertex(attrib, vi) );
-                    mesh.addColor( getColor(attrib, vi) );
-
-                    // If there is normals add them
-                    if (attrib.normals.size() > 0)
-                        mesh.addNormal( getNormal(attrib, ni) );
-
-                    // If there is texcoords add them
-                    if (attrib.texcoords.size() > 0)
-                        mesh.addTexCoord( getTexCoords(attrib, ti) );
-
-                    mesh.addIndex( counter++ );
-                }
-                
-            }
-        }
-        // If model have normals or texcoords we have to parse each face individually
-        else {
-            INDEX_TYPE index = 0;
-            std::vector<glm::vec4> colors;
-            std::vector<glm::vec3> normals;
-            std::vector<glm::vec2> uvs;
-            int current_material_id = -1;
-
-            for (size_t f = 0; f < shapes[s].mesh.indices.size() / 3; f++) {
-                tinyobj::index_t idx0 = shapes[s].mesh.indices[3 * f + 0];
-                tinyobj::index_t idx1 = shapes[s].mesh.indices[3 * f + 1];
-                tinyobj::index_t idx2 = shapes[s].mesh.indices[3 * f + 2];
-                
-
-                if (shapes[s].mesh.material_ids.size() > 0) {
-                    current_material_id = shapes[s].mesh.material_ids[f];
-                    mat = _materials[ materials[current_material_id].name ];
-                }
-
-                // Vertices
-                mesh.addVertex( getVertex(attrib, idx0.vertex_index) );
-                mesh.addVertex( getVertex(attrib, idx1.vertex_index) );
-                mesh.addVertex( getVertex(attrib, idx2.vertex_index) );
-
-                if ((attrib.colors.size() > 0) && 
-                    (attrib.colors.size() == attrib.vertices.size())) {
-                    mesh.addColor( getColor(attrib, idx0.vertex_index) );
-                    mesh.addColor( getColor(attrib, idx1.vertex_index) );
-                    mesh.addColor( getColor(attrib, idx2.vertex_index) );
-                }
-
-                getNormal(attrib, smoothVertexNormals, idx0, normals);
-                getNormal(attrib, smoothVertexNormals, idx1, normals);
-                getNormal(attrib, smoothVertexNormals, idx2, normals);
-
-                getTexCoords(attrib, idx0, uvs);
-                getTexCoords(attrib, idx1, uvs);
-                getTexCoords(attrib, idx2, uvs);
-
-                mesh.addIndex(index++);
-                mesh.addIndex(index++);
-                mesh.addIndex(index++);
             }
 
-            if (colors.size() == mesh.getVertices().size())
-                mesh.addColors(colors);
+            bool reuse = false;
+            iter = unique_indices.find(vi);
 
-            if (normals.size() == mesh.getVertices().size())
-                mesh.addNormals(normals);
+                        // if already exist 
+            if (iter != unique_indices.end())
+                // and have the same attributes
+                if ((iter->second.normal_index == ni) &&
+                    (iter->second.texcoord_index == ti) )
+                    reuse = true;
+            
+            // Re use the vertex
+            if (reuse)
+                mesh.addIndex( (INDEX_TYPE)iter->second.vertex_index );
+            // Other wise create a new one
+            else {
+                unique_indices[vi].vertex_index = (int)iCounter;
+                unique_indices[vi].normal_index = ni;
+                unique_indices[vi].texcoord_index = ti;
+                
+                mesh.addVertex( getVertex(attrib, vi) );
+                mesh.addColor( getColor(attrib, vi) );
 
-            if (uvs.size() == mesh.getVertices().size())
-                mesh.addTexCoords(uvs);
+                // If there is normals add them
+                if (attrib.normals.size() > 0)
+                    mesh.addNormal( getNormal(attrib, ni) );
+
+                else if (smoothVertexNormals.size() > 0)
+                    if ( smoothVertexNormals.find(vi) != smoothVertexNormals.end() )
+                        mesh.addNormal( smoothVertexNormals.at(vi) );
+
+                // If there is texcoords add them
+                if (attrib.texcoords.size() > 0)
+                    mesh.addTexCoord( getTexCoords(attrib, ti) );
+
+                mesh.addIndex( iCounter++ );
+            }
         }
 
-        if (_verbose) {
-            std::cout << "    vertices = " << mesh.getVertices().size() << std::endl;
-            std::cout << "    colors   = " << mesh.getColors().size() << std::endl;
-            std::cout << "    normals  = " << mesh.getNormals().size() << std::endl;
-            std::cout << "    uvs      = " << mesh.getTexCoords().size() << std::endl;
-        }
+        std::string meshName = name;
+        if (mCounter > 0)
+            meshName = name + "_" + toString(mCounter, 3, '0');
 
-        if ( !mesh.hasNormals() )
-            if ( mesh.computeNormals() )
-                if ( _verbose )
-                    std::cout << "    . Compute normals" << std::endl;
-
-        if ( mesh.computeTangents() )
-            if ( _verbose )
-                std::cout << "    . Compute tangents" << std::endl;
-
-        _models.push_back( new Model(name, mesh, mat) );
+        // std::cout << "Adding model " << meshName << " w material " << mat.name << std::endl;
+        addModel(_models, meshName, mesh, mat, _verbose);
     }
 
     return true;

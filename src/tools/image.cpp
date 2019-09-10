@@ -24,7 +24,7 @@ void flipPixelsVertically(T *_pixels, int _width, int _height, int _bytes_per_pi
     free(row);
 }
 
-float* loadFloatPixels(const std::string& _path, int *_width, int *_height, bool _vFlip) {
+float* loadHDRFloatPixels(const std::string& _path, int *_width, int *_height, bool _vFlip) {
     FILE* file = fopen(_path.c_str(), "rb");
     RGBE_ReadHeader(file, _width, _height, NULL);
 
@@ -36,6 +36,13 @@ float* loadFloatPixels(const std::string& _path, int *_width, int *_height, bool
     }
 
     fclose(file);
+    return pixels;
+}
+
+uint16_t* loadPixels16(const std::string& _path, int *_width, int *_height, Channels _channels, bool _vFlip) {
+    stbi_set_flip_vertically_on_load(_vFlip);
+    int comp;
+    uint16_t *pixels = stbi_load_16(_path.c_str(), _width, _height, &comp, _channels);
     return pixels;
 }
 

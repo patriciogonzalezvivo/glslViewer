@@ -192,8 +192,10 @@ bool Material::feedProperties(Shader& _shader) const {
     if (!normalMap.empty())
         _shader.addDefine( "MATERIAL_NORMALMAP", getUniformName( normalMap ) );
 
-    if (!bumpMap.empty())
+    if (!bumpMap.empty()) {
         _shader.addDefine( "MATERIAL_BUMPMAP", getUniformName( bumpMap ) );
+        _shader.addDefine( "MATERIAL_BUMPMAP_NORMALMAP", getUniformName( bumpMap ) + "_normalmap" );
+    }
 
     if (!displacementMap.empty())
         _shader.addDefine( "MATERIAL_DISPLACEMENTMAP", getUniformName( displacementMap ) );
@@ -214,7 +216,6 @@ bool Material::feedProperties(Shader& _shader) const {
 }
 
 bool Material::loadTextures(Uniforms& _uniforms, WatchFileList& _files, const std::string& _folder) const {
-
     if (!ambientMap.empty())
         _uniforms.addTexture(getUniformName( ambientMap ), _folder + ambientMap, _files);
 
@@ -229,8 +230,10 @@ bool Material::loadTextures(Uniforms& _uniforms, WatchFileList& _files, const st
         _uniforms.addTexture(getUniformName( specular_highlightMap ), _folder + specular_highlightMap, _files);
 
     // bumpMap,
-    if (!bumpMap.empty())
+    if (!bumpMap.empty()) {
         _uniforms.addTexture(getUniformName( bumpMap ), _folder + bumpMap, _files);
+        _uniforms.addBumpTexture(getUniformName( bumpMap ) + "_normalmap", _folder + bumpMap, _files);
+    }
 
     // displacementMap,
     if (!displacementMap.empty())

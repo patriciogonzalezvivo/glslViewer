@@ -174,6 +174,10 @@ void main(void) {\n\
     ambient = MATERIAL_AMBIENT;\n\
 #endif\n\
 \n\
+#ifdef MATERIAL_AMBIENTMAP\n\
+    ambient *= texture2D(MATERIAL_AMBIENTMAP, v_texcoord.xy).rgb;\n\
+#endif\n\
+\n\
 #ifdef MATERIAL_DIFFUSE\n\
     diffuse = MATERIAL_DIFFUSE;\n\
 #endif\n\
