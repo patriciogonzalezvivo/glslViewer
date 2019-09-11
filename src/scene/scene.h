@@ -44,9 +44,6 @@ public:
     void            setLight( glm::vec3 _position,  glm::vec3 _color );
     Fbo&            getLightMap() { return m_light_depthfbo; }
 
-    void            setDynamicShadows(bool _dynamic) { m_dynamicShadows = _dynamic; }
-    bool            getDynamicShadows() { return m_dynamicShadows; }
-
     void            setCubeMap( SkyBox* _skybox );
     void            setCubeMap( TextureCube* _cubemap );
     void            setCubeMap( const std::string& _filename, WatchFileList &_files, bool _visible, bool _verbose = true);
@@ -56,7 +53,7 @@ public:
     bool            haveChange() const;
 
     void            render(Uniforms &_uniforms);
-    void            renderFloor(Uniforms &_uniforms);
+    void            renderFloor(Uniforms &_uniforms, const glm::mat4& _mvp);
     void            renderGeometry(Uniforms &_uniforms);
     void            renderShadowMap(Uniforms &_uniforms);
     void            renderBackground(Uniforms &_uniforms);
@@ -67,7 +64,6 @@ public:
 
     bool            showGrid;
     bool            showAxis;
-    bool            showFloor;
     bool            showBBoxes;
     bool            showCubebox;
 
@@ -108,7 +104,9 @@ protected:
 
     Shader          m_floor_shader;
     Vbo*            m_floor_vbo;
-    float           m_floor;
+    float           m_floor_height;
+    int             m_floor_subd_target;
+    int             m_floor_subd;
 
     // UI Grid
     Vbo*            m_grid_vbo;

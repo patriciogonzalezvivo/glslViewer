@@ -318,49 +318,6 @@ void declareCommands() {
     },
     "dependencies[,vert|frag]   returns all the dependencies of the vertex o fragment shader or both.", false));
 
-    // commands.push_back( Command("define,", [&](const std::string& _line){ 
-    //     std::vector<std::string> values = split(_line,',');
-    //     if (values.size() == 2) {
-    //         consoleMutex.lock();
-    //         std::vector<std::string> v = split(values[1],' ');
-    //         sandbox.addDefine( v[0], v[1] );
-    //         consoleMutex.unlock();
-
-    //         filesMutex.lock();
-    //         fileChanged = sandbox.frag_index;
-    //         filesMutex.unlock();
-    //         return true;
-    //     }
-    //     else if (values.size() == 3) {
-    //         consoleMutex.lock();
-    //         sandbox.addDefine( values[1], values[2] );
-    //         consoleMutex.unlock();
-
-    //         filesMutex.lock();
-    //         fileChanged = sandbox.frag_index;
-    //         filesMutex.unlock();
-    //         return true;
-    //     }
-    //     return false;
-    // },
-    // "define,<KEYWORD>       add a define to the shader", false));
-
-    // commands.push_back( Command("undefine,", [&](const std::string& _line){ 
-    //     std::vector<std::string> values = split(_line,',');
-    //     if (values.size() == 2) {
-    //         consoleMutex.lock();
-    //         sandbox.delDefine( values[1] );
-    //         consoleMutex.unlock();
-
-    //         filesMutex.lock();
-    //         fileChanged = sandbox.frag_index;
-    //         filesMutex.unlock();
-    //         return true;
-    //     }
-    //     return false;
-    // },
-    // "undefine,<KEYWORD>     remove a define on the shader", false));
-
     commands.push_back(Command("wait", [&](const std::string& _line){ 
         std::vector<std::string> values = split(_line,',');
         if (values.size() == 2) {

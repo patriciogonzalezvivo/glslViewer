@@ -207,7 +207,6 @@ bool find_id(const std::string& program, const char* id) {
     return std::strstr(program.c_str(), id) != 0;
 }
 
-
 // Count how many BUFFERS are in the shader
 int count_buffers(const std::string &_source) {
     // Split Source code in lines
@@ -285,7 +284,6 @@ bool check_for_floor(const std::string &_source) {
     return false;
 }
 
-// Count how many BUFFERS are in the shader
 bool check_for_postprocessing(const std::string &_source) {
     // Split Source code in lines
     std::vector<std::string> lines = split(_source, '\n');
@@ -301,3 +299,4 @@ bool check_for_postprocessing(const std::string &_source) {
 
     return false;
 }
+
