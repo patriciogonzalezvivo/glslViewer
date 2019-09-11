@@ -26,7 +26,7 @@ Scene::Scene():
     // CubeMap
     m_cubemap_vbo(nullptr), m_cubemap(nullptr), m_cubemap_skybox(nullptr),
     // Floor
-    m_floor_vbo(nullptr), m_floor_height(0.0), m_floor_subd_target(0), m_floor_subd(0), 
+    m_floor_vbo(nullptr), m_floor_height(0.0), m_floor_subd_target(-1), m_floor_subd(-1), 
     // UI
     m_grid_vbo(nullptr), m_axis_vbo(nullptr) 
     {
@@ -390,11 +390,11 @@ void Scene::setup(CommandList &_commands, Uniforms &_uniforms) {
         else {
             if (values.size() == 2) {
                 if (values[1] == "off") {
-                    m_floor_subd_target = 0;
+                    m_floor_subd_target = -1;
                 }
                 else if (values[1] == "on") {
-                    if (m_floor_subd_target == 0)
-                        m_floor_subd_target = 1;
+                    if (m_floor_subd_target == -1)
+                        m_floor_subd_target = 0;
                 }
                 else {
                     m_floor_subd_target = toInt(values[1]);
@@ -630,7 +630,7 @@ void Scene::printDefines() {
         m_background_shader.printDefines();
     }
 
-    if (m_floor_subd > 0) {
+    if (m_floor_subd >= 0) {
         std::cout << std::endl;
         std::cout << "FLOOR" << std::endl;
         std::cout << "-------------- " << std::endl;
@@ -692,8 +692,8 @@ bool Scene::loadShaders(const std::string &_fragmentShader, const std::string &_
     bool thereIsFloorDefine = check_for_floor(_fragmentShader) || check_for_floor(_vertexShader);
     if (thereIsFloorDefine) {
         m_floor_shader.load(_fragmentShader, _vertexShader, false);
-        if (m_floor_subd == 0)
-            m_floor_subd_target = 1;
+        if (m_floor_subd == -1)
+            m_floor_subd_target = 0;
     }
 
     return rta;
@@ -818,7 +818,7 @@ void Scene::renderBackground(Uniforms &_uniforms) {
     }
 }
 void Scene::renderFloor(Uniforms &_uniforms, const glm::mat4& _mvp) {
-    if (m_floor_subd_target > 0) {
+    if (m_floor_subd_target >= 0) {
 
         //  Floor
         if (m_floor_subd_target != m_floor_subd) {
@@ -826,7 +826,7 @@ void Scene::renderFloor(Uniforms &_uniforms, const glm::mat4& _mvp) {
             if (m_floor_vbo)
                 delete m_floor_vbo;
 
-            m_floor_vbo = floor(m_area * 3.0, m_floor_subd_target, m_floor_height - 0.0001).getVbo();
+            m_floor_vbo = floor(m_area * 3.0, m_floor_subd_target, m_floor_height).getVbo();
             m_floor_subd = m_floor_subd_target;
 
             if (!m_floor_shader.isLoaded()) 
@@ -834,6 +834,8 @@ void Scene::renderFloor(Uniforms &_uniforms, const glm::mat4& _mvp) {
 
             m_floor_shader.addDefine("FLOOR");
             m_floor_shader.addDefine("FLOOR_SUBD", m_floor_subd);
+            m_floor_shader.addDefine("FLOOR_AREA", m_area * 3.0f);
+            m_floor_shader.addDefine("FLOOR_HEIGHT", m_floor_height);
             m_floor_shader.addDefine("MODEL_HAS_COLORS");
             m_floor_shader.addDefine("MODEL_HAS_NORMALS");
             m_floor_shader.addDefine("MODEL_HAS_TEXCOORDS");

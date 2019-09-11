@@ -294,44 +294,17 @@ Mesh grid(float _size, int _segments, float _y) {
 
 Mesh floor(float _area, int _subD, float _y) {
 
-    // float x = -_area * 0.5f;
-    // float z = -_area * 0.5f;
-    // float w = _area;
-    // float h = _area;
-
-    // Mesh mesh;
-    // mesh.addVertex( glm::vec3(x, _y, z) );
-    // mesh.addColor(glm::vec4(0.251, 0.251, 0.251, 1.0));
-    // mesh.addNormal(glm::vec3(0.0, 1.0, 0.0));
-    // mesh.addTexCoord(glm::vec2(0.0, 0.0));
-
-    // mesh.addVertex(glm::vec3(x+w, _y, z));
-    // mesh.addColor(glm::vec4(0.251, 0.251, 0.251, 1.0));
-    // mesh.addNormal(glm::vec3(0.0, 1.0, 0.0));
-    // mesh.addTexCoord(glm::vec2(1.0, 0.0));
-
-    // mesh.addVertex(glm::vec3(x+w, _y, z+h));
-    // mesh.addColor(glm::vec4(0.251, 0.251, 0.251, 1.0));
-    // mesh.addNormal(glm::vec3(0.0, 1.0, 0.0));
-    // mesh.addTexCoord(glm::vec2(1.0, 1.0));
-
-    // mesh.addVertex(glm::vec3(x, _y, z+h));
-    // mesh.addColor(glm::vec4(0.251, 0.251, 0.251, 1.0));
-    // mesh.addNormal(glm::vec3(0.0, 1.0, 0.0));
-    // mesh.addTexCoord(glm::vec2(0.0, 1.0));
-
-    // mesh.addIndex(0);   mesh.addIndex(1);   mesh.addIndex(2);
-    // mesh.addIndex(2);   mesh.addIndex(3);   mesh.addIndex(0);
+    int N = pow(2,_subD);
 
     Mesh mesh;
-    float w = _area/float(_subD);
+    float w = _area/float(N);
     float h = _area/2.0;
-    for (int z = 0; z <= _subD; z++){
-        for (int x = 0; x <= _subD; x++){
+    for (int z = 0; z <= N; z++){
+        for (int x = 0; x <= N; x++){
             mesh.addVertex(glm::vec3(x * w - h, _y, z * w - h));
             mesh.addColor(glm::vec4(0.251, 0.251, 0.251, 1.0));
             mesh.addNormal(glm::vec3(0.0, 1.0, 0.0));
-            mesh.addTexCoord(glm::vec2(float(x)/float(_subD), float(z)/float(_subD)));
+            mesh.addTexCoord(glm::vec2(float(x)/float(N), float(z)/float(N)));
         }
     }
     
@@ -342,15 +315,15 @@ Mesh floor(float _area, int _subD, float _y) {
     // |    |    |
     // 6 -- 7 -- 8
     //
-    for (int y = 0; y < _subD; y++){
-        for (int x=0; x < _subD; x++){
-            mesh.addIndex(  x   +   y   * (_subD+1));   // A
-            mesh.addIndex((x+1) +   y   * (_subD+1));   // B
-            mesh.addIndex((x+1) + (y+1) * (_subD+1));   // D
+    for (int y = 0; y < N; y++){
+        for (int x=0; x < N; x++){
+            mesh.addIndex(  x   +   y   * (N+1));   // A
+            mesh.addIndex((x+1) +   y   * (N+1));   // B
+            mesh.addIndex((x+1) + (y+1) * (N+1));   // D
 
-            mesh.addIndex((x+1) + (y+1) * (_subD+1));   // D
-            mesh.addIndex(  x   + (y+1) * (_subD+1));   // C
-            mesh.addIndex(  x   +   y   * (_subD+1));  // A
+            mesh.addIndex((x+1) + (y+1) * (N+1));   // D
+            mesh.addIndex(  x   + (y+1) * (N+1));   // C
+            mesh.addIndex(  x   +   y   * (N+1));  // A
         }
     }
 
