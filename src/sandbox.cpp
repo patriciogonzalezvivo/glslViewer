@@ -16,7 +16,6 @@
 #include "shaders/default.h"
 #include "shaders/dynamic_billboard.h"
 #include "shaders/wireframe2D.h"
-#include "shaders/default_scene.h"
 
 #define FRAME_DELTA 0.03333333333
 

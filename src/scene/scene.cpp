@@ -12,7 +12,7 @@
 #include "shaders/ui_light.h"
 #include "shaders/cubemap.h"
 #include "shaders/wireframe3D.h"
-#include "shaders/default_floor.h"
+// #include "shaders/default_floor.h"
 
 Scene::Scene(): 
     // Debug State
@@ -696,6 +696,9 @@ bool Scene::loadShaders(const std::string &_fragmentShader, const std::string &_
             m_floor_subd_target = 0;
     }
 
+    if (m_cubemap)
+        addDefine("CUBE_MAP", "u_cubeMap");
+
     return rta;
 }
 
@@ -830,7 +833,7 @@ void Scene::renderFloor(Uniforms &_uniforms, const glm::mat4& _mvp) {
             m_floor_subd = m_floor_subd_target;
 
             if (!m_floor_shader.isLoaded()) 
-                m_floor_shader.load(default_floor_frag, default_floor_vert, false);
+                m_floor_shader.load(default_scene_frag, default_scene_vert, false);
 
             m_floor_shader.addDefine("FLOOR");
             m_floor_shader.addDefine("FLOOR_SUBD", m_floor_subd);
