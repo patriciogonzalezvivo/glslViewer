@@ -115,15 +115,15 @@ void main(void) {\n\
     vec3 color = vec3(0.0);\n\
     vec3 ambient = vec3(0.2);\n\
     vec3 diffuse = vec3(1.0);\n\
+    vec3 specular = vec3(1.0);\n\
     vec3 emission = vec3(0.0);\n\
     float shininess = 15.0;\n\
     float metallic = 0.0;\n\
-    float roughness = 0.2;\n\
+    float roughness = 0.5;\n\
 \n\
 #ifdef MATERIAL_AMBIENT\n\
     ambient *= MATERIAL_AMBIENT;\n\
 #endif\n\
-\n\
 #ifdef MATERIAL_DIFFUSE\n\
     diffuse = MATERIAL_DIFFUSE;\n\
 #endif\n\
@@ -133,79 +133,68 @@ void main(void) {\n\
 #if defined(MATERIAL_DIFFUSEMAP) && defined(MODEL_HAS_TEXCOORDS)\n\
     diffuse *= texture2D(MATERIAL_DIFFUSEMAP, v_texcoord.xy).rgb;\n\
 #endif\n\
-\n\
-\n\
-    vec3 specular = mix(vec3(0.04), diffuse, metallic);\n\
 #ifdef MATERIAL_SPECULAR\n\
     specular = MATERIAL_SPECULAR;\n\
 #endif\n\
-\n\
+    specular = max(specular, vec3(0.2));\n\
 #ifdef MATERIAL_SHININESS\n\
     shininess = MATERIAL_SHININESS;\n\
 #endif\n\
+#ifdef MATERIAL_METALLIC\n\
+    metallic = MATERIAL_METALLIC;\n\
+#endif\n\
+#ifdef MATERIAL_ROUGHNESS\n\
+    roughness = MATERIAL_ROUGHNESS;\n\
+#endif\n\
 \n\
 #ifdef MODEL_HAS_NORMALS\n\
-    vec3 l = normalize(u_light);\n\
-    vec3 e = normalize(u_camera);\n\
-    vec3 v = normalize(-v_position.xyz);\n\
-    vec3 h = normalize(l + e);\n\
     vec3 n = v_normal;\n\
     #if defined(MODEL_HAS_TANGENTS) && defined(MATERIAL_BUMPMAP_NORMALMAP)\n\
-    n = (texture2D(MATERIAL_BUMPMAP_NORMALMAP, v_texcoord.xy).xyz * 2.0 - 1.0);\n\
-    n = v_tangentToWorld * n;\n\
-    #endif\n\
+    n = v_tangentToWorld * (texture2D(MATERIAL_BUMPMAP_NORMALMAP, v_texcoord.xy).xyz * 2.0 - 1.0);\n\
+    #endif \n\
     n = normalize(n);\n\
 \n\
+    vec3 l = normalize(u_light);\n\
+    vec3 e = normalize(u_camera);\n\
+    vec3 h = normalize(l + e);\n\
+    vec3 r = reflect(-e, n);\n\
+\n\
     // compute material reflectance\n\
-    float NdL = max(0.0, dot(n, l));\n\
-    float NdV = max(0.001, dot(n, e));\n\
+    float NdL = max(0.001, dot(n, l));\n\
     float NdH = max(0.001, dot(n, h));\n\
-    float HdV = max(0.001, dot(h, e));\n\
+    float NdE = dot(n, e);\n\
 \n\
 #if defined(SHADOW_MAP) && defined(SHADOW_MAP_SIZE) && !defined(PLATFORM_RPI)\n\
     float bias = 0.005;\n\
-    NdL *= clamp( 0.5 + textureShadowPCF(u_ligthShadowMap, vec2(SHADOW_MAP_SIZE), v_lightcoord.xy, v_lightcoord.z - bias), 0., 1.);\n\
+    NdL *= clamp( 0.2 + textureShadowPCF(u_ligthShadowMap, vec2(SHADOW_MAP_SIZE), v_lightcoord.xy, v_lightcoord.z - bias), 0., 1.);\n\
 #endif\n\
-\n\
-    vec3 specfresnel = fresnel_factor(specular, HdV);\n\
-    // diffuse is common for any model\n\
-    diffuse *= (vec3(1.0) - specfresnel);// * phong_diffuse() * NdL;\n\
-    // specular reflectance with COOK-TORRANCE\n\
-    specular *= cooktorrance_specular(NdL, NdV, NdH, specfresnel, roughness);// * NdL;\n\
 \n\
 #ifdef SH_ARRAY\n\
     vec3 sh = tonemap(sphericalHarmonics(n));\n\
     ambient *= sh;\n\
-    diffuse += sh * 0.2;\n\
+    diffuse *= sh;\n\
 #endif\n\
-\n\
-    #ifdef MATERIAL_METALLIC\n\
-    metallic = MATERIAL_METALLIC;\n\
-    #endif\n\
-\n\
-    #ifdef MATERIAL_ROUGHNESS\n\
-    roughness = MATERIAL_ROUGHNESS;\n\
-    #endif\n\
 \n\
     float notMetal = 1.0 - metallic;\n\
     float smooth = .95 - saturate( roughness );\n\
     smooth *= smooth;\n\
     smooth *= smooth;\n\
 \n\
-    float specIntensity = (0.35 * notMetal + 2.0 * metallic) * saturate(NdV + metallic) * (metallic + smooth + 4.0) * (0.3 + NdL * 0.7);\n\
-    vec3 r = reflect(-e, n);\n\
+    float specIntensity =   (0.35 * notMetal + 2.0 * metallic) * \n\
+                            saturate(1.1 + NdE + metallic) * \n\
+                            (metallic + smooth + 4.0) * (0.5 + NdL * 0.5);\n\
 \n\
     // Fake cubemap\n\
-    vec3  rAbs = abs(r);\n\
-    specular += myPow(max(max(rAbs.x, rAbs.y), rAbs.z) + 0.005, shininess * 5.0) * specIntensity;\n\
+    vec3 rAbs = abs(r);\n\ 
+    vec3 ambientSpecular = vec3(specIntensity) * myPow(max(max(rAbs.x, rAbs.y), rAbs.z) + 0.005, shininess * 5.0);\n\
 \n\
 #ifdef CUBE_MAP\n\
-    specular = mix(specular, approximateSpecularIBL(CUBE_MAP, specular, roughness, NdV, r) * specIntensity, metallic);\n\
+    ambientSpecular = mix(ambientSpecular, approximateSpecularIBL(CUBE_MAP, ambientSpecular, r, NdE, roughness),  metallic);\n\
 #endif\n\
 \n\
     color = ambient;\n\
     color += saturate(diffuse - diffuse * metallic) * phong_diffuse() * NdL;\n\
-    color += specular * (notMetal * smooth + diffuse * metallic);\n\
+    color += specular * ambientSpecular * (notMetal * smooth + diffuse * metallic);\n\
 #endif\n\
 \n\
 #ifdef MATERIAL_EMISSION\n\

@@ -35,6 +35,7 @@ Sandbox::Sandbox():
     m_record_start(0.0f), m_record_head(0.0f), m_record_end(0.0f), m_record_counter(0), m_record(false),
     // Scene
     m_view2d(1.0), m_frame(0), m_change(true),
+    // Debug
     m_showTextures(false), m_showPasses(false)
 {
 

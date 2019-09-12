@@ -19,26 +19,26 @@ vec3 sphericalHarmonics(const vec3 n) {\n\
         , 0.0);\n\
 }\n\
 \n\
-vec3 prefilterEnvMap(samplerCube _cube, vec3 R, float Roughness) {\n\
-    float numMips = 5.0;\n\
-    vec4 color = mix(   textureCube( _cube, R, (Roughness * numMips) ), \n\
-                        textureCube( _cube, R, min((Roughness * numMips) + 1.0, numMips)), \n\
-                        fract(Roughness * numMips) );\n\
+vec3 prefilterEnvMap(samplerCube _cube, vec3 _R, float _roughness) {\n\
+    float numMips = 6.0;\n\
+    vec4 color = mix(   textureCube( _cube, _R, (_roughness * numMips) ), \n\
+                        textureCube( _cube, _R, min((_roughness * numMips) + 1.0, numMips)), \n\
+                        fract(_roughness * numMips) );\n\
     return tonemap(color.rgb);\n\
 }\n\
 \n\
-vec3 envBRDFApprox( vec3 SpecularColor, float Roughness, float NoV ) {\n\
+vec3 envBRDFApprox( vec3 _specColor, float _roughness, float _NoE ) {\n\
     vec4 c0 = vec4( -1, -0.0275, -0.572, 0.022 );\n\
     vec4 c1 = vec4( 1, 0.0425, 1.04, -0.04 );\n\
-    vec4 r = Roughness * c0 + c1;\n\
-    float a004 = min( r.x * r.x, exp2( -9.28 * NoV ) ) * r.x + r.y;\n\
+    vec4 r = _roughness * c0 + c1;\n\
+    float a004 = min( r.x * r.x, exp2( -9.28 * _NoE ) ) * r.x + r.y;\n\
     vec2 AB = vec2( -1.04, 1.04 ) * a004 + r.zw;\n\
-    return SpecularColor * AB.x + AB.y;\n\
+    return _specColor * AB.x + AB.y;\n\
 }\n\
 \n\
-vec3 approximateSpecularIBL(samplerCube _cube, vec3 SpecularColor, float Roughness, float NoV, vec3 ReflectDir) {\n\
-    vec3 PrefilteredColor = prefilterEnvMap(_cube, ReflectDir, Roughness);\n\
-    return SpecularColor * PrefilteredColor * envBRDFApprox(SpecularColor, Roughness, NoV);\n\
+vec3 approximateSpecularIBL(samplerCube _cube, vec3 _specColor, vec3 _R, float _NoE, float _roughness) {\n\
+    vec3 PrefilteredColor = prefilterEnvMap(_cube, _R, _roughness);\n\
+    return _specColor * PrefilteredColor * envBRDFApprox(_specColor, _roughness, _NoE);\n\
 }\n\
 #endif\n\
 \n";
