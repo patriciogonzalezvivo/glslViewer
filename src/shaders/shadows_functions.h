@@ -2,7 +2,7 @@
 
 #include <string>
 
-const std::string textureShadow = "\n\
+const std::string shadows_functions = "\n\
 #if defined(SHADOW_MAP) && defined(SHADOW_MAP_SIZE)\n\
 uniform sampler2D u_ligthShadowMap;\n\
 varying vec4    v_lightcoord;\n\

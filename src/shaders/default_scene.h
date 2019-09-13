@@ -1,9 +1,11 @@
 #pragma once
 
-#include "textureShadow.h"
+#include "default_header.h"
+#include "materials_functions.h"
 #include "ibl_functions.h"
-#include "pbr_functions.h"
-
+#include "shadows_functions.h"
+#include "light_functions.h"
+#include "calc_functions.h"
 
 // DEFAULT SHADERS
 // -----------------------------------------------------
@@ -74,133 +76,23 @@ void main(void) {\n\
 }\n\
 ";
 
-const std::string default_scene_frag = "\n\
-#ifdef GL_ES\n\
-precision mediump float;\n\
-#endif\n\
-\n\
-#ifdef MATERIAL_DIFFUSEMAP\n\
-uniform sampler2D MATERIAL_DIFFUSEMAP;\n\
-#endif\n\
-\n\
-#ifdef MATERIAL_BUMPMAP_NORMALMAP\n\
-uniform sampler2D MATERIAL_BUMPMAP_NORMALMAP;\n\
-#endif\n\
-\n\
-uniform vec3    u_light;\n\
-uniform vec3    u_camera;\n\
-\n\
-varying vec4    v_position;\n\
-\n\
-#ifdef MODEL_HAS_COLORS\n\
-varying vec4    v_color;\n\
-#endif\n\
-\n\
-#ifdef MODEL_HAS_NORMALS\n\
-varying vec3    v_normal;\n\
-#endif\n\
-\n\
-#ifdef MODEL_HAS_TEXCOORDS\n\
-varying vec2    v_texcoord;\n\
-#endif\n\
-\n\
-#ifdef MODEL_HAS_TANGENTS\n\
-varying mat3    v_tangentToWorld;\n\
-varying vec4    v_tangent;\n\
-#endif\n\
-\n\
-\n" + textureShadow + ibl_functions + pbr_functions + "\n\
-\n\
+const std::string default_scene_frag = default_header + materials_functions + ibl_functions + shadows_functions + light_functions + calc_functions + "\n\
 void main(void) {\n\
-    vec3 color = vec3(0.0);\n\
-    vec3 ambient = vec3(0.2);\n\
-    vec3 diffuse = vec3(1.0);\n\
-    vec3 specular = vec3(1.0);\n\
-    vec3 emission = vec3(0.0);\n\
-    float shininess = 15.0;\n\
-    float metallic = 0.0;\n\
-    float roughness = 0.5;\n\
+    vec3 baseColor = getBaseColor();\n\
+    vec3 emissionColor = getEmissionColor();\n\
+    float roughness = getRoughness();\n\
+    float metallic = getMetallic();\n\
+    float occlusion = 1.0;\n\
 \n\
-#ifdef MATERIAL_AMBIENT\n\
-    ambient *= MATERIAL_AMBIENT;\n\
-#endif\n\
-#ifdef MATERIAL_DIFFUSE\n\
-    diffuse = MATERIAL_DIFFUSE;\n\
-#endif\n\
-#if defined(MODEL_HAS_COLORS)\n\
-    diffuse *= v_color.rgb;\n\
-#endif\n\
-#if defined(MATERIAL_DIFFUSEMAP) && defined(MODEL_HAS_TEXCOORDS)\n\
-    diffuse *= texture2D(MATERIAL_DIFFUSEMAP, v_texcoord.xy).rgb;\n\
-#endif\n\
-#ifdef MATERIAL_SPECULAR\n\
-    specular = MATERIAL_SPECULAR;\n\
-#endif\n\
-    specular = max(specular, vec3(0.2));\n\
-#ifdef MATERIAL_SHININESS\n\
-    shininess = MATERIAL_SHININESS;\n\
-#endif\n\
-#ifdef MATERIAL_METALLIC\n\
-    metallic = MATERIAL_METALLIC;\n\
-#endif\n\
-#ifdef MATERIAL_ROUGHNESS\n\
-    roughness = MATERIAL_ROUGHNESS;\n\
-#endif\n\
+    // Set Normal and Reflection\n\
+    vec3 normal = vec3(0.0);\n\
+    vec3 reflectDir = vec3(0.0);\n\
+    vec3 viewDir = normalize(u_camera);\n\
+    calcNormal(viewDir, normal, reflectDir);\n\
 \n\
-#ifdef MODEL_HAS_NORMALS\n\
-    vec3 n = v_normal;\n\
-    #if defined(MODEL_HAS_TANGENTS) && defined(MATERIAL_BUMPMAP_NORMALMAP)\n\
-    n = v_tangentToWorld * (texture2D(MATERIAL_BUMPMAP_NORMALMAP, v_texcoord.xy).xyz * 2.0 - 1.0);\n\
-    #endif \n\
-    n = normalize(n);\n\
-\n\
-    vec3 l = normalize(u_light);\n\
-    vec3 e = normalize(u_camera);\n\
-    vec3 h = normalize(l + e);\n\
-    vec3 r = reflect(-e, n);\n\
-\n\
-    // compute material reflectance\n\
-    float NdL = max(0.001, dot(n, l));\n\
-    float NdH = max(0.001, dot(n, h));\n\
-    float NdE = dot(n, e);\n\
-\n\
-#if defined(SHADOW_MAP) && defined(SHADOW_MAP_SIZE) && !defined(PLATFORM_RPI)\n\
-    float bias = 0.005;\n\
-    NdL *= clamp( 0.2 + textureShadowPCF(u_ligthShadowMap, vec2(SHADOW_MAP_SIZE), v_lightcoord.xy, v_lightcoord.z - bias), 0., 1.);\n\
-#endif\n\
-\n\
-#ifdef SH_ARRAY\n\
-    vec3 sh = tonemap(sphericalHarmonics(n));\n\
-    ambient *= sh;\n\
-    diffuse *= sh;\n\
-#endif\n\
-\n\
-    float notMetal = 1.0 - metallic;\n\
-    float smooth = .95 - saturate( roughness );\n\
-    smooth *= smooth;\n\
-    smooth *= smooth;\n\
-\n\
-    float specIntensity =   (0.35 * notMetal + 2.0 * metallic) * \n\
-                            saturate(1.1 + NdE + metallic) * \n\
-                            (metallic + smooth + 4.0) * (0.5 + NdL * 0.5);\n\
-\n\
-    // Fake cubemap\n\
-    vec3 rAbs = abs(r);\n\ 
-    vec3 ambientSpecular = vec3(specIntensity) * myPow(max(max(rAbs.x, rAbs.y), rAbs.z) + 0.005, shininess * 5.0);\n\
-\n\
-#ifdef CUBE_MAP\n\
-    ambientSpecular = mix(ambientSpecular, approximateSpecularIBL(CUBE_MAP, ambientSpecular, r, NdE, roughness),  metallic);\n\
-#endif\n\
-\n\
-    color = ambient;\n\
-    color += saturate(diffuse - diffuse * metallic) * phong_diffuse() * NdL;\n\
-    color += specular * ambientSpecular * (notMetal * smooth + diffuse * metallic);\n\
-#endif\n\
-\n\
-#ifdef MATERIAL_EMISSION\n\
-    emission = MATERIAL_EMISSION;\n\
-#endif\n\
-    color += emission;\n\
+    // Set Color\n\
+    vec3 color = calcColor(baseColor, normal, viewDir, reflectDir, roughness, metallic);\n\
+    color = max(color, emissionColor);\n\
 \n\
     gl_FragColor = vec4(color, 1.0);\n\
 }\n";

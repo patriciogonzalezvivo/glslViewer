@@ -66,6 +66,17 @@ bool Model::loadGeom(Mesh& _mesh) {
     if (_mesh.hasTangents())
         addDefine("MODEL_HAS_TANGENTS");
 
+    if (_mesh.getDrawMode() == GL_POINTS)
+        addDefine("MODEL_IS_POINTS");
+    else if (_mesh.getDrawMode() == GL_LINES)
+        addDefine("MODEL_IS_LINES");
+    else if (_mesh.getDrawMode() == GL_LINE_STRIP)
+        addDefine("MODEL_IS_LINE_STRIP");
+    else if (_mesh.getDrawMode() == GL_TRIANGLES)
+        addDefine("MODEL_IS_TRIANGLES");
+    else if (_mesh.getDrawMode() == GL_TRIANGLE_FAN)
+        addDefine("MODEL_IS_TRIANGLE_FAN");
+
     addDefine("SHADOW_MAP", "u_ligthShadowMap");
 #ifdef PLATFORM_RPI
     addDefine("SHADOW_MAP_SIZE", "512.0");

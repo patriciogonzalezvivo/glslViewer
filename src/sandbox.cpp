@@ -125,6 +125,12 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
                     m_scene.showGrid = (values[1] == "on");
                     m_scene.showAxis = (values[1] == "on");
                     m_scene.showBBoxes = (values[1] == "on");
+                    if (values[1] == "on") {
+                        m_scene.addDefine("DEBUG", values[1]);
+                    }
+                    else {
+                        m_scene.delDefine("DEBUG");
+                    }
                 }
             }
         }

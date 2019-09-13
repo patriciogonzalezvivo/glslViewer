@@ -339,8 +339,10 @@ void Scene::setup(CommandList &_commands, Uniforms &_uniforms) {
         else {
             std::vector<std::string> values = split(_line,',');
             if (values.size() == 2) {
-                setCubeMap(&m_skybox);
+                if (values[1] == "on")
+                    setCubeMap(&m_skybox);
                 showCubebox = values[1] == "on";
+                return true;
             }
         }
         return false;
@@ -357,6 +359,7 @@ void Scene::setup(CommandList &_commands, Uniforms &_uniforms) {
             std::vector<std::string> values = split(_line,',');
             if (values.size() == 2) {
                 showCubebox = values[1] == "on";
+                return true;
             }
         }
         return false;
@@ -582,6 +585,7 @@ void Scene::delDefine(const std::string &_define) {
 void Scene::setCubeMap( SkyBox* _skybox ) { 
     if (m_cubemap_skybox)
         delete m_cubemap_skybox;
+
     m_cubemap_skybox = _skybox; 
     m_cubemap_skybox->change = true;
     addDefine("CUBE_MAP", "u_cubeMap");
@@ -590,6 +594,7 @@ void Scene::setCubeMap( SkyBox* _skybox ) {
 void Scene::setCubeMap( TextureCube* _cubemap ) {
     if (m_cubemap)
         delete m_cubemap;
+
     m_cubemap = _cubemap;
 }
 
@@ -856,7 +861,6 @@ void Scene::renderFloor(Uniforms &_uniforms, const glm::mat4& _mvp) {
             m_floor_shader.setUniform("u_modelViewProjectionMatrix", _mvp );
             m_floor_vbo->render( &m_floor_shader );
         }
-
     }
 }
 

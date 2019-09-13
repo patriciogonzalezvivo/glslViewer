@@ -15,7 +15,7 @@ public:
     glm::mat4           getMVPMatrix( const glm::mat4 &_model, float _area );
     glm::mat4           getBiasMVPMatrix();
 
-    glm::vec3   color;
+    glm::vec3           color;
 
 protected:
     virtual void        onPositionChanged() { bChange = true; };
@@ -23,8 +23,8 @@ protected:
     virtual void        onScaleChanged() { bChange = true; };
 
 private:
-    glm::mat4   m_mvp;
-    glm::mat4   m_mvp_biased;
+    glm::mat4           m_mvp;
+    glm::mat4           m_mvp_biased;
     
-    LightType   m_type;
+    LightType           m_type;
 };
