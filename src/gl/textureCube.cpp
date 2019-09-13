@@ -542,6 +542,7 @@ bool TextureCube::generate(SkyBox* _skybox, int _width ) {
         // cout << SH[i].x << "," << SH[i].y << "," << SH[i].z << endlxw;
     }
 
+    glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
     glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 
     return true;
