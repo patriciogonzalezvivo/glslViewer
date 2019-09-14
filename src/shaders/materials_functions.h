@@ -22,7 +22,7 @@ float   checkBoard(float _scale) {\n\
 }\n\
 \n\
 vec3 getBaseColor() {\n\
-    vec3 base = vec3(0.976, 0.954, 0.94);\n\
+    vec3 base = vec3(0.776, 0.754, 0.74);\n\
 #if defined(MATERIAL_DIFFUSEMAP) && defined(MODEL_HAS_TEXCOORDS)\n\
     base *= texture2D(MATERIAL_DIFFUSEMAP, v_texcoord.xy).rgb;\n\
 #elif defined(MATERIAL_DIFFUSE)\n\
