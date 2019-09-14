@@ -17,7 +17,7 @@ vec3 sphericalHarmonics(vec3 _normal) {\n\
 \n\
 vec3 fakeCubeMap(vec3 _normal) {\n\
     vec3 rAbs = abs(_normal);\n\
-    return vec3(1.0) * myPow(max(max(rAbs.x, rAbs.y), rAbs.z) + 0.005, getShininess());\n\
+    return vec3(1.0) * myPow(max(max(rAbs.x, rAbs.y), rAbs.z) + 0.005, getMaterialShininess());\n\
 }\n\
 \n\
 const float numMips = 6.0;\n\

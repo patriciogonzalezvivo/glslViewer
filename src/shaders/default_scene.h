@@ -5,7 +5,6 @@
 #include "ibl_functions.h"
 #include "shadows_functions.h"
 #include "light_functions.h"
-#include "calc_functions.h"
 
 // DEFAULT SHADERS
 // -----------------------------------------------------
@@ -76,23 +75,43 @@ void main(void) {\n\
 }\n\
 ";
 
-const std::string default_scene_frag = default_header + materials_functions + ibl_functions + shadows_functions + light_functions + calc_functions + "\n\
-void main(void) {\n\
-    vec3 baseColor = getBaseColor();\n\
-    vec3 emissionColor = getEmissionColor();\n\
-    float roughness = getRoughness();\n\
-    float metallic = getMetallic();\n\
-    float occlusion = 1.0;\n\
+const std::string default_scene_frag = default_header + materials_functions + ibl_functions + shadows_functions + light_functions + "\n\
+void main() {\n\
+    vec3 albedo = getMaterialAlbedo();\n\
+    vec3 emissionColor = getMaterialEmission();\n\
+    float roughness = getMaterialRoughness();\n\
+    float metallic = getMaterialMetallic();\n\
 \n\
     // Set Normal and Reflection\n\
-    vec3 normal = vec3(0.0);\n\
-    vec3 reflectDir = vec3(0.0);\n\
-    vec3 viewDir = normalize(u_camera);\n\
-    calcNormal(viewDir, normal, reflectDir);\n\
+    vec3 normal = getMaterialNormal();\n\
+    vec3 viewDirection = normalize(u_camera);\n\
 \n\
-    // Set Color\n\
-    vec3 color = calcColor(baseColor, normal, viewDir, reflectDir, roughness, metallic);\n\
-    color = max(color, emissionColor);\n\
+    // Calculate Color\n\
+    vec3 color = vec3(0.0);\n\
+    vec3 R = reflect(-viewDirection, normal);\n\
+    float NoV = dot(normal, viewDirection);\n\
+\n\
+    vec3 diffuseColor = albedo * (1.0 - metallic);\n\
+    vec3 specularColor = mix(vec3(1.0), albedo, metallic);\n\
+    vec3 diffuse = diffuseColor * 0.9;\n\
+\n\
+    // IBL\n\
+    #if defined(SH_ARRAY)\n\
+    diffuse *= tonemap( sphericalHarmonics(normal) );\n\
+    #endif\n\
+\n\
+    vec3 specular = approximateSpecularIBL(specularColor, R, NoV, roughness) * metallic;\n\
+    vec3 frsnl = vec3(0.0);\n\
+    frsnl = fresnel(R, NoV, roughness, 0.2) * metallic;\n\
+\n\
+    // Add light\n\
+    vec3 lightDeffuse = vec3(0.0);\n\
+    vec3 lightSpecular = vec3(0.0);\n\
+    lightWithShadow(normal, viewDirection, diffuseColor, specularColor, roughness, lightDeffuse, lightSpecular);\n\
+    diffuse += lightDeffuse;\n\
+    specular += lightSpecular;\n\
+\n\
+    color = max(diffuse + specular + frsnl, emissionColor);\n\
 \n\
     gl_FragColor = vec4(color, 1.0);\n\
 }\n";
