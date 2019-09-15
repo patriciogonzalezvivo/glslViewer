@@ -588,7 +588,7 @@ void Scene::setCubeMap( SkyBox* _skybox ) {
 
     m_cubemap_skybox = _skybox; 
     m_cubemap_skybox->change = true;
-    addDefine("CUBE_MAP", "u_cubeMap");
+    addDefine("SCENE_HAS_CUBEMAP", "u_cubeMap");
 }
 
 void Scene::setCubeMap( TextureCube* _cubemap ) {
@@ -702,7 +702,7 @@ bool Scene::loadShaders(const std::string &_fragmentShader, const std::string &_
     }
 
     if (m_cubemap)
-        addDefine("CUBE_MAP", "u_cubeMap");
+        addDefine("SCENE_HAS_CUBEMAP", "u_cubeMap");
 
     return rta;
 }
@@ -847,11 +847,11 @@ void Scene::renderFloor(Uniforms &_uniforms, const glm::mat4& _mvp) {
             m_floor_shader.addDefine("MODEL_HAS_COLORS");
             m_floor_shader.addDefine("MODEL_HAS_NORMALS");
             m_floor_shader.addDefine("MODEL_HAS_TEXCOORDS");
-            addDefine("SHADOW_MAP", "u_ligthShadowMap");
+            addDefine("SCENE_HAS_SHADOWMAP", "u_ligthShadowMap");
             #ifdef PLATFORM_RPI
-                m_floor_shader.addDefine("SHADOW_MAP_SIZE", "512.0");
+                m_floor_shader.addDefine("SCENE_HAS_SHADOWMAP_SIZE", "512.0");
             #else
-                m_floor_shader.addDefine("SHADOW_MAP_SIZE", "1024.0");
+                m_floor_shader.addDefine("SCENE_HAS_SHADOWMAP_SIZE", "1024.0");
             #endif
         }
 

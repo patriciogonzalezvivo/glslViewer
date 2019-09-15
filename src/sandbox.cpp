@@ -369,9 +369,9 @@ bool Sandbox::reloadShaders( WatchFileList &_files ) {
             std::cout << "// Reload 3D scene shaders" << std::endl;
 
         if (m_scene.getCubeMap()) {
-            m_scene.addDefine("SH_ARRAY", "u_SH");
+            m_scene.addDefine("SCENE_HAS_SH_ARRAY", "u_SH");
             if (m_scene.showCubebox)
-                m_scene.addDefine("CUBE_MAP", "u_cubeMap");
+                m_scene.addDefine("SCENE_HAS_CUBEMAP", "u_cubeMap");
         }
 
         m_scene.loadShaders(m_frag_source, m_vert_source, verbose);

@@ -15,7 +15,7 @@ varying vec4 v_position;\n\
 // varying vec3 v_normal;\n\
 varying vec2 v_texcoord;\n\
 \n\
-#ifdef SHADOW_MAP\n\
+#ifdef SCENE_HAS_SHADOWMAP\n\
 uniform mat4    u_lightMatrix;\n\
 varying vec4    v_lightcoord;\n\
 #endif\n\
@@ -26,7 +26,7 @@ void main(void) {\n\
     // v_normal = vec3(0.0,0.0,1.0);\n\
     v_texcoord = a_texcoord;\n\
     \n\
-#ifdef SHADOW_MAP\n\
+#ifdef SCENE_HAS_SHADOWMAP\n\
     v_lightcoord = u_lightMatrix * v_position;\n\
 #endif\n\
     \n\

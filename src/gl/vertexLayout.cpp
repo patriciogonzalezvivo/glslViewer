@@ -107,7 +107,7 @@ uniform mat4 u_modelViewProjectionMatrix;\n\
 
     rta += "\n\
 \n\
-#ifdef SHADOW_MAP\n\
+#ifdef SCENE_HAS_SHADOWMAP\n\
 uniform mat4    u_lightMatrix;\n\
 varying vec4    v_lightcoord;\n\
 #endif\n\
@@ -130,7 +130,7 @@ void main(void) {\n\
     v_tangentToWorld = mat3(normalize(worldTangent), normalize(worldBiTangent), normalize(v_normal));\n\
 #endif\n\
     \n\
-#ifdef SHADOW_MAP\n\
+#ifdef SCENE_HAS_SHADOWMAP\n\
     v_lightcoord = u_lightMatrix * v_position;\n\
 #endif\n\
     \n";

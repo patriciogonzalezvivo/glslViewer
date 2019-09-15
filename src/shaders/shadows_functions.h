@@ -3,7 +3,7 @@
 #include <string>
 
 const std::string shadows_functions = "\n\
-#if defined(SHADOW_MAP) && defined(SHADOW_MAP_SIZE)\n\
+#if defined(SCENE_HAS_SHADOWMAP) && defined(SCENE_HAS_SHADOWMAP_SIZE)\n\
 uniform sampler2D u_ligthShadowMap;\n\
 varying vec4    v_lightcoord;\n\
 \n\

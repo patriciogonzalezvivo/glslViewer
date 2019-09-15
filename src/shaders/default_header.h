@@ -7,9 +7,6 @@ const std::string default_header = "\n\
 precision mediump float;\n\
 #endif\n\
 \n\
-uniform samplerCube u_cubeMap;\n\
-uniform vec3        u_SH[9];\n\
-\n\
 uniform vec3        u_light;\n\
 uniform vec3        u_lightColor;\n\
 uniform vec3        u_camera;\n\
