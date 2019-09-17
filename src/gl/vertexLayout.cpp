@@ -107,12 +107,12 @@ uniform mat4 u_modelViewProjectionMatrix;\n\
 
     rta += "\n\
 \n\
-#ifdef SCENE_HAS_SHADOWMAP\n\
+#ifdef LIGHT_SHADOWMAP\n\
 uniform mat4    u_lightMatrix;\n\
 varying vec4    v_lightcoord;\n\
 #endif\n\
 \n\
-#ifdef MODEL_HAS_TANGENTS\n\
+#ifdef MODEL_VERTEX_TANGENT\n\
 varying mat3    v_tangentToWorld;\n\
 #endif\n\
 \n\
@@ -124,13 +124,13 @@ void main(void) {\n\
     }
 
     rta += "\n\
-#ifdef MODEL_HAS_TANGENTS\n\
+#ifdef MODEL_VERTEX_TANGENT\n\
     vec3 worldTangent = a_tangent.xyz;\n\
     vec3 worldBiTangent = cross(v_normal, worldTangent) * sign(a_tangent.w);\n\
     v_tangentToWorld = mat3(normalize(worldTangent), normalize(worldBiTangent), normalize(v_normal));\n\
 #endif\n\
     \n\
-#ifdef SCENE_HAS_SHADOWMAP\n\
+#ifdef LIGHT_SHADOWMAP\n\
     v_lightcoord = u_lightMatrix * v_position;\n\
 #endif\n\
     \n";

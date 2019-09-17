@@ -13,11 +13,10 @@
 
 Shader::Shader():
     m_program(0), 
-    m_fragmentShader(0),m_vertexShader(0),
-    m_defineChange(true) {
+    m_fragmentShader(0),m_vertexShader(0) {
 
     // Adding default defines
-    addDefine("GLSLVIEWER", "1");
+    addDefine("GLSLVIEWER", 160);
 
     // Define PLATFORM
     #ifdef PLATFORM_OSX
@@ -30,9 +29,9 @@ Shader::Shader():
 }
 
 Shader::~Shader() {
-    if (m_program != 0) {           // Avoid crash when no command line arguments supplied
+    // Avoid crash when no command line arguments supplied
+    if (m_program != 0)
         glDeleteProgram(m_program);
-    }
 }
 
 bool Shader::load(const std::string& _fragmentSrc, const std::string& _vertexSrc, bool _verbose) {
@@ -114,62 +113,6 @@ bool Shader::load(const std::string& _fragmentSrc, const std::string& _vertexSrc
 
 bool Shader::reload(bool _verbose) {
     return load(m_fragmentSource, m_vertexSource, _verbose);
-}
-
-void Shader::addDefine(const std::string &_define, const std::string &_value) {
-    // if doesn't exist
-    if (m_defines.find(_define) == m_defines.end()) {
-        // add it
-        m_defines[_define] = _value;
-        m_defineChange = true;
-    }
-    // if its different
-    else if ( m_defines[_define] != _value){
-        // change it
-        m_defines[_define] = _value;
-        m_defineChange = true;
-    }
-}
-
-void Shader::addDefine( const std::string &_define, int _n ) {
-    addDefine(_define, toString(_n));
-}
-void Shader::addDefine( const std::string &_define, float _n ) {
-    addDefine(_define, toString(_n, 3));
-}
-
-void Shader::addDefine( const std::string &_define, glm::vec2 _v ) {
-    addDefine(_define, "vec2(" + toString(_v, ',') + ")");
-}
-
-void Shader::addDefine( const std::string &_define, glm::vec3 _v ) {
-    addDefine(_define, "vec3(" + toString(_v, ',') + ")");
-}
-
-void Shader::addDefine( const std::string &_define, glm::vec4 _v ) {
-    addDefine(_define, "vec4(" + toString(_v, ',') + ")");
-}
-
-void Shader::delDefine(const std::string &_define) {
-    if (m_defines.find(_define) != m_defines.end()) {
-        m_defines.erase(_define);
-        m_defineChange = true;
-    }
-}
-
-void Shader::printDefines() {
-    for (DefinesList_cit it = m_defines.begin(); it != m_defines.end(); ++it) {
-        std::cout << it->first << " " << it->second << std::endl;
-    }
-}
-
-void Shader::mergeDefines(const DefinesList &_defines) {
-    m_defineChange += merge(_defines, m_defines);
-}
-
-void Shader::replaceDefines(const DefinesList &_defines) {
-    m_defines = _defines;
-    m_defineChange = true;
 }
 
 const GLint Shader::getAttribLocation(const std::string& _attribute) const {

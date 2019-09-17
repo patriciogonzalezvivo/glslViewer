@@ -437,13 +437,13 @@ Depending on the geometry:
 
 * `MODEL_NAME_[NAME]`: only OBJ file import a name. Default is `MODEL_NAME_MESH`
 
-* `MODEL_HAS_COLORS`
+* `MODEL_VERTEX_COLOR`
 
-* `MODEL_HAS_NORMALS`
+* `MODEL_VERTEX_EX_NORMALS`
 
-* `MODEL_HAS_TEXCOORDS`
+* `MODEL_VERTEX_TEXCOORD
 
-* `MODEL_HAS_TANGENTS`
+* `MODEL_VERTEX_TANGENT`
 
 Depending on the material (only OBJ import materials):
 
@@ -477,9 +477,9 @@ Depending on the material (only OBJ import materials):
 
 * `MATERIAL_AMBIENTMAP`: the name of a `samplerd2D`
 
-* `MATERIAL_DIFFUSE`: a color as `vec3`
+* `MATERIAL_ALBEDO`: a color as `vec3`
 
-* `MATERIAL_DIFFUSEMAP`: the name of a `samplerd2D`
+* `MATERIAL_ALBEDOMAP`: the name of a `samplerd2D`
 
 * `MATERIAL_SPECULAR`: a color as `vec3`
 
@@ -513,7 +513,7 @@ Depending on the material (only OBJ import materials):
 
 * `MATERIAL_EMISSION`: a color as `vec3`
 
-* `MATERIAL_EMISSIVEMAP`: the name of a `samplerd2D`
+* `MATERIAL_EMISSIONMAP`: the name of a `samplerd2D`
 
 * `MATERIAL_NORMALMAP`: the name of a `samplerd2D`
 

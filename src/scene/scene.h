@@ -3,19 +3,21 @@
 #include "light.h"
 #include "model.h"
 #include "camera.h"
-#include "sceneLoader.h"
 
-#include "gl/vbo.h"
-#include "gl/fbo.h"
-#include "gl/shader.h"
-#include "gl/textureCube.h"
 
-#include "tools/skybox.h"
-#include "tools/command.h"
+#include "../gl/vbo.h"
+#include "../gl/fbo.h"
+#include "../gl/shader.h"
+#include "../gl/textureCube.h"
 
-#include "shaders/billboard.h"
+#include "../tools/skybox.h"
+#include "../tools/command.h"
 
-#include "shaders/default_scene.h"
+#include "../shaders/billboard.h"
+#include "../shaders/default_scene.h"
+
+#include "../loaders/ply.h"
+#include "../loaders/obj.h"
 
 enum CullingMode {
     NONE = 0,

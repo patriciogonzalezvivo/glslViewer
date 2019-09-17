@@ -12,7 +12,7 @@ varying vec3    v_normal;
 
 uniform float   u_time;
 
-#ifdef SCENE_HAS_SHADOWMAP
+#ifdef LIGHT_SHADOWMAP
 uniform mat4    u_lightMatrix;
 varying vec4    v_lightcoord;
 #endif
@@ -23,7 +23,7 @@ void main(void) {
     v_color = a_color;
     v_normal = a_normal;
 
-#ifdef SCENE_HAS_SHADOWMAP
+#ifdef LIGHT_SHADOWMAP
     v_lightcoord = u_lightMatrix * v_position;
 #endif
     

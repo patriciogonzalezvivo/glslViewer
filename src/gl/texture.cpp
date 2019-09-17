@@ -6,8 +6,8 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/normal.hpp>
 
-#include "tools/fs.h"
-#include "tools/image.h"
+#include "../tools/fs.h"
+#include "../loaders/pixels.h"
 
 // TEXTURE
 Texture::Texture():m_path(""), m_width(0), m_height(0), m_id(0) {

@@ -6,7 +6,7 @@ const std::string materials_functions = "\n\
 #ifndef FNC_GETMATERIAL\n\
 \n\
 float checkBoard(vec2 _scale) {\n\
-#ifdef MODEL_HAS_TEXCOORDS\n\
+#ifdef MODEL_VERTEX_TEXCOORD\n\
     vec2 uv = v_texcoord;\n\
 #else\n\
     vec2 uv = gl_FragCoord.xy/u_resolution;\n\
@@ -22,51 +22,51 @@ const float INV_GAMMA = 1.0 / GAMMA;\n\
 vec3 LINEARtoSRGB(vec3 color) { return pow(color, vec3(INV_GAMMA)); }\n\
 vec4 SRGBtoLINEAR(vec4 srgbIn) { return vec4(pow(srgbIn.xyz, vec3(GAMMA)), srgbIn.w); }\n\
 \n\
-#ifdef MATERIAL_DIFFUSEMAP\n\
-uniform sampler2D MATERIAL_DIFFUSEMAP;\n\
+#ifdef MATERIAL_ALBEDOMAP\n\
+uniform sampler2D MATERIAL_ALBEDOMAP;\n\
 #endif\n\
 \n\
 vec3 getMaterialAlbedo() {\n\
     vec3 base = vec3(1.0);\n\
 \n\
-#if defined(MATERIAL_DIFFUSEMAP) && defined(MODEL_HAS_TEXCOORDS)\n\
-    base = SRGBtoLINEAR(texture2D(MATERIAL_DIFFUSEMAP, v_texcoord.xy)).rgb;\n\
-#elif defined(MATERIAL_DIFFUSE)\n\
-    base = MATERIAL_DIFFUSE;\n\
-#elif !defined(MODEL_HAS_COLORS)\n\
+#if defined(MATERIAL_ALBEDOMAP) && defined(MODEL_VERTEX_TEXCOORD)\n\
+    base = SRGBtoLINEAR(texture2D(MATERIAL_ALBEDOMAP, v_texcoord.xy)).rgb;\n\
+#elif defined(MATERIAL_ALBEDO)\n\
+    base = MATERIAL_ALBEDO;\n\
+#elif !defined(MODEL_VERTEX_COLOR)\n\
     base *= 0.5 + checkBoard(vec2(8.0)) * 0.5;\n\
 #endif\n\
 \n\
-#if defined(MODEL_HAS_COLORS)\n\
+#if defined(MODEL_VERTEX_COLOR)\n\
     base *= v_color.rgb;\n\
 #endif\n\
     return base;\n\
 }\n\
 \n\
-#ifdef MATERIAL_DIFFUSEMAP\n\
+#ifdef MATERIAL_SPECULARMAP\n\
 uniform sampler2D MATERIAL_SPECULARMAP;\n\
 #endif\n\
 \n\
 vec3 getMaterialSpecular() {\n\
-    vec3 base = vec3(0.02);\n\
+    vec3 spec = vec3(0.02);\n\
 #if defined(MATERIAL_SPECULAR)\n\
-    base = MATERIAL_SPECULAR;\n\
+    spec = MATERIAL_SPECULAR;\n\
 #endif\n\
-#if defined(MATERIAL_SPECULARMAP) && defined(MODEL_HAS_TEXCOORDS)\n\
-    base *= SRGBtoLINEAR(texture2D(MATERIAL_SPECULARMAP, v_texcoord.xy)).rgb;\n\
+#if defined(MATERIAL_SPECULARMAP) && defined(MODEL_VERTEX_TEXCOORD)\n\
+    spec *= SRGBtoLINEAR(texture2D(MATERIAL_SPECULARMAP, v_texcoord.xy)).rgb;\n\
 #endif\n\
 \n\
-    return base;\n\
+    return spec;\n\
 }\n\
 \n\
-#ifdef MATERIAL_EMISSIVEMAP\n\
-uniform sampler2D MATERIAL_EMISSIVEMAP;\n\
+#ifdef MATERIAL_EMISSIONMAP\n\
+uniform sampler2D MATERIAL_EMISSIONMAP;\n\
 #endif\n\
 \n\
 vec3 getMaterialEmission() {\n\
     vec3 emission = vec3(0.0);\n\
-#if defined(MATERIAL_EMISSIVEMAP) && defined(MODEL_HAS_TEXCOORDS)\n\
-    emission *= SRGBtoLINEAR(texture2D(MATERIAL_EMISSIVEMAP, v_texcoord.xy)).rgb;\n\
+#if defined(MATERIAL_EMISSIONMAP) && defined(MODEL_VERTEX_TEXCOORD)\n\
+    emission *= SRGBtoLINEAR(texture2D(MATERIAL_EMISSIONMAP, v_texcoord.xy)).rgb;\n\
 #elif defined(MATERIAL_EMISSION)\n\
     emission = MATERIAL_EMISSION;\n\
 #endif\n\
@@ -83,11 +83,11 @@ uniform sampler2D MATERIAL_BUMPMAP_NORMALMAP;\n\
 \n\
 vec3 getMaterialNormal() {\n\
     vec3 normal = vec3(0.0, 0.0, 1.0);\n\
-#ifdef MODEL_HAS_NORMALS\n\
+#ifdef MODEL_VERTEX_NORMAL\n\
     normal = v_normal;\n\
-    #if defined(MODEL_HAS_TANGENTS) && defined(MODEL_HAS_TEXCOORDS) && defined(MATERIAL_NORMALMAP)\n\
+    #if defined(MODEL_VERTEX_TANGENT) && defined(MODEL_VERTEX_TEXCOORD) && defined(MATERIAL_NORMALMAP)\n\
     normal = v_tangentToWorld * (texture2D(MATERIAL_BUMPMAP_NORMALMAP, v_texcoord.xy).xyz * 2.0 - 1.0);\n\
-    #elif defined(MODEL_HAS_TANGENTS) && defined(MODEL_HAS_TEXCOORDS) && defined(MATERIAL_BUMPMAP_NORMALMAP)\n\
+    #elif defined(MODEL_VERTEX_TANGENT) && defined(MODEL_VERTEX_TEXCOORD) && defined(MATERIAL_BUMPMAP_NORMALMAP)\n\
     normal = v_tangentToWorld * (texture2D(MATERIAL_BUMPMAP_NORMALMAP, v_texcoord.xy).xyz * 2.0 - 1.0);\n\
     #endif\n\
 #endif\n\
@@ -115,7 +115,7 @@ float convertMetallic(vec3 diffuse, vec3 specular, float maxSpecular) {\n\
 \n\
 float getMaterialMetallic() {\n\
     float metallic = 0.0;\n\
-#if defined(MATERIAL_METALLICMAP) && defined(MODEL_HAS_TEXCOORDS)\n\
+#if defined(MATERIAL_METALLICMAP) && defined(MODEL_VERTEX_TEXCOORD)\n\
     metallic = SRGBtoLINEAR(texture2D(MATERIAL_METALLICMAP, v_texcoord.xy)).r;\n\
 #elif defined(MATERIAL_METALLIC)\n\
     metallic = MATERIAL_METALLIC;\n\
@@ -134,12 +134,12 @@ uniform sampler2D MATERIAL_ROUGHNESSMAP;\n\
 \n\
 float getMaterialRoughness() {\n\
     float roughness = 0.1;\n\
-#if defined(MATERIAL_ROUGHNESSMAP) && defined(MODEL_HAS_TEXCOORDS)\n\
+#if defined(MATERIAL_ROUGHNESSMAP) && defined(MODEL_VERTEX_TEXCOORD)\n\
     roughness = SRGBtoLINEAR(texture2D(MATERIAL_ROUGHNESSMAP, v_texcoord.xy)).r;\n\
 #elif defined(MATERIAL_ROUGHNESS)\n\
     roughness = MATERIAL_ROUGHNESS;\n\
 #elif defined(DEBUG)\n\
-    roughness = checkBoard(vec2(20.0, 0.0)) * 0.25;\n\
+    roughness = checkBoard(vec2(10.0)) * 0.25;\n\
 #endif\n\
     return roughness;\n\
 }\n\

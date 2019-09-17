@@ -12,7 +12,6 @@
 #include "shaders/ui_light.h"
 #include "shaders/cubemap.h"
 #include "shaders/wireframe3D.h"
-// #include "shaders/default_floor.h"
 
 Scene::Scene(): 
     // Debug State
@@ -117,7 +116,7 @@ void Scene::setup(CommandList &_commands, Uniforms &_uniforms) {
             if (values.size() == 2 && values[0] == "material") {
                 for (std::map<std::string,Material>::iterator it = m_materials.begin(); it != m_materials.end(); it++){
                     if (it->second.name == values[1]) {
-                        it->second.printProperties();
+                        it->second.printDefines();
                         return true;
                     }
                 }
@@ -588,7 +587,7 @@ void Scene::setCubeMap( SkyBox* _skybox ) {
 
     m_cubemap_skybox = _skybox; 
     m_cubemap_skybox->change = true;
-    addDefine("SCENE_HAS_CUBEMAP", "u_cubeMap");
+    addDefine("SCENE_CUBEMAP", "u_cubeMap");
 }
 
 void Scene::setCubeMap( TextureCube* _cubemap ) {
@@ -702,7 +701,7 @@ bool Scene::loadShaders(const std::string &_fragmentShader, const std::string &_
     }
 
     if (m_cubemap)
-        addDefine("SCENE_HAS_CUBEMAP", "u_cubeMap");
+        addDefine("SCENE_CUBEMAP", "u_cubeMap");
 
     return rta;
 }
@@ -844,15 +843,18 @@ void Scene::renderFloor(Uniforms &_uniforms, const glm::mat4& _mvp) {
             m_floor_shader.addDefine("FLOOR_SUBD", m_floor_subd);
             m_floor_shader.addDefine("FLOOR_AREA", m_area * 3.0f);
             m_floor_shader.addDefine("FLOOR_HEIGHT", m_floor_height);
-            m_floor_shader.addDefine("MODEL_HAS_COLORS");
-            m_floor_shader.addDefine("MODEL_HAS_NORMALS");
-            m_floor_shader.addDefine("MODEL_HAS_TEXCOORDS");
-            addDefine("SCENE_HAS_SHADOWMAP", "u_ligthShadowMap");
+
+            m_floor_shader.addDefine("MODEL_VERTEX_COLOR");
+            m_floor_shader.addDefine("MODEL_VERTEX_NORMAL");
+            m_floor_shader.addDefine("MODEL_VERTEX_TEXCOORD");
+            
+            m_floor_shader.addDefine("LIGHT_SHADOWMAP", "u_ligthShadowMap");
             #ifdef PLATFORM_RPI
-                m_floor_shader.addDefine("SCENE_HAS_SHADOWMAP_SIZE", "512.0");
+                m_floor_shader.addDefine("LIGHT_SHADOWMAP_SIZE", "512.0");
             #else
-                m_floor_shader.addDefine("SCENE_HAS_SHADOWMAP_SIZE", "1024.0");
+                m_floor_shader.addDefine("LIGHT_SHADOWMAP_SIZE", "1024.0");
             #endif
+
         }
 
         if (m_floor_vbo) {

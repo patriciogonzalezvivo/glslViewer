@@ -15,17 +15,17 @@ uniform mat4 u_modelViewProjectionMatrix;\n\
 attribute vec4  a_position;\n\
 varying vec4    v_position;\n\
 \n\
-#ifdef MODEL_HAS_COLORS\n\
+#ifdef MODEL_VERTEX_COLOR\n\
 attribute vec4  a_color;\n\
 varying vec4    v_color;\n\
 #endif\n\
 \n\
-#ifdef MODEL_HAS_NORMALS\n\
+#ifdef MODEL_VERTEX_NORMAL\n\
 attribute vec3  a_normal;\n\
 varying vec3    v_normal;\n\
 #endif\n\
 \n\
-#ifdef MODEL_HAS_TEXCOORDS\n\
+#ifdef MODEL_VERTEX_TEXCOORD\n\
 attribute vec2  a_texcoord;\n\
 varying vec2    v_texcoord;\n\
 #endif\n\
@@ -34,15 +34,15 @@ void main(void) {\n\
     \n\
     v_position = a_position;\n\
     \n\
-#ifdef MODEL_HAS_COLORS\n\
+#ifdef MODEL_VERTEX_COLOR\n\
     v_color = a_color;\n\
 #endif\n\
     \n\
-#ifdef MODEL_HAS_NORMALS\n\
+#ifdef MODEL_VERTEX_NORMAL\n\
     v_normal = a_normal;\n\
 #endif\n\
     \n\
-#ifdef MODEL_HAS_TEXCOORDS\n\
+#ifdef MODEL_VERTEX_TEXCOORD\n\
     v_texcoord = a_texcoord;\n\
 #endif\n\
     \n\

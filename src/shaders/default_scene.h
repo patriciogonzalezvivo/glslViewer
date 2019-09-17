@@ -16,28 +16,28 @@ uniform mat4 u_modelViewProjectionMatrix;\n\
 attribute vec4  a_position;\n\
 varying vec4    v_position;\n\
 \n\
-#ifdef MODEL_HAS_COLORS\n\
+#ifdef MODEL_VERTEX_COLOR\n\
 attribute vec4  a_color;\n\
 varying vec4    v_color;\n\
 #endif\n\
 \n\
-#ifdef MODEL_HAS_NORMALS\n\
+#ifdef MODEL_VERTEX_NORMAL\n\
 attribute vec3  a_normal;\n\
 varying vec3    v_normal;\n\
 #endif\n\
 \n\
-#ifdef MODEL_HAS_TEXCOORDS\n\
+#ifdef MODEL_VERTEX_TEXCOORD\n\
 attribute vec2  a_texcoord;\n\
 varying vec2    v_texcoord;\n\
 #endif\n\
 \n\
-#ifdef MODEL_HAS_TANGENTS\n\
+#ifdef MODEL_VERTEX_TANGENT\n\
 attribute vec4  a_tangent;\n\
 varying vec4    v_tangent;\n\
 varying mat3    v_tangentToWorld;\n\
 #endif\n\
 \n\
-#ifdef SCENE_HAS_SHADOWMAP\n\
+#ifdef LIGHT_SHADOWMAP\n\
 uniform mat4    u_lightMatrix;\n\
 varying vec4    v_lightcoord;\n\
 #endif\n\
@@ -46,26 +46,26 @@ void main(void) {\n\
     \n\
     v_position = a_position;\n\
     \n\
-#ifdef MODEL_HAS_COLORS\n\
+#ifdef MODEL_VERTEX_COLOR\n\
     v_color = a_color;\n\
 #endif\n\
     \n\
-#ifdef MODEL_HAS_NORMALS\n\
+#ifdef MODEL_VERTEX_NORMAL\n\
     v_normal = a_normal;\n\
 #endif\n\
     \n\
-#ifdef MODEL_HAS_TEXCOORDS\n\
+#ifdef MODEL_VERTEX_TEXCOORD\n\
     v_texcoord = a_texcoord;\n\
 #endif\n\
     \n\
-#ifdef MODEL_HAS_TANGENTS\n\
+#ifdef MODEL_VERTEX_TANGENT\n\
     v_tangent = a_tangent;\n\
     vec3 worldTangent = a_tangent.xyz;\n\
     vec3 worldBiTangent = cross(v_normal, worldTangent) * sign(a_tangent.w);\n\
     v_tangentToWorld = mat3(normalize(worldTangent), normalize(worldBiTangent), normalize(v_normal));\n\
 #endif\n\
     \n\
-#ifdef SCENE_HAS_SHADOWMAP\n\
+#ifdef LIGHT_SHADOWMAP\n\
     v_lightcoord = u_lightMatrix * v_position;\n\
 #endif\n\
     \n\
@@ -114,9 +114,9 @@ vec3 fix_cube_lookup( vec3 v, float cube_size, float lod ) {\n\
 }\n\
 \n\
 vec3 prefilterEnvMap(vec3 _normal, float _roughness) {\n\
-#if defined(SCENE_HAS_CUBEMAP)\n\
-    vec4 color = mix(   textureCube(SCENE_HAS_CUBEMAP, _normal, (_roughness * numMips) ),\n\
-                        textureCube(SCENE_HAS_CUBEMAP, _normal, min((_roughness * numMips) + 1.0, numMips)),\n\
+#if defined(SCENE_CUBEMAP)\n\
+    vec4 color = mix(   textureCube(SCENE_CUBEMAP, _normal, (_roughness * numMips) ),\n\
+                        textureCube(SCENE_CUBEMAP, _normal, min((_roughness * numMips) + 1.0, numMips)),\n\
                         fract(_roughness * numMips) );\n\
     return tonemap(color.rgb);\n\
 #elif defined(DEBUG)\n\
@@ -150,7 +150,7 @@ vec3 fresnel(Components _comp, vec3 _f0) {\n\
     vec3 frsnl = _f0 + (vec3(1.0) - _f0) * exponential;\n\
     vec3 reflectColor = vec3(0.0);\n\
 \n\
-    #if defined(SCENE_HAS_SH_ARRAY)\n\
+    #if defined(SCENE_SH_ARRAY)\n\
     reflectColor = tonemap(sphericalHarmonics(_comp.R));\n\
     #else\n\
     reflectColor = fakeCubeMap(_comp.R);\n\
@@ -234,9 +234,9 @@ void lightWithShadow(Components _comp, out vec3 _diffuse, out vec3 _specular) {\
 \n\
     float shadow = 1.0;\n\
 \n\
-#if defined(SCENE_HAS_SHADOWMAP) && defined(SCENE_HAS_SHADOWMAP_SIZE) && !defined(PLATFORM_RPI)\n\
+#if defined(LIGHT_SHADOWMAP) && defined(LIGHT_SHADOWMAP_SIZE) && !defined(PLATFORM_RPI)\n\
     float bias = 0.005;\n\
-    shadow *= textureShadowPCF(u_ligthShadowMap, vec2(SCENE_HAS_SHADOWMAP_SIZE), v_lightcoord.xy, v_lightcoord.z - bias);\n\
+    shadow *= textureShadowPCF(u_ligthShadowMap, vec2(LIGHT_SHADOWMAP_SIZE), v_lightcoord.xy, v_lightcoord.z - bias);\n\
     shadow = clamp(shadow, 0.0, 1.0);\n\
 #endif\n\
 \n\
@@ -247,9 +247,9 @@ void lightWithShadow(Components _comp, out vec3 _diffuse, out vec3 _specular) {\
 void main(void) {\n\
     vec3 albedo = getMaterialAlbedo();\n\
     vec3 emissionColor = getMaterialEmission();\n\
+    vec3 f0 = getMaterialSpecular();\n\
     float roughness = getMaterialRoughness();\n\
     float metallic = getMaterialMetallic();\n\
-    vec3 f0 = getMaterialSpecular();\n\
 \n\
     // Calculate Color\n\
     vec3 color = vec3(0.0);\n\
@@ -265,7 +265,7 @@ void main(void) {\n\
 \n\
     vec3 diffuse = comp.diffuseColor * 0.3183098862; // Lambert\n\
     // IBL\n\
-    #if defined(SCENE_HAS_SH_ARRAY)\n\
+    #if defined(SCENE_SH_ARRAY)\n\
     diffuse *= tonemap( sphericalHarmonics(comp.N) );\n\
     #endif\n\
 \n\

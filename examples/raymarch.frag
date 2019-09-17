@@ -14,7 +14,7 @@ uniform vec3        u_lightColor;
 uniform vec2        u_resolution;
 
 varying vec4        v_position;
-#ifdef MODEL_HAS_COLORS
+#ifdef MODEL_VERTEX_EX_COLORS
 varying vec4        v_color;
 #endif
 varying vec3        v_normal;
@@ -389,7 +389,7 @@ void main() {
     // FOWARD RENDER
     color = vec3(.5);
 
-#ifdef MODEL_HAS_COLORS
+#ifdef MODEL_VERTEX_COLOR
     color *= v_color.rgb;
 #endif
 

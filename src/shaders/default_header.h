@@ -14,19 +14,19 @@ uniform vec2        u_resolution;\n\
 \n\
 varying vec4        v_position;\n\
 \n\
-#ifdef MODEL_HAS_COLORS\n\
+#ifdef MODEL_VERTEX_COLOR\n\
 varying vec4        v_color;\n\
 #endif\n\
 \n\
-#ifdef MODEL_HAS_NORMALS\n\
+#ifdef MODEL_VERTEX_NORMAL\n\
 varying vec3        v_normal;\n\
 #endif\n\
 \n\
-#ifdef MODEL_HAS_TEXCOORDS\n\
+#ifdef MODEL_VERTEX_TEXCOORD\n\
 varying vec2        v_texcoord;\n\
 #endif\n\
 \n\
-#ifdef MODEL_HAS_TANGENTS\n\
+#ifdef MODEL_VERTEX_TANGENT\n\
 varying mat3        v_tangentToWorld;\n\
 varying vec4        v_tangent;\n\
 #endif\n\

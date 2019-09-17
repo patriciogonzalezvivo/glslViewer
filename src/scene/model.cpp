@@ -20,11 +20,11 @@ Model::Model(const std::string& _name, Mesh &_mesh, const Material &_mat):
 
 void Model::setName(const std::string& _str) {
     if (!m_name.empty())
-        delDefine( "MODEL_" + toUpper( toUnderscore( purifyString(m_name) ) ) );
+        delDefine( "MODEL_NAME_" + toUpper( toUnderscore( purifyString(m_name) ) ) );
 
     if (!_str.empty()) {
         m_name = toLower( toUnderscore( purifyString(_str) ) );
-        addDefine( "MODEL_" + toUpper( m_name ) );
+        addDefine( "MODEL_NAME_" + toUpper( m_name ) );
     }
 }
 
@@ -55,40 +55,41 @@ bool Model::loadGeom(Mesh& _mesh) {
 
     // Setup Shader and GEOMETRY DEFINE FLAGS
     if (_mesh.hasColors())
-        addDefine("MODEL_HAS_COLORS");
+        addDefine("MODEL_VERTEX_COLOR", "v_color");
 
     if (_mesh.hasNormals())
-        addDefine("MODEL_HAS_NORMALS");
+        addDefine("MODEL_VERTEX_NORMAL", "v_normal");
 
     if (_mesh.hasTexCoords())
-        addDefine("MODEL_HAS_TEXCOORDS");
+        addDefine("MODEL_VERTEX_TEXCOORD", "v_texcoord");
 
     if (_mesh.hasTangents())
-        addDefine("MODEL_HAS_TANGENTS");
+        addDefine("MODEL_VERTEX_TANGENT", "v_tangent");
 
     if (_mesh.getDrawMode() == GL_POINTS)
-        addDefine("MODEL_IS_POINTS");
+        addDefine("MODEL_PRIMITIVE_POINTS");
     else if (_mesh.getDrawMode() == GL_LINES)
-        addDefine("MODEL_IS_LINES");
+        addDefine("MODEL_PRIMITIVE_LINES");
     else if (_mesh.getDrawMode() == GL_LINE_STRIP)
-        addDefine("MODEL_IS_LINE_STRIP");
+        addDefine("MODEL_PRIMITIVE_LINE_STRIP");
     else if (_mesh.getDrawMode() == GL_TRIANGLES)
-        addDefine("MODEL_IS_TRIANGLES");
+        addDefine("MODEL_PRIMITIVE_TRIANGLES");
     else if (_mesh.getDrawMode() == GL_TRIANGLE_FAN)
-        addDefine("MODEL_IS_TRIANGLE_FAN");
+        addDefine("MODEL_PRIMITIVE_TRIANGLE_FAN");
 
-    addDefine("SCENE_HAS_SHADOWMAP", "u_ligthShadowMap");
+    addDefine("LIGHT_SHADOWMAP", "u_ligthShadowMap");
 #ifdef PLATFORM_RPI
-    addDefine("SCENE_HAS_SHADOWMAP_SIZE", "512.0");
+    addDefine("LIGHT_SHADOWMAP_SIZE", "512.0");
 #else
-    addDefine("SCENE_HAS_SHADOWMAP_SIZE", "1024.0");
+    addDefine("LIGHT_SHADOWMAP_SIZE", "1024.0");
 #endif
 
     return true;
 }
 
 bool Model::loadMaterial(const Material &_material) {
-    return _material.feedProperties(m_shader);
+    m_shader.mergeDefines(&_material);
+    return true;
 }
 
 bool Model::loadShader(const std::string& _fragStr, const std::string& _vertStr, bool verbose) {

@@ -7,8 +7,8 @@
 #include "window.h"
 
 #include "tools/text.h"
-#include "tools/image.h"
 #include "tools/shapes.h"
+#include "loaders/pixels.h"
 
 #include "glm/gtx/matrix_transform_2d.hpp"
 #include "glm/gtx/rotate_vector.hpp"
@@ -253,10 +253,10 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     // -----------------------------------------------
 
     if (geom_index == -1) {
-        // m_canvas_shader.addDefine("MODEL_HAS_COLORS");
-        // m_canvas_shader.addDefine("MODEL_HAS_NORMALS");
-        m_canvas_shader.addDefine("MODEL_HAS_TEXCOORDS");
-        // m_canvas_shader.addDefine("MODEL_HAS_TANGENTS");
+        // m_canvas_shader.addDefine("MODEL_VERTEX_EX_COLORS");
+        // m_canvas_shader.addDefine("MODEL_VERTEX_EX_NORMALS");
+        m_canvas_shader.addDefine("MODEL_VERTEX_TEXCOORD");
+        // m_canvas_shader.addDefine("MODEL_VERTEX_TANGENT");
     }
     else {
         m_scene.setup( _commands, uniforms);
@@ -369,9 +369,9 @@ bool Sandbox::reloadShaders( WatchFileList &_files ) {
             std::cout << "// Reload 3D scene shaders" << std::endl;
 
         if (m_scene.getCubeMap()) {
-            m_scene.addDefine("SCENE_HAS_SH_ARRAY", "u_SH");
+            m_scene.addDefine("SCENE_SH_ARRAY", "u_SH");
             if (m_scene.showCubebox)
-                m_scene.addDefine("SCENE_HAS_CUBEMAP", "u_cubeMap");
+                m_scene.addDefine("SCENE_CUBEMAP", "u_cubeMap");
         }
 
         m_scene.loadShaders(m_frag_source, m_vert_source, verbose);
