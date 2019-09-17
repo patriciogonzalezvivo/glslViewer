@@ -1,0 +1,18 @@
+#
+# Wavefront material file
+# Converted by Meshlab Group
+#
+
+newmtl default
+Ka 0.200000 0.200000 0.200000
+Kd 0.752941 0.752941 0.752941
+Ks 1.000000 1.000000 1.000000
+Ns 10.000000
+Tr 1.000000
+Pm 0.00
+Pr 1.0
+illum 2
+map_Kd default.png
+#map_bump bumpmap.jpg
+map_normal normal_4.png
+
