@@ -119,7 +119,7 @@ std::string toString(bool _bool) {
 std::string toString(const glm::vec2 &_vec, char _sep) {
     std::ostringstream strStream;
     strStream << std::fixed << std::setprecision(3) << _vec.x << _sep;
-    strStream << std::fixed << std::setprecision(3) << _vec.y << _sep;
+    strStream << std::fixed << std::setprecision(3) << _vec.y;
     return strStream.str();
 }
 

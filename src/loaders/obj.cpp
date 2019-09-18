@@ -127,103 +127,216 @@ Material InitMaterial (const tinyobj::material_t& _material, Uniforms& _uniforms
     mat.addDefine("MATERIAL_ALBEDO", (float*)_material.diffuse, 3);
     if (!_material.diffuse_texname.empty()) {
         std::string name = getUniformName(_material.diffuse_texname);
-        _uniforms.addTexture(getUniformName( _material.diffuse_texname ), _folder + _material.diffuse_texname, _files);
+        _uniforms.addTexture(name, _folder + _material.diffuse_texname, _files);
         mat.addDefine("MATERIAL_ALBEDOMAP", name);
+
+        if (_material.diffuse_texopt.origin_offset[0] != 0.0 ||
+            _material.diffuse_texopt.origin_offset[1] != 0.0 ) {
+            mat.addDefine("MATERIAL_ALBEDOMAP_OFFSET", (float*)_material.diffuse_texopt.origin_offset, 3);
+        }
+
+        if (_material.diffuse_texopt.scale[0] != 1.0 ||
+            _material.diffuse_texopt.scale[1] != 1.0 ) {
+            mat.addDefine("MATERIAL_ALBEDOMAP_SCALE", (float*)_material.diffuse_texopt.scale, 3);
+        }
+
     }
 
     mat.addDefine("MATERIAL_SPECULAR", (float*)_material.specular, 3);
     if (!_material.specular_texname.empty()) {
         std::string name = getUniformName(_material.specular_texname);
-        _uniforms.addTexture(getUniformName( _material.specular_texname ), _folder + _material.specular_texname, _files);
+        _uniforms.addTexture(name, _folder + _material.specular_texname, _files);
         mat.addDefine("MATERIAL_SPECULARMAP", name);
+
+        if (_material.specular_texopt.origin_offset[0] != 0.0 ||
+            _material.specular_texopt.origin_offset[1] != 0.0 ) {
+            mat.addDefine("MATERIAL_SPECULARMAP_OFFSET", (float*)_material.specular_texopt.origin_offset, 3);
+        }
+
+        if (_material.specular_texopt.scale[0] != 1.0 ||
+            _material.specular_texopt.scale[1] != 1.0 ) {
+            mat.addDefine("MATERIAL_SPECULARMAP_SCALE", (float*)_material.specular_texopt.scale, 3);
+        }
     }
 
     mat.addDefine("MATERIAL_EMISSION", (float*)_material.emission, 3);
     if (!_material.emissive_texname.empty()) {
         std::string name = getUniformName(_material.emissive_texname);
-        _uniforms.addTexture(getUniformName( _material.emissive_texname ), _folder + _material.emissive_texname, _files);
+        _uniforms.addTexture(name, _folder + _material.emissive_texname, _files);
         mat.addDefine("MATERIAL_EMISSIONMAP", name);
+
+        if (_material.emissive_texopt.origin_offset[0] != 0.0 ||
+            _material.emissive_texopt.origin_offset[1] != 0.0 ) {
+            mat.addDefine("MATERIAL_EMISSIONMAP_OFFSET", (float*)_material.emissive_texopt.origin_offset, 3);
+        }
+
+        if (_material.emissive_texopt.scale[0] != 1.0 ||
+            _material.emissive_texopt.scale[1] != 1.0 ) {
+            mat.addDefine("MATERIAL_EMISSIONMAP_SCALE", (float*)_material.emissive_texopt.scale, 3);
+        }
     }
 
     mat.addDefine("MATERIAL_ROUGHNESS", _material.roughness);
     if (!_material.roughness_texname.empty()) {
         std::string name = getUniformName(_material.roughness_texname);
-        _uniforms.addTexture(getUniformName( _material.roughness_texname ), _folder + _material.roughness_texname, _files);
+        _uniforms.addTexture(name, _folder + _material.roughness_texname, _files);
         mat.addDefine("MATERIAL_ROUGHNESSMAP", name);
+
+        if (_material.roughness_texopt.origin_offset[0] != 0.0 ||
+            _material.roughness_texopt.origin_offset[1] != 0.0 ) {
+            mat.addDefine("MATERIAL_ROUGHNESSMAP_OFFSET", (float*)_material.roughness_texopt.origin_offset, 3);
+        }
+
+        if (_material.roughness_texopt.scale[0] != 1.0 ||
+            _material.roughness_texopt.scale[1] != 1.0 ) {
+            mat.addDefine("MATERIAL_ROUGHNESSMAP_SCALE", (float*)_material.roughness_texopt.scale, 3);
+        }
     }
 
     mat.addDefine("MATERIAL_METALLIC", _material.metallic);
     if (!_material.metallic_texname.empty()) {
         std::string name = getUniformName(_material.metallic_texname);
-        _uniforms.addTexture(getUniformName( _material.metallic_texname ), _folder + _material.metallic_texname, _files);
+        _uniforms.addTexture(name, _folder + _material.metallic_texname, _files);
         mat.addDefine("MATERIAL_METALLICMAP", name);
+
+        if (_material.metallic_texopt.origin_offset[0] != 0.0 ||
+            _material.metallic_texopt.origin_offset[1] != 0.0 ) {
+            mat.addDefine("MATERIAL_METALLICMAP_OFFSET", (float*)_material.metallic_texopt.origin_offset, 3);
+        }
+
+        if (_material.metallic_texopt.scale[0] != 1.0 ||
+            _material.metallic_texopt.scale[1] != 1.0 ) {
+            mat.addDefine("MATERIAL_METALLICMAP_SCALE", (float*)_material.metallic_texopt.scale, 3);
+        }
     }
 
     if (!_material.normal_texname.empty()) {
         std::string name = getUniformName(_material.normal_texname);
-        _uniforms.addTexture(getUniformName( _material.normal_texname ), _folder + _material.normal_texname, _files);
+        _uniforms.addTexture(name, _folder + _material.normal_texname, _files);
         mat.addDefine("MATERIAL_NORMALMAP", name);
+
+        if (_material.normal_texopt.origin_offset[0] != 0.0 ||
+            _material.normal_texopt.origin_offset[1] != 0.0 ) {
+            mat.addDefine("MATERIAL_NORMALMAP_OFFSET", (float*)_material.normal_texopt.origin_offset, 3);
+        }
+
+        if (_material.normal_texopt.scale[0] != 1.0 ||
+            _material.normal_texopt.scale[1] != 1.0 ) {
+            mat.addDefine("MATERIAL_NORMALMAP_SCALE", (float*)_material.normal_texopt.scale, 3);
+        }
     }
 
     if (!_material.bump_texname.empty()) {
         std::string name = getUniformName(_material.bump_texname);
-        _uniforms.addTexture(getUniformName( _material.bump_texname ), _folder + _material.bump_texname, _files);
+        _uniforms.addTexture(name, _folder + _material.bump_texname, _files);
         mat.addDefine("MATERIAL_BUMPMAP", name);
+        _uniforms.addBumpTexture(name + "_normalmap", _folder + _material.bump_texname, _files);
+        mat.addDefine("MATERIAL_BUMPMAP_NORMALMAP", name + "_normalmap");
+
+        if (_material.bump_texopt.origin_offset[0] != 0.0 ||
+            _material.bump_texopt.origin_offset[1] != 0.0 ) {
+            mat.addDefine("MATERIAL_BUMPMAP_OFFSET", (float*)_material.bump_texopt.origin_offset, 3);
+            
+        }
+
+        if (_material.bump_texopt.scale[0] != 1.0 ||
+            _material.bump_texopt.scale[1] != 1.0 ) {
+            mat.addDefine("MATERIAL_BUMPMAP_SCALE", (float*)_material.bump_texopt.scale, 3);
+        }
     }
 
     if (!_material.displacement_texname.empty()) {
         std::string name = getUniformName(_material.displacement_texname);
-        _uniforms.addTexture(getUniformName( _material.displacement_texname ), _folder + _material.displacement_texname, _files);
+        _uniforms.addTexture(name, _folder + _material.displacement_texname, _files);
         mat.addDefine("MATERIAL_DISPLACEMENTMAP", name);
+
+        if (_material.displacement_texopt.origin_offset[0] != 0.0 ||
+            _material.displacement_texopt.origin_offset[1] != 0.0 ) {
+            mat.addDefine("MATERIAL_DISPLACEMENTMAP_OFFSET", (float*)_material.displacement_texopt.origin_offset, 3);
+        }
+
+        if (_material.displacement_texopt.scale[0] != 1.0 ||
+            _material.displacement_texopt.scale[1] != 1.0 ) {
+            mat.addDefine("MATERIAL_DISPLACEMENTMAP_SCALE", (float*)_material.displacement_texopt.scale, 3);
+        }
     }
 
     if (!_material.alpha_texname.empty()) {
         std::string name = getUniformName(_material.alpha_texname);
-        _uniforms.addTexture(getUniformName( _material.alpha_texname ), _folder + _material.alpha_texname, _files);
+        _uniforms.addTexture(name, _folder + _material.alpha_texname, _files);
         mat.addDefine("MATERIAL_ALPHAMAP", name);
+
+        if (_material.alpha_texopt.origin_offset[0] != 0.0 ||
+            _material.alpha_texopt.origin_offset[1] != 0.0 ) {
+            mat.addDefine("MATERIAL_ALPHAMAP_OFFSET", (float*)_material.alpha_texopt.origin_offset, 3);
+        }
+
+        if (_material.alpha_texopt.scale[0] != 1.0 ||
+            _material.alpha_texopt.scale[1] != 1.0 ) {
+            mat.addDefine("MATERIAL_ALPHAMAP_SCALE", (float*)_material.alpha_texopt.scale, 3);
+        }
     }
     
     // EXTRA 
      mat.addDefine("MATERIAL_SHEEN", _material.sheen);
     if (!_material.sheen_texname.empty()) {
         std::string name = getUniformName(_material.sheen_texname);
-        _uniforms.addTexture(getUniformName( _material.sheen_texname ), _folder + _material.sheen_texname, _files);
+        _uniforms.addTexture(name, _folder + _material.sheen_texname, _files);
         mat.addDefine("MATERIAL_SHEENMAP", name);
+
+        if (_material.sheen_texopt.origin_offset[0] != 0.0 ||
+            _material.sheen_texopt.origin_offset[1] != 0.0 ) {
+            mat.addDefine("MATERIAL_SHEENMAP_OFFSET", (float*)_material.sheen_texopt.origin_offset, 3);
+        }
+
+        if (_material.sheen_texopt.scale[0] != 1.0 ||
+            _material.sheen_texopt.scale[1] != 1.0 ) {
+            mat.addDefine("MATERIAL_SHEENMAP_SCALE", (float*)_material.sheen_texopt.scale, 3);
+        }
     }
 
     mat.addDefine("MATERIAL_SHININESS", _material.shininess);
 
-    // mat.addDefine("MATERIAL_ILLUM", _material.illum);
+    mat.addDefine("MATERIAL_ILLUM", _material.illum);
 
-    // if (_material.anisotropy > 0)
-    //     mat.addDefine("MATERIAL_ANISOTROPY", _material.anisotropy);
+    if (_material.anisotropy > 0)
+        mat.addDefine("MATERIAL_ANISOTROPY", _material.anisotropy);
 
-    // if (_material.anisotropy_rotation > 0)
-    //     mat.addDefine("MATERIAL_ANISOTROPY_ROTATION", _material.anisotropy_rotation);
+    if (_material.anisotropy_rotation > 0)
+        mat.addDefine("MATERIAL_ANISOTROPY_ROTATION", _material.anisotropy_rotation);
 
-    // if (_material.clearcoat_roughness > 0)
-    //     mat.addDefine("MATERIAL_CLEARCOAT_ROUGHNESS", _material.clearcoat_roughness);
+    if (_material.clearcoat_roughness > 0)
+        mat.addDefine("MATERIAL_CLEARCOAT_ROUGHNESS", _material.clearcoat_roughness);
 
-    // if (_material.clearcoat_thickness > 0)
-    //     mat.addDefine("MATERIAL_CLEARCOAT_THICKNESS", _material.clearcoat_thickness);
+    if (_material.clearcoat_thickness > 0)
+        mat.addDefine("MATERIAL_CLEARCOAT_THICKNESS", _material.clearcoat_thickness);
 
-    // mat.addDefine("MATERIAL_IOR", _material.ior);
+    mat.addDefine("MATERIAL_IOR", _material.ior);
 
     // mat.addDefine("MATERIAL_AMBIENT", (float*)_material.ambient, 3);
     // if (!_material.ambient_texname.empty()) {
     //     std::string name = getUniformName(_material.ambient_texname);
-    //     _uniforms.addTexture(getUniformName( _material.ambient_texname ), _folder + _material.ambient_texname, _files);
+    //     _uniforms.addTexture(name, _folder + _material.ambient_texname, _files);
     //     mat.addDefine("MATERIAL_AMBIENTMAP", name);
     // }
 
-    // mat.addDefine("MATERIAL_DISSOLVE", _material.dissolve);
-    // mat.addDefine("MATERIAL_TRANSMITTANCE", (float*)_material.transmittance, 3);
+    mat.addDefine("MATERIAL_DISSOLVE", _material.dissolve);
+    mat.addDefine("MATERIAL_TRANSMITTANCE", (float*)_material.transmittance, 3);
+    if (!_material.reflection_texname.empty()) {
+        std::string name = getUniformName(_material.reflection_texname);
+        _uniforms.addTexture(name, _folder + _material.reflection_texname, _files);
+        mat.addDefine("MATERIAL_REFLECTIONMAP", name);
 
-    // if (!_material.reflection_texname.empty()) {
-    //     std::string name = getUniformName(_material.reflection_texname);
-    //     _uniforms.addTexture(getUniformName( _material.reflection_texname ), _folder + _material.reflection_texname, _files);
-    //     mat.addDefine("MATERIAL_REFLECTIONMAP", name);
-    // }
+        if (_material.reflection_texopt.origin_offset[0] != 0.0 ||
+            _material.reflection_texopt.origin_offset[1] != 0.0 ) {
+            mat.addDefine("MATERIAL_REFLECTIONMAP_OFFSET", (float*)_material.reflection_texopt.origin_offset, 3);
+        }
+
+        if (_material.reflection_texopt.scale[0] != 1.0 ||
+            _material.reflection_texopt.scale[1] != 1.0 ) {
+            mat.addDefine("MATERIAL_REFLECTIONMAP_SCALE", (float*)_material.reflection_texopt.scale, 3);
+        }
+    }
 
     // mat.specular_highlightMap = _material.specular_highlight_texname;
 

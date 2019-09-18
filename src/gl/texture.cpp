@@ -99,7 +99,7 @@ bool Texture::loadBump(const std::string& _path, bool _vFlip) {
             data[i] = pixels[i] * m;
         }
 
-        float _scale = 1.0;
+        float _scale = -10.0;
 
         const int w = m_width - 1;
         const int h = m_height - 1;

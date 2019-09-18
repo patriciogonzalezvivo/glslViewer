@@ -131,7 +131,6 @@ bool Uniforms::addBumpTexture(const std::string& _name, const std::string& _path
         else {
             Texture* tex = new Texture();
 
-            std::cout << "Try to load and convert BUMPMAP " << _path << std::endl;
             // load an image into the texture
             if (tex->loadBump(_path, true)) {
 
