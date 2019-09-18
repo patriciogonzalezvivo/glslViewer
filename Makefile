@@ -21,14 +21,14 @@ INCLUDES +=	-Isrc/ -Iinclude/
 CFLAGS += -Wall -O3 -std=c++11 -fpermissive
 
 ifeq ($(PLATFORM),Raspbian GNU/Linux 8 (jessie))
-CFLAGS += -DGLM_FORCE_CXX98 -DPLATFORM_RPI
-INCLUDES += -I$(SDKSTAGE)/opt/vc/include/ \
-			-I$(SDKSTAGE)/opt/vc/include/interface/vcos/pthreads \
-			-I$(SDKSTAGE)/opt/vc/include/interface/vmcs_host/linux
-LDFLAGS += -L$(SDKSTAGE)/opt/vc/lib/ \
-			-lGLESv2 -lEGL \
-			-lbcm_host \
-			-lpthread
+	CFLAGS += -DGLM_FORCE_CXX98 -DPLATFORM_RPI
+	INCLUDES += -I$(SDKSTAGE)/opt/vc/include/ \
+				-I$(SDKSTAGE)/opt/vc/include/interface/vcos/pthreads \
+				-I$(SDKSTAGE)/opt/vc/include/interface/vmcs_host/linux
+	LDFLAGS += -L$(SDKSTAGE)/opt/vc/lib/ \
+				-lGLESv2 -lEGL \
+				-lbcm_host \
+				-lpthread
 
 else ifeq ($(PLATFORM),Raspbian GNU/Linux 9 (stretch))
 	CFLAGS += -DGLM_FORCE_CXX98 -DPLATFORM_RPI
@@ -39,6 +39,17 @@ else ifeq ($(PLATFORM),Raspbian GNU/Linux 9 (stretch))
 			   	-lbrcmGLESv2 -lbrcmEGL \
 			   	-lbcm_host \
 			    -lpthread
+//
+//else ifeq ($(PLATFORM),Raspbian GNU/Linux 10 (buster))
+//	CFLAGS += -DGLM_FORCE_CXX98 -DPLATFORM_RPI
+//	INCLUDES += -I$(SDKSTAGE)/opt/vc/include/ \
+//			    -I$(SDKSTAGE)/opt/vc/include/interface/vcos/pthreads \
+//			    -I$(SDKSTAGE)/opt/vc/include/interface/vmcs_host/linux
+//	LDFLAGS += -L$(SDKSTAGE)/opt/vc/lib/ \
+//			  	-lbrcmGLESv2 -lbrcmEGL \
+//			   	-lbcm_host \
+//			   	-lpthread
+
 $(info Platform ${PLATFORM})
 
 else ifeq ($(shell uname),Linux)
