@@ -12,7 +12,5 @@ Tr 1.000000
 Pm 0.00
 Pr 0.5
 illum 2
-#map_Kd default.png
-#map_bump -s 5 5 5 bumpmap.jpg
-#norm -s 10 10 10 normal.png 
+norm -s 10 10 10 normal.png 
 

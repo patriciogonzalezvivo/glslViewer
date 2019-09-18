@@ -5,7 +5,7 @@
 #
 # http://graphics.cs.williams.edu/data
 
-mtllib default.mtl
+mtllib cube.mtl
 
 v -0.5 0.5 -0.5 0 0 0
 v -0.5 0.5 0.5 0 0 1
