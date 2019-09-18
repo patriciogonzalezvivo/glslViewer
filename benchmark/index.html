@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="x-ua-compatible" content="ie=edge">
+        <title>Library module benchmark</title>
+
+        <link href='https://rawgit.com/mozilla/metrics-graphics/master/dist/metricsgraphics.css' rel='stylesheet' type='text/css'>
+        <link href='https://rawgit.com/dandehavilland/mg-line-brushing/master/dist/mg_line_brushing.css' rel='stylesheet' type='text/css'>
+        <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css">
+
+        <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.0/jquery.min.js'></script>
+        <script src="https://d3js.org/d3.v4.js"></script>
+        <script src="https://rawgit.com/mozilla/metrics-graphics/master/dist/metricsgraphics.js"></script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+        <script type="text/javascript" src="https://rawgit.com/chjj/marked/master/lib/marked.js"></script>
+
+        <style type="text/css">
+            
+            #chart {
+                font-family: monospace;
+                font-size: 10px;
+                width: 100%;
+            } 
+
+            .linked {
+                position: absolute;
+                left: 100px;
+                width: 100%;
+                transform: translate(-25%, 0px);
+            }
+
+        </style>
+    </head>
+    <body>
+
+        <div id="chart"></div>
+        <div id="legend"></div>
+
+        <script type="text/javascript">
+            function fetchHTTP(url, methood){
+                var request = new XMLHttpRequest(), response;
+                request.onreadystatechange = function () {
+                    if (request.readyState === 4 && request.status === 200) {
+                        response = request.responseText;
+                    }
+                }
+                request.open(methood ? methood : 'GET', url, false);
+                request.send();
+                return response;
+            }
+
+            function getRandomColor() {
+                function c() {
+                    var hex = Math.floor(Math.random()*256).toString(16);
+                    return ("0"+String(hex)).substr(-2); // pad with zero
+                }
+                return "#"+c()+c()+c();
+            }
+
+            function dropWWW(path) {
+                return path.replace(/\www(\.*)/gm, "$1");
+            }
+
+            function sortByKey(array, key) {
+                return array.sort(function(a, b) {
+                  var x = a[key]; var y = b[key];
+                  return ((x < y) ? -1 : ((x > y) ? 1 : 0));
+                });
+            }
+
+            var cursorX;
+            var cursorY;
+            document.onmousemove = function(e){
+                cursorX = e.pageX;
+                cursorY = e.pageY;
+            }
+
+            window.onload = function() {
+                var url = 'index.json';
+
+                d3.json(url, function(data) {
+                    console.log(data)
+
+                    var datum = [];
+                    var legend = [];
+                    var colors = [];
+                    var srcs = [];
+                    var titles = [];
+                    var tests = [];
+
+                    // Load module data
+                    if (!data) {
+                        return
+                    }
+                    
+                    // Load test to the chart
+                    var tests_el = document.getElementById('benchmarks_tests');
+                    for (var index in data) {
+                        var test = data[index];
+                        console.log(index, test['name'])
+                        test['color'] = getRandomColor();
+                        titles.push(test['name']);
+                        datum.push(test['data']);
+                        srcs.push(test['output']);
+                        tests.push(test);
+                        legend.push(test['name']);
+                        colors.push(test['color']);
+                    }
+
+                    // sortByKey(tests, "mean");
+                    // for (var i in tests){ 
+                    //     var test = tests[i]; 
+                    //     var test_el = document.createElement('div');
+                    //     test_el.className = 'benchmarks_test'
+                    //     test_el.innerHTML = '<p class="benchmarks_test_name" style="color:'+colors[i]+'">' + test.name + '</p>'
+                    //     test_el.innerHTML += '<p class="benchmarks_test_metrics"> Mean: ' + test.mean + ' Median: ' + test.median + '</p>';
+
+                    //     tests_el.appendChild(test_el);
+                    // }
+
+                    MG.data_graphic({
+                        // title: "Frame delta",
+                        description: "This test was perform on a RaspberryPi",
+                        data: datum,
+                        width: "800",
+                        height: "600",
+                        target: '#chart',
+                        legend: legend,
+                        colors: colors,
+                        y_extended_ticks: true,
+                        min_y_from_data: true,
+                        x_accessor: 'sec',
+                        y_accessor: 'val',
+                        linked: true,
+                    });
+                });
+            };
+        </script>
+    </body>
+</html>
