@@ -157,7 +157,7 @@ GLuint Shader::compileShader(const std::string& _src, GLenum _type, bool _verbos
         std::cout << _src << std::endl;
     }
 
-    prolog += "#line 1\n";
+    prolog += "#line 0\n";
 
     const GLchar* sources[2] = {
         (const GLchar*) prolog.c_str(),
