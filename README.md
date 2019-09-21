@@ -35,7 +35,11 @@ GlslViewer gives support to:
 
 * [Using GlslViewer](https://github.com/patriciogonzalezvivo/glslViewer/wiki/Using-GlslViewer)
 
-* [GlslViewer UNIFORMS and DEFINES conventions](https://github.com/patriciogonzalezvivo/glslViewer/wiki/GlslViewer-UNIFORMS-and-DEFINES-conventions)
+* GlslViewer Conventions
+
+    * [UNIFORMS](https://github.com/patriciogonzalezvivo/glslViewer/wiki/GlslViewer-UNIFORMS)
+
+    * [DEFINES](https://github.com/patriciogonzalezvivo/glslViewer/wiki/GlslViewer-DEFINES)
 
 
 ## Author
