@@ -17,7 +17,7 @@ varying vec2 v_texcoord;\n\
 \n\
 #ifdef LIGHT_SHADOWMAP\n\
 uniform mat4    u_lightMatrix;\n\
-varying vec4    v_lightcoord;\n\
+varying vec4    v_lightCoord;\n\
 #endif\n\
 \n\
 void main(void) {\n\
@@ -27,7 +27,7 @@ void main(void) {\n\
     v_texcoord = a_texcoord;\n\
     \n\
 #ifdef LIGHT_SHADOWMAP\n\
-    v_lightcoord = u_lightMatrix * v_position;\n\
+    v_lightCoord = u_lightMatrix * v_position;\n\
 #endif\n\
     \n\
     gl_Position = v_position;\n\

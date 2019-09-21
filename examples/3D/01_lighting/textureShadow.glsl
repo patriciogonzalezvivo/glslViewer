@@ -1,6 +1,6 @@
 #if defined(LIGHT_SHADOWMAP) && defined(LIGHT_SHADOWMAP_SIZE)
 uniform sampler2D   u_ligthShadowMap;
-varying vec4        v_lightcoord;
+varying vec4        v_lightCoord;
 
 float textureShadow(const sampler2D depths, vec2 uv, float compare){
     return step(compare, texture2D(depths, uv).r);

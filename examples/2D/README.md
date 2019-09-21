@@ -10,6 +10,8 @@
 
 * [Scripts examples](https://github.com/patriciogonzalezvivo/glslViewer/tree/master/examples/2D/04_scripts) some examples using a bash script to feed uniforms to a shader
 
+------------
+
 Please respect the authorship and copyright giving proper credits. Please use my full name and at least one of the following links to my portfolio, twitter, GitHub or instagram account. Thanks
 
 ```

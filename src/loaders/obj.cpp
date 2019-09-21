@@ -124,20 +124,20 @@ Material InitMaterial (const tinyobj::material_t& _material, Uniforms& _uniforms
 
     mat.addDefine("MATERIAL_NAME_" + toUpper(mat.name) );
 
-    mat.addDefine("MATERIAL_ALBEDO", (float*)_material.diffuse, 3);
+    mat.addDefine("MATERIAL_BASECOLOR", (float*)_material.diffuse, 3);
     if (!_material.diffuse_texname.empty()) {
         std::string name = getUniformName(_material.diffuse_texname);
         _uniforms.addTexture(name, _folder + _material.diffuse_texname, _files);
-        mat.addDefine("MATERIAL_ALBEDOMAP", name);
+        mat.addDefine("MATERIAL_BASECOLORMAP", name);
 
         if (_material.diffuse_texopt.origin_offset[0] != 0.0 ||
             _material.diffuse_texopt.origin_offset[1] != 0.0 ) {
-            mat.addDefine("MATERIAL_ALBEDOMAP_OFFSET", (float*)_material.diffuse_texopt.origin_offset, 3);
+            mat.addDefine("MATERIAL_BASECOLORMAP_OFFSET", (float*)_material.diffuse_texopt.origin_offset, 3);
         }
 
         if (_material.diffuse_texopt.scale[0] != 1.0 ||
             _material.diffuse_texopt.scale[1] != 1.0 ) {
-            mat.addDefine("MATERIAL_ALBEDOMAP_SCALE", (float*)_material.diffuse_texopt.scale, 3);
+            mat.addDefine("MATERIAL_BASECOLORMAP_SCALE", (float*)_material.diffuse_texopt.scale, 3);
         }
 
     }
@@ -159,20 +159,20 @@ Material InitMaterial (const tinyobj::material_t& _material, Uniforms& _uniforms
         }
     }
 
-    mat.addDefine("MATERIAL_EMISSION", (float*)_material.emission, 3);
+    mat.addDefine("MATERIAL_EMISSIVE", (float*)_material.emission, 3);
     if (!_material.emissive_texname.empty()) {
         std::string name = getUniformName(_material.emissive_texname);
         _uniforms.addTexture(name, _folder + _material.emissive_texname, _files);
-        mat.addDefine("MATERIAL_EMISSIONMAP", name);
+        mat.addDefine("MATERIAL_EMISSIVEMAP", name);
 
         if (_material.emissive_texopt.origin_offset[0] != 0.0 ||
             _material.emissive_texopt.origin_offset[1] != 0.0 ) {
-            mat.addDefine("MATERIAL_EMISSIONMAP_OFFSET", (float*)_material.emissive_texopt.origin_offset, 3);
+            mat.addDefine("MATERIAL_EMISSIVEMAP_OFFSET", (float*)_material.emissive_texopt.origin_offset, 3);
         }
 
         if (_material.emissive_texopt.scale[0] != 1.0 ||
             _material.emissive_texopt.scale[1] != 1.0 ) {
-            mat.addDefine("MATERIAL_EMISSIONMAP_SCALE", (float*)_material.emissive_texopt.scale, 3);
+            mat.addDefine("MATERIAL_EMISSIVEMAP_SCALE", (float*)_material.emissive_texopt.scale, 3);
         }
     }
 

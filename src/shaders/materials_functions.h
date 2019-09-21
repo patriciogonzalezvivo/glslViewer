@@ -23,23 +23,23 @@ vec3 LINEARtoSRGB(vec3 color) { return pow(color, vec3(INV_GAMMA)); }\n\
 // vec4 SRGBtoLINEAR(vec4 srgbIn) { return vec4(pow(srgbIn.xyz, vec3(GAMMA)), srgbIn.w); }\n\
 vec4 SRGBtoLINEAR(vec4 srgbIn) { return vec4(srgbIn.xyz * srgbIn.xyz, srgbIn.w); }\n\
 \n\
-#ifdef MATERIAL_ALBEDOMAP\n\
-uniform sampler2D MATERIAL_ALBEDOMAP;\n\
+#ifdef MATERIAL_BASECOLORMAP\n\
+uniform sampler2D MATERIAL_BASECOLORMAP;\n\
 #endif\n\
 \n\
 vec3 getMaterialAlbedo() {\n\
     vec3 base = vec3(1.0);\n\
-#if defined(MATERIAL_ALBEDOMAP) && defined(MODEL_VERTEX_TEXCOORD)\n\
+#if defined(MATERIAL_BASECOLORMAP) && defined(MODEL_VERTEX_TEXCOORD)\n\
     vec2 uv = v_texcoord.xy;\n\
-    #if defined(MATERIAL_ALBEDOMAP_OFFSET)\n\
-    uv += (MATERIAL_ALBEDOMAP_OFFSET).xy;\n\
+    #if defined(MATERIAL_BASECOLORMAP_OFFSET)\n\
+    uv += (MATERIAL_BASECOLORMAP_OFFSET).xy;\n\
     #endif\n\
-    #if defined(MATERIAL_ALBEDOMAP_SCALE)\n\
-    uv *= (MATERIAL_ALBEDOMAP_SCALE).xy;\n\
+    #if defined(MATERIAL_BASECOLORMAP_SCALE)\n\
+    uv *= (MATERIAL_BASECOLORMAP_SCALE).xy;\n\
     #endif\n\
-    base = SRGBtoLINEAR(texture2D(MATERIAL_ALBEDOMAP, uv)).rgb;\n\
-#elif defined(MATERIAL_ALBEDO)\n\
-    base = MATERIAL_ALBEDO;\n\
+    base = SRGBtoLINEAR(texture2D(MATERIAL_BASECOLORMAP, uv)).rgb;\n\
+#elif defined(MATERIAL_BASECOLOR)\n\
+    base = MATERIAL_BASECOLOR;\n\
 #elif !defined(MODEL_VERTEX_COLOR)\n\
     base *= 0.5 + checkBoard(vec2(8.0)) * 0.5;\n\
 #endif\n\
@@ -71,23 +71,23 @@ vec3 getMaterialSpecular() {\n\
     return spec;\n\
 }\n\
 \n\
-#ifdef MATERIAL_EMISSIONMAP\n\
-uniform sampler2D MATERIAL_EMISSIONMAP;\n\
+#ifdef MATERIAL_EMISSIVEMAP\n\
+uniform sampler2D MATERIAL_EMISSIVEMAP;\n\
 #endif\n\
 \n\
 vec3 getMaterialEmission() {\n\
     vec3 emission = vec3(0.0);\n\
-#if defined(MATERIAL_EMISSIONMAP) && defined(MODEL_VERTEX_TEXCOORD)\n\
+#if defined(MATERIAL_EMISSIVEMAP) && defined(MODEL_VERTEX_TEXCOORD)\n\
     vec2 uv = v_texcoord.xy;\n\
-    #if defined(MATERIAL_EMISSIONMAP_OFFSET)\n\
-    uv += (MATERIAL_EMISSIONMAP_OFFSET).xy;\n\
+    #if defined(MATERIAL_EMISSIVEMAP_OFFSET)\n\
+    uv += (MATERIAL_EMISSIVEMAP_OFFSET).xy;\n\
     #endif\n\
-    #if defined(MATERIAL_EMISSIONMAP_SCALE)\n\
-    uv *= (MATERIAL_EMISSIONMAP_SCALE).xy;\n\
+    #if defined(MATERIAL_EMISSIVEMAP_SCALE)\n\
+    uv *= (MATERIAL_EMISSIVEMAP_SCALE).xy;\n\
     #endif\n\
-    emission = SRGBtoLINEAR(texture2D(MATERIAL_EMISSIONMAP, uv)).rgb;\n\
-#elif defined(MATERIAL_EMISSION)\n\
-    emission = MATERIAL_EMISSION;\n\
+    emission = SRGBtoLINEAR(texture2D(MATERIAL_EMISSIVEMAP, uv)).rgb;\n\
+#elif defined(MATERIAL_EMISSIVE)\n\
+    emission = MATERIAL_EMISSIVE;\n\
 #endif\n\
     return emission;\n\
 }\n\

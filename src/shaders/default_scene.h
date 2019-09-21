@@ -39,7 +39,7 @@ varying mat3    v_tangentToWorld;\n\
 \n\
 #ifdef LIGHT_SHADOWMAP\n\
 uniform mat4    u_lightMatrix;\n\
-varying vec4    v_lightcoord;\n\
+varying vec4    v_lightCoord;\n\
 #endif\n\
 \n\
 void main(void) {\n\
@@ -66,7 +66,7 @@ void main(void) {\n\
 #endif\n\
     \n\
 #ifdef LIGHT_SHADOWMAP\n\
-    v_lightcoord = u_lightMatrix * v_position;\n\
+    v_lightCoord = u_lightMatrix * v_position;\n\
 #endif\n\
     \n\
     gl_Position = u_modelViewProjectionMatrix * v_position;\n\
@@ -236,7 +236,7 @@ void lightWithShadow(Components _comp, out vec3 _diffuse, out vec3 _specular) {\
 \n\
 #if defined(LIGHT_SHADOWMAP) && defined(LIGHT_SHADOWMAP_SIZE) && !defined(PLATFORM_RPI)\n\
     float bias = 0.005;\n\
-    shadow *= textureShadowPCF(u_ligthShadowMap, vec2(LIGHT_SHADOWMAP_SIZE), v_lightcoord.xy, v_lightcoord.z - bias);\n\
+    shadow *= textureShadowPCF(u_ligthShadowMap, vec2(LIGHT_SHADOWMAP_SIZE), v_lightCoord.xy, v_lightCoord.z - bias);\n\
     shadow = clamp(shadow, 0.0, 1.0);\n\
 #endif\n\
 \n\

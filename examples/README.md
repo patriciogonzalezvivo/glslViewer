@@ -1,6 +1,6 @@
 GlslViewer support both 2D shaders and/or 3D shaders when a geometry (PLY/OBJ) is provided.
 
-![](images/scene.png)
+![](../images/scene.png)
 
 In this folder you can find examples both:
 

@@ -109,7 +109,7 @@ uniform mat4 u_modelViewProjectionMatrix;\n\
 \n\
 #ifdef LIGHT_SHADOWMAP\n\
 uniform mat4    u_lightMatrix;\n\
-varying vec4    v_lightcoord;\n\
+varying vec4    v_lightCoord;\n\
 #endif\n\
 \n\
 #ifdef MODEL_VERTEX_TANGENT\n\
@@ -131,7 +131,7 @@ void main(void) {\n\
 #endif\n\
     \n\
 #ifdef LIGHT_SHADOWMAP\n\
-    v_lightcoord = u_lightMatrix * v_position;\n\
+    v_lightCoord = u_lightMatrix * v_position;\n\
 #endif\n\
     \n";
 
