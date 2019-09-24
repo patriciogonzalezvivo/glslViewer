@@ -17,8 +17,6 @@
 #include "shaders/dynamic_billboard.h"
 #include "shaders/wireframe2D.h"
 
-#define FRAME_DELTA 0.03333333333
-
 // ------------------------------------------------------------------------- CONTRUCTOR
 Sandbox::Sandbox(): 
     frag_index(-1), vert_index(-1), geom_index(-1),
@@ -32,7 +30,7 @@ Sandbox::Sandbox():
     // Geometry helpers
     m_billboard_vbo(nullptr), m_cross_vbo(nullptr),
     // Record
-    m_record_start(0.0f), m_record_head(0.0f), m_record_end(0.0f), m_record_counter(0), m_record(false),
+    m_record_fdelta(0.04166666667), m_record_start(0.0f), m_record_head(0.0f), m_record_end(0.0f), m_record_counter(0), m_record(false),
     // Scene
     m_view2d(1.0), m_frame(0), m_change(true),
     // Debug
@@ -49,7 +47,7 @@ Sandbox::Sandbox():
 
     uniforms.functions["u_delta"] = UniformFunction("float", 
     [this](Shader& _shader) {
-        if (m_record) _shader.setUniform("u_delta", float(FRAME_DELTA));
+        if (m_record) _shader.setUniform("u_delta", float(m_record_fdelta));
         else _shader.setUniform("u_delta", float(getDelta()));
     },
     []() { return toString(getDelta()); });
@@ -298,7 +296,7 @@ void Sandbox::addDefine(const std::string &_define, const std::string &_value) {
         m_buffers_shaders[i].addDefine(_define, _value);
 
     if (geom_index == -1)
-        m_canvas_shader.addDefine(_define);
+        m_canvas_shader.addDefine(_define, _value);
     else
         m_scene.addDefine(_define, _value);
 
@@ -346,7 +344,7 @@ std::string Sandbox::getSource(ShaderType _type) const {
 }
 
 int Sandbox::getRecordedPorcentage() {
-    return ((m_record_head - m_record_start) / (m_record_end - m_record_start)) * 100 ;
+    return ((m_record_head - m_record_start) / (m_record_end - m_record_start)) * 100;
 }
 
 // ------------------------------------------------------------------------- RELOAD SHADER
@@ -498,18 +496,16 @@ void Sandbox::render() {
         _renderBuffers();
     }
     
-
     // MAIN SCENE
     // ----------------------------------------------- < main scene start
-    if (m_postprocessing_enabled) {
+    if ( (screenshotFile != "" || m_record) && !m_record_fbo.isAllocated())
+        m_record_fbo.allocate(getWindowWidth(), getWindowHeight(), COLOR_TEXTURE_DEPTH_BUFFER);
+
+    if (m_postprocessing_enabled)
         m_scene_fbo.bind();
-    }
-    else if (screenshotFile != "" || m_record) {
-        if (!m_record_fbo.isAllocated()) {
-            m_record_fbo.allocate(getWindowWidth(), getWindowHeight(), COLOR_TEXTURE_DEPTH_BUFFER);
-        }
+    else if (screenshotFile != "" || m_record)
         m_record_fbo.bind();
-    }
+
 
     // Clear the background
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -538,12 +534,8 @@ void Sandbox::render() {
     if (m_postprocessing_enabled) {
         m_scene_fbo.unbind();
 
-        if (screenshotFile != "" || m_record) {
-             if (!m_record_fbo.isAllocated()) {
-                m_record_fbo.allocate(getWindowWidth(), getWindowHeight(), COLOR_TEXTURE_DEPTH_BUFFER);
-            }
+        if (screenshotFile != "" || m_record)
             m_record_fbo.bind();
-        }
     
         m_postprocessing_shader.use();
 
@@ -551,15 +543,25 @@ void Sandbox::render() {
         uniforms.feedTo( m_postprocessing_shader );
 
         // Pass textures of buffers
-        for (unsigned int i = 0; i < uniforms.buffers.size(); i++) {
+        for (unsigned int i = 0; i < uniforms.buffers.size(); i++)
             m_postprocessing_shader.setUniformTexture("u_buffer" + toString(i), &uniforms.buffers[i]);
-        }
 
         m_billboard_vbo->render( &m_postprocessing_shader );
     }
     
     if (screenshotFile != "" || m_record) {
         m_record_fbo.unbind();
+
+        if (!m_billboard_shader.isLoaded())
+            m_billboard_shader.load(dynamic_billboard_frag, dynamic_billboard_vert, false);
+
+        m_billboard_shader.use();
+        m_billboard_shader.setUniform("u_depth", float(0.0));
+        m_billboard_shader.setUniform("u_scale", 1.0, 1.0);
+        m_billboard_shader.setUniform("u_translate", 0.0, 0.0);
+        m_billboard_shader.setUniform("u_modelViewProjectionMatrix", glm::mat4(1.0) );
+        m_billboard_shader.setUniformTexture("u_tex0", &m_record_fbo, 0);
+        m_billboard_vbo->render( &m_billboard_shader );
     }
 }
 
@@ -589,7 +591,6 @@ void Sandbox::renderUI() {
                 m_billboard_shader.load(dynamic_billboard_frag, dynamic_billboard_vert, false);
 
             m_billboard_shader.use();
-            // uniforms.feedTo(m_billboard_shader);
 
             for (unsigned int i = 0; i < uniforms.buffers.size(); i++) {
                 m_billboard_shader.setUniform("u_depth", float(0.0));
@@ -692,7 +693,7 @@ void Sandbox::renderDone() {
     if (m_record) {
         onScreenshot(toString(m_record_counter, 0, 5, '0') + ".png");
 
-        m_record_head += FRAME_DELTA;
+        m_record_head += m_record_fdelta;
         m_record_counter++;
 
         if (m_record_head >= m_record_end) {
@@ -725,7 +726,8 @@ void Sandbox::clear() {
         delete m_cross_vbo;
 }
 
-void Sandbox::record(float _start, float _end) {
+void Sandbox::record(float _start, float _end, float fps) {
+    m_record_fdelta = 1.0/fps;
     m_record_start = _start;
     m_record_head = _start;
     m_record_end = _end;

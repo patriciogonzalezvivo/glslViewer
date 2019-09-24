@@ -28,7 +28,7 @@ public:
     
     bool                isReady();
 
-    void                record( float _start, float _end );
+    void                record( float _start, float _end, float fps = 24.0 );
     int                 getRecordedPorcentage();
 
     void                addDefine( const std::string &_define, const std::string &_value = "");
@@ -102,6 +102,7 @@ private:
 
     // Recording
     Fbo                 m_record_fbo;
+    float               m_record_fdelta;
     float               m_record_start;
     float               m_record_head;
     float               m_record_end;

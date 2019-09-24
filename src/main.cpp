@@ -126,7 +126,7 @@ void declareCommands() {
         }
         return false;
     },
-    "window_height          return the height of the windows.", false));
+    "window_height              return the height of the windows.", false));
 
     commands.push_back(Command("pixel_density", [&](const std::string& _line){ 
         if (_line == "pixel_density") {
@@ -135,7 +135,7 @@ void declareCommands() {
         }
         return false;
     },
-    "pixel_density          return the pixel density.", false));
+    "pixel_density              return the pixel density.", false));
 
     commands.push_back(Command("screen_size", [&](const std::string& _line){ 
         if (_line == "screen_size") {
@@ -145,7 +145,7 @@ void declareCommands() {
         }
         return false;
     },
-    "screen_size            return the screen size.", false));
+    "screen_size                return the screen size.", false));
 
     commands.push_back(Command("viewport", [&](const std::string& _line){ 
         if (_line == "viewport") {
@@ -155,7 +155,7 @@ void declareCommands() {
         }
         return false;
     },
-    "viewport               return the viewport size.", false));
+    "viewport                   return the viewport size.", false));
 
     commands.push_back(Command("mouse", [&](const std::string& _line){ 
         if (_line == "mouse") {
@@ -165,7 +165,7 @@ void declareCommands() {
         }
         return false;
     },
-    "mouse                  return the mouse position.", false));
+    "mouse                      return the mouse position.", false));
     
     commands.push_back(Command("fps", [&](const std::string& _line){ 
         if (_line == "fps") {
@@ -175,7 +175,7 @@ void declareCommands() {
         }
         return false;
     },
-    "fps                    return u_fps, the number of frames per second.", false));
+    "fps                        return u_fps, the number of frames per second.", false));
 
     commands.push_back(Command("delta", [&](const std::string& _line){ 
         if (_line == "delta") {
@@ -185,7 +185,7 @@ void declareCommands() {
         }
         return false;
     },
-    "delta                  return u_delta, the secs between frames.", false));
+    "delta                      return u_delta, the secs between frames.", false));
 
     commands.push_back(Command("time", [&](const std::string& _line){ 
         if (_line == "time") {
@@ -195,7 +195,7 @@ void declareCommands() {
         }
         return false;
     },
-    "time                   return u_time, the elapsed time.", false));
+    "time                       return u_time, the elapsed time.", false));
 
     commands.push_back(Command("date", [&](const std::string& _line){ 
         if (_line == "date") {
@@ -206,7 +206,7 @@ void declareCommands() {
         }
         return false;
     },
-    "date                   return u_date as YYYY, M, D and Secs.", false));
+    "date                       return u_date as YYYY, M, D and Secs.", false));
 
     commands.push_back(Command("files", [&](const std::string& _line){ 
         if (_line == "files") {
@@ -217,7 +217,7 @@ void declareCommands() {
         }
         return false;
     },
-    "files                  return a list of files.", false));
+    "files                      return a list of files.", false));
 
     commands.push_back(Command("frag", [&](const std::string& _line){ 
         if (_line == "frag") {
@@ -256,7 +256,7 @@ void declareCommands() {
         }
         return false;
     },
-    "frag[,<filename>]      returns or save the fragment shader source code.", false));
+    "frag[,<filename>]              returns or save the fragment shader source code.", false));
 
     commands.push_back(Command("vert", [&](const std::string& _line){ 
         if (_line == "vert") {
@@ -295,7 +295,7 @@ void declareCommands() {
         }
         return false;
     },
-    "vert[,<filename>]      returns or save the vertex shader source code.", false));
+    "vert[,<filename>]              returns or save the vertex shader source code.", false));
 
     commands.push_back( Command("dependencies", [&](const std::string& _line){ 
         if (_line == "dependencies") {
@@ -316,7 +316,7 @@ void declareCommands() {
         }
         return false;
     },
-    "dependencies[,vert|frag]   returns all the dependencies of the vertex o fragment shader or both.", false));
+    "dependencies[,vert|frag]       returns all the dependencies of the vertex o fragment shader or both.", false));
 
     commands.push_back(Command("wait", [&](const std::string& _line){ 
         std::vector<std::string> values = split(_line,',');
@@ -343,7 +343,7 @@ void declareCommands() {
         }
         return false;
     },
-    "cursor[,on|off]       show/hide cursor", false));
+    "cursor[,on|off]                show/hide cursor", false));
 
     commands.push_back(Command("screenshot", [&](const std::string& _line){ 
         if (_line == "screenshot" && outputFile != "") {
@@ -365,16 +365,20 @@ void declareCommands() {
 
     commands.push_back(Command("sequence", [&](const std::string& _line){ 
         std::vector<std::string> values = split(_line,',');
-        if (values.size() == 3) {
+        if (values.size() >= 3) {
             float from = toFloat(values[1]);
             float to = toFloat(values[2]);
+            float fps = 24.0;
+
+            if (values.size() == 4)
+                fps = toFloat(values[3]);
 
             if (from >= to) {
                 from = 0.0;
             }
 
             consoleMutex.lock();
-            sandbox.record(from, to);
+            sandbox.record(from, to, fps);
             consoleMutex.unlock();
 
             std::cout << "// " << std::endl;
@@ -406,7 +410,7 @@ void declareCommands() {
         }
         return false;
     },
-    "sequence,<A_sec>,<B_sec>   saves a sequence of images from A to B second.", false));
+    "sequence,<A_sec>,<B_sec>[,fps] saves a sequence of images from A to B second.", false));
 
     commands.push_back(Command("window_width", [&](const std::string& _line){ 
         if (_line == "window_width") {
@@ -415,7 +419,7 @@ void declareCommands() {
         }
         return false;
     },
-    "window_width           return the width of the windows.", false));
+    "window_width                   return the width of the windows.", false));
 
     commands.push_back(Command("q", [&](const std::string& _line){ 
         if (_line == "q") {
@@ -424,7 +428,7 @@ void declareCommands() {
         }
         return false;
     },
-    "q                          close glslViewer", false));
+    "q                              close glslViewer", false));
 
     commands.push_back(Command("quit", [&](const std::string& _line){ 
         if (_line == "quit") {
@@ -433,7 +437,7 @@ void declareCommands() {
         }
         return false;
     },
-    "quit                       close glslViewer", false));
+    "quit                           close glslViewer", false));
 
     commands.push_back(Command("exit", [&](const std::string& _line){ 
         if (_line == "exit") {
@@ -442,7 +446,7 @@ void declareCommands() {
         }
         return false;
     },
-    "exit                       close glslViewer", false));
+    "exit                           close glslViewer", false));
 }
 
 // Main program
