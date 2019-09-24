@@ -108,7 +108,7 @@ void declareCommands() {
         }
         return false;
     },
-    "help[,<command>]       print help for one or all command", false));
+    "help[,<command>]               print help for one or all command", false));
 
     commands.push_back(Command("version", [&](const std::string& _line){ 
         if (_line == "version") {
@@ -117,7 +117,7 @@ void declareCommands() {
         }
         return false;
     },
-    "version                return glslViewer version.", false));
+    "version                        return glslViewer version.", false));
 
     commands.push_back(Command("window_height", [&](const std::string& _line){ 
         if (_line == "window_height") {
@@ -126,7 +126,7 @@ void declareCommands() {
         }
         return false;
     },
-    "window_height              return the height of the windows.", false));
+    "window_height                  return the height of the windows.", false));
 
     commands.push_back(Command("pixel_density", [&](const std::string& _line){ 
         if (_line == "pixel_density") {
@@ -135,7 +135,7 @@ void declareCommands() {
         }
         return false;
     },
-    "pixel_density              return the pixel density.", false));
+    "pixel_density                  return the pixel density.", false));
 
     commands.push_back(Command("screen_size", [&](const std::string& _line){ 
         if (_line == "screen_size") {
@@ -145,7 +145,7 @@ void declareCommands() {
         }
         return false;
     },
-    "screen_size                return the screen size.", false));
+    "screen_size                    return the screen size.", false));
 
     commands.push_back(Command("viewport", [&](const std::string& _line){ 
         if (_line == "viewport") {
@@ -155,7 +155,7 @@ void declareCommands() {
         }
         return false;
     },
-    "viewport                   return the viewport size.", false));
+    "viewport                       return the viewport size.", false));
 
     commands.push_back(Command("mouse", [&](const std::string& _line){ 
         if (_line == "mouse") {
@@ -165,7 +165,7 @@ void declareCommands() {
         }
         return false;
     },
-    "mouse                      return the mouse position.", false));
+    "mouse                          return the mouse position.", false));
     
     commands.push_back(Command("fps", [&](const std::string& _line){ 
         if (_line == "fps") {
@@ -175,7 +175,7 @@ void declareCommands() {
         }
         return false;
     },
-    "fps                        return u_fps, the number of frames per second.", false));
+    "fps                            return u_fps, the number of frames per second.", false));
 
     commands.push_back(Command("delta", [&](const std::string& _line){ 
         if (_line == "delta") {
@@ -185,7 +185,7 @@ void declareCommands() {
         }
         return false;
     },
-    "delta                      return u_delta, the secs between frames.", false));
+    "delta                          return u_delta, the secs between frames.", false));
 
     commands.push_back(Command("time", [&](const std::string& _line){ 
         if (_line == "time") {
@@ -195,7 +195,7 @@ void declareCommands() {
         }
         return false;
     },
-    "time                       return u_time, the elapsed time.", false));
+    "time                           return u_time, the elapsed time.", false));
 
     commands.push_back(Command("date", [&](const std::string& _line){ 
         if (_line == "date") {
@@ -206,7 +206,7 @@ void declareCommands() {
         }
         return false;
     },
-    "date                       return u_date as YYYY, M, D and Secs.", false));
+    "date                           return u_date as YYYY, M, D and Secs.", false));
 
     commands.push_back(Command("files", [&](const std::string& _line){ 
         if (_line == "files") {
@@ -217,7 +217,7 @@ void declareCommands() {
         }
         return false;
     },
-    "files                      return a list of files.", false));
+    "files                          return a list of files.", false));
 
     commands.push_back(Command("frag", [&](const std::string& _line){ 
         if (_line == "frag") {

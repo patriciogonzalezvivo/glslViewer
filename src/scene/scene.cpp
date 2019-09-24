@@ -176,7 +176,7 @@ void Scene::setup(CommandList &_commands, Uniforms &_uniforms) {
         }
         return false;
     },
-    "camera_distance[,<dist>]       get or set the camera distance to the target."));
+    "camera_distance[,<dist>]           get or set the camera distance to the target."));
 
     _commands.push_back(Command("camera_fov", [&](const std::string& _line){ 
         std::vector<std::string> values = split(_line,',');
@@ -190,7 +190,7 @@ void Scene::setup(CommandList &_commands, Uniforms &_uniforms) {
         }
         return false;
     },
-    "camera_fov[,<field_of_view>]   get or set the camera field of view."));
+    "camera_fov[,<field_of_view>]       get or set the camera field of view."));
 
     _commands.push_back(Command("camera_position", [&](const std::string& _line){ 
         std::vector<std::string> values = split(_line,',');
@@ -206,7 +206,7 @@ void Scene::setup(CommandList &_commands, Uniforms &_uniforms) {
         }
         return false;
     },
-    "camera_position[,<x>,<y>,<z>]  get or set the camera position."));
+    "camera_position[,<x>,<y>,<z>]      get or set the camera position."));
 
     _commands.push_back(Command("camera_exposure", [&](const std::string& _line){ 
         std::vector<std::string> values = split(_line,',');
@@ -220,7 +220,7 @@ void Scene::setup(CommandList &_commands, Uniforms &_uniforms) {
         }
         return false;
     },
-    "camera_exposure[,<aperture>,<shutterSpeed>,<sensitivity>]  get or set the camera exposure. Defaults: 16, 1/125s, 100 ISO"));
+    "camera_exposure[,<aper.>,<shutter>,<sensit.>]  get or set the camera exposure values."));
 
     _commands.push_back(Command("light_position", [&](const std::string& _line){ 
         std::vector<std::string> values = split(_line,',');
@@ -235,7 +235,7 @@ void Scene::setup(CommandList &_commands, Uniforms &_uniforms) {
         }
         return false;
     },
-    "light_position[,<x>,<y>,<z>]  get or set the light position."));
+    "light_position[,<x>,<y>,<z>]       get or set the light position."));
 
     _commands.push_back(Command("light_color", [&](const std::string& _line){ 
          std::vector<std::string> values = split(_line,',');
@@ -251,7 +251,7 @@ void Scene::setup(CommandList &_commands, Uniforms &_uniforms) {
         }
         return false;
     },
-    "light_color[,<r>,<g>,<b>]      get or set the light color."));
+    "light_color[,<r>,<g>,<b>]          get or set the light color."));
     
     _commands.push_back(Command("dynamic_shadows", [&](const std::string& _line){ 
         if (_line == "dynamic_shadows") {
@@ -267,7 +267,7 @@ void Scene::setup(CommandList &_commands, Uniforms &_uniforms) {
         }
         return false;
     },
-    "dynamic_shadows[on|off]        get or set dynamic shadows"));
+    "dynamic_shadows[on|off]            get or set dynamic shadows"));
 
     _commands.push_back(Command("skybox_ground", [&](const std::string& _line){ 
         std::vector<std::string> values = split(_line,',');
@@ -282,7 +282,7 @@ void Scene::setup(CommandList &_commands, Uniforms &_uniforms) {
         }
         return false;
     },
-    "skybox_ground[,<r>,<g>,<b>]      get or set the ground color of the skybox."));
+    "skybox_ground[,<r>,<g>,<b>]        get or set the ground color of the skybox."));
 
     _commands.push_back(Command("skybox_elevation", [&](const std::string& _line){ 
         std::vector<std::string> values = split(_line,',');
@@ -312,7 +312,7 @@ void Scene::setup(CommandList &_commands, Uniforms &_uniforms) {
         }
         return false;
     },
-    "skybox_azimuth[,<sun_azimuth>]  get or set the sun azimuth (in rads) of the skybox."));
+    "skybox_azimuth[,<sun_azimuth>]     get or set the sun azimuth (in rads) of the skybox."));
 
     _commands.push_back(Command("skybox_turbidity", [&](const std::string& _line){ 
         std::vector<std::string> values = split(_line,',');
@@ -346,7 +346,7 @@ void Scene::setup(CommandList &_commands, Uniforms &_uniforms) {
         }
         return false;
     },
-    "skybox[,on|off]       show/hide skybox"));
+    "skybox[,on|off]                    show/hide skybox"));
 
     _commands.push_back(Command("cubemap", [&](const std::string& _line){
         if (_line == "cubemap") {
@@ -363,7 +363,7 @@ void Scene::setup(CommandList &_commands, Uniforms &_uniforms) {
         }
         return false;
     },
-    "cubemap[,on|off]       show/hide cubemap"));
+    "cubemap[,on|off]                   show/hide cubemap"));
     
     _commands.push_back(Command("model_position", [&](const std::string& _line){ 
         std::vector<std::string> values = split(_line,',');
@@ -379,7 +379,7 @@ void Scene::setup(CommandList &_commands, Uniforms &_uniforms) {
         }
         return false;
     },
-    "model_position[,<x>,<y>,<z>]  get or set the model position."));
+    "model_position[,<x>,<y>,<z>]       get or set the model position."));
 
     _commands.push_back(Command("floor", [&](const std::string& _line) {
         std::vector<std::string> values = split(_line,',');
@@ -405,7 +405,7 @@ void Scene::setup(CommandList &_commands, Uniforms &_uniforms) {
         }
         return false;
     },
-    "floor[,on|off|subD_level]      show/hide floor or presice the subdivision level"));
+    "floor[,on|off|subD_level]          show/hide floor or presice the subdivision level"));
 
     _commands.push_back(Command("grid", [&](const std::string& _line){
         if (_line == "grid") {
@@ -421,7 +421,7 @@ void Scene::setup(CommandList &_commands, Uniforms &_uniforms) {
         }
         return false;
     },
-    "grid[,on|off]          show/hide grid"));
+    "grid[,on|off]                      show/hide grid"));
 
     _commands.push_back(Command("axis", [&](const std::string& _line){
         if (_line == "grid") {
@@ -437,7 +437,7 @@ void Scene::setup(CommandList &_commands, Uniforms &_uniforms) {
         }
         return false;
     },
-    "axis[,on|off]          show/hide axis"));
+    "axis[,on|off]                      show/hide axis"));
 
     _commands.push_back(Command("bboxes", [&](const std::string& _line){
         if (_line == "bboxes") {
@@ -453,7 +453,7 @@ void Scene::setup(CommandList &_commands, Uniforms &_uniforms) {
         }
         return false;
     },
-    "bboxes[,on|off]        show/hide models bounding boxes"));
+    "bboxes[,on|off]                    show/hide models bounding boxes"));
 
     // LIGHT UNIFORMS
     //

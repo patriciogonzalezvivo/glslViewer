@@ -134,7 +134,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         }
         return false;
     },
-    "debug[,on|off]       show/hide passes and textures elements", false));
+    "debug[,on|off]                 show/hide passes and textures elements", false));
 
     _commands.push_back(Command("defines", [&](const std::string& _line){ 
         if (_line == "defines") {
@@ -146,7 +146,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         }
         return false;
     },
-    "defines                return a list of active defines", false));
+    "defines                        return a list of active defines", false));
     
     _commands.push_back( Command("define,", [&](const std::string& _line){ 
         std::vector<std::string> values = split(_line,',');
@@ -161,7 +161,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         }
         return false;
     },
-    "define,<KEYWORD>       add a define to the shader", false));
+    "define,<KEYWORD>               add a define to the shader", false));
 
     _commands.push_back( Command("undefine,", [&](const std::string& _line){ 
         std::vector<std::string> values = split(_line,',');
@@ -171,13 +171,13 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         }
         return false;
     },
-    "undefine,<KEYWORD>     remove a define on the shader", false));
+    "undefine,<KEYWORD>             remove a define on the shader", false));
 
     _commands.push_back(Command("uniforms", [&](const std::string& _line){ 
         uniforms.print(_line == "uniforms,all");
         return true;
     },
-    "uniforms[,all|active]  return a list of all uniforms and their values or just the one active (default).", false));
+    "uniforms[,all|active]          return a list of all or active uniforms and their values.", false));
 
     _commands.push_back(Command("textures", [&](const std::string& _line){ 
         if (_line == "textures") {
@@ -192,7 +192,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         }
         return false;
     },
-    "textures               return a list of textures as their uniform name and path.", false));
+    "textures                       return a list of textures as their uniform name and path.", false));
 
     _commands.push_back(Command("buffers", [&](const std::string& _line){ 
         if (_line == "buffers") {
@@ -207,7 +207,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         }
         return false;
     },
-    "buffers                return a list of buffers as their uniform name.", false));
+    "buffers                        return a list of buffers as their uniform name.", false));
 
     // LOAD SHACER 
     // -----------------------------------------------
