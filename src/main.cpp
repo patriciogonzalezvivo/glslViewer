@@ -76,6 +76,7 @@ void printUsage(char * executableName) {
     std::cerr << "// [-l] - draw 500x500 billboard on top right corner of the screen" << std::endl;
     std::cerr << "// [-s/--sec <seconds>] - exit app after a specific amount of seconds" << std::endl;
     std::cerr << "// [-o <file>.png] - save the viewport to an image file before" << std::endl;
+    std::cerr << "// [--fxaa] - set FXAA as postprocess filter" << std::endl;
     std::cerr << "// [--headless] - headless rendering. Very useful for making images or benchmarking." << std::endl;
     std::cerr << "// [--nocursor] - hide cursor" << std::endl;
     std::cerr << "// [-I<include_folder>] - add an include folder to default for #include files" << std::endl;
@@ -543,6 +544,9 @@ int main(int argc, char **argv){
         }
         else if ( argument == "--nocursor" ) {
             sandbox.cursor = false;
+        }
+        else if ( argument == "--fxaa" ) {
+            sandbox.fxaa = true;
         }
         else if ( argument == "-s" || argument == "--sec" ) {
             i++;

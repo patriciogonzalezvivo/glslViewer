@@ -16,11 +16,12 @@
 #include "shaders/default.h"
 #include "shaders/dynamic_billboard.h"
 #include "shaders/wireframe2D.h"
+#include "shaders/fxaa.h"
 
 // ------------------------------------------------------------------------- CONTRUCTOR
 Sandbox::Sandbox(): 
     frag_index(-1), vert_index(-1), geom_index(-1),
-    verbose(false), cursor(true),
+    verbose(false), cursor(true), fxaa(false),
     // Main Vert/Frag/Geom
     m_frag_source(""), m_vert_source(""),
     // Buffers
@@ -197,6 +198,14 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     _commands.push_back(Command("buffers", [&](const std::string& _line){ 
         if (_line == "buffers") {
             uniforms.printBuffers();
+            if (m_postprocessing_enabled) {
+                if (fxaa)
+                    std::cout << "FXAA";
+                else
+                    std::cout << "Custom";
+                std::cout << " postProcessing pass" << std::endl;
+            }
+            
             return true;
         }
         else {
@@ -380,11 +389,9 @@ bool Sandbox::reloadShaders( WatchFileList &_files ) {
         List new_dependencies = merge(m_frag_dependencies, m_vert_dependencies);
 
         // remove old dependencies
-        for (int i = _files.size() - 1; i >= 0; i--) {
-            if (_files[i].type == GLSL_DEPENDENCY) {
+        for (int i = _files.size() - 1; i >= 0; i--)
+            if (_files[i].type == GLSL_DEPENDENCY)
                 _files.erase( _files.begin() + i);
-            }
-        }
 
         // Add new dependencies
         struct stat st;
@@ -411,14 +418,24 @@ bool Sandbox::reloadShaders( WatchFileList &_files ) {
     
     // UPDATE Postprocessing
     bool havePostprocessing = check_for_postprocessing(getSource(FRAGMENT));
-    if (m_postprocessing_enabled != havePostprocessing) {
-        m_scene_fbo.allocate(getWindowWidth(), getWindowHeight(), uniforms.functions["u_sceneDepth"].present ? COLOR_DEPTH_TEXTURES : COLOR_TEXTURE_DEPTH_BUFFER );
-    }
-    m_postprocessing_enabled = havePostprocessing;
-    if (m_postprocessing_enabled) {
+    if (havePostprocessing) {
         // Specific defines for this buffer
         m_postprocessing_shader.addDefine("POSTPROCESSING");
         m_postprocessing_shader.load(m_frag_source, billboard_vert, false);
+        m_postprocessing_enabled = havePostprocessing;
+    }
+    else if (fxaa) {
+        m_postprocessing_shader.load(fxaa_frag, billboard_vert, false);
+        uniforms.functions["u_scene"].present = true;
+        m_postprocessing_enabled = true;
+    }
+    else 
+        m_postprocessing_enabled = false;
+
+    if (m_postprocessing_enabled || uniforms.functions["u_scene"].present) {
+        FboType type = uniforms.functions["u_sceneDepth"].present ? COLOR_DEPTH_TEXTURES : COLOR_TEXTURE_DEPTH_BUFFER;
+        if (!m_scene_fbo.isAllocated() || m_scene_fbo.getType() != type)
+            m_scene_fbo.allocate(getWindowWidth(), getWindowHeight(), type);
     }
 
     return true;
@@ -834,17 +851,14 @@ void Sandbox::onViewportResize(int _newWidth, int _newHeight) {
     if (geom_index != -1)
         m_scene.onViewportResize(_newWidth, _newHeight);
     
-    for (unsigned int i = 0; i < uniforms.buffers.size(); i++) {
+    for (unsigned int i = 0; i < uniforms.buffers.size(); i++) 
         uniforms.buffers[i].allocate(_newWidth, _newHeight, COLOR_TEXTURE);
-    }
 
-    if (m_postprocessing_enabled) {
+    if (m_postprocessing_enabled)
         m_scene_fbo.allocate(_newWidth, _newHeight, uniforms.functions["u_sceneDepth"].present ? COLOR_DEPTH_TEXTURES : COLOR_TEXTURE_DEPTH_BUFFER);
-    }
 
-    if (m_record_fbo.isAllocated()) {
+    if (m_record_fbo.isAllocated())
         m_scene_fbo.allocate(_newWidth, _newHeight, COLOR_TEXTURE_DEPTH_BUFFER);
-    }
 
     flagChange();
 }

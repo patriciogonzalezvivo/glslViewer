@@ -64,6 +64,7 @@ public:
 
     bool                verbose;
     bool                cursor;
+    bool                fxaa;
 
 private:
     void                _updateBuffers();

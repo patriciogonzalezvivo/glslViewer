@@ -55,7 +55,7 @@ GlslViewer gives support to:
 [x] [Option to change recording FPS](https://github.com/patriciogonzalezvivo/glslViewer/issues/106)
 
 
-## Bugs to fix 
+## Bugs to fix
 
 [ ] [Non-GLFW support for RPI4 based on: https://github.com/eyelash/tutorials](https://github.com/patriciogonzalezvivo/glslViewer/issues/141)
 
