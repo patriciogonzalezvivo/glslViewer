@@ -42,21 +42,26 @@ GlslViewer gives support to:
     * [DEFINES](https://github.com/patriciogonzalezvivo/glslViewer/wiki/GlslViewer-DEFINES)
 
 
-## TODO
+## TODO Features
 
-[] Option for FXAA postprocess filter
+[ ] Option for FXAA postprocess filter
 
-[] Option for SSAO buffer ( `u_sceneSSAO` )
+[ ] Option for SSAO buffer ( `u_sceneSSAO` )
 
-[] Depth frag shader for light's shadowMap
+[ ] Depth frag shader for light's shadowMap
 
-[] Depth frag shader for scene depthmap  ( `u_sceneDepth` ) instead of rendering to multiple targets ( only on RPI )
+[ ] [Fullscreen command (GLFW and non-GLFW)](https://github.com/patriciogonzalezvivo/glslViewer/issues/112)
 
-[] Non-GLFW support for RPI4 based on: https://github.com/eyelash/tutorials
+[x] [Option to change recording FPS](https://github.com/patriciogonzalezvivo/glslViewer/issues/106)
 
-[] Fullscreen command (GLFW and non-GLFW)
 
-[] Option to change recording FPS
+## Bugs to fix 
+
+[ ] [Non-GLFW support for RPI4 based on: https://github.com/eyelash/tutorials](https://github.com/patriciogonzalezvivo/glslViewer/issues/141)
+
+[ ] [Support for GL (Full KMS) or GL (Fake KMS) on RaspberryPi](https://github.com/patriciogonzalezvivo/glslViewer/issues/135)
+
+[ ] Depth frag shader for scene depthmap  ( `u_sceneDepth` ) instead of rendering to multiple targets ( only on RPI )
 
 
 ## Author
