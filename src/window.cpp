@@ -27,7 +27,13 @@ static double fDelta = 0.0f;
 static double fFPS = 0.0f;
 static float fPixelDensity = 1.0;
 
-#if defined(PLATFORM_RPI) || defined(PLATFORM_RPI4)
+#if defined(PLATFORM_LINUX) || defined(PLATFORM_OSX)
+// GLWF ( OSX/Linux ) globals
+//----------------------------------------------------
+static bool left_mouse_button_down = false;
+static GLFWwindow* window;
+
+#elif defined(PLATFORM_RPI) || defined(PLATFORM_RPI4)
 #include <assert.h>
 #include <fcntl.h>
 #include <iostream>
@@ -59,6 +65,58 @@ double getTimeSec() {
         temp.tv_nsec = now.tv_nsec-time_start.tv_nsec;
     }
     return double(temp.tv_sec) + double(temp.tv_nsec/1000000000.);
+}
+
+// Get the EGL error back as a string. Useful for debugging.
+static const char *eglGetErrorStr() {
+    switch (eglGetError()) {
+    case EGL_SUCCESS:
+        return "The last function succeeded without error.";
+    case EGL_NOT_INITIALIZED:
+        return "EGL is not initialized, or could not be initialized, for the "
+               "specified EGL display connection.";
+    case EGL_BAD_ACCESS:
+        return "EGL cannot access a requested resource (for example a context "
+               "is bound in another thread).";
+    case EGL_BAD_ALLOC:
+        return "EGL failed to allocate resources for the requested operation.";
+    case EGL_BAD_ATTRIBUTE:
+        return "An unrecognized attribute or attribute value was passed in the "
+               "attribute list.";
+    case EGL_BAD_CONTEXT:
+        return "An EGLContext argument does not name a valid EGL rendering "
+               "context.";
+    case EGL_BAD_CONFIG:
+        return "An EGLConfig argument does not name a valid EGL frame buffer "
+               "configuration.";
+    case EGL_BAD_CURRENT_SURFACE:
+        return "The current surface of the calling thread is a window, pixel "
+               "buffer or pixmap that is no longer valid.";
+    case EGL_BAD_DISPLAY:
+        return "An EGLDisplay argument does not name a valid EGL display "
+               "connection.";
+    case EGL_BAD_SURFACE:
+        return "An EGLSurface argument does not name a valid surface (window, "
+               "pixel buffer or pixmap) configured for GL rendering.";
+    case EGL_BAD_MATCH:
+        return "Arguments are inconsistent (for example, a valid context "
+               "requires buffers not supplied by a valid surface).";
+    case EGL_BAD_PARAMETER:
+        return "One or more argument values are invalid.";
+    case EGL_BAD_NATIVE_PIXMAP:
+        return "A NativePixmapType argument does not refer to a valid native "
+               "pixmap.";
+    case EGL_BAD_NATIVE_WINDOW:
+        return "A NativeWindowType argument does not refer to a valid native "
+               "window.";
+    case EGL_CONTEXT_LOST:
+        return "A power management event has occurred. The application must "
+               "destroy all contexts and reinitialise OpenGL ES state and "
+               "objects to continue rendering.";
+    default:
+        break;
+    }
+    return "Unknown error!";
 }
 #endif
 
@@ -169,13 +227,6 @@ static void gbmClean() {
     gbm_surface_destroy(gbmSurface);
     gbm_device_destroy(gbmDevice);
 }
-
-#else
-
-// GLWF ( OSX/Linux ) globals
-//----------------------------------------------------
-static bool left_mouse_button_down = false;
-static GLFWwindow* window;
 #endif
 
 void initGL (glm::ivec4 &_viewport, bool _headless, bool _alwaysOnTop) {
@@ -184,7 +235,7 @@ void initGL (glm::ivec4 &_viewport, bool _headless, bool _alwaysOnTop) {
         // RASPBERRY_PI
         clock_gettime(CLOCK_MONOTONIC, &time_start);
 
-    #ifdef PLATFORM_RPI
+        #ifdef PLATFORM_RPI
         // Start OpenGL ES
         if (!bBcm) {
             bcm_host_init();
@@ -196,7 +247,7 @@ void initGL (glm::ivec4 &_viewport, bool _headless, bool _alwaysOnTop) {
         assert(display!=EGL_NO_DISPLAY);
         check();
 
-    #elif defined(PLATFORM_RPI4)
+        #elif defined(PLATFORM_RPI4)
         // You can try chaning this to "card0" if "card1" does not work.
         device = open("/dev/dri/card1", O_RDWR | O_CLOEXEC);
         if (getDisplay(&display) != 0) {
@@ -205,7 +256,7 @@ void initGL (glm::ivec4 &_viewport, bool _headless, bool _alwaysOnTop) {
             return -1;
         }
 
-    #endif
+        #endif
 
         // Clear application state
         EGLBoolean result;
@@ -372,7 +423,6 @@ void initGL (glm::ivec4 &_viewport, bool _headless, bool _alwaysOnTop) {
             std::cerr << "ABORT: GLFW init failed" << std::endl;
             exit(-1);
         }
-
 
         if (_headless) {
             glfwWindowHint(GLFW_VISIBLE, GL_FALSE);
@@ -650,7 +700,7 @@ void closeGL(){
     #if defined(PLATFORM_RPI) || defined(PLATFORM_RPI4)
         // RASPBERRY_PI
         eglSwapBuffers(display, surface);
-        
+
         // Release OpenGL resources
         eglMakeCurrent(display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
         eglDestroySurface(display, surface);
