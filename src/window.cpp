@@ -154,14 +154,14 @@ static int getDisplay(EGLDisplay *display) {
     drmModeRes *resources = drmModeGetResources(device);
     if (resources == NULL) {
         std::cerr << "Unable to get DRM resources" << std::endl;
-        return -1;
+        return EXIT_FAILURE;
     }
 
     drmModeConnector *connector = getConnector(resources);
     if (connector == NULL) {
         std::cerr << "Unable to get connector" << std::endl;
         drmModeFreeResources(resources);
-        return -1;
+        return EXIT_FAILURE;
     }
 
     connectorId = connector->connector_id;
@@ -173,7 +173,7 @@ static int getDisplay(EGLDisplay *display) {
         std::cerr << "Unable to get encoder" << std::endl;
         drmModeFreeConnector(connector);
         drmModeFreeResources(resources);
-        return -1;
+        return EXIT_FAILURE;
     }
 
     crtc = drmModeGetCrtc(device, encoder->crtc_id);
@@ -269,7 +269,7 @@ void initGL (glm::ivec4 &_viewport, bool _headless, bool _alwaysOnTop) {
             #ifdef PLATFORM_RPI4
             gbmClean();
             #endif
-            return -1;
+            return EXIT_FAILURE;
         }
 
         // Make sure that we can use OpenGL in this EGL app.
@@ -308,7 +308,7 @@ void initGL (glm::ivec4 &_viewport, bool _headless, bool _alwaysOnTop) {
             #ifdef PLATFORM_RPI4
             gbmClean();
             #endif
-            return -1;
+            return EXIT_FAILURE;
         }
 
         #ifdef PLATFORM_RPI4
@@ -320,7 +320,7 @@ void initGL (glm::ivec4 &_viewport, bool _headless, bool _alwaysOnTop) {
             eglTerminate(display);
             gbm_surface_destroy(gbmSurface);
             gbm_device_destroy(gbmDevice);
-            return -1;
+            return EXIT_FAILURE;
         }
         #endif
 
@@ -332,7 +332,7 @@ void initGL (glm::ivec4 &_viewport, bool _headless, bool _alwaysOnTop) {
             #ifdef PLATFORM_RPI4
             gbmClean();
             #endif
-            return -1;
+            return EXIT_FAILURE;
         }
 
         // create an EGL rendering context
@@ -346,7 +346,7 @@ void initGL (glm::ivec4 &_viewport, bool _headless, bool _alwaysOnTop) {
             #ifdef PLATFORM_RPI4
             gbmClean();
             #endif
-            return -1;
+            return EXIT_FAILURE;
         }
 
         #ifdef PLATFORM_RPI
@@ -401,7 +401,7 @@ void initGL (glm::ivec4 &_viewport, bool _headless, bool _alwaysOnTop) {
             eglDestroyContext(display, context);
             eglTerminate(display);
             gbmClean();
-            return -1;
+            return EXIT_FAILURE;
         }
 
         #endif
@@ -552,13 +552,17 @@ bool isGL(){
     #ifdef PLATFORM_RPI
         // RASPBERRY_PI
         return bBcm;
+
+    #elif defined(PLATFORM_RPI4)
+        return true;
+
     #else
         // OSX/LINUX
         return !glfwWindowShouldClose(window);
     #endif
 }
 
-#ifndef PLATFORM_RPI
+#if defined(PLATFORM_OSX) || defined(PLATFORM_LINUX) 
 void debounceSetWindowTitle(std::string title){
     static double lastUpdated;
 
@@ -577,12 +581,8 @@ void debounceSetWindowTitle(std::string title){
 void updateGL(){
     // Update time
     // --------------------------------------------------------------------
-    #ifdef PLATFORM_RPI
-        // RASPBERRY_PI
-        // gettimeofday(&tv, NULL);
-        // unsigned long long timeNow =    (unsigned long long)(tv.tv_sec) * 1000 +
-        //                                 (unsigned long long)(tv.tv_usec) / 1000;
-        // double now = (timeNow - timeStart)*0.001;
+    #ifdef defined(PLATFORM_RPI) || defined(PLATFORM_RPI4) 
+        // ANY RASPBERRY PI 
         double now = getTimeSec();
     #else
         // OSX/LINUX
@@ -611,7 +611,7 @@ void updateGL(){
 
     // EVENTS
     // --------------------------------------------------------------------
-    #ifdef PLATFORM_RPI
+    #if defined(PLATFORM_RPI) || defined(PLATFORM_RPI4) 
         // RASPBERRY_PI
         static int fd = -1;
         const int XSIGN = 1<<4, YSIGN = 1<<5;
@@ -739,7 +739,7 @@ void setWindowSize(int _width, int _height) {
 glm::ivec2 getScreenSize() {
     glm::ivec2 screen;
 
-    #ifdef PLATFORM_RPI
+    #if defined(PLATFORM_RPI)
         // RASPBERRYPI
 
         if (!bBcm) {
@@ -751,6 +751,10 @@ glm::ivec2 getScreenSize() {
         int32_t success = graphics_get_display_size(0 /* LCD */, &screen_width, &screen_height);
         assert(success >= 0);
         screen = glm::ivec2(screen_width, screen_height);
+
+    #elif defined(PLATFORM_RPI4)
+        screen = glm::ivec2(mode.hdisplay, mode.vdisplay);
+
     #else
         // OSX/Linux
         glfwGetMonitorPhysicalSize(glfwGetPrimaryMonitor(), &screen.x, &screen.y);
@@ -760,7 +764,7 @@ glm::ivec2 getScreenSize() {
 }
 
 float getPixelDensity() {
-    #ifdef PLATFORM_RPI
+    #if defined(PLATFORM_RPI) || defined(PLATFORM_RPI4)
         // RASPBERRYPI
         return 1.;
     #else
