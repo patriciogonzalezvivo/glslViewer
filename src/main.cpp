@@ -456,7 +456,7 @@ int main(int argc, char **argv){
 
     // Set the size
     glm::ivec4 windowPosAndSize = glm::ivec4(0.);
-    #ifdef PLATFORM_RPI
+    #if defined(PLATFORM_RPI) || defined(PLATFORM_RPI4) 
         // RASPBERRYPI default windows size (fullscreen)
         glm::ivec2 screen = getScreenSize();
         windowPosAndSize.z = screen.x;
@@ -500,7 +500,7 @@ int main(int argc, char **argv){
         
         else if (   std::string(argv[i]) == "-l" ||
                     std::string(argv[i]) == "--life-coding" ){
-        #ifdef PLATFORM_RPI
+        #if defined(PLATFORM_RPI) || defined(PLATFORM_RPI4) 
             windowPosAndSize.x = windowPosAndSize.z - 500;
             windowPosAndSize.z = windowPosAndSize.w = 500;
         #else

@@ -292,7 +292,7 @@ bool TextureCube::load(const std::string &_path, bool _vFlip) {
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    #ifndef PLATFORM_RPI
+    #if !defined(PLATFORM_RPI) && !defined(PLATFORM_RPI4) 
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
     #endif
         glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
@@ -429,7 +429,7 @@ bool TextureCube::generate(SkyBox* _skybox, int _width ) {
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    #ifndef PLATFORM_RPI
+    #if !defined(PLATFORM_RPI) && !defined(PLATFORM_RPI4) 
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
     #endif
         glGenerateMipmap(GL_TEXTURE_CUBE_MAP);

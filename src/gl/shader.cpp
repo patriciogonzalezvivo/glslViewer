@@ -23,7 +23,7 @@ Shader::Shader():
     addDefine("PLATFORM_OSX");
     #elif defined(PLATFORM_LINUX)
     addDefine("PLATFORM_LINUX");
-    #elif defined(PLATFORM_RPI)
+    #elif defined(PLATFORM_RPI) || defined(PLATFORM_RPI4)
     addDefine("PLATFORM_RPI");
     #endif
 }
@@ -174,7 +174,7 @@ GLuint Shader::compileShader(const std::string& _src, GLenum _type, bool _verbos
     GLint infoLength = 0;
     glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &infoLength);
     
-#ifdef PLATFORM_RPI
+#if defined(PLATFORM_RPI) || defined(PLATFORM_RPI4) 
     if (infoLength > 1 && !isCompiled) {
 #else
     if (infoLength > 1) {

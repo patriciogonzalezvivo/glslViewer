@@ -48,10 +48,10 @@ bool Texture::load(const std::string& _path, bool _vFlip) {
     else if (haveExt(_path, "hdr") || haveExt(_path,"HDR")) {
         float* pixels = loadHDRFloatPixels(_path, &m_width, &m_height, _vFlip);
 
-    #ifndef PLATFORM_RPI
-        GLenum InternalFormat = GL_RGB16F_ARB;
-    #else
+    #if defined(PLATFORM_RPI) || defined(PLATFORM_RPI4) 
         GLenum InternalFormat = GL_RGB;
+    #else
+        GLenum InternalFormat = GL_RGB16F_ARB;
     #endif
 
         glTexImage2D(GL_TEXTURE_2D, 0, InternalFormat, m_width, m_height, 0, GL_RGB, GL_FLOAT, pixels);
@@ -130,10 +130,10 @@ bool Texture::loadBump(const std::string& _path, bool _vFlip) {
             }
         }
 
-    #ifndef PLATFORM_RPI
-        GLenum InternalFormat = GL_RGB16F_ARB;
-    #else
+    #if defined(PLATFORM_RPI) || defined(PLATFORM_RPI4) 
         GLenum InternalFormat = GL_RGB;
+    #else
+        GLenum InternalFormat = GL_RGB16F_ARB;
     #endif
 
         glTexImage2D(GL_TEXTURE_2D, 0, InternalFormat, m_width, m_height, 0, GL_RGB, GL_FLOAT, &result[0]);

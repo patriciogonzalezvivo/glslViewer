@@ -756,7 +756,7 @@ void Scene::render(Uniforms &_uniforms) {
 }
 
 void Scene::renderShadowMap(Uniforms &_uniforms) {
-#ifdef PLATFORM_RPI
+#if defined(PLATFORM_RPI) || defined(PLATFORM_RPI4) 
     return;
 #else
     if ( m_origin.bChange || m_light.bChange ||  m_dynamicShadows ) {
@@ -849,7 +849,7 @@ void Scene::renderFloor(Uniforms &_uniforms, const glm::mat4& _mvp) {
             m_floor_shader.addDefine("MODEL_VERTEX_TEXCOORD");
             
             m_floor_shader.addDefine("LIGHT_SHADOWMAP", "u_ligthShadowMap");
-            #ifdef PLATFORM_RPI
+            #if defined(PLATFORM_RPI) || defined(PLATFORM_RPI4) 
                 m_floor_shader.addDefine("LIGHT_SHADOWMAP_SIZE", "512.0");
             #else
                 m_floor_shader.addDefine("LIGHT_SHADOWMAP_SIZE", "1024.0");

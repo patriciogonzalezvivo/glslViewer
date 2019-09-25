@@ -78,7 +78,7 @@ bool Model::loadGeom(Mesh& _mesh) {
         addDefine("MODEL_PRIMITIVE_TRIANGLE_FAN");
 
     addDefine("LIGHT_SHADOWMAP", "u_ligthShadowMap");
-#ifdef PLATFORM_RPI
+#if defined(PLATFORM_RPI) || defined(PLATFORM_RPI4) 
     addDefine("LIGHT_SHADOWMAP_SIZE", "512.0");
 #else
     addDefine("LIGHT_SHADOWMAP_SIZE", "1024.0");
