@@ -15,7 +15,7 @@ ifneq ("$(wildcard /opt/vc/include/bcm_host.h)","")
     PLATFORM = $(shell . /etc/os-release && echo $$PRETTY_NAME)
 endif
 
-#$(info Platform ${PLATFORM})
+$(info Platform ${PLATFORM})
 
 INCLUDES +=	-Isrc/ -Iinclude/
 CFLAGS += -Wall -O3 -std=c++11 -fpermissive
@@ -29,8 +29,6 @@ ifeq ($(PLATFORM),Raspbian)
 				-lGLESv2 -lEGL \
 				-lbcm_host \
 				-lpthread
-
-$(info Platform ${PLATFORM})
 
 else ifeq ($(shell uname),Linux)
 CFLAGS += -DPLATFORM_LINUX $(shell pkg-config --cflags glfw3 glu gl)
