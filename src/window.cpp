@@ -315,13 +315,13 @@ void initGL (glm::ivec4 &_viewport, bool _headless, bool _alwaysOnTop) {
         // I am not exactly sure why the EGL config must match the GBM format.
         // But it works!
         int configIndex = matchConfigToVisual(display, GBM_FORMAT_XRGB8888, configs, numConfigs);
-        if (configIndex < 0) {
-            std::cerr << "Failed to find matching EGL config! Error: " << eglGetErrorStr() << std::endl;
-            eglTerminate(display);
-            gbm_surface_destroy(gbmSurface);
-            gbm_device_destroy(gbmDevice);
-            return EXIT_FAILURE;
-        }
+        // if (configIndex < 0) {
+        //     std::cerr << "Failed to find matching EGL config! Error: " << eglGetErrorStr() << std::endl;
+        //     eglTerminate(display);
+        //     gbm_surface_destroy(gbmSurface);
+        //     gbm_device_destroy(gbmDevice);
+        //     return EXIT_FAILURE;
+        // }
         #endif
 
         context = eglCreateContext(display, configs[configIndex], EGL_NO_CONTEXT, contextAttribs);
