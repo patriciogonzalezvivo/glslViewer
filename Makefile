@@ -39,16 +39,16 @@ else ifeq ($(PLATFORM),Raspbian GNU/Linux 9 (stretch))
 			   	-lbrcmGLESv2 -lbrcmEGL \
 			   	-lbcm_host \
 			    -lpthread
-//
-//else ifeq ($(PLATFORM),Raspbian GNU/Linux 10 (buster))
-//	CFLAGS += -DGLM_FORCE_CXX98 -DPLATFORM_RPI
-//	INCLUDES += -I$(SDKSTAGE)/opt/vc/include/ \
-//			    -I$(SDKSTAGE)/opt/vc/include/interface/vcos/pthreads \
-//			    -I$(SDKSTAGE)/opt/vc/include/interface/vmcs_host/linux
-//	LDFLAGS += -L$(SDKSTAGE)/opt/vc/lib/ \
-//			  	-lbrcmGLESv2 -lbrcmEGL \
-//			   	-lbcm_host \
-//			   	-lpthread
+
+else ifeq ($(PLATFORM),Raspbian GNU/Linux 10 (buster))
+	CFLAGS += -DGLM_FORCE_CXX98 -DPLATFORM_RPI
+	INCLUDES += -I$(SDKSTAGE)/opt/vc/include/ \
+			    -I$(SDKSTAGE)/opt/vc/include/interface/vcos/pthreads \
+			    -I$(SDKSTAGE)/opt/vc/include/interface/vmcs_host/linux
+	LDFLAGS += -L$(SDKSTAGE)/opt/vc/lib/ \
+			  	-lbrcmGLESv2 -lbrcmEGL \
+			   	-lbcm_host \
+			   	-lpthread
 
 $(info Platform ${PLATFORM})
 
