@@ -6,29 +6,45 @@ HEADERS := $(wildcard include/*/*.h) $(wildcard src/*.h) $(wildcard src/*.h) $(w
 OBJECTS := $(SOURCES:.cpp=.o)
 
 PLATFORM = $(shell uname)
+HARDWARE = "N/A"
+
 ifneq ("$(wildcard /etc/os-release)","")
 PLATFORM = $(shell . /etc/os-release && echo $$NAME )
 endif
 
-#override platform selection on RPi:
 ifneq ("$(wildcard /opt/vc/include/bcm_host.h)","")
-    PLATFORM = $(shell . /etc/os-release && echo $$PRETTY_NAME | awk '{print $$1}' )
+	PLATFORM = $(shell . /etc/os-release && echo $$PRETTY_NAME | awk '{print $$1}' )
+	HARDWARE = $(shell cat /proc/cpuinfo | grep 'Revision' | awk '{print $$3}' )
 endif
 
 $(info Platform ${PLATFORM})
+$(info Platform ${HARDWARE})
 
 INCLUDES +=	-Isrc/ -Iinclude/
 CFLAGS += -Wall -O3 -std=c++11 -fpermissive
 
 ifeq ($(PLATFORM),Raspbian)
-	CFLAGS += -DGLM_FORCE_CXX98 -DPLATFORM_RPI
-	INCLUDES += -I$(SDKSTAGE)/opt/vc/include/ \
-				-I$(SDKSTAGE)/opt/vc/include/interface/vcos/pthreads \
-				-I$(SDKSTAGE)/opt/vc/include/interface/vmcs_host/linux
-	LDFLAGS += -L$(SDKSTAGE)/opt/vc/lib/ \
+	CFLAGS += -DGLM_FORCE_CXX98
+
+ifeq ($(HARDWARE),c03111)
+	CFLAGS += -DPLATFORM_RPI4
+	INCLUDES += -I/opt/vc/include/ \
+				-I/usr/include/libdrm \
+				-I/usr/include/GLES2
+	LDFLAGS += -L/opt/vc/lib/ \
 				-lGLESv2 -lEGL \
+				-ldrm -lgbm \
+				-lpthread
+else
+	CFLAGS += -DPLATFORM_RPI
+	INCLUDES += -I/opt/vc/include/ \
+				-I/opt/vc/include/interface/vcos/pthreads \
+				-I/opt/vc/include/interface/vmcs_host/linux
+	LDFLAGS += -lbrcmGLESv2 -lbrcmEGL \
 				-lbcm_host \
 				-lpthread
+endif
+	
 
 else ifeq ($(shell uname),Linux)
 CFLAGS += -DPLATFORM_LINUX $(shell pkg-config --cflags glfw3 glu gl)
