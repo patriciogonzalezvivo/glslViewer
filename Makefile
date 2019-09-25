@@ -18,7 +18,6 @@ ifneq ("$(wildcard /opt/vc/include/bcm_host.h)","")
 endif
 
 $(info Platform ${PLATFORM})
-$(info Platform ${HARDWARE})
 
 INCLUDES +=	-Isrc/ -Iinclude/
 CFLAGS += -Wall -O3 -std=c++11 -fpermissive
