@@ -7,7 +7,7 @@ OBJECTS := $(SOURCES:.cpp=.o)
 
 PLATFORM = $(shell uname)
 ifneq ("$(wildcard /etc/os-release)","")
-PLATFORM = $(shell . /etc/os-release && echo $$NAME | awk '{print $1}'  )
+PLATFORM = $(shell . /etc/os-release && echo $$NAME | awk '{print $$1}'  )
 endif
 
 #override platform selection on RPi:
