@@ -2,30 +2,30 @@
 
 #include <string>
 
-const std::string wireframe2D_vert = "\n\
-#ifdef GL_ES\n\
-precision mediump float;\n\
-#endif\n\
-\n\
-uniform mat4 u_modelViewProjectionMatrix;\n\
-uniform vec2 u_translate;\n\
-uniform vec2 u_scale;\n\
-attribute vec4 a_position;\n\
-\n\
-void main(void) {\n\
-    vec4 position = a_position;\n\
-    position.xy *= u_scale;\n\
-    position.xy += u_translate;\n\
-    gl_Position = u_modelViewProjectionMatrix * position;\n\
-}\n";
+const std::string wireframe2D_vert = R"(
+#ifdef GL_ES
+precision mediump float;
+#endif
 
-const std::string wireframe2D_frag = "\n\
-#ifdef GL_ES\n\
-precision mediump float;\n\
-#endif\n\
-\n\
-uniform vec4 u_color;\n\
-\n\
-void main(void) { \n\
-    gl_FragColor = u_color;\n\
-}\n";
+uniform mat4 u_modelViewProjectionMatrix;
+uniform vec2 u_translate;
+uniform vec2 u_scale;
+attribute vec4 a_position;
+
+void main(void) {
+    vec4 position = a_position;
+    position.xy *= u_scale;
+    position.xy += u_translate;
+    gl_Position = u_modelViewProjectionMatrix * position;
+})";
+
+const std::string wireframe2D_frag = R"(
+#ifdef GL_ES
+precision mediump float;
+#endif
+
+uniform vec4 u_color;
+
+void main(void) {
+    gl_FragColor = u_color;
+})";

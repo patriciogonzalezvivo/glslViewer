@@ -44,16 +44,13 @@ GlslViewer gives support to:
 
 ## TODO Features
 
-[ ] Option for FXAA postprocess filter
+[x] Option for FXAA postprocess filter
 
 [ ] Option for SSAO buffer ( `u_sceneSSAO` )
-
-[ ] Depth frag shader for light's shadowMap
 
 [ ] [Fullscreen command (GLFW and non-GLFW)](https://github.com/patriciogonzalezvivo/glslViewer/issues/112)
 
 [x] [Option to change recording FPS](https://github.com/patriciogonzalezvivo/glslViewer/issues/106)
-
 
 ## Bugs to fix
 
@@ -63,6 +60,7 @@ GlslViewer gives support to:
 
 [ ] Depth frag shader for scene depthmap  ( `u_sceneDepth` ) instead of rendering to multiple targets ( only on RPI )
 
+[ ] Depth frag shader for light's shadowMap, to work on RPI
 
 ## Author
 

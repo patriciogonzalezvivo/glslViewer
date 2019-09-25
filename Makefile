@@ -46,7 +46,7 @@ else ifeq ($(PLATFORM),Raspbian GNU/Linux 10 (buster))
 			    -I$(SDKSTAGE)/opt/vc/include/interface/vcos/pthreads \
 			    -I$(SDKSTAGE)/opt/vc/include/interface/vmcs_host/linux
 	LDFLAGS += -L$(SDKSTAGE)/opt/vc/lib/ \
-			  	-lbrcmGLESv2 -lbrcmEGL \
+			  	-lGLESv2 -lEGL \
 			   	-lbcm_host \
 			   	-lpthread
 

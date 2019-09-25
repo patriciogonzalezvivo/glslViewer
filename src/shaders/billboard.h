@@ -2,33 +2,33 @@
 
 #include <string>
 
-static const std::string billboard_vert = "\n\
-#ifdef GL_ES\n\
-precision mediump float;\n\
-#endif\n\
-\n\
-attribute vec4 a_position;\n\
-attribute vec2 a_texcoord;\n\
-\n\
-varying vec4 v_position;\n\
-// varying vec4 v_color;\n\
-// varying vec3 v_normal;\n\
-varying vec2 v_texcoord;\n\
-\n\
-#ifdef LIGHT_SHADOWMAP\n\
-uniform mat4    u_lightMatrix;\n\
-varying vec4    v_lightCoord;\n\
-#endif\n\
-\n\
-void main(void) {\n\
-    v_position =  a_position;\n\
-    // v_color = vec4(1.0);\n\
-    // v_normal = vec3(0.0,0.0,1.0);\n\
-    v_texcoord = a_texcoord;\n\
-    \n\
-#ifdef LIGHT_SHADOWMAP\n\
-    v_lightCoord = u_lightMatrix * v_position;\n\
-#endif\n\
-    \n\
-    gl_Position = v_position;\n\
-}";
+static const std::string billboard_vert = R"(
+#ifdef GL_ES
+precision mediump float;
+#endif
+
+attribute vec4 a_position;
+attribute vec2 a_texcoord;
+
+varying vec4 v_position;
+// varying vec4 v_color;
+// varying vec3 v_normal;
+varying vec2 v_texcoord;
+
+#ifdef LIGHT_SHADOWMAP
+uniform mat4    u_lightMatrix;
+varying vec4    v_lightCoord;
+#endif
+
+void main(void) {
+    v_position =  a_position;
+    // v_color = vec4(1.0);
+    // v_normal = vec3(0.0,0.0,1.0);
+    v_texcoord = a_texcoord;
+    
+#ifdef LIGHT_SHADOWMAP
+    v_lightCoord = u_lightMatrix * v_position;
+#endif
+    
+    gl_Position = v_position;
+})";

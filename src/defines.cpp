@@ -112,7 +112,7 @@ void HaveDefines::delDefine(const std::string &_define) {
 
 void HaveDefines::printDefines() {
     for (DefinesList_cit it = m_defines.begin(); it != m_defines.end(); ++it) {
-        std::cout << it->first << " " << it->second << std::endl;
+        std::cout << "#define " << it->first << " " << it->second << std::endl;
     }
 }
 
