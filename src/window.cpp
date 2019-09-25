@@ -581,7 +581,7 @@ void debounceSetWindowTitle(std::string title){
 void updateGL(){
     // Update time
     // --------------------------------------------------------------------
-    #ifdef defined(PLATFORM_RPI) || defined(PLATFORM_RPI4) 
+    #if defined(PLATFORM_RPI) || defined(PLATFORM_RPI4) 
         // ANY RASPBERRY PI 
         double now = getTimeSec();
     #else
