@@ -253,7 +253,7 @@ void initGL (glm::ivec4 &_viewport, bool _headless, bool _alwaysOnTop) {
         if (getDisplay(&display) != 0) {
             std::cerr << "Unable to get EGL display" << std::endl;
             close(device);
-            return -1;
+            return EXIT_FAILURE;
         }
 
         #endif

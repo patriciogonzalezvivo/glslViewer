@@ -27,11 +27,9 @@ ifeq ($(PLATFORM),Raspbian)
 
 ifeq ($(HARDWARE),c03111)
 	CFLAGS += -DPLATFORM_RPI4
-	INCLUDES += -I/opt/vc/include/ \
-				-I/usr/include/libdrm \
+	INCLUDES += -I/usr/include/libdrm \
 				-I/usr/include/GLES2
-	LDFLAGS += -L/opt/vc/lib/ \
-				-lGLESv2 -lEGL \
+	LDFLAGS +=  -lGLESv2 -lEGL \
 				-ldrm -lgbm \
 				-lpthread
 else
@@ -39,7 +37,8 @@ else
 	INCLUDES += -I/opt/vc/include/ \
 				-I/opt/vc/include/interface/vcos/pthreads \
 				-I/opt/vc/include/interface/vmcs_host/linux
-	LDFLAGS += -lbrcmGLESv2 -lbrcmEGL \
+	LDFLAGS +=  -L/opt/vc/lib/ \
+				-lbrcmGLESv2 -lbrcmEGL \
 				-lbcm_host \
 				-lpthread
 endif
