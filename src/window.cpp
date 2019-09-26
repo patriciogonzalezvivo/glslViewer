@@ -273,7 +273,7 @@ void initGL (glm::ivec4 &_viewport, bool _headless, bool _alwaysOnTop) {
             #endif
             return EXIT_FAILURE;
         }
-
+        std::cout << "Initialized EGL version: " << major << "." << minor << std::endl;
         #endif
 
         // Make sure that we can use OpenGL in this EGL app.
@@ -281,7 +281,7 @@ void initGL (glm::ivec4 &_viewport, bool _headless, bool _alwaysOnTop) {
         result = eglBindAPI(EGL_OPENGL_ES_API);
         assert(EGL_FALSE != result);
         check();
-        std::cout << "Initialized EGL version: " << major << "." << minor << std::endl;
+       
 
         static const EGLint configAttribs[] = {
             EGL_RED_SIZE, 8,
