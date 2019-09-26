@@ -296,13 +296,14 @@ void initGL (glm::ivec4 &_viewport, bool _headless, bool _alwaysOnTop) {
             EGL_NONE
         };
 
-        EGLint count;
-        EGLint numConfigs;
-        eglGetConfigs(display, NULL, 0, &count);
-        EGLConfig *configs = malloc(count * sizeof(configs));
+        EGLConfig config;
+        // EGLint count;
+        // EGLint numConfigs;
+        // eglGetConfigs(display, NULL, 0, &count);
+        // EGLConfig *configs = malloc(count * sizeof(configs));
 
         // get an appropriate EGL frame buffer configuration
-        if (eglChooseConfig(display, configAttribs, configs, count, &numConfigs) == EGL_FALSE) {
+        if (eglChooseConfig(display, configAttribs, &config, 1, &numConfigs) == EGL_FALSE) {
             std::cerr << "Failed to get EGL configs! Error: " << eglGetErrorStr() << std::endl;
             eglTerminate(display);
             #ifdef PLATFORM_RPI4
@@ -311,10 +312,10 @@ void initGL (glm::ivec4 &_viewport, bool _headless, bool _alwaysOnTop) {
             return EXIT_FAILURE;
         }
 
-        #ifdef PLATFORM_RPI4
+        // #ifdef PLATFORM_RPI4
         // I am not exactly sure why the EGL config must match the GBM format.
         // But it works!
-        int configIndex = matchConfigToVisual(display, GBM_FORMAT_XRGB8888, configs, numConfigs);
+        // int configIndex = matchConfigToVisual(display, GBM_FORMAT_XRGB8888, configs, numConfigs);
         // if (configIndex < 0) {
         //     std::cerr << "Failed to find matching EGL config! Error: " << eglGetErrorStr() << std::endl;
         //     eglTerminate(display);
@@ -322,24 +323,10 @@ void initGL (glm::ivec4 &_viewport, bool _headless, bool _alwaysOnTop) {
         //     gbm_device_destroy(gbmDevice);
         //     return EXIT_FAILURE;
         // }
-        #endif
-
-        context = eglCreateContext(display, configs[configIndex], EGL_NO_CONTEXT, contextAttribs);
-        if (context == EGL_NO_CONTEXT)
-        {
-            std::cerr << "Failed to create EGL context! Error: " << eglGetErrorStr() << std::endl;
-            eglTerminate(display);
-            #ifdef PLATFORM_RPI4
-            gbmClean();
-            #endif
-            return EXIT_FAILURE;
-        }
+        // #endif
 
         // create an EGL rendering context
-        context = eglCreateContext(display, configs[configIndex], EGL_NO_CONTEXT, contextAttribs);
-        assert(context!=EGL_NO_CONTEXT);
-        check();
-
+        context = eglCreateContext(display, config, EGL_NO_CONTEXT, contextAttribs);
         if (context == EGL_NO_CONTEXT) {
             std::cerr << "Failed to create EGL context! Error: " << eglGetErrorStr() << std::endl;
             eglTerminate(display);
@@ -390,12 +377,12 @@ void initGL (glm::ivec4 &_viewport, bool _headless, bool _alwaysOnTop) {
         vc_dispmanx_update_submit_sync( dispman_update );
         check();
 
-        surface = eglCreateWindowSurface( display, configs[configIndex], &nativeviewport, NULL );
+        surface = eglCreateWindowSurface( display, &config, &nativeviewport, NULL );
         assert(surface != EGL_NO_SURFACE);
         check();
 
         #elif defined(PLATFORM_RPI4)
-        surface = eglCreateWindowSurface(display, configs[configIndex], gbmSurface, NULL);
+        surface = eglCreateWindowSurface(display, &config, gbmSurface, NULL);
         if (surface == EGL_NO_SURFACE) {
             std::cerr << "Failed to create EGL surface! Error: " << eglGetErrorStr() << std::endl;
             eglDestroyContext(display, context);
@@ -410,7 +397,7 @@ void initGL (glm::ivec4 &_viewport, bool _headless, bool _alwaysOnTop) {
         result = eglMakeCurrent(display, surface, surface, context);
         assert(EGL_FALSE != result);
         check();
-        free(configs);
+        // free(configs);
 
         setWindowSize(_viewport.z,_viewport.w);
     #else
