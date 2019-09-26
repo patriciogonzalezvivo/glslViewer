@@ -273,8 +273,9 @@ void initGL (glm::ivec4 &_viewport, bool _headless, bool _alwaysOnTop) {
         }
 
         // Make sure that we can use OpenGL in this EGL app.
-        result = eglBindAPI(EGL_OPENGL_API);
-        // result = eglBindAPI(EGL_OPENGL_ES_API);
+        // result = eglBindAPI(EGL_OPENGL_API);
+        result = eglBindAPI(EGL_OPENGL_ES_API);
+
         assert(EGL_FALSE != result);
         check();
         std::cout << "Initialized EGL version: " << major << "." << minor << std::endl;
