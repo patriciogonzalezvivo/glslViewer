@@ -235,6 +235,9 @@ void initGL (glm::ivec4 &_viewport, bool _headless, bool _alwaysOnTop) {
         // RASPBERRY_PI
         clock_gettime(CLOCK_MONOTONIC, &time_start);
 
+        // Clear application state
+        EGLBoolean result;
+
         #ifdef PLATFORM_RPI
         // Start OpenGL ES
         if (!bBcm) {
@@ -247,6 +250,10 @@ void initGL (glm::ivec4 &_viewport, bool _headless, bool _alwaysOnTop) {
         assert(display!=EGL_NO_DISPLAY);
         check();
 
+        result = eglInitialize(display, NULL, NULL);
+        assert(EGL_FALSE != result);
+        check();
+
         #elif defined(PLATFORM_RPI4)
         // You can try chaning this to "card0" if "card1" does not work.
         device = open("/dev/dri/card1", O_RDWR | O_CLOEXEC);
@@ -256,11 +263,6 @@ void initGL (glm::ivec4 &_viewport, bool _headless, bool _alwaysOnTop) {
             return EXIT_FAILURE;
         }
 
-        #endif
-
-        // Clear application state
-        EGLBoolean result;
-        
         // initialize the EGL display connection
         int major, minor;
         if (eglInitialize(display, &major, &minor) == EGL_FALSE) {
@@ -272,10 +274,11 @@ void initGL (glm::ivec4 &_viewport, bool _headless, bool _alwaysOnTop) {
             return EXIT_FAILURE;
         }
 
+        #endif
+
         // Make sure that we can use OpenGL in this EGL app.
         // result = eglBindAPI(EGL_OPENGL_API);
         result = eglBindAPI(EGL_OPENGL_ES_API);
-
         assert(EGL_FALSE != result);
         check();
         std::cout << "Initialized EGL version: " << major << "." << minor << std::endl;
