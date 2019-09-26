@@ -377,12 +377,12 @@ void initGL (glm::ivec4 &_viewport, bool _headless, bool _alwaysOnTop) {
         vc_dispmanx_update_submit_sync( dispman_update );
         check();
 
-        surface = eglCreateWindowSurface( display, &config, &nativeviewport, NULL );
+        surface = eglCreateWindowSurface( display, config, &nativeviewport, NULL );
         assert(surface != EGL_NO_SURFACE);
         check();
 
         #elif defined(PLATFORM_RPI4)
-        surface = eglCreateWindowSurface(display, &config, gbmSurface, NULL);
+        surface = eglCreateWindowSurface(display, config, gbmSurface, NULL);
         if (surface == EGL_NO_SURFACE) {
             std::cerr << "Failed to create EGL surface! Error: " << eglGetErrorStr() << std::endl;
             eglDestroyContext(display, context);
