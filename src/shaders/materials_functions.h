@@ -206,5 +206,5 @@ float getMaterialShininess() {
 #endif
     return shininess;
 }
-
-#endif)";
+#endif
+)";

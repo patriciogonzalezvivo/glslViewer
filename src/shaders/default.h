@@ -47,7 +47,8 @@ void main(void) {
 #endif
     
     gl_Position = u_modelViewProjectionMatrix * v_position;
-})";
+}
+)";
 
 const std::string default_frag = R"(
 #ifdef GL_ES
@@ -66,4 +67,5 @@ void main(void) {
     color = vec3(st.x,st.y,abs(sin(u_time)));
     
     gl_FragColor = vec4(color, 1.0);
-})";
+}
+)";

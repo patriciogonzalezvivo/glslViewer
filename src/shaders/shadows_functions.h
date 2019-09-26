@@ -36,4 +36,5 @@ float textureShadowPCF(sampler2D depths, vec2 size, vec2 uv, float compare) {
     }
     return result/25.0;
 }
-#endif)";
+#endif
+)";

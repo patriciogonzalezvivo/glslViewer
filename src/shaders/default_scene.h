@@ -74,7 +74,8 @@ void main(void) {
 )";
 
 const std::string default_scene_frag = default_header + materials_functions + shadows_functions + 
-R"(struct Components {
+R"(
+struct Components {
     vec3    diffuseColor;
     vec3    specularColor;
     vec3    N;  // Normal
