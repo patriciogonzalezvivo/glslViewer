@@ -186,16 +186,16 @@ static int getDisplay(EGLDisplay *display) {
     return 0;
 }
 
-static int matchConfigToVisual(EGLDisplay display, EGLint visualId, EGLConfig *configs, int count) {
-    EGLint id;
-    for (int i = 0; i < count; ++i) {
-        if (!eglGetConfigAttrib(display, configs[i], EGL_NATIVE_VISUAL_ID, &id))
-            continue;
-        if (id == visualId)
-            return i;
-    }
-    return -1;
-}
+// static int matchConfigToVisual(EGLDisplay display, EGLint visualId, EGLConfig *configs, int count) {
+//     EGLint id;
+//     for (int i = 0; i < count; ++i) {
+//         if (!eglGetConfigAttrib(display, configs[i], EGL_NATIVE_VISUAL_ID, &id))
+//             continue;
+//         if (id == visualId)
+//             return i;
+//     }
+//     return -1;
+// }
 
 static struct gbm_bo *previousBo = NULL;
 static uint32_t previousFb;
@@ -249,7 +249,7 @@ void initGL (glm::ivec4 &_viewport, bool _headless, bool _alwaysOnTop) {
         display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
         assert(display!=EGL_NO_DISPLAY);
         check();
-        
+
         #elif defined(PLATFORM_RPI4)
         // You can try chaning this to "card0" if "card1" does not work.
         device = open("/dev/dri/card1", O_RDWR | O_CLOEXEC);
