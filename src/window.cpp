@@ -297,8 +297,8 @@ void initGL (glm::ivec4 &_viewport, bool _headless, bool _alwaysOnTop) {
         };
 
         EGLConfig config;
+        EGLint numConfigs;
         // EGLint count;
-        // EGLint numConfigs;
         // eglGetConfigs(display, NULL, 0, &count);
         // EGLConfig *configs = malloc(count * sizeof(configs));
 
