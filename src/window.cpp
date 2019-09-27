@@ -719,6 +719,8 @@ void closeGL(){
 }
 //-------------------------------------------------------------
 void updateViewport() {
+    std::cout << (float)viewport.x * fPixelDensity << ' ' << (float)viewport.y *  fPixelDensity << ' ';
+    std::cout << (float)viewport.z * fPixelDensity << ' ' << (float)viewport.w * fPixelDensity << std::endl;
     fPixelDensity = getPixelDensity();
     glViewport( (float)viewport.x * fPixelDensity, (float)viewport.y * fPixelDensity,
                 (float)viewport.z * fPixelDensity, (float)viewport.w * fPixelDensity);
