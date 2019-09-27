@@ -65,20 +65,23 @@ void printUsage(char * executableName) {
     std::cerr << "// Arguments:" << std::endl;
     std::cerr << "// <shader>.frag [<shader>.vert] - load shaders" << std::endl;
     std::cerr << "// [<mesh>.(obj/.ply)] - load obj or ply file" << std::endl;
+    std::cerr << "// [-vFlip] - all textures after will be flipped vertically" << std::endl;
     std::cerr << "// [<texture>.(png/jpg/hdr)] - load and assign texture to uniform order" << std::endl;
     std::cerr << "// [-<uniformName> <texture>.(png/jpg/hdr)] - add textures associated with different uniform sampler2D names" << std::endl;
-    std::cerr << "// [-c/-C/-sh <enviromental_map>.(png/jpg/hdr)] - load a environmental map (cubemap or sphericalmap)" << std::endl;
-    std::cerr << "// [-vFlip] - all textures after will be flipped vertically" << std::endl;
+    std::cerr << "// [-C <enviromental_map>.(png/jpg/hdr)] - load a environmental map as cubemap" << std::endl;
+    std::cerr << "// [-c <enviromental_map>.(png/jpg/hdr)] - load a environmental map as cubemap but hided" << std::endl;
+    std::cerr << "// [-sh <enviromental_map>.(png/jpg/hdr)] - load a environmental map as spherical harmonics array" << std::endl;
     std::cerr << "// [-x <pixels>] - set the X position of the billboard on the screen" << std::endl;
     std::cerr << "// [-y <pixels>] - set the Y position of the billboard on the screen" << std::endl;
-    std::cerr << "// [-w <pixels>] - set the width of the billboard" << std::endl;
+    std::cerr << "// [-w <pixels>] - set the width of the window" << std::endl;
     std::cerr << "// [-h <pixels>] - set the height of the billboard" << std::endl;
-    std::cerr << "// [-l] - draw 500x500 billboard on top right corner of the screen" << std::endl;
-    std::cerr << "// [-s/--sec <seconds>] - exit app after a specific amount of seconds" << std::endl;
-    std::cerr << "// [-o <file>.png] - save the viewport to an image file before" << std::endl;
-    std::cerr << "// [--fxaa] - set FXAA as postprocess filter" << std::endl;
+    std::cerr << "// [-f|--fullscreen] - load the window in fullscreen" << std::endl;
+    std::cerr << "// [-l|--life-coding] - live code mode, where the billboard is allways visible" << std::endl;
     std::cerr << "// [--headless] - headless rendering. Very useful for making images or benchmarking." << std::endl;
     std::cerr << "// [--nocursor] - hide cursor" << std::endl;
+    std::cerr << "// [--fxaa] - set FXAA as postprocess filter" << std::endl;
+    std::cerr << "// [-o <file>.png] - save the viewport to an image file before" << std::endl;
+    std::cerr << "// [-s/--sec <seconds>] - exit app after a specific amount of seconds" << std::endl;
     std::cerr << "// [-I<include_folder>] - add an include folder to default for #include files" << std::endl;
     std::cerr << "// [-D<define>] - add system #defines directly from the console argument" << std::endl;
     std::cerr << "// [-e/-E <command>] - execute command when start. Multiple -e flags can be chained" << std::endl;
@@ -455,7 +458,7 @@ void declareCommands() {
 int main(int argc, char **argv){
 
     // Set the size
-    glm::ivec4 windowPosAndSize = glm::ivec4(0.);
+    glm::ivec4 windowPosAndSize = glm::ivec4(0);
     #if defined(PLATFORM_RPI) || defined(PLATFORM_RPI4) 
         // RASPBERRYPI default windows size (fullscreen)
         glm::ivec2 screen = getScreenSize();

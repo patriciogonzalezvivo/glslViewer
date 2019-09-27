@@ -6,15 +6,21 @@ HEADERS := $(wildcard include/*/*.h) $(wildcard src/*.h) $(wildcard src/*.h) $(w
 OBJECTS := $(SOURCES:.cpp=.o)
 
 PLATFORM = $(shell uname)
-HARDWARE = "N/A"
+DRIVERS ?= no_defined
 
-ifneq ("$(wildcard /etc/os-release)","")
-PLATFORM = $(shell . /etc/os-release && echo $$NAME )
-endif
-
-ifneq ("$(wildcard /opt/vc/include/bcm_host.h)","")
-	PLATFORM = $(shell . /etc/os-release && echo $$PRETTY_NAME | awk '{print $$1}' )
-	HARDWARE = $(shell cat /proc/cpuinfo | grep 'Revision' | awk '{print $$3}' )
+ifeq ($(DRIVERS),no_defined)
+	ifneq ("$(wildcard /opt/vc/include/bcm_host.h)","")
+		ifeq ($(shell cat /proc/cpuinfo | grep 'Revision' | awk '{print $$3}' ), c03111)
+			PLATFORM = RPI4
+			DRIVERS = kms
+		else
+			PLATFORM = RPI
+			DRIVERS = vc
+		endif
+	else
+		PLATFORM = $(shell uname)
+		DRIVERS = glfw
+	endif
 endif
 
 $(info Platform ${PLATFORM})
@@ -22,29 +28,30 @@ $(info Platform ${PLATFORM})
 INCLUDES +=	-Isrc/ -Iinclude/
 CFLAGS += -Wall -O3 -std=c++11 -fpermissive
 
-ifeq ($(PLATFORM),Raspbian)
-	CFLAGS += -DGLM_FORCE_CXX98
+ifeq ($(DRIVERS),vc)
+	CFLAGS += -DGLM_FORCE_CXX98 -DPLATFORM_RPI
+	INCLUDES += -I/opt/vc/include/ \
+				-I/opt/vc/include/interface/vcos/pthreads \
+				-I/opt/vc/include/interface/vmcs_host/linux
+	LDFLAGS +=  -L/opt/vc/lib/ \
+				-lbcm_host \
+				-lpthread
 
-ifeq ($(HARDWARE),c03111)
-	CFLAGS += -DPLATFORM_RPI4
+	ifeq ($(shell . /etc/os-release && echo $$PRETTY_NAME'),Raspbian GNU/Linux 8 (jessie))
+	-	LDFLAGS += -lGLESv2 -lEGL
+	else
+		LDFLAGS += -lbrcmGLESv2 -lbrcmEGL
+	endif
+
+else ifeq ($(DRIVERS),kms)
+	CFLAGS += -DGLM_FORCE_CXX98 -DPLATFORM_RPI4
 	INCLUDES += -I/usr/include/libdrm \
 				-I/usr/include/GLES2
 	LDFLAGS +=  -lGLESv2 -lEGL \
 				-ldrm -lgbm \
 				-lpthread
-else
-	CFLAGS += -DPLATFORM_RPI
-	INCLUDES += -I/opt/vc/include/ \
-				-I/opt/vc/include/interface/vcos/pthreads \
-				-I/opt/vc/include/interface/vmcs_host/linux
-	LDFLAGS +=  -L/opt/vc/lib/ \
-				-lbrcmGLESv2 -lbrcmEGL \
-				-lbcm_host \
-				-lpthread
-endif
 	
-
-else ifeq ($(shell uname),Linux)
+else ifeq ($(PLATFORM),Linux)
 CFLAGS += -DPLATFORM_LINUX $(shell pkg-config --cflags glfw3 glu gl)
 LDFLAGS += $(shell pkg-config --libs glfw3 glu gl x11 xrandr xi xxf86vm xcursor xinerama xrender xext xdamage) -lpthread -ldl
 
