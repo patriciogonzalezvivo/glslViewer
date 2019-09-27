@@ -23,6 +23,8 @@ void closeGL();
 
 //	SET
 //----------------------------------------------
+void updateViewport();
+void setViewport(float _width, float _height);
 void setWindowSize(int _width, int _height);
 
 //	GET

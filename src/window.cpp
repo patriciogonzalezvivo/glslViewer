@@ -525,11 +525,10 @@ void initGL (glm::ivec4 &_viewport, WindowStyle _style) {
         });
 
         glfwSetWindowPosCallback(window, [](GLFWwindow* _window, int x, int y) {
-            viewport.x = x;
-            viewport.y = y;
-            if (fPixelDensity != getPixelDensity()) {
-                setWindowSize(viewport.z, viewport.w);
-            }
+            // if (fPixelDensity != getPixelDensity()) {
+            //     updateViewport();
+            // }
+            updateViewport();
         });
 
         glfwSwapInterval(1);
@@ -719,14 +718,22 @@ void closeGL(){
     #endif
 }
 //-------------------------------------------------------------
+void updateViewport() {
+    fPixelDensity = getPixelDensity();
+    glViewport( (float)viewport.x * fPixelDensity, (float)viewport.y * fPixelDensity,
+                (float)viewport.z * fPixelDensity, (float)viewport.w * fPixelDensity);
+    orthoMatrix = glm::ortho(   (float)viewport.x * fPixelDensity, (float)viewport.z * fPixelDensity, 
+                                (float)viewport.y * fPixelDensity, (float)viewport.w * fPixelDensity);
+}
 
-void setWindowSize(int _width, int _height) {
+void setViewport(float _width, float _height) {
     viewport.z = _width;
     viewport.w = _height;
-    fPixelDensity = getPixelDensity();
-    glViewport(0.0, 0.0, (float)getWindowWidth(), (float)getWindowHeight());
-    orthoMatrix = glm::ortho((float)viewport.x, (float)getWindowWidth(), (float)viewport.y, (float)getWindowHeight());
+    updateViewport();
+}
 
+void setWindowSize(int _width, int _height) {
+    setViewport(_width, _height);
     onViewportResize(getWindowWidth(), getWindowHeight());
 }
 

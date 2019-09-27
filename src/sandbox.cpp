@@ -296,6 +296,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // LOAD SHADERS
+    updateViewport(); 
     reloadShaders( _files );
 
     // TODO:
@@ -306,7 +307,6 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     _updateBuffers();
 
     flagChange();
-    onViewportResize(getWindowWidth(), getWindowHeight()); 
 }
 
 void Sandbox::addDefine(const std::string &_define, const std::string &_value) {
