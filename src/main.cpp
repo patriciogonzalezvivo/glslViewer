@@ -120,6 +120,15 @@ void declareCommands() {
     },
     "version                        return glslViewer version.", false));
 
+    commands.push_back(Command("window_width", [&](const std::string& _line){ 
+        if (_line == "window_width") {
+            std::cout << getWindowWidth() << std::endl;
+            return true;
+        }
+        return false;
+    },
+    "window_width                   return the width of the windows.", false));
+
     commands.push_back(Command("window_height", [&](const std::string& _line){ 
         if (_line == "window_height") {
             std::cout << getWindowHeight() << std::endl;
@@ -412,15 +421,6 @@ void declareCommands() {
         return false;
     },
     "sequence,<A_sec>,<B_sec>[,fps] saves a sequence of images from A to B second.", false));
-
-    commands.push_back(Command("window_width", [&](const std::string& _line){ 
-        if (_line == "window_width") {
-            std::cout << getWindowWidth() << std::endl;
-            return true;
-        }
-        return false;
-    },
-    "window_width                   return the width of the windows.", false));
 
     commands.push_back(Command("q", [&](const std::string& _line){ 
         if (_line == "q") {

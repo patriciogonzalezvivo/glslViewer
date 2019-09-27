@@ -258,17 +258,6 @@ void initGL (glm::ivec4 &_viewport, windowStyle _prop) {
             return EXIT_FAILURE;
         }
 
-        // // initialize the EGL display connection
-        // int major, minor;
-        // if (eglInitialize(display, &major, &minor) == EGL_FALSE) {
-        //     std::cerr << "Failed to get EGL version! Error: " << eglGetErrorStr() << std::endl;
-        //     eglTerminate(display);
-        //     #ifdef PLATFORM_RPI4
-        //     gbmClean();
-        //     #endif
-        //     return EXIT_FAILURE;
-        // }
-        // std::cout << "Initialized EGL version: " << major << "." << minor << std::endl;
         #endif
 
         result = eglInitialize(display, NULL, NULL);
@@ -402,7 +391,6 @@ void initGL (glm::ivec4 &_viewport, windowStyle _prop) {
         check();
         // free(configs);
 
-        setWindowSize(_viewport.z,_viewport.w);
     #else
         // GLFW (OSX/LINUX)
         // ---------------------------------------------
@@ -421,11 +409,15 @@ void initGL (glm::ivec4 &_viewport, windowStyle _prop) {
             glfwWindowHint(GLFW_FLOATING, GL_TRUE);
 
         if (_prop == FULLSCREEN) {
-            GLFWmonitor* pMonitor = glfwGetPrimaryMonitor();
-            const GLFWvidmode* pCurrentVideoMod = glfwGetVideoMode(pMonitor);
-            _viewport.z = pCurrentVideoMod->width;
-            _viewport.w = pCurrentVideoMod->height;
-            window = glfwCreateWindow(_viewport.z, _viewport.w, appTitle.c_str(), pMonitor, NULL);
+            GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+            const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+            _viewport.z = mode->width;
+            _viewport.w = mode->height;
+            glfwWindowHint(GLFW_RED_BITS, mode->redBits);
+            glfwWindowHint(GLFW_GREEN_BITS, mode->greenBits);
+            glfwWindowHint(GLFW_BLUE_BITS, mode->blueBits);
+            glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
+            window = glfwCreateWindow(_viewport.z, _viewport.w, appTitle.c_str(), monitor, NULL);
         }
         else
             window = glfwCreateWindow(_viewport.z, _viewport.w, appTitle.c_str(), NULL, NULL);
@@ -437,8 +429,6 @@ void initGL (glm::ivec4 &_viewport, windowStyle _prop) {
         }
 
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
-
-        setWindowSize(_viewport.z, _viewport.w);
 
         glfwMakeContextCurrent(window);
         glfwSetWindowSizeCallback(window, [](GLFWwindow* _window, int _w, int _h) {
@@ -542,6 +532,7 @@ void initGL (glm::ivec4 &_viewport, windowStyle _prop) {
 
         glfwSwapInterval(1);
     #endif
+    setWindowSize(_viewport.z,_viewport.w);
 }
 
 bool isGL(){
@@ -754,7 +745,11 @@ glm::ivec2 getScreenSize() {
 
     #else
         // OSX/Linux
-        glfwGetMonitorPhysicalSize(glfwGetPrimaryMonitor(), &screen.x, &screen.y);
+        // glfwGetMonitorPhysicalSize(glfwGetPrimaryMonitor(), &screen.x, &screen.y);
+        GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+        const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+        screen.x = mode->width;
+        screen.y = mode->height;
     #endif
 
     return screen;
@@ -778,11 +773,11 @@ glm::ivec4 getViewport() {
 }
 
 int getWindowWidth() {
-    return viewport.z*fPixelDensity;
+    return viewport.z * fPixelDensity;
 }
 
 int getWindowHeight() {
-    return viewport.w*fPixelDensity;
+    return viewport.w * fPixelDensity;
 }
 
 glm::mat4 getOrthoMatrix() {
