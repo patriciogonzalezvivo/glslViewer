@@ -766,13 +766,6 @@ float getPixelDensity() {
         return 1.;
     #else
         // OSX/LINUX
-
-        // float xscale = 1.0;
-        // float yscale = 1.0;
-        // glfwGetWindowContentScale(window, &xscale, &yscale);
-        // return fmax(xscale, yscale);
-
-        // OSX/LINUX
         int window_width, window_height, framebuffer_width, framebuffer_height;
         glfwGetWindowSize(window, &window_width, &window_height);
         glfwGetFramebufferSize(window, &framebuffer_width, &framebuffer_height);
