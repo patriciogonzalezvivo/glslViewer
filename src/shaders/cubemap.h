@@ -14,7 +14,8 @@ varying vec4    v_position;
 void main(void) {
     v_position = a_position;
     gl_Position = u_modelViewProjectionMatrix * vec4(v_position.xyz, 1.0);
-})";
+}
+)";
 
 std::string cube_frag = R"(
 #ifdef GL_ES

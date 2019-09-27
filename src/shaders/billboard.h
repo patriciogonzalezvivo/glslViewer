@@ -31,4 +31,5 @@ void main(void) {
 #endif
     
     gl_Position = v_position;
-})";
+}
+)";

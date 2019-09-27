@@ -467,9 +467,8 @@ int main(int argc, char **argv){
         windowPosAndSize.w = 500;
     #endif
 
-    bool headless = false;
+    windowStyle w_style = REGULAR;
     bool displayHelp = false;
-    bool alwaysOnTop = false;
     for (int i = 1; i < argc ; i++) {
         std::string argument = std::string(argv[i]);
 
@@ -491,20 +490,23 @@ int main(int argc, char **argv){
             i++;
             windowPosAndSize.w = toInt(std::string(argv[i]));
         }
-        else if (   std::string(argv[i]) == "--headless" ) {
-            headless = true;
-        }
         else if (   std::string(argv[i]) == "--help" ) {
             displayHelp = true;
         }
-        
+        else if (   std::string(argv[i]) == "--headless" ) {
+            w_style = HEADLESS;
+        }
+        else if (   std::string(argv[i]) == "-f" ||
+                    std::string(argv[i]) == "--fullscreen" ) {
+            w_style = FULLSCREEN;
+        }
         else if (   std::string(argv[i]) == "-l" ||
                     std::string(argv[i]) == "--life-coding" ){
         #if defined(PLATFORM_RPI) || defined(PLATFORM_RPI4) 
             windowPosAndSize.x = windowPosAndSize.z - 500;
             windowPosAndSize.z = windowPosAndSize.w = 500;
         #else
-            alwaysOnTop = true;
+            w_style = ALLWAYS_ON_TOP;
         #endif
         }
         
@@ -519,7 +521,7 @@ int main(int argc, char **argv){
     declareCommands();
 
     // Initialize openGL context
-    initGL (windowPosAndSize, headless, alwaysOnTop);
+    initGL (windowPosAndSize, w_style);
 
     struct stat st;                         // for files to watch
     float       timeLimit       = -1.0f;    // Time limit
@@ -538,6 +540,9 @@ int main(int argc, char **argv){
         }
         else if (   argument == "-l" ||
                     argument == "--headless") {
+        }
+        else if (   std::string(argv[i]) == "-f" ||
+                    std::string(argv[i]) == "--fullscreen" ) {
         }
         else if (   argument == "--verbose" ) {
             sandbox.verbose = true;

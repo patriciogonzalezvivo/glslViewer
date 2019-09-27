@@ -200,8 +200,7 @@ static int getDisplay(EGLDisplay *display) {
 static struct gbm_bo *previousBo = NULL;
 static uint32_t previousFb;
 
-static void gbmSwapBuffers(EGLDisplay *display, EGLSurface *surface) {
-    eglSwapBuffers(*display, *surface);
+static void gbmSwapBuffers() {
     struct gbm_bo *bo = gbm_surface_lock_front_buffer(gbmSurface);
     uint32_t handle = gbm_bo_get_handle(bo).u32;
     uint32_t pitch = gbm_bo_get_stride(bo);
@@ -229,7 +228,7 @@ static void gbmClean() {
 }
 #endif
 
-void initGL (glm::ivec4 &_viewport, bool _headless, bool _alwaysOnTop) {
+void initGL (glm::ivec4 &_viewport, windowStyle _prop) {
 
     #if defined(PLATFORM_RPI) || defined(PLATFORM_RPI4)
         // RASPBERRY_PI
@@ -360,7 +359,7 @@ void initGL (glm::ivec4 &_viewport, bool _headless, bool _alwaysOnTop) {
         DISPMANX_ELEMENT_HANDLE_T dispman_element;
         DISPMANX_UPDATE_HANDLE_T dispman_update;
 
-        if (_headless) {
+        if (_prop == HEADLESS) {
             uint32_t dest_image_handle;
             DISPMANX_RESOURCE_HANDLE_T dispman_resource;
             dispman_resource = vc_dispmanx_resource_create(VC_IMAGE_RGBA32, _viewport.z, _viewport.w, &dest_image_handle);
@@ -415,17 +414,23 @@ void initGL (glm::ivec4 &_viewport, bool _headless, bool _alwaysOnTop) {
             exit(-1);
         }
 
-        if (_headless) {
+        if (_prop == HEADLESS)
             glfwWindowHint(GLFW_VISIBLE, GL_FALSE);
-        }
-
-        if (_alwaysOnTop) {
+            
+        else if (_prop == ALLWAYS_ON_TOP)
             glfwWindowHint(GLFW_FLOATING, GL_TRUE);
+
+        if (_prop == FULLSCREEN) {
+            GLFWmonitor* pMonitor = glfwGetPrimaryMonitor();
+            const GLFWvidmode* pCurrentVideoMod = glfwGetVideoMode(pMonitor);
+            _viewport.z = pCurrentVideoMod->width;
+            _viewport.w = pCurrentVideoMod->height;
+            window = glfwCreateWindow(_viewport.z, _viewport.w, appTitle.c_str(), pMonitor, NULL);
         }
+        else
+            window = glfwCreateWindow(_viewport.z, _viewport.w, appTitle.c_str(), NULL, NULL);
 
-        window = glfwCreateWindow(_viewport.z, _viewport.w, appTitle.c_str(), NULL, NULL);
-
-        if(!window) {
+        if (!window) {
             glfwTerminate();
             std::cerr << "ABORT: GLFW create window failed" << std::endl;
             exit(-1);
@@ -674,11 +679,12 @@ void updateGL(){
 
 void renderGL(){
     // RASPBERRY_PI
-    #if defined(PLATFORM_RPI)
+    #if defined(PLATFORM_RPI) || defined(PLATFORM_RPI4)
         eglSwapBuffers(display, surface);
 
-    #elif defined(PLATFORM_RPI4)
-        gbmSwapBuffers(&display, &surface);
+        #if defined(PLATFORM_RPI4)
+        gbmSwapBuffers();
+        #endif
 
     // OSX/LINUX
     #else
@@ -760,10 +766,10 @@ float getPixelDensity() {
         return 1.;
     #else
         // OSX/LINUX
-        int window_width, window_height, framebuffer_width, framebuffer_height;
-        glfwGetWindowSize(window, &window_width, &window_height);
-        glfwGetFramebufferSize(window, &framebuffer_width, &framebuffer_height);
-        return float(framebuffer_width)/float(window_width);
+        float xscale = 1.0;
+        float yscale = 1.0;
+        glfwGetWindowContentScale(window, &xscale, &yscale);
+        return fmax(xscale, yscale);
     #endif
 }
 

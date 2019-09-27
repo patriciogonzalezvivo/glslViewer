@@ -5,16 +5,16 @@ SOURCES := $(wildcard include/*/*.cc) $(wildcard src/*.cpp) $(wildcard src/*/*.c
 HEADERS := $(wildcard include/*/*.h) $(wildcard src/*.h) $(wildcard src/*.h) $(wildcard src/*/*.h)
 OBJECTS := $(SOURCES:.cpp=.o)
 
-PLATFORM = $(shell uname)
-HARDWARE = "N/A"
+PLATFORM ?= $(shell uname)
+HARDWARE ?= "N/A"
 
 ifneq ("$(wildcard /etc/os-release)","")
-PLATFORM = $(shell . /etc/os-release && echo $$NAME )
+PLATFORM ?= $(shell . /etc/os-release && echo $$NAME )
 endif
 
 ifneq ("$(wildcard /opt/vc/include/bcm_host.h)","")
-	PLATFORM = $(shell . /etc/os-release && echo $$PRETTY_NAME | awk '{print $$1}' )
-	HARDWARE = $(shell cat /proc/cpuinfo | grep 'Revision' | awk '{print $$3}' )
+	PLATFORM ?= $(shell . /etc/os-release && echo $$PRETTY_NAME | awk '{print $$1}' )
+	HARDWARE ?= $(shell cat /proc/cpuinfo | grep 'Revision' | awk '{print $$3}' )
 endif
 
 $(info Platform ${PLATFORM})

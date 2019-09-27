@@ -6,9 +6,16 @@
 #define REST_SEC 0.016 // 60fps
 #endif
 
+enum windowStyle {
+    HEADLESS = 0,
+    REGULAR,
+    ALLWAYS_ON_TOP,
+    FULLSCREEN
+};
+
 //	GL Context
 //----------------------------------------------
-void initGL(glm::ivec4 &_viewport, bool _headless = false, bool _alwaysOnTop = false);
+void initGL(glm::ivec4 &_viewport, windowStyle _prop = REGULAR);
 bool isGL();
 void updateGL();
 void renderGL();
@@ -27,6 +34,7 @@ glm::ivec4 getViewport();
 glm::mat4 getOrthoMatrix();
 int getWindowWidth();
 int getWindowHeight();
+
 
 glm::vec4 getDate();
 double getTime();

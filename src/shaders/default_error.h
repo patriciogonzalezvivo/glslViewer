@@ -15,7 +15,8 @@ varying vec4    v_position;
 void main(void) {
     v_position = a_position;
     gl_Position = u_modelViewProjectionMatrix * v_position;
-})";
+}
+)";
 
 static const std::string error_frag = R"(
 #ifdef GL_ES
