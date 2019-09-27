@@ -470,7 +470,7 @@ int main(int argc, char **argv){
         windowPosAndSize.w = 500;
     #endif
 
-    windowStyle w_style = REGULAR;
+    WindowStyle windowStyle = REGULAR;
     bool displayHelp = false;
     for (int i = 1; i < argc ; i++) {
         std::string argument = std::string(argv[i]);
@@ -497,11 +497,11 @@ int main(int argc, char **argv){
             displayHelp = true;
         }
         else if (   std::string(argv[i]) == "--headless" ) {
-            w_style = HEADLESS;
+            windowStyle = HEADLESS;
         }
         else if (   std::string(argv[i]) == "-f" ||
                     std::string(argv[i]) == "--fullscreen" ) {
-            w_style = FULLSCREEN;
+            windowStyle = FULLSCREEN;
         }
         else if (   std::string(argv[i]) == "-l" ||
                     std::string(argv[i]) == "--life-coding" ){
@@ -509,7 +509,7 @@ int main(int argc, char **argv){
             windowPosAndSize.x = windowPosAndSize.z - 500;
             windowPosAndSize.z = windowPosAndSize.w = 500;
         #else
-            w_style = ALLWAYS_ON_TOP;
+            windowStyle = ALLWAYS_ON_TOP;
         #endif
         }
         
@@ -524,7 +524,7 @@ int main(int argc, char **argv){
     declareCommands();
 
     // Initialize openGL context
-    initGL (windowPosAndSize, w_style);
+    initGL (windowPosAndSize, windowStyle);
 
     struct stat st;                         // for files to watch
     float       timeLimit       = -1.0f;    // Time limit
@@ -582,7 +582,7 @@ int main(int argc, char **argv){
             arguments_cmds.push_back(std::string(argv[i]));
             execute_exit = true;
         }
-        else if (argument == "-F" ) {
+        else if (argument == "--fullFps" ) {
             fullFps = true;
         }
         else if ( sandbox.frag_index == -1 && (haveExt(argument,"frag") || haveExt(argument,"fs") ) ) {
@@ -627,7 +627,8 @@ int main(int argc, char **argv){
                 sandbox.geom_index = files.size()-1;
             }
         }
-        else if ( argument == "-vFlip" ) {
+        else if (   argument == "-vFlip" ||
+                    argument == "--vFlip" ) {
             vFlip = false;
         }
         else if (   haveExt(argument,"hdr") || haveExt(argument,"HDR") ||

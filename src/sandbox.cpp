@@ -218,6 +218,14 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     },
     "buffers                        return a list of buffers as their uniform name.", false));
 
+    _commands.push_back(Command("update", [&](const std::string& _line){ 
+        if (_line == "update") {
+            flagChange();
+        }
+        return false;
+    },
+    "update                         rUPDATE.", false));
+
     // LOAD SHACER 
     // -----------------------------------------------
 
@@ -298,6 +306,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     _updateBuffers();
 
     flagChange();
+    onViewportResize(getWindowWidth(), getWindowHeight()); 
 }
 
 void Sandbox::addDefine(const std::string &_define, const std::string &_value) {
@@ -331,7 +340,7 @@ bool Sandbox::isReady() {
 }
 
 void Sandbox::flagChange() { 
-    m_change = true; 
+    m_change = true;
 }
 
 void Sandbox::unflagChange() {

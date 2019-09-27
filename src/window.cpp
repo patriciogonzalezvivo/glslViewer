@@ -228,7 +228,7 @@ static void gbmClean() {
 }
 #endif
 
-void initGL (glm::ivec4 &_viewport, windowStyle _prop) {
+void initGL (glm::ivec4 &_viewport, WindowStyle _style) {
 
     #if defined(PLATFORM_RPI) || defined(PLATFORM_RPI4)
         // RASPBERRY_PI
@@ -348,7 +348,7 @@ void initGL (glm::ivec4 &_viewport, windowStyle _prop) {
         DISPMANX_ELEMENT_HANDLE_T dispman_element;
         DISPMANX_UPDATE_HANDLE_T dispman_update;
 
-        if (_prop == HEADLESS) {
+        if (_style == HEADLESS) {
             uint32_t dest_image_handle;
             DISPMANX_RESOURCE_HANDLE_T dispman_resource;
             dispman_resource = vc_dispmanx_resource_create(VC_IMAGE_RGBA32, _viewport.z, _viewport.w, &dest_image_handle);
@@ -402,13 +402,13 @@ void initGL (glm::ivec4 &_viewport, windowStyle _prop) {
             exit(-1);
         }
 
-        if (_prop == HEADLESS)
+        if (_style == HEADLESS)
             glfwWindowHint(GLFW_VISIBLE, GL_FALSE);
             
-        else if (_prop == ALLWAYS_ON_TOP)
+        else if (_style == ALLWAYS_ON_TOP)
             glfwWindowHint(GLFW_FLOATING, GL_TRUE);
 
-        if (_prop == FULLSCREEN) {
+        if (_style == FULLSCREEN) {
             GLFWmonitor* monitor = glfwGetPrimaryMonitor();
             const GLFWvidmode* mode = glfwGetVideoMode(monitor);
             _viewport.z = mode->width;
@@ -535,9 +535,7 @@ void initGL (glm::ivec4 &_viewport, windowStyle _prop) {
         glfwSwapInterval(1);
 
         if (_viewport.x > 0 || _viewport.y > 0) {
-            viewport.x = _viewport.x;
-            viewport.y = _viewport.y;
-            glfwSetWindowPos(window, viewport.x, viewport.y);
+            glfwSetWindowPos(window, _viewport.x, _viewport.y);
         }
     #endif
     setWindowSize(_viewport.z,_viewport.w);

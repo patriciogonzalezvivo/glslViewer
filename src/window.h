@@ -6,7 +6,7 @@
 #define REST_SEC 0.016 // 60fps
 #endif
 
-enum windowStyle {
+enum WindowStyle {
     HEADLESS = 0,
     REGULAR,
     ALLWAYS_ON_TOP,
@@ -15,7 +15,7 @@ enum windowStyle {
 
 //	GL Context
 //----------------------------------------------
-void initGL(glm::ivec4 &_viewport, windowStyle _prop = REGULAR);
+void initGL(glm::ivec4 &_viewport, WindowStyle _prop = REGULAR);
 bool isGL();
 void updateGL();
 void renderGL();
