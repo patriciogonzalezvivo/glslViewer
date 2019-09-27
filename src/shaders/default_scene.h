@@ -674,10 +674,10 @@ struct Material {
 
     float   ambientOcclusion;
 
-#if defined(MATERIAL_CLEARCOAT_THICKNESS)
+#ifdef MATERIAL_CLEARCOAT_THICKNESS
     float   clearCoat;
     float   clearCoatRoughness;
-    #ifdef defined(MATERIAL_CLEARCOAT_THICKNESS_NORMAL)
+    #ifdef MATERIAL_CLEARCOAT_THICKNESS_NORMAL
     vec3    clearCoatNormal;
     #endif
 #endif
