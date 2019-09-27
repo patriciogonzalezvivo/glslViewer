@@ -6,20 +6,20 @@ HEADERS := $(wildcard include/*/*.h) $(wildcard src/*.h) $(wildcard src/*.h) $(w
 OBJECTS := $(SOURCES:.cpp=.o)
 
 PLATFORM = $(shell uname)
-DRIVERS ?= no_defined
+DRIVER ?= not_defined
 
-ifeq ($(DRIVERS),no_defined)
+ifeq ($(DRIVER),not_defined)
 	ifneq ("$(wildcard /opt/vc/include/bcm_host.h)","")
 		ifeq ($(shell cat /proc/cpuinfo | grep 'Revision' | awk '{print $$3}' ), c03111)
 			PLATFORM = RPI4
-			DRIVERS = kms
+			DRIVER = kms
 		else
 			PLATFORM = RPI
-			DRIVERS = vc
+			DRIVER = vc
 		endif
 	else
 		PLATFORM = $(shell uname)
-		DRIVERS = glfw
+		DRIVER = glfw
 	endif
 endif
 
@@ -28,7 +28,7 @@ $(info Platform ${PLATFORM})
 INCLUDES +=	-Isrc/ -Iinclude/
 CFLAGS += -Wall -O3 -std=c++11 -fpermissive
 
-ifeq ($(DRIVERS),vc)
+ifeq ($(DRIVER),vc)
 	CFLAGS += -DGLM_FORCE_CXX98 -DPLATFORM_RPI
 	INCLUDES += -I/opt/vc/include/ \
 				-I/opt/vc/include/interface/vcos/pthreads \
@@ -43,7 +43,7 @@ ifeq ($(DRIVERS),vc)
 		LDFLAGS += -lbrcmGLESv2 -lbrcmEGL
 	endif
 
-else ifeq ($(DRIVERS),kms)
+else ifeq ($(DRIVER),kms)
 	CFLAGS += -DGLM_FORCE_CXX98 -DPLATFORM_RPI4
 	INCLUDES += -I/usr/include/libdrm \
 				-I/usr/include/GLES2
