@@ -525,12 +525,20 @@ void initGL (glm::ivec4 &_viewport, windowStyle _prop) {
         });
 
         glfwSetWindowPosCallback(window, [](GLFWwindow* _window, int x, int y) {
+            viewport.x = x;
+            viewport.y = y;
             if (fPixelDensity != getPixelDensity()) {
                 setWindowSize(viewport.z, viewport.w);
             }
         });
 
         glfwSwapInterval(1);
+
+        if (_viewport.x > 0 || _viewport.y > 0) {
+            viewport.x = _viewport.x;
+            viewport.y = _viewport.y;
+            glfwSetWindowPos(window, viewport.x, viewport.y);
+        }
     #endif
     setWindowSize(_viewport.z,_viewport.w);
 }
