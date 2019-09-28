@@ -36,6 +36,7 @@ std::string name = "GlslViewer";
 std::string header = name + " " + version + " by Patricio Gonzalez Vivo ( patriciogonzalezvivo.com )"; 
 
 const unsigned int micro_wait = REST_SEC * 1000000;
+bool fullFps = false;
 
 // Here is where all the magic happens
 Sandbox sandbox;
@@ -357,7 +358,7 @@ void declareCommands() {
         }
         return false;
     },
-    "cursor[,on|off]                show/hide cursor", false));
+    "fullFps[,on|off]                go to full FPS or not", false));
 
     commands.push_back(Command("cursor", [&](const std::string& _line){
         if (_line == "cursor") {
@@ -549,7 +550,6 @@ int main(int argc, char **argv){
     float       timeLimit       = -1.0f;    // Time limit
     int         textureCounter  = 0;        // Number of textures to load
     bool        vFlip           = true;     // Flip state
-    bool        fullFps         = false;
 
     //Load the the resources (textures)
     for (int i = 1; i < argc ; i++){
