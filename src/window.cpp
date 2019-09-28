@@ -32,8 +32,8 @@ static float fPixelDensity = 1.0;
 //----------------------------------------------------
 static bool left_mouse_button_down = false;
 static GLFWwindow* window;
-#define DEVICE_MOUSE "/dev/input/mouse0"
-#define DEVICE_SCREEN "/dev/dri/card1"
+char* device_mouse = "/dev/input/mouse0";
+char* device_screen = "/dev/dri/card0";
 
 #elif defined(PLATFORM_RPI) || defined(PLATFORM_RPI4)
 #include <assert.h>
@@ -205,7 +205,7 @@ static void initHost() {
 
     #elif defined(PLATFORM_RPI4)
     // You can try chaning this to "card0" if "card1" does not work.
-    device = open(DEVICE_SCREEN, O_RDWR | O_CLOEXEC);
+    device = open(device_screen, O_RDWR | O_CLOEXEC);
 
     drmModeRes *resources = drmModeGetResources(device);
     if (resources == NULL) {
@@ -616,7 +616,7 @@ void updateGL(){
         static int fd = -1;
         const int XSIGN = 1<<4, YSIGN = 1<<5;
         if (fd<0) {
-            fd = open("/dev/input/mouse0",O_RDONLY|O_NONBLOCK);
+            fd = open(device_mouse,O_RDONLY|O_NONBLOCK);
         }
         if (fd>=0) {
             // Set values to 0
