@@ -38,7 +38,6 @@ static GLFWwindow* window;
 #include <fcntl.h>
 #include <iostream>
 #include <termios.h>
-#include <string>
 #include <fstream>
 
 // Raspberry globals
@@ -52,8 +51,8 @@ EGLSurface surface;
 
 // unsigned long long timeStart;
 struct timespec time_start;
-static char* device_mouse = "/dev/input/mouse0";
-static char* device_screen = "/dev/dri/card0";
+std::string device_mouse = "/dev/input/mouse0";
+std::string device_screen = "/dev/dri/card0";
 
 double getTimeSec() {
     timespec now;
@@ -205,7 +204,7 @@ static void initHost() {
 
     #elif defined(PLATFORM_RPI4)
     // You can try chaning this to "card0" if "card1" does not work.
-    device = open(device_screen, O_RDWR | O_CLOEXEC);
+    device = open(device_screen.c_str(), O_RDWR | O_CLOEXEC);
 
     drmModeRes *resources = drmModeGetResources(device);
     if (resources == NULL) {
@@ -616,7 +615,7 @@ void updateGL(){
         static int fd = -1;
         const int XSIGN = 1<<4, YSIGN = 1<<5;
         if (fd<0) {
-            fd = open(device_mouse,O_RDONLY|O_NONBLOCK);
+            fd = open(device_mouse.c_str(),O_RDONLY|O_NONBLOCK);
         }
         if (fd>=0) {
             // Set values to 0
