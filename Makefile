@@ -37,11 +37,11 @@ ifeq ($(DRIVER),vc)
 				-lbcm_host \
 				-lpthread
 
-	ifeq ($(shell . /etc/os-release && echo $$PRETTY_NAME'),Raspbian GNU/Linux 8 (jessie))
-	-	LDFLAGS += -lGLESv2 -lEGL
-	else
-		LDFLAGS += -lbrcmGLESv2 -lbrcmEGL
-	endif
+ifeq ($(shell . /etc/os-release && echo $$PRETTY_NAME'),Raspbian GNU/Linux 8 (jessie))
+-	LDFLAGS += -lGLESv2 -lEGL
+else
+	LDFLAGS += -lbrcmGLESv2 -lbrcmEGL
+endif
 
 else ifeq ($(DRIVER),kms)
 	CFLAGS += -DGLM_FORCE_CXX98 -DPLATFORM_RPI4
