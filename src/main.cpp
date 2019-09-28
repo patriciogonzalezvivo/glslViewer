@@ -340,6 +340,25 @@ void declareCommands() {
     },
     "wait,<seconds>                 wait for X <seconds> before excecuting another command."));
 
+    
+    commands.push_back(Command("fullFps", [&](const std::string& _line){
+        if (_line == "fullFps") {
+            std::string rta = fullFps ? "on" : "off";
+            std::cout <<  rta << std::endl; 
+            return true;
+        }
+        else {
+            std::vector<std::string> values = split(_line,',');
+            if (values.size() == 2) {
+                consoleMutex.lock();
+                fullFps = (values[1] == "on");
+                consoleMutex.unlock();
+            }
+        }
+        return false;
+    },
+    "cursor[,on|off]                show/hide cursor", false));
+
     commands.push_back(Command("cursor", [&](const std::string& _line){
         if (_line == "cursor") {
             std::string rta = sandbox.cursor ? "on" : "off";
