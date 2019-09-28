@@ -204,11 +204,6 @@ static void initHost() {
     #elif defined(PLATFORM_RPI4)
     // You can try chaning this to "card0" if "card1" does not work.
     device = open("/dev/dri/card1", O_RDWR | O_CLOEXEC);
-    if (getDisplay() != 0) {
-        std::cerr << "Unable to get EGL display" << std::endl;
-        close(device);
-        return EXIT_FAILURE;
-    }
 
     drmModeRes *resources = drmModeGetResources(device);
     if (resources == NULL) {
@@ -225,19 +220,7 @@ static void initHost() {
 
     connectorId = connector->connector_id;
     mode = connector->modes[0];
-    #endif
 
-    bHostInited = true;
-}
-
-static EGLDisplay getDisplay() {
-    initHost();
-    // printf("resolution: %ix%i\n", mode.hdisplay, mode.vdisplay);
-
-    #if defined(PLATFORM_RPI)
-    return eglGetDisplay(EGL_DEFAULT_DISPLAY);
-
-    #elif defined(PLATFORM_RPI4)
     drmModeEncoder *encoder = findEncoder(resources, connector);
     if (connector == NULL) {
         std::cerr << "Unable to get encoder" << std::endl;
@@ -252,6 +235,20 @@ static EGLDisplay getDisplay() {
     drmModeFreeResources(resources);
     gbmDevice = gbm_create_device(&device);
     gbmSurface = gbm_surface_create(gbmDevice, mode.hdisplay, mode.vdisplay, GBM_FORMAT_XRGB8888, GBM_BO_USE_SCANOUT | GBM_BO_USE_RENDERING);
+    #endif
+
+    bHostInited = true;
+}
+
+static EGLDisplay getDisplay() {
+    initHost();
+    // printf("resolution: %ix%i\n", mode.hdisplay, mode.vdisplay);
+
+    #if defined(PLATFORM_RPI)
+    return eglGetDisplay(EGL_DEFAULT_DISPLAY);
+
+    #elif defined(PLATFORM_RPI4)
+
     return eglGetDisplay(gbmDevice);
     #endif
 }
@@ -267,7 +264,7 @@ void initGL (glm::ivec4 &_viewport, WindowStyle _style) {
         EGLBoolean result;
 
         display = getDisplay();
-        assert(display!=EGL_NO_DISPLAY);
+        assert(display != EGL_NO_DISPLAY);
         check();
 
         result = eglInitialize(display, NULL, NULL);
