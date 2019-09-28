@@ -77,11 +77,13 @@ Sandbox::Sandbox():
         }
     });
 
+    #if !defined(PLATFORM_RPI) && !defined(PLATFORM_RPI4)
     uniforms.functions["u_sceneDepth"] = UniformFunction("sampler2D", [this](Shader& _shader) {
         if (m_postprocessing_enabled && m_scene_fbo.getTextureId()) {
             _shader.setUniformDepthTexture("u_sceneDepth", &m_scene_fbo, _shader.textureIndex++ );
         }
     });
+    #endif
 
     uniforms.functions["u_view2d"] = UniformFunction("mat3", [this](Shader& _shader) {
         _shader.setUniform("u_view2d", m_view2d);
@@ -441,11 +443,7 @@ bool Sandbox::reloadShaders( WatchFileList &_files ) {
         m_postprocessing_enabled = false;
 
     if (m_postprocessing_enabled || uniforms.functions["u_scene"].present) {
-        #if defined(PLATFORM_RPI) || defined(PLATFORM_RPI4)
-        FboType type = COLOR_TEXTURE_DEPTH_BUFFER;
-        #else
         FboType type = uniforms.functions["u_sceneDepth"].present ? COLOR_DEPTH_TEXTURES : COLOR_TEXTURE_DEPTH_BUFFER;
-        #endif
         if (!m_scene_fbo.isAllocated() || m_scene_fbo.getType() != type)
             m_scene_fbo.allocate(getWindowWidth(), getWindowHeight(), type);
     }
@@ -532,7 +530,6 @@ void Sandbox::render() {
         m_scene_fbo.bind();
     else if (screenshotFile != "" || m_record)
         m_record_fbo.bind();
-
 
     // Clear the background
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -873,14 +870,8 @@ void Sandbox::onViewportResize(int _newWidth, int _newHeight) {
     for (unsigned int i = 0; i < uniforms.buffers.size(); i++) 
         uniforms.buffers[i].allocate(_newWidth, _newHeight, COLOR_TEXTURE);
 
-    if (m_postprocessing_enabled) {
-        #if defined(PLATFORM_RPI) || defined(PLATFORM_RPI4)
-        FboType type = COLOR_TEXTURE_DEPTH_BUFFER;
-        #else
-        FboType type = uniforms.functions["u_sceneDepth"].present ? COLOR_DEPTH_TEXTURES : COLOR_TEXTURE_DEPTH_BUFFER;
-        #endif
-        m_scene_fbo.allocate(_newWidth, _newHeight, type);
-    }
+    if (m_postprocessing_enabled)
+        m_scene_fbo.allocate(_newWidth, _newHeight, uniforms.functions["u_sceneDepth"].present ? COLOR_DEPTH_TEXTURES : COLOR_TEXTURE_DEPTH_BUFFER);
 
     if (m_record_fbo.isAllocated())
         m_record_fbo.allocate(_newWidth, _newHeight, COLOR_TEXTURE_DEPTH_BUFFER);
