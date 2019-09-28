@@ -33,7 +33,7 @@ Sandbox::Sandbox():
     // Record
     m_record_fdelta(0.04166666667), m_record_start(0.0f), m_record_head(0.0f), m_record_end(0.0f), m_record_counter(0), m_record(false),
     // Scene
-    m_view2d(1.0), m_frame(0), m_change(true),
+    m_view2d(1.0), m_frame(0), m_change(true), m_initialized(false),
     // Debug
     m_showTextures(false), m_showPasses(false)
 {
@@ -296,7 +296,6 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // LOAD SHADERS
-    updateViewport(); 
     reloadShaders( _files );
 
     // TODO:
@@ -336,7 +335,7 @@ void Sandbox::delDefine(const std::string &_define) {
 // ------------------------------------------------------------------------- GET
 
 bool Sandbox::isReady() {
-    return m_frame > 0;
+    return m_initialized;
 }
 
 void Sandbox::flagChange() { 
@@ -511,16 +510,14 @@ void Sandbox::_renderBuffers() {
 void Sandbox::render() {
     // RENDER SHADOW MAP
     // -----------------------------------------------
-    if (geom_index != -1) {
+    if (geom_index != -1)
         if (uniforms.functions["u_ligthShadowMap"].present)
             m_scene.renderShadowMap(uniforms);
-    }
     
     // BUFFERS
     // -----------------------------------------------
-    if (uniforms.buffers.size() > 0) {
+    if (uniforms.buffers.size() > 0)
         _renderBuffers();
-    }
     
     // MAIN SCENE
     // ----------------------------------------------- < main scene start
@@ -735,6 +732,13 @@ void Sandbox::renderDone() {
     m_frame++;
 
     unflagChange();
+
+    if (!m_initialized) {
+        m_initialized = true;
+        updateViewport();
+        flagChange();
+    }
+    
 }
 
 // ------------------------------------------------------------------------- ACTIONS

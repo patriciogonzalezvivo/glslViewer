@@ -77,7 +77,6 @@ precision mediump float;
 
 uniform vec3    u_camera;
 uniform vec2    u_resolution;
-uniform float   u_time;
 
 varying vec4    v_position;
 

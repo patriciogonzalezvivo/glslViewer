@@ -525,10 +525,9 @@ void initGL (glm::ivec4 &_viewport, WindowStyle _style) {
         });
 
         glfwSetWindowPosCallback(window, [](GLFWwindow* _window, int x, int y) {
-            // if (fPixelDensity != getPixelDensity()) {
-            //     updateViewport();
-            // }
-            updateViewport();
+            if (fPixelDensity != getPixelDensity()) {
+                updateViewport();
+            }
         });
 
         glfwSwapInterval(1);
@@ -537,7 +536,7 @@ void initGL (glm::ivec4 &_viewport, WindowStyle _style) {
             glfwSetWindowPos(window, _viewport.x, _viewport.y);
         }
     #endif
-    setWindowSize(_viewport.z,_viewport.w);
+    setViewport(_viewport.z,_viewport.w);
 }
 
 bool isGL(){
@@ -719,8 +718,7 @@ void closeGL(){
 }
 //-------------------------------------------------------------
 void updateViewport() {
-    std::cout << (float)viewport.x * fPixelDensity << ' ' << (float)viewport.y *  fPixelDensity << ' ';
-    std::cout << (float)viewport.z * fPixelDensity << ' ' << (float)viewport.w * fPixelDensity << std::endl;
+
     fPixelDensity = getPixelDensity();
     glViewport( (float)viewport.x * fPixelDensity, (float)viewport.y * fPixelDensity,
                 (float)viewport.z * fPixelDensity, (float)viewport.w * fPixelDensity);

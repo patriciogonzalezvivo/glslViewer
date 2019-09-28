@@ -706,6 +706,12 @@ bool Scene::loadShaders(const std::string &_fragmentShader, const std::string &_
     return rta;
 }
 
+void Scene::flagChange() {
+    m_light.bChange = true;
+    m_camera.bChange = true;
+    m_origin.bChange = true;
+}
+
 bool Scene::haveChange() const {
     return  m_light.bChange ||
             m_camera.bChange ||
@@ -733,26 +739,24 @@ void Scene::render(Uniforms &_uniforms) {
     if (m_culling != 0) {
         glEnable(GL_CULL_FACE);
 
-        if (m_culling == 1) {
+        if (m_culling == 1) 
             glCullFace(GL_FRONT);
-        }
-        else if (m_culling == 2) {
+        
+        else if (m_culling == 2)
             glCullFace(GL_BACK);
-        }
-        else if (m_culling == 3) {
+        
+        else if (m_culling == 3)
             glCullFace(GL_FRONT_AND_BACK);
-        }
+
     }
 
-    for (unsigned int i = 0; i < m_models.size(); i++) {
+    for (unsigned int i = 0; i < m_models.size(); i++)
         m_models[i]->draw(_uniforms, m_mvp);
-    }
 
     glDisable(GL_DEPTH_TEST);
 
-    if (m_culling != 0) {
+    if (m_culling != 0)
         glDisable(GL_CULL_FACE);
-    }
 }
 
 void Scene::renderShadowMap(Uniforms &_uniforms) {

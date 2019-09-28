@@ -53,6 +53,7 @@ public:
     void            setCubeMap( const std::string& _filename, WatchFileList &_files, bool _visible, bool _verbose = true);
     TextureCube*    getCubeMap() { return m_cubemap; }
 
+    void            flagChange();
     void            unflagChange();
     bool            haveChange() const;
 

@@ -175,13 +175,11 @@ bool Uniforms::feedTo( Shader &_shader ) {
     bool update = false;
 
     // Pass Native uniforms 
-    for (UniformFunctionsList::iterator it=functions.begin(); it!=functions.end(); ++it) {
-        if (it->second.present) {
-            if (it->second.assign) {
+    for (UniformFunctionsList::iterator it=functions.begin(); it!=functions.end(); ++it)
+        if (it->second.present)
+            if (it->second.assign)
                 it->second.assign(_shader);
-            }
-        }
-    }
+
 
     // Pass User defined uniforms
     if (m_change) {
@@ -207,9 +205,8 @@ bool Uniforms::feedTo( Shader &_shader ) {
     }
 
     // Pass Buffers Uniforms
-    for (unsigned int i = 0; i < buffers.size(); i++) {
+    for (unsigned int i = 0; i < buffers.size(); i++)
         _shader.setUniformTexture("u_buffer" + toString(i), &buffers[i], _shader.textureIndex++ );
-    }
     
     return update;
 }
