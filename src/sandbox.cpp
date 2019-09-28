@@ -441,7 +441,11 @@ bool Sandbox::reloadShaders( WatchFileList &_files ) {
         m_postprocessing_enabled = false;
 
     if (m_postprocessing_enabled || uniforms.functions["u_scene"].present) {
+        #if defined(PLATFORM_RPI) || defined(PLATFORM_RPI4)
+        FboType type = COLOR_TEXTURE_DEPTH_BUFFER;
+        #else
         FboType type = uniforms.functions["u_sceneDepth"].present ? COLOR_DEPTH_TEXTURES : COLOR_TEXTURE_DEPTH_BUFFER;
+        #endif
         if (!m_scene_fbo.isAllocated() || m_scene_fbo.getType() != type)
             m_scene_fbo.allocate(getWindowWidth(), getWindowHeight(), type);
     }
@@ -636,6 +640,7 @@ void Sandbox::renderUI() {
                     yOffset -= yStep * 2.0 + margin;
                 }
 
+                #if !defined(PLATFORM_RPI) && !defined(PLATFORM_RPI4)
                 if (uniforms.functions["u_sceneDepth"].present) {
                     m_billboard_shader.setUniform("u_scale", xStep, yStep);
                     m_billboard_shader.setUniform("u_translate", xOffset, yOffset);
@@ -648,6 +653,7 @@ void Sandbox::renderUI() {
                     m_billboard_vbo->render(&m_billboard_shader);
                     yOffset -= yStep * 2.0 + margin;
                 }
+                #endif
             }
 
             if (uniforms.functions["u_ligthShadowMap"].present && m_scene.getLightMap().getDepthTextureId() ) {
@@ -867,11 +873,17 @@ void Sandbox::onViewportResize(int _newWidth, int _newHeight) {
     for (unsigned int i = 0; i < uniforms.buffers.size(); i++) 
         uniforms.buffers[i].allocate(_newWidth, _newHeight, COLOR_TEXTURE);
 
-    if (m_postprocessing_enabled)
-        m_scene_fbo.allocate(_newWidth, _newHeight, uniforms.functions["u_sceneDepth"].present ? COLOR_DEPTH_TEXTURES : COLOR_TEXTURE_DEPTH_BUFFER);
+    if (m_postprocessing_enabled) {
+        #if defined(PLATFORM_RPI) || defined(PLATFORM_RPI4)
+        FboType type = COLOR_TEXTURE_DEPTH_BUFFER;
+        #else
+        FboType type = uniforms.functions["u_sceneDepth"].present ? COLOR_DEPTH_TEXTURES : COLOR_TEXTURE_DEPTH_BUFFER;
+        #endif
+        m_scene_fbo.allocate(_newWidth, _newHeight, type);
+    }
 
     if (m_record_fbo.isAllocated())
-        m_scene_fbo.allocate(_newWidth, _newHeight, COLOR_TEXTURE_DEPTH_BUFFER);
+        m_record_fbo.allocate(_newWidth, _newHeight, COLOR_TEXTURE_DEPTH_BUFFER);
 
     flagChange();
 }
