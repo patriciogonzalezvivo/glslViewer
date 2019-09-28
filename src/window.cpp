@@ -432,7 +432,7 @@ void initGL (glm::ivec4 &_viewport, WindowStyle _style) {
 
         glfwMakeContextCurrent(window);
         glfwSetWindowSizeCallback(window, [](GLFWwindow* _window, int _w, int _h) {
-            setWindowSize(_w,_h);
+            setViewport(_w,_h);
         });
 
         glfwSetKeyCallback(window, [](GLFWwindow* _window, int _key, int _scancode, int _action, int _mods) {
@@ -718,12 +718,13 @@ void closeGL(){
 }
 //-------------------------------------------------------------
 void updateViewport() {
-
     fPixelDensity = getPixelDensity();
     glViewport( (float)viewport.x * fPixelDensity, (float)viewport.y * fPixelDensity,
                 (float)viewport.z * fPixelDensity, (float)viewport.w * fPixelDensity);
     orthoMatrix = glm::ortho(   (float)viewport.x * fPixelDensity, (float)viewport.z * fPixelDensity, 
                                 (float)viewport.y * fPixelDensity, (float)viewport.w * fPixelDensity);
+
+    onViewportResize(getWindowWidth(), getWindowHeight());
 }
 
 void setViewport(float _width, float _height) {
@@ -733,8 +734,15 @@ void setViewport(float _width, float _height) {
 }
 
 void setWindowSize(int _width, int _height) {
+#if defined(PLATFORM_RPI)
+    // Todo
+#elif defined(PLATFOMR_RPI4)
+    // TODO
+#else
+    glfwSetWindowSize(window, _width, _height);
+#endif
+
     setViewport(_width, _height);
-    onViewportResize(getWindowWidth(), getWindowHeight());
 }
 
 glm::ivec2 getScreenSize() {
