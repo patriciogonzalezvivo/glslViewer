@@ -32,8 +32,6 @@ static float fPixelDensity = 1.0;
 //----------------------------------------------------
 static bool left_mouse_button_down = false;
 static GLFWwindow* window;
-char* device_mouse = "/dev/input/mouse0";
-char* device_screen = "/dev/dri/card0";
 
 #elif defined(PLATFORM_RPI) || defined(PLATFORM_RPI4)
 #include <assert.h>
@@ -54,6 +52,8 @@ EGLSurface surface;
 
 // unsigned long long timeStart;
 struct timespec time_start;
+static char* device_mouse = "/dev/input/mouse0";
+static char* device_screen = "/dev/dri/card0";
 
 double getTimeSec() {
     timespec now;
