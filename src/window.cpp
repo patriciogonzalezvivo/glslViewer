@@ -736,7 +736,7 @@ void setViewport(float _width, float _height) {
 void setWindowSize(int _width, int _height) {
 #if defined(PLATFORM_RPI)
     // Todo
-#elif defined(PLATFOMR_RPI4)
+#elif defined(PLATFORM_RPI4)
     // TODO
 #else
     glfwSetWindowSize(window, _width, _height);
