@@ -12,7 +12,7 @@ ifeq ($(DRIVER),not_defined)
 	ifneq ("$(wildcard /opt/vc/include/bcm_host.h)","")
 		ifeq ($(shell cat /proc/cpuinfo | grep 'Revision' | awk '{print $$3}' ), c03111)
 			PLATFORM = RPI4
-			DRIVER = kms
+			DRIVER = gbm
 		else
 			PLATFORM = RPI
 			DRIVER = vc
@@ -42,8 +42,8 @@ ifeq ($(DRIVER),vc)
 	else
 		LDFLAGS += -lbrcmGLESv2 -lbrcmEGL
 	endif
-else ifeq ($(DRIVER),kms)
-	CFLAGS += -DGLM_FORCE_CXX98 -DPLATFORM_RPI4
+else ifeq ($(DRIVER),gbm)
+	CFLAGS += -DPLATFORM_RPI4
 	INCLUDES += -I/usr/include/libdrm \
 				-I/usr/include/GLES2
 	LDFLAGS +=  -lGLESv2 -lEGL \
