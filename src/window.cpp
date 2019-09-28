@@ -229,11 +229,11 @@ static void initHost() {
         return EXIT_FAILURE;
     }
 
-    crtc = drmModeGetCrtc(&device, encoder->crtc_id);
+    crtc = drmModeGetCrtc(device, encoder->crtc_id);
     drmModeFreeEncoder(encoder);
     drmModeFreeConnector(connector);
     drmModeFreeResources(resources);
-    gbmDevice = gbm_create_device(&device);
+    gbmDevice = gbm_create_device(device);
     gbmSurface = gbm_surface_create(gbmDevice, mode.hdisplay, mode.vdisplay, GBM_FORMAT_XRGB8888, GBM_BO_USE_SCANOUT | GBM_BO_USE_RENDERING);
     #endif
 
