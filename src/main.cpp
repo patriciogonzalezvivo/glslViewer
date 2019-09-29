@@ -606,31 +606,38 @@ int main(int argc, char **argv){
         }
         else if ( sandbox.frag_index == -1 && (haveExt(argument,"frag") || haveExt(argument,"fs") ) ) {
             if ( stat(argument.c_str(), &st) != 0 ) {
-                std::cerr << "Error watching file " << argv[i] << std::endl;
-            }
-            else {
-                WatchFile file;
-                file.type = FRAG_SHADER;
-                file.path = argument;
-                file.lastChange = st.st_mtime;
-                files.push_back(file);
+                std::cout << "File " << argv[i] << " not founded. Creating a default fragment shader with that name"<< std::endl;
 
-                sandbox.frag_index = files.size()-1;
+                std::ofstream out(argv[i]);
+                out << default_scene_frag;
+                out.close();
             }
+
+            WatchFile file;
+            file.type = FRAG_SHADER;
+            file.path = argument;
+            file.lastChange = st.st_mtime;
+            files.push_back(file);
+
+            sandbox.frag_index = files.size()-1;
+
         }
         else if ( sandbox.vert_index == -1 && ( haveExt(argument,"vert") || haveExt(argument,"vs") ) ) {
-            if ( stat(argument.c_str(), &st) != 0) {
-                std::cerr << "Error watching file " << argument << std::endl;
-            }
-            else {
-                WatchFile file;
-                file.type = VERT_SHADER;
-                file.path = argument;
-                file.lastChange = st.st_mtime;
-                files.push_back(file);
+            if ( stat(argument.c_str(), &st) != 0 ) {
+                std::cout << "File " << argv[i] << " not founded. Creating a default vertex shader with that name"<< std::endl;
 
-                sandbox.vert_index = files.size()-1;
+                std::ofstream out(argv[i]);
+                out << default_scene_vert;
+                out.close();
             }
+
+            WatchFile file;
+            file.type = VERT_SHADER;
+            file.path = argument;
+            file.lastChange = st.st_mtime;
+            files.push_back(file);
+
+            sandbox.vert_index = files.size()-1;
         }
         else if ( sandbox.geom_index == -1 && ( haveExt(argument,"ply") || haveExt(argument,"PLY") ||
                                                 haveExt(argument,"obj") || haveExt(argument,"OBJ") ) ) {

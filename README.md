@@ -48,13 +48,13 @@ GlslViewer gives support to:
 
 [ ] Option for SSAO buffer ( `u_sceneSSAO` )
 
-[ ] [Fullscreen command (GLFW and non-GLFW)](https://github.com/patriciogonzalezvivo/glslViewer/issues/112)
+[x] [Fullscreen command (GLFW and non-GLFW)](https://github.com/patriciogonzalezvivo/glslViewer/issues/112)
 
 [x] [Option to change recording FPS](https://github.com/patriciogonzalezvivo/glslViewer/issues/106)
 
 ## Bugs to fix
 
-[ ] [Non-GLFW support for RPI4 based on: https://github.com/eyelash/tutorials](https://github.com/patriciogonzalezvivo/glslViewer/issues/141)
+[x] [Non-GLFW support for RPI4 based on: https://github.com/eyelash/tutorials](https://github.com/patriciogonzalezvivo/glslViewer/issues/141)
 
 [ ] [Support for GL (Full KMS) or GL (Fake KMS) on RaspberryPi](https://github.com/patriciogonzalezvivo/glslViewer/issues/135)
 
