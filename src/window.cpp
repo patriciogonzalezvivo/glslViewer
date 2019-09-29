@@ -52,7 +52,7 @@ EGLSurface surface;
 // unsigned long long timeStart;
 struct timespec time_start;
 std::string device_mouse = "/dev/input/mouse0";
-std::string device_screen = "/dev/dri/card0";
+std::string device_screen = "/dev/dri/card1";
 
 double getTimeSec() {
     timespec now;
