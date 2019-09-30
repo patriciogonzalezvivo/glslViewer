@@ -225,7 +225,7 @@ void Scene::setup(CommandList& _commands, Uniforms& _uniforms) {
     _commands.push_back(Command("light_position", [&](const std::string& _line){ 
         std::vector<std::string> values = split(_line,',');
         if (values.size() == 4) {
-            if (m_lights.size() > 0)
+            if (m_lights.size() > 0) 
                 m_lights[0].setPosition(glm::vec3(toFloat(values[1]),toFloat(values[2]),toFloat(values[3])));
             return true;
         }
@@ -260,6 +260,45 @@ void Scene::setup(CommandList& _commands, Uniforms& _uniforms) {
         return false;
     },
     "light_color[,<r>,<g>,<b>]          get or set the light color."));
+
+    _commands.push_back(Command("light_falloff", [&](const std::string& _line){ 
+         std::vector<std::string> values = split(_line,',');
+        if (values.size() == 2) {
+            if (m_lights.size() > 0) {
+                m_lights[0].falloff = toFloat(values[1]);
+                m_lights[0].bChange = true;
+            }
+            return true;
+        }
+        else {
+            if (m_lights.size() > 0) {
+                std::cout <<  m_lights[0].falloff << std::endl;
+            }
+            return true;
+        }
+        return false;
+    },
+    "light_falloff[,<value>]            get or set the light falloff distance."));
+
+    _commands.push_back(Command("light_intensity", [&](const std::string& _line){ 
+         std::vector<std::string> values = split(_line,',');
+        if (values.size() == 2) {
+            if (m_lights.size() > 0) {
+                m_lights[0].intensity = toFloat(values[1]);
+                m_lights[0].bChange = true;
+            }
+            return true;
+        }
+        else {
+            if (m_lights.size() > 0) {
+                std::cout <<  m_lights[0].intensity << std::endl;
+            }
+            
+            return true;
+        }
+        return false;
+    },
+    "light_intensity[,<value>]            get or set the light intensity."));
     
     _commands.push_back(Command("dynamic_shadows", [&](const std::string& _line){ 
         if (_line == "dynamic_shadows") {
@@ -476,14 +515,14 @@ void Scene::setup(CommandList& _commands, Uniforms& _uniforms) {
     },
     [this]() { return toString(m_lights[0].color, ','); });
 
-    _uniforms.functions["u_lightFalloff"] = UniformFunction("vec3", [this](Shader& _shader) {
+    _uniforms.functions["u_lightFalloff"] = UniformFunction("float", [this](Shader& _shader) {
         if (m_lights.size() > 0)
             if (m_lights[0].falloff > 0)
                 _shader.setUniform("u_lightFalloff", m_lights[0].falloff);
     },
     [this]() { return toString(m_lights[0].falloff); });
 
-    _uniforms.functions["u_lightIntensity"] = UniformFunction("vec3", [this](Shader& _shader) {
+    _uniforms.functions["u_lightIntensity"] = UniformFunction("float", [this](Shader& _shader) {
         if (m_lights.size() > 0)
             _shader.setUniform("u_lightIntensity", m_lights[0].intensity);
     },
