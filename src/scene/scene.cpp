@@ -9,7 +9,7 @@
 #include "tools/text.h"
 #include "tools/shapes.h"
 
-#include "shaders/ui_light.h"
+#include "shaders/light_ui.h"
 #include "shaders/cubemap.h"
 #include "shaders/wireframe3D.h"
 
@@ -21,7 +21,7 @@ Scene::Scene():
     // Light
     m_light_vbo(nullptr), m_dynamicShadows(false),
     // Background
-    m_background_vbo(nullptr), m_background_draw(false), 
+    m_background_vbo(nullptr), m_background(false), 
     // CubeMap
     m_cubemap_vbo(nullptr), m_cubemap(nullptr), m_cubemap_skybox(nullptr),
     // Floor
@@ -472,8 +472,8 @@ void Scene::setup(CommandList &_commands, Uniforms &_uniforms) {
     });
 
     _uniforms.functions["u_ligthShadowMap"] = UniformFunction("sampler2D", [this](Shader& _shader) {
-        if (m_light_depthfbo.getDepthTextureId()) {
-            _shader.setUniformDepthTexture("u_ligthShadowMap", &m_light_depthfbo);
+        if (m_light.getShadowMap()->getDepthTextureId()) {
+            _shader.setUniformDepthTexture("u_ligthShadowMap", m_light.getShadowMap() );
         }
     });
 
@@ -627,7 +627,7 @@ void Scene::setCubeMap( const std::string& _filename, WatchFileList &_files, boo
 }
 
 void Scene::printDefines() {
-    if (m_background_draw) {
+    if (m_background) {
         std::cout << std::endl;
         std::cout << "BACKGROUND" << std::endl;
         std::cout << "-------------- " << std::endl;
@@ -686,8 +686,8 @@ bool Scene::loadShaders(const std::string &_fragmentShader, const std::string &_
             rta = false;
 
 
-    m_background_draw = check_for_background(_fragmentShader);
-    if (m_background_draw) {
+    m_background = check_for_background(_fragmentShader);
+    if (m_background) {
         // Specific defines for this buffer
         m_background_shader.addDefine("BACKGROUND");
         m_background_shader.load(_fragmentShader, billboard_vert, false);
@@ -751,7 +751,7 @@ void Scene::render(Uniforms &_uniforms) {
     }
 
     for (unsigned int i = 0; i < m_models.size(); i++)
-        m_models[i]->draw(_uniforms, m_mvp);
+        m_models[i]->render(_uniforms, m_mvp);
 
     glDisable(GL_DEPTH_TEST);
 
@@ -767,26 +767,15 @@ void Scene::renderShadowMap(Uniforms &_uniforms) {
 
         // Temporally move the MVP matrix from the view of the light 
         glm::mat4 mvp = m_light.getMVPMatrix( m_origin.getTransformMatrix(), m_area );
+        m_light.bindShadowMap();
 
-        if (m_light_depthfbo.getDepthTextureId() == 0) {
-            m_light_depthfbo.allocate(1024, 1024, COLOR_DEPTH_TEXTURES);
-        }
-
-        m_light_depthfbo.bind();
-
-        glEnable(GL_DEPTH_TEST);
         renderFloor(_uniforms, mvp);
 
-        glEnable(GL_CULL_FACE);
-
         for (unsigned int i = 0; i < m_models.size(); i++) {
-            m_models[i]->draw(_uniforms, mvp);
+            m_models[i]->render(_uniforms, mvp);
         }
 
-        glDisable(GL_DEPTH_TEST);
-        glDisable(GL_CULL_FACE);
-
-        m_light_depthfbo.unbind();
+        m_light.unbindShadowMap();
     }
 #endif
 }
@@ -803,7 +792,7 @@ void Scene::renderBackground(Uniforms &_uniforms) {
         }
     }
 
-    if (m_background_draw) {
+    if (m_background) {
         m_background_shader.use();
 
         // Update Uniforms and textures
@@ -919,7 +908,6 @@ void Scene::renderDebug() {
 
     if (m_light_vbo == nullptr)
         m_light_vbo = rect(0.0,0.0,0.0,0.0).getVbo();
-        // m_light_vbo = rect(0.0,0.0,1.0,1.0).getVbo();
 
     m_light_shader.use();
     m_light_shader.setUniform("u_scale", 24, 24);

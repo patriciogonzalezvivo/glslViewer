@@ -115,7 +115,11 @@ void Model::clear() {
     }
 }
 
-void Model::draw(Uniforms& _uniforms, const glm::mat4& _viewProjectionMatrix) {
+void Model::render(Shader* _shader) {
+    m_model_vbo->render(_shader );
+}
+
+void Model::render(Uniforms& _uniforms, const glm::mat4& _viewProjectionMatrix) {
 
     // If the model and the shader are loaded
     if ( m_model_vbo && m_shader.isLoaded() ) {

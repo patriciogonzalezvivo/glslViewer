@@ -1,6 +1,6 @@
 #include "light.h"
 
-Light::Light(): color(1.0), m_mvp(1.0), m_mvp_biased(1.0), m_type(LIGHT_DIRECTIONAL) {
+Light::Light(): color(1.0), m_mvp_biased(1.0), m_mvp(1.0), m_type(LIGHT_DIRECTIONAL) {
 
 }
 
@@ -39,4 +39,25 @@ glm::mat4 Light::getMVPMatrix( const glm::mat4 &_model, float _area) {
 
 glm::mat4 Light::getBiasMVPMatrix() {
     return m_mvp_biased;
+}
+
+void Light::bindShadowMap() {
+    if (m_shadowMap.getDepthTextureId() == 0) {
+        #if defined(PLATFORM_RPI) || defined(PLATFORM_RPI4) 
+        m_shadowMap.allocate(512, 512, DEPTH_TEXTURE);
+        #else
+        // m_shadowMap.allocate(1024, 1024, DEPTH_TEXTURE);
+        m_shadowMap.allocate(1024, 1024, COLOR_DEPTH_TEXTURES);
+        #endif
+    }
+
+    m_shadowMap.bind();
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
+}
+
+void Light::unbindShadowMap() {
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
+    m_shadowMap.unbind();
 }

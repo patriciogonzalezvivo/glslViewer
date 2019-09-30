@@ -653,12 +653,12 @@ void Sandbox::renderUI() {
                 #endif
             }
 
-            if (uniforms.functions["u_ligthShadowMap"].present && m_scene.getLightMap().getDepthTextureId() ) {
+            if (uniforms.functions["u_ligthShadowMap"].present && m_scene.getShadowMap()->getDepthTextureId() ) {
                 m_billboard_shader.setUniform("u_scale", xStep, yStep);
                 m_billboard_shader.setUniform("u_translate", xOffset, yOffset);
                 m_billboard_shader.setUniform("u_depth", float(0.0));
                 m_billboard_shader.setUniform("u_modelViewProjectionMatrix", getOrthoMatrix());
-                m_billboard_shader.setUniformDepthTexture("u_tex0", &m_scene.getLightMap());
+                m_billboard_shader.setUniformDepthTexture("u_tex0", m_scene.getShadowMap());
                 m_billboard_vbo->render(&m_billboard_shader);
                 yOffset -= yStep * 2.0 + margin;
             }

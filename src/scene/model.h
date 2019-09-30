@@ -38,8 +38,8 @@ public:
     glm::vec3   getMinBoundingBox() const { return m_bbmin; }
     glm::vec3   getMaxBoundingBox() const { return m_bbmax; }
     
-    void        draw(Uniforms& _uniforms, const glm::mat4& _viewProjectionMatrix );
-
+    void        render(Shader* _shader);
+    void        render(Uniforms& _uniforms, const glm::mat4& _viewProjectionMatrix );
 
 protected:
     Shader      m_shader;

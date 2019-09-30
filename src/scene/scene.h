@@ -6,7 +6,6 @@
 
 
 #include "../gl/vbo.h"
-#include "../gl/fbo.h"
 #include "../gl/shader.h"
 #include "../gl/textureCube.h"
 
@@ -45,8 +44,7 @@ public:
     void            setCulling(CullingMode _culling) { m_culling = _culling; }
     CullingMode     getCulling() { return m_culling; }
 
-    void            setLight( glm::vec3 _position,  glm::vec3 _color );
-    Fbo&            getLightMap() { return m_light_depthfbo; }
+    const Fbo*      getShadowMap() { return m_light.getShadowMap(); }
 
     void            setCubeMap( SkyBox* _skybox );
     void            setCubeMap( TextureCube* _cubemap );
@@ -91,13 +89,12 @@ protected:
     Light           m_light;
     Vbo*            m_light_vbo;
     Shader          m_light_shader;
-    Fbo             m_light_depthfbo;
     bool            m_dynamicShadows;
 
     // Background
     Shader          m_background_shader;
     Vbo*            m_background_vbo;
-    bool            m_background_draw;
+    bool            m_background;
 
     // CubeMap
     Shader          m_cubemap_shader;
