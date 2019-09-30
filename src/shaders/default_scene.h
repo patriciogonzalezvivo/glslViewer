@@ -171,6 +171,8 @@ float linear2gamma(in float v) {
 
 uniform vec3        u_light;
 uniform vec3        u_lightColor;
+uniform float       u_lightFalloff;
+uniform float       u_lightIntensity;
 
 #ifdef LIGHT_SHADOWMAP
 uniform sampler2D   u_ligthShadowMap;
@@ -927,23 +929,6 @@ vec3 fakeCube(vec3 _normal) {
 
 #endif
 
-
-#ifndef FNC_DEBUGCUBE
-#define FNC_DEBUGCUBE
-
-// http://the-witness.net/news/2012/02/seamless-cube-map-filtering/
-vec3 debugCube( vec3 v, float cube_size, float lod ) {
-    float M = max(max(abs(v.x), abs(v.y)), abs(v.z));
-    float scale = 1.0 - exp2(lod) / cube_size;
-    if (abs(v.x) != M) v.x *= scale;
-    if (abs(v.y) != M) v.y *= scale;
-    if (abs(v.z) != M) v.z *= scale;
-    return v;
-}
-
-#endif
-
-
 #ifndef ENVMAP_MAX_MIP_LEVEL
 #define ENVMAP_MAX_MIP_LEVEL 8.0
 #endif
@@ -956,12 +941,7 @@ vec3 envMap(vec3 _normal, float _roughness, float _metallic) {
 #if defined(SCENE_CUBEMAP)
     float lod = ENVMAP_MAX_MIP_LEVEL * _roughness;
     return textureCube( SCENE_CUBEMAP, _normal, lod).rgb;
-
-#elif defined(DEBUG)
-    float cube_size = ENVMAP_MAX_MIP_LEVEL * 8.;
-    float lod = ENVMAP_MAX_MIP_LEVEL * _roughness;
-    return debugCube( _normal, cube_size, lod);
-
+    
 #else
     return fakeCube(_normal, toShininess(_roughness, _metallic));
 
@@ -1477,13 +1457,11 @@ void lightPoint(vec3 _diffuseColor, vec3 _specularColor, vec3 _N, vec3 _V, float
     float spec = specular(s, _N, _V, _NoV, NoL, _roughness, _f0);
 
     float falloff = 1.0;
-    #ifdef LIGHT_RADIUS
-    falloff = falloff(length(u_light - v_position.xyz), LIGHT_RADIUS);
-    #endif
-    float light_intensity = 1.0;
+    if (u_lightFalloff > 0.0)
+        falloff = falloff(length(u_light - v_position.xyz), u_lightFalloff);
     
-    _diffuse = light_intensity * (_diffuseColor * u_lightColor * dif * falloff);
-    _specular = light_intensity * (_specularColor * u_lightColor * spec * falloff);
+    _diffuse = u_lightIntensity * (_diffuseColor * u_lightColor * dif * falloff);
+    _specular = u_lightIntensity * (_specularColor * u_lightColor * spec * falloff);
 }
 
 #endif

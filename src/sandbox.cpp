@@ -607,9 +607,8 @@ void Sandbox::renderUI() {
             float scale = fmin(1.0f / (float)(nTotal), 0.25) * 0.5;
             float xStep = w * scale;
             float yStep = h * scale;
-            float margin = 0.0;
-            float xOffset = xStep + margin;
-            float yOffset = h - yStep - margin;
+            float xOffset = xStep;
+            float yOffset = h - yStep;
 
             if (!m_billboard_shader.isLoaded())
                 m_billboard_shader.load(dynamic_billboard_frag, dynamic_billboard_vert, false);
@@ -623,7 +622,7 @@ void Sandbox::renderUI() {
                 m_billboard_shader.setUniform("u_modelViewProjectionMatrix", getOrthoMatrix());
                 m_billboard_shader.setUniformTexture("u_tex0", &uniforms.buffers[i]);
                 m_billboard_vbo->render(&m_billboard_shader);
-                yOffset -= yStep * 2.0 + margin;
+                yOffset -= yStep * 2.0;
             }
 
             if (m_postprocessing_enabled) {
@@ -634,7 +633,7 @@ void Sandbox::renderUI() {
                     m_billboard_shader.setUniform("u_modelViewProjectionMatrix", getOrthoMatrix());
                     m_billboard_shader.setUniformTexture("u_tex0", &m_scene_fbo, 0);
                     m_billboard_vbo->render(&m_billboard_shader);
-                    yOffset -= yStep * 2.0 + margin;
+                    yOffset -= yStep * 2.0;
                 }
 
                 #if !defined(PLATFORM_RPI) && !defined(PLATFORM_RPI4)
@@ -648,19 +647,13 @@ void Sandbox::renderUI() {
                     m_billboard_shader.setUniform("u_modelViewProjectionMatrix", getOrthoMatrix());
                     m_billboard_shader.setUniformDepthTexture("u_tex0", &m_scene_fbo);
                     m_billboard_vbo->render(&m_billboard_shader);
-                    yOffset -= yStep * 2.0 + margin;
+                    yOffset -= yStep * 2.0;
                 }
                 #endif
             }
 
-            if (uniforms.functions["u_ligthShadowMap"].present && m_scene.getShadowMap()->getDepthTextureId() ) {
-                m_billboard_shader.setUniform("u_scale", xStep, yStep);
-                m_billboard_shader.setUniform("u_translate", xOffset, yOffset);
-                m_billboard_shader.setUniform("u_depth", float(0.0));
-                m_billboard_shader.setUniform("u_modelViewProjectionMatrix", getOrthoMatrix());
-                m_billboard_shader.setUniformDepthTexture("u_tex0", m_scene.getShadowMap());
-                m_billboard_vbo->render(&m_billboard_shader);
-                yOffset -= yStep * 2.0 + margin;
+            if (uniforms.functions["u_ligthShadowMap"].present) {
+                m_scene.renderShadowMapUI(m_billboard_shader, m_billboard_vbo, xOffset);
             }
         }
     }

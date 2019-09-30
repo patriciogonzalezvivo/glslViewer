@@ -19,7 +19,7 @@ Scene::Scene():
     // Camera.
     m_culling(NONE), m_lat(180.0), m_lon(0.0),
     // Light
-    m_light_vbo(nullptr), m_dynamicShadows(false),
+    m_lightUI_vbo(nullptr), m_dynamicShadows(false),
     // Background
     m_background_vbo(nullptr), m_background(false), 
     // CubeMap
@@ -41,9 +41,9 @@ void Scene::clear() {
 
     m_models.clear();
 
-    if (m_light_vbo) {
-        delete m_light_vbo;
-        m_light_vbo = nullptr;
+    if (m_lightUI_vbo) {
+        delete m_lightUI_vbo;
+        m_lightUI_vbo = nullptr;
     }
 
     if (!m_background_vbo) {
@@ -72,13 +72,13 @@ void Scene::clear() {
     }
 }
 
-void Scene::setup(CommandList &_commands, Uniforms &_uniforms) {
+void Scene::setup(CommandList& _commands, Uniforms& _uniforms) {
     // Set up camera
     m_camera.setViewport(getWindowWidth(), getWindowHeight());
     m_camera.setPosition(glm::vec3(0.0,0.0,-3.));
 
     // Setup light
-    m_light.setPosition(glm::vec3(0.0,100.0,100.0));
+    m_lights.push_back( Light( glm::vec3(0.0,100.0,100.0), -1.0 ) );
 
     // ADD COMMANDS
     // ----------------------------------------- 
@@ -225,12 +225,15 @@ void Scene::setup(CommandList &_commands, Uniforms &_uniforms) {
     _commands.push_back(Command("light_position", [&](const std::string& _line){ 
         std::vector<std::string> values = split(_line,',');
         if (values.size() == 4) {
-            m_light.setPosition(glm::vec3(toFloat(values[1]),toFloat(values[2]),toFloat(values[3])));
+            if (m_lights.size() > 0)
+                m_lights[0].setPosition(glm::vec3(toFloat(values[1]),toFloat(values[2]),toFloat(values[3])));
             return true;
         }
         else {
-            glm::vec3 pos = m_light.getPosition();
-            std::cout << pos.x << ',' << pos.y << ',' << pos.z << std::endl;
+            if (m_lights.size() > 0) {
+                glm::vec3 pos = m_lights[0].getPosition();
+                std::cout << ',' << pos.x << ',' << pos.y << ',' << pos.z << std::endl;
+            }
             return true;
         }
         return false;
@@ -240,13 +243,18 @@ void Scene::setup(CommandList &_commands, Uniforms &_uniforms) {
     _commands.push_back(Command("light_color", [&](const std::string& _line){ 
          std::vector<std::string> values = split(_line,',');
         if (values.size() == 4) {
-            m_light.color = glm::vec3(toFloat(values[1]),toFloat(values[2]),toFloat(values[3]));
-            m_light.bChange = true;
+            if (m_lights.size() > 0) {
+                m_lights[0].color = glm::vec3(toFloat(values[1]),toFloat(values[2]),toFloat(values[3]));
+                m_lights[0].bChange = true;
+            }
             return true;
         }
         else {
-            glm::vec3 color = m_light.color;
-            std::cout << color.x << ',' << color.y << ',' << color.z << std::endl;
+            if (m_lights.size() > 0) {
+                glm::vec3 color = m_lights[0].color;
+                std::cout << color.x << ',' << color.y << ',' << color.z << std::endl;
+            }
+            
             return true;
         }
         return false;
@@ -369,7 +377,6 @@ void Scene::setup(CommandList &_commands, Uniforms &_uniforms) {
         std::vector<std::string> values = split(_line,',');
         if (values.size() == 4) {
             m_origin.setPosition( glm::vec3(toFloat(values[1]),toFloat(values[2]),toFloat(values[3])) );
-            m_light.bChange = true;
             return true;
         }
         else {
@@ -458,23 +465,40 @@ void Scene::setup(CommandList &_commands, Uniforms &_uniforms) {
     // LIGHT UNIFORMS
     //
     _uniforms.functions["u_light"] = UniformFunction("vec3", [this](Shader& _shader) {
-        _shader.setUniform("u_light", m_light.getPosition());
+        if (m_lights.size() > 0)
+            _shader.setUniform("u_light", m_lights[0].getPosition());
     },
-    [this]() { return toString(m_light.getPosition(), ','); });
+    [this]() { return toString(m_lights[0].getPosition(), ','); });
 
     _uniforms.functions["u_lightColor"] = UniformFunction("vec3", [this](Shader& _shader) {
-        _shader.setUniform("u_lightColor", m_light.color);
+        if (m_lights.size() > 0)
+            _shader.setUniform("u_lightColor", m_lights[0].color);
     },
-    [this]() { return toString(m_light.color, ','); });
+    [this]() { return toString(m_lights[0].color, ','); });
+
+    _uniforms.functions["u_lightFalloff"] = UniformFunction("vec3", [this](Shader& _shader) {
+        if (m_lights.size() > 0)
+            if (m_lights[0].falloff > 0)
+                _shader.setUniform("u_lightFalloff", m_lights[0].falloff);
+    },
+    [this]() { return toString(m_lights[0].falloff); });
+
+    _uniforms.functions["u_lightIntensity"] = UniformFunction("vec3", [this](Shader& _shader) {
+        if (m_lights.size() > 0)
+            _shader.setUniform("u_lightIntensity", m_lights[0].intensity);
+    },
+    [this]() { return toString(m_lights[0].intensity); });
 
     _uniforms.functions["u_lightMatrix"] = UniformFunction("mat4", [this](Shader& _shader) {
-        _shader.setUniform("u_lightMatrix", m_light.getBiasMVPMatrix() );
+        if (m_lights.size() > 0)
+            _shader.setUniform("u_lightMatrix", m_lights[0].getBiasMVPMatrix() );
     });
 
     _uniforms.functions["u_ligthShadowMap"] = UniformFunction("sampler2D", [this](Shader& _shader) {
-        if (m_light.getShadowMap()->getDepthTextureId()) {
-            _shader.setUniformDepthTexture("u_ligthShadowMap", m_light.getShadowMap() );
-        }
+        if (m_lights.size() > 0)
+            if (m_lights[0].getShadowMap()->getDepthTextureId()) {
+                _shader.setUniformDepthTexture("u_ligthShadowMap", m_lights[0].getShadowMap() );
+            }
     });
 
     // IBL UNIFORM
@@ -565,7 +589,7 @@ void Scene::setup(CommandList &_commands, Uniforms &_uniforms) {
     });
 }
 
-void Scene::addDefine(const std::string &_define, const std::string &_value) {
+void Scene::addDefine(const std::string& _define, const std::string& _value) {
     m_background_shader.addDefine(_define, _value);
     m_floor_shader.addDefine(_define, _value);
     for (unsigned int i = 0; i < m_models.size(); i++) {
@@ -573,7 +597,7 @@ void Scene::addDefine(const std::string &_define, const std::string &_value) {
     }
 }
 
-void Scene::delDefine(const std::string &_define) {
+void Scene::delDefine(const std::string& _define) {
     m_background_shader.delDefine(_define);
     m_floor_shader.delDefine(_define);
     for (unsigned int i = 0; i < m_models.size(); i++) {
@@ -597,7 +621,7 @@ void Scene::setCubeMap( TextureCube* _cubemap ) {
     m_cubemap = _cubemap;
 }
 
-void Scene::setCubeMap( const std::string& _filename, WatchFileList &_files, bool _visible, bool _verbose ) {
+void Scene::setCubeMap( const std::string& _filename, WatchFileList& _files, bool _visible, bool _verbose ) {
     struct stat st;
     if ( stat(_filename.c_str(), &st) != 0 ) {
         std::cerr << "Error watching for cubefile: " << _filename << std::endl;
@@ -679,7 +703,7 @@ bool Scene::loadGeometry(Uniforms& _uniforms, WatchFileList& _files, int _index,
     return true;
 }
 
-bool Scene::loadShaders(const std::string &_fragmentShader, const std::string &_vertexShader, bool _verbose) {
+bool Scene::loadShaders(const std::string& _fragmentShader, const std::string& _vertexShader, bool _verbose) {
     bool rta = true;
     for (unsigned int i = 0; i < m_models.size(); i++)
         if ( !m_models[i]->loadShader( _fragmentShader, _vertexShader, _verbose) )
@@ -707,24 +731,35 @@ bool Scene::loadShaders(const std::string &_fragmentShader, const std::string &_
 }
 
 void Scene::flagChange() {
-    m_light.bChange = true;
+    for (unsigned int i = 0; i < m_lights.size(); i++)
+        m_lights[i].bChange = true;
+
     m_camera.bChange = true;
     m_origin.bChange = true;
 }
 
 bool Scene::haveChange() const {
-    return  m_light.bChange ||
-            m_camera.bChange ||
-            m_origin.bChange;
+    bool changeOnLights = false;
+    for (unsigned int i = 0; i < m_lights.size(); i++)
+        if (m_lights[i].bChange) {
+            changeOnLights = true;
+            break;
+        }
+
+    return  changeOnLights ||
+            m_origin.bChange ||
+            m_camera.bChange;
 }
 
 void Scene::unflagChange() { 
-    m_light.bChange = false;
+    for (unsigned int i = 0; i < m_lights.size(); i++)
+        m_lights[i].bChange = false;
+
     m_camera.bChange = false;
     m_origin.bChange = false;
 }
 
-void Scene::render(Uniforms &_uniforms) {
+void Scene::render(Uniforms& _uniforms) {
     // Render Background
     renderBackground(_uniforms);
 
@@ -759,28 +794,59 @@ void Scene::render(Uniforms &_uniforms) {
         glDisable(GL_CULL_FACE);
 }
 
-void Scene::renderShadowMap(Uniforms &_uniforms) {
+void Scene::renderShadowMap(Uniforms& _uniforms) {
 #if defined(PLATFORM_RPI) || defined(PLATFORM_RPI4) 
     return;
 #else
-    if ( m_origin.bChange || m_light.bChange ||  m_dynamicShadows ) {
 
-        // Temporally move the MVP matrix from the view of the light 
-        glm::mat4 mvp = m_light.getMVPMatrix( m_origin.getTransformMatrix(), m_area );
-        m_light.bindShadowMap();
-
-        renderFloor(_uniforms, mvp);
-
-        for (unsigned int i = 0; i < m_models.size(); i++) {
-            m_models[i]->render(_uniforms, mvp);
+    bool changeOnLights = false;
+    for (unsigned int i = 0; i < m_lights.size(); i++)
+        if (m_lights[i].bChange) {
+            changeOnLights = true;
+            break;
         }
 
-        m_light.unbindShadowMap();
+    if ( m_dynamicShadows || changeOnLights || m_origin.bChange ) {
+        for (unsigned int i = 0; i < m_lights.size(); i++) {
+            // Temporally move the MVP matrix from the view of the light 
+            glm::mat4 mvp = m_lights[i].getMVPMatrix( m_origin.getTransformMatrix(), m_area );
+            m_lights[i].bindShadowMap();
+
+            renderFloor(_uniforms, mvp);
+
+            for (unsigned int i = 0; i < m_models.size(); i++)
+                m_models[i]->render(_uniforms, mvp);
+
+            m_lights[i].unbindShadowMap();
+        }
     }
 #endif
 }
 
-void Scene::renderBackground(Uniforms &_uniforms) {
+void Scene::renderShadowMapUI(Shader& _shader, Vbo* _vbo, float _xoffset) {
+#if defined(PLATFORM_RPI) || defined(PLATFORM_RPI4) 
+    return;
+#else
+    float x = _xoffset;
+    float y = (float)(getWindowHeight()) - _xoffset;
+    float w = _xoffset;
+    float h = _xoffset;
+
+    for (unsigned int i = 0; i < m_lights.size(); i++) {
+        if ( m_lights[i].getShadowMap()->getDepthTextureId() ) {
+            _shader.setUniform("u_scale", w, h);
+            _shader.setUniform("u_translate", x, y);
+            _shader.setUniform("u_depth", float(0.0));
+            _shader.setUniform("u_modelViewProjectionMatrix", getOrthoMatrix());
+            _shader.setUniformDepthTexture("u_tex0", m_lights[i].getShadowMap());
+            _vbo->render(&_shader);
+            x += w;
+        }
+    }
+#endif
+}
+
+void Scene::renderBackground(Uniforms& _uniforms) {
     // If there is a skybox and it had changes re generate
     if (m_cubemap_skybox) {
         if (m_cubemap_skybox->change) {
@@ -817,7 +883,7 @@ void Scene::renderBackground(Uniforms &_uniforms) {
         m_cubemap_vbo->render( &m_cubemap_shader );
     }
 }
-void Scene::renderFloor(Uniforms &_uniforms, const glm::mat4& _mvp) {
+void Scene::renderFloor(Uniforms& _uniforms, const glm::mat4& _mvp) {
     if (m_floor_subd_target >= 0) {
 
         //  Floor
@@ -847,7 +913,6 @@ void Scene::renderFloor(Uniforms &_uniforms, const glm::mat4& _mvp) {
             #else
                 m_floor_shader.addDefine("LIGHT_SHADOWMAP_SIZE", "1024.0");
             #endif
-
         }
 
         if (m_floor_vbo) {
@@ -903,20 +968,25 @@ void Scene::renderDebug() {
 
 
     // Light
-    if (!m_light_shader.isLoaded())
-        m_light_shader.load(light_frag, light_vert, false);
+    {
+        if (!m_lightUI_shader.isLoaded())
+            m_lightUI_shader.load(light_frag, light_vert, false);
 
-    if (m_light_vbo == nullptr)
-        m_light_vbo = rect(0.0,0.0,0.0,0.0).getVbo();
+        if (m_lightUI_vbo == nullptr)
+            m_lightUI_vbo = rect(0.0,0.0,0.0,0.0).getVbo();
 
-    m_light_shader.use();
-    m_light_shader.setUniform("u_scale", 24, 24);
-    m_light_shader.setUniform("u_translate", m_light.getPosition());
-    m_light_shader.setUniform("u_color", glm::vec4(m_light.color, 1.0));
-    m_light_shader.setUniform("u_viewMatrix", m_camera.getViewMatrix());
-    m_light_shader.setUniform("u_modelViewProjectionMatrix", m_mvp );
+        m_lightUI_shader.use();
+        m_lightUI_shader.setUniform("u_scale", 24, 24);
+        m_lightUI_shader.setUniform("u_viewMatrix", m_camera.getViewMatrix());
+        m_lightUI_shader.setUniform("u_modelViewProjectionMatrix", m_mvp );
 
-    m_light_vbo->render( &m_light_shader );
+        for (unsigned int i = 0; i < m_lights.size(); i++) {
+            m_lightUI_shader.setUniform("u_translate", m_lights[i].getPosition());
+            m_lightUI_shader.setUniform("u_color", glm::vec4(m_lights[i].color, 1.0));
+
+            m_lightUI_vbo->render( &m_lightUI_shader );
+        }
+    }
 
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glDisable(GL_DEPTH_TEST);

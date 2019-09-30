@@ -1,13 +1,44 @@
 #include "light.h"
 
-Light::Light(): color(1.0), m_mvp_biased(1.0), m_mvp(1.0), m_type(LIGHT_DIRECTIONAL) {
+Light::Light(): 
+    color(1.0), 
+    direction(0.0),
+    intensity(1.0),
+    falloff(-1.0),
+    m_mvp_biased(1.0), 
+    m_mvp(1.0), 
+    m_type(LIGHT_DIRECTIONAL) {
+}
 
+Light::Light(glm::vec3 _dir): m_mvp_biased(1.0), m_mvp(1.0) {
+    color = glm::vec3(1.0); 
+    intensity = 1.0;
+    falloff = -1.0; 
+    m_type = LIGHT_DIRECTIONAL;
+    setPosition(normalize(_dir));
+}
+
+Light::Light(glm::vec3 _pos, float _falloff): m_mvp_biased(1.0), m_mvp(1.0) {
+    color = glm::vec3(1.0); 
+    intensity = 1.0;
+    falloff = -1.0;
+    m_type = LIGHT_POINT;
+    setPosition(_pos);
+    falloff = _falloff;
+}
+
+Light::Light(glm::vec3 _pos, glm::vec3 _dir, float _falloff): m_mvp_biased(1.0), m_mvp(1.0) {
+    color = glm::vec3(1.0); 
+    intensity = 1.0;
+    falloff = -1.0;
+    m_type = LIGHT_SPOT;
+    direction = _dir;
+    setPosition(_pos);
+    falloff = _falloff;
 }
 
 Light::~Light() {
-
 }
-
 
 glm::mat4 Light::getMVPMatrix( const glm::mat4 &_model, float _area) {
     // TODO:
