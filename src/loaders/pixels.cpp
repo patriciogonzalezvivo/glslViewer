@@ -3,10 +3,10 @@
 #include <iostream>
 
 #define STB_IMAGE_IMPLEMENTATION
-#include "std/stb_image.h"
+#include "tinygltf/stb_image.h"
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "std/stb_image_write.h"
+#include "tinygltf/stb_image_write.h"
 
 #include "rgbe/rgbe.h" 
 
