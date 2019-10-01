@@ -51,7 +51,7 @@ void main(void) {
 
     float bias = 0.01;
     vec3 shadowCoord = v_lightCoord.xyz / v_lightCoord.w;
-    float shadow = textureShadowPCF( u_ligthShadowMap, vec2(LIGHT_SHADOWMAP_SIZE), shadowCoord.xy, shadowCoord.z - bias);
+    float shadow = textureShadowPCF( u_lightShadowMap, vec2(LIGHT_SHADOWMAP_SIZE), shadowCoord.xy, shadowCoord.z - bias);
 
     // add Spherical Harmonics
     color *= 0.5 + shadow * 0.5;

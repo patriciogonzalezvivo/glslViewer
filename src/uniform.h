@@ -9,6 +9,8 @@
 #include "gl/shader.h"
 #include "gl/texture.h"
 
+#include "scene/light.h"
+
 #include "tools/fs.h"
 
 struct UniformData {
@@ -19,8 +21,9 @@ struct UniformData {
     bool    bInt = false;
     bool    change = false;
 };
+
 typedef std::map<std::string, UniformData> UniformDataList;
-bool parseUniformData(const std::string &_line, UniformDataList *_uniforms);
+// bool parseUniformData(const std::string &_line, UniformDataList *_uniforms);
 
 struct UniformFunction {
     UniformFunction();
@@ -35,7 +38,6 @@ struct UniformFunction {
 };
 
 typedef std::map<std::string, UniformFunction> UniformFunctionsList;
-
 typedef std::map<std::string, Texture*> TextureList;
 
 class Uniforms {
@@ -48,7 +50,6 @@ public:
     bool                    addTexture( const std::string& _name, const std::string& _path, WatchFileList& _files, bool _flip = true, bool _verbose = true);
     bool                    addBumpTexture( const std::string& _name, const std::string& _path, WatchFileList& _files, bool _flip = true, bool _verbose = true);
     
-
     // Check presence of uniforms on shaders
     void                    checkPresenceIn( const std::string &_vert_src, const std::string &_frag_src );
 
@@ -59,6 +60,7 @@ public:
     void                    print(bool _all);
     void                    printBuffers();
     void                    printTextures();
+    void                    printLights();
 
     // Change state
     void                    flagChange();
@@ -67,10 +69,18 @@ public:
 
     void                    clear();
 
+    // Manually defined uniforms (through console IN)
     UniformDataList         data;
-    TextureList             textures;
+
+    // Automatic uniforms
     UniformFunctionsList    functions;
+
+    // Common 
+    TextureList             textures;
     std::vector<Fbo>        buffers;
+
+    // 3d Scene Uniforms 
+    std::vector<Light>      lights;
 
 protected:
     bool                    m_change;

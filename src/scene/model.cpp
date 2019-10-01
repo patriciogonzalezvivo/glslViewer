@@ -77,7 +77,7 @@ bool Model::loadGeom(Mesh& _mesh) {
     else if (_mesh.getDrawMode() == GL_TRIANGLE_FAN)
         addDefine("MODEL_PRIMITIVE_TRIANGLE_FAN");
 
-    addDefine("LIGHT_SHADOWMAP", "u_ligthShadowMap");
+    addDefine("LIGHT_SHADOWMAP", "u_lightShadowMap");
 #if defined(PLATFORM_RPI) || defined(PLATFORM_RPI4) 
     addDefine("LIGHT_SHADOWMAP_SIZE", "512.0");
 #else

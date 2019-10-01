@@ -8,8 +8,8 @@
 #include "../tools/geom.h"
 #include "../tools/text.h"
 
-bool loadPLY(Uniforms& _uniforms, WatchFileList &filenames, std::map<std::string,Material>& _materials, std::vector<Model*>& _models, int _index, bool _verbose) {
-    std::string filename = filenames[_index].path;
+bool loadPLY(Uniforms& _uniforms, WatchFileList& _files, Materials& _materials, Models& _models, int _index, bool _verbose) {
+    std::string filename = _files[_index].path;
     std::fstream is(filename.c_str(), std::ios::in);
     if (is.is_open()) {
 

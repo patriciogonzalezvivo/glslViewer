@@ -1,6 +1,5 @@
 #pragma once
 
-#include "light.h"
 #include "model.h"
 #include "camera.h"
 
@@ -57,10 +56,9 @@ public:
     void            renderFloor(Uniforms& _uniforms, const glm::mat4& _mvp);
     void            renderGeometry(Uniforms& _uniforms);
     void            renderBackground(Uniforms& _uniforms);
-    void            renderDebug();
+    void            renderDebug(Uniforms& _uniforms);
 
     void            renderShadowMap(Uniforms& _uniforms);
-    void            renderShadowMapUI(Shader& _shader, Vbo* _vbo, float _xoffset);
 
     void            onMouseDrag(float _x, float _y, int _button);
     void            onViewportResize(int _newWidth, int _newHeight);
@@ -86,8 +84,6 @@ protected:
     float               m_lon;
 
     // Ligth
-    // Light               m_light;
-    std::vector<Light>  m_lights;
     Vbo*                m_lightUI_vbo;
     Shader              m_lightUI_shader;
     bool                m_dynamicShadows;

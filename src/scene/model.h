@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vector>
+
 #include "node.h"
 #include "material.h"
 
@@ -53,3 +55,5 @@ protected:
     std::string m_name;
     float       m_area;
 };
+
+typedef std::vector<Model*>  Models;

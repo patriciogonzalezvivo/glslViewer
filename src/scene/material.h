@@ -1,5 +1,6 @@
 #pragma once
 
+#include <map>
 #include <string>
 #include "glm/glm.hpp"
 
@@ -18,3 +19,5 @@ public:
     std::string name;
 
 };
+
+typedef std::map<std::string,Material> Materials;

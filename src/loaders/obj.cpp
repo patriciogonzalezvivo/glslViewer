@@ -343,7 +343,7 @@ Material InitMaterial (const tinyobj::material_t& _material, Uniforms& _uniforms
     return mat;
 }
 
-bool loadOBJ(Uniforms& _uniforms, WatchFileList& _files, std::map<std::string,Material>& _materials, std::vector<Model*>& _models, int _index, bool _verbose) {
+bool loadOBJ(Uniforms& _uniforms, WatchFileList& _files, Materials& _materials, Models& _models, int _index, bool _verbose) {
     std::string filename = _files[_index].path;
 
     tinyobj::attrib_t attrib;
