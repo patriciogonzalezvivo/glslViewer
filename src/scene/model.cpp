@@ -53,10 +53,6 @@ void Model::printVboInfo() {
         m_model_vbo->printInfo();
 }
 
-bool Model::loadGeom(Vbo& _vbo) {
-    m_model_vbo = &_vbo;
-}
-
 bool Model::loadGeom(Mesh& _mesh) {
     // Load Geometry VBO
     m_model_vbo = _mesh.getVbo();

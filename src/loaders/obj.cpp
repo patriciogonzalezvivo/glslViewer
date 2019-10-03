@@ -113,11 +113,6 @@ glm::vec2 getTexCoords(const tinyobj::attrib_t& _attrib, int _index) {
                         1.0f - _attrib.texcoords[2 * _index + 1]);
 }
 
-std::string getUniformName(const std::string& _str){
-    std::vector<std::string> values = split(_str, '.');
-    return "u_" + toLower( toUnderscore( purifyString( values[0] ) ) );
-}
-
 Material InitMaterial (const tinyobj::material_t& _material, Uniforms& _uniforms, WatchFileList& _files, const std::string& _folder ) {
     Material mat;
     mat.name = toLower( toUnderscore( purifyString( _material.name ) ) );

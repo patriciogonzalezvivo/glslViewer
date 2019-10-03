@@ -18,7 +18,6 @@ public:
     Model(const std::string& _name, Mesh& _mesh, const Material& _mat);
     virtual ~Model();
 
-    bool        loadGeom(Vbo& _vbo);
     bool        loadGeom(Mesh& _mesh);
     bool        loadShader(const std::string& _fragStr, const std::string& _vertStr, bool verbose);
     bool        loadMaterial(const Material& _material);

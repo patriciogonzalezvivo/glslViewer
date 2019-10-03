@@ -79,6 +79,14 @@ bool Uniforms::parseLine( const std::string &_line ) {
     return somethingChange;
 }
 
+bool Uniforms::addTexture( const std::string& _name, Texture* _texture) {
+    if (textures.find(_name) == textures.end()) {
+        textures[ _name ] = _texture;
+        return true;
+    }
+    return false;
+}
+
 bool Uniforms::addTexture(const std::string& _name, const std::string& _path, WatchFileList& _files, bool _flip, bool _verbose) {
     if (textures.find(_name) == textures.end()) {
         struct stat st;

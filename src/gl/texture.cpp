@@ -153,6 +153,49 @@ bool Texture::loadBump(const std::string& _path, bool _vFlip) {
     return true;
 }
 
+bool Texture::load(int _width, int _height, int _component, int _bits, const unsigned char* _data) {
+    glEnable(GL_TEXTURE_2D);
+
+    if (m_id == 0){
+        // Generate an OpenGL texture ID for this texture
+        glGenTextures(1, &m_id);
+    }
+
+    glBindTexture(GL_TEXTURE_2D, m_id);
+
+    // glPixelStorei(GL_UNPACK_ALIGNMENT, 1);s
+    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+    GLenum format = GL_RGBA;
+
+    if (_component == 1) {
+      format = GL_RED;
+    } else if (_component == 2) {
+      format = GL_RG;
+    } else if (_component == 3) {
+      format = GL_RGB;
+    } else {
+      // ???
+    }
+
+    GLenum type = GL_UNSIGNED_BYTE;
+    if (_bits == 8) {
+      // ok
+    } else if (_bits == 16) {
+      type = GL_UNSIGNED_SHORT;
+    } else {
+      // ???
+    }
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, _width, _height, 0, format, type, _data);
+
+    return true;
+}
+
 void Texture::bind() {
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, m_id);

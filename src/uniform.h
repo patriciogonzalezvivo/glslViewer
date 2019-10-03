@@ -47,8 +47,9 @@ public:
 
     // Ingest new uniforms
     bool                    parseLine( const std::string &_line );
-    bool                    addTexture( const std::string& _name, const std::string& _path, WatchFileList& _files, bool _flip = true, bool _verbose = true);
-    bool                    addBumpTexture( const std::string& _name, const std::string& _path, WatchFileList& _files, bool _flip = true, bool _verbose = true);
+    bool                    addTexture( const std::string& _name, Texture* _texture );
+    bool                    addTexture( const std::string& _name, const std::string& _path, WatchFileList& _files, bool _flip = true, bool _verbose = true );
+    bool                    addBumpTexture( const std::string& _name, const std::string& _path, WatchFileList& _files, bool _flip = true, bool _verbose = true );
     
     // Check presence of uniforms on shaders
     void                    checkPresenceIn( const std::string &_vert_src, const std::string &_frag_src );

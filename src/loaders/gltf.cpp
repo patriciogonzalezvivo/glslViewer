@@ -118,20 +118,35 @@ void extractVertexData(uint32_t v_pos, const uint8_t *base, int accesor_componen
     }
 }
 
-Material extractMaterial(tinygltf::Material& _material) {
+Material extractMaterial(const tinygltf::Model& _model, int _materialIndex, Uniforms& _uniforms) {
+    const tinygltf::Material& material = _model.materials[_materialIndex];
+
     Material mat;
-    mat.name = toLower( toUnderscore( purifyString( _material.name ) ) );
+    mat.name = toLower( toUnderscore( purifyString( material.name ) ) );
 
     mat.addDefine("MATERIAL_NAME_" + toUpper(mat.name) );
-    mat.addDefine("MATERIAL_EMISSIVE", (double*)_material.emissiveFactor.data(), 3);
-    mat.addDefine("MATERIAL_BASECOLOR", (double*)_material.pbrMetallicRoughness.baseColorFactor.data(), 4);
-    mat.addDefine("MATERIAL_ROUGHNESS", _material.pbrMetallicRoughness.roughnessFactor);
-    mat.addDefine("MATERIAL_METALLIC", _material.pbrMetallicRoughness.metallicFactor);
+    mat.addDefine("MATERIAL_EMISSIVE", (double*)material.emissiveFactor.data(), 3);
+    mat.addDefine("MATERIAL_BASECOLOR", (double*)material.pbrMetallicRoughness.baseColorFactor.data(), 4);
+    if (material.pbrMetallicRoughness.baseColorTexture.index >= 0) {
+        const tinygltf::Texture &tex = _model.textures[material.pbrMetallicRoughness.baseColorTexture.index];
+        const tinygltf::Image &image = _model.images[tex.source];
+        std::string name = getUniformName(image.name);
+
+        Texture* texture = new Texture();
+        texture->load(image.width, image.height, image.component, image.bits, &image.image.at(0));
+        if (!_uniforms.addTexture(name, texture)) {
+            delete texture;
+        }
+        mat.addDefine("MATERIAL_BASECOLORMAP", name);
+    }
+
+    mat.addDefine("MATERIAL_ROUGHNESS", material.pbrMetallicRoughness.roughnessFactor);
+    mat.addDefine("MATERIAL_METALLIC", material.pbrMetallicRoughness.metallicFactor);
 
     return mat;
 }
 
-void extractMesh(tinygltf::Model& _model, tinygltf::Mesh& _mesh, Models& _models, bool _verbose) {
+void extractMesh(tinygltf::Model& _model, tinygltf::Mesh& _mesh, Uniforms& _uniforms, Models& _models, bool _verbose) {
     std::cout << "Mesh " << _mesh.name << std::endl;
     for (size_t i = 0; i < _mesh.primitives.size(); ++i) {
         tinygltf::Primitive primitive = _mesh.primitives[i];
@@ -225,19 +240,19 @@ void extractMesh(tinygltf::Model& _model, tinygltf::Mesh& _mesh, Models& _models
             if ( _verbose )
                 std::cout << "    . Compute tangents" << std::endl;
 
-        Material mat = extractMaterial( _model.materials[primitive.material] );
+        Material mat = extractMaterial( _model, primitive.material, _uniforms );
 
         _models.push_back( new Model(_mesh.name, mesh, mat) );
     }
 };
 
 // bind models
-void extractNodes(tinygltf::Model& _model, tinygltf::Node& _node, Models& _models, bool _verbose) {
+void extractNodes(tinygltf::Model& _model, tinygltf::Node& _node, Uniforms& _uniforms, Models& _models, bool _verbose) {
     std::cout << "Node " << _node.name << std::endl;
-    extractMesh(_model, _model.meshes[ _node.mesh ], _models, _verbose);
+    extractMesh(_model, _model.meshes[ _node.mesh ], _uniforms, _models, _verbose);
     
     for (size_t i = 0; i < _node.children.size(); i++) {
-        extractNodes(_model, _model.nodes[ _node.children[i] ], _models, _verbose);
+        extractNodes(_model, _model.nodes[ _node.children[i] ], _uniforms, _models, _verbose);
     }
 };
 
@@ -255,7 +270,7 @@ bool loadGLTF(Uniforms& _uniforms, WatchFileList& _files, Materials& _materials,
     const tinygltf::Scene &scene = model.scenes[model.defaultScene];
     std::cout << " tinygltf::Scene &scene" << std::endl;
     for (size_t i = 0; i < scene.nodes.size(); ++i) {
-        extractNodes(model, model.nodes[scene.nodes[i]], _models, _verbose);
+        extractNodes(model, model.nodes[scene.nodes[i]], _uniforms, _models, _verbose);
     }
 
     return true;
