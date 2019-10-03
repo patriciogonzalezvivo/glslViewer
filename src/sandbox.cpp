@@ -83,6 +83,12 @@ Sandbox::Sandbox():
             _shader.setUniformDepthTexture("u_sceneDepth", &m_scene_fbo, _shader.textureIndex++ );
         }
     });
+
+    uniforms.functions["u_lightShadowMap"] = UniformFunction("sampler2D", [this](Shader& _shader) {
+        if (uniforms.lights.size() > 0) {
+            _shader.setUniformDepthTexture("u_lightShadowMap", uniforms.lights[0].getShadowMap(), _shader.textureIndex++ );
+        }
+    });
     #endif
 
     uniforms.functions["u_view2d"] = UniformFunction("mat3", [this](Shader& _shader) {
@@ -220,13 +226,130 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     },
     "buffers                        return a list of buffers as their uniform name.", false));
 
+    _commands.push_back(Command("lights", [&](const std::string& _line){ 
+        if (_line == "lights") {
+            uniforms.printLights();
+            return true;
+        }
+        return false;
+    },
+    "lights                         get all light data."));
+
+    _commands.push_back(Command("light_position", [&](const std::string& _line){ 
+        std::vector<std::string> values = split(_line,',');
+        if (values.size() == 4) {
+            if (uniforms.lights.size() > 0) 
+                uniforms.lights[0].setPosition(glm::vec3(toFloat(values[1]),toFloat(values[2]),toFloat(values[3])));
+            return true;
+        }
+        else if (values.size() == 5) {
+            int i = toInt(values[1]);
+            if (uniforms.lights.size() > i) 
+                uniforms.lights[i].setPosition(glm::vec3(toFloat(values[2]),toFloat(values[3]),toFloat(values[4])));
+            return true;
+        }
+        else {
+            if (uniforms.lights.size() > 0) {
+                glm::vec3 pos = uniforms.lights[0].getPosition();
+                std::cout << ',' << pos.x << ',' << pos.y << ',' << pos.z << std::endl;
+            }
+            return true;
+        }
+        return false;
+    },
+    "light_position[,<x>,<y>,<z>]   get or set the light position."));
+
+    _commands.push_back(Command("light_color", [&](const std::string& _line){ 
+         std::vector<std::string> values = split(_line,',');
+        if (values.size() == 4) {
+            if (uniforms.lights.size() > 0) {
+                uniforms.lights[0].color = glm::vec3(toFloat(values[1]),toFloat(values[2]),toFloat(values[3]));
+                uniforms.lights[0].bChange = true;
+            }
+            return true;
+        }
+        else if (values.size() == 5) {
+            int i = toInt(values[1]);
+            if (uniforms.lights.size() > i) {
+                uniforms.lights[i].color = glm::vec3(toFloat(values[2]),toFloat(values[3]),toFloat(values[4]));
+                uniforms.lights[i].bChange = true;
+            }
+            return true;
+        }
+        else {
+            if (uniforms.lights.size() > 0) {
+                glm::vec3 color = uniforms.lights[0].color;
+                std::cout << color.x << ',' << color.y << ',' << color.z << std::endl;
+            }
+            
+            return true;
+        }
+        return false;
+    },
+    "light_color[,<r>,<g>,<b>]      get or set the light color."));
+
+    _commands.push_back(Command("light_falloff", [&](const std::string& _line){ 
+         std::vector<std::string> values = split(_line,',');
+        if (values.size() == 2) {
+            if (uniforms.lights.size() > 0) {
+                uniforms.lights[0].falloff = toFloat(values[1]);
+                uniforms.lights[0].bChange = true;
+            }
+            return true;
+        }
+        else if (values.size() == 5) {
+            int i = toInt(values[1]);
+            if (uniforms.lights.size() > i) {
+                uniforms.lights[i].falloff = toFloat(values[2]);
+                uniforms.lights[i].bChange = true;
+            }
+            return true;
+        }
+        else {
+            if (uniforms.lights.size() > 0) {
+                std::cout <<  uniforms.lights[0].falloff << std::endl;
+            }
+            return true;
+        }
+        return false;
+    },
+    "light_falloff[,<value>]        get or set the light falloff distance."));
+
+    _commands.push_back(Command("light_intensity", [&](const std::string& _line){ 
+         std::vector<std::string> values = split(_line,',');
+        if (values.size() == 2) {
+            if (uniforms.lights.size() > 0) {
+                uniforms.lights[0].intensity = toFloat(values[1]);
+                uniforms.lights[0].bChange = true;
+            }
+            return true;
+        }
+        else if (values.size() == 5) {
+            int i = toInt(values[1]);
+            if (uniforms.lights.size() > i) {
+                uniforms.lights[i].intensity = toFloat(values[2]);
+                uniforms.lights[i].bChange = true;
+            }
+            return true;
+        }
+        else {
+            if (uniforms.lights.size() > 0) {
+                std::cout <<  uniforms.lights[0].intensity << std::endl;
+            }
+            
+            return true;
+        }
+        return false;
+    },
+    "light_intensity[,<value>]      get or set the light intensity."));
+
     _commands.push_back(Command("update", [&](const std::string& _line){ 
         if (_line == "update") {
             flagChange();
         }
         return false;
     },
-    "update                         rUPDATE.", false));
+    "update                         force all uniforms to be updated", false));
 
     // LOAD SHACER 
     // -----------------------------------------------
@@ -513,7 +636,7 @@ void Sandbox::render() {
     // RENDER SHADOW MAP
     // -----------------------------------------------
     if (geom_index != -1)
-        if (uniforms.functions["u_ligthShadowMap"].present)
+        if (uniforms.functions["u_lightShadowMap"].present)
             m_scene.renderShadowMap(uniforms);
     
     // BUFFERS
@@ -549,7 +672,7 @@ void Sandbox::render() {
     else {
         m_scene.render(uniforms);
         if (m_scene.showGrid || m_scene.showAxis || m_scene.showBBoxes)
-            m_scene.renderDebug();
+            m_scene.renderDebug(uniforms);
     }
     
     // ----------------------------------------------- < main scene end
@@ -600,7 +723,7 @@ void Sandbox::renderUI() {
             nTotal += uniforms.functions["u_scene"].present;
             nTotal += uniforms.functions["u_sceneDepth"].present;
         }
-        nTotal += uniforms.functions["u_ligthShadowMap"].present;
+        nTotal += uniforms.functions["u_lightShadowMap"].present;
         if (nTotal > 0) {
             float w = (float)(getWindowWidth());
             float h = (float)(getWindowHeight());
@@ -652,9 +775,26 @@ void Sandbox::renderUI() {
                 #endif
             }
 
-            if (uniforms.functions["u_ligthShadowMap"].present) {
-                m_scene.renderShadowMapUI(m_billboard_shader, m_billboard_vbo, xOffset);
+        // #if !defined(PLATFORM_RPI) && !defined(PLATFORM_RPI4) 
+            if (uniforms.functions["u_lightShadowMap"].present) {
+                float x = xOffset;
+                float y = (float)(getWindowHeight()) - xOffset;
+                float w = xOffset;
+                float h = xOffset;
+
+                for (unsigned int i = 0; i < uniforms.lights.size(); i++) {
+                    if ( uniforms.lights[i].getShadowMap()->getDepthTextureId() ) {
+                        m_billboard_shader.setUniform("u_scale", w, h);
+                        m_billboard_shader.setUniform("u_translate", x, y);
+                        m_billboard_shader.setUniform("u_depth", float(0.0));
+                        m_billboard_shader.setUniform("u_modelViewProjectionMatrix", getOrthoMatrix());
+                        m_billboard_shader.setUniformDepthTexture("u_tex0", uniforms.lights[i].getShadowMap());
+                        m_billboard_vbo->render(&m_billboard_shader);
+                        x += w;
+                    }
+                }
             }
+        // #endif
         }
     }
 

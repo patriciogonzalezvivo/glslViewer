@@ -15,7 +15,7 @@ Light::Light(glm::vec3 _dir): m_mvp_biased(1.0), m_mvp(1.0) {
     intensity = 1.0;
     falloff = -1.0; 
     m_type = LIGHT_DIRECTIONAL;
-    setPosition(normalize(_dir));
+    direction = normalize(_dir);
 }
 
 Light::Light(glm::vec3 _pos, float _falloff): m_mvp_biased(1.0), m_mvp(1.0) {

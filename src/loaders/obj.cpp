@@ -113,11 +113,6 @@ glm::vec2 getTexCoords(const tinyobj::attrib_t& _attrib, int _index) {
                         1.0f - _attrib.texcoords[2 * _index + 1]);
 }
 
-std::string getUniformName(const std::string& _str){
-    std::vector<std::string> values = split(_str, '.');
-    return "u_" + toLower( toUnderscore( purifyString( values[0] ) ) );
-}
-
 Material InitMaterial (const tinyobj::material_t& _material, Uniforms& _uniforms, WatchFileList& _files, const std::string& _folder ) {
     Material mat;
     mat.name = toLower( toUnderscore( purifyString( _material.name ) ) );
@@ -139,7 +134,6 @@ Material InitMaterial (const tinyobj::material_t& _material, Uniforms& _uniforms
             _material.diffuse_texopt.scale[1] != 1.0 ) {
             mat.addDefine("MATERIAL_BASECOLORMAP_SCALE", (float*)_material.diffuse_texopt.scale, 3);
         }
-
     }
 
     mat.addDefine("MATERIAL_SPECULAR", (float*)_material.specular, 3);
@@ -343,7 +337,7 @@ Material InitMaterial (const tinyobj::material_t& _material, Uniforms& _uniforms
     return mat;
 }
 
-bool loadOBJ(Uniforms& _uniforms, WatchFileList& _files, std::map<std::string,Material>& _materials, std::vector<Model*>& _models, int _index, bool _verbose) {
+bool loadOBJ(Uniforms& _uniforms, WatchFileList& _files, Materials& _materials, Models& _models, int _index, bool _verbose) {
     std::string filename = _files[_index].path;
 
     tinyobj::attrib_t attrib;

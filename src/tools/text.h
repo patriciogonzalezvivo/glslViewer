@@ -84,3 +84,6 @@ std::string toString(const glm::vec4 &_vec, char _sep = ',');
 inline std::ostream& operator<<(std::ostream& os, const glm::vec3& vec);
 inline std::istream& operator>>(std::istream& is, glm::vec3& vec);
 
+
+std::string getUniformName(const std::string& _str);
+

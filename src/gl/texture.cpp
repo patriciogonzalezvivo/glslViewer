@@ -18,13 +18,12 @@ Texture::~Texture() {
 }
 
 bool Texture::load(const std::string& _path, bool _vFlip) {
+    std::string ext = getExt(_path);
+
+    // Generate an OpenGL texture ID for this texture
     glEnable(GL_TEXTURE_2D);
-
-    if (m_id == 0){
-        // Generate an OpenGL texture ID for this texture
+    if (m_id == 0)
         glGenTextures(1, &m_id);
-    }
-
     glBindTexture(GL_TEXTURE_2D, m_id);
 
     // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -33,9 +32,9 @@ bool Texture::load(const std::string& _path, bool _vFlip) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-    if (haveExt(_path,"png") || haveExt(_path,"PNG") ||
-        haveExt(_path,"jpg") || haveExt(_path,"JPG") ||
-        haveExt(_path,"jpeg") || haveExt(_path,"JPEG")) {
+    if (ext == "png"    || ext == "PNG" ||
+        ext == "jpg"    || ext == "JPG" ||
+        ext == "jpeg"   || ext == "JPEG") {
 
         unsigned char* pixels = loadPixels(_path, &m_width, &m_height, RGB_ALPHA, _vFlip);
 
@@ -45,7 +44,7 @@ bool Texture::load(const std::string& _path, bool _vFlip) {
         delete pixels;
     }
 
-    else if (haveExt(_path, "hdr") || haveExt(_path,"HDR")) {
+    else if (ext == "hdr" || ext == "HDR") {
         float* pixels = loadHDRFloatPixels(_path, &m_width, &m_height, _vFlip);
 
     #if defined(PLATFORM_RPI) || defined(PLATFORM_RPI4) 
@@ -70,13 +69,12 @@ bool Texture::load(const std::string& _path, bool _vFlip) {
 }
 
 bool Texture::loadBump(const std::string& _path, bool _vFlip) {
+    std::string ext = getExt(_path);
+
+    // Generate an OpenGL texture ID for this texture
     glEnable(GL_TEXTURE_2D);
-
-    if (m_id == 0){
-        // Generate an OpenGL texture ID for this texture
+    if (m_id == 0)
         glGenTextures(1, &m_id);
-    }
-
     glBindTexture(GL_TEXTURE_2D, m_id);
 
     // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -85,9 +83,9 @@ bool Texture::loadBump(const std::string& _path, bool _vFlip) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-    if (haveExt(_path,"png") || haveExt(_path,"PNG") ||
-        haveExt(_path,"jpg") || haveExt(_path,"JPG") ||
-        haveExt(_path,"jpeg") || haveExt(_path,"JPEG")) {
+    if (ext == "png"    || ext == "PNG" ||
+        ext == "jpg"    || ext == "JPG" ||
+        ext == "jpeg"   || ext == "JPEG") {
 
         uint16_t* pixels = loadPixels16(_path, &m_width, &m_height, LUMINANCE, _vFlip);
 
@@ -147,6 +145,46 @@ bool Texture::loadBump(const std::string& _path, bool _vFlip) {
 
     unbind();
 
+    return true;
+}
+
+bool Texture::load(int _width, int _height, int _component, int _bits, const unsigned char* _data) {
+
+    // Generate an OpenGL texture ID for this texturez
+    glEnable(GL_TEXTURE_2D);
+    if (m_id == 0)
+        glGenTextures(1, &m_id);
+    glBindTexture(GL_TEXTURE_2D, m_id);
+
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+    GLenum format = GL_RGBA;
+    if (_component == 1) {
+        format = GL_RED;
+    } else if (_component == 2) {
+        format = GL_RG;
+    } else if (_component == 3) {
+        format = GL_RGB;
+    } else {
+      // ???
+    }
+
+    GLenum type = GL_UNSIGNED_BYTE;
+    if (_bits == 8) {
+        // ok
+    } else if (_bits == 16) {
+        type = GL_UNSIGNED_SHORT;
+    } else {
+        // ???
+    }
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, _width, _height, 0, format, type, _data);
+    // glGenerateMipmap(GL_TEXTURE_2D);
     return true;
 }
 

@@ -300,3 +300,7 @@ bool check_for_postprocessing(const std::string &_source) {
     return false;
 }
 
+std::string getUniformName(const std::string& _str) {
+    std::vector<std::string> values = split(_str, '.');
+    return "u_" + toLower( toUnderscore( purifyString( values[0] ) ) );
+}

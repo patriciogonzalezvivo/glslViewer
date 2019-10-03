@@ -282,6 +282,7 @@ void splitFacesFromEquilateral(T *_data, unsigned int _width, unsigned int _heig
 }
 
 bool TextureCube::load(const std::string &_path, bool _vFlip) {
+    std::string ext = getExt(_path);
 
     if (m_id != 0) {
         // Init
@@ -299,9 +300,9 @@ bool TextureCube::load(const std::string &_path, bool _vFlip) {
     }
 
     int sh_samples = 0;
-    if (haveExt(_path,"png") || haveExt(_path,"PNG") ||
-        haveExt(_path,"jpg") || haveExt(_path,"JPG") ||
-        haveExt(_path,"jpeg") || haveExt(_path,"JPEG")) {
+    if (ext == "png"    || ext == "PNG" ||
+        ext == "jpg"    || ext == "JPG" ||
+        ext == "jpeg"   || ext == "JPEG" ) {
 
         unsigned char* data = loadPixels(_path, &m_width, &m_height, RGB, false);
 
@@ -355,7 +356,7 @@ bool TextureCube::load(const std::string &_path, bool _vFlip) {
 
     }
 
-    else if (haveExt(_path, "hdr") || haveExt(_path,"HDR")) {
+    else if (ext == "hdr" || ext == "HDR") {
         float* data = loadHDRFloatPixels(_path, &m_width, &m_height, false);
 
         // LOAD FACES

@@ -1,5 +1,5 @@
 #if defined(LIGHT_SHADOWMAP) && defined(LIGHT_SHADOWMAP_SIZE)
-uniform sampler2D   u_ligthShadowMap;
+uniform sampler2D   u_lightShadowMap;
 varying vec4        v_lightCoord;
 
 float textureShadow(const sampler2D depths, vec2 uv, float compare){

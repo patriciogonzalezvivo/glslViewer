@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vector>
+
 #include "node.h"
 #include "material.h"
 
@@ -16,9 +18,9 @@ public:
     Model(const std::string& _name, Mesh& _mesh, const Material& _mat);
     virtual ~Model();
 
-    bool        loadGeom(Mesh &_mesh);
+    bool        loadGeom(Mesh& _mesh);
     bool        loadShader(const std::string& _fragStr, const std::string& _vertStr, bool verbose);
-    bool        loadMaterial(const Material &_material);
+    bool        loadMaterial(const Material& _material);
 
     bool        loaded() const { return m_model_vbo != nullptr; }
     void        clear();
@@ -31,15 +33,13 @@ public:
     void        printDefines();
     void        printVboInfo();
 
-    // Vbo*        getVbo() { return m_model_vbo; }
-    Vbo*        getBboxVbo() { return m_bbox_vbo; }
-
     float       getArea() const { return m_area; }
     glm::vec3   getMinBoundingBox() const { return m_bbmin; }
     glm::vec3   getMaxBoundingBox() const { return m_bbmax; }
     
-    void        render(Shader* _shader);
     void        render(Uniforms& _uniforms, const glm::mat4& _viewProjectionMatrix );
+    void        render(Shader* _shader);
+    void        renderBbox(Shader* _shader);
 
 protected:
     Shader      m_shader;
@@ -53,3 +53,5 @@ protected:
     std::string m_name;
     float       m_area;
 };
+
+typedef std::vector<Model*>  Models;

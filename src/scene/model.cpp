@@ -8,6 +8,14 @@ Model::Model():
     m_model_vbo(nullptr), m_bbox_vbo(nullptr), 
     m_bbmin(100000.0), m_bbmax(-1000000.),
     m_name(""), m_area(0.0f) {
+
+#if defined(PLATFORM_RPI) || defined(PLATFORM_RPI4) 
+    addDefine("LIGHT_SHADOWMAP", "u_lightShadowMap");
+    addDefine("LIGHT_SHADOWMAP_SIZE", "512.0");
+#else
+    addDefine("LIGHT_SHADOWMAP", "u_lightShadowMap");
+    addDefine("LIGHT_SHADOWMAP_SIZE", "1024.0");
+#endif
 }
 
 Model::Model(const std::string& _name, Mesh &_mesh, const Material &_mat):
@@ -77,13 +85,6 @@ bool Model::loadGeom(Mesh& _mesh) {
     else if (_mesh.getDrawMode() == GL_TRIANGLE_FAN)
         addDefine("MODEL_PRIMITIVE_TRIANGLE_FAN");
 
-    addDefine("LIGHT_SHADOWMAP", "u_ligthShadowMap");
-#if defined(PLATFORM_RPI) || defined(PLATFORM_RPI4) 
-    addDefine("LIGHT_SHADOWMAP_SIZE", "512.0");
-#else
-    addDefine("LIGHT_SHADOWMAP_SIZE", "1024.0");
-#endif
-
     return true;
 }
 
@@ -115,10 +116,6 @@ void Model::clear() {
     }
 }
 
-void Model::render(Shader* _shader) {
-    m_model_vbo->render(_shader );
-}
-
 void Model::render(Uniforms& _uniforms, const glm::mat4& _viewProjectionMatrix) {
 
     // If the model and the shader are loaded
@@ -132,6 +129,15 @@ void Model::render(Uniforms& _uniforms, const glm::mat4& _viewProjectionMatrix) 
 
         // Pass special uniforms
         m_shader.setUniform( "u_modelViewProjectionMatrix", _viewProjectionMatrix );
-        m_model_vbo->render( &m_shader );
+        render( &m_shader );
     }
+}
+
+void Model::render(Shader* _shader) {
+    m_model_vbo->render(_shader);
+}
+
+void Model::renderBbox(Shader* _shader) {
+    if (m_bbox_vbo)
+        m_model_vbo->render(_shader);
 }

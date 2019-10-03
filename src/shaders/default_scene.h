@@ -175,7 +175,7 @@ uniform float       u_lightFalloff;
 uniform float       u_lightIntensity;
 
 #ifdef LIGHT_SHADOWMAP
-uniform sampler2D   u_ligthShadowMap;
+uniform sampler2D   u_lightShadowMap;
 uniform mat4        u_lightMatrix;
 varying vec4        v_lightCoord;
 #endif
@@ -210,7 +210,7 @@ float textureShadow(const sampler2D _shadowMap) {
 
 float textureShadow() {
     #ifdef LIGHT_SHADOWMAP
-    return textureShadow(u_ligthShadowMap);
+    return textureShadow(u_lightShadowMap);
     #else
     return 1.0;
     #endif
@@ -1482,7 +1482,7 @@ void lightWithShadow(vec3 _diffuseColor, vec3 _specularColor, vec3 _N, vec3 _V, 
 
 #if defined(LIGHT_SHADOWMAP) && defined(LIGHT_SHADOWMAP_SIZE) && !defined(PLATFORM_RPI)
     float bias = 0.005;
-    shadow *= textureShadowPCF(u_ligthShadowMap, vec2(LIGHT_SHADOWMAP_SIZE), v_lightCoord.xy, v_lightCoord.z - bias);
+    shadow *= textureShadowPCF(u_lightShadowMap, vec2(LIGHT_SHADOWMAP_SIZE), v_lightCoord.xy, v_lightCoord.z - bias);
     shadow = saturate(shadow);
 #endif
 

@@ -314,34 +314,34 @@ Vbo* Mesh::getVbo() {
 
     // Create Vertex Layout
     //
-    std::vector<VertexLayout::VertexAttrib> attribs;
-    attribs.push_back({"position", 3, GL_FLOAT, POSITION_ATTRIBUTE, false, 0});
+    std::vector<VertexAttrib> attribs;
+    attribs.push_back({"position", 3, GL_FLOAT, false, 0});
     int  nBits = 3;
 
     bool bColor = false;
     if (hasColors() && getColors().size() == m_vertices.size()) {
-        attribs.push_back({"color", 4, GL_FLOAT, COLOR_ATTRIBUTE, false, 0});
+        attribs.push_back({"color", 4, GL_FLOAT, false, 0});
         bColor = true;
         nBits += 4;
     }
 
     bool bNormals = false;
     if (hasNormals() > 0 && getNormals().size() == m_vertices.size()) {
-        attribs.push_back({"normal", 3, GL_FLOAT, NORMAL_ATTRIBUTE, false, 0});
+        attribs.push_back({"normal", 3, GL_FLOAT, false, 0});
         bNormals = true;
         nBits += 3;
     }
 
     bool bTexCoords = false;
     if (hasTexCoords() > 0 && getTexCoords().size() == m_vertices.size()) {
-        attribs.push_back({"texcoord", 2, GL_FLOAT, TEXCOORD_ATTRIBUTE, false, 0});
+        attribs.push_back({"texcoord", 2, GL_FLOAT, false, 0});
         bTexCoords = true;
         nBits += 2;
     }
 
     bool bTangents = false;
     if (hasTangents() > 0 && getTangents().size() == m_vertices.size()) {
-        attribs.push_back({"tangent", 4, GL_FLOAT, TANGENT_ATTRIBUTE, false, 0});
+        attribs.push_back({"tangent", 4, GL_FLOAT, false, 0});
         bTangents = true;
         nBits += 4;
     }

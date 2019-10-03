@@ -93,7 +93,8 @@
         "*.ipp": "cpp",
         "unordered_set": "cpp",
         "__memory": "cpp",
-        "filesystem": "cpp"
+        "filesystem": "cpp",
+        "forward_list": "cpp"
     },
     "python.pythonPath": "/usr/local/bin/python"
 }
