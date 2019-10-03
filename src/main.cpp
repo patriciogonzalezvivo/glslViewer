@@ -640,7 +640,9 @@ int main(int argc, char **argv){
             sandbox.vert_index = files.size()-1;
         }
         else if ( sandbox.geom_index == -1 && ( haveExt(argument,"ply") || haveExt(argument,"PLY") ||
-                                                haveExt(argument,"obj") || haveExt(argument,"OBJ") ) ) {
+                                                haveExt(argument,"obj") || haveExt(argument,"OBJ") ||
+                                                haveExt(argument,"glb") || haveExt(argument,"GLB") ||
+                                                haveExt(argument,"gltf") || haveExt(argument,"GLTF") ) ) {
             if ( stat(argument.c_str(), &st) != 0) {
                 std::cerr << "Error watching file " << argument << std::endl;
             }

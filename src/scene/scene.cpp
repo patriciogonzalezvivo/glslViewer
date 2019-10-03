@@ -13,6 +13,10 @@
 #include "shaders/cubemap.h"
 #include "shaders/wireframe3D.h"
 
+#include "../loaders/ply.h"
+#include "../loaders/obj.h"
+#include "../loaders/gltf.h"
+
 Scene::Scene(): 
     // Debug State
     showGrid(false), showAxis(false), showBBoxes(false), showCubebox(false), 
@@ -597,16 +601,21 @@ void Scene::printDefines() {
 }
 
 bool Scene::loadGeometry(Uniforms& _uniforms, WatchFileList& _files, int _index, bool _verbose) {
+    std::string ext = getExt(_files[_index].path);
 
     // If the geometry is a PLY it's easy because is only one mesh
-    if ( haveExt(_files[_index].path,"ply") || haveExt(_files[_index].path,"PLY") ) {
+    if ( ext == "ply" || ext == "PLY" ) {
         loadPLY(_uniforms, _files, m_materials, m_models, _index, _verbose);
 
     }
 
-    // If it's a OBJ could be more complicated because they can contain several meshes
-    else if ( haveExt(_files[_index].path,"obj") || haveExt(_files[_index].path,"OBJ") )
+    // If it's a OBJ could be more complicated because they can contain several meshes and materials
+    else if ( ext == "obj" || ext == "OBJ" )
         loadOBJ(_uniforms, _files, m_materials, m_models, _index, _verbose);
+
+    // If it's a GLTF it's not just multiple meshes and materials but also nodes, lights and cameras
+    else if ( ext == "glb" || ext == "GLB" || ext == "gltf" || ext == "GLTF" )
+        loadGLTF(_uniforms, _files, m_materials, m_models, _index, _verbose);
 
     // Calculate the total area
     glm::vec3 min_v;
@@ -826,7 +835,7 @@ void Scene::renderDebug(Uniforms& _uniforms) {
         m_wireframe3D_shader.setUniform("u_color", glm::vec4(1.0,1.0,0.0,1.0));
         m_wireframe3D_shader.setUniform("u_modelViewProjectionMatrix", m_mvp );
         for (unsigned int i = 0; i < m_models.size(); i++) {
-            m_models[i]->getBboxVbo()->render( &m_wireframe3D_shader );
+            m_models[i]->renderBbox( &m_wireframe3D_shader );
         }
     }
     

@@ -24,16 +24,10 @@ public:
     Vbo(VertexLayout* _vertexlayout, GLenum _drawMode = GL_TRIANGLES);
     virtual ~Vbo();
 
-    /*
-     * Set Vertex Layout for the Vbo object
-     */
-    void setVertexLayout(VertexLayout* _vertexLayout);
+    void setDrawMode(GLenum _drawMode = GL_TRIANGLES);  // Set Draw mode for the Vbo object
+    void setVertexLayout(VertexLayout* _vertexLayout);  // Set Vertex Layout for the Vbo object
 
-    /*
-     * Set Draw mode for the Vbo object
-     */
-    void setDrawMode(GLenum _drawMode = GL_TRIANGLES);
-
+    VertexLayout* getVertexLayout() { return m_vertexLayout; };
 
     /*
      * Adds a single vertex to the mesh; _vertex must be a pointer to the beginning of a vertex structured
@@ -57,10 +51,6 @@ public:
      * block of _nIndices unsigned short indices
      */
     void addIndices(INDEX_TYPE_GL* _indices, int _nIndices);
-
-    int numIndices() const { return m_indices.size(); };
-    int numVertices() const { return m_nVertices; };
-    VertexLayout* getVertexLayout() { return m_vertexLayout; };
 
     /*
      * Copies all added vertices and indices into OpenGL buffer objects; After geometry is uploaded,

@@ -12,9 +12,15 @@ bool haveExt(const std::string& _file, const std::string& _ext){
     return _file.find( "." + _ext) != std::string::npos;
 }
 
-bool urlExists(const std::string& name) {
+bool urlExists(const std::string& _name) {
     struct stat buffer;
-    return (stat (name.c_str(), &buffer) == 0);
+    return (stat (_name.c_str(), &buffer) == 0);
+}
+
+std::string getExt(const std::string& _filename) {
+    if (_filename.find_last_of(".") != std::string::npos)
+        return _filename.substr(_filename.find_last_of(".") + 1);
+    return "";
 }
 
 std::string getBaseDir(const std::string& filepath) {

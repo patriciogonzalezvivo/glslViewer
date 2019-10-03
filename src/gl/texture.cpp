@@ -18,6 +18,7 @@ Texture::~Texture() {
 }
 
 bool Texture::load(const std::string& _path, bool _vFlip) {
+    std::string ext = getExt(_path);
     glEnable(GL_TEXTURE_2D);
 
     if (m_id == 0){
@@ -33,9 +34,9 @@ bool Texture::load(const std::string& _path, bool _vFlip) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-    if (haveExt(_path,"png") || haveExt(_path,"PNG") ||
-        haveExt(_path,"jpg") || haveExt(_path,"JPG") ||
-        haveExt(_path,"jpeg") || haveExt(_path,"JPEG")) {
+    if (ext == "png"    || ext == "PNG" ||
+        ext == "jpg"    || ext == "JPG" ||
+        ext == "jpeg"   || ext == "JPEG") {
 
         unsigned char* pixels = loadPixels(_path, &m_width, &m_height, RGB_ALPHA, _vFlip);
 
@@ -45,7 +46,7 @@ bool Texture::load(const std::string& _path, bool _vFlip) {
         delete pixels;
     }
 
-    else if (haveExt(_path, "hdr") || haveExt(_path,"HDR")) {
+    else if (ext == "hdr" || ext == "HDR") {
         float* pixels = loadHDRFloatPixels(_path, &m_width, &m_height, _vFlip);
 
     #if defined(PLATFORM_RPI) || defined(PLATFORM_RPI4) 
@@ -70,6 +71,8 @@ bool Texture::load(const std::string& _path, bool _vFlip) {
 }
 
 bool Texture::loadBump(const std::string& _path, bool _vFlip) {
+    std::string ext = getExt(_path);
+
     glEnable(GL_TEXTURE_2D);
 
     if (m_id == 0){
@@ -85,9 +88,9 @@ bool Texture::loadBump(const std::string& _path, bool _vFlip) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-    if (haveExt(_path,"png") || haveExt(_path,"PNG") ||
-        haveExt(_path,"jpg") || haveExt(_path,"JPG") ||
-        haveExt(_path,"jpeg") || haveExt(_path,"JPEG")) {
+    if (ext == "png"    || ext == "PNG" ||
+        ext == "jpg"    || ext == "JPG" ||
+        ext == "jpeg"   || ext == "JPEG") {
 
         uint16_t* pixels = loadPixels16(_path, &m_width, &m_height, LUMINANCE, _vFlip);
 

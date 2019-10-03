@@ -139,7 +139,6 @@ Material InitMaterial (const tinyobj::material_t& _material, Uniforms& _uniforms
             _material.diffuse_texopt.scale[1] != 1.0 ) {
             mat.addDefine("MATERIAL_BASECOLORMAP_SCALE", (float*)_material.diffuse_texopt.scale, 3);
         }
-
     }
 
     mat.addDefine("MATERIAL_SPECULAR", (float*)_material.specular, 3);

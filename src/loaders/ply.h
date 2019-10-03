@@ -1,7 +1,5 @@
 #pragma once
 
-#include <vector>
-
 #include "../uniform.h"
 #include "../scene/model.h"
 

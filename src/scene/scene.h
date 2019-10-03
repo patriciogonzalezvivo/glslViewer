@@ -14,8 +14,8 @@
 #include "../shaders/billboard.h"
 #include "../shaders/default_scene.h"
 
-#include "../loaders/ply.h"
-#include "../loaders/obj.h"
+#include "../uniform.h"
+#include "../scene/model.h"
 
 enum CullingMode {
     NONE = 0,

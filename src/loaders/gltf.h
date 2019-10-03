@@ -1,6 +1,5 @@
 #pragma once
-
-#include <vector>
+#pragma once
 
 #include "../uniform.h"
 #include "../scene/model.h"
