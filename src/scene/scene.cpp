@@ -730,12 +730,8 @@ void Scene::renderShadowMap(Uniforms& _uniforms) {
             // Temporally move the MVP matrix from the view of the light 
             glm::mat4 mvp = _uniforms.lights[i].getMVPMatrix( m_origin.getTransformMatrix(), m_area );
             _uniforms.lights[i].bindShadowMap();
-            glEnable(GL_CULL_FACE);
-            glCullFace(GL_FRONT_AND_BACK);
 
             renderFloor(_uniforms, mvp);
-
-            glDisable(GL_CULL_FACE);
 
             for (unsigned int i = 0; i < m_models.size(); i++)
                 m_models[i]->render(_uniforms, mvp);

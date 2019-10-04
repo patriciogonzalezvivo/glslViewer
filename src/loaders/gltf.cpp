@@ -235,7 +235,9 @@ Material extractMaterial(const tinygltf::Model& _model, const tinygltf::Material
 }
 
 void extractMesh(const tinygltf::Model& _model, const tinygltf::Mesh& _mesh, Uniforms& _uniforms, Models& _models, bool _verbose) {
-    std::cout << "Mesh " << _mesh.name << std::endl;
+    if (_verbose)
+        std::cout << "Parsing mesh " << _mesh.name << std::endl;
+
     for (size_t i = 0; i < _mesh.primitives.size(); ++i) {
         tinygltf::Primitive primitive = _mesh.primitives[i];
 
@@ -336,7 +338,9 @@ void extractMesh(const tinygltf::Model& _model, const tinygltf::Mesh& _mesh, Uni
 
 // bind models
 void extractNodes(const tinygltf::Model& _model, const tinygltf::Node& _node, Uniforms& _uniforms, Models& _models, bool _verbose) {
-    std::cout << "Node " << _node.name << std::endl;
+    if (_verbose)
+        std::cout << "Entering node " << _node.name << std::endl;
+        
     extractMesh(_model, _model.meshes[ _node.mesh ], _uniforms, _models, _verbose);
     
     for (size_t i = 0; i < _node.children.size(); i++) {
@@ -352,11 +356,8 @@ bool loadGLTF(Uniforms& _uniforms, WatchFileList& _files, Materials& _materials,
         std::cout << "Failed to load .glTF : " << filename << std::endl;
         return false;
     }
-    std::cout << "Load Model" << std::endl;
 
-    
     const tinygltf::Scene &scene = model.scenes[model.defaultScene];
-    std::cout << " tinygltf::Scene &scene" << std::endl;
     for (size_t i = 0; i < scene.nodes.size(); ++i) {
         extractNodes(model, model.nodes[scene.nodes[i]], _uniforms, _models, _verbose);
     }
