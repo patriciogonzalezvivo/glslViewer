@@ -121,17 +121,23 @@ void extractVertexData(uint32_t v_pos, const uint8_t *base, int accesor_componen
     }
 }
 
-Material extractMaterial(const tinygltf::Model& _model, const tinygltf::Material& _material, Uniforms& _uniforms) {
+Material extractMaterial(const tinygltf::Model& _model, const tinygltf::Material& _material, Uniforms& _uniforms, bool _verbose) {
+    int texCounter = 0;
     Material mat;
     mat.name = toLower( toUnderscore( purifyString( _material.name ) ) );
 
     mat.addDefine("MATERIAL_NAME_" + toUpper(mat.name) );
-    mat.addDefine("MATERIAL_EMISSIVE", (double*)_material.emissiveFactor.data(), 3);
     mat.addDefine("MATERIAL_BASECOLOR", (double*)_material.pbrMetallicRoughness.baseColorFactor.data(), 4);
     if (_material.pbrMetallicRoughness.baseColorTexture.index >= 0) {
         const tinygltf::Texture &tex = _model.textures[_material.pbrMetallicRoughness.baseColorTexture.index];
         const tinygltf::Image &image = _model.images[tex.source];
-        std::string name = getUniformName(image.name);
+        std::string name = image.name + image.uri;
+        if (name.empty())
+            name = "texture" + toString(texCounter++);
+        name = getUniformName(name);
+
+        if (_verbose)
+            std::cout << "Loading " << name << "for BASECOLORMAP as " << name << std::endl;
 
         Texture* texture = new Texture();
         texture->load(image.width, image.height, image.component, image.bits, &image.image.at(0));
@@ -141,8 +147,89 @@ Material extractMaterial(const tinygltf::Model& _model, const tinygltf::Material
         mat.addDefine("MATERIAL_BASECOLORMAP", name);
     }
 
+    mat.addDefine("MATERIAL_EMISSIVE", (double*)_material.emissiveFactor.data(), 3);
+    if (_material.emissiveTexture.index >= 0) {
+        tinygltf::Image image = _model.images[_model.textures[_material.emissiveTexture.index].source];
+        std::string name = image.name + image.uri;
+        if (name.empty())
+            name = "texture" + toString(texCounter++);
+        name = getUniformName(name);
+
+        if (_verbose)
+            std::cout << "Loading " << name << "for EMISSIVEMAP as " << name << std::endl;
+
+        Texture* texture = new Texture();
+        texture->load(image.width, image.height, image.component, image.bits, &image.image.at(0));
+        if (!_uniforms.addTexture(name, texture)) {
+            delete texture;
+        }
+        mat.addDefine("MATERIAL_EMISSIVEMAP", name);
+    }
+
     mat.addDefine("MATERIAL_ROUGHNESS", _material.pbrMetallicRoughness.roughnessFactor);
     mat.addDefine("MATERIAL_METALLIC", _material.pbrMetallicRoughness.metallicFactor);
+    if (_material.pbrMetallicRoughness.metallicRoughnessTexture.index >= 0) {
+        tinygltf::Texture tex = _model.textures[_material.pbrMetallicRoughness.metallicRoughnessTexture.index];
+        tinygltf::Image image = _model.images[tex.source];
+        std::string name = image.name + image.uri;
+        if (name.empty())
+            name = "texture" + toString(texCounter++);
+        name = getUniformName(name);
+
+        if (_verbose)
+            std::cout << "Loading " << name << "for METALLICROUGHNESSMAP as " << name << std::endl;
+
+        Texture* texture = new Texture();
+        texture->load(image.width, image.height, image.component, image.bits, &image.image.at(0));
+        if (!_uniforms.addTexture(name, texture)) {
+            delete texture;
+        }
+        mat.addDefine("MATERIAL_METALLICROUGHNESSMAP", name);
+    }
+
+    // NORMALMAP
+    if (_material.normalTexture.index >= 0) {
+        tinygltf::Image image = _model.images[_model.textures[_material.normalTexture.index].source];
+        std::string name = image.name + image.uri;
+        if (name.empty())
+            name = "texture" + toString(texCounter++);
+        name = getUniformName(name);
+
+        if (_verbose)
+            std::cout << "Loading " << name << "for NORMALMAP as " << name << std::endl;
+
+        Texture* texture = new Texture();
+        texture->load(image.width, image.height, image.component, image.bits, &image.image.at(0));
+        if (!_uniforms.addTexture(name, texture)) {
+            delete texture;
+        }
+        mat.addDefine("MATERIAL_NORMALMAP", name);
+
+        if (_material.normalTexture.scale != 1.0)
+            mat.addDefine("MATERIAL_NORMALMAP_SCALE", glm::vec3(_material.normalTexture.scale, _material.normalTexture.scale, 1.0));
+    }
+
+    // OCCLUSION
+    if (_material.occlusionTexture.index >= 0) {
+        const tinygltf::Image &image = _model.images[_model.textures[_material.occlusionTexture.index].source];
+        std::string name = image.name + image.uri;
+        if (name.empty())
+            name = "texture" + toString(texCounter++);
+        name = getUniformName(name);
+
+        if (_verbose)
+            std::cout << "Loading " << name << "for OCCLUSIONMAP as " << name << std::endl;
+
+        Texture* texture = new Texture();
+        texture->load(image.width, image.height, image.component, image.bits, &image.image.at(0));
+        if (!_uniforms.addTexture(name, texture)) {
+            delete texture;
+        }
+        mat.addDefine("MATERIAL_OCCLUSIONMAP", name);
+
+        if (_material.occlusionTexture.strength != 1.0)
+            mat.addDefine("MATERIAL_OCCLUSIONMAP_STRENGTH", _material.occlusionTexture.strength);
+    }
 
     return mat;
 }
@@ -241,7 +328,7 @@ void extractMesh(const tinygltf::Model& _model, const tinygltf::Mesh& _mesh, Uni
             if ( _verbose )
                 std::cout << "    . Compute tangents" << std::endl;
 
-        Material mat = extractMaterial( _model, _model.materials[primitive.material], _uniforms );
+        Material mat = extractMaterial( _model, _model.materials[primitive.material], _uniforms, _verbose );
 
         _models.push_back( new Model(_mesh.name, mesh, mat) );
     }

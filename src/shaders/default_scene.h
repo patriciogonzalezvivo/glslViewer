@@ -97,6 +97,9 @@ varying mat3    v_tangentToWorld;
 varying vec4    v_tangent;
 #endif
 
+// #define MATERIAL_ANISOTROPY 0.9
+// #define MATERIAL_ANISOTROPY_DIRECTION vec3(0.2, 0.4, 0.23)
+
 // #define DIFFUSE_BURLEY
 // #define DIFFUSE_LAMBERT
 // #define DIFFUSE_ORENNAYAR
@@ -105,14 +108,7 @@ varying vec4    v_tangent;
 // #define SPECULAR_COOKTORRANCE
 // #define SPECULAR_PHONG
 // #define SPECULAR_BLINNPHONG
-// #define TONEMAP_FNC tonemap_linear
-// #define TONEMAP_FNC tonemap_reinhard
-// #define TONEMAP_FNC tonemap_unreal
-// #define TONEMAP_FNC tonemap_ACES
-// #define TONEMAP_FNC tonemap_ACES_rec2020_1k
-// #define TONEMAP_FNC tonemap_displayRange
-// #define MATERIAL_ANISOTROPY 0.9
-// #define MATERIAL_ANISOTROPY_DIRECTION vec3(0.2, 0.4, 0.23)
+// #define LIGHT_SHADOWMAP_BIAS 0.005
 
 #ifndef TONEMAP_FNC
 #define TONEMAP_FNC tonemap_reinhard
@@ -165,6 +161,11 @@ float linear2gamma(in float v) {
 #endif
 }
 #endif
+
+
+
+
+
 
 #ifndef HEADER_LIGHT
 #define HEADER_LIGHT
@@ -219,6 +220,10 @@ float textureShadow() {
 #endif
 
 
+#ifndef LIGHT_SHADOWMAP_BIAS
+#define LIGHT_SHADOWMAP_BIAS 0.005
+#endif
+
 #ifndef FNC_TEXTURESHADOWLERP
 #define FNC_TEXTURESHADOWLERP
 
@@ -239,8 +244,7 @@ float textureShadowLerp(sampler2D depths, vec2 size, vec2 uv, float compare){
 
 float textureShadowLerp(vec3 lightcoord) {
 #if defined(LIGHT_SHADOWMAP) && defined(LIGHT_SHADOWMAP_SIZE)
-    float bias = 0.005;
-    return textureShadowLerp(LIGHT_SHADOWMAP, vec2(LIGHT_SHADOWMAP_SIZE), lightcoord.xy, lightcoord.z - bias);
+    return textureShadowLerp(LIGHT_SHADOWMAP, vec2(LIGHT_SHADOWMAP_SIZE), lightcoord.xy, lightcoord.z - LIGHT_SHADOWMAP_BIAS);
 #else
     return 1.0;
 #endif
@@ -255,6 +259,10 @@ float textureShadowLerp() {
 #endif
 
 
+#ifndef LIGHT_SHADOWMAP_BIAS
+#define LIGHT_SHADOWMAP_BIAS 0.005
+#endif
+
 #ifndef FNC_TEXTURESHADOWPCF
 #define FNC_TEXTURESHADOWPCF
 
@@ -263,7 +271,7 @@ float textureShadowPCF(sampler2D depths, vec2 size, vec2 uv, float compare) {
     for(int x=-2; x<=2; x++){
         for(int y=-2; y<=2; y++){
             vec2 off = vec2(x,y)/size;
-            // result += sampleShadow(depths, uv+off, compare);
+            // result += textureShadow(depths, uv+off, compare);
             result += textureShadowLerp(depths, size, uv+off, compare);
         }
     }
@@ -272,8 +280,7 @@ float textureShadowPCF(sampler2D depths, vec2 size, vec2 uv, float compare) {
 
 float textureShadowPCF(vec3 lightcoord) {
 #if defined(LIGHT_SHADOWMAP) && defined(LIGHT_SHADOWMAP_SIZE)
-    float bias = 0.005;
-    return textureShadowPCF(LIGHT_SHADOWMAP, vec2(LIGHT_SHADOWMAP_SIZE), lightcoord.xy, lightcoord.z - bias);
+    return textureShadowPCF(LIGHT_SHADOWMAP, vec2(LIGHT_SHADOWMAP_SIZE), lightcoord.xy, lightcoord.z - LIGHT_SHADOWMAP_BIAS);
 #else
     return 1.0;
 #endif
@@ -480,6 +487,32 @@ vec3 materialEmissive() {
 
 
 
+#ifndef FNC_MATERIAL_OCCLUSION
+#define FNC_MATERIAL_OCCLUSION
+
+#ifdef MATERIAL_OCCLUSIONMAP
+uniform sampler2D MATERIAL_OCCLUSIONMAP;
+#endif
+
+float materialOcclusion() {
+    float occlusion = 1.0;
+
+#if defined(MATERIAL_OCCLUSIONMAP) && defined(MODEL_VERTEX_TEXCOORD)
+    vec2 uv = v_texcoord.xy;
+    occlusion = texture2D(MATERIAL_OCCLUSIONMAP, uv).r;
+#endif
+
+#if defined(MATERIAL_OCCLUSIONMAP_STRENGTH)
+    occlusion *= MATERIAL_OCCLUSIONMAP_STRENGTH;
+#endif
+
+    return occlusion;
+}
+
+#endif
+
+
+
 #ifndef FNC_MATERIAL_NORMAL
 #define FNC_MATERIAL_NORMAL
 
@@ -563,6 +596,11 @@ float toMetallic(vec3 diffuse, vec3 specular) {
 #ifdef MATERIAL_METALLICMAP
 uniform sampler2D MATERIAL_METALLICMAP;
 #endif
+
+#if defined(MATERIAL_METALLICROUGHNESSMAP) && !defined(MATERIAL_METALLICROUGHNESSMAP_UNIFORM)
+#define MATERIAL_METALLICROUGHNESSMAP_UNIFORM
+uniform sampler2D MATERIAL_METALLICROUGHNESSMAP;
+#endif
     
 float materialMetallic() {
     float metallic = 0.0;
@@ -575,7 +613,11 @@ float materialMetallic() {
     #if defined(MATERIAL_METALLICMAP_SCALE)
     uv *= (MATERIAL_METALLICMAP_SCALE).xy;
     #endif
-    metallic = texture2D(MATERIAL_METALLICMAP, uv).r;
+    metallic = texture2D(MATERIAL_METALLICMAP, uv).b;
+
+#elif defined(MATERIAL_METALLICROUGHNESSMAP) && defined(MODEL_VERTEX_TEXCOORD)
+    vec2 uv = v_texcoord.xy;
+    metallic = texture2D(MATERIAL_METALLICROUGHNESSMAP, uv).b;
 
 #elif defined(MATERIAL_METALLIC)
     metallic = MATERIAL_METALLIC;
@@ -600,6 +642,11 @@ float materialMetallic() {
 uniform sampler2D MATERIAL_ROUGHNESSMAP;
 #endif
 
+#if defined(MATERIAL_METALLICROUGHNESSMAP) && !defined(MATERIAL_METALLICROUGHNESSMAP_UNIFORM)
+#define MATERIAL_METALLICROUGHNESSMAP_UNIFORM
+uniform sampler2D MATERIAL_METALLICROUGHNESSMAP;
+#endif
+
 float materialRoughness() {
     float roughness = 0.1;
 
@@ -611,7 +658,11 @@ float materialRoughness() {
     #if defined(MATERIAL_ROUGHNESSMAP_SCALE)
     uv *= (MATERIAL_ROUGHNESSMAP_SCALE).xy;
     #endif
-    roughness = texture2D(MATERIAL_ROUGHNESSMAP, uv).r;
+    roughness = texture2D(MATERIAL_ROUGHNESSMAP, uv).g;
+
+#elif defined(MATERIAL_METALLICROUGHNESSMAP) && defined(MODEL_VERTEX_TEXCOORD)
+    vec2 uv = v_texcoord.xy;
+    roughness = texture2D(MATERIAL_METALLICROUGHNESSMAP, uv).g;
 
 #elif defined(MATERIAL_ROUGHNESS)
     roughness = MATERIAL_ROUGHNESS;
@@ -675,10 +726,10 @@ struct Material {
 
     float   ambientOcclusion;
 
-#ifdef MATERIAL_CLEARCOAT_THICKNESS
+#if defined(MATERIAL_CLEARCOAT_THICKNESS)
     float   clearCoat;
     float   clearCoatRoughness;
-    #ifdef MATERIAL_CLEARCOAT_THICKNESS_NORMAL
+    #if defined(MATERIAL_CLEARCOAT_THICKNESS_NORMAL)
     vec3    clearCoatNormal;
     #endif
 #endif
@@ -716,7 +767,7 @@ void initMaterial(out Material _mat) {
     _mat.metallic = materialMetallic();
 
     _mat.reflectance = 0.5;
-    _mat.ambientOcclusion = 1.0;
+    _mat.ambientOcclusion = materialOcclusion();
 
 #if defined(MATERIAL_CLEARCOAT_THICKNESS)
     _mat.clearCoat = MATERIAL_CLEARCOAT_THICKNESS;
@@ -833,6 +884,7 @@ float luminance(const vec4 linear) {
 }
 #endif
 
+
 #ifndef TONEMAP_FNC
     #ifdef TARGET_MOBILE
         #ifdef HAS_HARDWARE_CONVERSION_FUNCTION
@@ -910,10 +962,89 @@ vec3 tonemap_ACES_rec2020_1k(const vec3 x) {
     return (x * (a * x + b)) / (x * (c * x + d) + e);
 }
 
-vec3 tonemap(const vec3 x) { return TONEMAP_FNC(x); }
-vec3 tonemap(const vec4 x) { return TONEMAP_FNC(x.xyz); }
+//------------------------------------------------------------------------------
+// Debug tone-mapping operators, for LDR output
+//------------------------------------------------------------------------------
+
+/**
+ * Converts the input HDR RGB color into one of 16 debug colors that represent
+ * the pixel's exposure. When the output is cyan, the input color represents
+ * middle gray (18% exposure). Every exposure stop above or below middle gray
+ * causes a color shift.
+ *
+ * The relationship between exposures and colors is:
+ *
+ * -5EV  - black
+ * -4EV  - darkest blue
+ * -3EV  - darker blue
+ * -2EV  - dark blue
+ * -1EV  - blue
+ *  OEV  - cyan
+ * +1EV  - dark green
+ * +2EV  - green
+ * +3EV  - yellow
+ * +4EV  - yellow-orange
+ * +5EV  - orange
+ * +6EV  - bright red
+ * +7EV  - red
+ * +8EV  - magenta
+ * +9EV  - purple
+ * +10EV - white
+ */
+
+#ifndef PLATFORM_RPI
+vec3 tonemap_displayRange(const vec3 x) {
+
+    // 16 debug colors + 1 duplicated at the end for easy indexing
+    vec3 debugColors[17];
+    debugColors[0] = vec3(0.0, 0.0, 0.0);         // black
+    debugColors[1] = vec3(0.0, 0.0, 0.1647);      // darkest blue
+    debugColors[2] = vec3(0.0, 0.0, 0.3647);      // darker blue
+    debugColors[3] = vec3(0.0, 0.0, 0.6647);      // dark blue
+    debugColors[4] = vec3(0.0, 0.0, 0.9647);      // blue
+    debugColors[5] = vec3(0.0, 0.9255, 0.9255);   // cyan
+    debugColors[6] = vec3(0.0, 0.5647, 0.0);      // dark green
+    debugColors[7] = vec3(0.0, 0.7843, 0.0);      // green
+    debugColors[8] = vec3(1.0, 1.0, 0.0);         // yellow
+    debugColors[9] = vec3(0.90588, 0.75294, 0.0); // yellow-orange
+    debugColors[10] = vec3(1.0, 0.5647, 0.0);      // orange
+    debugColors[11] = vec3(1.0, 0.0, 0.0);         // bright red
+    debugColors[12] = vec3(0.8392, 0.0, 0.0);      // red
+    debugColors[13] = vec3(1.0, 0.0, 1.0);         // magenta
+    debugColors[14] = vec3(0.6, 0.3333, 0.7882);   // purple
+    debugColors[15] = vec3(1.0, 1.0, 1.0);         // white
+    debugColors[16] = vec3(1.0, 1.0, 1.0);         // white
+
+    // The 5th color in the array (cyan) represents middle gray (18%)
+    // Every stop above or below middle gray causes a color shift
+    float v = log2(luminance(x) / 0.18);
+    v = clamp(v + 5.0, 0.0, 15.0);
+    int index = int(v);
+    return mix(debugColors[index], debugColors[index + 1], v - float(index));
+}
+#endif
+
+//------------------------------------------------------------------------------
+// Tone-mapping dispatch
+//------------------------------------------------------------------------------
+
+/**
+ * Tone-maps the specified RGB color. The input color must be in linear HDR and
+ * pre-exposed. Our HDR to LDR tone mapping operators are designed to tone-map
+ * the range [0..~8] to [0..1].
+ */
+vec3 tonemap(const vec3 x) {
+    return TONEMAP_FNC(x);
+}
+
+vec3 tonemap(const vec4 x) {
+    return TONEMAP_FNC(x.xyz);
+}
 
 #endif
+
+
+
 
 #ifndef FNC_FAKECUBE
 #define FNC_FAKECUBE
@@ -929,6 +1060,7 @@ vec3 fakeCube(vec3 _normal) {
 
 #endif
 
+
 #ifndef ENVMAP_MAX_MIP_LEVEL
 #define ENVMAP_MAX_MIP_LEVEL 8.0
 #endif
@@ -941,7 +1073,7 @@ vec3 envMap(vec3 _normal, float _roughness, float _metallic) {
 #if defined(SCENE_CUBEMAP)
     float lod = ENVMAP_MAX_MIP_LEVEL * _roughness;
     return textureCube( SCENE_CUBEMAP, _normal, lod).rgb;
-    
+
 #else
     return fakeCube(_normal, toShininess(_roughness, _metallic));
 
@@ -1024,6 +1156,21 @@ vec3 fresnel(vec3 _R, vec3 _f0, float _NoV) {
 }
 
 #endif
+
+
+
+// #define SPECULAR_BLINNPHONG
+// #define SPECULAR_PHONG
+// #define SPECULAR_GGX
+// #define SPECULAR_BLECKMANN
+// #define SPECULAR_GAUSSIAN
+// #define SPECULAR_COOKTORRANCE
+// #define DIFFUSE_BURLEY
+// #define DIFFUSE_ORENNAYAR
+// #define DIFFUSE_LAMBERT
+
+
+
 
 #ifndef SPECULAR_POW
 #ifdef TARGET_MOBILE
@@ -1551,16 +1698,15 @@ vec4 pbr(const Material _mat) {
 
 #endif
 
-
 void main(void) {
     Material mat = MaterialInit();
 
     // vec2 st = gl_FragCoord.xy/u_resolution.xy;
     // mat.metallic = step(0.5, st.y);
     // mat.roughness = step(0.5, st.x);
-    // mat.ambientOcclusion = v_color.r;
-
+    
     gl_FragColor = pbr(mat);
 }
+
 
 )";
