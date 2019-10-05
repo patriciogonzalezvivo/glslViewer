@@ -4,15 +4,18 @@
 #include "glm/gtc/matrix_access.hpp"
 
 #include "tools/geom.h"
+#include "tools/text.h"
 
 Node::Node(): 
     bChange(true),
     m_transformMatrix(1.0), 
-    m_position(0.0), 
+    m_position(0.0),
+    m_orientation(1.0, 0.0, 0.0, 0.0),
     m_scale(1.0) {
-    setPosition(glm::vec3(0.0));
-    setOrientation(glm::vec3(0.0));
-    setScale(glm::vec3(1.));
+    // setPosition(glm::vec3(0.0));
+    // setOrientation(glm::quat(1.0, 0.0, 0.0, 0.0));
+    // setScale(glm::vec3(1.));
+    createMatrix();
 }
 
 Node::~Node() {
@@ -217,6 +220,14 @@ void Node::apply(const glm::mat4& _m) {
 void Node::reset(){
     setPosition(glm::vec3(0.0));
     setOrientation(glm::vec3(0.0));
+}
+
+
+void Node::print() {
+    std::cout << "Scale     : " << toString(m_scale) << std::endl;
+    // std::cout << "Rotation  : " << toString(m_orientation) << std::endl;
+    std::cout << "Translate : " << toString(m_position) << std::endl;
+    // std::cout << toString(m_transformMatrix) << std::endl;
 }
 
 void Node::createMatrix() {

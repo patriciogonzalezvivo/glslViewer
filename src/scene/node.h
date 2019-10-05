@@ -56,6 +56,7 @@ public:
     virtual void        apply(const glm::mat4& _m);
 
     virtual void        reset();
+    virtual void        print();
 
     bool    bChange;
 

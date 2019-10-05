@@ -363,11 +363,6 @@ void extractNodes(const tinygltf::Model& _model, const tinygltf::Node& _node, No
                                         _node.matrix[4],  _node.matrix[5],  _node.matrix[6],  _node.matrix[7],
                                         _node.matrix[8],  _node.matrix[9],  _node.matrix[10], _node.matrix[11],
                                         _node.matrix[12], _node.matrix[13], _node.matrix[14], _node.matrix[15]) );
-        // _currentProps.apply( glm::mat4( _node.matrix[0],  _node.matrix[4],  _node.matrix[8],  _node.matrix[12],
-        //                                 _node.matrix[1],  _node.matrix[5],  _node.matrix[9],  _node.matrix[13],
-        //                                 _node.matrix[2],  _node.matrix[6],  _node.matrix[10], _node.matrix[14],
-        //                                 _node.matrix[3],  _node.matrix[7],  _node.matrix[11], _node.matrix[15]) );
-
 
     if (_node.mesh >= 0)
         extractMesh(_model, _model.meshes[ _node.mesh ], _currentProps, _uniforms, _models, _verbose);

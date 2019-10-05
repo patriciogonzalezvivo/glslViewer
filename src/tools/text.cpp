@@ -40,11 +40,11 @@ std::string purifyString(const std::string& _string) {
     return std;
 }
 
-bool isDigit(const std::string &_string) {
+bool isDigit(const std::string& _string) {
   return _string.find_first_not_of( "0123456789" ) == std::string::npos;
 }
 
-bool isFloat(const std::string &_string) {
+bool isFloat(const std::string& _string) {
     std::istringstream iss(_string);
     float dummy;
     iss >> std::skipws >> dummy;
@@ -63,28 +63,28 @@ bool isFloat(const std::string &_string) {
 }
 
 //---------------------------------------- Conversions
-int toInt(const std::string &_string) {
+int toInt(const std::string& _string) {
     int x = 0;
     std::istringstream cur(_string);
     cur >> x;
     return x;
 }
 
-float toFloat(const std::string &_string) {
+float toFloat(const std::string& _string) {
     float x = 0;
     std::istringstream cur(_string);
     cur >> x;
     return x;
 }
 
-double toDouble(const std::string &_string) {
+double toDouble(const std::string& _string) {
     double x = 0;
     std::istringstream cur(_string);
     cur >> x;
     return x;
 }
 
-bool toBool(const std::string &_string) {
+bool toBool(const std::string& _string) {
     static const std::string trueString = "true";
     static const std::string falseString = "false";
 
@@ -103,7 +103,7 @@ bool toBool(const std::string &_string) {
     return x;
 }
 
-char toChar(const std::string &_string) {
+char toChar(const std::string& _string) {
     char x = '\0';
     std::istringstream cur(_string);
     cur >> x;
@@ -116,14 +116,14 @@ std::string toString(bool _bool) {
     return strStream.str();
 }
 
-std::string toString(const glm::vec2 &_vec, char _sep) {
+std::string toString(const glm::vec2& _vec, char _sep) {
     std::ostringstream strStream;
     strStream << std::fixed << std::setprecision(3) << _vec.x << _sep;
     strStream << std::fixed << std::setprecision(3) << _vec.y;
     return strStream.str();
 }
 
-std::string toString(const glm::vec3 &_vec, char _sep) {
+std::string toString(const glm::vec3& _vec, char _sep) {
     std::ostringstream strStream;
     strStream << std::fixed << std::setprecision(3) << _vec.x << _sep;
     strStream << std::fixed << std::setprecision(3) << _vec.y << _sep; 
@@ -131,12 +131,30 @@ std::string toString(const glm::vec3 &_vec, char _sep) {
     return strStream.str();
 }
 
-std::string toString(const glm::vec4 &_vec, char _sep) {
+std::string toString(const glm::vec4& _vec, char _sep) {
     std::ostringstream strStream;
     strStream << std::fixed << std::setprecision(3) << _vec.x << _sep;
     strStream << std::fixed << std::setprecision(3) << _vec.y << _sep;
     strStream << std::fixed << std::setprecision(3) << _vec.z << _sep; 
     strStream << std::fixed << std::setprecision(3) << _vec.w;
+    return strStream.str();
+}
+
+// std::string toString(const glm::quat& _quat, char _sep) {
+//     std::ostringstream strStream;
+//     strStream << std::fixed << std::setprecision(3) << _quat.a << _sep;
+//     strStream << std::fixed << std::setprecision(3) << _quat.x << _sep;
+//     strStream << std::fixed << std::setprecision(3) << _quat.y << _sep; 
+//     strStream << std::fixed << std::setprecision(3) << _quat.z;
+//     return strStream.str();
+// }
+
+std::string toString(const glm::mat4& _mat, char _sep) {
+    std::ostringstream strStream;
+    strStream << _mat[0] << _sep << _mat[4] << _sep << _mat[8]  << _sep << _mat[12] << '\n';
+    strStream << _mat[1] << _sep << _mat[5] << _sep << _mat[9]  << _sep << _mat[13] << '\n';
+    strStream << _mat[2] << _sep << _mat[6] << _sep << _mat[10] << _sep << _mat[14] << '\n'; 
+    strStream << _mat[3] << _sep << _mat[7] << _sep << _mat[11] << _sep << _mat[15] << '\n';
     return strStream.str();
 }
 
@@ -154,7 +172,7 @@ std::istream& operator>>(std::istream& is, glm::vec3& vec) {
     return is;
 }
 
-std::vector<std::string> split(const std::string &_string, char _sep, bool _tolerate_empty) {
+std::vector<std::string> split(const std::string& _string, char _sep, bool _tolerate_empty) {
     std::vector<std::string> tokens;
     std::size_t start = 0, end = 0;
     while ((end = _string.find(_sep, start)) != std::string::npos) {
@@ -169,7 +187,7 @@ std::vector<std::string> split(const std::string &_string, char _sep, bool _tole
     return tokens;
 }
 
-bool beginsWith(const std::string &_stringA, const std::string &_stringB) {
+bool beginsWith(const std::string& _stringA, const std::string& _stringB) {
     for (uint i = 0; i < _stringB.size(); i++) {
         if (_stringB[i] != _stringA[i]) {
             return false;
@@ -208,7 +226,7 @@ bool find_id(const std::string& program, const char* id) {
 }
 
 // Count how many BUFFERS are in the shader
-int count_buffers(const std::string &_source) {
+int count_buffers(const std::string& _source) {
     // Split Source code in lines
     std::vector<std::string> lines = split(_source, '\n');
 
@@ -251,7 +269,7 @@ int count_buffers(const std::string &_source) {
 }
 
 // Count how many BUFFERS are in the shader
-bool check_for_background(const std::string &_source) {
+bool check_for_background(const std::string& _source) {
     // Split Source code in lines
     std::vector<std::string> lines = split(_source, '\n');
 
@@ -268,7 +286,7 @@ bool check_for_background(const std::string &_source) {
 }
 
 // Count how many BUFFERS are in the shader
-bool check_for_floor(const std::string &_source) {
+bool check_for_floor(const std::string& _source) {
     // Split Source code in lines
     std::vector<std::string> lines = split(_source, '\n');
 
@@ -284,7 +302,7 @@ bool check_for_floor(const std::string &_source) {
     return false;
 }
 
-bool check_for_postprocessing(const std::string &_source) {
+bool check_for_postprocessing(const std::string& _source) {
     // Split Source code in lines
     std::vector<std::string> lines = split(_source, '\n');
 

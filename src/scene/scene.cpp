@@ -485,20 +485,11 @@ void Scene::setup(CommandList& _commands, Uniforms& _uniforms) {
     },
     [this]() { return toString(m_camera.getSensitivity()); });
     
-    // MATRIX UNIFORMS
-    _uniforms.functions["u_model"] = UniformFunction("vec3", [this](Shader& _shader) {
-        _shader.setUniform("u_model", m_origin.getPosition());
-    },
-    [this]() { return toString(m_origin.getPosition(), ','); });
-
     _uniforms.functions["u_normalMatrix"] = UniformFunction("mat3", [this](Shader& _shader) {
         _shader.setUniform("u_normalMatrix", m_camera.getNormalMatrix());
     });
 
-    _uniforms.functions["u_modelMatrix"] = UniformFunction("mat4", [this](Shader& _shader) {
-        _shader.setUniform("u_modelMatrix", m_origin.getTransformMatrix() );
-    });
-
+    // MATRIX UNIFORMS
     _uniforms.functions["u_viewMatrix"] = UniformFunction("mat4", [this](Shader& _shader) {
         _shader.setUniform("u_viewMatrix", m_camera.getViewMatrix());
     });
@@ -506,6 +497,17 @@ void Scene::setup(CommandList& _commands, Uniforms& _uniforms) {
     _uniforms.functions["u_projectionMatrix"] = UniformFunction("mat4", [this](Shader& _shader) {
         _shader.setUniform("u_projectionMatrix", m_camera.getProjectionMatrix());
     });
+
+    
+    // _uniforms.functions["u_model"] = UniformFunction("vec3", [this](Shader& _shader) {
+    //     _shader.setUniform("u_model", m_origin.getPosition());
+    // },
+    // [this]() { return toString(m_origin.getPosition(), ','); });
+
+    // _uniforms.functions["u_modelMatrix"] = UniformFunction("mat4", [this](Shader& _shader) {
+    //     _shader.setUniform("u_modelMatrix", m_origin.getTransformMatrix() );
+    // });
+    
 }
 
 void Scene::addDefine(const std::string& _define, const std::string& _value) {
@@ -684,7 +686,7 @@ void Scene::render(Uniforms& _uniforms) {
     glEnable(GL_DEPTH_TEST);
 
     if (m_camera.bChange || m_origin.bChange)
-        m_mvp = m_camera.getProjectionViewMatrix();// * m_origin.getTransformMatrix(); 
+        m_mvp = m_camera.getProjectionViewMatrix() * m_origin.getTransformMatrix(); 
     
     renderFloor(_uniforms, m_mvp);
 
