@@ -13,6 +13,8 @@
 #include "../tools/geom.h"
 #include "../tools/text.h"
 
+#include "glm/gtx/quaternion.hpp"
+
 #define TINYGLTF_IMPLEMENTATION
 #define STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_WRITE_IMPLEMENTATION
@@ -234,9 +236,11 @@ Material extractMaterial(const tinygltf::Model& _model, const tinygltf::Material
     return mat;
 }
 
-void extractMesh(const tinygltf::Model& _model, const tinygltf::Mesh& _mesh, Node _currentProps, Uniforms& _uniforms, Models& _models, bool _verbose) {
+void extractMesh(const tinygltf::Model& _model, const tinygltf::Mesh& _mesh, glm::mat4 _matrix, Uniforms& _uniforms, Models& _models, bool _verbose) {
     if (_verbose)
         std::cout << "  Parsing Mesh " << _mesh.name << std::endl;
+
+    glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(_matrix)));
 
     for (size_t i = 0; i < _mesh.primitives.size(); ++i) {
         if (_verbose)
@@ -258,9 +262,9 @@ void extractMesh(const tinygltf::Model& _model, const tinygltf::Mesh& _mesh, Nod
 
             if (attrib.first.compare("POSITION") == 0)  {
                 for (size_t v = 0; v < accessor.count; v++) {
-                    glm::vec3 pos;
+                    glm::vec4 pos = glm::vec4(1.0);
                     extractVertexData(v, &buffer.data.at(bufferView.byteOffset + accessor.byteOffset), accessor.componentType, accessor.type, accessor.normalized, byteStride, &pos[0], 3);
-                    mesh.addVertex(pos);
+                    mesh.addVertex( glm::vec3(_matrix * pos) );
                 }
             }
 
@@ -276,7 +280,7 @@ void extractMesh(const tinygltf::Model& _model, const tinygltf::Mesh& _mesh, Nod
                 for (size_t v = 0; v < accessor.count; v++) {
                     glm::vec3 nor;
                     extractVertexData(v, &buffer.data.at(bufferView.byteOffset + accessor.byteOffset), accessor.componentType, accessor.type, accessor.normalized, byteStride, &nor[0], 3);
-                    mesh.addNormal(nor);
+                    mesh.addNormal( normalize(normalMatrix * nor) );
                 }
             }
 
@@ -336,36 +340,44 @@ void extractMesh(const tinygltf::Model& _model, const tinygltf::Mesh& _mesh, Nod
 
         Material mat = extractMaterial( _model, _model.materials[primitive.material], _uniforms, _verbose );
 
-        Model* m = new Model(_mesh.name, mesh, mat); 
-        m->setProperties(_currentProps);
-        _models.push_back( m );
+        // Model* m = new Model(_mesh.name, mesh, mat); 
+        // m->apply( _currentProps.getTransformMatrix() );
+        // _models.push_back( m );
 
-        // _models.push_back( new Model(_mesh.name, mesh, mat) );
+        _models.push_back( new Model(_mesh.name, mesh, mat) );
     }
 };
 
 // bind models
-void extractNodes(const tinygltf::Model& _model, const tinygltf::Node& _node, Node _currentProps, Uniforms& _uniforms, Models& _models, bool _verbose) {
+void extractNodes(const tinygltf::Model& _model, const tinygltf::Node& _node, glm::mat4 _matrix, Uniforms& _uniforms, Models& _models, bool _verbose) {
     if (_verbose)
         std::cout << "Entering node " << _node.name << std::endl;
 
+    glm::mat4 R = glm::mat4(1.0);
+    glm::mat4 S = glm::mat4(1.0);
+    glm::mat4 T = glm::mat4(1.0);
+
     if (_node.rotation.size() > 0)
-        _currentProps.rotate( glm::quat(_node.rotation[0], _node.rotation[1], _node.rotation[2], _node.rotation[3]) );
+        R = glm::mat4_cast( glm::quat(_node.rotation[1], _node.rotation[2], _node.rotation[3], _node.rotation[0]) );
 
     if (_node.scale.size() > 0)
-        _currentProps.scale( glm::vec3(_node.scale[0], _node.scale[1], _node.scale[2]) );
+        S = glm::scale(S, glm::vec3(_node.scale[0], _node.scale[1], _node.scale[2]) );
 
     if (_node.translation.size() > 0)
-        _currentProps.translate( glm::vec3(_node.translation[0], _node.translation[1], _node.translation[2]) );
+        T = glm::translate(T, glm::vec3(_node.translation[0], _node.translation[1], _node.translation[2]) );
+
+    glm::mat4 localMatrix = T * R * S; 
 
     if (_node.matrix.size() > 0)
-        _currentProps.apply( glm::mat4( _node.matrix[0],  _node.matrix[1],  _node.matrix[2],  _node.matrix[3],
-                                        _node.matrix[4],  _node.matrix[5],  _node.matrix[6],  _node.matrix[7],
-                                        _node.matrix[8],  _node.matrix[9],  _node.matrix[10], _node.matrix[11],
-                                        _node.matrix[12], _node.matrix[13], _node.matrix[14], _node.matrix[15]) );
+        localMatrix = glm::mat4(_node.matrix[0],  _node.matrix[1],  _node.matrix[2],  _node.matrix[3],
+                                _node.matrix[4],  _node.matrix[5],  _node.matrix[6],  _node.matrix[7],
+                                _node.matrix[8],  _node.matrix[9],  _node.matrix[10], _node.matrix[11],
+                                _node.matrix[12], _node.matrix[13], _node.matrix[14], _node.matrix[15]);
+
+    _matrix = _matrix * localMatrix;
 
     if (_node.mesh >= 0)
-        extractMesh(_model, _model.meshes[ _node.mesh ], _currentProps, _uniforms, _models, _verbose);
+        extractMesh(_model, _model.meshes[ _node.mesh ], _matrix, _uniforms, _models, _verbose);
 
     if (_node.camera >= 0)
         if (_verbose)
@@ -373,7 +385,7 @@ void extractNodes(const tinygltf::Model& _model, const tinygltf::Node& _node, No
         // TODO extract camera
     
     for (size_t i = 0; i < _node.children.size(); i++) {
-        extractNodes(_model, _model.nodes[ _node.children[i] ], _currentProps, _uniforms, _models, _verbose);
+        extractNodes(_model, _model.nodes[ _node.children[i] ], _matrix, _uniforms, _models, _verbose);
     }
 };
 
@@ -386,10 +398,9 @@ bool loadGLTF(Uniforms& _uniforms, WatchFileList& _files, Materials& _materials,
         return false;
     }
 
-    Node    root;
     const tinygltf::Scene &scene = model.scenes[model.defaultScene];
     for (size_t i = 0; i < scene.nodes.size(); ++i) {
-        extractNodes(model, model.nodes[scene.nodes[i]], root, _uniforms, _models, _verbose);
+        extractNodes(model, model.nodes[scene.nodes[i]], glm::mat4(1.0), _uniforms, _models, _verbose);
     }
 
     return true;

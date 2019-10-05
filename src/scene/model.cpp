@@ -131,7 +131,7 @@ void Model::render(Uniforms& _uniforms, const glm::mat4& _viewProjectionMatrix) 
         _uniforms.feedTo( m_shader);
 
         // Pass special uniforms
-        m_shader.setUniform( "u_modelViewProjectionMatrix", _viewProjectionMatrix * getTransformMatrix() );
+        m_shader.setUniform( "u_modelViewProjectionMatrix", _viewProjectionMatrix);
         render( &m_shader );
     }
 }
