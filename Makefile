@@ -30,7 +30,7 @@ endif
 $(info ${PLATFORM} platform with $(DRIVER) drivers)
 
 INCLUDES +=	-Isrc/ -Iinclude/
-CFLAGS += -Wall -O3 -std=c++11 -fpermissive
+CFLAGS += -Wall -Wno-psabi -O3 -std=c++11 -fpermissive
 
 ifeq ($(DRIVER),vc)
 	CFLAGS += -DGLM_FORCE_CXX98 -DPLATFORM_RPI
@@ -47,7 +47,7 @@ ifeq ($(DRIVER),vc)
 		LDFLAGS += -lbrcmGLESv2 -lbrcmEGL
 	endif
 else ifeq ($(DRIVER),gbm)
-	CFLAGS += -DPLATFORM_RPI4 -Wno-psabi
+	CFLAGS += -DPLATFORM_RPI4 
 	INCLUDES += -I/usr/include/libdrm \
 				-I/usr/include/GLES2
 	LDFLAGS +=  -lGLESv2 -lEGL \

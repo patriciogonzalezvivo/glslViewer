@@ -13,7 +13,7 @@ Node::Node():
     m_orientation(1.0, 0.0, 0.0, 0.0),
     m_scale(1.0) {
     // setPosition(glm::vec3(0.0));
-    // setOrientation(glm::quat(1.0, 0.0, 0.0, 0.0));
+    setOrientation(glm::vec3(0.0));
     // setScale(glm::vec3(1.));
     createMatrix();
 }
@@ -199,22 +199,25 @@ void Node::orbit(float _lat, float _lon, float _radius, const glm::vec3& _center
 }
 
 void Node::apply(const glm::mat4& _m) {
-    glm::vec3 scale;
-    glm::quat rotation;
-    glm::vec3 translation;
-    glm::vec3 skew;
-    glm::vec4 perspective;
-    glm::decompose( _m, scale, rotation, translation, skew, perspective );
+    m_transformMatrix = m_transformMatrix * _m;
+    setTransformMatrix(m_transformMatrix);
 
-    m_scale *= scale;
-    m_orientation *= rotation;
-    m_position += translation;
+    // glm::vec3 scale;
+    // glm::quat rotation;
+    // glm::vec3 translation;
+    // glm::vec3 skew;
+    // glm::vec4 perspective;
+    // glm::decompose( _m, scale, rotation, translation, skew, perspective );
 
-    createMatrix();
+    // m_scale *= scale;
+    // m_orientation *= rotation;
+    // m_position += translation;
 
-    onPositionChanged();
-    onOrientationChanged();
-    onScaleChanged();
+    // createMatrix();
+
+    // onPositionChanged();
+    // onOrientationChanged();
+    // onScaleChanged();
 }
 
 void Node::reset(){
