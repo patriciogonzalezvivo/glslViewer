@@ -164,27 +164,30 @@ bool Texture::load(int _width, int _height, int _component, int _bits, const uns
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
     GLenum format = GL_RGBA;
-    if (_component == 3) {
+    if (_component == 4) {
+        format = GL_RGBA;
+    }
+    else if (_component == 3) {
         format = GL_RGB;
     }
 #if !defined(PLATFORM_RPI) && !defined(PLATFORM_RPI4)
-    else if (_component == 1) {
-        format = GL_RED;
-    } 
     else if (_component == 2) {
         format = GL_RG;
     } 
+    else if (_component == 1) {
+        format = GL_RED;
+    }
 #endif
     else
         std::cout << "Unrecognize GLenum format " << _component << std::endl;
 
     GLenum type = GL_UNSIGNED_BYTE;
-    if (_bits == 8) {
-        // ok
-    } 
-    else if (_bits == 16) {
+    if (_bits == 16) {
         type = GL_UNSIGNED_SHORT;
     } 
+    else if (_bits == 8) {
+        type = GL_UNSIGNED_BYTE;
+    }
     else 
         std::cout << "Unrecognize GLenum type for " << _bits << " bits" << std::endl;
 

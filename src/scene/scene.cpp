@@ -77,14 +77,6 @@ void Scene::clear() {
 }
 
 void Scene::setup(CommandList& _commands, Uniforms& _uniforms) {
-    // Set up camera
-    m_camera.setViewport(getWindowWidth(), getWindowHeight());
-    m_camera.setPosition(glm::vec3(0.0,0.0,-3.));
-
-    // Setup light
-    if (_uniforms.lights.size() == 0)
-        _uniforms.lights.push_back( Light( glm::vec3(0.0,100.0,100.0), -1.0 ) );
-
     // ADD COMMANDS
     // ----------------------------------------- 
     _commands.push_back(Command("model", [&](const std::string& _line){ 
@@ -630,7 +622,14 @@ bool Scene::loadGeometry(Uniforms& _uniforms, WatchFileList& _files, int _index,
     m_floor_height = min_v.y;
 
     // set the right distance to the camera
-    m_camera.setDistance( m_area * 2.0 );
+    // Set up camera
+    m_camera.setViewport(getWindowWidth(), getWindowHeight());
+    m_camera.setPosition(glm::vec3(0.0,0.0,-m_area * 2.0));
+    // m_camera.setDistance( m_area * 2.0 );
+
+        // Setup light
+    if (_uniforms.lights.size() == 0)
+        _uniforms.lights.push_back( Light( glm::vec3(0.0,m_area*100.0,m_area*100.0), -1.0 ) );
 
     return true;
 }
@@ -685,7 +684,7 @@ void Scene::render(Uniforms& _uniforms) {
     glEnable(GL_DEPTH_TEST);
 
     if (m_camera.bChange || m_origin.bChange)
-        m_mvp = m_camera.getProjectionViewMatrix() * m_origin.getTransformMatrix(); 
+        m_mvp = m_camera.getProjectionViewMatrix();// * m_origin.getTransformMatrix(); 
     
     renderFloor(_uniforms, m_mvp);
 

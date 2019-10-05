@@ -1603,12 +1603,12 @@ void lightPoint(vec3 _diffuseColor, vec3 _specularColor, vec3 _N, vec3 _V, float
     float dif = diffuse(s, _N, _V, _NoV, NoL, _roughness) * ONE_OVER_PI;
     float spec = specular(s, _N, _V, _NoV, NoL, _roughness, _f0);
 
-    float falloff = 1.0;
+    float fall = 1.0;
     if (u_lightFalloff > 0.0)
-        falloff = falloff(length(u_light - v_position.xyz), u_lightFalloff);
+        fall = falloff(length(u_light - v_position.xyz), u_lightFalloff);
     
-    _diffuse = u_lightIntensity * (_diffuseColor * u_lightColor * dif * falloff);
-    _specular = u_lightIntensity * (_specularColor * u_lightColor * spec * falloff);
+    _diffuse = u_lightIntensity * (_diffuseColor * u_lightColor * dif * fall);
+    _specular = u_lightIntensity * (_specularColor * u_lightColor * spec * fall);
 }
 
 #endif

@@ -19,6 +19,18 @@ Node::~Node() {
 
 }
 
+void Node::setProperties(const Node& _other) {
+    m_scale = _other.getScale();
+    m_position = _other.getPosition();
+    m_orientation = _other.getOrientationQuat();
+
+    createMatrix();
+
+    onPositionChanged();
+    onOrientationChanged();
+    onScaleChanged();
+}
+
 void Node::setTransformMatrix(const glm::mat4& _m) {
     m_transformMatrix = _m;
 
@@ -115,22 +127,28 @@ const glm::mat4& Node::getTransformMatrix() const {
     return m_transformMatrix;
 }
 
-void Node::move(const glm::vec3& _offset) {
+void Node::scale(const glm::vec3& _scale) {
+    m_scale *= _scale;
+    createMatrix();
+    onScaleChanged();
+}
+
+void Node::translate(const glm::vec3& _offset) {
     m_position += _offset;
     m_transformMatrix = glm::translate(m_transformMatrix, m_position);
     onPositionChanged();
 }
 
 void Node::truck(float _amount) {
-    move(getXAxis() * _amount);
+    translate(getXAxis() * _amount);
 }
 
 void Node::boom(float _amount) {
-    move(getYAxis() * _amount);
+    translate(getYAxis() * _amount);
 }
 
 void Node::dolly(float _amount) {
-    move(getZAxis() * _amount);
+    translate(getZAxis() * _amount);
 }
 
 void Node::tilt(float _degrees) {
@@ -147,14 +165,12 @@ void Node::roll(float _degrees) {
 
 void Node::rotate(const glm::quat& _q) {
     m_orientation *= _q;
-
     createMatrix();
     onOrientationChanged();
 }
 
 void Node::rotateAround(const glm::quat& _q, const glm::vec3& _point) {
     setPosition( (getPosition() - _point) * _q + _point);
-
     onOrientationChanged();
     onPositionChanged();
 }
@@ -179,6 +195,25 @@ void Node::orbit(float _lat, float _lon, float _radius, const glm::vec3& _center
     lookAt(_centerPoint);
 }
 
+void Node::apply(const glm::mat4& _m) {
+    glm::vec3 scale;
+    glm::quat rotation;
+    glm::vec3 translation;
+    glm::vec3 skew;
+    glm::vec4 perspective;
+    glm::decompose( _m, scale, rotation, translation, skew, perspective );
+
+    m_scale *= scale;
+    m_orientation *= rotation;
+    m_position += translation;
+
+    createMatrix();
+
+    onPositionChanged();
+    onOrientationChanged();
+    onScaleChanged();
+}
+
 void Node::reset(){
     setPosition(glm::vec3(0.0));
     setOrientation(glm::vec3(0.0));
@@ -186,7 +221,7 @@ void Node::reset(){
 
 void Node::createMatrix() {
     m_transformMatrix = glm::scale(m_scale);
-    m_transformMatrix = glm::toMat4(m_orientation)*m_transformMatrix;
+    m_transformMatrix = glm::toMat4(m_orientation) * m_transformMatrix;
     m_transformMatrix = glm::translate(m_transformMatrix, m_position);
 
     updateAxis();

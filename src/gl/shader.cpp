@@ -146,16 +146,16 @@ GLuint Shader::compileShader(const std::string& _src, GLenum _type, bool _verbos
         prolog += "#define " + it->first + " " + it->second + '\n';
     }
 
-    if (_verbose) {
-        if (_type == GL_VERTEX_SHADER) {
-            std::cout << "// ---------- Vertex Shader" << std::endl;
-        }
-        else {
-            std::cout << "// ---------- Fragment Shader" << std::endl;
-        }
-        std::cout << prolog << std::endl;
-        std::cout << _src << std::endl;
-    }
+    // if (_verbose) {
+    //     if (_type == GL_VERTEX_SHADER) {
+    //         std::cout << "// ---------- Vertex Shader" << std::endl;
+    //     }
+    //     else {
+    //         std::cout << "// ---------- Fragment Shader" << std::endl;
+    //     }
+    //     std::cout << prolog << std::endl;
+    //     std::cout << _src << std::endl;
+    // }
 
     prolog += "#line 0\n";
 

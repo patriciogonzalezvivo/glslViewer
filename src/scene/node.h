@@ -11,6 +11,8 @@ public:
     Node();
     virtual ~Node();
 
+    virtual void        setProperties(const Node& _other);
+
     virtual void        setTransformMatrix(const glm::mat4& _m);
     virtual void        setPosition(const glm::vec3& _pos);
     virtual void        setOrientation(const glm::vec3& _ori);
@@ -35,7 +37,8 @@ public:
 
     virtual const glm::mat4& getTransformMatrix() const;
 
-    virtual void        move(const glm::vec3& _offset);
+    virtual void        scale(const glm::vec3& _scale);
+    virtual void        translate(const glm::vec3& _offset);
 
     virtual void        truck(float _amount);
     virtual void        boom(float _amount);
@@ -49,6 +52,9 @@ public:
     virtual void        rotateAround(const glm::quat& _q, const glm::vec3& _point);
     virtual void        lookAt(const glm::vec3& _lookAtPosition, glm::vec3 _upVector = glm::vec3(0.0, 1.0, 0.0));
     virtual void        orbit(float _longitude, float _latitude, float _radius, const glm::vec3& _centerPoint = glm::vec3(0.0));
+
+    virtual void        apply(const glm::mat4& _m);
+
     virtual void        reset();
 
     bool    bChange;
