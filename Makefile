@@ -8,22 +8,26 @@ OBJECTS := $(SOURCES:.cpp=.o)
 PLATFORM = $(shell uname)
 DRIVER ?= not_defined
 
-ifeq ($(DRIVER),not_defined)
-	ifneq ("$(wildcard /opt/vc/include/bcm_host.h)","")
-		ifeq ($(shell cat /proc/cpuinfo | grep 'Revision' | awk '{print $$3}' ), c03111)
-			PLATFORM = RPI4
+ifneq ("$(wildcard /opt/vc/include/bcm_host.h)","")
+	ifeq ($(shell cat /proc/cpuinfo | grep 'Revision' | awk '{print $$3}' ), c03111)
+		PLATFORM = RPI4
+		ifeq ($(DRIVER),not_defined)
 			DRIVER = gbm
-		else
-			PLATFORM = RPI
-			DRIVER = vc
 		endif
 	else
-		PLATFORM = $(shell uname)
+		PLATFORM = RPI
+		ifeq ($(DRIVER),not_defined)
+			DRIVER = vc
+		endif
+	endif
+else
+	PLATFORM = $(shell uname)
+	ifeq ($(DRIVER),not_defined)
 		DRIVER = glfw
 	endif
 endif
 
-$(info Platform ${PLATFORM})
+$(info ${PLATFORM} platform with $(DRIVER) drivers)
 
 INCLUDES +=	-Isrc/ -Iinclude/
 CFLAGS += -Wall -O3 -std=c++11 -fpermissive
@@ -43,7 +47,7 @@ ifeq ($(DRIVER),vc)
 		LDFLAGS += -lbrcmGLESv2 -lbrcmEGL
 	endif
 else ifeq ($(DRIVER),gbm)
-	CFLAGS += -DPLATFORM_RPI4
+	CFLAGS += -DPLATFORM_RPI4 -Wno-psabi
 	INCLUDES += -I/usr/include/libdrm \
 				-I/usr/include/GLES2
 	LDFLAGS +=  -lGLESv2 -lEGL \

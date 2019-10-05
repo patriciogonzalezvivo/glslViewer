@@ -243,7 +243,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
             return true;
         }
         else if (values.size() == 5) {
-            int i = toInt(values[1]);
+            unsigned int i = toInt(values[1]);
             if (uniforms.lights.size() > i) 
                 uniforms.lights[i].setPosition(glm::vec3(toFloat(values[2]),toFloat(values[3]),toFloat(values[4])));
             return true;
@@ -269,7 +269,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
             return true;
         }
         else if (values.size() == 5) {
-            int i = toInt(values[1]);
+            unsigned int i = toInt(values[1]);
             if (uniforms.lights.size() > i) {
                 uniforms.lights[i].color = glm::vec3(toFloat(values[2]),toFloat(values[3]),toFloat(values[4]));
                 uniforms.lights[i].bChange = true;
@@ -298,7 +298,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
             return true;
         }
         else if (values.size() == 5) {
-            int i = toInt(values[1]);
+            unsigned int i = toInt(values[1]);
             if (uniforms.lights.size() > i) {
                 uniforms.lights[i].falloff = toFloat(values[2]);
                 uniforms.lights[i].bChange = true;
@@ -325,7 +325,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
             return true;
         }
         else if (values.size() == 5) {
-            int i = toInt(values[1]);
+            unsigned int i = toInt(values[1]);
             if (uniforms.lights.size() > i) {
                 uniforms.lights[i].intensity = toFloat(values[2]);
                 uniforms.lights[i].bChange = true;
