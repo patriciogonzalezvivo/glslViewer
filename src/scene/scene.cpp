@@ -499,14 +499,14 @@ void Scene::setup(CommandList& _commands, Uniforms& _uniforms) {
     });
 
     
-    // _uniforms.functions["u_model"] = UniformFunction("vec3", [this](Shader& _shader) {
-    //     _shader.setUniform("u_model", m_origin.getPosition());
-    // },
-    // [this]() { return toString(m_origin.getPosition(), ','); });
+    _uniforms.functions["u_model"] = UniformFunction("vec3", [this](Shader& _shader) {
+        _shader.setUniform("u_model", m_origin.getPosition());
+    },
+    [this]() { return toString(m_origin.getPosition(), ','); });
 
-    // _uniforms.functions["u_modelMatrix"] = UniformFunction("mat4", [this](Shader& _shader) {
-    //     _shader.setUniform("u_modelMatrix", m_origin.getTransformMatrix() );
-    // });
+    _uniforms.functions["u_modelMatrix"] = UniformFunction("mat4", [this](Shader& _shader) {
+        _shader.setUniform("u_modelMatrix", m_origin.getTransformMatrix() );
+    });
     
 }
 
