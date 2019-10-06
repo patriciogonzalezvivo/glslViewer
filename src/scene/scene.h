@@ -1,8 +1,6 @@
 #pragma once
 
 #include "model.h"
-#include "camera.h"
-
 
 #include "../gl/vbo.h"
 #include "../gl/shader.h"
@@ -44,9 +42,6 @@ public:
     CullingMode     getCulling() { return m_culling; }
 
     void            setCubeMap( SkyBox* _skybox );
-    void            setCubeMap( TextureCube* _cubemap );
-    void            setCubeMap( const std::string& _filename, WatchFileList& _files, bool _visible, bool _verbose = true);
-    TextureCube*    getCubeMap() { return m_cubemap; }
 
     void            flagChange();
     void            unflagChange();
@@ -59,9 +54,6 @@ public:
     void            renderDebug(Uniforms& _uniforms);
 
     void            renderShadowMap(Uniforms& _uniforms);
-
-    void            onMouseDrag(float _x, float _y, int _button);
-    void            onViewportResize(int _newWidth, int _newHeight);
 
     bool            showGrid;
     bool            showAxis;
@@ -78,11 +70,8 @@ protected:
     float               m_area;
 
     // Camera
-    Camera              m_camera;
     CullingMode         m_culling;
-    float               m_lat;
-    float               m_lon;
-
+    
     // Ligth
     Vbo*                m_lightUI_vbo;
     Shader              m_lightUI_shader;
@@ -96,7 +85,6 @@ protected:
     // CubeMap
     Shader              m_cubemap_shader;
     Vbo*                m_cubemap_vbo;
-    TextureCube*        m_cubemap;
     SkyBox*             m_cubemap_skybox;
 
     SkyBox              m_skybox;

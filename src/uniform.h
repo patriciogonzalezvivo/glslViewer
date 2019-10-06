@@ -10,6 +10,7 @@
 #include "gl/texture.h"
 
 #include "scene/light.h"
+#include "scene/camera.h"
 
 #include "tools/fs.h"
 
@@ -47,15 +48,21 @@ public:
 
     // Ingest new uniforms
     bool                    parseLine( const std::string &_line );
+
     bool                    addTexture( const std::string& _name, Texture* _texture );
     bool                    addTexture( const std::string& _name, const std::string& _path, WatchFileList& _files, bool _flip = true, bool _verbose = true );
     bool                    addBumpTexture( const std::string& _name, const std::string& _path, WatchFileList& _files, bool _flip = true, bool _verbose = true );
+
+    void                    setCubeMap( TextureCube* _cubemap );
+    void                    setCubeMap( const std::string& _filename, WatchFileList& _files, bool _verbose = true);
     
     // Check presence of uniforms on shaders
     void                    checkPresenceIn( const std::string &_vert_src, const std::string &_frag_src );
 
     // Feed uniforms to a specific shader
     bool                    feedTo( Shader &_shader );
+
+    Camera&                 getCamera() { return cameras[0]; } 
 
     // Debug
     void                    print(bool _all);
@@ -78,9 +85,11 @@ public:
 
     // Common 
     TextureList             textures;
+    TextureCube*            cubemap;
     std::vector<Fbo>        buffers;
 
     // 3d Scene Uniforms 
+    std::vector<Camera>     cameras;
     std::vector<Light>      lights;
 
 protected:

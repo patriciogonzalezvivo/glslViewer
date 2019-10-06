@@ -670,12 +670,14 @@ int main(int argc, char **argv){
         else if ( argument == "-c" || argument == "-sh" ) {
             i++;
             argument = std::string(argv[i]);
-            sandbox.getScene().setCubeMap(argument, files, false);
+            sandbox.uniforms.setCubeMap(argument, files);
+            sandbox.getScene().showCubebox = false;
         }
         else if ( argument == "-C" ) {
             i++;
             argument = std::string(argv[i]);
-            sandbox.getScene().setCubeMap(argument, files, true);
+            sandbox.uniforms.setCubeMap(argument, files);
+            sandbox.getScene().showCubebox = true;
         }
         else if ( argument.find("-D") == 0 ) {
             // Defines are added/remove once existing shaders
@@ -699,6 +701,29 @@ int main(int argc, char **argv){
             argument = std::string(argv[i]);
             sandbox.uniforms.addTexture(parameterPair, argument, files, vFlip);
         }
+    }
+
+    if (sandbox.verbose) {
+       // query strings
+        char *vendor = (char *)glGetString(GL_VENDOR);
+        char *renderer = (char *)glGetString(GL_RENDERER);
+        char *version = (char *)glGetString(GL_VERSION);
+        char *glsl_version = (char *)glGetString(GL_SHADING_LANGUAGE_VERSION);
+    
+        printf("OpenGL ES\n");
+        printf("  Vendor: %s\n", vendor);
+        printf("  Renderer: %s\n", renderer);
+        printf("  Version: %s\n", version);
+        printf("  GLSL version: %s\n", glsl_version);
+
+        // char *exts = (char *)glGetString(GL_EXTENSIONS);
+        // printf("  Extensions: %s\n", exts);
+        // printf("  Implementation limits:\n");
+
+        int param;
+        glGetIntegerv(GL_MAX_TEXTURE_SIZE, &param);
+        std::cout << "  GL_MAX_TEXTURE_SIZE = " << param << std::endl;
+
     }
 
     // If no shader
@@ -794,11 +819,9 @@ void onKeyPress (int _key) {
 }
 
 void onMouseMove(float _x, float _y) {
-
 }
 
 void onMouseClick(float _x, float _y, int _button) {
-
 }
 
 void onScroll(float _yoffset) {

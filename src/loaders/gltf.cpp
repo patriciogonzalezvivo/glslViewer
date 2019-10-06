@@ -264,7 +264,6 @@ void extractMesh(const tinygltf::Model& _model, const tinygltf::Mesh& _mesh, glm
                 for (size_t v = 0; v < accessor.count; v++) {
                     glm::vec4 pos = glm::vec4(1.0);
                     extractVertexData(v, &buffer.data.at(bufferView.byteOffset + accessor.byteOffset), accessor.componentType, accessor.type, accessor.normalized, byteStride, &pos[0], 3);
-                    // pos.z = -pos.z;
                     mesh.addVertex( glm::vec3(_matrix * pos) );
                 }
             }
@@ -340,10 +339,6 @@ void extractMesh(const tinygltf::Model& _model, const tinygltf::Mesh& _mesh, glm
                 std::cout << "    . Compute tangents" << std::endl;
 
         Material mat = extractMaterial( _model, _model.materials[primitive.material], _uniforms, _verbose );
-
-        // Model* m = new Model(_mesh.name, mesh, mat); 
-        // m->apply( _currentProps.getTransformMatrix() );
-        // _models.push_back( m );
 
         _models.push_back( new Model(_mesh.name, mesh, mat) );
     }

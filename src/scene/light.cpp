@@ -49,7 +49,7 @@ glm::mat4 Light::getMVPMatrix( const glm::mat4 &_model, float _area) {
         _area *= 2.0;
 
         // Compute the MVP matrix from the light's point of view
-        glm::mat4 depthProjectionMatrix = glm::ortho<float>(-_area, _area, -_area, _area, -_area, _area);
+        glm::mat4 depthProjectionMatrix = glm::ortho<float>(-_area, _area, -_area, _area, -_area * 2.0, _area * 2.0);
         glm::mat4 depthViewMatrix = glm::lookAt(glm::normalize(getPosition()), glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0));
         m_mvp = depthProjectionMatrix * depthViewMatrix * _model;
 
@@ -85,11 +85,11 @@ void Light::bindShadowMap() {
 
     m_shadowMap.bind();
     glEnable(GL_DEPTH_TEST);
-    glEnable(GL_CULL_FACE);
+    // glEnable(GL_CULL_FACE);
 }
 
 void Light::unbindShadowMap() {
+    // glDisable(GL_CULL_FACE);
     glDisable(GL_DEPTH_TEST);
-    glDisable(GL_CULL_FACE);
     m_shadowMap.unbind();
 }

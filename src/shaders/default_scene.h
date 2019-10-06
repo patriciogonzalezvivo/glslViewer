@@ -1695,7 +1695,6 @@ vec4 pbr(const Material _mat) {
     return linear2gamma(color);
 }
 
-
 #endif
 
 void main(void) {

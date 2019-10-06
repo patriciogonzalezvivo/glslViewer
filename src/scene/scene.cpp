@@ -21,13 +21,13 @@ Scene::Scene():
     // Debug State
     showGrid(false), showAxis(false), showBBoxes(false), showCubebox(false), 
     // Camera.
-    m_culling(NONE), m_lat(180.0), m_lon(0.0),
+    m_culling(NONE),
     // Light
     m_lightUI_vbo(nullptr), m_dynamicShadows(false),
     // Background
     m_background_vbo(nullptr), m_background(false), 
     // CubeMap
-    m_cubemap_vbo(nullptr), m_cubemap(nullptr), m_cubemap_skybox(nullptr),
+    m_cubemap_vbo(nullptr), m_cubemap_skybox(nullptr),
     // Floor
     m_floor_vbo(nullptr), m_floor_height(0.0), m_floor_subd_target(-1), m_floor_subd(-1), 
     // UI
@@ -53,16 +53,6 @@ void Scene::clear() {
     if (!m_background_vbo) {
         delete m_background_vbo;
         m_background_vbo = nullptr;
-    }
-
-    if (m_cubemap) {
-        delete m_cubemap;
-        m_cubemap = nullptr;
-    }
-
-    if (m_cubemap_vbo) {
-        delete m_cubemap_vbo;
-        m_cubemap_vbo = nullptr;
     }
 
     if (m_grid_vbo) {
@@ -160,64 +150,6 @@ void Scene::setup(CommandList& _commands, Uniforms& _uniforms) {
         return false;
     },
     "culling[,<none|front|back|both>]   get or set the culling modes"));
-
-    _commands.push_back(Command("camera_distance", [&](const std::string& _line){ 
-        std::vector<std::string> values = split(_line,',');
-        if (values.size() == 2) {
-            m_camera.setDistance(toFloat(values[1]));
-            return true;
-        }
-        else {
-            std::cout << m_camera.getDistance() << std::endl;
-            return true;
-        }
-        return false;
-    },
-    "camera_distance[,<dist>]           get or set the camera distance to the target."));
-
-    _commands.push_back(Command("camera_fov", [&](const std::string& _line){ 
-        std::vector<std::string> values = split(_line,',');
-        if (values.size() == 2) {
-            m_camera.setFOV(toFloat(values[1]));
-            return true;
-        }
-        else {
-            std::cout << m_camera.getFOV() << std::endl;
-            return true;
-        }
-        return false;
-    },
-    "camera_fov[,<field_of_view>]       get or set the camera field of view."));
-
-    _commands.push_back(Command("camera_position", [&](const std::string& _line){ 
-        std::vector<std::string> values = split(_line,',');
-        if (values.size() == 4) {
-            m_camera.setPosition(glm::vec3(toFloat(values[1]),toFloat(values[2]),toFloat(values[3])));
-            m_camera.lookAt(m_camera.getTarget());
-            return true;
-        }
-        else {
-            glm::vec3 pos = m_camera.getPosition();
-            std::cout << pos.x << ',' << pos.y << ',' << pos.z << std::endl;
-            return true;
-        }
-        return false;
-    },
-    "camera_position[,<x>,<y>,<z>]      get or set the camera position."));
-
-    _commands.push_back(Command("camera_exposure", [&](const std::string& _line){ 
-        std::vector<std::string> values = split(_line,',');
-        if (values.size() == 4) {
-            m_camera.setExposure(toFloat(values[1]),toFloat(values[2]),toFloat(values[3]));
-            return true;
-        }
-        else {
-            std::cout << m_camera.getExposure() << std::endl;
-            return true;
-        }
-        return false;
-    },
-    "camera_exposure[,<aper.>,<shutter>,<sensit.>]  get or set the camera exposure values."));
     
     _commands.push_back(Command("dynamic_shadows", [&](const std::string& _line){ 
         if (_line == "dynamic_shadows") {
@@ -419,85 +351,6 @@ void Scene::setup(CommandList& _commands, Uniforms& _uniforms) {
         return false;
     },
     "bboxes[,on|off]                    show/hide models bounding boxes"));
-
-    // IBL UNIFORM
-    _uniforms.functions["u_cubeMap"] = UniformFunction("samplerCube", [this](Shader& _shader) {
-        if (m_cubemap) {
-            _shader.setUniformTextureCube("u_cubeMap", (TextureCube*)m_cubemap);
-        }
-    });
-
-    _uniforms.functions["u_SH"] = UniformFunction("vec3", [this](Shader& _shader) {
-        if (m_cubemap) {
-            _shader.setUniform("u_SH", m_cubemap->SH, 9);
-        }
-    });
-
-    _uniforms.functions["u_iblLuminance"] = UniformFunction("float", [this](Shader& _shader) {
-        _shader.setUniform("u_iblLuminance", 30000.0f * m_camera.getExposure());
-    },
-    [this]() { return toString(30000.0f * m_camera.getExposure()); });
-    
-    // CAMERA UNIFORMS
-    //
-    _uniforms.functions["u_camera"] = UniformFunction("vec3", [this](Shader& _shader) {
-        _shader.setUniform("u_camera", -m_camera.getPosition());
-    },
-    [this]() { return toString(-m_camera.getPosition(), ','); });
-
-    _uniforms.functions["u_cameraDistance"] = UniformFunction("float", [this](Shader& _shader) {
-        _shader.setUniform("u_cameraDistance", m_camera.getDistance());
-    },
-    [this]() { return toString(m_camera.getDistance()); });
-
-    _uniforms.functions["u_cameraNearClip"] = UniformFunction("float", [this](Shader& _shader) {
-        _shader.setUniform("u_cameraNearClip", m_camera.getNearClip());
-    },
-    [this]() { return toString(m_camera.getNearClip()); });
-
-    _uniforms.functions["u_cameraFarClip"] = UniformFunction("float", [this](Shader& _shader) {
-        _shader.setUniform("u_cameraFarClip", m_camera.getFarClip());
-    },
-    [this]() { return toString(m_camera.getFarClip()); });
-
-    _uniforms.functions["u_cameraEv100"] = UniformFunction("float", [this](Shader& _shader) {
-        _shader.setUniform("u_cameraEv100", m_camera.getEv100());
-    },
-    [this]() { return toString(m_camera.getEv100()); });
-
-    _uniforms.functions["u_cameraExposure"] = UniformFunction("float", [this](Shader& _shader) {
-        _shader.setUniform("u_cameraExposure", m_camera.getExposure());
-    },
-    [this]() { return toString(m_camera.getExposure()); });
-
-    _uniforms.functions["u_cameraAperture"] = UniformFunction("float", [this](Shader& _shader) {
-        _shader.setUniform("u_cameraAperture", m_camera.getAperture());
-    },
-    [this]() { return toString(m_camera.getAperture()); });
-
-    _uniforms.functions["u_cameraShutterSpeed"] = UniformFunction("float", [this](Shader& _shader) {
-        _shader.setUniform("u_cameraShutterSpeed", m_camera.getShutterSpeed());
-    },
-    [this]() { return toString(m_camera.getShutterSpeed()); });
-
-    _uniforms.functions["u_cameraSensitivity"] = UniformFunction("float", [this](Shader& _shader) {
-        _shader.setUniform("u_cameraSensitivity", m_camera.getSensitivity());
-    },
-    [this]() { return toString(m_camera.getSensitivity()); });
-    
-    _uniforms.functions["u_normalMatrix"] = UniformFunction("mat3", [this](Shader& _shader) {
-        _shader.setUniform("u_normalMatrix", m_camera.getNormalMatrix());
-    });
-
-    // MATRIX UNIFORMS
-    _uniforms.functions["u_viewMatrix"] = UniformFunction("mat4", [this](Shader& _shader) {
-        _shader.setUniform("u_viewMatrix", m_camera.getViewMatrix());
-    });
-
-    _uniforms.functions["u_projectionMatrix"] = UniformFunction("mat4", [this](Shader& _shader) {
-        _shader.setUniform("u_projectionMatrix", m_camera.getProjectionMatrix());
-    });
-
     
     _uniforms.functions["u_model"] = UniformFunction("vec3", [this](Shader& _shader) {
         _shader.setUniform("u_model", m_origin.getPosition());
@@ -532,43 +385,7 @@ void Scene::setCubeMap( SkyBox* _skybox ) {
 
     m_cubemap_skybox = _skybox; 
     m_cubemap_skybox->change = true;
-    addDefine("SCENE_CUBEMAP", "u_cubeMap");
-}
-
-void Scene::setCubeMap( TextureCube* _cubemap ) {
-    if (m_cubemap)
-        delete m_cubemap;
-
-    m_cubemap = _cubemap;
-}
-
-void Scene::setCubeMap( const std::string& _filename, WatchFileList& _files, bool _visible, bool _verbose ) {
-    struct stat st;
-    if ( stat(_filename.c_str(), &st) != 0 ) {
-        std::cerr << "Error watching for cubefile: " << _filename << std::endl;
-    }
-    else {
-        TextureCube* tex = new TextureCube();
-        if ( tex->load(_filename, true) ) {
-
-            setCubeMap(tex);
-            showCubebox = _visible;
-
-            WatchFile file;
-            file.type = CUBEMAP;
-            file.path = _filename;
-            file.lastChange = st.st_mtime;
-            file.vFlip = true;
-            _files.push_back(file);
-
-            std::cout << "// " << _filename << " loaded as: " << std::endl;
-            std::cout << "//    uniform samplerCube u_cubeMap;"<< std::endl;
-            std::cout << "//    uniform vec3        u_SH[9];"<< std::endl;
-        }
-        else {
-            delete tex;
-        }
-    }
+    flagChange();
 }
 
 void Scene::printDefines() {
@@ -623,13 +440,9 @@ bool Scene::loadGeometry(Uniforms& _uniforms, WatchFileList& _files, int _index,
     m_origin.setPosition( -centroid );
     m_floor_height = min_v.y;
 
-    // set the right distance to the camera
-    // Set up camera
-    m_camera.setViewport(getWindowWidth(), getWindowHeight());
-    m_camera.setPosition(glm::vec3(0.0,0.0,-m_area * 2.0));
-    // m_camera.setDistance( m_area * 2.0 );
+    _uniforms.getCamera().setPosition(glm::vec3(0.0,0.0,-m_area * 2.0));
 
-        // Setup light
+    // Setup light
     if (_uniforms.lights.size() == 0)
         _uniforms.lights.push_back( Light( glm::vec3(0.0,m_area*100.0,m_area*100.0), -1.0 ) );
 
@@ -657,24 +470,18 @@ bool Scene::loadShaders(const std::string& _fragmentShader, const std::string& _
             m_floor_subd_target = 0;
     }
 
-    if (m_cubemap)
-        addDefine("SCENE_CUBEMAP", "u_cubeMap");
-
     return rta;
 }
 
 void Scene::flagChange() {
-    m_camera.bChange = true;
     m_origin.bChange = true;
 }
 
 bool Scene::haveChange() const {
-    return  m_origin.bChange ||
-            m_camera.bChange;
+    return  m_origin.bChange;
 }
 
 void Scene::unflagChange() { 
-    m_camera.bChange = false;
     m_origin.bChange = false;
 }
 
@@ -685,8 +492,8 @@ void Scene::render(Uniforms& _uniforms) {
     // Begining of DEPTH for 3D 
     glEnable(GL_DEPTH_TEST);
 
-    if (m_camera.bChange || m_origin.bChange)
-        m_mvp = m_camera.getProjectionViewMatrix() * m_origin.getTransformMatrix(); 
+    if (_uniforms.getCamera().bChange || m_origin.bChange)
+        m_mvp = _uniforms.getCamera().getProjectionViewMatrix() * m_origin.getTransformMatrix(); 
     
     renderFloor(_uniforms, m_mvp);
 
@@ -747,10 +554,10 @@ void Scene::renderBackground(Uniforms& _uniforms) {
     // If there is a skybox and it had changes re generate
     if (m_cubemap_skybox) {
         if (m_cubemap_skybox->change) {
-            if (!m_cubemap) {
-                m_cubemap = new TextureCube();
+            if (!_uniforms.cubemap) {
+                _uniforms.cubemap = new TextureCube();
             }
-            m_cubemap->generate(m_cubemap_skybox);
+            _uniforms.cubemap->generate(m_cubemap_skybox);
             m_cubemap_skybox->change = false;
         }
     }
@@ -766,7 +573,7 @@ void Scene::renderBackground(Uniforms& _uniforms) {
         m_background_vbo->render( &m_background_shader );
     }
 
-    else if (m_cubemap && showCubebox) {
+    else if (_uniforms.cubemap && showCubebox) {
         if (!m_cubemap_vbo) {
             m_cubemap_vbo = cube(1.0f).getVbo();
             m_cubemap_shader.load(cube_frag, cube_vert, false);
@@ -774,8 +581,8 @@ void Scene::renderBackground(Uniforms& _uniforms) {
 
         m_cubemap_shader.use();
 
-        m_cubemap_shader.setUniform("u_modelViewProjectionMatrix", m_camera.getProjectionMatrix() * glm::toMat4(m_camera.getOrientationQuat()) );
-        m_cubemap_shader.setUniformTextureCube( "u_cubeMap", m_cubemap, 0 );
+        m_cubemap_shader.setUniform("u_modelViewProjectionMatrix", _uniforms.getCamera().getProjectionMatrix() * glm::toMat4(_uniforms.getCamera().getOrientationQuat()) );
+        m_cubemap_shader.setUniformTextureCube( "u_cubeMap", _uniforms.cubemap, 0 );
 
         m_cubemap_vbo->render( &m_cubemap_shader );
     }
@@ -843,7 +650,7 @@ void Scene::renderDebug(Uniforms& _uniforms) {
     // Axis
     if (showAxis) {
         if (m_axis_vbo == nullptr)
-            m_axis_vbo = axis(m_camera.getFarClip(), m_floor_height).getVbo();
+            m_axis_vbo = axis(_uniforms.getCamera().getFarClip(), m_floor_height).getVbo();
 
         glLineWidth(2.0f);
         m_wireframe3D_shader.use();
@@ -855,7 +662,7 @@ void Scene::renderDebug(Uniforms& _uniforms) {
     // Grid
     if (showGrid) {
         if (m_grid_vbo == nullptr)
-            m_grid_vbo = grid(m_camera.getFarClip(), m_camera.getFarClip() / 20.0, m_floor_height).getVbo();
+            m_grid_vbo = grid(_uniforms.getCamera().getFarClip(), _uniforms.getCamera().getFarClip() / 20.0, m_floor_height).getVbo();
         glLineWidth(1.0f);
         m_wireframe3D_shader.use();
         m_wireframe3D_shader.setUniform("u_color", glm::vec4(0.5));
@@ -874,7 +681,7 @@ void Scene::renderDebug(Uniforms& _uniforms) {
 
         m_lightUI_shader.use();
         m_lightUI_shader.setUniform("u_scale", 24, 24);
-        m_lightUI_shader.setUniform("u_viewMatrix", m_camera.getViewMatrix());
+        m_lightUI_shader.setUniform("u_viewMatrix", _uniforms.getCamera().getViewMatrix());
         m_lightUI_shader.setUniform("u_modelViewProjectionMatrix", m_mvp );
 
         for (unsigned int i = 0; i < _uniforms.lights.size(); i++) {
@@ -887,35 +694,4 @@ void Scene::renderDebug(Uniforms& _uniforms) {
 
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glDisable(GL_DEPTH_TEST);
-}
-
-// ------------------------------------------------------ EVENTS
-
-void Scene::onMouseDrag(float _x, float _y, int _button) {
-    if (_button == 1) {
-        // Left-button drag is used to rotate geometry.
-        float dist = m_camera.getDistance();
-
-        float vel_x = getMouseVelX();
-        float vel_y = getMouseVelY();
-
-        if (fabs(vel_x) < 50.0 && fabs(vel_y) < 50.0) {
-            m_lat -= vel_x;
-            m_lon -= vel_y * 0.5;
-            m_camera.orbit(m_lat, m_lon, dist);
-            m_camera.lookAt(glm::vec3(0.0));
-        }
-    } 
-    else {
-        // Right-button drag is used to zoom geometry.
-        float dist = m_camera.getDistance();
-        dist += (-.008f * getMouseVelY());
-        if (dist > 0.0f) {
-            m_camera.setDistance( dist );
-        }
-    }
-}
-
-void Scene::onViewportResize(int _newWidth, int _newHeight) {
-    m_camera.setViewport(_newWidth, _newHeight);
 }

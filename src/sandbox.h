@@ -112,6 +112,8 @@ private:
 
     // Other state properties
     glm::mat3           m_view2d;
+    float               m_lat;
+    float               m_lon;
     unsigned int        m_frame;
     bool                m_change;
     bool                m_initialized;

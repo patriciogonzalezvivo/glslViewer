@@ -33,7 +33,7 @@ Sandbox::Sandbox():
     // Record
     m_record_fdelta(0.04166666667), m_record_start(0.0f), m_record_head(0.0f), m_record_end(0.0f), m_record_counter(0), m_record(false),
     // Scene
-    m_view2d(1.0), m_frame(0), m_change(true), m_initialized(false),
+    m_view2d(1.0), m_lat(180.0), m_lon(0.0), m_frame(0), m_change(true), m_initialized(false),
     // Debug
     m_showTextures(false), m_showPasses(false)
 {
@@ -226,6 +226,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     },
     "buffers                        return a list of buffers as their uniform name.", false));
 
+    // LIGTH
     _commands.push_back(Command("lights", [&](const std::string& _line){ 
         if (_line == "lights") {
             uniforms.printLights();
@@ -343,6 +344,65 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     },
     "light_intensity[,<value>]      get or set the light intensity."));
 
+    // CAMERA
+    _commands.push_back(Command("camera_distance", [&](const std::string& _line){ 
+        std::vector<std::string> values = split(_line,',');
+        if (values.size() == 2) {
+            uniforms.getCamera().setDistance(toFloat(values[1]));
+            return true;
+        }
+        else {
+            std::cout << uniforms.getCamera().getDistance() << std::endl;
+            return true;
+        }
+        return false;
+    },
+    "camera_distance[,<dist>]           get or set the camera distance to the target."));
+
+    _commands.push_back(Command("camera_fov", [&](const std::string& _line){ 
+        std::vector<std::string> values = split(_line,',');
+        if (values.size() == 2) {
+            uniforms.getCamera().setFOV(toFloat(values[1]));
+            return true;
+        }
+        else {
+            std::cout << uniforms.getCamera().getFOV() << std::endl;
+            return true;
+        }
+        return false;
+    },
+    "camera_fov[,<field_of_view>]       get or set the camera field of view."));
+
+    _commands.push_back(Command("camera_position", [&](const std::string& _line){ 
+        std::vector<std::string> values = split(_line,',');
+        if (values.size() == 4) {
+            uniforms.getCamera().setPosition(glm::vec3(toFloat(values[1]),toFloat(values[2]),toFloat(values[3])));
+            uniforms.getCamera().lookAt(uniforms.getCamera().getTarget());
+            return true;
+        }
+        else {
+            glm::vec3 pos = uniforms.getCamera().getPosition();
+            std::cout << pos.x << ',' << pos.y << ',' << pos.z << std::endl;
+            return true;
+        }
+        return false;
+    },
+    "camera_position[,<x>,<y>,<z>]      get or set the camera position."));
+
+    _commands.push_back(Command("camera_exposure", [&](const std::string& _line){ 
+        std::vector<std::string> values = split(_line,',');
+        if (values.size() == 4) {
+            uniforms.getCamera().setExposure(toFloat(values[1]),toFloat(values[2]),toFloat(values[3]));
+            return true;
+        }
+        else {
+            std::cout << uniforms.getCamera().getExposure() << std::endl;
+            return true;
+        }
+        return false;
+    },
+    "camera_exposure[,<aper.>,<shutter>,<sensit.>]  get or set the camera exposure values."));
+
     _commands.push_back(Command("update", [&](const std::string& _line){ 
         if (_line == "update") {
             flagChange();
@@ -405,6 +465,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
 
     // FINISH SCENE SETUP
     // -------------------------------------------------
+    uniforms.getCamera().setViewport(getWindowWidth(), getWindowHeight());
 
     // Prepare viewport
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
@@ -508,12 +569,6 @@ bool Sandbox::reloadShaders( WatchFileList &_files ) {
         if (verbose)
             std::cout << "// Reload 3D scene shaders" << std::endl;
 
-        if (m_scene.getCubeMap()) {
-            m_scene.addDefine("SCENE_SH_ARRAY", "u_SH");
-            if (m_scene.showCubebox)
-                m_scene.addDefine("SCENE_CUBEMAP", "u_cubeMap");
-        }
-
         m_scene.loadShaders(m_frag_source, m_vert_source, verbose);
     }
 
@@ -544,6 +599,11 @@ bool Sandbox::reloadShaders( WatchFileList &_files ) {
     // UPDATE uniforms
     uniforms.checkPresenceIn(m_vert_source, m_frag_source); // Check active native uniforms
     uniforms.flagChange();                                  // Flag all user defined uniforms as changed
+
+    if (uniforms.cubemap) {
+        addDefine("SCENE_SH_ARRAY", "u_SH");
+        addDefine("SCENE_CUBEMAP", "u_cubeMap");
+    }
 
     // UPDATE Buffers
     m_buffers_total = count_buffers(m_frag_source);
@@ -959,8 +1019,8 @@ void Sandbox::onFileChange(WatchFileList &_files, int index) {
         }
     }
     else if (type == CUBEMAP) {
-        if (m_scene.getCubeMap()) {
-            m_scene.getCubeMap()->load(filename, _files[index].vFlip);
+        if (uniforms.cubemap) {
+            uniforms.cubemap->load(filename, _files[index].vFlip);
         }
     }
 
@@ -986,19 +1046,37 @@ void Sandbox::onScroll(float _yoffset) {
 }
 
 void Sandbox::onMouseDrag(float _x, float _y, int _button) {
-    if (geom_index != -1)
-        m_scene.onMouseDrag(_x, _y, _button);
-
     if (_button == 1) {
         // Left-button drag is used to pan u_view2d.
         m_view2d = glm::translate(m_view2d, -getMouseVelocity());
-        flagChange();
+
+        // Left-button drag is used to rotate geometry.
+        float dist = uniforms.getCamera().getDistance();
+
+        float vel_x = getMouseVelX();
+        float vel_y = getMouseVelY();
+
+        if (fabs(vel_x) < 50.0 && fabs(vel_y) < 50.0) {
+            m_lat -= vel_x;
+            m_lon -= vel_y * 0.5;
+            uniforms.getCamera().orbit(m_lat, m_lon, dist);
+            uniforms.getCamera().lookAt(glm::vec3(0.0));
+        }
     } 
+    else {
+        // Right-button drag is used to zoom geometry.
+        float dist = uniforms.getCamera().getDistance();
+        dist += (-.008f * getMouseVelY());
+        if (dist > 0.0f) {
+            uniforms.getCamera().setDistance( dist );
+        }
+    }
+
+    flagChange();
 }
 
 void Sandbox::onViewportResize(int _newWidth, int _newHeight) {
-    if (geom_index != -1)
-        m_scene.onViewportResize(_newWidth, _newHeight);
+    uniforms.getCamera().setViewport(_newWidth, _newHeight);
     
     for (unsigned int i = 0; i < uniforms.buffers.size(); i++) 
         uniforms.buffers[i].allocate(_newWidth, _newHeight, COLOR_TEXTURE);
