@@ -38,6 +38,21 @@ bool Texture::load(const std::string& _path, bool _vFlip) {
 
         unsigned char* pixels = loadPixels(_path, &m_width, &m_height, RGB_ALPHA, _vFlip);
 
+#if defined(PLATFORM_RPI) || defined(PLATFORM_RPI4)
+    int max_size = std::max(m_width, m_height);
+    if ( max_size > 512) {
+        float factor = max_size/512.0;
+        int w = m_width/factor;
+        int h = m_height/factor;
+        unsigned char * data = new unsigned char [w * 4 * h];
+        rescalePixels( pixels, m_width, m_height, 4, w, h, data);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+        m_width = w;
+        m_height = h;
+        delete[] data;
+    }
+    else
+#endif
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_width, m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 
         // delete[] pixels;
@@ -45,7 +60,7 @@ bool Texture::load(const std::string& _path, bool _vFlip) {
     }
 
     else if (ext == "hdr" || ext == "HDR") {
-        float* pixels = loadHDRFloatPixels(_path, &m_width, &m_height, _vFlip);
+        float* pixels = loadPixelsHDR(_path, &m_width, &m_height, _vFlip);
 
     #if defined(PLATFORM_RPI) || defined(PLATFORM_RPI4) 
         GLenum InternalFormat = GL_RGB;
@@ -191,8 +206,27 @@ bool Texture::load(int _width, int _height, int _component, int _bits, const uns
     else 
         std::cout << "Unrecognize GLenum type for " << _bits << " bits" << std::endl;
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, _width, _height, 0, format, type, _data);
+    m_width = _width;
+    m_height = _height;
+#if defined(PLATFORM_RPI) || defined(PLATFORM_RPI4)
+    int max_size = std::max(m_width, m_height);
+    if ( max_size > 512) {
+        float factor = max_size/512.0;
+        int w = m_width/factor;
+        int h = m_height/factor;
+        unsigned char * data = new unsigned char [w * 4 * h];
+        rescalePixels( _data, m_width, m_height, 4, w, h, data);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+        m_width = w;
+        m_height = h;
+        delete[] data;
+    }
+    else
+#endif
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_width, m_height, 0, format, type, _data);
+
     // glGenerateMipmap(GL_TEXTURE_2D);
+
     return true;
 }
 
