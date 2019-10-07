@@ -8,7 +8,7 @@
 #include "../tools/math.h"
 #include "../loaders/pixels.h"
 
-#define USE_BILINEAR_INTERPOLATION
+// #define USE_BILINEAR_INTERPOLATION
 
 // extern "C" {
 #include "skylight/ArHosekSkyModel.h"
@@ -30,6 +30,8 @@ TextureCube::~TextureCube() {
 
 template <typename T> 
 void splitFacesFromVerticalCross(T *_data, int _width, int _height, Face<T> **_faces ) {
+    // std::cout << "splitFacesFromVerticalCross" << std::endl;
+
     int faceWidth = _width / 3;
     int faceHeight = _height / 4;
 
@@ -157,6 +159,8 @@ void splitFacesFromHorizontalRow(T *_data, int _width, int _height, Face<T> **_f
 
 template <typename T> 
 void splitFacesFromVerticalRow(T *_data, int _width, int _height, Face<T> **_faces ) {
+    // std::cout << "splitFacesFromVerticalRow" << std::endl;
+    
     int faceWidth = _width;
     int faceHeight = _height/6;
 
@@ -195,6 +199,8 @@ void splitFacesFromVerticalRow(T *_data, int _width, int _height, Face<T> **_fac
 // https://github.com/dariomanesku/cmft/blob/master/src/cmft/image.cpp#L3124
 template <typename T> 
 void splitFacesFromEquilateral(T *_data, unsigned int _width, unsigned int _height, Face<T> **_faces ) {
+    // std::cout << "splitFacesFromEquilateral" << std::endl;
+
     // Alloc data.
     const uint32_t faceWidth = (_height + 1)/2;
     const uint32_t faceHeight = faceWidth;
@@ -287,16 +293,7 @@ bool TextureCube::load(const std::string &_path, bool _vFlip) {
     if (m_id != 0) {
         // Init
         glGenTextures(1, &m_id);
-
         glBindTexture(GL_TEXTURE_CUBE_MAP, m_id);
-        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    #if !defined(PLATFORM_RPI) && !defined(PLATFORM_RPI4) 
-        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-    #endif
-        glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
     }
 
     int sh_samples = 0;
@@ -412,7 +409,13 @@ bool TextureCube::load(const std::string &_path, bool _vFlip) {
         SH[i] = SH[i] * (32.0f / (float)sh_samples);
     }
 
-    glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+#if !defined(PLATFORM_RPI) && !defined(PLATFORM_RPI4) 
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+#endif
     glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 
     m_path = _path;             
@@ -424,16 +427,7 @@ bool TextureCube::generate(SkyBox* _skybox, int _width ) {
     if (m_id != 0) {
         // Init
         glGenTextures(1, &m_id);
-
         glBindTexture(GL_TEXTURE_CUBE_MAP, m_id);
-        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    #if !defined(PLATFORM_RPI) && !defined(PLATFORM_RPI4) 
-        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-    #endif
-        glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
     }
 
     int sh_samples = 0;
@@ -507,15 +501,16 @@ bool TextureCube::generate(SkyBox* _skybox, int _width ) {
 
     for (int y = 0; y < m_height; y++) {
         for (int x = 0; x < m_width; x++) {
-            int i = (y * m_width * 3) + x * 3;
+            int i = (y * m_width) + x;
+            i *= 3;
 
             if (y >= m_height / 2) {
-                data[i] = _skybox->groundAlbedo.r;
+                data[i + 0] = _skybox->groundAlbedo.r;
                 data[i + 1] = _skybox->groundAlbedo.g;
                 data[i + 2] = _skybox->groundAlbedo.b;
             }
             else {
-                data[i] *= hdrScale;
+                data[i + 0] *= hdrScale;
                 data[i + 1] *= hdrScale;
                 data[i + 2] *= hdrScale;
             }
@@ -543,7 +538,13 @@ bool TextureCube::generate(SkyBox* _skybox, int _width ) {
         // cout << SH[i].x << "," << SH[i].y << "," << SH[i].z << endlxw;
     }
 
-    glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+#if !defined(PLATFORM_RPI) && !defined(PLATFORM_RPI4) 
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+#endif
     glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 
     return true;
