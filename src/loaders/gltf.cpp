@@ -348,9 +348,9 @@ void extractNodes(const tinygltf::Model& _model, const tinygltf::Node& _node, gl
     if (_verbose)
         std::cout << "Entering node " << _node.name << std::endl;
 
-    glm::mat4 R = glm::mat4(1.0);
-    glm::mat4 S = glm::mat4(1.0);
-    glm::mat4 T = glm::mat4(1.0);
+    glm::mat4 R = glm::mat4(1.0f);
+    glm::mat4 S = glm::mat4(1.0f);
+    glm::mat4 T = glm::mat4(1.0f);
 
     if (_node.rotation.size() > 0)
         R = glm::mat4_cast( glm::quat(_node.rotation[1], _node.rotation[2], _node.rotation[3], _node.rotation[0]) );
@@ -393,9 +393,11 @@ bool loadGLTF(Uniforms& _uniforms, WatchFileList& _files, Materials& _materials,
         return false;
     }
 
+    glm::mat4 M = glm::rotate(-3.1415f, glm::vec3(0.0f, 1.0f, 0.0f));
+
     const tinygltf::Scene &scene = model.scenes[model.defaultScene];
     for (size_t i = 0; i < scene.nodes.size(); ++i) {
-        extractNodes(model, model.nodes[scene.nodes[i]], glm::mat4(1.0), _uniforms, _models, _verbose);
+        extractNodes(model, model.nodes[scene.nodes[i]], M, _uniforms, _models, _verbose);
     }
 
     return true;
