@@ -26,8 +26,7 @@ bool Texture::load(const std::string& _path, bool _vFlip) {
         glGenTextures(1, &m_id);
     glBindTexture(GL_TEXTURE_2D, m_id);
 
-    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -39,22 +38,23 @@ bool Texture::load(const std::string& _path, bool _vFlip) {
         unsigned char* pixels = loadPixels(_path, &m_width, &m_height, RGB_ALPHA, _vFlip);
 
 #if defined(PLATFORM_RPI) || defined(PLATFORM_RPI4)
-    int max_size = std::max(m_width, m_height);
-    if ( max_size > 512) {
-        float factor = max_size/512.0;
-        int w = m_width/factor;
-        int h = m_height/factor;
-        unsigned char * data = new unsigned char [w * 4 * h];
-        rescalePixels( pixels, m_width, m_height, 4, w, h, data);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-        m_width = w;
-        m_height = h;
-        delete[] data;
-    }
-    else
-#endif
+        int max_size = std::max(m_width, m_height);
+        if ( max_size > 512) {
+            float factor = max_size/512.0;
+            int w = m_width/factor;
+            int h = m_height/factor;
+            unsigned char * data = new unsigned char [w * 4 * h];
+            rescalePixels( pixels, m_width, m_height, 4, w, h, data);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+            m_width = w;
+            m_height = h;
+            delete[] data;
+        }
+        else
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_width, m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+#else
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_width, m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-
+#endif
         // delete[] pixels;
         delete pixels;
     }
@@ -74,8 +74,6 @@ bool Texture::load(const std::string& _path, bool _vFlip) {
         delete pixels;
     }
 
-    glGenerateMipmap(GL_TEXTURE_2D);
-
     m_path = _path;
 
     unbind();
@@ -92,8 +90,7 @@ bool Texture::loadBump(const std::string& _path, bool _vFlip) {
         glGenTextures(1, &m_id);
     glBindTexture(GL_TEXTURE_2D, m_id);
 
-    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -154,8 +151,6 @@ bool Texture::loadBump(const std::string& _path, bool _vFlip) {
         delete pixels;
     }
 
-    glGenerateMipmap(GL_TEXTURE_2D);
-
     m_path = _path;
 
     unbind();
@@ -173,7 +168,6 @@ bool Texture::load(int _width, int _height, int _component, int _bits, const uns
 
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -222,11 +216,10 @@ bool Texture::load(int _width, int _height, int _component, int _bits, const uns
         delete[] data;
     }
     else
-#endif
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_width, m_height, 0, format, type, _data);
-
-    // glGenerateMipmap(GL_TEXTURE_2D);
-
+#else
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_width, m_height, 0, format, type, _data);
+#endif
     return true;
 }
 

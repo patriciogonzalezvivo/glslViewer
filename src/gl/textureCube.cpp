@@ -30,8 +30,6 @@ TextureCube::~TextureCube() {
 
 template <typename T> 
 void splitFacesFromVerticalCross(T *_data, int _width, int _height, Face<T> **_faces ) {
-    // std::cout << "splitFacesFromVerticalCross" << std::endl;
-
     int faceWidth = _width / 3;
     int faceHeight = _height / 4;
 
@@ -159,8 +157,6 @@ void splitFacesFromHorizontalRow(T *_data, int _width, int _height, Face<T> **_f
 
 template <typename T> 
 void splitFacesFromVerticalRow(T *_data, int _width, int _height, Face<T> **_faces ) {
-    // std::cout << "splitFacesFromVerticalRow" << std::endl;
-    
     int faceWidth = _width;
     int faceHeight = _height/6;
 
@@ -199,8 +195,6 @@ void splitFacesFromVerticalRow(T *_data, int _width, int _height, Face<T> **_fac
 // https://github.com/dariomanesku/cmft/blob/master/src/cmft/image.cpp#L3124
 template <typename T> 
 void splitFacesFromEquilateral(T *_data, unsigned int _width, unsigned int _height, Face<T> **_faces ) {
-    // std::cout << "splitFacesFromEquilateral" << std::endl;
-
     // Alloc data.
     const uint32_t faceWidth = (_height + 1)/2;
     const uint32_t faceHeight = faceWidth;
@@ -537,7 +531,6 @@ bool TextureCube::generate(SkyBox* _skybox, int _width ) {
 
     for (int i = 0; i < 9; i++) {
         SH[i] = SH[i] * (32.0f / (float)sh_samples);
-        // cout << SH[i].x << "," << SH[i].y << "," << SH[i].z << endlxw;
     }
 
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
