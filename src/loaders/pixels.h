@@ -1,7 +1,7 @@
 #pragma once
 
-#include <stdio.h>
 #include <stdlib.h>
+#include <cstring>
 #include <string>
 
 enum Channels {
@@ -26,9 +26,9 @@ void flipPixelsVertically(T *_pixels, int _width, int _height, int _bytes_per_pi
     T *low = _pixels;
     T *high = &_pixels[(_height - 1) * stride];
     for (; low < high; low += stride, high -= stride) {
-        memcpy(row, low, stride * sizeof(T));
-        memcpy(low, high, stride * sizeof(T));
-        memcpy(high, row, stride * sizeof(T));
+        std::memcpy(row, low, stride * sizeof(T));
+        std::memcpy(low, high, stride * sizeof(T));
+        std::memcpy(high, row, stride * sizeof(T));
     }
     free(row);
 }
