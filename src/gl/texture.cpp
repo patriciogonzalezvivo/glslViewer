@@ -39,8 +39,8 @@ bool Texture::load(const std::string& _path, bool _vFlip) {
 
 #if defined(PLATFORM_RPI) || defined(PLATFORM_RPI4)
         int max_size = std::max(m_width, m_height);
-        if ( max_size > 512) {
-            float factor = max_size/512.0;
+        if ( max_size > 1024) {
+            float factor = max_size/1024.0;
             int w = m_width/factor;
             int h = m_height/factor;
             unsigned char * data = new unsigned char [w * 4 * h];
@@ -204,8 +204,8 @@ bool Texture::load(int _width, int _height, int _component, int _bits, const uns
     m_height = _height;
 #if defined(PLATFORM_RPI) || defined(PLATFORM_RPI4)
     int max_size = std::max(m_width, m_height);
-    if ( max_size > 512) {
-        float factor = max_size/512.0;
+    if ( max_size > 1024) {
+        float factor = max_size/1024.0;
         int w = m_width/factor;
         int h = m_height/factor;
         unsigned char * data = new unsigned char [w * 4 * h];
