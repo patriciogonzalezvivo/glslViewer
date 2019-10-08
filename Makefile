@@ -64,13 +64,13 @@ CFLAGS += -DPLATFORM_RPI4 -DDRIVER_GLFW -Wno-psabi $(shell pkg-config --cflags g
 LDFLAGS += $(shell pkg-config --libs glfw3 glu gl x11 xrandr xi xxf86vm xcursor xinerama xrender xext xdamage) -lpthread -ldl
 
 else ifeq ($(PLATFORM),Linux)
-CFLAGS += -DPLATFORM_LINUX $(shell pkg-config --cflags glfw3 glu gl)
+CFLAGS += -DPLATFORM_LINUX -DDRIVER_GLFW $(shell pkg-config --cflags glfw3 glu gl)
 LDFLAGS += $(shell pkg-config --libs glfw3 glu gl x11 xrandr xi xxf86vm xcursor xinerama xrender xext xdamage) -lpthread -ldl
 
 else ifeq ($(PLATFORM),Darwin)
 CXX = /usr/bin/clang++
 ARCH = -arch x86_64
-CFLAGS += $(ARCH) -DPLATFORM_OSX -stdlib=libc++ $(shell pkg-config --cflags glfw3)
+CFLAGS += $(ARCH) -DPLATFORM_OSX -DDRIVER_GLFW -stdlib=libc++ $(shell pkg-config --cflags glfw3)
 INCLUDES += -I/System/Library/Frameworks/GLUI.framework
 LDFLAGS += $(ARCH) -framework OpenGL -framework Cocoa -framework CoreVideo -framework IOKit $(shell pkg-config --libs glfw3)
 
