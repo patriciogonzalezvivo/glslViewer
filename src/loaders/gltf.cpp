@@ -12,6 +12,11 @@
 #include "../tools/geom.h"
 #include "../tools/text.h"
 
+#define GLM_FORCE_RADIANS
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
+#include "glm/glm.hpp"
+#include "glm/gtc/matrix_transform.hpp"
+#include "glm/gtc/type_ptr.hpp"
 #include "glm/gtx/quaternion.hpp"
 
 #define TINYGLTF_IMPLEMENTATION
@@ -352,22 +357,21 @@ void extractNodes(const tinygltf::Model& _model, const tinygltf::Node& _node, gl
     glm::mat4 S = glm::mat4(1.0f);
     glm::mat4 T = glm::mat4(1.0f);
 
-    if (_node.rotation.size() > 0)
-        R = glm::mat4_cast( glm::quat(_node.rotation[1], _node.rotation[2], _node.rotation[3], _node.rotation[0]) );
+    if (_node.rotation.size() == 4) {
+        glm::quat q = glm::make_quat(_node.rotation.data());
+        R = glm::mat4( q );
+    }
 
-    if (_node.scale.size() > 0)
-        S = glm::scale(S, glm::vec3(_node.scale[0], _node.scale[1], _node.scale[2]) );
+    if (_node.scale.size() == 3)
+        S = glm::scale( glm::make_vec3(_node.scale.data()) );
 
-    if (_node.translation.size() > 0)
-        T = glm::translate(T, glm::vec3(_node.translation[0], _node.translation[1], _node.translation[2]) );
+    if (_node.translation.size() == 3)
+        T = glm::translate( glm::make_vec3(_node.translation.data()) );
 
     glm::mat4 localMatrix = T * R * S; 
 
-    if (_node.matrix.size() > 0)
-        localMatrix = glm::mat4(_node.matrix[0],  _node.matrix[1],  _node.matrix[2],  _node.matrix[3],
-                                _node.matrix[4],  _node.matrix[5],  _node.matrix[6],  _node.matrix[7],
-                                _node.matrix[8],  _node.matrix[9],  _node.matrix[10], _node.matrix[11],
-                                _node.matrix[12], _node.matrix[13], _node.matrix[14], _node.matrix[15]);
+    if (_node.matrix.size() == 16)
+        localMatrix = glm::make_mat4x4(_node.matrix.data());
 
     _matrix = _matrix * localMatrix;
 
@@ -393,11 +397,9 @@ bool loadGLTF(Uniforms& _uniforms, WatchFileList& _files, Materials& _materials,
         return false;
     }
 
-    glm::mat4 M = glm::rotate(-3.1415f, glm::vec3(0.0f, 1.0f, 0.0f));
-
     const tinygltf::Scene &scene = model.scenes[model.defaultScene];
     for (size_t i = 0; i < scene.nodes.size(); ++i) {
-        extractNodes(model, model.nodes[scene.nodes[i]], M, _uniforms, _models, _verbose);
+        extractNodes(model, model.nodes[scene.nodes[i]], glm::mat4(1.0), _uniforms, _models, _verbose);
     }
 
     return true;
