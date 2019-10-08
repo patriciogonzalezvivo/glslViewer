@@ -10,7 +10,7 @@
 
 #elif defined(PLATFORM_RPI)
 #include "bcm_host.h"
-
+#undef countof
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
 #include <GLES2/gl2.h>
