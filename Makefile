@@ -33,7 +33,7 @@ INCLUDES +=	-Isrc/ -Iinclude/
 CFLAGS += -Wall -O3 -std=c++11 -fpermissive
 
 ifeq ($(DRIVER),vc)
-	CFLAGS += -DGLM_FORCE_CXX98 -DPLATFORM_RPI -Wno-psabi
+	CFLAGS += -DGLM_FORCE_CXX14 -DPLATFORM_RPI -Wno-psabi
 	INCLUDES += -I/opt/vc/include/ \
 				-I/opt/vc/include/interface/vcos/pthreads \
 				-I/opt/vc/include/interface/vmcs_host/linux
