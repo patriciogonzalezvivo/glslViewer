@@ -172,6 +172,7 @@ Material extractMaterial(const tinygltf::Model& _model, const tinygltf::Material
         mat.addDefine("MATERIAL_EMISSIVEMAP", name);
     }
 
+    bool isOcclusionRoughnessMetallic = false;
     mat.addDefine("MATERIAL_ROUGHNESS", _material.pbrMetallicRoughness.roughnessFactor);
     mat.addDefine("MATERIAL_METALLIC", _material.pbrMetallicRoughness.metallicFactor);
     if (_material.pbrMetallicRoughness.metallicRoughnessTexture.index >= 0) {
@@ -190,7 +191,41 @@ Material extractMaterial(const tinygltf::Model& _model, const tinygltf::Material
         if (!_uniforms.addTexture(name, texture)) {
             delete texture;
         }
-        mat.addDefine("MATERIAL_METALLICROUGHNESSMAP", name);
+
+        if (_material.occlusionTexture.index >= 0) {
+            const tinygltf::Image &occlussionImage = _model.images[_model.textures[_material.occlusionTexture.index].source];
+            isOcclusionRoughnessMetallic = image.uri == occlussionImage.uri;
+        }
+
+        if (isOcclusionRoughnessMetallic) {
+            mat.addDefine("MATERIAL_OCCLUSIONROUGHNESSMETALLICMAP", name);
+            if (_material.occlusionTexture.strength != 1.0)
+                mat.addDefine("MATERIAL_OCCLUSIONMAP_STRENGTH", _material.occlusionTexture.strength);
+        }
+        else
+            mat.addDefine("MATERIAL_ROUGHNESSMETALLICMAP", name);
+    }
+
+     // OCCLUSION
+    if (!isOcclusionRoughnessMetallic && _material.occlusionTexture.index >= 0) {
+        const tinygltf::Image &image = _model.images[_model.textures[_material.occlusionTexture.index].source];
+        std::string name = image.name + image.uri;
+        if (name.empty())
+            name = "texture" + toString(texCounter++);
+        name = getUniformName(name);
+
+        if (_verbose)
+            std::cout << "Loading " << name << "for OCCLUSIONMAP as " << name << std::endl;
+
+        Texture* texture = new Texture();
+        texture->load(image.width, image.height, image.component, image.bits, &image.image.at(0));
+        if (!_uniforms.addTexture(name, texture)) {
+            delete texture;
+        }
+        mat.addDefine("MATERIAL_OCCLUSIONMAP", name);
+
+        if (_material.occlusionTexture.strength != 1.0)
+            mat.addDefine("MATERIAL_OCCLUSIONMAP_STRENGTH", _material.occlusionTexture.strength);
     }
 
     // NORMALMAP
@@ -213,28 +248,6 @@ Material extractMaterial(const tinygltf::Model& _model, const tinygltf::Material
 
         if (_material.normalTexture.scale != 1.0)
             mat.addDefine("MATERIAL_NORMALMAP_SCALE", glm::vec3(_material.normalTexture.scale, _material.normalTexture.scale, 1.0));
-    }
-
-    // OCCLUSION
-    if (_material.occlusionTexture.index >= 0) {
-        const tinygltf::Image &image = _model.images[_model.textures[_material.occlusionTexture.index].source];
-        std::string name = image.name + image.uri;
-        if (name.empty())
-            name = "texture" + toString(texCounter++);
-        name = getUniformName(name);
-
-        if (_verbose)
-            std::cout << "Loading " << name << "for OCCLUSIONMAP as " << name << std::endl;
-
-        Texture* texture = new Texture();
-        texture->load(image.width, image.height, image.component, image.bits, &image.image.at(0));
-        if (!_uniforms.addTexture(name, texture)) {
-            delete texture;
-        }
-        mat.addDefine("MATERIAL_OCCLUSIONMAP", name);
-
-        if (_material.occlusionTexture.strength != 1.0)
-            mat.addDefine("MATERIAL_OCCLUSIONMAP_STRENGTH", _material.occlusionTexture.strength);
     }
 
     return mat;
