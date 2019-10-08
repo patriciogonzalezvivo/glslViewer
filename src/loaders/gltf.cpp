@@ -194,7 +194,8 @@ Material extractMaterial(const tinygltf::Model& _model, const tinygltf::Material
 
         if (_material.occlusionTexture.index >= 0) {
             const tinygltf::Image &occlussionImage = _model.images[_model.textures[_material.occlusionTexture.index].source];
-            isOcclusionRoughnessMetallic = image.uri == occlussionImage.uri;
+            if (image.uri != "" && image.uri == occlussionImage.uri)
+                isOcclusionRoughnessMetallic = true;
         }
 
         if (isOcclusionRoughnessMetallic) {
