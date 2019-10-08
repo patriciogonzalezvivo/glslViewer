@@ -27,33 +27,34 @@ static double fDelta = 0.0f;
 static double fFPS = 0.0f;
 static float fPixelDensity = 1.0;
 
-#if defined(PLATFORM_LINUX) || defined(PLATFORM_OSX)
-// GLWF ( OSX/Linux ) globals
+#if defined(DRIVER_GLFW)
+// GLWF globals
 //----------------------------------------------------
 static bool left_mouse_button_down = false;
 static GLFWwindow* window;
 
-#elif defined(PLATFORM_RPI) || defined(PLATFORM_RPI4)
+#else
+// NON GLWF globals (we have to do all brute force)
+// --------------------------------------------------
 #include <assert.h>
 #include <fcntl.h>
 #include <iostream>
 #include <termios.h>
 #include <fstream>
 
-// Raspberry globals
-//----------------------------------------------------
-
 #define check() assert(glGetError() == 0)
 
+// EGL context globals
 EGLDisplay display;
 EGLContext context;
 EGLSurface surface;
 
 // unsigned long long timeStart;
-struct timespec time_start;
 std::string device_mouse = "/dev/input/mice";
 std::string device_screen = "/dev/dri/card1";
 
+// get Time Function
+struct timespec time_start;
 double getTimeSec() {
     timespec now;
     clock_gettime(CLOCK_MONOTONIC, &now);
@@ -121,10 +122,10 @@ static const char *eglGetErrorStr() {
 }
 #endif
 
-#if defined(PLATFORM_RPI)
+#if defined(DRIVER_VC)
 DISPMANX_DISPLAY_HANDLE_T dispman_display;
 
-#elif defined(PLATFORM_RPI4)
+#elif defined(DRIVER_GBM)
 // https://github.com/matusnovak/rpi-opengl-without-x/blob/master/triangle_rpi4.c
 
 int device;
@@ -149,18 +150,6 @@ static drmModeEncoder *findEncoder(drmModeRes *resources, drmModeConnector *conn
         return drmModeGetEncoder(device, connector->encoder_id);
     return NULL;
 }
-
-
-// static int matchConfigToVisual(EGLDisplay display, EGLint visualId, EGLConfig *configs, int count) {
-//     EGLint id;
-//     for (int i = 0; i < count; ++i) {
-//         if (!eglGetConfigAttrib(display, configs[i], EGL_NATIVE_VISUAL_ID, &id))
-//             continue;
-//         if (id == visualId)
-//             return i;
-//     }
-//     return -1;
-// }
 
 static struct gbm_bo *previousBo = NULL;
 static uint32_t previousFb;
@@ -193,16 +182,16 @@ static void gbmClean() {
 }
 #endif
 
-#if defined(PLATFORM_RPI) || defined(PLATFORM_RPI4)
+#if !defined(DRIVER_GLFW)
 static bool bHostInited = false;
 static void initHost() {
     if (bHostInited)
         return;
 
-    #if defined(PLATFORM_RPI)
+    #if defined(DRIVER_VC)
     bcm_host_init();
 
-    #elif defined(PLATFORM_RPI4)
+    #elif defined(DRIVER_GBM)
     // You can try chaning this to "card0" if "card1" does not work.
     device = open(device_screen.c_str(), O_RDWR | O_CLOEXEC);
 
@@ -245,10 +234,10 @@ static EGLDisplay getDisplay() {
     initHost();
     // printf("resolution: %ix%i\n", mode.hdisplay, mode.vdisplay);
 
-    #if defined(PLATFORM_RPI)
+    #if defined(DRIVER_VC)
     return eglGetDisplay(EGL_DEFAULT_DISPLAY);
 
-    #elif defined(PLATFORM_RPI4)
+    #elif defined(DRIVER_GBM)
 
     return eglGetDisplay(gbmDevice);
     #endif
@@ -257,8 +246,8 @@ static EGLDisplay getDisplay() {
 
 void initGL (glm::ivec4 &_viewport, WindowStyle _style) {
 
-    #if defined(PLATFORM_RPI) || defined(PLATFORM_RPI4)
-        // RASPBERRY_PI
+    // NON GLFW
+    #if !defined(DRIVER_GLFW)
         clock_gettime(CLOCK_MONOTONIC, &time_start);
 
         // Clear application state
@@ -278,7 +267,6 @@ void initGL (glm::ivec4 &_viewport, WindowStyle _style) {
         assert(EGL_FALSE != result);
         check();
        
-
         static const EGLint configAttribs[] = {
             EGL_RED_SIZE, 8,
             EGL_GREEN_SIZE, 8,
@@ -298,45 +286,29 @@ void initGL (glm::ivec4 &_viewport, WindowStyle _style) {
 
         EGLConfig config;
         EGLint numConfigs;
-        // EGLint count;
-        // eglGetConfigs(display, NULL, 0, &count);
-        // EGLConfig *configs = malloc(count * sizeof(configs));
 
         // get an appropriate EGL frame buffer configuration
         if (eglChooseConfig(display, configAttribs, &config, 1, &numConfigs) == EGL_FALSE) {
             std::cerr << "Failed to get EGL configs! Error: " << eglGetErrorStr() << std::endl;
             eglTerminate(display);
-            #ifdef PLATFORM_RPI4
+            #ifdef DRIVER_GBM
             gbmClean();
             #endif
             return EXIT_FAILURE;
         }
-
-        // #ifdef PLATFORM_RPI4
-        // I am not exactly sure why the EGL config must match the GBM format.
-        // But it works!
-        // int configIndex = matchConfigToVisual(display, GBM_FORMAT_XRGB8888, configs, numConfigs);
-        // if (configIndex < 0) {
-        //     std::cerr << "Failed to find matching EGL config! Error: " << eglGetErrorStr() << std::endl;
-        //     eglTerminate(display);
-        //     gbm_surface_destroy(gbmSurface);
-        //     gbm_device_destroy(gbmDevice);
-        //     return EXIT_FAILURE;
-        // }
-        // #endif
 
         // create an EGL rendering context
         context = eglCreateContext(display, config, EGL_NO_CONTEXT, contextAttribs);
         if (context == EGL_NO_CONTEXT) {
             std::cerr << "Failed to create EGL context! Error: " << eglGetErrorStr() << std::endl;
             eglTerminate(display);
-            #ifdef PLATFORM_RPI4
+            #ifdef DRIVER_GBM
             gbmClean();
             #endif
             return EXIT_FAILURE;
         }
 
-        #ifdef PLATFORM_RPI
+        #ifdef DRIVER_VC
         static EGL_DISPMANX_WINDOW_T nativeviewport;
 
         VC_RECT_T dst_rect;
@@ -381,7 +353,7 @@ void initGL (glm::ivec4 &_viewport, WindowStyle _style) {
         assert(surface != EGL_NO_SURFACE);
         check();
 
-        #elif defined(PLATFORM_RPI4)
+        #elif defined(DRIVER_GBM)
         surface = eglCreateWindowSurface(display, config, gbmSurface, NULL);
         if (surface == EGL_NO_SURFACE) {
             std::cerr << "Failed to create EGL surface! Error: " << eglGetErrorStr() << std::endl;
@@ -397,11 +369,9 @@ void initGL (glm::ivec4 &_viewport, WindowStyle _style) {
         result = eglMakeCurrent(display, surface, surface, context);
         assert(EGL_FALSE != result);
         check();
-        // free(configs);
 
+    // GLFW
     #else
-        // GLFW (OSX/LINUX)
-        // ---------------------------------------------
         glfwSetErrorCallback([](int err, const char* msg)->void {
             std::cerr << "GLFW error 0x"<<std::hex<<err<<std::dec<<": "<<msg<<"\n";
         });
@@ -548,20 +518,20 @@ void initGL (glm::ivec4 &_viewport, WindowStyle _style) {
 }
 
 bool isGL(){
-    #ifdef PLATFORM_RPI
-        // RASPBERRY_PI
+ 
+    #if defined(DRIVER_GLFW)
+        return !glfwWindowShouldClose(window);
+
+    #elif defined(DRIVER_VC)
         return bHostInited;
 
-    #elif defined(PLATFORM_RPI4)
+    #elif defined(DRIVER_GBM)
         return true;
 
-    #else
-        // OSX/LINUX
-        return !glfwWindowShouldClose(window);
     #endif
 }
 
-#if defined(PLATFORM_OSX) || defined(PLATFORM_LINUX) 
+#if defined(DRIVER_GLFW) 
 void debounceSetWindowTitle(std::string title){
     static double lastUpdated;
 
@@ -580,11 +550,8 @@ void debounceSetWindowTitle(std::string title){
 void updateGL(){
     // Update time
     // --------------------------------------------------------------------
-    #if defined(PLATFORM_RPI) || defined(PLATFORM_RPI4) 
-        // ANY RASPBERRY PI 
-        double now = getTimeSec();
-    #else
-        // OSX/LINUX
+
+    #if defined(DRIVER_GLFW)
         double now = glfwGetTime();
 
         // Fix the FPS to a max of 60fps (REST_SEC)
@@ -593,8 +560,13 @@ void updateGL(){
             usleep(int((REST_SEC - diff) * 1000000));
             now = glfwGetTime();
         }
-        
+
+    #else 
+        // NON GLFW (VC or GBM) 
+        double now = getTimeSec();       
+    
     #endif
+
     fDelta = now - fTime;
     fTime = now;
 
@@ -610,10 +582,14 @@ void updateGL(){
 
     // EVENTS
     // --------------------------------------------------------------------
-    #if defined(PLATFORM_RPI) || defined(PLATFORM_RPI4) 
-        // RASPBERRY_PI
-        static int fd = -1;
+        #if defined(DRIVER_GLFW)
+        std::string title = appTitle + ":..: FPS:" + toString(fFPS);
+        debounceSetWindowTitle(title);
+        glfwPollEvents();
+        
+        #else
         const int XSIGN = 1<<4, YSIGN = 1<<5;
+        static int fd = -1;
         if (fd<0) {
             fd = open(device_mouse.c_str(),O_RDONLY|O_NONBLOCK);
         }
@@ -671,34 +647,30 @@ void updateGL(){
                 else onMouseMove(mouse.x, mouse.y);
             }
         }
-    #else
-        std::string title = appTitle + ":..: FPS:" + toString(fFPS);
-        debounceSetWindowTitle(title);
-
-        // OSX/LINUX
-        glfwPollEvents();
     #endif
 }
 
 void renderGL(){
-    // RASPBERRY_PI
-    #if defined(PLATFORM_RPI) || defined(PLATFORM_RPI4)
-        eglSwapBuffers(display, surface);
+    // NON GLFW
+#if defined(DRIVER_GLFW)
+    glfwSwapBuffers(window);
 
-        #if defined(PLATFORM_RPI4)
-        gbmSwapBuffers();
-        #endif
-
-    // OSX/LINUX
-    #else
-        
-        glfwSwapBuffers(window);
+#else
+    eglSwapBuffers(display, surface);
+    #if defined(DRIVER_GBM)
+    gbmSwapBuffers();
     #endif
+
+#endif
 }
 
 void closeGL(){
-    #if defined(PLATFORM_RPI) || defined(PLATFORM_RPI4)
-        // RASPBERRY_PI
+    // NON GLFW
+    #if defined(DRIVER_GLFW)
+        glfwSetWindowShouldClose(window, GL_TRUE);
+        glfwTerminate();
+
+    #else
         eglSwapBuffers(display, surface);
 
         // Release OpenGL resources
@@ -708,20 +680,15 @@ void closeGL(){
         eglTerminate(display);
         eglReleaseThread();
 
-        #if defined(PLATFORM_RPI)
+        #if defined(DRIVER_VC)
         vc_dispmanx_display_close(dispman_display);
         bcm_host_deinit();
 
-        #elif defined(PLATFORM_RPI4)
+        #elif defined(DRIVER_GBM)
         gbmClean();
         close(device);
-
         #endif
 
-    #else
-        // OSX/LINUX
-        glfwSetWindowShouldClose(window, GL_TRUE);
-        glfwTerminate();
     #endif
 }
 //-------------------------------------------------------------
@@ -742,23 +709,23 @@ void setViewport(float _width, float _height) {
 }
 
 void setWindowSize(int _width, int _height) {
-#if defined(PLATFORM_RPI)
-    // Todo
-#elif defined(PLATFORM_RPI4)
-    // TODO
-#else
+#if defined(DRIVER_GLFW)
     glfwSetWindowSize(window, _width, _height);
 #endif
-
     setViewport(_width, _height);
 }
 
 glm::ivec2 getScreenSize() {
     glm::ivec2 screen;
 
-    #if defined(PLATFORM_RPI)
-        // RASPBERRYPI
+    #if defined(DRIVER_GLFW)
+        // glfwGetMonitorPhysicalSize(glfwGetPrimaryMonitor(), &screen.x, &screen.y);
+        GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+        const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+        screen.x = mode->width;
+        screen.y = mode->height;
 
+    #elif defined(DRIVER_VC)
         if (!bHostInited)
             initHost();
 
@@ -768,34 +735,25 @@ glm::ivec2 getScreenSize() {
         assert(success >= 0);
         screen = glm::ivec2(screen_width, screen_height);
 
-    #elif defined(PLATFORM_RPI4)
+    #elif defined(DRIVER_GBM)
         if (!bHostInited)
             initHost();
 
         screen = glm::ivec2(mode.hdisplay, mode.vdisplay);
 
-    #else
-        // OSX/Linux
-        // glfwGetMonitorPhysicalSize(glfwGetPrimaryMonitor(), &screen.x, &screen.y);
-        GLFWmonitor* monitor = glfwGetPrimaryMonitor();
-        const GLFWvidmode* mode = glfwGetVideoMode(monitor);
-        screen.x = mode->width;
-        screen.y = mode->height;
     #endif
 
     return screen;
 }
 
 float getPixelDensity() {
-    #if defined(PLATFORM_RPI) || defined(PLATFORM_RPI4)
-        // RASPBERRYPI
-        return 1.;
-    #else
-        // OSX/LINUX
+    #if defined(DRIVER_GLFW)
         int window_width, window_height, framebuffer_width, framebuffer_height;
         glfwGetWindowSize(window, &window_width, &window_height);
         glfwGetFramebufferSize(window, &framebuffer_width, &framebuffer_height);
         return float(framebuffer_width)/float(window_width);
+    #else
+        return 1.;
     #endif
 }
 
