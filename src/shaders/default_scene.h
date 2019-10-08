@@ -57,7 +57,7 @@ void main(void) {
 #ifdef MODEL_VERTEX_TANGENT
     v_tangent = a_tangent;
     vec3 worldTangent = a_tangent.xyz;
-    vec3 worldBiTangent = cross(v_normal, worldTangent) * sign(a_tangent.w);
+    vec3 worldBiTangent = cross(v_normal, worldTangent);// * sign(a_tangent.w);
     v_tangentToWorld = mat3(normalize(worldTangent), normalize(worldBiTangent), normalize(v_normal));
 #endif
     
@@ -109,6 +109,10 @@ varying vec4    v_tangent;
 // #define SPECULAR_PHONG
 // #define SPECULAR_BLINNPHONG
 // #define LIGHT_SHADOWMAP_BIAS 0.005
+
+#ifdef PLATFORM_RPI
+#define TARGET_MOBILE
+#endif
 
 #ifndef TONEMAP_FNC
 #define TONEMAP_FNC tonemap_reinhard
@@ -494,12 +498,20 @@ vec3 materialEmissive() {
 uniform sampler2D MATERIAL_OCCLUSIONMAP;
 #endif
 
+#if defined(MATERIAL_OCCLUSIONROUGHNESSMETALLICMAP) && !defined(MATERIAL_OCCLUSIONROUGHNESSMETALLICMAP_UNIFORM)
+#define MATERIAL_OCCLUSIONROUGHNESSMETALLICMAP_UNIFORM
+uniform sampler2D MATERIAL_OCCLUSIONROUGHNESSMETALLICMAP;
+#endif
+
 float materialOcclusion() {
     float occlusion = 1.0;
 
 #if defined(MATERIAL_OCCLUSIONMAP) && defined(MODEL_VERTEX_TEXCOORD)
     vec2 uv = v_texcoord.xy;
     occlusion = texture2D(MATERIAL_OCCLUSIONMAP, uv).r;
+#elif defined(MATERIAL_OCCLUSIONROUGHNESSMETALLICMAP) && defined(MODEL_VERTEX_TEXCOORD)
+    vec2 uv = v_texcoord.xy;
+    occlusion = texture2D(MATERIAL_OCCLUSIONROUGHNESSMETALLICMAP, uv).r;
 #endif
 
 #if defined(MATERIAL_OCCLUSIONMAP_STRENGTH)
@@ -597,9 +609,14 @@ float toMetallic(vec3 diffuse, vec3 specular) {
 uniform sampler2D MATERIAL_METALLICMAP;
 #endif
 
-#if defined(MATERIAL_METALLICROUGHNESSMAP) && !defined(MATERIAL_METALLICROUGHNESSMAP_UNIFORM)
-#define MATERIAL_METALLICROUGHNESSMAP_UNIFORM
-uniform sampler2D MATERIAL_METALLICROUGHNESSMAP;
+#if defined(MATERIAL_ROUGHNESSMETALLICMAP) && !defined(MATERIAL_ROUGHNESSMETALLICMAP_UNIFORM)
+#define MATERIAL_ROUGHNESSMETALLICMAP_UNIFORM
+uniform sampler2D MATERIAL_ROUGHNESSMETALLICMAP;
+#endif
+
+#if defined(MATERIAL_OCCLUSIONROUGHNESSMETALLICMAP) && !defined(MATERIAL_OCCLUSIONROUGHNESSMETALLICMAP_UNIFORM)
+#define MATERIAL_OCCLUSIONROUGHNESSMETALLICMAP_UNIFORM
+uniform sampler2D MATERIAL_OCCLUSIONROUGHNESSMETALLICMAP;
 #endif
     
 float materialMetallic() {
@@ -615,9 +632,13 @@ float materialMetallic() {
     #endif
     metallic = texture2D(MATERIAL_METALLICMAP, uv).b;
 
-#elif defined(MATERIAL_METALLICROUGHNESSMAP) && defined(MODEL_VERTEX_TEXCOORD)
+#elif defined(MATERIAL_ROUGHNESSMETALLICMAP) && defined(MODEL_VERTEX_TEXCOORD)
     vec2 uv = v_texcoord.xy;
-    metallic = texture2D(MATERIAL_METALLICROUGHNESSMAP, uv).b;
+    metallic = texture2D(MATERIAL_ROUGHNESSMETALLICMAP, uv).b;
+
+#elif defined(MATERIAL_OCCLUSIONROUGHNESSMETALLICMAP) && defined(MODEL_VERTEX_TEXCOORD)
+    vec2 uv = v_texcoord.xy;
+    metallic = texture2D(MATERIAL_OCCLUSIONROUGHNESSMETALLICMAP, uv).b;
 
 #elif defined(MATERIAL_METALLIC)
     metallic = MATERIAL_METALLIC;
@@ -642,9 +663,14 @@ float materialMetallic() {
 uniform sampler2D MATERIAL_ROUGHNESSMAP;
 #endif
 
-#if defined(MATERIAL_METALLICROUGHNESSMAP) && !defined(MATERIAL_METALLICROUGHNESSMAP_UNIFORM)
-#define MATERIAL_METALLICROUGHNESSMAP_UNIFORM
-uniform sampler2D MATERIAL_METALLICROUGHNESSMAP;
+#if defined(MATERIAL_ROUGHNESSMETALLICMAP) && !defined(MATERIAL_ROUGHNESSMETALLICMAP_UNIFORM)
+#define MATERIAL_ROUGHNESSMETALLICMAP_UNIFORM
+uniform sampler2D MATERIAL_ROUGHNESSMETALLICMAP;
+#endif
+
+#if defined(MATERIAL_OCCLUSIONROUGHNESSMETALLICMAP) && !defined(MATERIAL_OCCLUSIONROUGHNESSMETALLICMAP_UNIFORM)
+#define MATERIAL_OCCLUSIONROUGHNESSMETALLICMAP_UNIFORM
+uniform sampler2D MATERIAL_OCCLUSIONROUGHNESSMETALLICMAP;
 #endif
 
 float materialRoughness() {
@@ -660,9 +686,13 @@ float materialRoughness() {
     #endif
     roughness = texture2D(MATERIAL_ROUGHNESSMAP, uv).g;
 
-#elif defined(MATERIAL_METALLICROUGHNESSMAP) && defined(MODEL_VERTEX_TEXCOORD)
+#elif defined(MATERIAL_ROUGHNESSMETALLICMAP) && defined(MODEL_VERTEX_TEXCOORD)
     vec2 uv = v_texcoord.xy;
-    roughness = texture2D(MATERIAL_METALLICROUGHNESSMAP, uv).g;
+    roughness = texture2D(MATERIAL_ROUGHNESSMETALLICMAP, uv).g;
+
+#elif defined(MATERIAL_OCCLUSIONROUGHNESSMETALLICMAP) && defined(MODEL_VERTEX_TEXCOORD)
+    vec2 uv = v_texcoord.xy;
+    roughness = texture2D(MATERIAL_OCCLUSIONROUGHNESSMETALLICMAP, uv).g;
 
 #elif defined(MATERIAL_ROUGHNESS)
     roughness = MATERIAL_ROUGHNESS;
@@ -1424,7 +1454,6 @@ float specularGGX(vec3 L, vec3 N, vec3 V, float roughness, float fresnel) {
 
 #ifndef FNC_SPECULAR
 #define FNC_SPECULAR
-
 float specular(vec3 L, vec3 N, vec3 V, float roughness) {
 
 #if defined(SPECULAR_GAUSSIAN)
@@ -1446,8 +1475,13 @@ float specular(vec3 L, vec3 N, vec3 V, float roughness) {
     return specularBlinnPhong(L, N, V, shininess);
 #else
 
+    #ifdef TARGET_MOBILE
     float shininess = toShininess(roughness, 0.0);
     return specularBlinnPhong(L, N, V, shininess);
+    #else
+    float f0 = 0.04;
+    return specularCookTorrance(L, N, V, roughness, f0);
+    #endif  
 
 #endif
 }
@@ -1474,8 +1508,12 @@ float specular(vec3 L, vec3 N, vec3 V, float NoV, float NoL, float roughness, fl
     return specularBlinnPhong(L, N, V, shininess);
 #else
 
+    #ifdef TARGET_MOBILE
     float shininess = toShininess(roughness, 0.0);
     return specularBlinnPhong(L, N, V, shininess);
+    #else
+    return specularCookTorrance(L, N, V, roughness, fresnel);
+    #endif  
 
 #endif
 }
