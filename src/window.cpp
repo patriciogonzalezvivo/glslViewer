@@ -50,7 +50,6 @@ EGLContext context;
 EGLSurface surface;
 
 // unsigned long long timeStart;
-struct timespec time_start;
 std::string device_mouse = "/dev/input/mice";
 std::string device_screen = "/dev/dri/card1";
 
