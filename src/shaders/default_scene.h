@@ -57,7 +57,7 @@ void main(void) {
 #ifdef MODEL_VERTEX_TANGENT
     v_tangent = a_tangent;
     vec3 worldTangent = a_tangent.xyz;
-    vec3 worldBiTangent = cross(v_normal, worldTangent) * sign(a_tangent.w);
+    vec3 worldBiTangent = cross(v_normal, worldTangent);// * sign(a_tangent.w);
     v_tangentToWorld = mat3(normalize(worldTangent), normalize(worldBiTangent), normalize(v_normal));
 #endif
     
@@ -109,6 +109,10 @@ varying vec4    v_tangent;
 // #define SPECULAR_PHONG
 // #define SPECULAR_BLINNPHONG
 // #define LIGHT_SHADOWMAP_BIAS 0.005
+
+#ifdef PLATFORM_RPI
+#define TARGET_MOBILE
+#endif
 
 #ifndef TONEMAP_FNC
 #define TONEMAP_FNC tonemap_reinhard
@@ -1450,7 +1454,6 @@ float specularGGX(vec3 L, vec3 N, vec3 V, float roughness, float fresnel) {
 
 #ifndef FNC_SPECULAR
 #define FNC_SPECULAR
-
 float specular(vec3 L, vec3 N, vec3 V, float roughness) {
 
 #if defined(SPECULAR_GAUSSIAN)
@@ -1472,8 +1475,13 @@ float specular(vec3 L, vec3 N, vec3 V, float roughness) {
     return specularBlinnPhong(L, N, V, shininess);
 #else
 
+    #ifdef TARGET_MOBILE
     float shininess = toShininess(roughness, 0.0);
     return specularBlinnPhong(L, N, V, shininess);
+    #else
+    float f0 = 0.04;
+    return specularCookTorrance(L, N, V, roughness, f0);
+    #endif  
 
 #endif
 }
@@ -1500,8 +1508,12 @@ float specular(vec3 L, vec3 N, vec3 V, float NoV, float NoL, float roughness, fl
     return specularBlinnPhong(L, N, V, shininess);
 #else
 
+    #ifdef TARGET_MOBILE
     float shininess = toShininess(roughness, 0.0);
     return specularBlinnPhong(L, N, V, shininess);
+    #else
+    return specularCookTorrance(L, N, V, roughness, fresnel);
+    #endif  
 
 #endif
 }
