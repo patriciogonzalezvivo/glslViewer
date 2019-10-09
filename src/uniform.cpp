@@ -168,6 +168,11 @@ bool Uniforms::addTexture( const std::string& _name, Texture* _texture) {
         textures[ _name ] = _texture;
         return true;
     }
+    else {
+        if (textures[ _name ])
+            delete textures[ _name ];
+        textures[ _name ] = _texture;
+    }
     return false;
 }
 

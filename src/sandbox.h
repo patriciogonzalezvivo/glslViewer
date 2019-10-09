@@ -42,11 +42,12 @@ public:
     Scene&              getScene() { return m_scene; }
     
     // Some events
-    void                onFileChange( WatchFileList &_files, int _index );
     void                onScroll( float _yoffset );
-    void                onScreenshot( std::string _file );
     void                onMouseDrag( float _x, float _y, int _button );
     void                onViewportResize( int _newWidth, int _newHeight );
+    void                onFileChange( WatchFileList &_files, int _index );
+    void                onScreenshot( std::string _file );
+    void                onHistogram();
    
     // Include folders
     List                include_folders;
@@ -91,7 +92,7 @@ private:
 
     // Postprocessing
     Shader              m_postprocessing_shader;
-    bool                m_postprocessing_enabled;
+    bool                m_postprocessing;
 
     // Billboard
     Shader              m_billboard_shader;
@@ -110,6 +111,11 @@ private:
     int                 m_record_counter;
     bool                m_record;
 
+    // Histogram
+    Shader              m_histogram_shader;
+    Texture*            m_histogram_texture;
+    bool                m_histogram;
+
     // Other state properties
     glm::mat3           m_view2d;
     float               m_lat;
@@ -117,6 +123,8 @@ private:
     unsigned int        m_frame;
     bool                m_change;
     bool                m_initialized;
+
+    //  Debug
     bool                m_showTextures;
     bool                m_showPasses;
     

@@ -15,6 +15,7 @@
 
 #include "shaders/default.h"
 #include "shaders/dynamic_billboard.h"
+#include "shaders/histogram.h"
 #include "shaders/wireframe2D.h"
 #include "shaders/fxaa.h"
 
@@ -27,11 +28,13 @@ Sandbox::Sandbox():
     // Buffers
     m_buffers_total(0),
     // PostProcessing
-    m_postprocessing_enabled(false),
+    m_postprocessing(false),
     // Geometry helpers
     m_billboard_vbo(nullptr), m_cross_vbo(nullptr),
     // Record
     m_record_fdelta(0.04166666667), m_record_start(0.0f), m_record_head(0.0f), m_record_end(0.0f), m_record_counter(0), m_record(false),
+    // Histogram
+    m_histogram_texture(nullptr), m_histogram(false),
     // Scene
     m_view2d(1.0), m_lat(180.0), m_lon(0.0), m_frame(0), m_change(true), m_initialized(false),
     // Debug
@@ -72,14 +75,14 @@ Sandbox::Sandbox():
 
     // SCENE
     uniforms.functions["u_scene"] = UniformFunction("sampler2D", [this](Shader& _shader) {
-        if (m_postprocessing_enabled) {
+        if (m_postprocessing && m_scene_fbo.getTextureId()) {
             _shader.setUniformTexture("u_scene", &m_scene_fbo, _shader.textureIndex++ );
         }
     });
 
     #if !defined(PLATFORM_RPI) && !defined(PLATFORM_RPI4)
     uniforms.functions["u_sceneDepth"] = UniformFunction("sampler2D", [this](Shader& _shader) {
-        if (m_postprocessing_enabled && m_scene_fbo.getTextureId()) {
+        if (m_postprocessing && m_scene_fbo.getTextureId()) {
             _shader.setUniformDepthTexture("u_sceneDepth", &m_scene_fbo, _shader.textureIndex++ );
         }
     });
@@ -145,6 +148,22 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     },
     "debug[,on|off]                 show/hide passes and textures elements", false));
 
+    _commands.push_back(Command("histogram", [&](const std::string& _line){
+        if (_line == "histogram") {
+            std::string rta = m_histogram ? "on" : "off";
+            std::cout << "histogram," << rta << std::endl; 
+            return true;
+        }
+        else {
+            std::vector<std::string> values = split(_line,',');
+            if (values.size() == 2) {
+                m_histogram = (values[1] == "on");
+            }
+        }
+        return false;
+    },
+    "histogram[,on|off]             show/hide histogram", false));
+
     _commands.push_back(Command("defines", [&](const std::string& _line){ 
         if (_line == "defines") {
             if (geom_index == -1)
@@ -206,7 +225,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     _commands.push_back(Command("buffers", [&](const std::string& _line){ 
         if (_line == "buffers") {
             uniforms.printBuffers();
-            if (m_postprocessing_enabled) {
+            if (m_postprocessing) {
                 if (fxaa)
                     std::cout << "FXAA";
                 else
@@ -615,17 +634,17 @@ bool Sandbox::reloadShaders( WatchFileList &_files ) {
         // Specific defines for this buffer
         m_postprocessing_shader.addDefine("POSTPROCESSING");
         m_postprocessing_shader.load(m_frag_source, billboard_vert, false);
-        m_postprocessing_enabled = havePostprocessing;
+        m_postprocessing = havePostprocessing;
     }
     else if (fxaa) {
         m_postprocessing_shader.load(fxaa_frag, billboard_vert, false);
         uniforms.functions["u_scene"].present = true;
-        m_postprocessing_enabled = true;
+        m_postprocessing = true;
     }
     else 
-        m_postprocessing_enabled = false;
+        m_postprocessing = false;
 
-    if (m_postprocessing_enabled || uniforms.functions["u_scene"].present) {
+    if (m_postprocessing || m_histogram) { //|| uniforms.functions["u_scene"].present) {
         FboType type = uniforms.functions["u_sceneDepth"].present ? COLOR_DEPTH_TEXTURES : COLOR_TEXTURE_DEPTH_BUFFER;
         if (!m_scene_fbo.isAllocated() || m_scene_fbo.getType() != type)
             m_scene_fbo.allocate(getWindowWidth(), getWindowHeight(), type);
@@ -709,9 +728,15 @@ void Sandbox::render() {
     if ( (screenshotFile != "" || m_record) && !m_record_fbo.isAllocated())
         m_record_fbo.allocate(getWindowWidth(), getWindowHeight(), COLOR_TEXTURE_DEPTH_BUFFER);
 
-    if (m_postprocessing_enabled)
+    if (m_postprocessing || m_histogram ) {
+        if (!m_scene_fbo.isAllocated()) {
+            FboType type = uniforms.functions["u_sceneDepth"].present ? COLOR_DEPTH_TEXTURES : COLOR_TEXTURE_DEPTH_BUFFER;
+            m_scene_fbo.allocate(getWindowWidth(), getWindowHeight(), type);
+        }
+
         m_scene_fbo.bind();
-    else if (screenshotFile != "" || m_record)
+    }
+    else if (screenshotFile != "" || m_record )
         m_record_fbo.bind();
 
     // Clear the background
@@ -738,7 +763,7 @@ void Sandbox::render() {
     // ----------------------------------------------- < main scene end
 
     // POST PROCESSING
-    if (m_postprocessing_enabled) {
+    if (m_postprocessing) {
         m_scene_fbo.unbind();
 
         if (screenshotFile != "" || m_record)
@@ -754,6 +779,23 @@ void Sandbox::render() {
             m_postprocessing_shader.setUniformTexture("u_buffer" + toString(i), &uniforms.buffers[i]);
 
         m_billboard_vbo->render( &m_postprocessing_shader );
+    }
+    else if (m_histogram) {
+        m_scene_fbo.unbind();
+
+        if (screenshotFile != "" || m_record)
+            m_record_fbo.bind();
+
+        if (!m_billboard_shader.isLoaded())
+            m_billboard_shader.load(dynamic_billboard_frag, dynamic_billboard_vert, false);
+
+        m_billboard_shader.use();
+        m_billboard_shader.setUniform("u_depth", float(0.0));
+        m_billboard_shader.setUniform("u_scale", 1.0, 1.0);
+        m_billboard_shader.setUniform("u_translate", 0.0, 0.0);
+        m_billboard_shader.setUniform("u_modelViewProjectionMatrix", glm::mat4(1.0) );
+        m_billboard_shader.setUniformTexture("u_tex0", &m_scene_fbo, 0);
+        m_billboard_vbo->render( &m_billboard_shader );
     }
     
     if (screenshotFile != "" || m_record) {
@@ -779,7 +821,7 @@ void Sandbox::renderUI() {
 
         // DEBUG BUFFERS
         int nTotal = uniforms.buffers.size();
-        if (m_postprocessing_enabled) {
+        if (m_postprocessing) {
             nTotal += uniforms.functions["u_scene"].present;
             nTotal += uniforms.functions["u_sceneDepth"].present;
         }
@@ -808,7 +850,7 @@ void Sandbox::renderUI() {
                 yOffset -= yStep * 2.0;
             }
 
-            if (m_postprocessing_enabled) {
+            if (m_postprocessing) {
                 if (uniforms.functions["u_scene"].present) {
                     m_billboard_shader.setUniform("u_depth", float(0.0));
                     m_billboard_shader.setUniform("u_scale", xStep, yStep);
@@ -835,7 +877,7 @@ void Sandbox::renderUI() {
                 #endif
             }
 
-        // #if !defined(PLATFORM_RPI) && !defined(PLATFORM_RPI4) 
+        #if !defined(PLATFORM_RPI) && !defined(PLATFORM_RPI4) 
             if (uniforms.functions["u_lightShadowMap"].present) {
                 float x = xOffset;
                 float y = (float)(getWindowHeight()) - xOffset;
@@ -854,7 +896,29 @@ void Sandbox::renderUI() {
                     }
                 }
             }
-        // #endif
+        #endif
+        }
+    }
+
+    if (m_histogram && m_histogram_texture) {
+        glDisable(GL_DEPTH_TEST);
+
+        float w = 100;
+        float h = 50;
+        float x = (float)(getWindowWidth()) * 0.5;
+        float y = h;
+
+        if (!m_histogram_shader.isLoaded())
+            m_histogram_shader.load(histogram_frag, dynamic_billboard_vert, false);
+
+        m_histogram_shader.use();
+        for (std::map<std::string, Texture*>::iterator it = uniforms.textures.begin(); it != uniforms.textures.end(); it++) {
+            m_histogram_shader.setUniform("u_scale", w, h);
+            m_histogram_shader.setUniform("u_translate", x, y);
+            m_histogram_shader.setUniform("u_resolution", (float)getWindowWidth(), (float)getWindowHeight());
+            m_histogram_shader.setUniform("u_modelViewProjectionMatrix", getOrthoMatrix());
+            m_histogram_shader.setUniformTexture("u_sceneHistogram", m_histogram_texture, 0);
+            m_billboard_vbo->render(&m_histogram_shader);
         }
     }
 
@@ -924,6 +988,9 @@ void Sandbox::renderDone() {
         onScreenshot(screenshotFile);
         screenshotFile = "";
     }
+
+    if (m_histogram)
+        onHistogram();
 
     m_frame++;
 
@@ -1081,7 +1148,7 @@ void Sandbox::onViewportResize(int _newWidth, int _newHeight) {
     for (unsigned int i = 0; i < uniforms.buffers.size(); i++) 
         uniforms.buffers[i].allocate(_newWidth, _newHeight, COLOR_TEXTURE);
 
-    if (m_postprocessing_enabled)
+    if (m_postprocessing || m_histogram)
         m_scene_fbo.allocate(_newWidth, _newHeight, uniforms.functions["u_sceneDepth"].present ? COLOR_DEPTH_TEXTURES : COLOR_TEXTURE_DEPTH_BUFFER);
 
     if (m_record_fbo.isAllocated())
@@ -1105,6 +1172,50 @@ void Sandbox::onScreenshot(std::string _file) {
         }
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    }
+}
+
+void Sandbox::onHistogram() {
+    if ( isGL() && haveChange() ) {
+
+        // Extract pixels
+        glBindFramebuffer(GL_FRAMEBUFFER, m_scene_fbo.getId());
+        int w = getWindowWidth();
+        int h = getWindowHeight();
+        int c = 4;
+        int total = w * h * c;
+        unsigned char* pixels = new unsigned char[total];
+        glReadPixels(0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+        // Count frequencies of appearances 
+        float max_freq = 0;
+        glm::vec3 freqs[256];
+        for (int i = 0; i < total; i += c) {
+            freqs[pixels[i]].r++;
+            if (freqs[pixels[i]].r > max_freq)
+                max_freq = freqs[pixels[i]].r;
+
+            freqs[pixels[i+1]].g++;
+            if (freqs[pixels[i+1]].g > max_freq)
+                max_freq = freqs[pixels[i+1]].g;
+
+            freqs[pixels[i+2]].b++;
+            if (freqs[pixels[i+2]].b > max_freq)
+                max_freq = freqs[pixels[i+2]].b;
+        }
+        delete[] pixels;
+
+        // Normalize frequencies
+        for (int i = 0; i < 255; i ++)
+            freqs[i] /= max_freq;
+
+        if (m_histogram_texture == nullptr)
+            m_histogram_texture = new Texture();
+
+        m_histogram_texture->load(256, 1, 3, 32, &freqs[0]);
+
+        uniforms.textures["u_sceneHistogram"] = m_histogram_texture;
     }
 }
 
