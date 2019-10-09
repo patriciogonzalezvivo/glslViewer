@@ -554,6 +554,13 @@ void Sandbox::unflagChange() {
 }
 
 bool Sandbox::haveChange() { 
+
+    // std::cout << "CHANGE " << m_change << std::endl;
+    // std::cout << "RECORD " << m_record << std::endl;
+    // std::cout << "SCENE " << m_scene.haveChange() << std::endl;
+    // std::cout << "UNIFORMS " << uniforms.haveChange() << std::endl;
+    // std::cout << std::endl;
+
     return  m_change || 
             m_record ||
             m_scene.haveChange() ||
@@ -1139,7 +1146,7 @@ void Sandbox::onMouseDrag(float _x, float _y, int _button) {
         }
     }
 
-    flagChange();
+    // flagChange();
 }
 
 void Sandbox::onViewportResize(int _newWidth, int _newHeight) {

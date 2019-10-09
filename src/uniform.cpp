@@ -386,12 +386,13 @@ void Uniforms::unflagChange() {
         for (UniformDataList::iterator it = data.begin(); it != data.end(); ++it)
             it->second.change = false;
 
-        for (unsigned int i = 0; i < lights.size(); i++)
-            lights[i].bChange = false;
-
-        getCamera().bChange = false;
         m_change = false;
     }
+
+    for (unsigned int i = 0; i < lights.size(); i++)
+        lights[i].bChange = false;
+
+    getCamera().bChange = false;
 }
 
 bool Uniforms::haveChange() { 
@@ -402,6 +403,13 @@ bool Uniforms::haveChange() {
             break;
         }
     }
+
+    // std::cout << "  change " << m_change << std::endl;
+    // std::cout << "  lights " << lightChange << std::endl;
+    // std::cout << "  u_time " << functions["u_time"].present << std::endl;
+    // std::cout << "  u_delta " << functions["u_delta"].present << std::endl;
+    // std::cout << "  u_mouse " << functions["u_mouse"].present << std::endl;
+    // std::cout << "  u_camera " << getCamera().bChange << std::endl;
 
     return  m_change || 
             functions["u_time"].present || 

@@ -197,23 +197,6 @@ void Node::orbit(float _lat, float _lon, float _radius, const glm::vec3& _center
 void Node::apply(const glm::mat4& _m) {
     m_transformMatrix = m_transformMatrix * _m;
     setTransformMatrix(m_transformMatrix);
-
-    // glm::vec3 scale;
-    // glm::quat rotation;
-    // glm::vec3 translation;
-    // glm::vec3 skew;
-    // glm::vec4 perspective;
-    // glm::decompose( _m, scale, rotation, translation, skew, perspective );
-
-    // m_scale *= scale;
-    // m_orientation *= rotation;
-    // m_position += translation;
-
-    // createMatrix();
-
-    // onPositionChanged();
-    // onOrientationChanged();
-    // onScaleChanged();
 }
 
 void Node::reset(){
@@ -230,17 +213,14 @@ void Node::createMatrix() {
 }
 
 void Node::updateAxis() {
-    if(m_scale[0]>0) {
+    if(m_scale[0]>0)
         m_axis[0] = glm::vec3(glm::row(getTransformMatrix(),0))/m_scale[0];
-    }
 
-    if(m_scale[1]>0) {
+    if(m_scale[1]>0)
         m_axis[1] = glm::vec3(glm::row(getTransformMatrix(),1))/m_scale[1];
-    }
 
-    if(m_scale[2]>0) {
+    if(m_scale[2]>0)
         m_axis[2] = glm::vec3(glm::row(getTransformMatrix(),2))/m_scale[2];
-    }
 
     bChange = true;
 }

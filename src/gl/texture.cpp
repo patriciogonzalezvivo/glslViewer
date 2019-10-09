@@ -26,58 +26,19 @@ void Texture::clear() {
 bool Texture::load(const std::string& _path, bool _vFlip) {
     std::string ext = getExt(_path);
 
-    // Generate an OpenGL texture ID for this texture
-    glEnable(GL_TEXTURE_2D);
-    if (m_id == 0)
-        glGenTextures(1, &m_id);
-    glBindTexture(GL_TEXTURE_2D, m_id);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
     if (ext == "png"    || ext == "PNG" ||
         ext == "jpg"    || ext == "JPG" ||
         ext == "jpeg"   || ext == "JPEG") {
 
         unsigned char* pixels = loadPixels(_path, &m_width, &m_height, RGB_ALPHA, _vFlip);
-
-#if defined(PLATFORM_RPI) || defined(PLATFORM_RPI4)
-        int max_size = std::max(m_width, m_height);
-        if ( max_size > 1024) {
-            float factor = max_size/1024.0;
-            int w = m_width/factor;
-            int h = m_height/factor;
-            unsigned char * data = new unsigned char [w * 4 * h];
-            rescalePixels( pixels, m_width, m_height, 4, w, h, data);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-            m_width = w;
-            m_height = h;
-            delete[] data;
-        }
-        else
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_width, m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-#else
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_width, m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-#endif
-
-        load()
+        load(m_width, m_height, 4, 8, pixels);
         // delete[] pixels;
         delete pixels;
     }
 
     else if (ext == "hdr" || ext == "HDR") {
         float* pixels = loadPixelsHDR(_path, &m_width, &m_height, _vFlip);
-
-    #if defined(PLATFORM_RPI) || defined(PLATFORM_RPI4) 
-        GLenum InternalFormat = GL_RGB;
-    #else
-        GLenum InternalFormat = GL_RGB16F_ARB;
-    #endif
-
-        glTexImage2D(GL_TEXTURE_2D, 0, InternalFormat, m_width, m_height, 0, GL_RGB, GL_FLOAT, pixels);
-
+        load(m_width, m_height, 3, 32, pixels);
         // delete[] pixels;
         delete pixels;
     }
@@ -147,26 +108,17 @@ bool Texture::loadBump(const std::string& _path, bool _vFlip) {
                 i++;
             }
         }
-
-    #if defined(PLATFORM_RPI) || defined(PLATFORM_RPI4) 
-        GLenum InternalFormat = GL_RGB;
-    #else
-        GLenum InternalFormat = GL_RGB16F_ARB;
-    #endif
-
-        glTexImage2D(GL_TEXTURE_2D, 0, InternalFormat, m_width, m_height, 0, GL_RGB, GL_FLOAT, &result[0]);
-
         delete pixels;
+
+        load(m_width, m_height, 4, 32, &result[0]);
     }
 
     m_path = _path;
 
-    unbind();
-
     return true;
 }
 
-bool Texture::load(int _width, int _height, int _component, int _bits, const void* _data) {
+bool Texture::load(int _width, int _height, int _channels, int _bits, const void* _data) {
 
     // Generate an OpenGL texture ID for this texturez
     glEnable(GL_TEXTURE_2D);
@@ -181,22 +133,22 @@ bool Texture::load(int _width, int _height, int _component, int _bits, const voi
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
     GLenum format = GL_RGBA;
-    if (_component == 4) {
+    if (_channels == 4) {
         format = GL_RGBA;
     }
-    else if (_component == 3) {
+    else if (_channels == 3) {
         format = GL_RGB;
     }
 #if !defined(PLATFORM_RPI) && !defined(PLATFORM_RPI4)
-    else if (_component == 2) {
+    else if (_channels == 2) {
         format = GL_RG;
     } 
-    else if (_component == 1) {
+    else if (_channels == 1) {
         format = GL_RED;
     }
 #endif
     else
-        std::cout << "Unrecognize GLenum format " << _component << std::endl;
+        std::cout << "Unrecognize GLenum format " << _channels << std::endl;
 
     GLenum type = GL_UNSIGNED_BYTE;
     if (_bits == 32) {
@@ -213,7 +165,8 @@ bool Texture::load(int _width, int _height, int _component, int _bits, const voi
 
     m_width = _width;
     m_height = _height;
-#if defined(PLATFORM_RPI) || defined(PLATFORM_RPI4)
+    
+// #if defined(PLATFORM_RPI) || defined(PLATFORM_RPI4)
     int max_size = std::max(m_width, m_height);
     if ( max_size > 1024) {
         float factor = max_size/1024.0;
@@ -221,21 +174,21 @@ bool Texture::load(int _width, int _height, int _component, int _bits, const voi
         int h = m_height/factor;
 
         if (_bits == 32) {
-            float * data = new float [w * 4 * h];
-            rescalePixels((float*)_data, m_width, m_height, 4, w, h, data);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, type, data);
+            float * data = new float [w * h * _channels];
+            rescalePixels((float*)_data, m_width, m_height, _channels, w, h, data);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, format, type, data);
             delete[] data;
         }
         else if (_bits == 16) {
-            unsigned short * data = new unsigned short [w * 4 * h];
-            rescalePixels((unsigned short *)_data, m_width, m_height, 4, w, h, data);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, type, data);
+            unsigned short * data = new unsigned short [w * h * _channels];
+            rescalePixels((unsigned short *)_data, m_width, m_height, _channels, w, h, data);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, format, type, data);
             delete[] data;
         }
         else if (_bits == 8) {
-            unsigned char * data = new unsigned char [w * 4 * h];
-            rescalePixels((unsigned char*)_data, m_width, m_height, 4, w, h, data);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, type, data);
+            unsigned char * data = new unsigned char [w * h * _channels];
+            rescalePixels((unsigned char*)_data, m_width, m_height, _channels, w, h, data);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, format, type, data);
             delete[] data;
         }
         m_width = w;
@@ -243,9 +196,9 @@ bool Texture::load(int _width, int _height, int _component, int _bits, const voi
     }
     else
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_width, m_height, 0, format, type, _data);
-#else
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_width, m_height, 0, format, type, _data);
-#endif
+// #else
+//     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_width, m_height, 0, format, type, _data);
+// #endif
     return true;
 }
 
