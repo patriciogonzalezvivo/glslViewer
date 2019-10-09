@@ -166,7 +166,7 @@ bool Texture::load(int _width, int _height, int _channels, int _bits, const void
     m_width = _width;
     m_height = _height;
     
-// #if defined(PLATFORM_RPI) || defined(PLATFORM_RPI4)
+#if defined(PLATFORM_RPI) || defined(PLATFORM_RPI4)
     int max_size = std::max(m_width, m_height);
     if ( max_size > 1024) {
         float factor = max_size/1024.0;
@@ -196,9 +196,9 @@ bool Texture::load(int _width, int _height, int _channels, int _bits, const void
     }
     else
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_width, m_height, 0, format, type, _data);
-// #else
-//     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_width, m_height, 0, format, type, _data);
-// #endif
+#else
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_width, m_height, 0, format, type, _data);
+#endif
     return true;
 }
 
