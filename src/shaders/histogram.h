@@ -11,15 +11,21 @@ uniform sampler2D u_sceneHistogram;
 
 varying vec2 v_texcoord;
 
+float stroke(float x, float size, float w) {
+    float d = step(size, x+w*.5) - step(size, x-w*.5);
+    return clamp(d, 0., 1.);
+}
+
 void main() {
     vec3 color = vec3(0.0);
     vec2 st = v_texcoord;
 
-    vec3 freqs = texture2D(u_sceneHistogram, vec2(st.x, 0.0)).rgb;
+    vec4 freqs = texture2D(u_sceneHistogram, vec2(st.x, 0.0));
 
     color.r = step(st.y, freqs.r);
     color.g = step(st.y, freqs.g);
     color.b = step(st.y, freqs.b);
+    color += stroke(freqs.a, st.y, 0.1);
 
     gl_FragColor = vec4(color, 1.0);
 }

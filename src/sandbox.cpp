@@ -131,6 +131,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
             if (values.size() == 2) {
                 m_showPasses = (values[1] == "on");
                 m_showTextures = (values[1] == "on");
+                m_histogram = (values[1] == "on");
                 if (geom_index != -1) {
                     m_scene.showGrid = (values[1] == "on");
                     m_scene.showAxis = (values[1] == "on");
@@ -1196,31 +1197,37 @@ void Sandbox::onHistogram() {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
         // Count frequencies of appearances 
-        float max_freq = 0;
-        glm::vec3 freqs[256];
+        float max_rgb_freq = 0;
+        float max_luma_freq = 0;
+        glm::vec4 freqs[256];
         for (int i = 0; i < total; i += c) {
             freqs[pixels[i]].r++;
-            if (freqs[pixels[i]].r > max_freq)
-                max_freq = freqs[pixels[i]].r;
+            if (freqs[pixels[i]].r > max_rgb_freq)
+                max_rgb_freq = freqs[pixels[i]].r;
 
             freqs[pixels[i+1]].g++;
-            if (freqs[pixels[i+1]].g > max_freq)
-                max_freq = freqs[pixels[i+1]].g;
+            if (freqs[pixels[i+1]].g > max_rgb_freq)
+                max_rgb_freq = freqs[pixels[i+1]].g;
 
             freqs[pixels[i+2]].b++;
-            if (freqs[pixels[i+2]].b > max_freq)
-                max_freq = freqs[pixels[i+2]].b;
+            if (freqs[pixels[i+2]].b > max_rgb_freq)
+                max_rgb_freq = freqs[pixels[i+2]].b;
+
+            int luma = 0.299 * pixels[i] + 0.587 * pixels[i+1] + 0.114 * pixels[i+2];
+            freqs[luma].a++;
+            if (freqs[luma].a > max_luma_freq)
+                max_luma_freq = freqs[luma].a;
         }
         delete[] pixels;
 
         // Normalize frequencies
         for (int i = 0; i < 255; i ++)
-            freqs[i] /= max_freq;
+            freqs[i] = freqs[i] / glm::vec4(max_rgb_freq, max_rgb_freq, max_rgb_freq, max_luma_freq);
 
         if (m_histogram_texture == nullptr)
             m_histogram_texture = new Texture();
 
-        m_histogram_texture->load(256, 1, 3, 32, &freqs[0]);
+        m_histogram_texture->load(256, 1, 4, 32, &freqs[0]);
 
         uniforms.textures["u_sceneHistogram"] = m_histogram_texture;
     }
