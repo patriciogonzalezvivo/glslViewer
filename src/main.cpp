@@ -14,6 +14,8 @@
 #include "tools/fs.h"
 #include "tools/text.h"
 
+#include "osc-server.h"
+
 // GLOBAL VARIABLES
 //============================================================================
 //
@@ -28,8 +30,11 @@ int fileChanged;
 CommandList commands;
 std::mutex  consoleMutex;
 std::string outputFile      = "";
-std::vector<std::string> arguments_cmds;       // Execute commands
+std::vector<std::string> cmds_arguments;    // Execute commands
 bool        execute_exit    = false;
+
+// Open Sound Control
+int OSC_PORT = -1;  // No port set leaves OSC disabled
 
 std::string version = "1.6.0";
 std::string name = "GlslViewer";
@@ -44,6 +49,7 @@ Sandbox sandbox;
 //================================================================= Threads
 void fileWatcherThread();
 void cinWatcherThread();
+void oscWatcherThread();
 
 //================================================================= Functions
 void onExit();
@@ -592,13 +598,17 @@ int main(int argc, char **argv){
                 std::cerr << "At the moment screenshots only support PNG formats" << std::endl;
             }
         }
+        else if ( argument== "-p" || argument == "--port" ) {
+            i++;
+            OSC_PORT = toInt(std::string(argv[i]));
+        }
         else if ( argument == "-e" ) {
             i++;
-            arguments_cmds.push_back(std::string(argv[i]));
+            cmds_arguments.push_back(std::string(argv[i]));
         }
         else if ( argument == "-E" ) {
             i++;
-            arguments_cmds.push_back(std::string(argv[i]));
+            cmds_arguments.push_back(std::string(argv[i]));
             execute_exit = true;
         }
         else if (argument == "--fullFps" ) {
@@ -685,7 +695,7 @@ int main(int argc, char **argv){
             // variations of meshes, that only get created after loading the sece
             // to work arround that defines are add post-loading as argument commands
             std::string define = std::string("define,") + argument.substr(2);
-            arguments_cmds.push_back(define);
+            cmds_arguments.push_back(define);
         }
         else if ( argument.find("-I") == 0 ) {
             std::string include = argument.substr(2);
@@ -737,6 +747,8 @@ int main(int argc, char **argv){
     fileChanged = -1;
     std::thread fileWatcher( &fileWatcherThread );
     std::thread cinWatcher( &cinWatcherThread );
+    
+    std::thread oscWatcher( &oscWatcherThread );
 
     // Start working on the GL context
     filesMutex.lock();
@@ -803,8 +815,8 @@ int main(int argc, char **argv){
     fileWatcher.join();
 
     // Force cinWatcher to finish (because is waiting for input)
-    pthread_t handler = cinWatcher.native_handle();
-    pthread_cancel( handler );
+    pthread_t cinHandler = cinWatcher.native_handle();
+    pthread_cancel( cinHandler );
 
     exit(0);
 }
@@ -909,11 +921,11 @@ void cinWatcherThread() {
     }
 
     // Argument commands to execute comming from -e or -E
-    if (arguments_cmds.size() > 0) {
-        for (unsigned int i = 0; i < arguments_cmds.size(); i++) {
-            runCmd(arguments_cmds[i], consoleMutex);
+    if (cmds_arguments.size() > 0) {
+        for (unsigned int i = 0; i < cmds_arguments.size(); i++) {
+            runCmd(cmds_arguments[i], consoleMutex);
         }
-        arguments_cmds.clear();
+        cmds_arguments.clear();
 
         // If it's using -E exit after executing all commands
         if (execute_exit) {
@@ -927,5 +939,19 @@ void cinWatcherThread() {
     while (std::getline(std::cin, console_line)) {
         runCmd(console_line, consoleMutex);
         std::cout << "// > ";
+    }
+}
+
+// Open Sound Control Thread
+//============================================================================
+void oscWatcherThread() {
+    MyPacketListener listener;
+    listener.runCmd = runCmd;
+    UdpListeningReceiveSocket socket(IpEndpointName( IpEndpointName::ANY_ADDRESS, OSC_PORT ), &listener );
+
+    if (OSC_PORT > 1000) {
+        std::cout << "OSC listening at localhost:" << OSC_PORT << std::endl;
+        socket.Run();
+        std::cout << "OSC ended" << std::endl;
     }
 }
