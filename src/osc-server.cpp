@@ -9,7 +9,7 @@ void MyPacketListener::ProcessMessage( const osc::ReceivedMessage& m, const IpEn
         std::string line;
 
         std::vector<std::string> address = split(std::string(m.AddressPattern()), '/');
-        for (int i = 0; i < address.size(); i++) {
+        for (size_t i = 0; i < address.size(); i++) {
             if (i != 0)
                 line += "_";
             line += address[i];

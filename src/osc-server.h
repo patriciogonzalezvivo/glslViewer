@@ -8,6 +8,7 @@
 #include <cstring>
 #include <string>
 #include <mutex>
+#include <functional>
 
 class MyPacketListener : public osc::OscPacketListener {
 public:
