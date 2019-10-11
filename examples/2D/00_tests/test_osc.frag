@@ -2,11 +2,13 @@
 precision mediump float;
 #endif
 
-uniform vec2 u_mouse;
 uniform vec2 u_resolution;
-uniform float u_time;
-uniform float faderM;
+// uniform vec2 u_mouse;
+// uniform float u_time;
 
+uniform float multifaderM_1;
+uniform float multifaderM_2;
+uniform float multifaderM_3;
 
 varying vec4 v_position;
 varying vec4 v_color;
@@ -19,7 +21,9 @@ void main (void) {
     st.x *= aspect;
 
     vec3 color = vec3(0.0);
-    color.r = faderM;
+    color.r = multifaderM_1;
+    color.g = multifaderM_2;
+    color.b = multifaderM_3;
     
     gl_FragColor = vec4(color,1.0);
 }

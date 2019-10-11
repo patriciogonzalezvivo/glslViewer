@@ -8,7 +8,6 @@
 typedef std::map<std::string,std::string> DefinesList;
 typedef std::map<std::string,std::string>::iterator DefinesList_it;
 typedef std::map<std::string,std::string>::const_iterator DefinesList_cit;
-// bool merge(const DefinesList &_src, DefinesList &_dst);
 
 class HaveDefines {
 public:
