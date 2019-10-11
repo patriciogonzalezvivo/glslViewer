@@ -2,26 +2,6 @@
 
 #include "tools/text.h"
 
-// bool merge(const DefinesList &_src, DefinesList &_dst) {
-//     bool change = false;
-//     for (DefinesList_cit it=_src.begin(); it!=_src.end(); ++it) {
-//         // If it doesn't exist 
-//         if ( _dst.find(it->first) == _dst.end() ) {
-//             // add it
-//             _dst[it->first] = it->second;
-//             change = true;
-//         }
-//         // If exist and is different
-//         else if ( _dst[it->first] != it->second) {
-//             // change it
-//             _dst[it->first] = it->second;
-//             change = true;
-//         }
-//     }
-
-//     return change;
-// }
-
 HaveDefines::HaveDefines() : m_defineChange(false) {
 }
 

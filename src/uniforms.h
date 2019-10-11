@@ -12,7 +12,7 @@
 #include "scene/light.h"
 #include "scene/camera.h"
 
-#include "tools/fs.h"
+#include "io/fs.h"
 
 struct UniformData {
     std::string getType();
@@ -24,7 +24,6 @@ struct UniformData {
 };
 
 typedef std::map<std::string, UniformData> UniformDataList;
-// bool parseUniformData(const std::string &_line, UniformDataList *_uniforms);
 
 struct UniformFunction {
     UniformFunction();

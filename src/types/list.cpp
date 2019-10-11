@@ -1,6 +1,6 @@
 #include "list.h"
 
-#include <algorithm>    // std::sort
+#include <algorithm>
 
 List merge(const List &_A,const List &_B) {
     List rta;

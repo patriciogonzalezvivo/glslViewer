@@ -2,18 +2,18 @@
 
 #include "model.h"
 
+#include "../uniforms.h"
+
+#include "../io/command.h"
+
 #include "../gl/vbo.h"
 #include "../gl/shader.h"
 #include "../gl/textureCube.h"
 
-#include "../tools/skybox.h"
-#include "../tools/command.h"
+#include "../scene/model.h"
 
 #include "../shaders/billboard.h"
 #include "../shaders/default_scene.h"
-
-#include "../uniform.h"
-#include "../scene/model.h"
 
 enum CullingMode {
     NONE = 0,

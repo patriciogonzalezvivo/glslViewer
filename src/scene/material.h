@@ -4,9 +4,9 @@
 #include <string>
 #include "glm/glm.hpp"
 
-#include "../uniform.h"
+#include "../uniforms.h"
 #include "../defines.h"
-#include "../tools/fs.h"
+#include "../io/fs.h"
 #include "../gl/shader.h"
 
 class Material : public HaveDefines {

@@ -2,8 +2,8 @@
 #pragma once
 
 #include "texture.h"
-#include "tools/skybox.h"
 #include "glm/glm.hpp"
+#include "types/skybox.h"
 
 class TextureCube : public Texture {
 public:

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "scene/scene.h"
+#include "types/list.h"
 
 enum ShaderType {
     FRAGMENT = 0,

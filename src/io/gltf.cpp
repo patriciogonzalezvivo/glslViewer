@@ -5,10 +5,10 @@
 #include <string>
 #include <map>
 
+#include "fs.h"
 #include "pixels.h"
 
 #include "../gl/vbo.h"
-#include "../tools/fs.h"
 #include "../tools/geom.h"
 #include "../tools/text.h"
 

@@ -1,12 +1,10 @@
+#include "fs.h"
+
 #include <iostream>     // cout
 #include <fstream>      // File
 #include <iterator>     // std::back_inserter
 #include <algorithm>    // std::unique
-
 #include <sys/stat.h>
-
-#include "fs.h"
-
 
 bool haveExt(const std::string& _file, const std::string& _ext){
     return _file.find( "." + _ext) != std::string::npos;

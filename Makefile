@@ -1,8 +1,10 @@
 EXE = ./bin/glslViewer
 
 CXX = g++
-SOURCES := $(wildcard include/*/*.cc) $(wildcard src/*.cpp) $(wildcard src/*/*.cpp)
-HEADERS := $(wildcard include/*/*.h) $(wildcard src/*.h) $(wildcard src/*.h) $(wildcard src/*/*.h)
+SOURCES := 	$(wildcard include/*/*.cc) $(wildcard src/*.cpp) $(wildcard src/*/*.cpp) \
+			$(wildcard include/oscpack/osc/*.cpp) $(wildcard include/oscpack/ip/posix/*.cpp)
+HEADERS := 	$(wildcard include/*/*.h) $(wildcard src/*.h) $(wildcard src/*.h) $(wildcard src/*/*.h) \
+			$(wildcard include/oscpack/osc/*.h)   $(wildcard include/oscpack/ip/posix/*.h)
 OBJECTS := $(SOURCES:.cpp=.o)
 
 PLATFORM = $(shell uname)
@@ -86,7 +88,7 @@ $(EXE): $(OBJECTS) $(HEADERS)
 	$(CXX) $(CFLAGS) $(OBJECTS) $(LDFLAGS) -rdynamic -o $@
 
 clean:
-	@rm -rvf $(EXE) src/*.o src/*/*.o include/*/*.o *.dSYM
+	@rm -rvf $(EXE) src/*.o src/*/*.o include/*/*.o include/*/*/*.o *.dSYM
 	
 install:
 	@cp $(EXE) /usr/local/bin
