@@ -4,7 +4,7 @@
 #include <unistd.h>
 #include <sys/stat.h>
 
-#include "tools/fs.h"
+#include "io/fs.h"
 #include "tools/geom.h"
 #include "tools/text.h"
 #include "tools/shapes.h"
@@ -13,9 +13,9 @@
 #include "shaders/cubemap.h"
 #include "shaders/wireframe3D.h"
 
-#include "../loaders/ply.h"
-#include "../loaders/obj.h"
-#include "../loaders/gltf.h"
+#include "../io/ply.h"
+#include "../io/obj.h"
+#include "../io/gltf.h"
 
 Scene::Scene(): 
     // Debug State

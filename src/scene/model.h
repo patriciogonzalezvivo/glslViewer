@@ -10,7 +10,7 @@
 
 #include "types/mesh.h"
 
-#include "../uniform.h"
+#include "../uniforms.h"
 
 class Model : public Node {
 public:

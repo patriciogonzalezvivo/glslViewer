@@ -12,7 +12,7 @@
 #include "scene/light.h"
 #include "scene/camera.h"
 
-#include "tools/fs.h"
+#include "io/fs.h"
 
 struct UniformData {
     std::string getType();

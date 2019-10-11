@@ -1,5 +1,5 @@
-#include "osc-server.h"
-#include "tools/text.h"
+#include "osc.h"
+#include "../tools/text.h"
 
 void MyPacketListener::ProcessMessage( const osc::ReceivedMessage& m, const IpEndpointName& remoteEndpoint ){
     try {

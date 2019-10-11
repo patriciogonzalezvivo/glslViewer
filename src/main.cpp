@@ -11,10 +11,9 @@
 #include "gl/gl.h"
 #include "window.h"
 #include "sandbox.h"
-#include "tools/fs.h"
+#include "io/fs.h"
+#include "io/osc.h"
 #include "tools/text.h"
-
-#include "osc-server.h"
 
 // GLOBAL VARIABLES
 //============================================================================

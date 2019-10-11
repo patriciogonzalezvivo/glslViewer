@@ -3,10 +3,10 @@
 
 #include "textureCube.h"
 
-#include "../tools/fs.h"
-#include "../tools/face.h"
+#include "../io/fs.h"
+#include "../io/pixels.h"
+#include "../types/face.h"
 #include "../tools/math.h"
-#include "../loaders/pixels.h"
 
 // #define USE_BILINEAR_INTERPOLATION
 

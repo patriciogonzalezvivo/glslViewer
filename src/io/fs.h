@@ -1,6 +1,6 @@
 #pragma once
 
-#include "list.h"
+#include "../types/list.h"
 
 enum FileType {
     FRAG_SHADER     = 0,
