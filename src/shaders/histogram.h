@@ -25,7 +25,7 @@ void main() {
     color.r = step(st.y, freqs.r);
     color.g = step(st.y, freqs.g);
     color.b = step(st.y, freqs.b);
-    color += stroke(freqs.a, st.y, 0.1);
+    // color += stroke(freqs.a, st.y, 0.1);
 
     gl_FragColor = vec4(color, 1.0);
 }

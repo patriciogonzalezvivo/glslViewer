@@ -119,7 +119,7 @@ Material InitMaterial (const tinyobj::material_t& _material, Uniforms& _uniforms
 
     mat.addDefine("MATERIAL_NAME_" + toUpper(mat.name) );
 
-    mat.addDefine("MATERIAL_BASECOLOR", (float*)_material.diffuse, 3);
+    mat.addDefine("MATERIAL_BASECOLOR", glm::vec4(_material.diffuse[0], _material.diffuse[1], _material.diffuse[2], 1.0));
     if (!_material.diffuse_texname.empty()) {
         std::string name = getUniformName(_material.diffuse_texname);
         _uniforms.addTexture(name, _folder + _material.diffuse_texname, _files);
