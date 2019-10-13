@@ -979,7 +979,6 @@ void Sandbox::renderUI() {
 }
 
 void Sandbox::renderDone() {
-
     // RECORD
     if (m_record) {
         onScreenshot(toString(m_record_counter, 0, 5, '0') + ".png");
@@ -1009,7 +1008,6 @@ void Sandbox::renderDone() {
         updateViewport();
         flagChange();
     }
-    
 }
 
 // ------------------------------------------------------------------------- ACTIONS

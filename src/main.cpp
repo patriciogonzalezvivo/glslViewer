@@ -41,6 +41,7 @@ std::string header = name + " " + version + " by Patricio Gonzalez Vivo ( patric
 
 const unsigned int micro_wait = REST_SEC * 1000000;
 bool fullFps = false;
+bool timeOut = false;
 
 // Here is where all the magic happens
 Sandbox sandbox;
@@ -461,7 +462,8 @@ void declareCommands() {
 
     commands.push_back(Command("quit", [&](const std::string& _line){ 
         if (_line == "quit") {
-            bRun.store(false);
+            // bRun.store(false);
+            timeOut = true;
             return true;
         }
         return false;
@@ -470,7 +472,8 @@ void declareCommands() {
 
     commands.push_back(Command("exit", [&](const std::string& _line){ 
         if (_line == "exit") {
-            bRun.store(false);
+            // bRun.store(false);
+            timeOut = true;
             return true;
         }
         return false;
@@ -758,7 +761,6 @@ int main(int argc, char **argv){
         std::cout << "Starting Render Loop" << std::endl; 
     
     // Render Loop
-    bool timeOut = false;
     while ( isGL() && bRun.load() ) {
         // Update
         updateGL();
@@ -794,13 +796,11 @@ int main(int argc, char **argv){
         // Finish drawing
         sandbox.renderDone();
 
-        if ( timeOut ) {
+        if ( timeOut )
             bRun.store(false);
-        }
-        else {
+        else
              // Swap the buffers
             renderGL();
-        }
     }
 
     // If is terminated by the windows manager, turn bRun off so the fileWatcher can stop
@@ -928,7 +928,8 @@ void cinWatcherThread() {
 
         // If it's using -E exit after executing all commands
         if (execute_exit) {
-            bRun.store(false);
+            // bRun.store(false);
+            timeOut = true;
         }
     }
 
