@@ -49,8 +49,16 @@ class GlslViewer:
                 self.cmd.append('-l')
 
         if 'cursor' in options:
-            if options['cursor']:
-                self.cmd.append('-c')
+            if not options['cursor']:
+                self.cmd.append('--nocursor')
+        
+        if 'fxaa' in options:
+            if options['fxaa']:
+                self.cmd.append('--fxaa')
+
+        if 'fullFps' in options:
+            if options['fullFps']:
+                self.cmd.append('--fullFps')
 
         if 'verbose' in options:
             if options['verbose']:
@@ -109,7 +117,7 @@ class GlslViewer:
         if self.isRunning():
             return False
 
-        # print('EXE ',  ' '.join(self.cmd))
+        print('EXE ',  ' '.join(self.cmd))
         self.process = Popen(self.cmd,
                              stdin=PIPE, stdout=PIPE, stderr=PIPE,
                              shell=False)
@@ -275,6 +283,30 @@ class GlslViewer:
         return values
 
 
+    def wait(self, sec):
+        if not self.isRunning():
+            return False
+        answer = self.write('wait,' + str(sec))
+        return answer
+
+    
+    def update(self):
+        if not self.isRunning():
+            return False
+        answer = self.write('update')
+        return answer
+
+    
+    def reload(self, filename=""):
+        if not self.isRunning():
+            return False
+        if len(filename) == 0:
+            answer = self.write('reload')
+        else:
+            answer = self.write('reload,'+filename)
+        return answer
+
+
     def screenshot(self, filename):
         if not self.isRunning():
             return False
@@ -287,6 +319,7 @@ class GlslViewer:
             return False
         answer = self.write('sequence,' + str(start_second) + ',' + str(end_second))
         return answer
+
 
     def setCamera(self, x, y, z):
         if not self.isRunning():

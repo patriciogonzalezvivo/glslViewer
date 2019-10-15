@@ -87,10 +87,11 @@ void printUsage(char * executableName) {
     std::cerr << "// [--headless] - headless rendering. Very useful for making images or benchmarking." << std::endl;
     std::cerr << "// [--nocursor] - hide cursor" << std::endl;
     std::cerr << "// [--fxaa] - set FXAA as postprocess filter" << std::endl;
-    std::cerr << "// [-o <file>.png] - save the viewport to an image file before" << std::endl;
-    std::cerr << "// [-s/--sec <seconds>] - exit app after a specific amount of seconds" << std::endl;
     std::cerr << "// [-I<include_folder>] - add an include folder to default for #include files" << std::endl;
     std::cerr << "// [-D<define>] - add system #defines directly from the console argument" << std::endl;
+    std::cerr << "// [-p <OSC_PORT>] - open OSC listening port" << std::endl;
+    std::cerr << "// [-o <file>.png] - save the viewport to an image file before exit" << std::endl;
+    std::cerr << "// [-s/--sec <seconds>] - exit app after a specific amount of seconds" << std::endl;
     std::cerr << "// [-e/-E <command>] - execute command when start. Multiple -e flags can be chained" << std::endl;
     std::cerr << "// [-v/--version] - return glslViewer version" << std::endl;
     std::cerr << "// [--verbose] - turn verbose outputs on" << std::endl;
@@ -239,6 +240,35 @@ void declareCommands() {
     },
     "files                          return a list of files.", false));
 
+    commands.push_back(Command("reload", [&](const std::string& _line){ 
+        if (_line == "reload" || _line == "reload,all") {
+            fullFps = true;
+            for (unsigned int i = 0; i < files.size(); i++) {
+                filesMutex.lock();
+                fileChanged = i;
+                filesMutex.unlock();
+                sleep(micro_wait * 10.0);
+            }
+            fullFps = false;
+            return true;
+        }
+        else {
+            std::vector<std::string> values = split(_line,',');
+            if (values.size() == 2 && values[0] == "reload") {
+                for (unsigned int i = 0; i < files.size(); i++) {
+                    if (files[i].path == values[1]) {
+                        filesMutex.lock();
+                        fileChanged = i;
+                        filesMutex.unlock();
+                        return true;
+                    } 
+                }
+            }
+        }
+        return false;
+    },
+    "reload[,<filename>]            reload one or all files", false));
+
     commands.push_back(Command("frag", [&](const std::string& _line){ 
         if (_line == "frag") {
             std::cout << sandbox.getSource(FRAGMENT) << std::endl;
@@ -338,6 +368,14 @@ void declareCommands() {
     },
     "dependencies[,vert|frag]       returns all the dependencies of the vertex o fragment shader or both.", false));
 
+    commands.push_back(Command("update", [&](const std::string& _line){ 
+        if (_line == "update") {
+            sandbox.flagChange();
+        }
+        return false;
+    },
+    "update                         force all uniforms to be updated", false));
+
     commands.push_back(Command("wait", [&](const std::string& _line){ 
         std::vector<std::string> values = split(_line,',');
         if (values.size() == 2) {
@@ -347,7 +385,6 @@ void declareCommands() {
     },
     "wait,<seconds>                 wait for X <seconds> before excecuting another command."));
 
-    
     commands.push_back(Command("fullFps", [&](const std::string& _line){
         if (_line == "fullFps") {
             std::string rta = fullFps ? "on" : "off";
@@ -799,7 +836,7 @@ int main(int argc, char **argv){
         if ( timeOut )
             bRun.store(false);
         else
-             // Swap the buffers
+            // Swap the buffers
             renderGL();
     }
 

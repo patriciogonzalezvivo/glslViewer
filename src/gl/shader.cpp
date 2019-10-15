@@ -123,10 +123,10 @@ void Shader::use() {
     if (m_defineChange)
         reload(false);
 
-    if (!isInUse()) {
+    textureIndex = 0;
+
+    if (!isInUse())
         glUseProgram(getProgram());
-        textureIndex = 0;
-    }
 }
 
 bool Shader::isInUse() const {

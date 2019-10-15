@@ -423,14 +423,6 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     },
     "camera_exposure[,<aper.>,<shutter>,<sensit.>]  get or set the camera exposure values."));
 
-    _commands.push_back(Command("update", [&](const std::string& _line){ 
-        if (_line == "update") {
-            flagChange();
-        }
-        return false;
-    },
-    "update                         force all uniforms to be updated", false));
-
     // LOAD SHACER 
     // -----------------------------------------------
 
@@ -562,8 +554,9 @@ bool Sandbox::haveChange() {
     // std::cout << "UNIFORMS " << uniforms.haveChange() << std::endl;
     // std::cout << std::endl;
 
-    return  m_change || 
+    return  m_change ||
             m_record ||
+            screenshotFile != "" ||
             m_scene.haveChange() ||
             uniforms.haveChange();
 }
@@ -733,8 +726,9 @@ void Sandbox::render() {
     
     // MAIN SCENE
     // ----------------------------------------------- < main scene start
-    if ( (screenshotFile != "" || m_record) && !m_record_fbo.isAllocated())
-        m_record_fbo.allocate(getWindowWidth(), getWindowHeight(), COLOR_TEXTURE_DEPTH_BUFFER);
+    if (screenshotFile != "" || m_record)
+        if (!m_record_fbo.isAllocated())
+            m_record_fbo.allocate(getWindowWidth(), getWindowHeight(), COLOR_TEXTURE_DEPTH_BUFFER);
 
     if (m_postprocessing || m_histogram ) {
         if (!m_scene_fbo.isAllocated()) {
@@ -1063,38 +1057,33 @@ void Sandbox::onFileChange(WatchFileList &_files, int index) {
             filename = _files[vert_index].path;
         }
     }
-
-    if (type == FRAG_SHADER) {
+    else if (type == FRAG_SHADER) {
         m_frag_source = "";
         m_frag_dependencies.clear();
-
-        if ( loadFromPath(filename, &m_frag_source, include_folders, &m_frag_dependencies) ) {
+        if ( loadFromPath(filename, &m_frag_source, include_folders, &m_frag_dependencies) )
             reloadShaders(_files);
-        }
     }
     else if (type == VERT_SHADER) {
         m_vert_source = "";
         m_vert_dependencies.clear();
-
-        if ( loadFromPath(filename, &m_vert_source, include_folders, &m_vert_dependencies) ) {
+        if ( loadFromPath(filename, &m_vert_source, include_folders, &m_vert_dependencies) )
             reloadShaders(_files);
-        }
     }
     else if (type == GEOMETRY) {
         // TODO
     }
     else if (type == IMAGE) {
-        for (TextureList::iterator it = uniforms.textures.begin(); it!=uniforms.textures.end(); ++it) {
+        for (TextureList::iterator it = uniforms.textures.begin(); it!=uniforms.textures.end(); it++) {
             if (filename == it->second->getFilePath()) {
+                std::cout << filename << std::endl;
                 it->second->load(filename, _files[index].vFlip);
                 break;
             }
         }
     }
     else if (type == CUBEMAP) {
-        if (uniforms.cubemap) {
+        if (uniforms.cubemap)
             uniforms.cubemap->load(filename, _files[index].vFlip);
-        }
     }
 
     flagChange();
@@ -1157,7 +1146,7 @@ void Sandbox::onViewportResize(int _newWidth, int _newHeight) {
     if (m_postprocessing || m_histogram)
         m_scene_fbo.allocate(_newWidth, _newHeight, uniforms.functions["u_sceneDepth"].present ? COLOR_DEPTH_TEXTURES : COLOR_TEXTURE_DEPTH_BUFFER);
 
-    if (m_record_fbo.isAllocated())
+    if (m_record || screenshotFile != "")
         m_record_fbo.allocate(_newWidth, _newHeight, COLOR_TEXTURE_DEPTH_BUFFER);
 
     flagChange();
