@@ -33,7 +33,7 @@ std::vector<std::string> cmds_arguments;    // Execute commands
 bool        execute_exit    = false;
 
 // Open Sound Control
-int OSC_PORT = -1;  // No port set leaves OSC disabled
+Osc osc_listener;
 
 std::string version = "1.6.0";
 std::string name = "GlslViewer";
@@ -47,9 +47,9 @@ bool timeOut = false;
 Sandbox sandbox;
 
 //================================================================= Threads
+void runCmd(const std::string &_cmd, std::mutex &_mutex);
 void fileWatcherThread();
 void cinWatcherThread();
-void oscWatcherThread();
 
 //================================================================= Functions
 void onExit();
@@ -89,7 +89,7 @@ void printUsage(char * executableName) {
     std::cerr << "// [--fxaa] - set FXAA as postprocess filter" << std::endl;
     std::cerr << "// [-I<include_folder>] - add an include folder to default for #include files" << std::endl;
     std::cerr << "// [-D<define>] - add system #defines directly from the console argument" << std::endl;
-    std::cerr << "// [-p <OSC_PORT>] - open OSC listening port" << std::endl;
+    std::cerr << "// [-p <osc_port>] - open OSC listening port" << std::endl;
     std::cerr << "// [-o <file>.png] - save the viewport to an image file before exit" << std::endl;
     std::cerr << "// [-s/--sec <seconds>] - exit app after a specific amount of seconds" << std::endl;
     std::cerr << "// [-e/-E <command>] - execute command when start. Multiple -e flags can be chained" << std::endl;
@@ -401,7 +401,7 @@ void declareCommands() {
         }
         return false;
     },
-    "fullFps[,on|off]                go to full FPS or not", false));
+    "fullFps[,on|off]               go to full FPS or not", false));
 
     commands.push_back(Command("cursor", [&](const std::string& _line){
         if (_line == "cursor") {
@@ -639,7 +639,7 @@ int main(int argc, char **argv){
         }
         else if ( argument== "-p" || argument == "--port" ) {
             i++;
-            OSC_PORT = toInt(std::string(argv[i]));
+            osc_listener.start(toInt(std::string(argv[i])), runCmd);
         }
         else if ( argument == "-e" ) {
             i++;
@@ -786,8 +786,6 @@ int main(int argc, char **argv){
     fileChanged = -1;
     std::thread fileWatcher( &fileWatcherThread );
     std::thread cinWatcher( &cinWatcherThread );
-    
-    std::thread oscWatcher( &oscWatcherThread );
 
     // Start working on the GL context
     filesMutex.lock();
@@ -976,19 +974,5 @@ void cinWatcherThread() {
     while (std::getline(std::cin, console_line)) {
         runCmd(console_line, consoleMutex);
         std::cout << "// > ";
-    }
-}
-
-// Open Sound Control Thread
-//============================================================================
-void oscWatcherThread() {
-    MyPacketListener listener;
-    listener.runCmd = runCmd;
-    UdpListeningReceiveSocket socket(IpEndpointName( IpEndpointName::ANY_ADDRESS, OSC_PORT ), &listener );
-
-    if (OSC_PORT > 1000) {
-        std::cout << "OSC listening at localhost:" << OSC_PORT << std::endl;
-        socket.Run();
-        std::cout << "OSC ended" << std::endl;
     }
 }

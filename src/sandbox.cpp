@@ -377,7 +377,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         }
         return false;
     },
-    "camera_distance[,<dist>]           get or set the camera distance to the target."));
+    "camera_distance[,<dist>]       get or set the camera distance to the target."));
 
     _commands.push_back(Command("camera_fov", [&](const std::string& _line){ 
         std::vector<std::string> values = split(_line,',');
@@ -391,7 +391,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         }
         return false;
     },
-    "camera_fov[,<field_of_view>]       get or set the camera field of view."));
+    "camera_fov[,<field_of_view>]   get or set the camera field of view."));
 
     _commands.push_back(Command("camera_position", [&](const std::string& _line){ 
         std::vector<std::string> values = split(_line,',');
@@ -407,7 +407,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         }
         return false;
     },
-    "camera_position[,<x>,<y>,<z>]      get or set the camera position."));
+    "camera_position[,<x>,<y>,<z>]  get or set the camera position."));
 
     _commands.push_back(Command("camera_exposure", [&](const std::string& _line){ 
         std::vector<std::string> values = split(_line,',');
