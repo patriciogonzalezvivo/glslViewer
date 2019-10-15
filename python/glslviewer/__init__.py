@@ -117,7 +117,7 @@ class GlslViewer:
         if self.isRunning():
             return False
 
-        print('EXE ',  ' '.join(self.cmd))
+        # print('EXE ',  ' '.join(self.cmd))
         self.process = Popen(self.cmd,
                              stdin=PIPE, stdout=PIPE, stderr=PIPE,
                              shell=False)

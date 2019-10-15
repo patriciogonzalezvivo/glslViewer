@@ -120,10 +120,10 @@ const GLint Shader::getAttribLocation(const std::string& _attribute) const {
 }
 
 void Shader::use() {
+    textureIndex = 0;
+
     if (m_defineChange)
         reload(false);
-
-    textureIndex = 0;
 
     if (!isInUse())
         glUseProgram(getProgram());

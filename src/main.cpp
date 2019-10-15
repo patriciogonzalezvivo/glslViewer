@@ -833,7 +833,7 @@ int main(int argc, char **argv){
         // Finish drawing
         sandbox.renderDone();
 
-        if ( timeOut )
+        if ( timeOut && sandbox.screenshotFile == "" )
             bRun.store(false);
         else
             // Swap the buffers
