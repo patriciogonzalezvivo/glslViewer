@@ -1047,6 +1047,7 @@ void Sandbox::onFileChange(WatchFileList &_files, int index) {
     FileType type = _files[index].type;
     std::string filename = _files[index].path;
 
+    // IF the change is on a dependency file, re route to the correct shader that need to be reload
     if (type == GLSL_DEPENDENCY) {
         if (std::find(m_frag_dependencies.begin(), m_frag_dependencies.end(), filename) != m_frag_dependencies.end()) {
             type = FRAG_SHADER;
@@ -1057,7 +1058,8 @@ void Sandbox::onFileChange(WatchFileList &_files, int index) {
             filename = _files[vert_index].path;
         }
     }
-    else if (type == FRAG_SHADER) {
+    
+    if (type == FRAG_SHADER) {
         m_frag_source = "";
         m_frag_dependencies.clear();
         if ( loadFromPath(filename, &m_frag_source, include_folders, &m_frag_dependencies) )
