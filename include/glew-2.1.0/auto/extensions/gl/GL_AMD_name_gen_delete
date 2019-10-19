@@ -1,0 +1,12 @@
+GL_AMD_name_gen_delete
+http://www.opengl.org/registry/specs/AMD/name_gen_delete.txt
+GL_AMD_name_gen_delete
+
+	GL_DATA_BUFFER_AMD 0x9151
+	GL_PERFORMANCE_MONITOR_AMD 0x9152
+	GL_QUERY_OBJECT_AMD 0x9153
+	GL_VERTEX_ARRAY_OBJECT_AMD 0x9154
+	GL_SAMPLER_OBJECT_AMD 0x9155
+	void glDeleteNamesAMD (GLenum identifier, GLuint num, const GLuint* names)
+	void glGenNamesAMD (GLenum identifier, GLuint num, GLuint* names)
+	GLboolean glIsNameAMD (GLenum identifier, GLuint name)

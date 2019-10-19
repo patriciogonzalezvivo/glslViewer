@@ -1,0 +1,7 @@
+EGL_KHR_config_attribs
+https://www.khronos.org/registry/egl/specs/eglspec.1.5.pdf
+EGL_KHR_config_attribs
+
+	EGL_VG_COLORSPACE_LINEAR_BIT_KHR 0x0020
+	EGL_VG_ALPHA_FORMAT_PRE_BIT_KHR 0x0040
+	EGL_CONFORMANT_KHR 0x3042

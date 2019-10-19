@@ -1,0 +1,8 @@
+GL_SGIX_datapipe
+http://www.opengl.org/registry/specs/SGIX/datapipe.txt
+GL_SGIX_datapipe
+
+	GL_GEOMETRY_BIT 0x1
+	GL_IMAGE_BIT 0x2
+	void glAddressSpace (GLenum space, GLbitfield mask)
+	GLint glDataPipe (GLenum space)

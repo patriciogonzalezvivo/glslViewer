@@ -1,0 +1,7 @@
+EGL_EXT_device_base
+https://www.khronos.org/registry/egl/specs/eglspec.1.5.pdf
+EGL_EXT_device_base
+
+	EGL_NO_DEVICE_EXT ((EGLDeviceEXT)(0))
+	EGL_BAD_DEVICE_EXT 0x322B
+	EGL_DEVICE_EXT 0x322C

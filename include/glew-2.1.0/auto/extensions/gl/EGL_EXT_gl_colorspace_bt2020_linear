@@ -1,0 +1,5 @@
+EGL_EXT_gl_colorspace_bt2020_linear
+https://www.khronos.org/registry/egl/specs/eglspec.1.5.pdf
+EGL_EXT_gl_colorspace_bt2020_linear
+
+	EGL_GL_COLORSPACE_BT2020_LINEAR_EXT 0x333F

@@ -1,0 +1,5 @@
+EGL_NV_stream_cross_partition
+https://www.khronos.org/registry/egl/specs/eglspec.1.5.pdf
+EGL_NV_stream_cross_partition
+
+	EGL_STREAM_CROSS_PARTITION_NV 0x323F

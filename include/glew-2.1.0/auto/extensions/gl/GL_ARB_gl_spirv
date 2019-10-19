@@ -1,0 +1,7 @@
+GL_ARB_gl_spirv
+http://www.opengl.org/registry/specs/ARB/gl_spirv.txt
+GL_ARB_gl_spirv
+
+	GL_SHADER_BINARY_FORMAT_SPIR_V_ARB 0x9551
+	GL_SPIR_V_BINARY_ARB 0x9552
+	void glSpecializeShaderARB (GLuint shader, const GLchar* pEntryPoint, GLuint numSpecializationConstants, const GLuint* pConstantIndex, const GLuint* pConstantValue)

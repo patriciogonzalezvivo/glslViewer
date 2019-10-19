@@ -1,0 +1,5 @@
+EGL_EXT_buffer_age
+https://www.khronos.org/registry/egl/specs/eglspec.1.5.pdf
+EGL_EXT_buffer_age
+
+	EGL_BUFFER_AGE_EXT 0x313D

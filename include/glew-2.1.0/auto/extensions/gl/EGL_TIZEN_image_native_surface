@@ -1,0 +1,5 @@
+EGL_TIZEN_image_native_surface
+https://www.khronos.org/registry/egl/specs/eglspec.1.5.pdf
+EGL_TIZEN_image_native_surface
+
+	EGL_NATIVE_SURFACE_TIZEN 0x32A1

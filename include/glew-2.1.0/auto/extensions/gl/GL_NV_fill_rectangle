@@ -1,0 +1,5 @@
+GL_NV_fill_rectangle
+http://www.opengl.org/registry/specs/NV/fill_rectangle.txt
+GL_NV_fill_rectangle
+
+	GL_FILL_RECTANGLE_NV 0x933C

@@ -1,0 +1,27 @@
+GL_APPLE_sync
+http://www.opengl.org/registry/specs/APPLE/sync.txt
+GL_APPLE_sync
+
+	GL_TIMEOUT_IGNORED_APPLE 0xFFFFFFFFFFFFFFFFull
+	GL_SYNC_FLUSH_COMMANDS_BIT_APPLE 0x00000001
+	GL_SYNC_OBJECT_APPLE 0x8A53
+	GL_MAX_SERVER_WAIT_TIMEOUT_APPLE 0x9111
+	GL_OBJECT_TYPE_APPLE 0x9112
+	GL_SYNC_CONDITION_APPLE 0x9113
+	GL_SYNC_STATUS_APPLE 0x9114
+	GL_SYNC_FLAGS_APPLE 0x9115
+	GL_SYNC_FENCE_APPLE 0x9116
+	GL_SYNC_GPU_COMMANDS_COMPLETE_APPLE 0x9117
+	GL_UNSIGNALED_APPLE 0x9118
+	GL_SIGNALED_APPLE 0x9119
+	GL_ALREADY_SIGNALED_APPLE 0x911A
+	GL_TIMEOUT_EXPIRED_APPLE 0x911B
+	GL_CONDITION_SATISFIED_APPLE 0x911C
+	GL_WAIT_FAILED_APPLE 0x911D
+	GLenum glClientWaitSyncAPPLE (GLsync GLsync, GLbitfield flags, GLuint64 timeout)
+	void glDeleteSyncAPPLE (GLsync GLsync)
+	GLsync glFenceSyncAPPLE (GLenum condition, GLbitfield flags)
+	void glGetInteger64vAPPLE (GLenum pname, GLint64* params)
+	void glGetSyncivAPPLE (GLsync GLsync, GLenum pname, GLsizei bufSize, GLsizei* length, GLint *values)
+	GLboolean glIsSyncAPPLE (GLsync GLsync)
+	void glWaitSyncAPPLE (GLsync GLsync, GLbitfield flags, GLuint64 timeout)

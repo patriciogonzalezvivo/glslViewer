@@ -1,0 +1,6 @@
+GL_EXT_instanced_arrays
+http://www.opengl.org/registry/specs/EXT/instanced_arrays.txt
+GL_EXT_instanced_arrays
+
+	GL_VERTEX_ATTRIB_ARRAY_DIVISOR_EXT 0x88FE
+	void glVertexAttribDivisorEXT (GLuint index, GLuint divisor)

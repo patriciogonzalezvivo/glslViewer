@@ -1,0 +1,10 @@
+GL_SGIX_vertex_array_object
+http://www.opengl.org/registry/specs/SGIX/vertex_array_object.txt
+GL_SGIX_vertex_array_object
+
+	GLboolean glAreVertexArraysResidentSGIX (GLsizei n, const GLuint* arrays, GLboolean* residences)
+	void glBindVertexArraySGIX (GLuint array)
+	void glDeleteVertexArraysSGIX (GLsizei n, const GLuint* arrays)
+	void glGenVertexArraysSGIX (GLsizei n, GLuint* arrays)
+	GLboolean glIsVertexArraySGIX (GLuint array)
+	void glPrioritizeVertexArraysSGIX (GLsizei n, const GLuint* arrays, const GLclampf* priorities)

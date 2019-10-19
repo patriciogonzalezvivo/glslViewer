@@ -1,0 +1,8 @@
+GL_ANGLE_framebuffer_multisample
+https://code.google.com/p/angleproject/source/browse/#git%2Fextensions
+GL_ANGLE_framebuffer_multisample
+
+	GL_RENDERBUFFER_SAMPLES_ANGLE 0x8CAB
+	GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE_ANGLE 0x8D56
+	GL_MAX_SAMPLES_ANGLE 0x8D57
+	void glRenderbufferStorageMultisampleANGLE (GLenum target, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height)

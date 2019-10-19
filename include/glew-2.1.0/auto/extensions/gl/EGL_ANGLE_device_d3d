@@ -1,0 +1,6 @@
+EGL_ANGLE_device_d3d
+https://www.khronos.org/registry/egl/specs/eglspec.1.5.pdf
+EGL_ANGLE_device_d3d
+
+	EGL_D3D9_DEVICE_ANGLE 0x33A0
+	EGL_D3D11_DEVICE_ANGLE 0x33A1

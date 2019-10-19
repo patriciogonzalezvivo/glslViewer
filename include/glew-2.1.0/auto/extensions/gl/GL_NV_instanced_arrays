@@ -1,0 +1,6 @@
+GL_NV_instanced_arrays
+http://www.opengl.org/registry/specs/NV/instanced_arrays.txt
+GL_NV_instanced_arrays
+
+	GL_VERTEX_ATTRIB_ARRAY_DIVISOR_NV 0x88FE
+	void glVertexAttribDivisorNV (GLuint index, GLuint divisor)

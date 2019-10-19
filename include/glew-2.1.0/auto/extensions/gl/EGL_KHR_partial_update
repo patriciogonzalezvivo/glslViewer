@@ -1,0 +1,6 @@
+EGL_KHR_partial_update
+https://www.khronos.org/registry/egl/specs/eglspec.1.5.pdf
+EGL_KHR_partial_update
+
+	EGL_BUFFER_AGE_KHR 0x313D
+	EGLBoolean  eglSetDamageRegionKHR (EGLDisplay  dpy, EGLSurface  surface, EGLint * rects, EGLint  n_rects)

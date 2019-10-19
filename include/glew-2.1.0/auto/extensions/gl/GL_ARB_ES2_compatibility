@@ -1,0 +1,26 @@
+GL_ARB_ES2_compatibility
+http://www.opengl.org/registry/specs/ARB/ES2_compatibility.txt
+GL_ARB_ES2_compatibility
+
+	GL_FIXED 0x140C
+	GL_IMPLEMENTATION_COLOR_READ_TYPE 0x8B9A
+	GL_IMPLEMENTATION_COLOR_READ_FORMAT 0x8B9B
+	GL_RGB565 0x8D62
+	GL_LOW_FLOAT 0x8DF0
+	GL_MEDIUM_FLOAT 0x8DF1
+	GL_HIGH_FLOAT 0x8DF2
+	GL_LOW_INT 0x8DF3
+	GL_MEDIUM_INT 0x8DF4
+	GL_HIGH_INT 0x8DF5
+	GL_SHADER_BINARY_FORMATS 0x8DF8
+	GL_NUM_SHADER_BINARY_FORMATS 0x8DF9
+	GL_SHADER_COMPILER 0x8DFA
+	GL_MAX_VERTEX_UNIFORM_VECTORS 0x8DFB
+	GL_MAX_VARYING_VECTORS 0x8DFC
+	GL_MAX_FRAGMENT_UNIFORM_VECTORS 0x8DFD
+	void glClearDepthf (GLclampf d)
+	void glDepthRangef (GLclampf n, GLclampf f)
+	void glGetShaderPrecisionFormat (GLenum shadertype, GLenum precisiontype, GLint* range, GLint *precision)
+	void glReleaseShaderCompiler (void)
+	void glShaderBinary (GLsizei count, const GLuint* shaders, GLenum binaryformat, const void*binary, GLsizei length)
+	typedef int GLfixed

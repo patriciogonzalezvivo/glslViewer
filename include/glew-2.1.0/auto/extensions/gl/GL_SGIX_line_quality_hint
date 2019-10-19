@@ -1,0 +1,5 @@
+GL_SGIX_line_quality_hint
+http://www.opengl.org/registry/specs/SGIX/line_quality_hint.txt
+GL_SGIX_line_quality_hint
+
+	GL_LINE_QUALITY_HINT_SGIX 0x835B

@@ -1,0 +1,14 @@
+GL_AMD_interleaved_elements
+http://www.opengl.org/registry/specs/AMD/interleaved_elements.txt
+GL_AMD_interleaved_elements
+
+	GL_RED 0x1903
+	GL_GREEN 0x1904
+	GL_BLUE 0x1905
+	GL_ALPHA 0x1906
+	GL_RG8UI 0x8238
+	GL_RG16UI 0x823A
+	GL_RGBA8UI 0x8D7C
+	GL_VERTEX_ELEMENT_SWIZZLE_AMD 0x91A4
+	GL_VERTEX_ID_SWIZZLE_AMD 0x91A5
+	void glVertexAttribParameteriAMD (GLuint index, GLenum pname, GLint param)

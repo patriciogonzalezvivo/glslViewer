@@ -1,0 +1,41 @@
+GL_EXT_memory_object
+http://www.opengl.org/registry/specs/EXT/external_objects.txt
+GL_EXT_memory_object
+
+	GL_UUID_SIZE_EXT 16
+	GL_TEXTURE_TILING_EXT 0x9580
+	GL_DEDICATED_MEMORY_OBJECT_EXT 0x9581
+	GL_NUM_TILING_TYPES_EXT 0x9582
+	GL_TILING_TYPES_EXT 0x9583
+	GL_OPTIMAL_TILING_EXT 0x9584
+	GL_LINEAR_TILING_EXT 0x9585
+	GL_LAYOUT_GENERAL_EXT 0x958D
+	GL_LAYOUT_COLOR_ATTACHMENT_EXT 0x958E
+	GL_LAYOUT_DEPTH_STENCIL_ATTACHMENT_EXT 0x958F
+	GL_LAYOUT_DEPTH_STENCIL_READ_ONLY_EXT 0x9590
+	GL_LAYOUT_SHADER_READ_ONLY_EXT 0x9591
+	GL_LAYOUT_TRANSFER_SRC_EXT 0x9592
+	GL_LAYOUT_TRANSFER_DST_EXT 0x9593
+	GL_NUM_DEVICE_UUIDS_EXT 0x9596
+	GL_DEVICE_UUID_EXT 0x9597
+	GL_DRIVER_UUID_EXT 0x9598
+	GL_PROTECTED_MEMORY_OBJECT_EXT 0x959B
+	void glBufferStorageMemEXT (GLenum target, GLsizeiptr size, GLuint memory, GLuint64 offset)
+	void glCreateMemoryObjectsEXT (GLsizei n, GLuint* memoryObjects)
+	void glDeleteMemoryObjectsEXT (GLsizei n, const GLuint* memoryObjects)
+	void glGetMemoryObjectParameterivEXT (GLuint memoryObject, GLenum pname, GLint* params)
+	void glGetUnsignedBytei_vEXT (GLenum target, GLuint index, GLubyte* data)
+	void glGetUnsignedBytevEXT (GLenum pname, GLubyte* data)
+	GLboolean glIsMemoryObjectEXT (GLuint memoryObject)
+	void glMemoryObjectParameterivEXT (GLuint memoryObject, GLenum pname, const GLint* params)
+	void glNamedBufferStorageMemEXT (GLuint buffer, GLsizeiptr size, GLuint memory, GLuint64 offset)
+	void glTexStorageMem1DEXT (GLenum target, GLsizei levels, GLenum internalFormat, GLsizei width, GLuint memory, GLuint64 offset)
+	void glTexStorageMem2DEXT (GLenum target, GLsizei levels, GLenum internalFormat, GLsizei width, GLsizei height, GLuint memory, GLuint64 offset)
+	void glTexStorageMem2DMultisampleEXT (GLenum target, GLsizei samples, GLenum internalFormat, GLsizei width, GLsizei height, GLboolean fixedSampleLocations, GLuint memory, GLuint64 offset)
+	void glTexStorageMem3DEXT (GLenum target, GLsizei levels, GLenum internalFormat, GLsizei width, GLsizei height, GLsizei depth, GLuint memory, GLuint64 offset)
+	void glTexStorageMem3DMultisampleEXT (GLenum target, GLsizei samples, GLenum internalFormat, GLsizei width, GLsizei height, GLsizei depth, GLboolean fixedSampleLocations, GLuint memory, GLuint64 offset)
+	void glTextureStorageMem1DEXT (GLuint texture, GLsizei levels, GLenum internalFormat, GLsizei width, GLuint memory, GLuint64 offset)
+	void glTextureStorageMem2DEXT (GLuint texture, GLsizei levels, GLenum internalFormat, GLsizei width, GLsizei height, GLuint memory, GLuint64 offset)
+	void glTextureStorageMem2DMultisampleEXT (GLuint texture, GLsizei samples, GLenum internalFormat, GLsizei width, GLsizei height, GLboolean fixedSampleLocations, GLuint memory, GLuint64 offset)
+	void glTextureStorageMem3DEXT (GLuint texture, GLsizei levels, GLenum internalFormat, GLsizei width, GLsizei height, GLsizei depth, GLuint memory, GLuint64 offset)
+	void glTextureStorageMem3DMultisampleEXT (GLuint texture, GLsizei samples, GLenum internalFormat, GLsizei width, GLsizei height, GLsizei depth, GLboolean fixedSampleLocations, GLuint memory, GLuint64 offset)

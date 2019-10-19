@@ -1,0 +1,7 @@
+GL_EXT_unpack_subimage
+http://www.opengl.org/registry/specs/EXT/unpack_subimage.txt
+GL_EXT_unpack_subimage
+
+	GL_UNPACK_ROW_LENGTH_EXT 0x0CF2
+	GL_UNPACK_SKIP_ROWS_EXT 0x0CF3
+	GL_UNPACK_SKIP_PIXELS_EXT 0x0CF4

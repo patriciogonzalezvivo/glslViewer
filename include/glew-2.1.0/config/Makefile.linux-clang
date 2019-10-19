@@ -1,0 +1,34 @@
+NAME = $(GLEW_NAME)
+CC = clang
+LD = clang
+M_ARCH ?= $(shell uname -m)
+ARCH64 = false
+ifeq (x86_64,${M_ARCH})
+  ARCH64 = true
+endif
+ifeq (ppc64,${M_ARCH})
+  ARCH64 = true
+endif
+ifeq (${ARCH64},true)
+  LDFLAGS.EXTRA = -L/usr/X11R6/lib64 -L/usr/lib64
+  LIBDIR = $(GLEW_DEST)/lib64
+else
+  LDFLAGS.EXTRA = -L/usr/X11R6/lib -L/usr/lib
+  LIBDIR = $(GLEW_DEST)/lib
+endif
+LDFLAGS.GL = -lGL -lX11
+LDFLAGS.STATIC = -Wl,-Bstatic
+LDFLAGS.DYNAMIC = -Wl,-Bdynamic
+NAME = GLEW
+WARN = -Wall -W
+POPT = -O2
+CFLAGS.EXTRA += -fPIC
+CFLAGS.EXTRA += -Wcast-qual
+CFLAGS.EXTRA += -ansi -pedantic
+CFLAGS.EXTRA += -fno-stack-protector
+BIN.SUFFIX =
+LIB.SONAME = lib$(NAME).so.$(SO_MAJOR)
+LIB.DEVLNK = lib$(NAME).so
+LIB.SHARED = lib$(NAME).so.$(SO_VERSION)
+LIB.STATIC = lib$(NAME).a
+LDFLAGS.SO = -shared -Wl,-soname=$(LIB.SONAME)

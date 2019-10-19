@@ -28,10 +28,7 @@
 #include <OpenGL/glext.h>
 
 #elif defined(_WIN32)
-#define NOMINMAX
-#include <windows.h>
-#define GL_GLEXT_PROTOTYPES
-#include "gl/glcorearb.h"
+#include <GL/glew.h>
 #else
 // ANY LINUX using GLFW 
 #define GL_GLEXT_PROTOTYPES

@@ -1,0 +1,6 @@
+GL_QCOM_shader_framebuffer_fetch_noncoherent
+http://www.opengl.org/registry/specs/QCOM/shader_framebuffer_fetch_noncoherent.txt
+GL_QCOM_shader_framebuffer_fetch_noncoherent
+
+	GL_FRAMEBUFFER_FETCH_NONCOHERENT_QCOM 0x96A2
+	void glFramebufferFetchBarrierQCOM (void)

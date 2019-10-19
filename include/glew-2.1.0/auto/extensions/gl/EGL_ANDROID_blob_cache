@@ -1,0 +1,5 @@
+EGL_ANDROID_blob_cache
+https://www.khronos.org/registry/egl/specs/eglspec.1.5.pdf
+EGL_ANDROID_blob_cache
+
+	void  eglSetBlobCacheFuncsANDROID (EGLDisplay  dpy, EGLSetBlobFuncANDROID  set, EGLGetBlobFuncANDROID  get)

@@ -1,0 +1,7 @@
+EGL_NV_stream_reset
+https://www.khronos.org/registry/egl/specs/eglspec.1.5.pdf
+EGL_NV_stream_reset
+
+	EGL_SUPPORT_RESET_NV 0x3334
+	EGL_SUPPORT_REUSE_NV 0x3335
+	EGLBoolean  eglResetStreamNV (EGLDisplay  dpy, EGLStreamKHR  stream)

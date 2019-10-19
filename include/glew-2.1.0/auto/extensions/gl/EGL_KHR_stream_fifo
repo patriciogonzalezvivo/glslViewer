@@ -1,0 +1,9 @@
+EGL_KHR_stream_fifo
+https://www.khronos.org/registry/egl/specs/eglspec.1.5.pdf
+EGL_KHR_stream_fifo
+
+	EGL_STREAM_FIFO_LENGTH_KHR 0x31FC
+	EGL_STREAM_TIME_NOW_KHR 0x31FD
+	EGL_STREAM_TIME_CONSUMER_KHR 0x31FE
+	EGL_STREAM_TIME_PRODUCER_KHR 0x31FF
+	EGLBoolean  eglQueryStreamTimeKHR (EGLDisplay  dpy, EGLStreamKHR  stream, EGLenum  attribute, EGLTimeKHR * value)

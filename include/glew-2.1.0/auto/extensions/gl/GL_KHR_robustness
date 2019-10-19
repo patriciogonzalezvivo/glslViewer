@@ -1,0 +1,16 @@
+GL_KHR_robustness
+http://www.opengl.org/registry/specs/KHR/robustness.txt
+GL_KHR_robustness
+
+	GL_CONTEXT_LOST 0x0507
+	GL_LOSE_CONTEXT_ON_RESET 0x8252
+	GL_GUILTY_CONTEXT_RESET 0x8253
+	GL_INNOCENT_CONTEXT_RESET 0x8254
+	GL_UNKNOWN_CONTEXT_RESET 0x8255
+	GL_RESET_NOTIFICATION_STRATEGY 0x8256
+	GL_NO_RESET_NOTIFICATION 0x8261
+	GL_CONTEXT_ROBUST_ACCESS 0x90F3
+	void glGetnUniformfv (GLuint program, GLint location, GLsizei bufSize, GLfloat* params)
+	void glGetnUniformiv (GLuint program, GLint location, GLsizei bufSize, GLint* params)
+	void glGetnUniformuiv (GLuint program, GLint location, GLsizei bufSize, GLuint* params)
+	void glReadnPixels (GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLsizei bufSize, void *data)

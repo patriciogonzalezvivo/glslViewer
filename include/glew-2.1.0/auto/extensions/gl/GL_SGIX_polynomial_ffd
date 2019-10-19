@@ -1,0 +1,8 @@
+GL_SGIX_polynomial_ffd
+http://www.opengl.org/registry/specs/SGIX/polynomial_ffd.txt
+GL_SGIX_polynomial_ffd
+
+	GL_TEXTURE_DEFORMATION_BIT_SGIX 0x1
+	GL_GEOMETRY_DEFORMATION_BIT_SGIX 0x2
+	void glDeformSGIX (GLbitfield mask)
+	void glLoadIdentityDeformationMapSGIX (GLbitfield mask)

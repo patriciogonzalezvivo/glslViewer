@@ -1,0 +1,7 @@
+GL_NV_fragment_coverage_to_color
+http://www.opengl.org/registry/specs/NV/fragment_coverage_to_color.txt
+GL_NV_fragment_coverage_to_color
+
+	GL_FRAGMENT_COVERAGE_TO_COLOR_NV 0x92DD
+	GL_FRAGMENT_COVERAGE_COLOR_NV 0x92DE
+	void glFragmentCoverageColorNV (GLuint color)

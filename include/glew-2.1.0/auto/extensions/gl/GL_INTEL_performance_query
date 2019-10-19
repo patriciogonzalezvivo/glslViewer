@@ -1,0 +1,34 @@
+GL_INTEL_performance_query
+http://www.opengl.org/registry/specs/INTEL/performance_query.txt
+GL_INTEL_performance_query
+
+	GL_PERFQUERY_SINGLE_CONTEXT_INTEL 0x0000
+	GL_PERFQUERY_GLOBAL_CONTEXT_INTEL 0x0001
+	GL_PERFQUERY_DONOT_FLUSH_INTEL 0x83F9
+	GL_PERFQUERY_FLUSH_INTEL 0x83FA
+	GL_PERFQUERY_WAIT_INTEL 0x83FB
+	GL_PERFQUERY_COUNTER_EVENT_INTEL 0x94F0
+	GL_PERFQUERY_COUNTER_DURATION_NORM_INTEL 0x94F1
+	GL_PERFQUERY_COUNTER_DURATION_RAW_INTEL 0x94F2
+	GL_PERFQUERY_COUNTER_THROUGHPUT_INTEL 0x94F3
+	GL_PERFQUERY_COUNTER_RAW_INTEL 0x94F4
+	GL_PERFQUERY_COUNTER_TIMESTAMP_INTEL 0x94F5
+	GL_PERFQUERY_COUNTER_DATA_UINT32_INTEL 0x94F8
+	GL_PERFQUERY_COUNTER_DATA_UINT64_INTEL 0x94F9
+	GL_PERFQUERY_COUNTER_DATA_FLOAT_INTEL 0x94FA
+	GL_PERFQUERY_COUNTER_DATA_DOUBLE_INTEL 0x94FB
+	GL_PERFQUERY_COUNTER_DATA_BOOL32_INTEL 0x94FC
+	GL_PERFQUERY_QUERY_NAME_LENGTH_MAX_INTEL 0x94FD
+	GL_PERFQUERY_COUNTER_NAME_LENGTH_MAX_INTEL 0x94FE
+	GL_PERFQUERY_COUNTER_DESC_LENGTH_MAX_INTEL 0x94FF
+	GL_PERFQUERY_GPA_EXTENDED_COUNTERS_INTEL 0x9500
+	void glBeginPerfQueryINTEL (GLuint queryHandle)
+	void glCreatePerfQueryINTEL (GLuint queryId, GLuint* queryHandle)
+	void glDeletePerfQueryINTEL (GLuint queryHandle)
+	void glEndPerfQueryINTEL (GLuint queryHandle)
+	void glGetFirstPerfQueryIdINTEL (GLuint* queryId)
+	void glGetNextPerfQueryIdINTEL (GLuint queryId, GLuint* nextQueryId)
+	void glGetPerfCounterInfoINTEL (GLuint queryId, GLuint counterId, GLuint counterNameLength, GLchar* counterName, GLuint counterDescLength, GLchar *counterDesc, GLuint *counterOffset, GLuint *counterDataSize, GLuint *counterTypeEnum, GLuint *counterDataTypeEnum, GLuint64 *rawCounterMaxValue)
+	void glGetPerfQueryDataINTEL (GLuint queryHandle, GLuint flags, GLsizei dataSize, void *data, GLuint *bytesWritten)
+	void glGetPerfQueryIdByNameINTEL (GLchar* queryName, GLuint *queryId)
+	void glGetPerfQueryInfoINTEL (GLuint queryId, GLuint queryNameLength, GLchar* queryName, GLuint *dataSize, GLuint *noCounters, GLuint *noInstances, GLuint *capsMask)

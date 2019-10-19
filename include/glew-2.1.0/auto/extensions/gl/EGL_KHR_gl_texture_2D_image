@@ -1,0 +1,6 @@
+EGL_KHR_gl_texture_2D_image
+https://www.khronos.org/registry/egl/specs/eglspec.1.5.pdf
+EGL_KHR_gl_texture_2D_image
+
+	EGL_GL_TEXTURE_2D_KHR 0x30B1
+	EGL_GL_TEXTURE_LEVEL_KHR 0x30BC

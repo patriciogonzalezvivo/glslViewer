@@ -1,0 +1,13 @@
+EGL_KHR_stream_attrib
+https://www.khronos.org/registry/egl/specs/eglspec.1.5.pdf
+EGL_KHR_stream_attrib
+
+	EGL_CONSUMER_LATENCY_USEC_KHR 0x3210
+	EGL_STREAM_STATE_KHR 0x3214
+	EGL_STREAM_STATE_CREATED_KHR 0x3215
+	EGL_STREAM_STATE_CONNECTING_KHR 0x3216
+	EGLStreamKHR  eglCreateStreamAttribKHR (EGLDisplay  dpy, const EGLAttrib * attrib_list)
+	EGLBoolean  eglQueryStreamAttribKHR (EGLDisplay  dpy, EGLStreamKHR  stream, EGLenum  attribute, EGLAttrib * value)
+	EGLBoolean  eglSetStreamAttribKHR (EGLDisplay  dpy, EGLStreamKHR  stream, EGLenum  attribute, EGLAttrib  value)
+	EGLBoolean  eglStreamConsumerAcquireAttribKHR (EGLDisplay  dpy, EGLStreamKHR  stream, const EGLAttrib * attrib_list)
+	EGLBoolean  eglStreamConsumerReleaseAttribKHR (EGLDisplay  dpy, EGLStreamKHR  stream, const EGLAttrib * attrib_list)

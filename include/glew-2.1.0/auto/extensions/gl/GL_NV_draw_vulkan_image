@@ -1,0 +1,10 @@
+GL_NV_draw_vulkan_image
+http://www.opengl.org/registry/specs/NV/draw_vulkan_image.txt
+GL_NV_draw_vulkan_image
+
+	void glDrawVkImageNV (GLuint64 vkImage, GLuint sampler, GLfloat x0, GLfloat y0, GLfloat x1, GLfloat y1, GLfloat z, GLfloat s0, GLfloat t0, GLfloat s1, GLfloat t1)
+	GLVULKANPROCNV glGetVkProcAddrNV (const GLchar* name)
+	void glSignalVkFenceNV (GLuint64 vkFence)
+	void glSignalVkSemaphoreNV (GLuint64 vkSemaphore)
+	void glWaitVkSemaphoreNV (GLuint64 vkSemaphore)
+    typedef void (APIENTRY *GLVULKANPROCNV)(void)

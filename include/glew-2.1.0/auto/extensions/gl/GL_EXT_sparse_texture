@@ -1,0 +1,22 @@
+GL_EXT_sparse_texture
+http://www.opengl.org/registry/specs/EXT/sparse_texture.txt
+GL_EXT_sparse_texture
+
+	GL_TEXTURE_2D 0x0DE1
+	GL_TEXTURE_3D 0x806F
+	GL_TEXTURE_CUBE_MAP 0x8513
+	GL_TEXTURE_2D_ARRAY 0x8C1A
+	GL_TEXTURE_CUBE_MAP_ARRAY_OES 0x9009
+	GL_VIRTUAL_PAGE_SIZE_X_EXT 0x9195
+	GL_VIRTUAL_PAGE_SIZE_Y_EXT 0x9196
+	GL_VIRTUAL_PAGE_SIZE_Z_EXT 0x9197
+	GL_MAX_SPARSE_TEXTURE_SIZE_EXT 0x9198
+	GL_MAX_SPARSE_3D_TEXTURE_SIZE_EXT 0x9199
+	GL_MAX_SPARSE_ARRAY_TEXTURE_LAYERS_EXT 0x919A
+	GL_TEXTURE_SPARSE_EXT 0x91A6
+	GL_VIRTUAL_PAGE_SIZE_INDEX_EXT 0x91A7
+	GL_NUM_VIRTUAL_PAGE_SIZES_EXT 0x91A8
+	GL_SPARSE_TEXTURE_FULL_ARRAY_CUBE_MIPMAPS_EXT 0x91A9
+	GL_NUM_SPARSE_LEVELS_EXT 0x91AA
+	void glTexPageCommitmentEXT (GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLboolean commit)
+	void glTexturePageCommitmentEXT (GLuint texture, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLboolean commit)

@@ -1,0 +1,8 @@
+GL_EXT_shadow_samplers
+http://www.opengl.org/registry/specs/EXT/shadow_samplers.txt
+GL_EXT_shadow_samplers
+
+	GL_TEXTURE_COMPARE_MODE_EXT 0x884C
+	GL_TEXTURE_COMPARE_FUNC_EXT 0x884D
+	GL_COMPARE_REF_TO_TEXTURE_EXT 0x884E
+	GL_SAMPLER_2D_SHADOW_EXT 0x8B62

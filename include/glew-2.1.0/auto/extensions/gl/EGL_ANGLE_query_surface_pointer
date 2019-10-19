@@ -1,0 +1,5 @@
+EGL_ANGLE_query_surface_pointer
+https://www.khronos.org/registry/egl/specs/eglspec.1.5.pdf
+EGL_ANGLE_query_surface_pointer
+
+	EGLBoolean  eglQuerySurfacePointerANGLE (EGLDisplay  dpy, EGLSurface  surface, EGLint  attribute, void ** value)

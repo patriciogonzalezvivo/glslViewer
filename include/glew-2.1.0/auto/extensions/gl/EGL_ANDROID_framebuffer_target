@@ -1,0 +1,5 @@
+EGL_ANDROID_framebuffer_target
+https://www.khronos.org/registry/egl/specs/eglspec.1.5.pdf
+EGL_ANDROID_framebuffer_target
+
+	EGL_FRAMEBUFFER_TARGET_ANDROID 0x3147

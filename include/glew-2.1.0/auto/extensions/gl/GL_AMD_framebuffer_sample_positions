@@ -1,0 +1,12 @@
+GL_AMD_framebuffer_sample_positions
+http://www.opengl.org/registry/specs/AMD/framebuffer_sample_positions.txt
+GL_AMD_framebuffer_sample_positions
+
+	GL_SUBSAMPLE_DISTANCE_AMD 0x883F
+	GL_PIXELS_PER_SAMPLE_PATTERN_X_AMD 0x91AE
+	GL_PIXELS_PER_SAMPLE_PATTERN_Y_AMD 0x91AF
+	GL_ALL_PIXELS_AMD 0xFFFFFFFF
+	void glFramebufferSamplePositionsfvAMD (GLenum target, GLuint numsamples, GLuint pixelindex, const GLfloat* values)
+	void glGetFramebufferParameterfvAMD (GLenum target, GLenum pname, GLuint numsamples, GLuint pixelindex, GLsizei size, GLfloat* values)
+	void glGetNamedFramebufferParameterfvAMD (GLuint framebuffer, GLenum pname, GLuint numsamples, GLuint pixelindex, GLsizei size, GLfloat* values)
+	void glNamedFramebufferSamplePositionsfvAMD (GLuint framebuffer, GLuint numsamples, GLuint pixelindex, const GLfloat* values)

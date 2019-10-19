@@ -1,0 +1,9 @@
+GL_ARB_texture_buffer_range
+http://www.opengl.org/registry/specs/ARB/texture_buffer_range.txt
+GL_ARB_texture_buffer_range
+
+	GL_TEXTURE_BUFFER_OFFSET 0x919D
+	GL_TEXTURE_BUFFER_SIZE 0x919E
+	GL_TEXTURE_BUFFER_OFFSET_ALIGNMENT 0x919F
+	void glTexBufferRange (GLenum target, GLenum internalformat, GLuint buffer, GLintptr offset, GLsizeiptr size)
+	void glTextureBufferRangeEXT (GLuint texture, GLenum target, GLenum internalformat, GLuint buffer, GLintptr offset, GLsizeiptr size)

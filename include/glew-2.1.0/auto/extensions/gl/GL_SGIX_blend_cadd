@@ -1,0 +1,5 @@
+GL_SGIX_blend_cadd
+http://www.opengl.org/registry/specs/SGIX/blend_cadd.txt
+GL_SGIX_blend_cadd
+
+	GL_FUNC_COMPLEX_ADD_EXT 0x601C

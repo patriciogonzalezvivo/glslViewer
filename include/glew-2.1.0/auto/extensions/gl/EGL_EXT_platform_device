@@ -1,0 +1,5 @@
+EGL_EXT_platform_device
+https://www.khronos.org/registry/egl/specs/eglspec.1.5.pdf
+EGL_EXT_platform_device
+
+	EGL_PLATFORM_DEVICE_EXT 0x313F

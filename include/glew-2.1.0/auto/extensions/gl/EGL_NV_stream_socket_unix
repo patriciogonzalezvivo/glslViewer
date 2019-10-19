@@ -1,0 +1,5 @@
+EGL_NV_stream_socket_unix
+https://www.khronos.org/registry/egl/specs/eglspec.1.5.pdf
+EGL_NV_stream_socket_unix
+
+	EGL_SOCKET_TYPE_UNIX_NV 0x324E

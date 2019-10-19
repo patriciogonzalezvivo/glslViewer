@@ -1,0 +1,5 @@
+GL_SGIS_shared_multisample
+http://www.opengl.org/registry/specs/SGIS/shared_multisample.txt
+GL_SGIS_shared_multisample
+
+	void glMultisampleSubRectPosSGIS (GLint x, GLint y)

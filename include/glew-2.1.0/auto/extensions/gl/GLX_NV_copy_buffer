@@ -1,0 +1,6 @@
+GLX_NV_copy_buffer
+http://www.opengl.org/registry/specs/NV/glx_copy_buffer.txt
+GLX_NV_copy_buffer
+
+	void glXCopyBufferSubDataNV (Display* dpy, GLXContext readCtx, GLXContext writeCtx, GLenum readTarget, GLenum writeTarget, GLintptr readOffset, GLintptr writeOffset, GLsizeiptr size)
+	void glXNamedCopyBufferSubDataNV (Display* dpy, GLXContext readCtx, GLXContext writeCtx, GLuint readBuffer, GLuint writeBuffer, GLintptr readOffset, GLintptr writeOffset, GLsizeiptr size)

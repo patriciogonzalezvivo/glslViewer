@@ -1,0 +1,23 @@
+EGL_NV_sync
+https://www.khronos.org/registry/egl/specs/eglspec.1.5.pdf
+EGL_NV_sync
+
+	EGL_NO_SYNC_NV ((EGLSyncNV)0)
+	EGL_SYNC_FLUSH_COMMANDS_BIT_NV 0x0001
+	EGL_SYNC_PRIOR_COMMANDS_COMPLETE_NV 0x30E6
+	EGL_SYNC_STATUS_NV 0x30E7
+	EGL_SIGNALED_NV 0x30E8
+	EGL_UNSIGNALED_NV 0x30E9
+	EGL_ALREADY_SIGNALED_NV 0x30EA
+	EGL_TIMEOUT_EXPIRED_NV 0x30EB
+	EGL_CONDITION_SATISFIED_NV 0x30EC
+	EGL_SYNC_TYPE_NV 0x30ED
+	EGL_SYNC_CONDITION_NV 0x30EE
+	EGL_SYNC_FENCE_NV 0x30EF
+	EGL_FOREVER_NV 0xFFFFFFFFFFFFFFFF
+	EGLint  eglClientWaitSyncNV (EGLSyncNV  sync, EGLint  flags, EGLTimeNV  timeout)
+	EGLSyncNV  eglCreateFenceSyncNV (EGLDisplay  dpy, EGLenum  condition, const EGLint * attrib_list)
+	EGLBoolean  eglDestroySyncNV (EGLSyncNV  sync)
+	EGLBoolean  eglFenceNV (EGLSyncNV  sync)
+	EGLBoolean  eglGetSyncAttribNV (EGLSyncNV  sync, EGLint  attribute, EGLint * value)
+	EGLBoolean  eglSignalSyncNV (EGLSyncNV  sync, EGLenum  mode)

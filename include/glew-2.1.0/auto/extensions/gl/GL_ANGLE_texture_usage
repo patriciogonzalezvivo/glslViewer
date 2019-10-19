@@ -1,0 +1,6 @@
+GL_ANGLE_texture_usage
+https://code.google.com/p/angleproject/source/browse/#git%2Fextensions
+GL_ANGLE_texture_usage
+
+	GL_TEXTURE_USAGE_ANGLE 0x93A2
+	GL_FRAMEBUFFER_ATTACHMENT_ANGLE 0x93A3

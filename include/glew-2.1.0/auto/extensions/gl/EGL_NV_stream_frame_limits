@@ -1,0 +1,6 @@
+EGL_NV_stream_frame_limits
+https://www.khronos.org/registry/egl/specs/eglspec.1.5.pdf
+EGL_NV_stream_frame_limits
+
+	EGL_PRODUCER_MAX_FRAME_HINT_NV 0x3337
+	EGL_CONSUMER_MAX_FRAME_HINT_NV 0x3338

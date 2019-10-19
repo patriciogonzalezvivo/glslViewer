@@ -1,0 +1,8 @@
+EGL_KHR_image
+https://www.khronos.org/registry/egl/specs/eglspec.1.5.pdf
+EGL_KHR_image
+
+	EGL_NO_IMAGE_KHR ((EGLImageKHR)0)
+	EGL_NATIVE_PIXMAP_KHR 0x30B0
+	EGLImageKHR  eglCreateImageKHR (EGLDisplay  dpy, EGLContext  ctx, EGLenum  target, EGLClientBuffer  buffer, const EGLint * attrib_list)
+	EGLBoolean  eglDestroyImageKHR (EGLDisplay  dpy, EGLImageKHR  image)

@@ -1,0 +1,13 @@
+EGL_MESA_drm_image
+https://www.khronos.org/registry/egl/specs/eglspec.1.5.pdf
+EGL_MESA_drm_image
+
+	EGL_DRM_BUFFER_USE_SCANOUT_MESA 0x00000001
+	EGL_DRM_BUFFER_USE_SHARE_MESA 0x00000002
+	EGL_DRM_BUFFER_FORMAT_MESA 0x31D0
+	EGL_DRM_BUFFER_USE_MESA 0x31D1
+	EGL_DRM_BUFFER_FORMAT_ARGB32_MESA 0x31D2
+	EGL_DRM_BUFFER_MESA 0x31D3
+	EGL_DRM_BUFFER_STRIDE_MESA 0x31D4
+	EGLImageKHR  eglCreateDRMImageMESA (EGLDisplay  dpy, const EGLint * attrib_list)
+	EGLBoolean  eglExportDRMImageMESA (EGLDisplay  dpy, EGLImageKHR  image, EGLint * name, EGLint * handle, EGLint * stride)

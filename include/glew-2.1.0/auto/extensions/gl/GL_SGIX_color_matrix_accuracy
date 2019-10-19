@@ -1,0 +1,5 @@
+GL_SGIX_color_matrix_accuracy
+http://www.opengl.org/registry/specs/SGIX/color_matrix_accuracy.txt
+GL_SGIX_color_matrix_accuracy
+
+	GL_COLOR_MATRIX_HINT 0x8317

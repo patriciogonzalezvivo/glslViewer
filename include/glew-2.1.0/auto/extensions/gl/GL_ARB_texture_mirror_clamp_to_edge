@@ -1,0 +1,5 @@
+GL_ARB_texture_mirror_clamp_to_edge
+http://www.opengl.org/registry/specs/ARB/texture_mirror_clamp_to_edge.txt
+GL_ARB_texture_mirror_clamp_to_edge
+
+	GL_MIRROR_CLAMP_TO_EDGE 0x8743

@@ -1,0 +1,5 @@
+EGL_KHR_no_config_context
+https://www.khronos.org/registry/egl/specs/eglspec.1.5.pdf
+EGL_KHR_no_config_context
+
+	EGL_NO_CONFIG_KHR ((EGLConfig)0)

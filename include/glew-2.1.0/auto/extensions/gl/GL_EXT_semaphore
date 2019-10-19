@@ -1,0 +1,11 @@
+GL_EXT_semaphore
+http://www.opengl.org/registry/specs/EXT/external_objects.txt
+GL_EXT_semaphore
+
+	void glDeleteSemaphoresEXT (GLsizei n, const GLuint* semaphores)
+	void glGenSemaphoresEXT (GLsizei n, GLuint* semaphores)
+	void glGetSemaphoreParameterui64vEXT (GLuint semaphore, GLenum pname, GLuint64* params)
+	GLboolean glIsSemaphoreEXT (GLuint semaphore)
+	void glSemaphoreParameterui64vEXT (GLuint semaphore, GLenum pname, const GLuint64* params)
+	void glSignalSemaphoreEXT (GLuint semaphore, GLuint numBufferBarriers, const GLuint* buffers, GLuint numTextureBarriers, const GLuint *textures, const GLenum *dstLayouts)
+	void glWaitSemaphoreEXT (GLuint semaphore, GLuint numBufferBarriers, const GLuint* buffers, GLuint numTextureBarriers, const GLuint *textures, const GLenum *srcLayouts)

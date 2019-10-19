@@ -1,0 +1,5 @@
+GLX_EXT_libglvnd
+http://www.opengl.org/registry/specs/EXT/glx_libglvnd.txt
+GLX_EXT_libglvnd
+
+	GLX_VENDOR_NAMES_EXT 0x20F6

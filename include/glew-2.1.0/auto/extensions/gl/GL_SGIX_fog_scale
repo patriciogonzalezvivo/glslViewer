@@ -1,0 +1,6 @@
+GL_SGIX_fog_scale
+http://www.opengl.org/registry/specs/SGIX/fog_scale.txt
+GL_SGIX_fog_scale
+
+	GL_FOG_SCALE_SGIX 0x81FC
+	GL_FOG_SCALE_VALUE_SGIX 0x81FD

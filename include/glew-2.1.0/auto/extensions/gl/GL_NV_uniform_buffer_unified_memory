@@ -1,0 +1,7 @@
+GL_NV_uniform_buffer_unified_memory
+http://www.opengl.org/registry/specs/NV/uniform_buffer_unified_memory.txt
+GL_NV_uniform_buffer_unified_memory
+
+	GL_UNIFORM_BUFFER_UNIFIED_NV 0x936E
+	GL_UNIFORM_BUFFER_ADDRESS_NV 0x936F
+	GL_UNIFORM_BUFFER_LENGTH_NV 0x9370

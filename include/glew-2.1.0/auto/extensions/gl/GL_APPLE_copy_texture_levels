@@ -1,0 +1,5 @@
+GL_APPLE_copy_texture_levels
+http://www.opengl.org/registry/specs/APPLE/copy_texture_levels.txt
+GL_APPLE_copy_texture_levels
+
+	void glCopyTextureLevelsAPPLE (GLuint destinationTexture, GLuint sourceTexture, GLint sourceBaseLevel, GLsizei sourceLevelCount)

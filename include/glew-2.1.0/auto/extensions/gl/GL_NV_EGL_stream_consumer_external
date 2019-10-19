@@ -1,0 +1,8 @@
+GL_NV_EGL_stream_consumer_external
+http://www.opengl.org/registry/specs/NV/EGL_stream_consumer_external.txt
+GL_NV_EGL_stream_consumer_external
+
+	GL_TEXTURE_EXTERNAL_OES 0x8D65
+	GL_SAMPLER_EXTERNAL_OES 0x8D66
+	GL_TEXTURE_BINDING_EXTERNAL_OES 0x8D67
+	GL_REQUIRED_TEXTURE_IMAGE_UNITS_OES 0x8D68

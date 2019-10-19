@@ -1,0 +1,5 @@
+WGL_NV_delay_before_swap
+http://www.opengl.org/registry/specs/NV/wgl_delay_before_swap.txt
+WGL_NV_delay_before_swap
+
+	BOOL wglDelayBeforeSwapNV (HDC hDC, GLfloat seconds)

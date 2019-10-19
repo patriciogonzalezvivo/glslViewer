@@ -1,0 +1,8 @@
+GL_SGIX_fragment_lighting_space
+http://www.opengl.org/registry/specs/SGIX/fragment_lighting_space.txt
+GL_SGIX_fragment_lighting_space
+
+	GL_EYE_SPACE_SGIX 0x8436
+	GL_TANGENT_SPACE_SGIX 0x8437
+	GL_OBJECT_SPACE_SGIX 0x8438
+	GL_FRAGMENT_LIGHT_SPACE_SGIX 0x843D
