@@ -1,6 +1,14 @@
+------------------------------------------------------------------------
+
+local function IsVisualStudio()
+    return _ACTION == "vs2017" or _ACTION == "vs2019"
+end
+
+------------------------------------------------------------------------
 
 solution "glslViewer"
     configurations {"Debug", "Release"}
+    startproject("glslViewer")
 
 ------------------------------------------------------------------------
 project "rgbe"
@@ -79,11 +87,12 @@ project "glfw"
         "../include/glfw/src/x11*",
         "../include/glfw/src/xkb*",
     }
-
-    defines 
-    {
-        "_GLFW_WIN32"
-    }
+    if IsVisualStudio() then
+        defines 
+        {
+            "_GLFW_WIN32"
+        }
+    end
 
     includedirs
     {
@@ -106,7 +115,7 @@ project "oscpack"
     }
 
     
-    if _ACTION == "vs2019" then
+    if IsVisualStudio() then
         defines 
         {
             "__WIN32__"
@@ -127,7 +136,7 @@ project "glslViewer"
         "../src/**"
     }
 
-    if _ACTION == "vs2019" then
+    if IsVisualStudio() then
         defines {"DRIVER_GLFW", "GLFW_INCLUDE_GLCOREARB", "_USE_MATH_DEFINES", "PLATFORM_WINDOWS", "GLEW_STATIC"}
 
         links 
@@ -149,5 +158,6 @@ project "glslViewer"
         "oscpack","rgbe", "skylight", "glfw", "glew"
     }
 
- 
+    debugdir("../examples/3D/01_lighting")
+    debugargs("head.ply")
 ------------------------------------------------------------------------
