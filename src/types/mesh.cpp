@@ -22,7 +22,7 @@ void Mesh::setDrawMode(GLenum _drawMode) {
 
 void Mesh::setColor(const glm::vec4 &_color) {
     m_colors.clear();
-    for (uint i = 0; i < m_vertices.size(); i++) {
+    for (uint32_t i = 0; i < m_vertices.size(); i++) {
         m_colors.push_back(_color);
     }
 }
@@ -99,7 +99,7 @@ void Mesh::add(const Mesh &_mesh) {
     addNormals(_mesh.getNormals());
     addTexCoords(_mesh.getTexCoords());
 
-    for (uint i = 0; i < _mesh.getIndices().size(); i++) {
+    for (uint32_t i = 0; i < _mesh.getIndices().size(); i++) {
         addIndex(indexOffset+_mesh.getIndices()[i]);
     }
 }
@@ -326,21 +326,21 @@ Vbo* Mesh::getVbo() {
     }
 
     bool bNormals = false;
-    if (hasNormals() > 0 && getNormals().size() == m_vertices.size()) {
+    if (hasNormals() && getNormals().size() == m_vertices.size()) {
         attribs.push_back({"normal", 3, GL_FLOAT, false, 0});
         bNormals = true;
         nBits += 3;
     }
 
     bool bTexCoords = false;
-    if (hasTexCoords() > 0 && getTexCoords().size() == m_vertices.size()) {
+    if (hasTexCoords()  && getTexCoords().size() == m_vertices.size()) {
         attribs.push_back({"texcoord", 2, GL_FLOAT, false, 0});
         bTexCoords = true;
         nBits += 2;
     }
 
     bool bTangents = false;
-    if (hasTangents() > 0 && getTangents().size() == m_vertices.size()) {
+    if (hasTangents() && getTangents().size() == m_vertices.size()) {
         attribs.push_back({"tangent", 4, GL_FLOAT, false, 0});
         bTangents = true;
         nBits += 4;
@@ -382,12 +382,12 @@ Vbo* Mesh::getVbo() {
     
     if (!hasIndices()) {
         if ( getDrawMode() == GL_LINES ) {
-            for (uint i = 0; i < getVertices().size(); i++) {
+            for (uint32_t i = 0; i < getVertices().size(); i++) {
                 addIndex(i);
             }
         }
         else if ( getDrawMode() == GL_LINE_STRIP ) {
-            for (uint i = 1; i < getVertices().size(); i++) {
+            for (uint32_t i = 1; i < getVertices().size(); i++) {
                 addIndex(i-1);
                 addIndex(i);
             }

@@ -4,6 +4,8 @@
 #include "../types/mesh.h"
 #include "../types/rectangle.h"
 
+
+
 Mesh line(const glm::vec3 &_a, const glm::vec3 &_b);
 
 Mesh lineTo(const glm::vec3 &_a, const glm::vec3 &_dir, float _size);
@@ -11,10 +13,10 @@ Mesh lineTo(const glm::vec3 &_a, const glm::vec3 &_dir, float _size);
 Mesh cross(const glm::vec3 &_pos, float _width);
 
 Mesh rect(float _x, float _y, float _w, float _h);
-Mesh rect(const Rectangle &_rect);
+Mesh rect(const glslViewer::Rectangle&_rect);
 
-Mesh rectBorders(const Rectangle &_rect);
-Mesh rectCorners(const Rectangle &_rect, float _width = 4.);
+Mesh rectBorders(const glslViewer::Rectangle &_rect);
+Mesh rectCorners(const glslViewer::Rectangle &_rect, float _width = 4.);
 
 Mesh polyline(const std::vector<glm::vec3> &_pts );
 

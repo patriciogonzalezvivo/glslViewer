@@ -83,7 +83,7 @@ void expandBoundingBox(const glm::vec3 &_pt, glm::vec3 &_min, glm::vec3 &_max) {
 
 glm::vec3 getCentroid(const std::vector<glm::vec3> &_pts) {
     glm::vec3 centroid;
-    for (uint i = 0; i < _pts.size(); i++) {
+    for (uint32_t i = 0; i < _pts.size(); i++) {
         centroid += _pts[i] / (float)_pts.size();
     }
     return centroid;
@@ -93,7 +93,7 @@ float getSize(const std::vector<glm::vec3> &_pts) {
     // Substract the Model position
     glm::vec3 centroid = getCentroid(_pts);
     std::vector<glm::vec3> pts = _pts;
-    for (uint i = 0; i < pts.size(); i++) {
+    for (uint32_t i = 0; i < pts.size(); i++) {
         pts[i] -= centroid;
     }
 
@@ -138,7 +138,7 @@ std::vector<glm::vec3> getConvexHull(std::vector<glm::vec3> &pts) {
     hull.push_back(pts.at(0));
     hull.push_back(pts.at(1));
 
-    uint currentPoint = 2;
+    uint32_t currentPoint = 2;
     int direction = 1;
 
     for (int i=0; i<3000; i++) { //max 1000 tries

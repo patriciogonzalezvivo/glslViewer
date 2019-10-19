@@ -1,10 +1,10 @@
 #include "window.h"
 
 #include <time.h>
-#include <sys/time.h>
-#include <unistd.h>
+//#include <sys/time.h>
+//#include <unistd.h>
 
-#include "gl/gl.h"
+#include "gl/gl_common.h"
 #include "glm/gtc/matrix_transform.hpp"
 #include "tools/text.h"
 
@@ -29,6 +29,7 @@ static float fPixelDensity = 1.0;
 
 #if defined(DRIVER_GLFW)
 // GLWF globals
+#include "GLFW/glfw3.h"
 //----------------------------------------------------
 static bool left_mouse_button_down = false;
 static GLFWwindow* window;
@@ -39,7 +40,7 @@ static GLFWwindow* window;
 #include <assert.h>
 #include <fcntl.h>
 #include <iostream>
-#include <termios.h>
+//#include <termios.h>
 #include <fstream>
 
 #define check() assert(glGetError() == 0)

@@ -195,7 +195,7 @@ bool loadPLY(Uniforms& _uniforms, WatchFileList& _files, Materials& _materials, 
                 }
 
                 currentVertex++;
-                if ((uint)currentVertex==vertices.size()) {
+                if ((uint32_t)currentVertex==vertices.size()) {
                     if (orderVertices<orderIndices) {
                         state = Faces;
                     }
@@ -224,7 +224,7 @@ bool loadPLY(Uniforms& _uniforms, WatchFileList& _files, Materials& _materials, 
                 indices[currentFace*3+2] = i;
 
                 currentFace++;
-                if ((uint)currentFace==indices.size()/3) {
+                if ((uint32_t)currentFace==indices.size()/3) {
                     if (orderVertices<orderIndices) {
                         state = Vertices;
                     }

@@ -1,5 +1,6 @@
 #include <sys/stat.h>
-#include <unistd.h>
+
+//#include <unistd.h>
 
 #include <map>
 #include <thread>
@@ -8,7 +9,7 @@
 #include <iostream>
 #include <fstream>
 
-#include "gl/gl.h"
+#include "gl/gl_common.h"
 #include "window.h"
 #include "sandbox.h"
 #include "io/fs.h"
@@ -899,7 +900,7 @@ void onExit() {
 void fileWatcherThread() {
     struct stat st;
     while ( bRun.load() ) {
-        for ( uint i = 0; i < files.size(); i++ ) {
+        for ( uint32_t i = 0; i < files.size(); i++ ) {
             if ( fileChanged == -1 ) {
                 stat( files[i].path.c_str(), &st );
                 int date = st.st_mtime;

@@ -8,6 +8,7 @@
 #include "../types/face.h"
 #include "../tools/math.h"
 
+#include <algorithm>
 // #define USE_BILINEAR_INTERPOLATION
 
 // extern "C" {

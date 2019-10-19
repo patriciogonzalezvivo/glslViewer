@@ -54,7 +54,7 @@ std::string urlResolve(const std::string& _path, const std::string& _pwd, const 
 
     // .. search on the include path
     else {
-        for (uint i = 0; i < _include_folders.size(); i++) {
+        for ( uint32_t i = 0; i < _include_folders.size(); i++) {
             std::string new_path = _include_folders[i] + "/" + _path;
             if (urlExists(new_path)) 
                 return realpath(new_path.c_str(), NULL);

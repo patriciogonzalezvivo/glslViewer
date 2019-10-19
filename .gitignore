@@ -10,3 +10,6 @@ build/*
 dist/*
 python/glslviewer.egg-info/*
 .vscode/browse.db*
+/prj/.vs/glslViewer/v16/.suo
+/prj/.vs/glslViewer/v16
+/prj/obj/Debug

@@ -4,7 +4,7 @@
 #include <string>
 #include <map>
 
-#include "gl.h"
+#include "gl_common.h"
 #include "shader.h"
 
 struct VertexAttrib {

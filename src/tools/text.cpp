@@ -28,8 +28,8 @@ std::string toUnderscore(const std::string& _string){
 std::string purifyString(const std::string& _string) {
     std::string std = _string;
     for (std::string::iterator it = std.begin(), itEnd = std.end(); it!=itEnd; ++it) {
-        if (static_cast<uint>(*it) < 32 || 
-            static_cast<uint>(*it) > 127 || 
+        if (static_cast<uint32_t>(*it) < 32 || 
+            static_cast<uint32_t>(*it) > 127 || 
             *it == '.' ||
             *it == '-' ||
             *it == '\\'||
@@ -188,7 +188,7 @@ std::vector<std::string> split(const std::string& _string, char _sep, bool _tole
 }
 
 bool beginsWith(const std::string& _stringA, const std::string& _stringB) {
-    for (uint i = 0; i < _stringB.size(); i++) {
+    for (uint32_t i = 0; i < _stringB.size(); i++) {
         if (_stringB[i] != _stringA[i]) {
             return false;
         }
