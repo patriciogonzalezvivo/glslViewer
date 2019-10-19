@@ -862,9 +862,10 @@ int main(int argc, char **argv){
 
 
     // Force cinWatcher to finish (because is waiting for input)
-    //pthread_t cinHandler = cinWatcher.native_handle();
-    //pthread_cancel( cinHandler );
-
+#ifndef PLATFORM_WINDOWS
+    pthread_t cinHandler = cinWatcher.native_handle();
+    pthread_cancel( cinHandler );
+#endif//
     exit(0);
 }
 

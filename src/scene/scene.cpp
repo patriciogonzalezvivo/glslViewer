@@ -1,7 +1,11 @@
+
 #include "scene.h"
 #include "window.h"
 
-//#include <unistd.h>
+#ifndef PLATFORM_WINDOWS
+#include <unistd.h>
+#endif
+
 #include <sys/stat.h>
 
 #include "io/fs.h"

@@ -47,7 +47,7 @@ static GLFWwindow* window;
 #include <assert.h>
 #include <fcntl.h>
 #include <iostream>
-//#include <termios.h>
+#include <termios.h>
 #include <fstream>
 
 #define check() assert(glGetError() == 0)

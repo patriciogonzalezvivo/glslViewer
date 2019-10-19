@@ -8,8 +8,10 @@
 #include "../types/face.h"
 #include "../tools/math.h"
 
+#ifdef PLATFORM_WINDOWS
 #include <cmath>
 #include <algorithm>
+#endif
 // #define USE_BILINEAR_INTERPOLATION
 
 // extern "C" {
