@@ -13,3 +13,10 @@ python/glslviewer.egg-info/*
 /prj/.vs/glslViewer/v16/.suo
 /prj/.vs/glslViewer/v16
 /prj/obj/Debug
+/prj/glew.vcxproj
+/prj/glfw.vcxproj
+/prj/glfw.vcxproj.filters
+/prj/bin/Debug
+/prj/*.vcxproj
+/prj/*.filters
+/prj/*.user
