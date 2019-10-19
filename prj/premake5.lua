@@ -64,20 +64,20 @@ project "glfw"
 
     files 
     {
-        "../libs/glfw/src/*.c",
-        "../libs/glfw/src/*.h"
+        "../include/glfw/src/*.c",
+        "../include/glfw/src/*.h"
     }
 
     excludes
     {
-        "../libs/glfw/src/cocoa*",        
-        "../libs/glfw/src/glx*",
-        "../libs/glfw/src/linux*",
-        "../libs/glfw/src/null*",        
-        "../libs/glfw/src/posix*",
-        "../libs/glfw/src/wl*",
-        "../libs/glfw/src/x11*",
-        "../libs/glfw/src/xkb*",
+        "../include/glfw/src/cocoa*",        
+        "../include/glfw/src/glx*",
+        "../include/glfw/src/linux*",
+        "../include/glfw/src/null*",        
+        "../include/glfw/src/posix*",
+        "../include/glfw/src/wl*",
+        "../include/glfw/src/x11*",
+        "../include/glfw/src/xkb*",
     }
 
     defines 
@@ -87,7 +87,7 @@ project "glfw"
 
     includedirs
     {
-        "../libs/glfw",         
+        "../include/glfw",         
     }
 ------------------------------------------------------------------------
 project "oscpack"
@@ -139,7 +139,7 @@ project "glslViewer"
     includedirs
     {
         "../include/", 
-        "../libs/glfw/include",
+        "../include/glfw/include",
         "../include/glew-2.1.0/include",
         "../src/"
     }
