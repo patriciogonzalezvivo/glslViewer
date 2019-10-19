@@ -897,10 +897,10 @@ float materialRoughness() {
 #define FNC_TOSHININESS
 
 float toShininess(float roughness, float metallic) {
-    float smooth = .95 - roughness * 0.5;
-    smooth *= smooth;
-    smooth *= smooth;
-    return smooth * (80. + 160. * (1.0-metallic));
+    float _smooth = .95 - roughness * 0.5;
+    _smooth *= _smooth;
+    _smooth *= _smooth;
+    return _smooth * (80. + 160. * (1.0-metallic));
 }
 
 #endif
