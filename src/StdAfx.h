@@ -18,4 +18,6 @@
 #include "glm/gtc/quaternion.hpp"
 #include "glm/gtx/quaternion.hpp"
 
+#ifdef PLATFORM_WINDOWS
 #include "gl/glew.h"
+#endif
