@@ -20,3 +20,11 @@ python/glslviewer.egg-info/*
 /prj/*.vcxproj
 /prj/*.filters
 /prj/*.user
+/prj/bin/x64/Debug
+/prj/obj/x64/Debug/glew
+/prj/obj/x64/Debug/glfw
+/prj/obj/x64/Debug/glslViewer
+/prj/obj/x64/Debug/rgbe
+/prj/obj/x64/Debug/skylight
+/prj/obj/x64/Debug/oscpack
+/prj/*.sln

@@ -8,6 +8,7 @@ end
 
 solution "glslViewer"
     configurations {"Debug", "Release"}
+    platforms {"x32", "x64"}
     startproject("glslViewer")
 
 ------------------------------------------------------------------------
