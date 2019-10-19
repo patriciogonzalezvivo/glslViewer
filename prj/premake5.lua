@@ -93,6 +93,7 @@ project "glfw"
         {
             "_GLFW_WIN32"
         }
+
     end
 
     includedirs
@@ -158,6 +159,11 @@ project "glslViewer"
     {
         "oscpack","rgbe", "skylight", "glfw", "glew"
     }
+
+    forceincludes {"StdAfx.h"}
+
+	pchheader "StdAfx.h"
+	pchsource ("../src/StdAfx.cpp")
 
     debugdir("../examples/3D/01_lighting")
     debugargs("head.ply")
