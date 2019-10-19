@@ -2,7 +2,7 @@
 
 #include <string>
 
-#include "gl_common.h"
+#include "gl.h"
 
 class Texture {
 public:

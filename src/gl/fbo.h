@@ -1,8 +1,6 @@
 #pragma once
 
-
-#include "gl_common.h"
-
+#include "gl.h"
 
 enum FboType {
     COLOR_TEXTURE, COLOR_TEXTURE_DEPTH_BUFFER, COLOR_DEPTH_TEXTURES, DEPTH_TEXTURE

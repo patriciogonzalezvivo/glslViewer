@@ -2,7 +2,7 @@
 
 #include <string>
 
-#include "gl_common.h"
+#include "gl.h"
 #include "fbo.h"
 #include "texture.h"
 #include "textureCube.h"

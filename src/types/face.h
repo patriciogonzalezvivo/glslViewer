@@ -2,7 +2,7 @@
 
 #include <math.h>
 
-#include "gl/gl_common.h"
+#include "gl/gl.h"
 #include "glm/glm.hpp"
 
 #ifndef M_PI

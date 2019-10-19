@@ -2,7 +2,7 @@
 
 #include <vector>
 
-#include "gl_common.h"
+#include "gl.h"
 #include "vertexLayout.h"
 
 #if defined(PLATFORM_RPI) || defined(PLATFORM_RPI4) 

@@ -1,6 +1,8 @@
 #include <sys/stat.h>
 
-//#include <unistd.h>
+#ifndef PLATFORM_WINDOWS
+#include <unistd.h>
+#endif
 
 #include <map>
 #include <thread>
@@ -9,7 +11,7 @@
 #include <iostream>
 #include <fstream>
 
-#include "gl/gl_common.h"
+#include "gl/gl.h"
 #include "window.h"
 #include "sandbox.h"
 #include "io/fs.h"
