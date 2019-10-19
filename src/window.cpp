@@ -419,9 +419,9 @@ void initGL (glm::ivec4 &_viewport, WindowStyle _style) {
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
 
         glfwMakeContextCurrent(window);
-
+#ifdef PLATFORM_WINDOWS
         glewInit();
-
+#endif//
         glfwSetWindowSizeCallback(window, [](GLFWwindow* _window, int _w, int _h) {
             setViewport(_w,_h);
         });
