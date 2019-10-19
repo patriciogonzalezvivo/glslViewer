@@ -28,6 +28,12 @@ GlslViewer gives support to:
 
 ![](images/01.gif)
 
+## Compiling on Windows
+* Download premake from https://github.com/premake/premake-core/releases 
+* Extract premake exe in the prj folder
+* In the same folder run premake5.exe vs2019
+* Open the generated project with Visual Studio 2019 
+
 
 ## Wiki themes
 
