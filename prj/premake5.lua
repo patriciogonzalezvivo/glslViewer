@@ -13,7 +13,7 @@ solution "glslViewer"
     }
 
     if _ACTION == "vs2019" then
-        defines {"DRIVER_GLFW", "GLFW_INCLUDE_GLCOREARB"}
+        defines {"DRIVER_GLFW", "GLFW_INCLUDE_GLCOREARB", "_USE_MATH_DEFINES", "PLATFORM_WINDOWS"}
     end 
     includedirs
     {

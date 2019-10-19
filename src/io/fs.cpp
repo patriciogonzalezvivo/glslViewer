@@ -38,6 +38,12 @@ std::string getBaseDir(const std::string& filepath) {
     return base_dir;
 }
 
+#if defined (PLATFORM_WINDOWS)
+const char* realpath(const char* str, void*)
+{
+    return str;
+}
+#endif 
 std::string getAbsPath(const std::string& _path) {
     std::string abs_path = realpath(_path.c_str(), NULL);
     std::size_t found = abs_path.find_last_of("\\/");

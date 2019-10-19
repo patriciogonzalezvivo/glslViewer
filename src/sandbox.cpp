@@ -19,6 +19,8 @@
 #include "shaders/wireframe2D.h"
 #include "shaders/fxaa.h"
 
+std::string default_scene_frag = default_scene_frag0 + default_scene_frag1 + default_scene_frag2 + default_scene_frag3;
+
 // ------------------------------------------------------------------------- CONTRUCTOR
 Sandbox::Sandbox(): 
     frag_index(-1), vert_index(-1), geom_index(-1),

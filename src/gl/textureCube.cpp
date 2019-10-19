@@ -8,6 +8,7 @@
 #include "../types/face.h"
 #include "../tools/math.h"
 
+#include <cmath>
 #include <algorithm>
 // #define USE_BILINEAR_INTERPOLATION
 
