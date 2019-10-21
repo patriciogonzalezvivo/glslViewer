@@ -1,0 +1,5 @@
+EGL_KHR_wait_sync
+https://www.khronos.org/registry/egl/specs/eglspec.1.5.pdf
+EGL_KHR_wait_sync
+
+	EGLint  eglWaitSyncKHR (EGLDisplay  dpy, EGLSyncKHR  sync, EGLint  flags)

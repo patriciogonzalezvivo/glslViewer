@@ -1,0 +1,5 @@
+WGL_ARB_robustness_share_group_isolation
+http://www.opengl.org/registry/specs/ARB/wgl_robustness_isolation.txt
+WGL_ARB_robustness_share_group_isolation
+
+	WGL_CONTEXT_RESET_ISOLATION_BIT_ARB 0x00000008

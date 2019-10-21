@@ -75,7 +75,7 @@ Mesh rect (float _x, float _y, float _w, float _h) {
     return mesh;
 }
 
-Mesh rect (const Rectangle &_rect) {
+Mesh rect (const glslViewer::Rectangle &_rect) {
     Mesh mesh;
     mesh.addVertex(_rect.getBottomLeft());
     mesh.addColor(glm::vec4(1.0));
@@ -103,7 +103,7 @@ Mesh rect (const Rectangle &_rect) {
     return mesh;
 }
 
-Mesh rectBorders(const Rectangle &_rect) {
+Mesh rectBorders(const glslViewer::Rectangle &_rect) {
     glm::vec3 linePoints[5] = {_rect.getTopLeft(), _rect.getTopRight(), _rect.getBottomRight(), _rect.getBottomLeft(), _rect.getTopLeft()};
 
     Mesh mesh;
@@ -112,7 +112,7 @@ Mesh rectBorders(const Rectangle &_rect) {
     return mesh;
 }
 
-Mesh rectCorners(const Rectangle &_rect, float _width ) {
+Mesh rectCorners(const glslViewer::Rectangle &_rect, float _width ) {
     glm::vec3 linePoints[16] = {_rect.getTopLeft(), _rect.getTopLeft(),_rect.getTopLeft(), _rect.getTopLeft(),
                                 _rect.getTopRight(), _rect.getTopRight(),_rect.getTopRight(), _rect.getTopRight(),
                                 _rect.getBottomRight(), _rect.getBottomRight(), _rect.getBottomRight(), _rect.getBottomRight(),

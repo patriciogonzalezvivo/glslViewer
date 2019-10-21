@@ -1,0 +1,5 @@
+GLX_ARB_robustness_application_isolation
+http://www.opengl.org/registry/specs/ARB/glx_robustness_isolation.txt
+GLX_ARB_robustness_application_isolation
+
+	GLX_CONTEXT_RESET_ISOLATION_BIT_ARB 0x00000008

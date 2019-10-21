@@ -28,6 +28,14 @@ GlslViewer gives support to:
 
 ![](images/01.gif)
 
+## Compiling on Windows
+* git clone 
+* git submodule update --init 
+* Download premake from https://github.com/premake/premake-core/releases 
+* Extract premake exe in the prj folder
+* In the same folder run premake5.exe vs2019
+* Open the generated project with Visual Studio 2019 
+* Compile and run
 
 ## Wiki themes
 
@@ -81,5 +89,6 @@ Thanks to:
 
 * [Philip Rideout](http://prideout.net/) and [Romain Guy](http://www.curious-creature.com/) general generosity to share their code and experience
 
+* [Mihai Sebea](https://codepatcher.wordpress.com) for porting it to windows(TM) 
 
 ![](images/dof.gif)

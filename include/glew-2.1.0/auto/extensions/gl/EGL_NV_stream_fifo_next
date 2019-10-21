@@ -1,0 +1,6 @@
+EGL_NV_stream_fifo_next
+https://www.khronos.org/registry/egl/specs/eglspec.1.5.pdf
+EGL_NV_stream_fifo_next
+
+	EGL_PENDING_FRAME_NV 0x3329
+	EGL_STREAM_TIME_PENDING_NV 0x332A

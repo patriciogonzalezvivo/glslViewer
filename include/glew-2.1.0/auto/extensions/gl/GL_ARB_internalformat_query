@@ -1,0 +1,6 @@
+GL_ARB_internalformat_query
+http://www.opengl.org/registry/specs/ARB/internalformat_query.txt
+GL_ARB_internalformat_query
+
+	GL_NUM_SAMPLE_COUNTS 0x9380
+	void glGetInternalformativ (GLenum target, GLenum internalformat, GLenum pname, GLsizei bufSize, GLint* params)

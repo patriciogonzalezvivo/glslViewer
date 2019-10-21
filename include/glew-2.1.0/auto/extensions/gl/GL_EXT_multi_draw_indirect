@@ -1,0 +1,6 @@
+GL_EXT_multi_draw_indirect
+http://www.opengl.org/registry/specs/EXT/multi_draw_indirect.txt
+GL_EXT_multi_draw_indirect
+
+	void glMultiDrawArraysIndirectEXT (GLenum mode, const void *indirect, GLsizei drawcount, GLsizei stride)
+	void glMultiDrawElementsIndirectEXT (GLenum mode, GLenum type, const void *indirect, GLsizei drawcount, GLsizei stride)

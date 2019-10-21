@@ -1,0 +1,5 @@
+EGL_KHR_platform_gbm
+https://www.khronos.org/registry/egl/specs/eglspec.1.5.pdf
+EGL_KHR_platform_gbm
+
+	EGL_PLATFORM_GBM_KHR 0x31D7

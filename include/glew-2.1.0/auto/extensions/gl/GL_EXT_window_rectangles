@@ -1,0 +1,11 @@
+GL_EXT_window_rectangles
+http://www.opengl.org/registry/specs/EXT/window_rectangles.txt
+GL_EXT_window_rectangles
+
+	GL_INCLUSIVE_EXT 0x8F10
+	GL_EXCLUSIVE_EXT 0x8F11
+	GL_WINDOW_RECTANGLE_EXT 0x8F12
+	GL_WINDOW_RECTANGLE_MODE_EXT 0x8F13
+	GL_MAX_WINDOW_RECTANGLES_EXT 0x8F14
+	GL_NUM_WINDOW_RECTANGLES_EXT 0x8F15
+	void glWindowRectanglesEXT (GLenum mode, GLsizei count, const GLint box[])

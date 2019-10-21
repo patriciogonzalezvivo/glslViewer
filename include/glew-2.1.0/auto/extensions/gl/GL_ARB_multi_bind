@@ -1,0 +1,10 @@
+GL_ARB_multi_bind
+http://www.opengl.org/registry/specs/ARB/multi_bind.txt
+GL_ARB_multi_bind
+
+	void glBindBuffersBase (GLenum target, GLuint first, GLsizei count, const GLuint* buffers)
+	void glBindBuffersRange (GLenum target, GLuint first, GLsizei count, const GLuint* buffers, const GLintptr *offsets, const GLsizeiptr *sizes)
+	void glBindImageTextures (GLuint first, GLsizei count, const GLuint* textures)
+	void glBindSamplers (GLuint first, GLsizei count, const GLuint* samplers)
+	void glBindTextures (GLuint first, GLsizei count, const GLuint* textures)
+	void glBindVertexBuffers (GLuint first, GLsizei count, const GLuint* buffers, const GLintptr *offsets, const GLsizei *strides)

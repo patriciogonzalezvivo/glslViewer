@@ -1,0 +1,5 @@
+include config/Makefile.msys
+
+POPT := -march=i686 -mtune=generic -O2
+CFLAGS.EXTRA  += -m32
+LDFLAGS.EXTRA += -m32

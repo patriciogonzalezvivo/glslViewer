@@ -1,0 +1,6 @@
+GL_NV_robustness_video_memory_purge
+http://www.opengl.org/registry/specs/NV/robustness_video_memory_purge.txt
+GL_NV_robustness_video_memory_purge
+
+	GL_EGL_GENERATE_RESET_ON_VIDEO_MEMORY_PURGE_NV 0x334C
+	GL_PURGED_CONTEXT_RESET_NV 0x92BB

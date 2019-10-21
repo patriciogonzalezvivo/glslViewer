@@ -38,6 +38,12 @@ std::string getBaseDir(const std::string& filepath) {
     return base_dir;
 }
 
+#if defined (PLATFORM_WINDOWS)
+const char* realpath(const char* str, void*)
+{
+    return str;
+}
+#endif 
 std::string getAbsPath(const std::string& _path) {
     std::string abs_path = realpath(_path.c_str(), NULL);
     std::size_t found = abs_path.find_last_of("\\/");
@@ -54,7 +60,7 @@ std::string urlResolve(const std::string& _path, const std::string& _pwd, const 
 
     // .. search on the include path
     else {
-        for (uint i = 0; i < _include_folders.size(); i++) {
+        for ( uint32_t i = 0; i < _include_folders.size(); i++) {
             std::string new_path = _include_folders[i] + "/" + _path;
             if (urlExists(new_path)) 
                 return realpath(new_path.c_str(), NULL);

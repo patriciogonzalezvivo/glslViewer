@@ -1,0 +1,5 @@
+GL_SGIX_spotlight_cutoff
+http://www.opengl.org/registry/specs/SGIX/spotlight_cutoff.txt
+GL_SGIX_spotlight_cutoff
+
+	GL_SPOT_CUTOFF_DELTA_SGIX 0x8193

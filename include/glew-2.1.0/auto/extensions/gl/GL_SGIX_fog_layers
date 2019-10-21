@@ -1,0 +1,12 @@
+GL_SGIX_fog_layers
+http://www.opengl.org/registry/specs/SGIX/fog_layers.txt
+GL_SGIX_fog_layers
+
+	GL_FOG_TYPE_SGIX 0x8323
+	GL_UNIFORM_SGIX 0x8324
+	GL_LAYERED_SGIX 0x8325
+	GL_FOG_GROUND_PLANE_SGIX 0x8326
+	GL_FOG_LAYERS_POINTS_SGIX 0x8327
+	GL_MAX_FOG_LAYERS_POINTS_SGIX 0x8328
+	void glFogLayersSGIX (GLsizei n, const GLfloat* points)
+	void glGetFogLayersSGIX (GLfloat* points)

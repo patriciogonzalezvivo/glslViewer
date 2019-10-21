@@ -1,0 +1,6 @@
+GL_ARM_shader_framebuffer_fetch
+http://www.opengl.org/registry/specs/ARM/shader_framebuffer_fetch.txt
+GL_ARM_shader_framebuffer_fetch
+
+	GL_FETCH_PER_SAMPLE_ARM 0x8F65
+	GL_FRAGMENT_SHADER_FRAMEBUFFER_FETCH_MRT_ARM 0x8F66

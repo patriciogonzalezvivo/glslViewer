@@ -1,0 +1,5 @@
+EGL_KHR_vg_parent_image
+https://www.khronos.org/registry/egl/specs/eglspec.1.5.pdf
+EGL_KHR_vg_parent_image
+
+	EGL_VG_PARENT_IMAGE_KHR 0x30BA

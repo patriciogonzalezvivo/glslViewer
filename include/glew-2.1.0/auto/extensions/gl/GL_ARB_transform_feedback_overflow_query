@@ -1,0 +1,6 @@
+GL_ARB_transform_feedback_overflow_query
+http://www.opengl.org/registry/specs/ARB/transform_feedback_overflow_query.txt
+GL_ARB_transform_feedback_overflow_query
+
+	GL_TRANSFORM_FEEDBACK_OVERFLOW_ARB 0x82EC
+	GL_TRANSFORM_FEEDBACK_STREAM_OVERFLOW_ARB 0x82ED

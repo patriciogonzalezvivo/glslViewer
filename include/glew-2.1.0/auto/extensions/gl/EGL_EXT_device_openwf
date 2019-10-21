@@ -1,0 +1,5 @@
+EGL_EXT_device_openwf
+https://www.khronos.org/registry/egl/specs/eglspec.1.5.pdf
+EGL_EXT_device_openwf
+
+	EGL_OPENWF_DEVICE_ID_EXT 0x3237

@@ -1,0 +1,13 @@
+GL_ARB_shading_language_include
+http://www.opengl.org/registry/specs/ARB/shading_language_include.txt
+GL_ARB_shading_language_include
+
+	GL_SHADER_INCLUDE_ARB 0x8DAE
+	GL_NAMED_STRING_LENGTH_ARB 0x8DE9
+	GL_NAMED_STRING_TYPE_ARB 0x8DEA
+	void glCompileShaderIncludeARB (GLuint shader, GLsizei count, const GLchar* const *path, const GLint *length)
+	void glDeleteNamedStringARB (GLint namelen, const GLchar* name)
+	void glGetNamedStringARB (GLint namelen, const GLchar* name, GLsizei bufSize, GLint *stringlen, GLchar *string)
+	void glGetNamedStringivARB (GLint namelen, const GLchar* name, GLenum pname, GLint *params)
+	GLboolean glIsNamedStringARB (GLint namelen, const GLchar* name)
+	void glNamedStringARB (GLenum type, GLint namelen, const GLchar* name, GLint stringlen, const GLchar *string)

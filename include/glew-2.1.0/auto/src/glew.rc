@@ -1,0 +1,135 @@
+
+#include <windows.h>
+
+#ifdef GLEW_STATIC
+# ifdef _DEBUG
+#  define FILENAME "glew32sd.dll"
+# else
+#   define FILENAME "glew32s.dll"
+# endif
+#else
+# ifdef _DEBUG
+#  define FILENAME "glew32d.dll"
+# else
+#  define FILENAME "glew32.dll"
+# endif
+#endif
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+VS_VERSION_INFO VERSIONINFO 
+FILEVERSION GLEW_MAJOR, GLEW_MINOR, GLEW_MICRO, 0
+PRODUCTVERSION GLEW_MAJOR, GLEW_MINOR, GLEW_MICRO, 0
+FILEFLAGSMASK VS_FFI_FILEFLAGSMASK
+#ifdef _DEBUG
+FILEFLAGS VS_FF_DEBUG
+#else
+FILEFLAGS 0x0L
+#endif
+FILEOS VOS__WINDOWS32
+#ifdef GLEW_STATIC
+FILETYPE VFT_STATIC_LIB
+#else
+FILETYPE VFT_DLL
+#endif
+FILESUBTYPE VFT2_UNKNOWN
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904b0"
+        BEGIN
+            VALUE "Comments", 
+            "The OpenGL Extension Wrangler Library\r\n"
+            "Copyright (C) 2002-2008, Milan Ikits <milan ikits[]ieee org>\r\n"
+            "Copyright (C) 2002-2008, Marcelo E. Magallon <mmagallo[]debian org>\r\n"
+            "Copyright (C) 2002, Lev Povalahev\r\n"
+            "All rights reserved.\r\n"
+            "\r\n"
+            "Redistribution and use in source and binary forms, with or without \r\n"
+            "modification, are permitted provided that the following conditions are met:\r\n"
+            "\r\n"
+            "* Redistributions of source code must retain the above copyright notice, \r\n"
+            "  this list of conditions and the following disclaimer.\r\n"
+            "* Redistributions in binary form must reproduce the above copyright notice, \r\n"
+            "  this list of conditions and the following disclaimer in the documentation \r\n"
+            "  and/or other materials provided with the distribution.\r\n"
+            "* The name of the author may be used to endorse or promote products \r\n"
+            "  derived from this software without specific prior written permission.\r\n"
+            "\r\n"
+            "THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ''AS IS'' \r\n"
+            "AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE \r\n"
+            "IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE\r\n"
+            "ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE \r\n"
+            "LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR \r\n"
+            "CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF \r\n"
+            "SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS\r\n"
+            "INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN\r\n"
+            "CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)\r\n"
+            "ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF\r\n"
+            "THE POSSIBILITY OF SUCH DAMAGE.\r\n"
+            "\r\n"
+            "\r\n"
+            "Mesa 3-D graphics library\r\n"
+            "\r\n"
+            "Version:  7.0\r\n"
+            "\r\n"
+            "Copyright (C) 1999-2007  Brian Paul   All Rights Reserved.\r\n"
+            "\r\n"
+            "Permission is hereby granted, free of charge, to any person obtaining a\r\n"
+            "copy of this software and associated documentation files (the ''Software''),\r\n"
+            "to deal in the Software without restriction, including without limitation\r\n"
+            "the rights to use, copy, modify, merge, publish, distribute, sublicense,\r\n"
+            "and/or sell copies of the Software, and to permit persons to whom the\r\n"
+            "Software is furnished to do so, subject to the following conditions:\r\n"
+            "\r\n"
+            "The above copyright notice and this permission notice shall be included\r\n"
+            "in all copies or substantial portions of the Software.\r\n"
+            "\r\n"
+            "THE SOFTWARE IS PROVIDED ''AS IS'', WITHOUT WARRANTY OF ANY KIND, EXPRESS\r\n"
+            "OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\r\n"
+            "FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL\r\n"
+            "BRIAN PAUL BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN\r\n"
+            "AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN\r\n"
+            "CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\r\n"
+            "\r\n"
+            "\r\n"
+            "Copyright (c) 2007 The Khronos Group Inc.\r\n"
+            "\r\n"
+            "Permission is hereby granted, free of charge, to any person obtaining a\r\n"
+            "copy of this software and/or associated documentation files (the\r\n"
+            "''Materials''), to deal in the Materials without restriction, including\r\n"
+            "without limitation the rights to use, copy, modify, merge, publish,\r\n"
+            "distribute, sublicense, and/or sell copies of the Materials, and to\r\n"
+            "permit persons to whom the Materials are furnished to do so, subject to\r\n"
+            "the following conditions:\r\n"
+            "\r\n"
+            "The above copyright notice and this permission notice shall be included\r\n"
+            "in all copies or substantial portions of the Materials.\r\n"
+            "\r\n"
+            "THE MATERIALS ARE PROVIDED ''AS IS'', WITHOUT WARRANTY OF ANY KIND,\r\n"
+            "EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\r\n"
+            "MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\r\n"
+            "IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\r\n"
+            "CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\r\n"
+            "TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\r\n"
+            "MATERIALS OR THE USE OR OTHER DEALINGS IN THE MATERIALS.\0"
+            VALUE "CompanyName", "\0"
+            VALUE "FileDescription", "The OpenGL Extension Wrangler Library\0"
+            VALUE "FileVersion", "GLEW_MAJOR,GLEW_MINOR,GLEW_MICRO,0\0"
+            VALUE "InternalName", "GLEW\0"
+            VALUE "LegalCopyright", "© 2002-2008 Milan Ikits & Marcelo Magallon\0"
+            VALUE "LegalTrademarks", "\0"
+            VALUE "OriginalFilename", FILENAME "\0"
+            VALUE "PrivateBuild", "\0"
+            VALUE "ProductName", "The OpenGL Extension Wrangler Library\0"
+            VALUE "ProductVersion", "GLEW_MAJOR,GLEW_MINOR,GLEW_MICRO,0\0"
+            VALUE "SpecialBuild", "\0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END

@@ -1,0 +1,9 @@
+GL_QCOM_binning_control
+http://www.opengl.org/registry/specs/QCOM/binning_control.txt
+GL_QCOM_binning_control
+
+	GL_DONT_CARE 0x1100
+	GL_BINNING_CONTROL_HINT_QCOM 0x8FB0
+	GL_CPU_OPTIMIZED_QCOM 0x8FB1
+	GL_GPU_OPTIMIZED_QCOM 0x8FB2
+	GL_RENDER_DIRECT_TO_FRAMEBUFFER_QCOM 0x8FB3

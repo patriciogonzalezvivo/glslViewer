@@ -1,0 +1,7 @@
+EGL_KHR_context_flush_control
+https://www.khronos.org/registry/egl/specs/eglspec.1.5.pdf
+EGL_KHR_context_flush_control
+
+	EGL_CONTEXT_RELEASE_BEHAVIOR_NONE_KHR 0
+	EGL_CONTEXT_RELEASE_BEHAVIOR_KHR 0x2097
+	EGL_CONTEXT_RELEASE_BEHAVIOR_FLUSH_KHR 0x2098

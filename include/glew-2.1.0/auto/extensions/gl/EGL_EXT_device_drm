@@ -1,0 +1,5 @@
+EGL_EXT_device_drm
+https://www.khronos.org/registry/egl/specs/eglspec.1.5.pdf
+EGL_EXT_device_drm
+
+	EGL_DRM_DEVICE_FILE_EXT 0x3233

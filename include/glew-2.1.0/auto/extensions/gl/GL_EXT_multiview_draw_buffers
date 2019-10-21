@@ -1,0 +1,12 @@
+GL_EXT_multiview_draw_buffers
+http://www.opengl.org/registry/specs/EXT/multiview_draw_buffers.txt
+GL_EXT_multiview_draw_buffers
+
+	GL_DRAW_BUFFER_EXT 0x0C01
+	GL_READ_BUFFER_EXT 0x0C02
+	GL_COLOR_ATTACHMENT_EXT 0x90F0
+	GL_MULTIVIEW_EXT 0x90F1
+	GL_MAX_MULTIVIEW_BUFFERS_EXT 0x90F2
+	void glDrawBuffersIndexedEXT (GLint n, const GLenum* location, const GLint *indices)
+	void glGetIntegeri_vEXT (GLenum target, GLuint index, GLint* data)
+	void glReadBufferIndexedEXT (GLenum src, GLint index)

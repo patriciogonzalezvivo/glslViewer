@@ -1,0 +1,5 @@
+EGL_EXT_device_enumeration
+https://www.khronos.org/registry/egl/specs/eglspec.1.5.pdf
+EGL_EXT_device_enumeration
+
+	EGLBoolean  eglQueryDevicesEXT (EGLint  max_devices, EGLDeviceEXT * devices, EGLint * num_devices)

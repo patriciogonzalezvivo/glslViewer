@@ -1,0 +1,17 @@
+GL_NV_texture_array
+http://www.opengl.org/registry/specs/NV/texture_array.txt
+GL_NV_texture_array
+
+	GL_UNPACK_SKIP_IMAGES_NV 0x806D
+	GL_UNPACK_IMAGE_HEIGHT_NV 0x806E
+	GL_MAX_ARRAY_TEXTURE_LAYERS_NV 0x88FF
+	GL_TEXTURE_2D_ARRAY_NV 0x8C1A
+	GL_TEXTURE_BINDING_2D_ARRAY_NV 0x8C1D
+	GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_LAYER_NV 0x8CD4
+	GL_SAMPLER_2D_ARRAY_NV 0x8DC1
+	void glCompressedTexImage3DNV (GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height, GLsizei depth, GLint border, GLsizei imageSize, const void *data)
+	void glCompressedTexSubImage3DNV (GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLsizei imageSize, const void *data)
+	void glCopyTexSubImage3DNV (GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLint x, GLint y, GLsizei width, GLsizei height)
+	void glFramebufferTextureLayerNV (GLenum target, GLenum attachment, GLuint texture, GLint level, GLint layer)
+	void glTexImage3DNV (GLenum target, GLint level, GLenum internalFormat, GLsizei width, GLsizei height, GLsizei depth, GLint border, GLenum format, GLenum type, const void *pixels)
+	void glTexSubImage3DNV (GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type, const void *pixels)

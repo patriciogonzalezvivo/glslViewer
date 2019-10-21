@@ -27,8 +27,9 @@
 #include <OpenGL/gl.h>
 #include <OpenGL/glext.h>
 
+#elif defined(_WIN32)
+#include <GL/glew.h>
 #else
-
 // ANY LINUX using GLFW 
 #define GL_GLEXT_PROTOTYPES
 #include <GLFW/glfw3.h>

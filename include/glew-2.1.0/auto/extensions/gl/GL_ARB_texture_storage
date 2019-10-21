@@ -1,0 +1,8 @@
+GL_ARB_texture_storage
+http://www.opengl.org/registry/specs/ARB/texture_storage.txt
+GL_ARB_texture_storage
+
+	GL_TEXTURE_IMMUTABLE_FORMAT 0x912F
+	void glTexStorage1D (GLenum target, GLsizei levels, GLenum internalformat, GLsizei width)
+	void glTexStorage2D (GLenum target, GLsizei levels, GLenum internalformat, GLsizei width, GLsizei height)
+	void glTexStorage3D (GLenum target, GLsizei levels, GLenum internalformat, GLsizei width, GLsizei height, GLsizei depth)

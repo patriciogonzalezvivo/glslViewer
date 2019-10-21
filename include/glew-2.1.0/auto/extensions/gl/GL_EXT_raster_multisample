@@ -1,0 +1,22 @@
+GL_EXT_raster_multisample
+http://www.opengl.org/registry/specs/NV/framebuffer_mixed_samples.txt
+GL_EXT_raster_multisample
+
+	GL_COLOR_SAMPLES_NV 0x8E20
+	GL_RASTER_MULTISAMPLE_EXT 0x9327
+	GL_RASTER_SAMPLES_EXT 0x9328
+	GL_MAX_RASTER_SAMPLES_EXT 0x9329
+	GL_RASTER_FIXED_SAMPLE_LOCATIONS_EXT 0x932A
+	GL_MULTISAMPLE_RASTERIZATION_ALLOWED_EXT 0x932B
+	GL_EFFECTIVE_RASTER_SAMPLES_EXT 0x932C
+	GL_DEPTH_SAMPLES_NV 0x932D
+	GL_STENCIL_SAMPLES_NV 0x932E
+	GL_MIXED_DEPTH_SAMPLES_SUPPORTED_NV 0x932F
+	GL_MIXED_STENCIL_SAMPLES_SUPPORTED_NV 0x9330
+	GL_COVERAGE_MODULATION_TABLE_NV 0x9331
+	GL_COVERAGE_MODULATION_NV 0x9332
+	GL_COVERAGE_MODULATION_TABLE_SIZE_NV 0x9333
+	void glCoverageModulationNV (GLenum components)
+	void glCoverageModulationTableNV (GLsizei n, const GLfloat* v)
+	void glGetCoverageModulationTableNV (GLsizei bufsize, GLfloat* v)
+	void glRasterSamplesEXT (GLuint samples, GLboolean fixedsamplelocations)

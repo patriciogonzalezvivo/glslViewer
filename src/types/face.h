@@ -83,6 +83,8 @@ struct Face {
         
     #if defined(PLATFORM_RPI) || defined(PLATFORM_RPI4) 
         GLenum InternalFormat = GL_RGB;
+    #elif defined (PLATFORM_WINDOWS)
+        GLenum InternalFormat = GL_RGB16F;
     #else
         GLenum InternalFormat = GL_RGB16F_ARB;
     #endif

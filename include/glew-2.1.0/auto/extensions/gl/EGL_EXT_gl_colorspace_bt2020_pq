@@ -1,0 +1,5 @@
+EGL_EXT_gl_colorspace_bt2020_pq
+https://www.khronos.org/registry/egl/specs/eglspec.1.5.pdf
+EGL_EXT_gl_colorspace_bt2020_pq
+
+	EGL_GL_COLORSPACE_BT2020_PQ_EXT 0x3340

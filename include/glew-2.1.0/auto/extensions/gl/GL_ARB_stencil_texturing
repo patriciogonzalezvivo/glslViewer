@@ -1,0 +1,5 @@
+GL_ARB_stencil_texturing
+http://www.opengl.org/registry/specs/ARB/stencil_texturing.txt
+GL_ARB_stencil_texturing
+
+	GL_DEPTH_STENCIL_TEXTURE_MODE 0x90EA

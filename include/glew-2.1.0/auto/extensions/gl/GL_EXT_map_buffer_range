@@ -1,0 +1,12 @@
+GL_EXT_map_buffer_range
+http://www.opengl.org/registry/specs/EXT/map_buffer_range.txt
+GL_EXT_map_buffer_range
+
+	GL_MAP_READ_BIT_EXT 0x0001
+	GL_MAP_WRITE_BIT_EXT 0x0002
+	GL_MAP_INVALIDATE_RANGE_BIT_EXT 0x0004
+	GL_MAP_INVALIDATE_BUFFER_BIT_EXT 0x0008
+	GL_MAP_FLUSH_EXPLICIT_BIT_EXT 0x0010
+	GL_MAP_UNSYNCHRONIZED_BIT_EXT 0x0020
+	void glFlushMappedBufferRangeEXT (GLenum target, GLintptr offset, GLsizeiptr length)
+	void * glMapBufferRangeEXT (GLenum target, GLintptr offset, GLsizeiptr length, GLbitfield access)

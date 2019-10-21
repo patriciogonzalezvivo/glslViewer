@@ -1,8 +1,13 @@
 #include "window.h"
 
 #include <time.h>
+#if defined(PLATFORM_WINDOWS)
+#define NOMINMAX
+#include <windows.h>
+#else
 #include <sys/time.h>
 #include <unistd.h>
+#endif 
 
 #include "gl/gl.h"
 #include "glm/gtc/matrix_transform.hpp"
@@ -27,8 +32,11 @@ static double fDelta = 0.0f;
 static double fFPS = 0.0f;
 static float fPixelDensity = 1.0;
 
+extern void pal_sleep(uint64_t);
+
 #if defined(DRIVER_GLFW)
 // GLWF globals
+#include "GLFW/glfw3.h"
 //----------------------------------------------------
 static bool left_mouse_button_down = false;
 static GLFWwindow* window;
@@ -372,6 +380,8 @@ void initGL (glm::ivec4 &_viewport, WindowStyle _style) {
 
     // GLFW
     #else
+
+    
         glfwSetErrorCallback([](int err, const char* msg)->void {
             std::cerr << "GLFW error 0x"<<std::hex<<err<<std::dec<<": "<<msg<<"\n";
         });
@@ -409,6 +419,9 @@ void initGL (glm::ivec4 &_viewport, WindowStyle _style) {
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
 
         glfwMakeContextCurrent(window);
+#ifdef PLATFORM_WINDOWS
+        glewInit();
+#endif//
         glfwSetWindowSizeCallback(window, [](GLFWwindow* _window, int _w, int _h) {
             setViewport(_w,_h);
         });
@@ -557,7 +570,7 @@ void updateGL(){
         // Fix the FPS to a max of 60fps (REST_SEC)
         float diff = now - fTime;
         if (diff < REST_SEC) {
-            usleep(int((REST_SEC - diff) * 1000000));
+            pal_sleep(int((REST_SEC - diff) * 1000000));
             now = glfwGetTime();
         }
 
@@ -773,15 +786,35 @@ glm::mat4 getOrthoMatrix() {
     return orthoMatrix;
 }
 
+
+
 glm::vec4 getDate() {
+#ifdef _MSC_VER
+    time_t tv = time(NULL);
+
+    struct tm tm_struct;
+    struct tm* tm = &tm_struct;
+    errno_t err = localtime_s(tm, &tv);
+    if (err)
+    {
+              
+    }
+
+    return glm::vec4(tm->tm_year + 1900,
+        tm->tm_mon,
+        tm->tm_mday,
+        tm->tm_hour * 3600.0f + tm->tm_min * 60.0f + tm->tm_sec);
+#else
     gettimeofday(&tv, NULL);
     struct tm *tm;
     tm = localtime(&tv.tv_sec);
     // std::cout << "y: " << tm->tm_year+1900 << " m: " << tm->tm_mon << " d: " << tm->tm_mday << " s: " << tm->tm_hour*3600.0f+tm->tm_min*60.0f+tm->tm_sec+tv.tv_usec*0.000001 << std::endl;
-    return glm::vec4(tm->tm_year+1900,
-                     tm->tm_mon,
-                     tm->tm_mday,
-                     tm->tm_hour*3600.0f+tm->tm_min*60.0f+tm->tm_sec+tv.tv_usec*0.000001);
+    return glm::vec4(tm->tm_year + 1900,
+        tm->tm_mon,
+        tm->tm_mday,
+        tm->tm_hour * 3600.0f + tm->tm_min * 60.0f + tm->tm_sec + tv.tv_usec * 0.000001);
+#endif 
+  
 }
 
 double getTime() {

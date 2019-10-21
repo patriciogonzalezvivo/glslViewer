@@ -1,0 +1,6 @@
+GL_SGIX_ycrcba
+http://www.opengl.org/registry/specs/SGIX/ycrcba.txt
+GL_SGIX_ycrcba
+
+	GL_YCRCB_SGIX 0x8318
+	GL_YCRCBA_SGIX 0x8319

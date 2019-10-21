@@ -1,0 +1,6 @@
+GL_NV_compute_program5
+http://www.opengl.org/registry/specs/NV/compute_program5.txt
+GL_NV_compute_program5
+
+	GL_COMPUTE_PROGRAM_NV 0x90FB
+	GL_COMPUTE_PROGRAM_PARAMETER_BUFFER_NV 0x90FC

@@ -1,0 +1,16 @@
+GL_NV_non_square_matrices
+http://www.opengl.org/registry/specs/NV/non_square_matrices.txt
+GL_NV_non_square_matrices
+
+	GL_FLOAT_MAT2x3_NV 0x8B65
+	GL_FLOAT_MAT2x4_NV 0x8B66
+	GL_FLOAT_MAT3x2_NV 0x8B67
+	GL_FLOAT_MAT3x4_NV 0x8B68
+	GL_FLOAT_MAT4x2_NV 0x8B69
+	GL_FLOAT_MAT4x3_NV 0x8B6A
+	void glUniformMatrix2x3fvNV (GLint location, GLsizei count, GLboolean transpose, const GLfloat* value)
+	void glUniformMatrix2x4fvNV (GLint location, GLsizei count, GLboolean transpose, const GLfloat* value)
+	void glUniformMatrix3x2fvNV (GLint location, GLsizei count, GLboolean transpose, const GLfloat* value)
+	void glUniformMatrix3x4fvNV (GLint location, GLsizei count, GLboolean transpose, const GLfloat* value)
+	void glUniformMatrix4x2fvNV (GLint location, GLsizei count, GLboolean transpose, const GLfloat* value)
+	void glUniformMatrix4x3fvNV (GLint location, GLsizei count, GLboolean transpose, const GLfloat* value)

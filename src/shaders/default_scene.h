@@ -69,7 +69,7 @@ void main(void) {
 }
 )";
 
-const std::string default_scene_frag = R"(
+const std::string default_scene_frag0 = R"(
 
 #ifdef GL_ES
 precision mediump float;
@@ -128,14 +128,12 @@ float myPow(float a, float b) {
 
 #endif
 
-
 #ifndef FNC_SATURATE
 #define FNC_SATURATE
 
 #define saturate(x)        clamp(x, 0.0, 1.0)
 
 #endif
-
 
 #if !defined(TARGET_MOBILE) && !defined(GAMMA)
 #define GAMMA 2.2
@@ -166,10 +164,6 @@ float linear2gamma(in float v) {
 }
 #endif
 
-
-
-
-
 #ifndef HEADER_LIGHT
 #define HEADER_LIGHT
 
@@ -185,8 +179,6 @@ varying vec4        v_lightCoord;
 #endif
 
 #endif
-
-
 
 #ifndef FNC_TEXTURESHADOW
 #define FNC_TEXTURESHADOW
@@ -501,13 +493,7 @@ float shadow() {
 }    
 
 #endif
-
 #endif
-
-
-
-
-
 
 #ifndef FNC_REFLECTION
 #define FNC_REFLECTION
@@ -536,7 +522,6 @@ vec3 reflection(vec3 _V, vec3 _N, float _roughness) {
 }
 
 #endif
-
 
 #ifndef TARGET_MOBILE
 #define IBL_SPECULAR_OCCLUSION
@@ -568,11 +553,6 @@ vec3 envBRDFApprox(vec3 _specularColor, float _NoV, float _roughness) {
 
 #endif
 
-
-
-
-
-
 #if !defined(TARGET_MOBILE) && !defined(GAMMA)
 #define GAMMA 2.2
 #endif
@@ -601,8 +581,6 @@ vec4 gamma2linear(in vec4 v) {
   return vec4(gamma2linear(v.rgb), v.a);
 }
 #endif
-
-
 
 #ifndef FNC_MATERIAL_BASECOLOR
 #define FNC_MATERIAL_BASECOLOR
@@ -636,9 +614,9 @@ vec4 materialBaseColor() {
     return base;
 }
 
-#endif
+#endif)";
 
-
+const std::string default_scene_frag1 = R"(
 
 #ifndef FNC_MATERIAL_SPECULAR
 #define FNC_MATERIAL_SPECULAR
@@ -919,10 +897,10 @@ float materialRoughness() {
 #define FNC_TOSHININESS
 
 float toShininess(float roughness, float metallic) {
-    float smooth = .95 - roughness * 0.5;
-    smooth *= smooth;
-    smooth *= smooth;
-    return smooth * (80. + 160. * (1.0-metallic));
+    float _smooth = .95 - roughness * 0.5;
+    _smooth *= _smooth;
+    _smooth *= _smooth;
+    return _smooth * (80. + 160. * (1.0-metallic));
 }
 
 #endif
@@ -1199,7 +1177,9 @@ vec3 tonemap_ACES_rec2020_1k(const vec3 x) {
     const float e = 1.9;
     return (x * (a * x + b)) / (x * (c * x + d) + e);
 }
+)";
 
+const std::string default_scene_frag2 = R"(
 //------------------------------------------------------------------------------
 // Debug tone-mapping operators, for LDR output
 //------------------------------------------------------------------------------
@@ -1766,8 +1746,9 @@ float diffuseOrenNayar(vec3 L, vec3 N, vec3 V, float roughness) {
 }
 
 #endif
+)";
 
-
+const std::string default_scene_frag3 = R"(
 
 #ifndef FNC_DIFFUSE_BURLEY
 #define FNC_DIFFUSE_BURLEY
@@ -1954,3 +1935,5 @@ void main(void) {
 }
 
 )";
+
+ extern std::string default_scene_frag;

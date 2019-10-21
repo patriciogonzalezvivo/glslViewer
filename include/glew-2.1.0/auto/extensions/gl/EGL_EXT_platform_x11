@@ -1,0 +1,6 @@
+EGL_EXT_platform_x11
+https://www.khronos.org/registry/egl/specs/eglspec.1.5.pdf
+EGL_EXT_platform_x11
+
+	EGL_PLATFORM_X11_EXT 0x31D5
+	EGL_PLATFORM_X11_SCREEN_EXT 0x31D6

@@ -1,0 +1,6 @@
+GL_NV_blend_minmax_factor
+http://www.opengl.org/registry/specs/NV/blend_minmax_factor.txt
+GL_NV_blend_minmax_factor
+
+	GL_FACTOR_MIN_AMD 0x901C
+	GL_FACTOR_MAX_AMD 0x901D

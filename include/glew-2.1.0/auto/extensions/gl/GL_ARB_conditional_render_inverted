@@ -1,0 +1,8 @@
+GL_ARB_conditional_render_inverted
+http://www.opengl.org/registry/specs/ARB/conditional_render_inverted.txt
+GL_ARB_conditional_render_inverted
+
+	GL_QUERY_WAIT_INVERTED 0x8E17
+	GL_QUERY_NO_WAIT_INVERTED 0x8E18
+	GL_QUERY_BY_REGION_WAIT_INVERTED 0x8E19
+	GL_QUERY_BY_REGION_NO_WAIT_INVERTED 0x8E1A

@@ -1,0 +1,6 @@
+GL_NV_texture_border_clamp
+http://www.opengl.org/registry/specs/NV/texture_border_clamp.txt
+GL_NV_texture_border_clamp
+
+	GL_TEXTURE_BORDER_COLOR_NV 0x1004
+	GL_CLAMP_TO_BORDER_NV 0x812D

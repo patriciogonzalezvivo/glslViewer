@@ -1,5 +1,8 @@
 #include <sys/stat.h>
+
+#ifndef PLATFORM_WINDOWS
 #include <unistd.h>
+#endif
 
 #include <map>
 #include <thread>
@@ -19,6 +22,15 @@
 //============================================================================
 //
 std::atomic<bool> bRun(true);
+
+void pal_sleep(uint64_t value)
+{
+#if defined(PLATFORM_WINDOWS)
+    std::this_thread::sleep_for(std::chrono::microseconds(value));
+#else
+    usleep(value);
+#endif 
+}
 
 //  List of FILES to watch and the variable to communicate that between process
 WatchFileList files;
@@ -247,7 +259,7 @@ void declareCommands() {
                 filesMutex.lock();
                 fileChanged = i;
                 filesMutex.unlock();
-                sleep(micro_wait * 10.0);
+                pal_sleep(micro_wait * 10.0);
             }
             fullFps = false;
             return true;
@@ -379,7 +391,7 @@ void declareCommands() {
     commands.push_back(Command("wait", [&](const std::string& _line){ 
         std::vector<std::string> values = split(_line,',');
         if (values.size() == 2) {
-            usleep( toFloat(values[1])*1000000 ); 
+            pal_sleep( toFloat(values[1])*1000000 ); 
         }
         return false;
     },
@@ -480,7 +492,7 @@ void declareCommands() {
                     }
                 }
                 std::cout << " ] " << pct << "%" << std::endl;
-                usleep( micro_wait );
+                pal_sleep( micro_wait );
             }
             return true;
         }
@@ -818,7 +830,7 @@ int main(int argc, char **argv){
 
         // If nothing in the scene change skip the frame and try to keep it at 60fps
         if (!timeOut && !fullFps && !sandbox.haveChange()) {
-            usleep( micro_wait );
+            pal_sleep( micro_wait );
             continue;
         }
 
@@ -844,14 +856,16 @@ int main(int argc, char **argv){
     }
 
     onExit();
-
+    
     // Wait for watchers to end
     fileWatcher.join();
 
+
     // Force cinWatcher to finish (because is waiting for input)
+#ifndef PLATFORM_WINDOWS
     pthread_t cinHandler = cinWatcher.native_handle();
     pthread_cancel( cinHandler );
-
+#endif//
     exit(0);
 }
 
@@ -899,7 +913,7 @@ void onExit() {
 void fileWatcherThread() {
     struct stat st;
     while ( bRun.load() ) {
-        for ( uint i = 0; i < files.size(); i++ ) {
+        for ( uint32_t i = 0; i < files.size(); i++ ) {
             if ( fileChanged == -1 ) {
                 stat( files[i].path.c_str(), &st );
                 int date = st.st_mtime;
@@ -911,7 +925,7 @@ void fileWatcherThread() {
                 }
             }
         }
-        usleep(500000);
+        pal_sleep(500000);
     }
 }
 
@@ -951,7 +965,7 @@ void runCmd(const std::string &_cmd, std::mutex &_mutex) {
 //============================================================================
 void cinWatcherThread() {
     while (!sandbox.isReady()) {
-        usleep( micro_wait );
+        pal_sleep( micro_wait );
     }
 
     // Argument commands to execute comming from -e or -E

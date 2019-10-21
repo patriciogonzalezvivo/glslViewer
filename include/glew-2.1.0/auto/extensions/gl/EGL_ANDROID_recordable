@@ -1,0 +1,5 @@
+EGL_ANDROID_recordable
+https://www.khronos.org/registry/egl/specs/eglspec.1.5.pdf
+EGL_ANDROID_recordable
+
+	EGL_RECORDABLE_ANDROID 0x3142

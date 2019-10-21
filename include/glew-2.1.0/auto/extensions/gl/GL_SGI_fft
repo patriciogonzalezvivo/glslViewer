@@ -1,0 +1,16 @@
+GL_SGI_fft
+http://www.opengl.org/registry/specs/SGI/fft.txt
+GL_SGI_fft
+
+	GL_PIXEL_TRANSFORM_OPERATOR_SGI 0x81C4
+	GL_CONVOLUTION_SGI 0x81C5
+	GL_FFT_1D_SGI 0x81C6
+	GL_PIXEL_TRANSFORM_SGI 0x81C7
+	GL_MAX_FFT_WIDTH_SGI 0x81C8
+	void glGetPixelTransformParameterfvSGI (GLenum target, GLenum pname, GLfloat* params)
+	void glGetPixelTransformParameterivSGI (GLenum target, GLenum pname, GLint* params)
+	void glPixelTransformParameterfSGI (GLenum target, GLenum pname, GLfloat param)
+	void glPixelTransformParameterfvSGI (GLenum target, GLenum pname, const GLfloat* params)
+	void glPixelTransformParameteriSGI (GLenum target, GLenum pname, GLint param)
+	void glPixelTransformParameterivSGI (GLenum target, GLenum pname, const GLint* params)
+	void glPixelTransformSGI (GLenum target)

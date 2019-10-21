@@ -1,0 +1,5 @@
+EGL_KHR_mutable_render_buffer
+https://www.khronos.org/registry/egl/specs/eglspec.1.5.pdf
+EGL_KHR_mutable_render_buffer
+
+	EGL_MUTABLE_RENDER_BUFFER_BIT_KHR 0x1000

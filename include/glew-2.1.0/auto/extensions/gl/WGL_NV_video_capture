@@ -1,0 +1,12 @@
+WGL_NV_video_capture
+http://www.opengl.org/registry/specs/NV/video_capture.txt
+WGL_NV_video_capture
+
+	WGL_UNIQUE_ID_NV 0x20CE
+	WGL_NUM_VIDEO_CAPTURE_SLOTS_NV 0x20CF
+	BOOL wglBindVideoCaptureDeviceNV (UINT uVideoSlot, HVIDEOINPUTDEVICENV hDevice)
+	UINT wglEnumerateVideoCaptureDevicesNV (HDC hDc, HVIDEOINPUTDEVICENV* phDeviceList)
+	BOOL wglLockVideoCaptureDeviceNV (HDC hDc, HVIDEOINPUTDEVICENV hDevice)
+	BOOL wglQueryVideoCaptureDeviceNV (HDC hDc, HVIDEOINPUTDEVICENV hDevice, int iAttribute, int* piValue)
+	BOOL wglReleaseVideoCaptureDeviceNV (HDC hDc, HVIDEOINPUTDEVICENV hDevice)
+    DECLARE_HANDLE(HVIDEOINPUTDEVICENV);

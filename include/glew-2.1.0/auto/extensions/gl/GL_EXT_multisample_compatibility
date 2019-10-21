@@ -1,0 +1,6 @@
+GL_EXT_multisample_compatibility
+http://www.opengl.org/registry/specs/EXT/multisample_compatibility.txt
+GL_EXT_multisample_compatibility
+
+	GL_MULTISAMPLE_EXT 0x809D
+	GL_SAMPLE_ALPHA_TO_ONE_EXT 0x809F

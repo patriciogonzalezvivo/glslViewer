@@ -1,0 +1,11 @@
+GL_NV_polygon_mode
+http://www.opengl.org/registry/specs/NV/polygon_mode.txt
+GL_NV_polygon_mode
+
+	GL_POLYGON_MODE_NV 0x0B40
+	GL_POINT_NV 0x1B00
+	GL_LINE_NV 0x1B01
+	GL_FILL_NV 0x1B02
+	GL_POLYGON_OFFSET_POINT_NV 0x2A01
+	GL_POLYGON_OFFSET_LINE_NV 0x2A02
+	void glPolygonModeNV (GLenum face, GLenum mode)

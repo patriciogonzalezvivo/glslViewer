@@ -1,0 +1,5 @@
+EGL_ARM_implicit_external_sync
+https://www.khronos.org/registry/egl/specs/eglspec.1.5.pdf
+EGL_ARM_implicit_external_sync
+
+	EGL_SYNC_PRIOR_COMMANDS_IMPLICIT_EXTERNAL_ARM 0x328A

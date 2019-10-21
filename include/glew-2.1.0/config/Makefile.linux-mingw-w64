@@ -1,0 +1,22 @@
+# For cross-compiling from Linux to Windows x86 using mingw-w64
+# http://mingw-w64.sourceforge.net/
+#
+# $ make SYSTEM=linux-mingw-w64
+#
+
+NAME  := glew32
+CC    := i686-w64-mingw32-gcc
+LD    := i686-w64-mingw32-ld
+LN    :=
+STRIP :=
+LDFLAGS.GL = -lopengl32 -lgdi32 -luser32 -lkernel32
+CFLAGS.EXTRA  += -fno-builtin -fno-stack-protector
+LDFLAGS.EXTRA += -nostdlib
+WARN = -Wall -W
+POPT = -O2
+BIN.SUFFIX = .exe
+LIB.SONAME    = lib$(NAME).dll
+LIB.DEVLNK    = lib$(NAME).dll.a    # for mingw this is the dll import lib
+LIB.SHARED    = $(NAME).dll
+LIB.STATIC    = lib$(NAME).a        # the static lib will be broken
+LDFLAGS.SO    = -shared -soname $(LIB.SONAME) --out-implib lib/$(LIB.DEVLNK)

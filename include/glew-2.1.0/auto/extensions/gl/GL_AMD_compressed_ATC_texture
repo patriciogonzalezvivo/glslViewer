@@ -1,0 +1,7 @@
+GL_AMD_compressed_ATC_texture
+http://www.opengl.org/registry/specs/AMD/compressed_ATC_texture.txt
+GL_AMD_compressed_ATC_texture
+
+	GL_ATC_RGBA_INTERPOLATED_ALPHA_AMD 0x87EE
+	GL_ATC_RGB_AMD 0x8C92
+	GL_ATC_RGBA_EXPLICIT_ALPHA_AMD 0x8C93

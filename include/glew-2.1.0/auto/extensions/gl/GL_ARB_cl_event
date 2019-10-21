@@ -1,0 +1,9 @@
+GL_ARB_cl_event
+http://www.opengl.org/registry/specs/ARB/cl_event.txt
+GL_ARB_cl_event
+
+	GL_SYNC_CL_EVENT_ARB 0x8240
+	GL_SYNC_CL_EVENT_COMPLETE_ARB 0x8241
+	GLsync glCreateSyncFromCLeventARB (cl_context context, cl_event event, GLbitfield flags)
+	typedef struct _cl_context *cl_context
+	typedef struct _cl_event *cl_event

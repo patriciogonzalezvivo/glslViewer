@@ -8,7 +8,7 @@ public:
     Polyline();
     Polyline(const Polyline &_poly);
     Polyline(const std::vector<glm::vec3> &_points);
-    Polyline(const Rectangle &_rect, float _radiants = 0);
+    Polyline(const glslViewer::Rectangle &_rect, float _radiants = 0);
     virtual ~Polyline();
 
     virtual void add(const glm::vec3 &_point);
@@ -23,7 +23,7 @@ public:
     virtual const std::vector<glm::vec3> & getVertices() const;
     virtual glm::vec3   getPositionAt(const float &_dist) const;
     virtual Polyline get2DConvexHull();
-	Rectangle        getBoundingBox() const;
+    glslViewer::Rectangle        getBoundingBox() const;
 
     bool    isInside(float _x, float _y);
 

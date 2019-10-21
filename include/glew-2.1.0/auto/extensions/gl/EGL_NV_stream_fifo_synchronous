@@ -1,0 +1,5 @@
+EGL_NV_stream_fifo_synchronous
+https://www.khronos.org/registry/egl/specs/eglspec.1.5.pdf
+EGL_NV_stream_fifo_synchronous
+
+	EGL_STREAM_FIFO_SYNCHRONOUS_NV 0x3336

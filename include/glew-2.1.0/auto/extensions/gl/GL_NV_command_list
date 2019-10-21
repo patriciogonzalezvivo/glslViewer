@@ -1,0 +1,40 @@
+GL_NV_command_list
+http://www.opengl.org/registry/specs/NV/command_list.txt
+GL_NV_command_list
+
+	GL_TERMINATE_SEQUENCE_COMMAND_NV 0x0000
+	GL_NOP_COMMAND_NV 0x0001
+	GL_DRAW_ELEMENTS_COMMAND_NV 0x0002
+	GL_DRAW_ARRAYS_COMMAND_NV 0x0003
+	GL_DRAW_ELEMENTS_STRIP_COMMAND_NV 0x0004
+	GL_DRAW_ARRAYS_STRIP_COMMAND_NV 0x0005
+	GL_DRAW_ELEMENTS_INSTANCED_COMMAND_NV 0x0006
+	GL_DRAW_ARRAYS_INSTANCED_COMMAND_NV 0x0007
+	GL_ELEMENT_ADDRESS_COMMAND_NV 0x0008
+	GL_ATTRIBUTE_ADDRESS_COMMAND_NV 0x0009
+	GL_UNIFORM_ADDRESS_COMMAND_NV 0x000a
+	GL_BLEND_COLOR_COMMAND_NV 0x000b
+	GL_STENCIL_REF_COMMAND_NV 0x000c
+	GL_LINE_WIDTH_COMMAND_NV 0x000d
+	GL_POLYGON_OFFSET_COMMAND_NV 0x000e
+	GL_ALPHA_REF_COMMAND_NV 0x000f
+	GL_VIEWPORT_COMMAND_NV 0x0010
+	GL_SCISSOR_COMMAND_NV 0x0011
+	GL_FRONT_FACE_COMMAND_NV 0x0012
+	void glCallCommandListNV (GLuint list)
+	void glCommandListSegmentsNV (GLuint list, GLuint segments)
+	void glCompileCommandListNV (GLuint list)
+	void glCreateCommandListsNV (GLsizei n, GLuint* lists)
+	void glCreateStatesNV (GLsizei n, GLuint* states)
+	void glDeleteCommandListsNV (GLsizei n, const GLuint* lists)
+	void glDeleteStatesNV (GLsizei n, const GLuint* states)
+	void glDrawCommandsAddressNV (GLenum primitiveMode, const GLuint64* indirects, const GLsizei* sizes, GLuint count)
+	void glDrawCommandsNV (GLenum primitiveMode, GLuint buffer, const GLintptr* indirects, const GLsizei* sizes, GLuint count)
+	void glDrawCommandsStatesAddressNV (const GLuint64* indirects, const GLsizei* sizes, const GLuint* states, const GLuint* fbos, GLuint count)
+	void glDrawCommandsStatesNV (GLuint buffer, const GLintptr* indirects, const GLsizei* sizes, const GLuint* states, const GLuint* fbos, GLuint count)
+	GLuint glGetCommandHeaderNV (GLenum tokenID, GLuint size)
+	GLushort glGetStageIndexNV (GLenum shadertype)
+	GLboolean glIsCommandListNV (GLuint list)
+	GLboolean glIsStateNV (GLuint state)
+	void glListDrawCommandsStatesClientNV (GLuint list, GLuint segment, const void** indirects, const GLsizei* sizes, const GLuint* states, const GLuint* fbos, GLuint count)
+	void glStateCaptureNV (GLuint state, GLenum mode)

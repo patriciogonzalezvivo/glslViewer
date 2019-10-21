@@ -4,6 +4,8 @@
 
 #include "glm/glm.hpp"
 
+namespace glslViewer
+{
 class Rectangle {
 public:
 
@@ -51,3 +53,5 @@ public:
 
     float   x,y,width,height;
 };
+
+}

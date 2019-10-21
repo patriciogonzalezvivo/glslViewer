@@ -1,0 +1,5 @@
+GL_NV_shadow_samplers_cube
+http://www.opengl.org/registry/specs/NV/shadow_samplers_cube.txt
+GL_NV_shadow_samplers_cube
+
+	GL_SAMPLER_CUBE_SHADOW_NV 0x8DC5

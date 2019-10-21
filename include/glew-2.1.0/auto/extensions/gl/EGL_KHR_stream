@@ -1,0 +1,22 @@
+EGL_KHR_stream
+https://www.khronos.org/registry/egl/specs/eglspec.1.5.pdf
+EGL_KHR_stream
+
+	EGL_NO_STREAM_KHR ((EGLStreamKHR)0)
+	EGL_CONSUMER_LATENCY_USEC_KHR 0x3210
+	EGL_PRODUCER_FRAME_KHR 0x3212
+	EGL_CONSUMER_FRAME_KHR 0x3213
+	EGL_STREAM_STATE_KHR 0x3214
+	EGL_STREAM_STATE_CREATED_KHR 0x3215
+	EGL_STREAM_STATE_CONNECTING_KHR 0x3216
+	EGL_STREAM_STATE_EMPTY_KHR 0x3217
+	EGL_STREAM_STATE_NEW_FRAME_AVAILABLE_KHR 0x3218
+	EGL_STREAM_STATE_OLD_FRAME_AVAILABLE_KHR 0x3219
+	EGL_STREAM_STATE_DISCONNECTED_KHR 0x321A
+	EGL_BAD_STREAM_KHR 0x321B
+	EGL_BAD_STATE_KHR 0x321C
+	EGLStreamKHR  eglCreateStreamKHR (EGLDisplay  dpy, const EGLint * attrib_list)
+	EGLBoolean  eglDestroyStreamKHR (EGLDisplay  dpy, EGLStreamKHR  stream)
+	EGLBoolean  eglQueryStreamKHR (EGLDisplay  dpy, EGLStreamKHR  stream, EGLenum  attribute, EGLint * value)
+	EGLBoolean  eglQueryStreamu64KHR (EGLDisplay  dpy, EGLStreamKHR  stream, EGLenum  attribute, EGLuint64KHR * value)
+	EGLBoolean  eglStreamAttribKHR (EGLDisplay  dpy, EGLStreamKHR  stream, EGLenum  attribute, EGLint  value)

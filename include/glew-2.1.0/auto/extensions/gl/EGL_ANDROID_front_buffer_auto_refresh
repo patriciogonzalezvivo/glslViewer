@@ -1,0 +1,5 @@
+EGL_ANDROID_front_buffer_auto_refresh
+https://www.khronos.org/registry/egl/specs/eglspec.1.5.pdf
+EGL_ANDROID_front_buffer_auto_refresh
+
+	EGL_FRONT_BUFFER_AUTO_REFRESH_ANDROID 0x314C

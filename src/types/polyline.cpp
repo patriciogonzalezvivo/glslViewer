@@ -17,7 +17,7 @@ Polyline::Polyline(const std::vector<glm::vec3> & _points):m_centroid(0.0,0.0,0.
     add(_points);
 }
 
-Polyline::Polyline(const Rectangle &_rect, float _radiants){
+Polyline::Polyline(const glslViewer::Rectangle &_rect, float _radiants){
     if (_radiants == 0) {
         add(_rect.getTopLeft());
         add(_rect.getTopRight());
@@ -99,8 +99,8 @@ glm::vec3 Polyline::getPositionAt(const float &_dist) const{
     return glm::vec3(0.,0.,0.);
 }
 
-Rectangle Polyline::getBoundingBox() const {
-	Rectangle box;
+glslViewer::Rectangle Polyline::getBoundingBox() const {
+    glslViewer::Rectangle box;
     box.growToInclude(m_points);
 	return box;
 }

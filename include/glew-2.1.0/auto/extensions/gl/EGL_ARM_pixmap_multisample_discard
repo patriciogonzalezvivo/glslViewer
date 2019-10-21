@@ -1,0 +1,5 @@
+EGL_ARM_pixmap_multisample_discard
+https://www.khronos.org/registry/egl/specs/eglspec.1.5.pdf
+EGL_ARM_pixmap_multisample_discard
+
+	EGL_DISCARD_SAMPLES_ARM 0x3286

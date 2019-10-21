@@ -1,0 +1,5 @@
+EGL_NV_stream_socket_inet
+https://www.khronos.org/registry/egl/specs/eglspec.1.5.pdf
+EGL_NV_stream_socket_inet
+
+	EGL_SOCKET_TYPE_INET_NV 0x324F

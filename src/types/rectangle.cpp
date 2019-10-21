@@ -1,7 +1,8 @@
 #include "rectangle.h"
 
 #include "tools/geom.h"
-
+namespace glslViewer
+{
 Rectangle::Rectangle():x(0.0), y(0.0), width(0.0), height(0.0){
 
 }
@@ -160,4 +161,6 @@ void Rectangle::growToInclude(const std::vector<glm::vec3> &_points){
     for(auto &it: _points){
         growToInclude(it);
     }
+}
+
 }

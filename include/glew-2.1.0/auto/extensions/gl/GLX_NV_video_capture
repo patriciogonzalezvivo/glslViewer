@@ -1,0 +1,13 @@
+GLX_NV_video_capture
+http://www.opengl.org/registry/specs/NV/video_capture.txt
+GLX_NV_video_capture
+
+	GLX_DEVICE_ID_NV 0x20CD
+	GLX_UNIQUE_ID_NV 0x20CE
+	GLX_NUM_VIDEO_CAPTURE_SLOTS_NV 0x20CF
+	int glXBindVideoCaptureDeviceNV (Display* dpy, unsigned int video_capture_slot, GLXVideoCaptureDeviceNV device)
+	GLXVideoCaptureDeviceNV * glXEnumerateVideoCaptureDevicesNV (Display* dpy, int screen, int *nelements)
+	void glXLockVideoCaptureDeviceNV (Display* dpy, GLXVideoCaptureDeviceNV device)
+	int glXQueryVideoCaptureDeviceNV (Display* dpy, GLXVideoCaptureDeviceNV device, int attribute, int *value)
+	void glXReleaseVideoCaptureDeviceNV (Display* dpy, GLXVideoCaptureDeviceNV device)
+    typedef XID GLXVideoCaptureDeviceNV

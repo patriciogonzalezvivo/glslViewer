@@ -1,0 +1,6 @@
+GL_VERSION_4_3
+https://www.opengl.org/registry/doc/glspec43.compatibility.20130214.pdf
+
+
+	GL_VERTEX_ATTRIB_ARRAY_LONG 0x874E
+	GL_NUM_SHADING_LANGUAGE_VERSIONS 0x82E9

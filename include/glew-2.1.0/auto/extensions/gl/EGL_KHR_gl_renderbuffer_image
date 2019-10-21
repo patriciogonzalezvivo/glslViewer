@@ -1,0 +1,5 @@
+EGL_KHR_gl_renderbuffer_image
+https://www.khronos.org/registry/egl/specs/eglspec.1.5.pdf
+EGL_KHR_gl_renderbuffer_image
+
+	EGL_GL_RENDERBUFFER_KHR 0x30B9

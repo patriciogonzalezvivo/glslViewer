@@ -1,0 +1,5 @@
+GL_ARM_rgba8
+http://www.opengl.org/registry/specs/ARM/rgba8.txt
+GL_ARM_rgba8
+
+	GL_RGBA8_OES 0x8058

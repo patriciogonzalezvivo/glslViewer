@@ -1,0 +1,5 @@
+GL_SGIX_blend_cmultiply
+http://www.opengl.org/registry/specs/SGIX/blend_cmultiply.txt
+GL_SGIX_blend_cmultiply
+
+	GL_FUNC_COMPLEX_MULTIPLY_EXT 0x601B

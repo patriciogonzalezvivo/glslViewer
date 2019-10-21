@@ -1,0 +1,6 @@
+EGL_EXT_output_openwf
+https://www.khronos.org/registry/egl/specs/eglspec.1.5.pdf
+EGL_EXT_output_openwf
+
+	EGL_OPENWF_PIPELINE_ID_EXT 0x3238
+	EGL_OPENWF_PORT_ID_EXT 0x3239

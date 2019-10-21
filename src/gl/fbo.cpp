@@ -44,7 +44,7 @@ Fbo::~Fbo() {
 }
 
 
-void Fbo::allocate(const uint _width, const uint _height, FboType _type) {
+void Fbo::allocate(const uint32_t _width, const uint32_t _height, FboType _type) {
     m_type = _type;
 
     bool color_texture = true;

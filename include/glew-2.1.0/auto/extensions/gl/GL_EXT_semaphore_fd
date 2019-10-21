@@ -1,0 +1,5 @@
+GL_EXT_semaphore_fd
+http://www.opengl.org/registry/specs/EXT/external_objects_fd.txt
+GL_EXT_semaphore_fd
+
+	void glImportSemaphoreFdEXT (GLuint semaphore, GLenum handleType, GLint fd)

@@ -1,0 +1,5 @@
+GL_EXT_texture_sRGB_R8
+http://www.opengl.org/registry/specs/EXT/texture_sRGB_R8.txt
+GL_EXT_texture_sRGB_R8
+
+	GL_SR8_EXT 0x8FBD

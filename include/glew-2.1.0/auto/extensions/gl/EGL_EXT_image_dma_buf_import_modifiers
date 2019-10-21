@@ -1,0 +1,17 @@
+EGL_EXT_image_dma_buf_import_modifiers
+https://www.khronos.org/registry/egl/specs/eglspec.1.5.pdf
+EGL_EXT_image_dma_buf_import_modifiers
+
+	EGL_DMA_BUF_PLANE3_FD_EXT 0x3440
+	EGL_DMA_BUF_PLANE3_OFFSET_EXT 0x3441
+	EGL_DMA_BUF_PLANE3_PITCH_EXT 0x3442
+	EGL_DMA_BUF_PLANE0_MODIFIER_LO_EXT 0x3443
+	EGL_DMA_BUF_PLANE0_MODIFIER_HI_EXT 0x3444
+	EGL_DMA_BUF_PLANE1_MODIFIER_LO_EXT 0x3445
+	EGL_DMA_BUF_PLANE1_MODIFIER_HI_EXT 0x3446
+	EGL_DMA_BUF_PLANE2_MODIFIER_LO_EXT 0x3447
+	EGL_DMA_BUF_PLANE2_MODIFIER_HI_EXT 0x3448
+	EGL_DMA_BUF_PLANE3_MODIFIER_LO_EXT 0x3449
+	EGL_DMA_BUF_PLANE3_MODIFIER_HI_EXT 0x344A
+	EGLBoolean  eglQueryDmaBufFormatsEXT (EGLDisplay  dpy, EGLint  max_formats, EGLint  *formats, EGLint  *num_formats)
+	EGLBoolean  eglQueryDmaBufModifiersEXT (EGLDisplay  dpy, EGLint  format, EGLint  max_modifiers, EGLuint64KHR  *modifiers, EGLBoolean  *external_only, EGLint  *num_modifiers)

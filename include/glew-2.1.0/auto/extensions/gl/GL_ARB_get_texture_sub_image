@@ -1,0 +1,6 @@
+GL_ARB_get_texture_sub_image
+http://www.opengl.org/registry/specs/ARB/get_texture_sub_image.txt
+GL_ARB_get_texture_sub_image
+
+	void glGetCompressedTextureSubImage (GLuint texture, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLsizei bufSize, void *pixels)
+	void glGetTextureSubImage (GLuint texture, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type, GLsizei bufSize, void *pixels)

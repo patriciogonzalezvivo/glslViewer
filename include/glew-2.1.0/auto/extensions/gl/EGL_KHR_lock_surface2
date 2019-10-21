@@ -1,0 +1,5 @@
+EGL_KHR_lock_surface2
+https://www.khronos.org/registry/egl/specs/eglspec.1.5.pdf
+EGL_KHR_lock_surface2
+
+	EGL_BITMAP_PIXEL_SIZE_KHR 0x3110

@@ -1,0 +1,5 @@
+EGL_NV_stream_cross_system
+https://www.khronos.org/registry/egl/specs/eglspec.1.5.pdf
+EGL_NV_stream_cross_system
+
+	EGL_STREAM_CROSS_SYSTEM_NV 0x334F

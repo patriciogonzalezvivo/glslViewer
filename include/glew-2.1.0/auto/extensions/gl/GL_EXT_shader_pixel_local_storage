@@ -1,0 +1,7 @@
+GL_EXT_shader_pixel_local_storage
+http://www.opengl.org/registry/specs/EXT/shader_pixel_local_storage.txt
+GL_EXT_shader_pixel_local_storage
+
+	GL_MAX_SHADER_PIXEL_LOCAL_STORAGE_FAST_SIZE_EXT 0x8F63
+	GL_SHADER_PIXEL_LOCAL_STORAGE_EXT 0x8F64
+	GL_MAX_SHADER_PIXEL_LOCAL_STORAGE_SIZE_EXT 0x8F67
