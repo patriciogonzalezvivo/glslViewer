@@ -30,6 +30,10 @@ GlslViewer gives support to:
 
 ## Wiki themes
 
+* What is GlslViewer
+
+[![Watch the video](https://img.youtube.com/vi/8qyFLgl0_FI/hqdefault.jpg)](https://www.youtube.com/watch?v=8qyFLgl0_FI)
+
 * [**Installing** GlslViewer](https://github.com/patriciogonzalezvivo/glslViewer/wiki/Installing-GlslViewer)
 
 * [**Using** GlslViewer](https://github.com/patriciogonzalezvivo/glslViewer/wiki/Using-GlslViewer)
