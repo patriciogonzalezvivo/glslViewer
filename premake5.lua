@@ -18,13 +18,13 @@ project "rgbe"
 
     files 
     {
-        "../include/rgbe/**"
+        "include/rgbe/**"
     }
 
     includedirs
     {
-        "../include/", 
-        "../include/rgbe", 
+        "include/", 
+        "include/rgbe", 
     }
 
 ------------------------------------------------------------------------
@@ -35,7 +35,7 @@ project "glew"
 
     files 
     {
-        "../include/glew-2.1.0/src/glew.c"
+        "include/glew-2.1.0/src/glew.c"
     }
 
     defines 
@@ -45,7 +45,7 @@ project "glew"
 
     includedirs
     {
-        "../include/glew-2.1.0/include",         
+        "include/glew-2.1.0/include",         
     }
 
 ------------------------------------------------------------------------
@@ -56,13 +56,13 @@ project "skylight"
 
     files 
     {
-        "../include/skylight/**"
+        "include/skylight/**"
     }
 
     includedirs
     {
-        "../include/", 
-        "../include/skylight", 
+        "include/", 
+        "include/skylight", 
     }
 
 ------------------------------------------------------------------------
@@ -73,20 +73,20 @@ project "glfw"
 
     files 
     {
-        "../include/glfw/src/*.c",
-        "../include/glfw/src/*.h"
+        "include/glfw/src/*.c",
+        "include/glfw/src/*.h"
     }
 
     excludes
     {
-        "../include/glfw/src/cocoa*",        
-        "../include/glfw/src/glx*",
-        "../include/glfw/src/linux*",
-        "../include/glfw/src/null*",        
-        "../include/glfw/src/posix*",
-        "../include/glfw/src/wl*",
-        "../include/glfw/src/x11*",
-        "../include/glfw/src/xkb*",
+        "include/glfw/src/cocoa*",        
+        "include/glfw/src/glx*",
+        "include/glfw/src/linux*",
+        "include/glfw/src/null*",        
+        "include/glfw/src/posix*",
+        "include/glfw/src/wl*",
+        "include/glfw/src/x11*",
+        "include/glfw/src/xkb*",
     }
     if IsVisualStudio() then
         defines 
@@ -98,7 +98,7 @@ project "glfw"
 
     includedirs
     {
-        "../include/glfw",         
+        "include/glfw",         
     }
 ------------------------------------------------------------------------
 project "oscpack"
@@ -107,13 +107,13 @@ project "oscpack"
 
     files 
     {
-        "../include/oscpack/**"
+        "include/oscpack/**"
     }
 
     includedirs
     {
-        "../include/", 
-        "../include/oscpack", 
+        "include/", 
+        "include/oscpack", 
     }
 
     
@@ -125,7 +125,7 @@ project "oscpack"
 
         excludes 
         {
-            "../include/oscpack/ip/posix/**"  
+            "include/oscpack/ip/posix/**"  
         }
     end
 ------------------------------------------------------------------------
@@ -135,7 +135,7 @@ project "glslViewer"
 
     files 
     {
-        "../src/**"
+        "src/**"
     }
 
     if IsVisualStudio() then
@@ -149,10 +149,10 @@ project "glslViewer"
 
     includedirs
     {
-        "../include/", 
-        "../include/glfw/include",
-        "../include/glew-2.1.0/include",
-        "../src/"
+        "include/", 
+        "include/glfw/include",
+        "include/glew-2.1.0/include",
+        "src/"
     }
 
     links 
@@ -163,8 +163,8 @@ project "glslViewer"
     forceincludes {"StdAfx.h"}
 
 	pchheader "StdAfx.h"
-	pchsource ("../src/StdAfx.cpp")
+	pchsource ("src/StdAfx.cpp")
 
-    debugdir("../examples/3D/01_lighting")
+    debugdir("examples/3D/01_lighting")
     debugargs("head.ply")
 ------------------------------------------------------------------------
