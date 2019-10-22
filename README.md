@@ -28,26 +28,19 @@ GlslViewer gives support to:
 
 ![](images/01.gif)
 
-## Compiling on Windows
-* git clone 
-* git submodule update --init 
-* Download premake from https://github.com/premake/premake-core/releases 
-* Extract premake exe in the prj folder
-* In the same folder run premake5.exe vs2019
-* Open the generated project with Visual Studio 2019 
-* Compile and run
-
 ## Wiki themes
 
 * [Installing GlslViewer](https://github.com/patriciogonzalezvivo/glslViewer/wiki/Installing-GlslViewer)
 
 * [Using GlslViewer](https://github.com/patriciogonzalezvivo/glslViewer/wiki/Using-GlslViewer)
 
-* GlslViewer Conventions
+* **Conventions**: over all GlslViewer is designed to be flexible, that means that sticks very close to GLSL language. There is not extra languages or meta data on top. The only conventions comes on the native uniform names and defines GlslViewer use to send information like time, resolution, lights, vertex attributes, material properties, platform type, shadowmap name, etc.
 
     * [UNIFORMS](https://github.com/patriciogonzalezvivo/glslViewer/wiki/GlslViewer-UNIFORMS)
 
     * [DEFINES](https://github.com/patriciogonzalezvivo/glslViewer/wiki/GlslViewer-DEFINES)
+
+* [Python wrapper for GlslViewer](https://github.com/patriciogonzalezvivo/glslViewer/wiki/Python-wrapper-for-GlslViewer)
 
 
 ## TODO Features
