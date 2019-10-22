@@ -43,12 +43,6 @@ GlslViewer gives support to:
 * [Python wrapper for GlslViewer](https://github.com/patriciogonzalezvivo/glslViewer/wiki/Python-wrapper-for-GlslViewer)
 
 
-## TODO Features
-
-[ ] Option for SSAO buffer ( `u_sceneSSAO` )
-
-[ ] Add OSC compatibility
-
 ## Bugs to fix
 
 [ ] [Support for GL (Full KMS) or GL (Fake KMS) on RaspberryPi](https://github.com/patriciogonzalezvivo/glslViewer/issues/135)
@@ -56,6 +50,7 @@ GlslViewer gives support to:
 [ ] Depth frag shader for scene depthmap  ( `u_sceneDepth` ) instead of rendering to multiple targets ( only on RPI )
 
 [ ] Depth frag shader for light's shadowMap, to work on RPI
+
 
 ## Author
 
