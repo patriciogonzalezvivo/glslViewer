@@ -30,9 +30,9 @@ GlslViewer gives support to:
 
 ## Wiki themes
 
-* [Installing GlslViewer](https://github.com/patriciogonzalezvivo/glslViewer/wiki/Installing-GlslViewer)
+* [**Installing** GlslViewer](https://github.com/patriciogonzalezvivo/glslViewer/wiki/Installing-GlslViewer)
 
-* [Using GlslViewer](https://github.com/patriciogonzalezvivo/glslViewer/wiki/Using-GlslViewer)
+* [**Using** GlslViewer](https://github.com/patriciogonzalezvivo/glslViewer/wiki/Using-GlslViewer)
 
 * **Conventions**: over all GlslViewer is designed to be flexible, that means that sticks very close to GLSL language. There is not extra languages or meta data on top. The only conventions comes on the native uniform names and defines GlslViewer use to send information like time, resolution, lights, vertex attributes, material properties, platform type, shadowmap name, etc.
 
@@ -66,7 +66,9 @@ GlslViewer gives support to:
 
 Thanks to:
 
-* [Karim’s Naaki](http://karim.naaji.fr/) lot of concept and code was inspired by this two projects: [fragTool](https://github.com/karimnaaji/fragtool) and [hdreffects](https://github.com/karimnaaji/hdreffects)
+* [Mihai Sebea](https://twitter.com/mihai_sebea) for making the Windows compile happen
+
+* [Karim Naaki](http://karim.naaji.fr/) lot of concept and code was inspired by this two projects: [fragTool](https://github.com/karimnaaji/fragtool) and [hdreffects](https://github.com/karimnaaji/hdreffects)
 
 * [Doug Moen](https://github.com/doug-moen) he help to add the compatibility to ShaderToy shaders and some RayMarching features were added for his integration with his project: [curv](https://github.com/doug-moen/curv).
 
