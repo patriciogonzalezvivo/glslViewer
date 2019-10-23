@@ -1,3 +1,19 @@
+glslviewer (1.6) UNRELEASED; urgency=medium
+
+A lot of new things but the biggest one are
+
+  * Support for OBJ materials
+
+  * Support for GLTF files
+
+  * Default PBR shader
+
+  * OSC support
+
+  * Windows compile rutines
+
+ -- Patricio Gonzalez Vivo <patricio@ubuntu>  Wed, 23 Oct 2019 02:45:12 -0800
+
 glslviewer (1.5) UNRELEASED; urgency=medium
 
   * Adding `frag`/`vert` console commands to print fragment/vertex source code

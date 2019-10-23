@@ -10,5 +10,4 @@ Homepage: https://github.com/patriciogonzalezvivo/glslViewer
 Package: glslviewer
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
-Description: GLSL Shader Visualizer
- This is a GLSL live-coding console tool that renders GLSL Shaders. Every file you use (frag/vert shader, images and geometries) is watched for modification, and every time you modify it GlslViewer will automatically update their content. This tools is consistent with the scheam of uniforms described on The Book of Shaders (http://thebookofshaders.com) and it on-line editor (http://editor.thebookofshaders.com) that is why this is a great tool to learn how to code your own shaders.
+Description: GlslViewer is a flexible console-base OpenGL Sandbox to display 2D/3D GLSL shaders without the need of an UI
