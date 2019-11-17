@@ -553,22 +553,30 @@ int main(int argc, char **argv){
         std::string argument = std::string(argv[i]);
 
         if (        std::string(argv[i]) == "-x" ) {
-            i++;
-            windowPosAndSize.x = toInt(std::string(argv[i]));
+            if(++i < argc)
+                windowPosAndSize.x = toInt(std::string(argv[i]));
+            else
+                std::cout << "Argument '" << argument << "' should be followed by a <pixels>. Skipping argument." << std::endl;
         }
         else if (   std::string(argv[i]) == "-y" ) {
-            i++;
-            windowPosAndSize.y = toInt(std::string(argv[i]));
+            if(++i < argc)
+                windowPosAndSize.y = toInt(std::string(argv[i]));
+            else
+                std::cout << "Argument '" << argument << "' should be followed by a <pixels>. Skipping argument." << std::endl;
         }
         else if (   std::string(argv[i]) == "-w" ||
                     std::string(argv[i]) == "--width" ) {
-            i++;
-            windowPosAndSize.z = toInt(std::string(argv[i]));
+            if(++i < argc)
+                windowPosAndSize.z = toInt(std::string(argv[i]));
+            else
+                std::cout << "Argument '" << argument << "' should be followed by a <pixels>. Skipping argument." << std::endl;
         }
         else if (   std::string(argv[i]) == "-h" ||
                     std::string(argv[i]) == "--height" ) {
-            i++;
-            windowPosAndSize.w = toInt(std::string(argv[i]));
+            if(++i < argc)
+                windowPosAndSize.w = toInt(std::string(argv[i]));
+            else
+                std::cout << "Argument '" << argument << "' should be followed by a <pixels>. Skipping argument." << std::endl;
         }
         else if (   std::string(argv[i]) == "--help" ) {
             displayHelp = true;
@@ -611,7 +619,6 @@ int main(int argc, char **argv){
     //Load the the resources (textures)
     for (int i = 1; i < argc ; i++){
         std::string argument = std::string(argv[i]);
-
         if (    argument == "-x" || argument == "-y" ||
                 argument == "-w" || argument == "--width" ||
                 argument == "-h" || argument == "--height" ) {
@@ -633,34 +640,47 @@ int main(int argc, char **argv){
             sandbox.fxaa = true;
         }
         else if ( argument == "-s" || argument == "--sec" ) {
-            i++;
-            argument = std::string(argv[i]);
-            timeLimit = toFloat(argument);
-            std::cout << "// Will exit in " << timeLimit << " seconds." << std::endl;
+            if(++i < argc) {
+                argument = std::string(argv[i]);
+                timeLimit = toFloat(argument);
+                std::cout << "// Will exit in " << timeLimit << " seconds." << std::endl;
+            }
+            else
+                std::cout << "Argument '" << argument << "' should be followed by <seconds>. Skipping argument." << std::endl;
         }
         else if ( argument == "-o" ) {
-            i++;
-            argument = std::string(argv[i]);
-            if ( haveExt(argument, "png" )) {
-                outputFile = argument;
-                std::cout << "// Will save screenshot to " << outputFile  << " on exit." << std::endl;
+            if(++i < argc) {
+                argument = std::string(argv[i]);
+                if ( haveExt(argument, "png" )) {
+                    outputFile = argument;
+                    std::cout << "// Will save screenshot to " << outputFile  << " on exit." << std::endl;
+                }
+                else {
+                    std::cerr << "At the moment screenshots only support PNG formats" << std::endl;
+                }
             }
-            else {
-                std::cerr << "At the moment screenshots only support PNG formats" << std::endl;
-            }
+            else
+                std::cout << "Argument '" << argument << "' should be followed by a <file>. Skipping argument." << std::endl;
         }
         else if ( argument== "-p" || argument == "--port" ) {
-            i++;
-            osc_listener.start(toInt(std::string(argv[i])), runCmd);
+            if(++i < argc)
+                osc_listener.start(toInt(std::string(argv[i])), runCmd);
+            else
+                std::cout << "Argument '" << argument << "' should be followed by an <osc_port>. Skipping argument." << std::endl;
         }
         else if ( argument == "-e" ) {
-            i++;
-            cmds_arguments.push_back(std::string(argv[i]));
+            if(++i < argc)         
+                cmds_arguments.push_back(std::string(argv[i]));
+            else
+                std::cout << "Argument '" << argument << "' should be followed by a <command>. Skipping argument." << std::endl;
         }
         else if ( argument == "-E" ) {
-            i++;
-            cmds_arguments.push_back(std::string(argv[i]));
-            execute_exit = true;
+            if(++i < argc) {
+                cmds_arguments.push_back(std::string(argv[i]));
+                execute_exit = true;
+            }
+            else
+                std::cout << "Argument '" << argument << "' should be followed by a <command>. Skipping argument." << std::endl;
         }
         else if (argument == "--fullFps" ) {
             fullFps = true;
@@ -729,16 +749,23 @@ int main(int argc, char **argv){
                 textureCounter++;
         }
         else if ( argument == "-c" || argument == "-sh" ) {
-            i++;
-            argument = std::string(argv[i]);
-            sandbox.uniforms.setCubeMap(argument, files);
-            sandbox.getScene().showCubebox = false;
+            if(++i < argc) {
+                argument = std::string(argv[i]);
+                sandbox.uniforms.setCubeMap(argument, files);
+                sandbox.getScene().showCubebox = false;
+            }
+            else
+                std::cout << "Argument '" << argument << "' should be followed by a <enviromental_map>. Skipping argument." << std::endl;
         }
         else if ( argument == "-C" ) {
-            i++;
-            argument = std::string(argv[i]);
-            sandbox.uniforms.setCubeMap(argument, files);
-            sandbox.getScene().showCubebox = true;
+            if(++i < argc)
+            {
+                argument = std::string(argv[i]);
+                sandbox.uniforms.setCubeMap(argument, files);
+                sandbox.getScene().showCubebox = true;
+            }
+            else
+                std::cout << "Argument '" << argument << "' should be followed by a <enviromental_map>. Skipping argument." << std::endl;
         }
         else if ( argument.find("-D") == 0 ) {
             // Defines are added/remove once existing shaders
@@ -758,9 +785,12 @@ int main(int argc, char **argv){
         }
         else if ( argument.find("-") == 0 ) {
             std::string parameterPair = argument.substr( argument.find_last_of('-') + 1 );
-            i++;
-            argument = std::string(argv[i]);
-            sandbox.uniforms.addTexture(parameterPair, argument, files, vFlip);
+            if(++i < argc) {
+                argument = std::string(argv[i]);
+                sandbox.uniforms.addTexture(parameterPair, argument, files, vFlip);
+            }
+            else
+                std::cout << "Argument '" << argument << "' should be followed by a <texture>. Skipping argument." << std::endl;
         }
     }
 
