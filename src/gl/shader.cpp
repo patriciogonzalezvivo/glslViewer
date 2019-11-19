@@ -229,6 +229,77 @@ void Shader::setUniform(const std::string& _name, int _x) {
     }
 }
 
+void Shader::setUniform(const std::string& _name, int _x, int _y) {
+    if (isInUse()) {
+        glUniform2i(getUniformLocation(_name), _x, _y);
+        // std::cout << "Uniform " << _name << ": vec2i(" << _x << "," << _y << ")" << std::endl;
+    }
+}
+
+void Shader::setUniform(const std::string& _name, int _x, int _y, int _z) {
+    if (isInUse()) {
+        glUniform3i(getUniformLocation(_name), _x, _y, _z);
+        // std::cout << "Uniform " << _name << ": vec3i(" << _x << "," << _y << "," << _z <<")" << std::endl;
+    }
+}
+
+void Shader::setUniform(const std::string& _name, int _x, int _y, int _z, int _w) {
+    if (isInUse()) {
+        glUniform4i(getUniformLocation(_name), _x, _y, _z, _w);
+        // std::cout << "Uniform " << _name << ": vec4i(" << _x << "," << _y << "," << _z << << "," << _w << ")" << std::endl;
+    }
+}
+
+void Shader::setUniform(const std::string& _name, const int *_array, unsigned int _size) {
+    GLint loc = getUniformLocation(_name);
+    if (isInUse()) {
+        if (_size == 1) {
+            glUniform1i(loc, _array[0]);
+        }
+        else if (_size == 2) {
+            glUniform2i(loc, _array[0], _array[1]);
+            std::cout << _name << ',' << _array[0] << ',' << _array[1] << std::endl;
+        }
+        else if (_size == 3) {
+            glUniform3i(loc, _array[0], _array[1], _array[2]);
+        }
+        else if (_size == 4) {
+            glUniform4i(loc, _array[0], _array[1], _array[2], _array[3]);
+        }
+        else {
+            std::cerr << "Passing matrix uniform as array, not supported yet" << std::endl;
+        }
+    }
+}
+
+void Shader::setUniform(const std::string& _name, float _x) {
+    if (isInUse()) {
+        glUniform1f(getUniformLocation(_name), _x);
+        // std::cout << "Uniform " << _name << ": float(" << _x << ")" << std::endl;
+    }
+}
+
+void Shader::setUniform(const std::string& _name, float _x, float _y) {
+    if (isInUse()) {
+        glUniform2f(getUniformLocation(_name), _x, _y);
+        // std::cout << "Uniform " << _name << ": vec2(" << _x << "," << _y << ")" << std::endl;
+    }
+}
+
+void Shader::setUniform(const std::string& _name, float _x, float _y, float _z) {
+    if (isInUse()) {
+        glUniform3f(getUniformLocation(_name), _x, _y, _z);
+        // std::cout << "Uniform " << _name << ": vec3(" << _x << "," << _y << "," << _z <<")" << std::endl;
+    }
+}
+
+void Shader::setUniform(const std::string& _name, float _x, float _y, float _z, float _w) {
+    if (isInUse()) {
+        glUniform4f(getUniformLocation(_name), _x, _y, _z, _w);
+        // std::cout << "Uniform " << _name << ": vec3(" << _x << "," << _y << "," << _z <<")" << std::endl;
+    }
+}
+
 void Shader::setUniform(const std::string& _name, const float *_array, unsigned int _size) {
     GLint loc = getUniformLocation(_name);
     if (isInUse()) {
@@ -265,34 +336,6 @@ void Shader::setUniform(const std::string& _name, const glm::vec3 *_array, unsig
 void Shader::setUniform(const std::string& _name, const glm::vec4 *_array, unsigned int _size) {
     if (isInUse()) {
         glUniform4fv(getUniformLocation(_name), _size, glm::value_ptr(_array[0]));
-    }
-}
-
-void Shader::setUniform(const std::string& _name, float _x) {
-    if (isInUse()) {
-        glUniform1f(getUniformLocation(_name), _x);
-        // std::cout << "Uniform " << _name << ": float(" << _x << ")" << std::endl;
-    }
-}
-
-void Shader::setUniform(const std::string& _name, float _x, float _y) {
-    if (isInUse()) {
-        glUniform2f(getUniformLocation(_name), _x, _y);
-        // std::cout << "Uniform " << _name << ": vec2(" << _x << "," << _y << ")" << std::endl;
-    }
-}
-
-void Shader::setUniform(const std::string& _name, float _x, float _y, float _z) {
-    if (isInUse()) {
-        glUniform3f(getUniformLocation(_name), _x, _y, _z);
-        // std::cout << "Uniform " << _name << ": vec3(" << _x << "," << _y << "," << _z <<")" << std::endl;
-    }
-}
-
-void Shader::setUniform(const std::string& _name, float _x, float _y, float _z, float _w) {
-    if (isInUse()) {
-        glUniform4f(getUniformLocation(_name), _x, _y, _z, _w);
-        // std::cout << "Uniform " << _name << ": vec3(" << _x << "," << _y << "," << _z <<")" << std::endl;
     }
 }
 

@@ -318,13 +318,18 @@ bool Uniforms::feedTo( Shader &_shader ) {
         for (UniformDataList::iterator it=data.begin(); it!=data.end(); ++it) {
             if (it->second.change) {
                 if (it->second.bInt) {
-                    _shader.setUniform(it->first, int(it->second.value[0]));
-                    update = true;
+                    if (it->second.size == 1)
+                        _shader.setUniform(it->first, int(it->second.value[0]));
+                    else if (it->second.size == 2)
+                        _shader.setUniform(it->first, int(it->second.value[0]), int(it->second.value[1]));
+                    else if (it->second.size == 3)
+                        _shader.setUniform(it->first, int(it->second.value[0]), int(it->second.value[1]), int(it->second.value[2]));
+                    else if (it->second.size == 4)
+                        _shader.setUniform(it->first, int(it->second.value[0]), int(it->second.value[1]), int(it->second.value[2]), int(it->second.value[3]));
                 }
-                else {
+                else
                     _shader.setUniform(it->first, it->second.value, it->second.size);
-                    update = true;
-                }
+                update = true;
             }
         }
     }

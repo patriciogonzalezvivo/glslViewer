@@ -795,8 +795,8 @@ void Sandbox::render() {
 
         m_billboard_shader.use();
         m_billboard_shader.setUniform("u_depth", float(0.0));
-        m_billboard_shader.setUniform("u_scale", 1.0, 1.0);
-        m_billboard_shader.setUniform("u_translate", 0.0, 0.0);
+        m_billboard_shader.setUniform("u_scale", float(1.0), float(1.0));
+        m_billboard_shader.setUniform("u_translate", float(0.0), float(0.0));
         m_billboard_shader.setUniform("u_modelViewProjectionMatrix", glm::mat4(1.0) );
         m_billboard_shader.setUniformTexture("u_tex0", &m_scene_fbo, 0);
         m_billboard_vbo->render( &m_billboard_shader );
@@ -810,8 +810,8 @@ void Sandbox::render() {
 
         m_billboard_shader.use();
         m_billboard_shader.setUniform("u_depth", float(0.0));
-        m_billboard_shader.setUniform("u_scale", 1.0, 1.0);
-        m_billboard_shader.setUniform("u_translate", 0.0, 0.0);
+        m_billboard_shader.setUniform("u_scale", float(1.0), float(1.0));
+        m_billboard_shader.setUniform("u_translate", float(0.0), float(0.0));
         m_billboard_shader.setUniform("u_modelViewProjectionMatrix", glm::mat4(1.0) );
         m_billboard_shader.setUniformTexture("u_tex0", &m_record_fbo, 0);
         m_billboard_vbo->render( &m_billboard_shader );

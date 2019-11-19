@@ -31,12 +31,15 @@ public:
     bool    isLoaded() const;
    
     void    setUniform(const std::string& _name, int _x);
+    void    setUniform(const std::string& _name, int _x, int _y);
+    void    setUniform(const std::string& _name, int _x, int _y, int _z);
+    void    setUniform(const std::string& _name, int _x, int _y, int _z, int _w);
+    void    setUniform(const std::string& _name, const int *_array, unsigned int _size);
 
     void    setUniform(const std::string& _name, float _x);
     void    setUniform(const std::string& _name, float _x, float _y);
     void    setUniform(const std::string& _name, float _x, float _y, float _z);
     void    setUniform(const std::string& _name, float _x, float _y, float _z, float _w);
-
     void    setUniform(const std::string& _name, const float *_array, unsigned int _size);
 
     void    setUniform(const std::string& _name, const glm::vec2& _value) { setUniform(_name,_value.x,_value.y); }
