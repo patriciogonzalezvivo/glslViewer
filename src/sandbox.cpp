@@ -65,13 +65,13 @@ Sandbox::Sandbox():
 
     // MOUSE
     uniforms.functions["u_mouse"] = UniformFunction("vec2", [](Shader& _shader) {
-        _shader.setUniform("u_mouse", getMouseX(), getMouseY());
+        _shader.setUniform("u_mouse", float(getMouseX()), float(getMouseY()));
     },
     []() { return toString(getMouseX()) + "," + toString(getMouseY()); } );
 
     // VIEWPORT
     uniforms.functions["u_resolution"]= UniformFunction("vec2", [](Shader& _shader) {
-        _shader.setUniform("u_resolution", getWindowWidth(), getWindowHeight());
+        _shader.setUniform("u_resolution", float(getWindowWidth()), float(getWindowHeight()));
     },
     []() { return toString(getWindowWidth()) + "," + toString(getWindowHeight()); });
 
@@ -794,9 +794,9 @@ void Sandbox::render() {
             m_billboard_shader.load(dynamic_billboard_frag, dynamic_billboard_vert, false);
 
         m_billboard_shader.use();
-        m_billboard_shader.setUniform("u_depth", float(0.0));
-        m_billboard_shader.setUniform("u_scale", float(1.0), float(1.0));
-        m_billboard_shader.setUniform("u_translate", float(0.0), float(0.0));
+        m_billboard_shader.setUniform("u_depth", 0.0f);
+        m_billboard_shader.setUniform("u_scale", 1.0f, 1.0f);
+        m_billboard_shader.setUniform("u_translate", 0.0f, 0.0f);
         m_billboard_shader.setUniform("u_modelViewProjectionMatrix", glm::mat4(1.0) );
         m_billboard_shader.setUniformTexture("u_tex0", &m_scene_fbo, 0);
         m_billboard_vbo->render( &m_billboard_shader );
@@ -809,9 +809,9 @@ void Sandbox::render() {
             m_billboard_shader.load(dynamic_billboard_frag, dynamic_billboard_vert, false);
 
         m_billboard_shader.use();
-        m_billboard_shader.setUniform("u_depth", float(0.0));
-        m_billboard_shader.setUniform("u_scale", float(1.0), float(1.0));
-        m_billboard_shader.setUniform("u_translate", float(0.0), float(0.0));
+        m_billboard_shader.setUniform("u_depth", 0.0f);
+        m_billboard_shader.setUniform("u_scale", 1.0f, 1.0f);
+        m_billboard_shader.setUniform("u_translate", 0.0f, 0.0f);
         m_billboard_shader.setUniform("u_modelViewProjectionMatrix", glm::mat4(1.0) );
         m_billboard_shader.setUniformTexture("u_tex0", &m_record_fbo, 0);
         m_billboard_vbo->render( &m_billboard_shader );
@@ -845,7 +845,7 @@ void Sandbox::renderUI() {
             m_billboard_shader.use();
 
             for (unsigned int i = 0; i < uniforms.buffers.size(); i++) {
-                m_billboard_shader.setUniform("u_depth", float(0.0));
+                m_billboard_shader.setUniform("u_depth", 0.0f);
                 m_billboard_shader.setUniform("u_scale", xStep, yStep);
                 m_billboard_shader.setUniform("u_translate", xOffset, yOffset);
                 m_billboard_shader.setUniform("u_modelViewProjectionMatrix", getOrthoMatrix());
@@ -856,7 +856,7 @@ void Sandbox::renderUI() {
 
             if (m_postprocessing) {
                 if (uniforms.functions["u_scene"].present) {
-                    m_billboard_shader.setUniform("u_depth", float(0.0));
+                    m_billboard_shader.setUniform("u_depth", 0.0f);
                     m_billboard_shader.setUniform("u_scale", xStep, yStep);
                     m_billboard_shader.setUniform("u_translate", xOffset, yOffset);
                     m_billboard_shader.setUniform("u_modelViewProjectionMatrix", getOrthoMatrix());
@@ -869,7 +869,7 @@ void Sandbox::renderUI() {
                 if (uniforms.functions["u_sceneDepth"].present) {
                     m_billboard_shader.setUniform("u_scale", xStep, yStep);
                     m_billboard_shader.setUniform("u_translate", xOffset, yOffset);
-                    m_billboard_shader.setUniform("u_depth", float(1.0));
+                    m_billboard_shader.setUniform("u_depth", 1.0f);
                     uniforms.functions["u_cameraNearClip"].assign(m_billboard_shader);
                     uniforms.functions["u_cameraFarClip"].assign(m_billboard_shader);
                     uniforms.functions["u_cameraDistance"].assign(m_billboard_shader);
@@ -892,7 +892,7 @@ void Sandbox::renderUI() {
                     if ( uniforms.lights[i].getShadowMap()->getDepthTextureId() ) {
                         m_billboard_shader.setUniform("u_scale", w, h);
                         m_billboard_shader.setUniform("u_translate", x, y);
-                        m_billboard_shader.setUniform("u_depth", float(0.0));
+                        m_billboard_shader.setUniform("u_depth", 0.0f);
                         m_billboard_shader.setUniform("u_modelViewProjectionMatrix", getOrthoMatrix());
                         m_billboard_shader.setUniformDepthTexture("u_tex0", uniforms.lights[i].getShadowMap());
                         m_billboard_vbo->render(&m_billboard_shader);
@@ -945,7 +945,7 @@ void Sandbox::renderUI() {
             m_billboard_shader.use();
 
             for (std::map<std::string, Texture*>::iterator it = uniforms.textures.begin(); it != uniforms.textures.end(); it++) {
-                m_billboard_shader.setUniform("u_depth", float(0.0));
+                m_billboard_shader.setUniform("u_depth", 0.0f);
                 m_billboard_shader.setUniform("u_scale", xStep, yStep);
                 m_billboard_shader.setUniform("u_translate", xOffset, yOffset);
                 m_billboard_shader.setUniform("u_modelViewProjectionMatrix", getOrthoMatrix());
@@ -967,7 +967,7 @@ void Sandbox::renderUI() {
         m_wireframe2D_shader.use();
         m_wireframe2D_shader.setUniform("u_color", glm::vec4(1.0));
         m_wireframe2D_shader.setUniform("u_scale", 1.0f, 1.0f);
-        m_wireframe2D_shader.setUniform("u_translate", getMouseX(), getMouseY());
+        m_wireframe2D_shader.setUniform("u_translate", (float)getMouseX(), (float)getMouseY());
         m_wireframe2D_shader.setUniform("u_modelViewProjectionMatrix", getOrthoMatrix());
         m_cross_vbo->render(&m_wireframe2D_shader);
         glLineWidth(1.0f);

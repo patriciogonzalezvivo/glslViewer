@@ -684,7 +684,7 @@ void Scene::renderDebug(Uniforms& _uniforms) {
             m_lightUI_vbo = rect(0.0,0.0,0.0,0.0).getVbo();
 
         m_lightUI_shader.use();
-        m_lightUI_shader.setUniform("u_scale", 24, 24);
+        m_lightUI_shader.setUniform("u_scale", 24.0f, 24.0f);
         m_lightUI_shader.setUniform("u_viewMatrix", _uniforms.getCamera().getViewMatrix());
         m_lightUI_shader.setUniform("u_modelViewProjectionMatrix", m_mvp );
 

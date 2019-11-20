@@ -95,8 +95,8 @@ install:
 	@cp bin/glslLoader /usr/local/bin
 
 install_python:
-	@python setup.py install
-	@python3 setup.py install
+	@sudo python setup.py install
+	@sudo python3 setup.py install
 
 clean_python:
 	@rm -rvf build
