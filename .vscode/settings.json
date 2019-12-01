@@ -96,5 +96,5 @@
         "filesystem": "cpp",
         "forward_list": "cpp"
     },
-    "python.pythonPath": "/usr/local/bin/python"
+    "python.pythonPath": "/bin/python3"
 }
