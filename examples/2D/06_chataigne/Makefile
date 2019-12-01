@@ -1,2 +1,2 @@
 all:
-	glslViewer test_osc.frag -p 9000 -l
+	glslViewer chataigne.frag -p 9000 -l
