@@ -183,7 +183,11 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         std::vector<std::string> values = split(_line,',');
         if (values.size() == 2) {
             std::vector<std::string> v = split(values[1],' ');
-            addDefine( v[0], v[1] );
+            if (v.size() > 1)
+                addDefine( v[0], v[1] );
+            else
+                addDefine( v[0] );
+                
             return true;
         }
         else if (values.size() == 3) {
