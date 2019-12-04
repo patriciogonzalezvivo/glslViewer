@@ -8,7 +8,15 @@
 
 * [Buffers examples](https://github.com/patriciogonzalezvivo/glslViewer/tree/master/examples/2D/03_buffers) some examples of using multiple buffers on glslViewer. Ex: ripples and grayscot reaction diffusion
 
-* [Scripts examples](https://github.com/patriciogonzalezvivo/glslViewer/tree/master/examples/2D/04_scripts) some examples using a bash script to feed uniforms to a shader
+* [Script example](https://github.com/patriciogonzalezvivo/glslViewer/tree/master/examples/2D/04_scripts) example using a bash script to feed uniforms to a shader
+
+* [ORCA example](https://github.com/patriciogonzalezvivo/glslViewer/tree/master/examples/2D/05_orca) example made by Johan Ismael of how to connect [ORCA](https://100r.co/pages/orca.html), Ableton (MIDI) and glslViewer (OSC)
+
+* [Chataigne example](https://github.com/patriciogonzalezvivo/glslViewer/tree/master/examples/2D/06_chataigne) example on how to send animated values in [Chataigne](http://benjamin.kuperberg.fr/chataigne/en) to glslViewer through OSC
+
+* [TouchOSC example](https://github.com/patriciogonzalezvivo/glslViewer/tree/master/examples/2D/07_touchOSC) example on how to send values from [OSCTouch](https://hexler.net/products/touchosc) to glslViewer through OSC
+
+* [Score example](https://github.com/patriciogonzalezvivo/glslViewer/tree/master/examples/2D/08_score) example on how to send animated values from [Ossia Score](https://ossia.io/) to glslViewer through OSC
 
 ------------
 
