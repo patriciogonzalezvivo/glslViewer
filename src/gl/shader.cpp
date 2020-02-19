@@ -142,9 +142,81 @@ bool Shader::isLoaded() const {
 GLuint Shader::compileShader(const std::string& _src, GLenum _type, bool _verbose) {
     std::string prolog = "";
 
+    //
+    // detect #version directive at the beginning of the shader, move it to the prolog and remove it from the shader
+    //
+
+    std::string srcBody; // _src stripped of any #version directive at the beginning
+    bool zeroBasedLineDirective; // true for GLSL core 1.10 to 1.50
+    bool srcVersionFound = _src.substr(0, 8) == "#version"; // true if user provided a #version directive at the beginning of _src
+
+    if(srcVersionFound) {
+
+        //
+        // split _src into srcVersion and srcBody
+        //
+
+        std::istringstream srcIss(_src);
+
+        // the version line can be read without checking the result of getline(), srcVersionFound == true implies this
+        std::string srcVersion;
+        std::getline(srcIss,srcVersion);
+
+        // move the #version directive to the top of the prolog
+        prolog += srcVersion + '\n';
+
+        // copy the rest of the shader into srcBody
+        std::ostringstream srcOss("");
+        std::string dataRead;
+        while(std::getline(srcIss,dataRead)){
+            srcOss << dataRead << '\n';
+        }
+        srcBody = srcOss.str();
+
+        //
+        // try to determine which version are we actually using
+        //
+
+        size_t glslVersionNumber = 0;
+        std::istringstream versionIss(srcVersion);
+        versionIss >> dataRead; // consume the "#version" string which is guaranteed to be there
+        versionIss >> glslVersionNumber; // try to read the next token and convert it to a number
+
+        //
+        // determine if the glsl version number starts numbering the #line directive from 0 or from 1
+        //
+        // #version 100        : "es"   profile, numbering starts from 1
+        // #version 110 to 150 : "core" profile, numbering starts from 0
+        // #version 200        : "es"   profile, numbering starts from 1
+        // #version 300 to 320 : "es"   profile, numbering starts from 1
+        // #version 330+       : all           , numbering starts from 1
+        //
+        // Any malformed or invalid #version directives are of no interest here, the shader compiler
+        // will take care of reporting this to the user later.
+        //
+
+        zeroBasedLineDirective = (glslVersionNumber >= 110 && glslVersionNumber <= 150);
+
+    } else {
+        // no #version directive found at the beginning of _src, which means...
+        srcBody = _src; // ... _src contains the whole shader body and ...
+        zeroBasedLineDirective = true; // ... glsl defaults to version 1.10, which starts numbering #line directives from 0.
+    }
+
     for(DefinesList_it it = m_defines.begin(); it != m_defines.end(); it++) {
         prolog += "#define " + it->first + " " + it->second + '\n';
     }
+
+    //
+    // determine the #line offset to be used for conciliating lines in glsl error messages and the line number in the editor
+    //
+    // #line 0 : no version specified by user, glsl defaults to version 1.10, shader source used without modifications
+    // #line 1 : user specified #version 1.10 to 1.50, which start numbering #line from 0, version line removed from _src
+    // #line 2 : user specified a version #version other than 1.10 to 1.50, those start numbering #line from 1, version line removed from _src
+    //
+
+    size_t startLine = (srcVersionFound ? 1 : 0) + (zeroBasedLineDirective ? 0 : 1);
+    prolog += "#line " + std::to_string(startLine) + "\n";
 
     // if (_verbose) {
     //     if (_type == GL_VERTEX_SHADER) {
@@ -154,14 +226,12 @@ GLuint Shader::compileShader(const std::string& _src, GLenum _type, bool _verbos
     //         std::cout << "// ---------- Fragment Shader" << std::endl;
     //     }
     //     std::cout << prolog << std::endl;
-    //     std::cout << _src << std::endl;
+    //     std::cout << srcBody << std::endl;
     // }
-
-    prolog += "#line 0\n";
 
     const GLchar* sources[2] = {
         (const GLchar*) prolog.c_str(),
-        (const GLchar*) _src.c_str()
+        (const GLchar*) srcBody.c_str()
     };
 
     GLuint shader = glCreateShader(_type);
