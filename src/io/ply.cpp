@@ -206,7 +206,7 @@ bool loadPLY(Uniforms& _uniforms, WatchFileList& _files, Materials& _materials, 
                 continue;
             }
 
-            if (state==Faces) {
+            if (state==Faces && indices.size() > 0) {
                 std::stringstream sline;
                 sline.str(line);
                 int numV;
