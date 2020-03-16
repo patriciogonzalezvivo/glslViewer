@@ -13,6 +13,9 @@ enum Channels {
 
 // Implementation of savePixels and loadPixels is on gltf.cpp because tiny_gltf.h also use stb_image*.h
 bool            savePixels(const std::string& _path, unsigned char* _pixels, int _width, int _height);
+bool            savePixels16(const std::string& _path, unsigned short* _pixels, int _width, int _height);
+bool            savePixelsHDR(const std::string& _path, float* _pixels, int _width, int _height);
+
 unsigned char*  loadPixels(const std::string& _path, int *_width, int *_height, Channels _channels = RGB, bool _vFlip = true);
 uint16_t *      loadPixels16(const std::string& _path, int *_width, int *_height, Channels _channels = RGB, bool _vFlip = true);
 float*          loadPixelsHDR(const std::string& _path, int *_width, int *_height, bool _vFlip = true);

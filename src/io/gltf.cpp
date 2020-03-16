@@ -434,14 +434,80 @@ unsigned char* loadPixels(const std::string& _path, int *_width, int *_height, C
 }
 
 bool savePixels(const std::string& _path, unsigned char* _pixels, int _width, int _height) {
+    int saved = 0;
+    int channels = 4;
+    std::string ext = getExt(_path);
 
     // Flip the image on Y
-    int depth = 4;
-    flipPixelsVertically<unsigned char>(_pixels, _width, _height, depth);
+    flipPixelsVertically<unsigned char>(_pixels, _width, _height, channels);
 
-    if (0 == stbi_write_png(_path.c_str(), _width, _height, 4, _pixels, _width * 4)) {
-        std::cout << "can't create file " << _path << std::endl;
+    if ( ext == "png") 
+        saved = stbi_write_png(_path.c_str(), _width, _height, channels, _pixels, _width * channels);
+    else if ( ext == "jpg")
+        saved = stbi_write_jpg(_path.c_str(), _width, _height, channels, _pixels, 92);
+    else if ( ext == "bmp")
+        saved = stbi_write_bmp(_path.c_str(), _width, _height, channels, _pixels);
+    else if ( ext == "tga")
+        saved = stbi_write_tga(_path.c_str(), _width, _height, channels, _pixels);
+    else if ( ext == "hdr") {
+        size_t total = _width * _height * channels;
+        const float m = 1.f / 255.f;
+        float *float_pixels = new float[total];
+        for (size_t i = 0; i < total; i++)
+            float_pixels[i] = _pixels[i] * m;
+        saved = stbi_write_hdr(_path.c_str(), _width, _height, channels, float_pixels);
+        delete [] float_pixels;
     }
 
+    if (0 == saved) {
+        std::cout << "Can't create file " << _path << std::endl;
+        return false;
+    }
+    return true;
+}
+
+bool savePixels16(const std::string& _path, unsigned short* _pixels, int _width, int _height) {
+    int saved = 0;
+    int channels = 4;
+    std::string ext = getExt(_path);
+
+    // Flip the image on Y
+    flipPixelsVertically<unsigned short>(_pixels, _width, _height, channels);
+
+    if ( ext == "png") 
+        saved = stbi_write_png(_path.c_str(), _width, _height, channels, _pixels, _width * channels);
+    else if ( ext == "jpg")
+        saved = stbi_write_jpg(_path.c_str(), _width, _height, channels, _pixels, 92);
+    else if ( ext == "bmp")
+        saved = stbi_write_bmp(_path.c_str(), _width, _height, channels, _pixels);
+    else if ( ext == "tga")
+        saved = stbi_write_tga(_path.c_str(), _width, _height, channels, _pixels);
+    else if ( ext == "hdr") {
+        size_t total = _width * _height * channels;
+        const float m = 1.f / 65535.f;
+        float *float_pixels = new float[total];
+        for (size_t i = 0; i < total; i++)
+            float_pixels[i] = _pixels[i] * m;
+        saved = stbi_write_hdr(_path.c_str(), _width, _height, channels, float_pixels);
+        delete [] float_pixels;
+    }
+
+    if (0 == saved) {
+        std::cout << "Can't create file " << _path << std::endl;
+        return false;
+    }
+    return true;
+}
+
+bool savePixelsHDR(const std::string& _path, float* _pixels, int _width, int _height) {
+    int channels = 4;
+
+    // Flip the image on Y
+    flipPixelsVertically<float>(_pixels, _width, _height, channels);
+    
+    if (0 == stbi_write_hdr(_path.c_str(), _width, _height, channels, _pixels)) {
+        std::cout << "Can't create file " << _path << std::endl;
+        return false;
+    }
     return true;
 }
