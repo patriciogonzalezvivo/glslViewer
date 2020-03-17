@@ -419,6 +419,14 @@ bool loadGLTF(Uniforms& _uniforms, WatchFileList& _files, Materials& _materials,
     return true;
 }
 
+
+unsigned char* loadPixels(const std::string& _path, int *_width, int *_height, Channels _channels, bool _vFlip) {
+    stbi_set_flip_vertically_on_load(_vFlip);
+    int comp;
+    unsigned char* pixels = stbi_load(_path.c_str(), _width, _height, &comp, (_channels == RGB)? STBI_rgb : STBI_rgb_alpha);
+    return pixels;
+}
+
 uint16_t* loadPixels16(const std::string& _path, int *_width, int *_height, Channels _channels, bool _vFlip) {
     stbi_set_flip_vertically_on_load(_vFlip);
     int comp;
@@ -426,10 +434,10 @@ uint16_t* loadPixels16(const std::string& _path, int *_width, int *_height, Chan
     return pixels;
 }
 
-unsigned char* loadPixels(const std::string& _path, int *_width, int *_height, Channels _channels, bool _vFlip) {
+float* loadPixelsHDR(const std::string& _path, int *_width, int *_height, bool _vFlip) {
     stbi_set_flip_vertically_on_load(_vFlip);
     int comp;
-    unsigned char* pixels = stbi_load(_path.c_str(), _width, _height, &comp, (_channels == RGB)? STBI_rgb : STBI_rgb_alpha);
+    float* pixels = stbi_loadf(_path.c_str(), _width, _height, &comp, 0);
     return pixels;
 }
 

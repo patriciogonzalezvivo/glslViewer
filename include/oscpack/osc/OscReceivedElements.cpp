@@ -46,14 +46,13 @@ namespace osc{
 // return the first 4 byte boundary after the end of a str4
 // be careful about calling this version if you don't know whether
 // the string is terminated correctly.
-static inline const char* FindStr4End( const char *p )
-{
-	if( p[0] == '\0' )    // special case for SuperCollider integer address pattern
+static inline const char* FindStr4End( const char *p ) {
+	if (p[0] == '\0')    // special case for SuperCollider integer address pattern
 		return p + 4;
 
     p += 3;
 
-    while( *p )
+    while ( *p )
         p += 4;
 
     return p + 1;
@@ -62,21 +61,20 @@ static inline const char* FindStr4End( const char *p )
 
 // return the first 4 byte boundary after the end of a str4
 // returns 0 if p == end or if the string is unterminated
-static inline const char* FindStr4End( const char *p, const char *end )
-{
-    if( p >= end )
+static inline const char* FindStr4End( const char *p, const char *end ) {
+    if (p >= end)
         return 0;
 
-	if( p[0] == '\0' )    // special case for SuperCollider integer address pattern
+	if (p[0] == '\0')    // special case for SuperCollider integer address pattern
 		return p + 4;
 
     p += 3;
     end -= 1;
 
-    while( p < end && *p )
+    while (p < end && *p)
         p += 4;
 
-    if( *p )
+    if (*p)
         return 0;
     else
         return p + 1;
@@ -84,14 +82,12 @@ static inline const char* FindStr4End( const char *p, const char *end )
 
 
 // round up to the next highest multiple of 4. unless x is already a multiple of 4
-static inline uint32 RoundUp4( uint32 x ) 
-{
+static inline uint32 RoundUp4( uint32 x ) {
     return (x + 3) & ~((uint32)0x03);
 }
 
 
-static inline int32 ToInt32( const char *p )
-{
+static inline int32 ToInt32( const char *p ) {
 #ifdef OSC_HOST_LITTLE_ENDIAN
     union{
         osc::int32 i;
@@ -110,8 +106,7 @@ static inline int32 ToInt32( const char *p )
 }
 
 
-static inline uint32 ToUInt32( const char *p )
-{
+static inline uint32 ToUInt32( const char *p ) {
 #ifdef OSC_HOST_LITTLE_ENDIAN
     union{
         osc::uint32 i;
@@ -130,8 +125,7 @@ static inline uint32 ToUInt32( const char *p )
 }
 
 
-static inline int64 ToInt64( const char *p )
-{
+static inline int64 ToInt64( const char *p ) {
 #ifdef OSC_HOST_LITTLE_ENDIAN
     union{
         osc::int64 i;
@@ -154,8 +148,7 @@ static inline int64 ToInt64( const char *p )
 }
 
 
-static inline uint64 ToUInt64( const char *p )
-{
+static inline uint64 ToUInt64( const char *p ) {
 #ifdef OSC_HOST_LITTLE_ENDIAN
     union{
         osc::uint64 i;
@@ -179,21 +172,18 @@ static inline uint64 ToUInt64( const char *p )
 
 //------------------------------------------------------------------------------
 
-bool ReceivedPacket::IsBundle() const
-{
+bool ReceivedPacket::IsBundle() const {
     return (Size() > 0 && Contents()[0] == '#');
 }
 
 //------------------------------------------------------------------------------
 
-bool ReceivedBundleElement::IsBundle() const
-{
+bool ReceivedBundleElement::IsBundle() const {
     return (Size() > 0 && Contents()[0] == '#');
 }
 
 
-osc_bundle_element_size_t ReceivedBundleElement::Size() const
-{
+osc_bundle_element_size_t ReceivedBundleElement::Size() const {
     return ToInt32( sizePtr_ );
 }
 
