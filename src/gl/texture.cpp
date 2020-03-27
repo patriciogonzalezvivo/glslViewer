@@ -110,18 +110,9 @@ bool Texture::load(int _width, int _height, int _channels, int _bits, const void
 bool Texture::load(const std::string& _path, bool _vFlip) {
     std::string ext = getExt(_path);
 
-    // JPEG baseline & progressive (12 bpc/arithmetic not supported, same as stock IJG lib)
-    // PNG 1/2/4/8/16-bit-per-channel
-
-    // TGA (not sure what subset, if a subset)
     // BMP non-1bpp, non-RLE
-    // PSD (composited view only, no extra channels, 8/16 bit-per-channel)
-
     // GIF (*comp always reports as 4-channel)
-    // HDR (radiance rgbE format)
-    // PIC (Softimage PIC)
-    // PNM (PPM and PGM binary only)
-
+    // JPEG baseline & progressive (12 bpc/arithmetic not supported, same as stock IJG lib)
     if (ext == "bmp"    || ext == "BMP" ||
         ext == "gif"    || ext == "GIF" ||
         ext == "jpg"    || ext == "JPG" ||
@@ -132,6 +123,9 @@ bool Texture::load(const std::string& _path, bool _vFlip) {
         delete pixels;
     }
 
+    // PNG 1/2/4/8/16-bit-per-channel
+    // TGA (not sure what subset, if a subset)
+    // PSD (composited view only, no extra channels, 8/16 bit-per-channel)
     else if (   ext == "png" || ext == "PNG" ||
                 ext == "psd" || ext == "PSD" ||
                 ext == "tga" || ext == "TGA") {
@@ -141,13 +135,13 @@ bool Texture::load(const std::string& _path, bool _vFlip) {
         load(m_width, m_height, 4, 8, pixels);
         delete pixels;
 #else
-        const Channels channels = RGB_ALPHA;
-        uint16_t* pixels = loadPixels16(_path, &m_width, &m_height, channels, _vFlip);
-        load(m_width, m_height, int(channels), 16, pixels);
+        uint16_t* pixels = loadPixels16(_path, &m_width, &m_height, RGB_ALPHA, _vFlip);
+        load(m_width, m_height, 4, 16, pixels);
         delete pixels;
 #endif
     }
 
+    // HDR (radiance rgbE format)
     else if (ext == "hdr" || ext == "HDR") {
         float* pixels = loadPixelsHDR(_path, &m_width, &m_height, _vFlip);
         load(m_width, m_height, 3, 32, pixels);
