@@ -25,6 +25,7 @@ Scene::Scene():
     // Debug State
     showGrid(false), showAxis(false), showBBoxes(false), showCubebox(false), 
     // Camera.
+    m_blend(ALPHA),
     m_culling(NONE),
     // Light
     m_lightUI_vbo(nullptr), m_dynamicShadows(false),
@@ -118,36 +119,47 @@ void Scene::setup(CommandList& _commands, Uniforms& _uniforms) {
     },
     "models                             print all the names of the models"));
 
-    _commands.push_back(Command("culling", [&](const std::string& _line){ 
+    _commands.push_back(Command("blending", [&](const std::string& _line){ 
         std::vector<std::string> values = split(_line,',');
         if (values.size() == 1) {
-            if (getCulling() == NONE) {
-                std::cout << "none" << std::endl;
-            }
-            else if (getCulling() == FRONT) {
-                std::cout << "front" << std::endl;
-            }
-            else if (getCulling() == BACK) {
-                std::cout << "back" << std::endl;
-            }
-            else if (getCulling() == BOTH) {
-                std::cout << "both" << std::endl;
-            }
+            if (getBlend() == ALPHA) std::cout << "alpha" << std::endl;
+            else if (getBlend() == ADD) std::cout << "add" << std::endl;
+            else if (getBlend() == MULTIPLY) std::cout << "multiply" << std::endl;
+            else if (getBlend() == SCREEN) std::cout << "screen" << std::endl;
+            else if (getBlend() == SUBSTRACT) std::cout << "substract" << std::endl;
+            
             return true;
         }
         else if (values.size() == 2) {
-            if (values[1] == "none") {
-                setCulling(NONE);
-            }
-            else if (values[1] == "front") {
-                setCulling(FRONT);
-            }
-            else if (values[1] == "back") {
-                setCulling(BACK);
-            }
-            else if (values[1] == "both") {
-                setCulling(BOTH);
-            }
+            if (values[1] == "alpha") setBlend(ALPHA);
+            else if (values[1] == "add") setBlend(ADD);
+            else if (values[1] == "multiply") setBlend(MULTIPLY);
+            else if (values[1] == "screen") setBlend(SCREEN);
+            else if (values[1] == "substract") setBlend(SUBSTRACT);
+
+            return true;
+        }
+
+        return false;
+    },
+    "blending[,<alpha|add|multiply|screen|substract>]   get or set the blendign modes"));
+
+    _commands.push_back(Command("culling", [&](const std::string& _line){ 
+        std::vector<std::string> values = split(_line,',');
+        if (values.size() == 1) {
+            if (getCulling() == NONE) std::cout << "none" << std::endl;
+            else if (getCulling() == FRONT) std::cout << "front" << std::endl;
+            else if (getCulling() == BACK) std::cout << "back" << std::endl;
+            else if (getCulling() == BOTH) std::cout << "both" << std::endl;
+
+            return true;
+        }
+        else if (values.size() == 2) {
+            if (values[1] == "none") setCulling(NONE);
+            else if (values[1] == "front") setCulling(FRONT);
+            else if (values[1] == "back") setCulling(BACK);
+            else if (values[1] == "both") setCulling(BOTH);
+
             return true;
         }
 
@@ -165,6 +177,7 @@ void Scene::setup(CommandList& _commands, Uniforms& _uniforms) {
             std::vector<std::string> values = split(_line,',');
             if (values.size() == 2) {
                 m_dynamicShadows = (values[1] == "on");
+                return true;
             }
         }
         return false;
@@ -302,6 +315,7 @@ void Scene::setup(CommandList& _commands, Uniforms& _uniforms) {
                 else {
                     m_floor_subd_target = toInt(values[1]);
                 }
+                return true;
             }
         }
         return false;
@@ -318,6 +332,7 @@ void Scene::setup(CommandList& _commands, Uniforms& _uniforms) {
             std::vector<std::string> values = split(_line,',');
             if (values.size() == 2) {
                 showGrid = values[1] == "on";
+                return true;
             }
         }
         return false;
@@ -334,6 +349,7 @@ void Scene::setup(CommandList& _commands, Uniforms& _uniforms) {
             std::vector<std::string> values = split(_line,',');
             if (values.size() == 2) {
                 showAxis = values[1] == "on";
+                return true;
             }
         }
         return false;
@@ -350,6 +366,7 @@ void Scene::setup(CommandList& _commands, Uniforms& _uniforms) {
             std::vector<std::string> values = split(_line,',');
             if (values.size() == 2) {
                 showBBoxes = values[1] == "on";
+                return true;
             }
         }
         return false;
@@ -496,6 +513,36 @@ void Scene::render(Uniforms& _uniforms) {
     // Begining of DEPTH for 3D 
     glEnable(GL_DEPTH_TEST);
 
+    if (m_blend != 0) {
+        switch (m_blend) {
+            case 1: // Add
+                glEnable(GL_BLEND);
+                glBlendEquation(GL_FUNC_ADD);
+                glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+                break;
+
+            case 2: // Multiply
+                glEnable(GL_BLEND);
+                glBlendEquation(GL_FUNC_ADD);
+                glBlendFunc(GL_DST_COLOR, GL_ONE_MINUS_SRC_ALPHA /* GL_ZERO or GL_ONE_MINUS_SRC_ALPHA */);
+                break;
+
+            case 3: // Screen
+                glEnable(GL_BLEND);
+                glBlendEquation(GL_FUNC_ADD);
+                glBlendFunc(GL_ONE_MINUS_DST_COLOR, GL_ONE);
+                break;
+
+            case 4: // Substract
+                glEnable(GL_BLEND);
+                glBlendEquation(GL_FUNC_REVERSE_SUBTRACT);
+                glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+                break;
+            default:
+			    break;
+	    }
+    }
+
     if (_uniforms.getCamera().bChange || m_origin.bChange)
         m_mvp = _uniforms.getCamera().getProjectionViewMatrix() * m_origin.getTransformMatrix(); 
     
@@ -519,6 +566,12 @@ void Scene::render(Uniforms& _uniforms) {
         m_models[i]->render(_uniforms, m_mvp);
 
     glDisable(GL_DEPTH_TEST);
+
+    if (m_blend != 0) {
+        glEnable(GL_BLEND);
+        glBlendEquation(GL_FUNC_ADD);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    }
 
     if (m_culling != 0)
         glDisable(GL_CULL_FACE);
