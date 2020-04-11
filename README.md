@@ -43,6 +43,7 @@ GlslViewer gives support to:
 * **Convensions**: over all GlslViewer is designed to be flexible, that means that sticks very close to GLSL language. There is not extra languages or meta data on top. The only conventions comes on the native uniform names and defines GlslViewer use to send information like time, resolution, lights, vertex attributes, material properties, platform type, shadowmap name, etc. 
     * [Defines](https://github.com/patriciogonzalezvivo/glslViewer/wiki/GlslViewer-DEFINES)
     * [Uniforms](https://github.com/patriciogonzalezvivo/glslViewer/wiki/GlslViewer-UNIFORMS)
+    * [Multiple buffers, background and postprocessing render pass](https://github.com/patriciogonzalezvivo/glslViewer/wiki/Multiple-render-passes-and-Buffers)
 * [Python wrapper](https://github.com/patriciogonzalezvivo/glslViewer/wiki/Python-wrapper-for-GlslViewer)
 
 
