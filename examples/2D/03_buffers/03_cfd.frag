@@ -1,4 +1,6 @@
-// Pseudo fluids, heavily inspired by flockaroo's single-pass CFD
+// Pseudo fluids, Made by Keijiro Takahashi (@_kzr), and 
+// heavily based on Florian Berger's (@flockaroo) single-pass CFD
+// 
 // https://www.shadertoy.com/view/MdKXRy
 
 uniform sampler2D   u_buffer0;
