@@ -40,7 +40,6 @@ int fileChanged;
 // Console elements
 CommandList commands;
 std::mutex  consoleMutex;
-std::string outputFile      = "";
 std::vector<std::string> cmds_arguments;    // Execute commands
 bool        execute_exit    = false;
 
@@ -102,8 +101,6 @@ void printUsage(char * executableName) {
     std::cerr << "// [-I<include_folder>] - add an include folder to default for #include files" << std::endl;
     std::cerr << "// [-D<define>] - add system #defines directly from the console argument" << std::endl;
     std::cerr << "// [-p <osc_port>] - open OSC listening port" << std::endl;
-    std::cerr << "// [-o <file>.(png,jpg,tga,bmp,hdr)] - save the viewport to an image file before exit" << std::endl;
-    std::cerr << "// [-s/--sec <seconds>] - exit app after a specific amount of seconds" << std::endl;
     std::cerr << "// [-e/-E <command>] - execute command when start. Multiple -e flags can be chained" << std::endl;
     std::cerr << "// [-v/--version] - return glslViewer version" << std::endl;
     std::cerr << "// [--verbose] - turn verbose outputs on" << std::endl;
@@ -434,18 +431,12 @@ void declareCommands() {
     "cursor[,on|off]                show/hide cursor", false));
 
     commands.push_back(Command("screenshot", [&](const std::string& _line){ 
-        if (_line == "screenshot" && outputFile != "") {
-            sandbox.screenshotFile = outputFile;
+        std::vector<std::string> values = split(_line,',');
+        if (values.size() == 2) {
+            consoleMutex.lock();
+            sandbox.screenshotFile = values[1];
+            consoleMutex.unlock();
             return true;
-        }
-        else {
-            std::vector<std::string> values = split(_line,',');
-            if (values.size() == 2) {
-                consoleMutex.lock();
-                sandbox.screenshotFile = values[1];
-                consoleMutex.unlock();
-                return true;
-            }
         }
         return false;
     },
@@ -612,7 +603,6 @@ int main(int argc, char **argv){
     initGL (windowPosAndSize, windowStyle);
 
     struct stat st;                         // for files to watch
-    float       timeLimit       = -1.0f;    // Time limit
     int         textureCounter  = 0;        // Number of textures to load
     bool        vFlip           = true;     // Flip state
 
@@ -638,29 +628,6 @@ int main(int argc, char **argv){
         }
         else if ( argument == "--fxaa" ) {
             sandbox.fxaa = true;
-        }
-        else if ( argument == "-s" || argument == "--sec" ) {
-            if(++i < argc) {
-                argument = std::string(argv[i]);
-                timeLimit = toFloat(argument);
-                std::cout << "// Will exit in " << timeLimit << " seconds." << std::endl;
-            }
-            else
-                std::cout << "Argument '" << argument << "' should be followed by <seconds>. Skipping argument." << std::endl;
-        }
-        else if ( argument == "-o" ) {
-            if(++i < argc) {
-                argument = std::string(argv[i]);
-                if ( haveExt(argument, "png" )) {
-                    outputFile = argument;
-                    std::cout << "// Will save screenshot to " << outputFile  << " on exit." << std::endl;
-                }
-                else {
-                    std::cerr << "At the moment screenshots only support PNG formats" << std::endl;
-                }
-            }
-            else
-                std::cout << "Argument '" << argument << "' should be followed by a <file>. Skipping argument." << std::endl;
         }
         else if ( argument== "-p" || argument == "--port" ) {
             if(++i < argc)
@@ -845,12 +812,6 @@ int main(int argc, char **argv){
     while ( isGL() && bRun.load() ) {
         // Update
         updateGL();
-
-        // Calculate if timeout required
-        if ( timeLimit >= 0.0 && getTime() >= timeLimit ) {
-            timeOut = true;
-            sandbox.screenshotFile = outputFile;
-        }
 
         glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
