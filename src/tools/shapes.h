@@ -4,8 +4,6 @@
 #include "../types/mesh.h"
 #include "../types/rectangle.h"
 
-
-
 Mesh line(const glm::vec3 &_a, const glm::vec3 &_b);
 
 Mesh lineTo(const glm::vec3 &_a, const glm::vec3 &_dir, float _size);

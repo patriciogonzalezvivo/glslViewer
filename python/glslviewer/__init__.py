@@ -89,10 +89,6 @@ class GlslViewer:
         if 'extra_arguments' in options:
             self.cmd.append(options['extra_arguments'])
 
-        if 'output' in options:
-            self.cmd.append('-o')
-            self.cmd.append(options['output'])
-
         if 'defines' in options:
             for define in options['defines']:
                 self.cmd.append('-D' + str(define))
