@@ -83,6 +83,7 @@ protected:
     // Camera
     BlendMode           m_blend;
     CullingMode         m_culling;
+    bool                m_depth_test;
     
     // Ligth
     Vbo*                m_lightUI_vbo;
