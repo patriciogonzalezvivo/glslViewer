@@ -133,7 +133,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
             if (values.size() == 2) {
                 m_showPasses = (values[1] == "on");
                 m_showTextures = (values[1] == "on");
-                m_histogram = (values[1] == "on");
+                // m_histogram = (values[1] == "on");
                 if (geom_index != -1) {
                     m_scene.showGrid = (values[1] == "on");
                     m_scene.showAxis = (values[1] == "on");
