@@ -8,7 +8,7 @@
 
 #include "io/pixels.h"
 #include "tools/text.h"
-#include "tools/shapes.h"
+#include "tools/geom.h"
 
 #include "glm/gtx/matrix_transform_2d.hpp"
 #include "glm/gtx/rotate_vector.hpp"

@@ -2,7 +2,6 @@
 
 #include "tools/text.h"
 #include "tools/geom.h"
-#include "tools/shapes.h"
 
 Model::Model():
     m_model_vbo(nullptr), m_bbox_vbo(nullptr), 

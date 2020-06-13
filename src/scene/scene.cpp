@@ -11,7 +11,6 @@
 #include "io/fs.h"
 #include "tools/geom.h"
 #include "tools/text.h"
-#include "tools/shapes.h"
 
 #include "shaders/light_ui.h"
 #include "shaders/cubemap.h"
