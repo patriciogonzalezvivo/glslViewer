@@ -572,7 +572,7 @@ std::string Sandbox::getSource(ShaderType _type) const {
     else return m_vert_source;
 }
 
-int Sandbox::getRecordedPorcentage() {
+int Sandbox::getRecordedPercentage() {
     return ((m_record_head - m_record_start) / (m_record_end - m_record_start)) * 100;
 }
 

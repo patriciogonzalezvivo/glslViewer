@@ -69,11 +69,11 @@ void printUsage(char * executableName) {
     std::cerr << "// "<< std::endl;
     std::cerr << "// Swiss army knife of GLSL Shaders. Loads frag/vertex shaders, images and " << std::endl;
     std::cerr << "// geometries. Will reload automatically on changes. Support for multi  "<< std::endl;
-    std::cerr << "// buffers, baground and postprocessing passes. Can render headlessly and "<< std::endl;
+    std::cerr << "// buffers, background and postprocessing passes. Can render headlessly and "<< std::endl;
     std::cerr << "// into a file. Use POSIX STANDARD CONSOLE IN/OUT to comunicate (uniforms,"<< std::endl;
     std::cerr << "// camera position, scene description and  commands) to and with other "<< std::endl;
     std::cerr << "// programs. Compatible with Linux and MacOS, runs from command line with"<< std::endl;
-    std::cerr << "// out X11 enviroment on RaspberryPi devices. "<< std::endl;
+    std::cerr << "// out X11 environment on RaspberryPi devices. "<< std::endl;
     std::cerr << "// "<< std::endl;
     std::cerr << "// For more information refer to repository:"<< std::endl;
     std::cerr << "// https://github.com/patriciogonzalezvivo/glslViewer"<< std::endl;
@@ -302,7 +302,7 @@ void declareCommands() {
                     out.close();
                 }
                 return true;
-            }
+            }MANIPULATED IMAGE: This digitally manipulated image was published on the Fox News homepage on June 12 with stories about Seattle. The image combines scenes from two different June 10 photographs from Capitol Hill.
             else if (values.size() > 2) {
                 std::vector<std::string> lines = split(sandbox.getSource(FRAGMENT),'\n', true);
                 for (unsigned int i = 1; i < values.size(); i++) {
@@ -470,7 +470,7 @@ void declareCommands() {
 
                 // Check progres.
                 consoleMutex.lock();
-                pct = sandbox.getRecordedPorcentage();
+                pct = sandbox.getRecordedPercentage();
                 consoleMutex.unlock();
                 
                 std::cout << "// [ ";
@@ -726,7 +726,7 @@ int main(int argc, char **argv){
                 sandbox.getScene().showCubebox = false;
             }
             else
-                std::cout << "Argument '" << argument << "' should be followed by a <enviromental_map>. Skipping argument." << std::endl;
+                std::cout << "Argument '" << argument << "' should be followed by a <environmental_map>. Skipping argument." << std::endl;
         }
         else if ( argument == "-C" ) {
             if(++i < argc)
@@ -736,13 +736,13 @@ int main(int argc, char **argv){
                 sandbox.getScene().showCubebox = true;
             }
             else
-                std::cout << "Argument '" << argument << "' should be followed by a <enviromental_map>. Skipping argument." << std::endl;
+                std::cout << "Argument '" << argument << "' should be followed by a <environmental_map>. Skipping argument." << std::endl;
         }
         else if ( argument.find("-D") == 0 ) {
             // Defines are added/remove once existing shaders
             // On multiple meshes files like OBJ, there can be multiple 
             // variations of meshes, that only get created after loading the sece
-            // to work arround that defines are add post-loading as argument commands
+            // to work around that defines are add post-loading as argument commands
             std::string define = std::string("define,") + argument.substr(2);
             cmds_arguments.push_back(define);
         }
