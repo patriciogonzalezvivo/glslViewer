@@ -474,7 +474,7 @@ bool Scene::loadGeometry(Uniforms& _uniforms, WatchFileList& _files, int _index,
         expandBoundingBox( m_models[i]->getMinBoundingBox(), min_v, max_v);
         expandBoundingBox( m_models[i]->getMaxBoundingBox(), min_v, max_v);
     }
-    m_area = glm::min(glm::length(min_v), glm::length(max_v));
+    m_area = glm::max(glm::length(min_v), glm::length(max_v));
     glm::vec3 centroid = (min_v + max_v) / 2.0f;
     m_origin.setPosition( -centroid );
     m_floor_height = min_v.y;
@@ -664,6 +664,7 @@ void Scene::renderBackground(Uniforms& _uniforms) {
         m_cubemap_vbo->render( &m_cubemap_shader );
     }
 }
+
 void Scene::renderFloor(Uniforms& _uniforms, const glm::mat4& _mvp) {
     if (m_floor_subd_target >= 0) {
 
