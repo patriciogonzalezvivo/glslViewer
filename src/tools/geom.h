@@ -45,28 +45,11 @@
 #endif
 
 //---------------------------------------- Geom
-int signValue(float _n);
 
-void wrapRad(double& _rad);
-void wrapDeg(float& _deg);
-
-void scale(glm::vec3& _vec, float _length);
-glm::vec3 getScaled(const glm::vec3& _vec, float _length);
-
-float getSize(const std::vector<glm::vec3>& _pts);
 float getArea(const std::vector<glm::vec3>& _pts);
 glm::vec3 getCentroid(const std::vector<glm::vec3>& _pts);
 void getBoundingBox(const std::vector<glm::vec3>& _pts, glm::vec3& _min, glm::vec3& _max);
 void expandBoundingBox(const std::vector<glm::vec3>& _pts, glm::vec3& _min, glm::vec3& _max);
 void expandBoundingBox(const glm::vec3& _pt, glm::vec3& _min, glm::vec3& _max);
 
-void simplify(std::vector<glm::vec3>& _pts, float _tolerance=0.3f);
-std::vector<glm::vec3> getSimplify(const std::vector<glm::vec3>& _pts, float _tolerance=0.3f);
-
-std::vector<glm::vec3> getConvexHull(std::vector<glm::vec3>& _pts);
-std::vector<glm::vec3> getConvexHull(const std::vector<glm::vec3>& _pts);
-
 void calcNormal(const glm::vec3& _v0, const glm::vec3& _v1, const glm::vec3& _v2, glm::vec3& _N);
-
-//---------------------------------------- Conversions
-float mapValue(const float& _value, const float& _inputMin, const float& _inputMax, const float& _outputMin, const float& _outputMax, bool _clamp = true );
