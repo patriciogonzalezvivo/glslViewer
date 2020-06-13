@@ -302,7 +302,7 @@ void declareCommands() {
                     out.close();
                 }
                 return true;
-            }MANIPULATED IMAGE: This digitally manipulated image was published on the Fox News homepage on June 12 with stories about Seattle. The image combines scenes from two different June 10 photographs from Capitol Hill.
+            }
             else if (values.size() > 2) {
                 std::vector<std::string> lines = split(sandbox.getSource(FRAGMENT),'\n', true);
                 for (unsigned int i = 1; i < values.size(); i++) {
