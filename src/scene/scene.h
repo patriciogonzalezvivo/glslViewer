@@ -22,6 +22,14 @@ enum CullingMode {
     BOTH = 3
 };
 
+enum BlendMode {
+    ALPHA = 0,       // Alpha is the default
+    ADD = 1,
+    MULTIPLY = 2,
+    SCREEN = 3,
+    SUBSTRACT = 4,
+};
+
 class Scene {
 public:
 
@@ -37,6 +45,9 @@ public:
     void            addDefine(const std::string& _define, const std::string& _value);
     void            delDefine(const std::string& _define);
     void            printDefines();
+
+    void            setBlend(BlendMode _blend) { m_blend = _blend; }
+    BlendMode       getBlend() { return m_blend; }
 
     void            setCulling(CullingMode _culling) { m_culling = _culling; }
     CullingMode     getCulling() { return m_culling; }
@@ -70,7 +81,9 @@ protected:
     float               m_area;
 
     // Camera
+    BlendMode           m_blend;
     CullingMode         m_culling;
+    bool                m_depth_test;
     
     // Ligth
     Vbo*                m_lightUI_vbo;

@@ -133,7 +133,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
             if (values.size() == 2) {
                 m_showPasses = (values[1] == "on");
                 m_showTextures = (values[1] == "on");
-                m_histogram = (values[1] == "on");
+                // m_histogram = (values[1] == "on");
                 if (geom_index != -1) {
                     m_scene.showGrid = (values[1] == "on");
                     m_scene.showAxis = (values[1] == "on");
@@ -1164,11 +1164,18 @@ void Sandbox::onScreenshot(std::string _file) {
     if (_file != "" && isGL()) {
         glBindFramebuffer(GL_FRAMEBUFFER, m_record_fbo.getId());
 
-        unsigned char* pixels = new unsigned char[getWindowWidth() * getWindowHeight()*4];
-        glReadPixels(0, 0, getWindowWidth(), getWindowHeight(), GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-        savePixels(_file, pixels, getWindowWidth(), getWindowHeight());
-        delete[] pixels;
-
+        if (getExt(_file) == "hdr") {
+            float* pixels = new float[getWindowWidth() * getWindowHeight()*4];
+            glReadPixels(0, 0, getWindowWidth(), getWindowHeight(), GL_RGBA, GL_FLOAT, pixels);
+            savePixelsHDR(_file, pixels, getWindowWidth(), getWindowHeight());
+        }
+        else {
+            unsigned char* pixels = new unsigned char[getWindowWidth() * getWindowHeight()*4];
+            glReadPixels(0, 0, getWindowWidth(), getWindowHeight(), GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+            savePixels(_file, pixels, getWindowWidth(), getWindowHeight());
+            delete[] pixels;
+        }
+    
         if (!m_record) {
             std::cout << "// Screenshot saved to " << _file << std::endl;
             std::cout << "// > ";

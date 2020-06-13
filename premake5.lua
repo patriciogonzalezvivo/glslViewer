@@ -12,22 +12,6 @@ solution "glslViewer"
     startproject("glslViewer")
 
 ------------------------------------------------------------------------
-project "rgbe"
-    
-    kind "StaticLib"
-
-    files 
-    {
-        "include/rgbe/**"
-    }
-
-    includedirs
-    {
-        "include/", 
-        "include/rgbe", 
-    }
-
-------------------------------------------------------------------------
 
 project "glew"
     
@@ -157,7 +141,7 @@ project "glslViewer"
 
     links 
     {
-        "oscpack","rgbe", "skylight", "glfw", "glew"
+        "oscpack", "skylight", "glfw", "glew"
     }
 
     debugdir("examples/3D/01_lighting")

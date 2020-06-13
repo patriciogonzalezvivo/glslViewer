@@ -67,8 +67,7 @@ typedef ssize_t socklen_t;
 #endif
 
 
-static void SockaddrFromIpEndpointName( struct sockaddr_in& sockAddr, const IpEndpointName& endpoint )
-{
+static void SockaddrFromIpEndpointName( struct sockaddr_in& sockAddr, const IpEndpointName& endpoint ) {
     std::memset( (char *)&sockAddr, 0, sizeof(sockAddr ) );
     sockAddr.sin_family = AF_INET;
 
@@ -84,8 +83,7 @@ static void SockaddrFromIpEndpointName( struct sockaddr_in& sockAddr, const IpEn
 }
 
 
-static IpEndpointName IpEndpointNameFromSockaddr( const struct sockaddr_in& sockAddr )
-{
+static IpEndpointName IpEndpointNameFromSockaddr( const struct sockaddr_in& sockAddr ) {
 	return IpEndpointName( 
 		(sockAddr.sin_addr.s_addr == INADDR_ANY) 
 			? IpEndpointName::ANY_ADDRESS 
@@ -97,7 +95,7 @@ static IpEndpointName IpEndpointNameFromSockaddr( const struct sockaddr_in& sock
 }
 
 
-class UdpSocket::Implementation{
+class UdpSocket::Implementation {
 	bool isBound_;
 	bool isConnected_;
 
@@ -143,8 +141,7 @@ public:
 #endif
 	}
 
-	IpEndpointName LocalEndpointFor( const IpEndpointName& remoteEndpoint ) const
-	{
+	IpEndpointName LocalEndpointFor( const IpEndpointName& remoteEndpoint ) const {
 		assert( isBound_ );
 
 		// first connect the socket to the remote server
@@ -165,14 +162,15 @@ public:
             throw std::runtime_error("unable to getsockname\n");
         }
         
-		if( isConnected_ ){
+		if (isConnected_) {
 			// reconnect to the connected address
 			
 			if (connect(socket_, (struct sockaddr *)&connectedAddr_, sizeof(connectedAddr_)) < 0) {
 				throw std::runtime_error("unable to connect udp socket\n");
 			}
 
-		}else{
+		}
+		else {
 			// unconnect from the remote address
 		
 			struct sockaddr_in unconnectSockAddr;
@@ -188,8 +186,7 @@ public:
 		return IpEndpointNameFromSockaddr( sockAddr );
 	}
 
-	void Connect( const IpEndpointName& remoteEndpoint )
-	{
+	void Connect( const IpEndpointName& remoteEndpoint ) {
 		SockaddrFromIpEndpointName( connectedAddr_, remoteEndpoint );
        
         if (connect(socket_, (struct sockaddr *)&connectedAddr_, sizeof(connectedAddr_)) < 0) {
@@ -199,23 +196,19 @@ public:
 		isConnected_ = true;
 	}
 
-	void Send( const char *data, std::size_t size )
-	{
+	void Send( const char *data, std::size_t size ) {
 		assert( isConnected_ );
-
         send( socket_, data, size, 0 );
 	}
 
-    void SendTo( const IpEndpointName& remoteEndpoint, const char *data, std::size_t size )
-	{
+    void SendTo( const IpEndpointName& remoteEndpoint, const char *data, std::size_t size ) {
 		sendToAddr_.sin_addr.s_addr = htonl( remoteEndpoint.address );
         sendToAddr_.sin_port = htons( remoteEndpoint.port );
 
         sendto( socket_, data, size, 0, (sockaddr*)&sendToAddr_, sizeof(sendToAddr_) );
 	}
 
-	void Bind( const IpEndpointName& localEndpoint )
-	{
+	void Bind( const IpEndpointName& localEndpoint ) {
 		struct sockaddr_in bindSockAddr;
 		SockaddrFromIpEndpointName( bindSockAddr, localEndpoint );
 
@@ -228,8 +221,7 @@ public:
 
 	bool IsBound() const { return isBound_; }
 
-    std::size_t ReceiveFrom( IpEndpointName& remoteEndpoint, char *data, std::size_t size )
-	{
+    std::size_t ReceiveFrom( IpEndpointName& remoteEndpoint, char *data, std::size_t size ) {
 		assert( isBound_ );
 
 		struct sockaddr_in fromAddr;
@@ -237,7 +229,7 @@ public:
              	 
         ssize_t result = recvfrom(socket_, data, size, 0,
                     (struct sockaddr *) &fromAddr, (socklen_t*)&fromAddrLen);
-		if( result < 0 )
+		if ( result < 0 )
 			return 0;
 
 		remoteEndpoint.address = ntohl(fromAddr.sin_addr.s_addr);
@@ -249,8 +241,7 @@ public:
 	int Socket() { return socket_; }
 };
 
-UdpSocket::UdpSocket()
-{
+UdpSocket::UdpSocket() {
 	impl_ = new Implementation();
 }
 

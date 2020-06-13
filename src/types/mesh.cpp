@@ -299,7 +299,7 @@ bool Mesh::computeTangents() {
         const glm::vec3 &t = tan1[i];
         
         // Gram-Schmidt orthogonalize
-        glm::vec3 tangent = t - n * glm::normalize( glm::dot(n, t));
+        glm::vec3 tangent = t - n * glm::dot(n, t);
 
         // Calculate handedness
         float hardedness = (glm::dot( glm::cross(n, t), tan2[i]) < 0.0f) ? -1.0f : 1.0f;
