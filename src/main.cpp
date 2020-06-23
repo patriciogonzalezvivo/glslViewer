@@ -82,7 +82,7 @@ void printUsage(char * executableName) {
     std::cerr << "// "<< std::endl;
     std::cerr << "// Arguments:" << std::endl;
     std::cerr << "// <shader>.frag [<shader>.vert] - load shaders" << std::endl;
-    std::cerr << "// [<mesh>.(obj/.ply)] - load obj or ply file" << std::endl;
+    std::cerr << "// [<mesh>.(obj/ply/stl/glb/gltf)] - load obj/ply/stl/glb/gltf file" << std::endl;
     std::cerr << "// [-vFlip] - all textures after will be flipped vertically" << std::endl;
     std::cerr << "// [<texture>.(png/tga/jpg/bmp/psd/gif/hdr)] - load and assign texture to uniform order" << std::endl;
     std::cerr << "// [-<uniformName> <texture>.(png/tga/jpg/bmp/psd/gif/hdr)] - add textures associated with different uniform sampler2D names" << std::endl;
@@ -689,6 +689,7 @@ int main(int argc, char **argv){
         }
         else if ( sandbox.geom_index == -1 && ( haveExt(argument,"ply") || haveExt(argument,"PLY") ||
                                                 haveExt(argument,"obj") || haveExt(argument,"OBJ") ||
+                                                haveExt(argument,"stl") || haveExt(argument,"STL") ||
                                                 haveExt(argument,"glb") || haveExt(argument,"GLB") ||
                                                 haveExt(argument,"gltf") || haveExt(argument,"GLTF") ) ) {
             if ( stat(argument.c_str(), &st) != 0) {

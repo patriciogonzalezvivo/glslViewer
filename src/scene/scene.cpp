@@ -19,6 +19,7 @@
 #include "../io/ply.h"
 #include "../io/obj.h"
 #include "../io/gltf.h"
+#include "../io/stl.h"
 
 Scene::Scene(): 
     // Debug State
@@ -453,10 +454,8 @@ bool Scene::loadGeometry(Uniforms& _uniforms, WatchFileList& _files, int _index,
     std::string ext = getExt(_files[_index].path);
 
     // If the geometry is a PLY it's easy because is only one mesh
-    if ( ext == "ply" || ext == "PLY" ) {
+    if ( ext == "ply" || ext == "PLY" )
         loadPLY(_uniforms, _files, m_materials, m_models, _index, _verbose);
-
-    }
 
     // If it's a OBJ could be more complicated because they can contain several meshes and materials
     else if ( ext == "obj" || ext == "OBJ" )
@@ -465,6 +464,10 @@ bool Scene::loadGeometry(Uniforms& _uniforms, WatchFileList& _files, int _index,
     // If it's a GLTF it's not just multiple meshes and materials but also nodes, lights and cameras
     else if ( ext == "glb" || ext == "GLB" || ext == "gltf" || ext == "GLTF" )
         loadGLTF(_uniforms, _files, m_materials, m_models, _index, _verbose);
+
+    // If it's a STL 
+    else if ( ext == "stl" || ext == "STL" )
+        loadSTL(_files, m_materials, m_models, _index, _verbose);
 
     // Calculate the total area
     glm::vec3 min_v;
