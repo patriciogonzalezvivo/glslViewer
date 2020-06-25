@@ -48,7 +48,7 @@ bool loadSTL(WatchFileList& _files, Materials& _materials, Models& _models, int 
     
         size_t num_faces = *reinterpret_cast<unsigned int*>(buf);
         fseek(stl_file,0,SEEK_END);
-        int file_size = ftell(stl_file);
+        size_t file_size = ftell(stl_file);
         if (file_size == 80 + 4 + (4*12 + 2) * num_faces) is_ascii = false;
         else is_ascii = true;
     }
@@ -77,14 +77,13 @@ bool loadSTL(WatchFileList& _files, Materials& _materials, Models& _models, int 
             char facet[LINE_MAX];
             char normal[LINE_MAX];
 
-            // Triangle tri;
             glm::vec3 n;
 
             double nd[3];
             ret = fscanf(stl_file,"%s %s %lg %lg %lg", facet, normal, nd, nd+1, nd+2);
             n.x = nd[0];
-            n.y = nd[1];
-            n.z = nd[2];
+            n.y = nd[2];
+            n.z = -nd[1];
 
             if (std::string("endsolid") == facet)
                 break;
@@ -100,9 +99,9 @@ bool loadSTL(WatchFileList& _files, Materials& _materials, Models& _models, int 
             }
             // copy casts to Type
             n.x = nd[0]; 
-            n.y = nd[1];
-            n.z = nd[2];
-            // tri.setNormals(n, n, n);
+            n.y = nd[2];
+            n.z = -nd[1];
+
             mesh.addNormal(n);
             mesh.addNormal(n);
             mesh.addNormal(n);
@@ -113,7 +112,6 @@ bool loadSTL(WatchFileList& _files, Materials& _materials, Models& _models, int 
                 goto close_false;
             }
             
-            // size_t index = 0;
             while(true) {
                 char word[LINE_MAX];
                 int ret = fscanf(stl_file, "%s", word);
@@ -127,16 +125,13 @@ bool loadSTL(WatchFileList& _files, Materials& _materials, Models& _models, int 
                         std::cerr << "IOError: bad format (3)." << std::endl;
                         goto close_false;
                     }
-                    // tri.setVertex(index, glm::vec3(vd[0], vd[1], vd[2]));
-                    // index++;
-                    mesh.addVertex(glm::vec3(vd[0], vd[1], vd[2]));
+                    mesh.addVertex(glm::vec3(vd[0], vd[2], -vd[1]));
                 }
                 else {
                     std::cerr << "IOError: bad format (4)." << std::endl;
                     goto close_false;
                 }
             }
-            // _mesh.addTriangle(tri);
 
             char endfacet[LINE_MAX];
             ret = fscanf(stl_file,"%s",endfacet);
@@ -165,21 +160,16 @@ bool loadSTL(WatchFileList& _files, Materials& _materials, Models& _models, int 
             goto close_false;
         }
 
-        // std::vector<Triangle> triangles;
-        // triangles.resize(num_tri);
         for(int t = 0; t < (int)num_tri; t++) {
-            // Triangle tri;
-
             // Read normal
             glm::vec3 n;
             if (fread(&n.x, sizeof(float), 3, stl_file) != 3) {
                 std::cerr << "IOError: bad format (8)." << std::endl;
                 goto close_false;
             }
-            // tri.setNormals(n, n, n);
-            mesh.addNormal(n);
-            mesh.addNormal(n);
-            mesh.addNormal(n);
+            mesh.addNormal(glm::vec3(n.x, n.z, -n.y));
+            mesh.addNormal(glm::vec3(n.x, n.z, -n.y));
+            mesh.addNormal(glm::vec3(n.x, n.z, -n.y));
 
             // Read each vertex
             for (size_t c = 0; c < 3; c++) {
@@ -188,8 +178,7 @@ bool loadSTL(WatchFileList& _files, Materials& _materials, Models& _models, int 
                     std::cerr << "IOError: bad format (9)." << std::endl;
                     goto close_false;
                 }
-                // tri.setVertex(c, v);
-                mesh.addVertex(v);
+                mesh.addVertex(glm::vec3(v.x, v.z, -v.y));
             }
             
             // Read attribute size
