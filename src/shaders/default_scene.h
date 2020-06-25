@@ -1927,9 +1927,17 @@ vec4 pbr(const Material _mat) {
 void main(void) {
     Material mat = MaterialInit();
 
-    // vec2 st = gl_FragCoord.xy/u_resolution.xy;
-    // mat.metallic = step(0.5, st.y);
-    // mat.roughness = step(0.5, st.x);
+#ifdef FLOOR 
+    vec2 st = v_texcoord;
+    st *= 10.0;
+    vec4 t = vec4(  fract(st),
+                    floor(st));
+    vec2 c = mod(t.zw, 2.0);
+    float p = abs(c.x-c.y) * 0.5;
+             
+    mat.baseColor += p;
+    mat.roughness = 0.5 + p * 0.5;
+#endif
     
     gl_FragColor = pbr(mat);
 }
