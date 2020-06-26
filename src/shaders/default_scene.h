@@ -1928,8 +1928,8 @@ void main(void) {
     Material mat = MaterialInit();
 
 #ifdef FLOOR 
-    vec2 st = v_texcoord;
-    st *= 10.0;
+    vec2 st = v_texcoord - 0.5;
+    st *= 7.0;
     vec4 t = vec4(  fract(st),
                     floor(st));
     vec2 c = mod(t.zw, 2.0);

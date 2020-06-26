@@ -420,7 +420,8 @@ void Scene::delDefine(const std::string& _define) {
 
 void Scene::setCubeMap( SkyBox* _skybox ) { 
     if (m_cubemap_skybox)
-        delete m_cubemap_skybox;
+        if (m_cubemap_skybox != _skybox)
+            delete m_cubemap_skybox;
 
     m_cubemap_skybox = _skybox; 
     m_cubemap_skybox->change = true;

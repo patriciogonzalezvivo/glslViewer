@@ -6,3 +6,5 @@
 override_dh_auto_install:
 	install -D -m 0755 bin/glslViewer $$(pwd)/debian/glslviewer/usr/bin/glslViewer
 	install -D -m 0755 bin/glslLoader $$(pwd)/debian/glslviewer/usr/bin/glslLoader
+	install -D -m 0755 glslViewer.png $$(pwd)/debian/glslviewer/usr/share/pixmaps/glslViewer.png
+	install -D -m 0755 glslViewer.desktop $$(pwd)/debian/glslviewer/usr/share/applications/glslViewer.desktop

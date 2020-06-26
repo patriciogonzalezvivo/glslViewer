@@ -6,7 +6,7 @@ struct SkyBox {
     SkyBox() {
         groundAlbedo = glm::vec3(0.25);
         azimuth = 0.0f;
-        elevation = 0.785398f;
+        elevation = 0.3;
         turbidity = 4.0f;
     }
 
