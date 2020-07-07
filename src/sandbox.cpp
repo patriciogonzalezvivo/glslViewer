@@ -179,35 +179,6 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     },
     "defines                        return a list of active defines", false));
     
-    _commands.push_back( Command("define,", [&](const std::string& _line){ 
-        std::vector<std::string> values = split(_line,',');
-        if (values.size() == 2) {
-            std::vector<std::string> v = split(values[1],' ');
-            if (v.size() > 1)
-                addDefine( v[0], v[1] );
-            else
-                addDefine( v[0] );
-                
-            return true;
-        }
-        else if (values.size() == 3) {
-            addDefine( values[1], values[2] );
-            return true;
-        }
-        return false;
-    },
-    "define,<KEYWORD>               add a define to the shader", false));
-
-    _commands.push_back( Command("undefine,", [&](const std::string& _line){ 
-        std::vector<std::string> values = split(_line,',');
-        if (values.size() == 2) {
-            delDefine( values[1] );
-            return true;
-        }
-        return false;
-    },
-    "undefine,<KEYWORD>             remove a define on the shader", false));
-
     _commands.push_back(Command("uniforms", [&](const std::string& _line){ 
         uniforms.print(_line == "uniforms,all");
         return true;

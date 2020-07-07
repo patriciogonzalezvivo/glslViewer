@@ -249,6 +249,61 @@ void declareCommands() {
     },
     "files                          return a list of files.", false));
 
+    commands.push_back( Command("define,", [&](const std::string& _line){ 
+        std::vector<std::string> values = split(_line,',');
+        bool change = false;
+        if (values.size() == 2) {
+            std::vector<std::string> v = split(values[1],' ');
+            if (v.size() > 1)
+                sandbox.addDefine( v[0], v[1] );
+            else
+                sandbox.addDefine( v[0] );
+            change = true;
+        }
+        else if (values.size() == 3) {
+            sandbox.addDefine( values[1], values[2] );
+            change = true;
+        }
+
+        if (change) {
+            fullFps = true;
+            for (unsigned int i = 0; i < files.size(); i++) {
+                if (files[i].type == FRAG_SHADER ||
+                    files[i].type == VERT_SHADER ) {
+                        filesMutex.lock();
+                        fileChanged = i;
+                        filesMutex.unlock();
+                        pal_sleep(micro_wait * 10.0);
+                }
+            }
+            fullFps = false;
+        }
+        return change;
+    },
+    "define,<KEYWORD>               add a define to the shader", false));
+
+    commands.push_back( Command("undefine,", [&](const std::string& _line){ 
+        std::vector<std::string> values = split(_line,',');
+        if (values.size() == 2) {
+            sandbox.delDefine( values[1] );
+            fullFps = true;
+            for (unsigned int i = 0; i < files.size(); i++) {
+                if (files[i].type == FRAG_SHADER ||
+                    files[i].type == VERT_SHADER ) {
+                        filesMutex.lock();
+                        fileChanged = i;
+                        filesMutex.unlock();
+                        pal_sleep(micro_wait * 10.0);
+                }
+            }
+            fullFps = false;
+            return true;
+        }
+        return false;
+    },
+    "undefine,<KEYWORD>             remove a define on the shader", false));
+
+
     commands.push_back(Command("reload", [&](const std::string& _line){ 
         if (_line == "reload" || _line == "reload,all") {
             fullFps = true;

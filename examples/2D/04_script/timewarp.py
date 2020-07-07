@@ -40,13 +40,13 @@ def normalize( A, div=None ):
     B = B + 0.5
     return np.clip(B, 0.0, 1.0)
 
-def opticalFlow( frame1, frame2, div, flow=None, levels=1, iterations=2, winsize=5 ):
-    flow = cv2.calcOpticalFlowFarneback(    frame1, frame2, flow=flow,
+def opticalFlow( img1, img2, frame, flow=None, levels=1, iterations=2, winsize=5):
+    flow = cv2.calcOpticalFlowFarneback(    img1, img2, flow=flow,
                                             pyr_scale=0.5, levels=levels, winsize=winsize,
                                             iterations=iterations,
                                             poly_n=5, poly_sigma=1.1, flags=0 )
 
-    w,h = frame1.shape[:2]
+    w,h = img1.shape[:2]
     rgb = np.zeros((w, h, 3))
 
     div_x = max(abs(np.min(flow[..., 0])), np.max(flow[..., 0]))
@@ -54,10 +54,11 @@ def opticalFlow( frame1, frame2, div, flow=None, levels=1, iterations=2, winsize
     div = max(div_x, div_y)
 
     print("Norm divider: ", div)
+    frame['div'] = div
 
     rgb[:,:,0] = normalize(flow[..., 0], div)
     rgb[:,:,1] = normalize(flow[..., 1], div)
-    rgb[:,:,2] = frame1[:,:]/255.0
+    rgb[:,:,2] = img1[:,:]/255.0
 
     return rgb
 
@@ -88,7 +89,7 @@ def interpolate(A_flow, A_div, A,
                 B_flow, B_div, B, 
                 sec, target_folder, start_index, width, height):
     
-    cmd = f"glslViewer timewarp.frag --headless {A_flow} {A} {B_flow} {B} -w {width} -h {height} -e u_A,{A_div} -e u_B,{B_div} -E sequence,0,{sec}"
+    cmd = f"offload-glx glslViewer timewarp.frag --headless {A_flow} {A} {B_flow} {B} -w {width} -h {height} -e u_A,{A_div} -e u_B,{B_div} -E sequence,0,{sec}"
     print(cmd)
     subprocess.call(cmd, shell=True) 
 
@@ -139,15 +140,20 @@ if __name__ == '__main__':
     for index in range(len(frames)-1):
         A = cv2.imread(frames[index]['rgb'], 0)
         B = cv2.imread(frames[index+1]['rgb'], 0)
-        # A = cv2.pyrDown(A)
-        # B = cv2.pyrDown(B)
-        O = opticalFlow(A, B, frames[index]['div'],winsize=10)
+        A = cv2.pyrDown(A)
+        B = cv2.pyrDown(B)
+        O = opticalFlow(A, B, frames[index])
         saveImage(O, frames[index]['flow'])
     
+    # Interpolate pairs of frames using velocities from optical flow
     frame = 0
     index = 0
     shader = None
     for A, B in zip(frames[:-1], frames[1:]):
+        if frame == len(frames)-2:
+            break
         print('Frame:', str(frame) + '/' + str(len(frames)))
-        index = interpolate( A['flow'], A['div'], A['rgb'],  B['flow'], B['div'], B['rgb'], 1, FOLDER_SUB_FRAMES, index, WIDTH, HEIGHT)
+        index = interpolate(A['flow'], A['div'], A['rgb'],  
+                            B['flow'], B['div'], B['rgb'], 
+                            1, FOLDER_SUB_FRAMES, index, WIDTH, HEIGHT)
         frame += 1
