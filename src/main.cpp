@@ -53,6 +53,7 @@ std::string header = name + " " + version + " by Patricio Gonzalez Vivo ( patric
 const unsigned int micro_wait = REST_SEC * 1000000;
 bool fullFps = false;
 bool timeOut = false;
+bool screensaver = false;
 
 // Here is where all the magic happens
 Sandbox sandbox;
@@ -95,6 +96,7 @@ void printUsage(char * executableName) {
     std::cerr << "// [-h <pixels>] - set the height of the billboard" << std::endl;
     std::cerr << "// [-f|--fullscreen] - load the window in fullscreen" << std::endl;
     std::cerr << "// [-l|--life-coding] - live code mode, where the billboard is allways visible" << std::endl;
+    std::cerr << "// [-ss|--screensaver] - screensaver mode, any pressed key will exit" << std::endl;
     std::cerr << "// [--headless] - headless rendering. Very useful for making images or benchmarking." << std::endl;
     std::cerr << "// [--nocursor] - hide cursor" << std::endl;
     std::cerr << "// [--fxaa] - set FXAA as postprocess filter" << std::endl;
@@ -643,6 +645,11 @@ int main(int argc, char **argv){
             windowStyle = ALLWAYS_ON_TOP;
         #endif
         }
+        else if (   std::string(argv[i]) == "-ss" ||
+                    std::string(argv[i]) == "--screensaver") {
+            windowStyle = FULLSCREEN;
+            screensaver = true;
+        }
         
     }
 
@@ -923,9 +930,15 @@ int main(int argc, char **argv){
 // Events
 //============================================================================
 void onKeyPress (int _key) {
-    if (_key == 'q' || _key == 'Q') {
+    if (screensaver) {
         bRun = false;
         bRun.store(false);
+    }
+    else {
+        if (_key == 'q' || _key == 'Q') {
+            bRun = false;
+            bRun.store(false);
+        }
     }
 }
 
