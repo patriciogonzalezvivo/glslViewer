@@ -1,3 +1,15 @@
+glslviewer (1.6.1) UNRELEASED; urgency=medium
+
+A lot of new things but the biggest one are
+
+  * Support for STL models
+
+  * Screensaver mode
+
+  * bug fixes
+
+ -- Patricio Gonzalez Vivo <patricio@ubuntu>  Wed, 23 Oct 2019 02:45:12 -0800
+
 glslviewer (1.6) UNRELEASED; urgency=medium
 
 A lot of new things but the biggest one are
