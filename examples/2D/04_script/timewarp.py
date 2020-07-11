@@ -40,7 +40,7 @@ def normalize( A, div=None ):
     B = B + 0.5
     return np.clip(B, 0.0, 1.0)
 
-def opticalFlow( img1, img2, frame, flow=None, levels=1, iterations=2, winsize=5):
+def opticalFlow( img1, img2, frame, flow=None, levels=5, iterations=5, winsize=11):
     flow = cv2.calcOpticalFlowFarneback(    img1, img2, flow=flow,
                                             pyr_scale=0.5, levels=levels, winsize=winsize,
                                             iterations=iterations,
@@ -138,10 +138,15 @@ if __name__ == '__main__':
 
     # Make optical flow images
     for index in range(len(frames)-1):
-        A = cv2.imread(frames[index]['rgb'], 0)
-        B = cv2.imread(frames[index+1]['rgb'], 0)
-        A = cv2.pyrDown(A)
-        B = cv2.pyrDown(B)
+        A = cv2.imread(frames[index]['rgb'])
+        B = cv2.imread(frames[index+1]['rgb'])
+
+        A = cv2.cvtColor(A, cv2.COLOR_BGR2GRAY)
+        B = cv2.cvtColor(B, cv2.COLOR_BGR2GRAY)
+
+        # A = cv2.pyrDown(A)
+        # B = cv2.pyrDown(B)
+
         O = opticalFlow(A, B, frames[index])
         saveImage(O, frames[index]['flow'])
     

@@ -62,10 +62,12 @@ void main (void) {
     float pct = fract(time/cycle);
 
     vec2 A_DIR = gaussianBlur2D(u_tex0, st, pixel * 3., 9);
+    // A_DIR = texture2D(u_tex0, st).xy * 2.0 - 1.0;
     A_DIR *= vec2(-1.0, 1.0);
     A_DIR *= pixel * u_A * pct;
 
-    vec2 B_DIR = gaussianBlur2D(u_tex2, st, pixel * 3., 9);
+    vec2 B_DIR = gaussianBlur2D(u_tex2, st, pixel * 2., 9);
+    // B_DIR = texture2D(u_tex2, st).xy * 2.0 - 1.0;
     B_DIR *= vec2(-1.0, 1.0);
     B_DIR *= pixel * u_B * (1.0-pct);
 
@@ -74,7 +76,7 @@ void main (void) {
     color = mix(A_RGB, B_RGB, pct);
 
     // color = vec3((B_DIR * 10.0) * 0.5 + 0.5, 0.0);
-    color += step(pct, st.x) * step(st.y, 0.005);
+    color += step(st.x, pct) * step(st.y, 0.005);
 
     gl_FragColor = vec4(color,1.0);
 }
