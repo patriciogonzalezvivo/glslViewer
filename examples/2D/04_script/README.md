@@ -29,3 +29,5 @@ Then you can compile the final frames with ffmpeg:
 ```bash
 ffmpeg -i frames_final/%05d.png -pix_fmt yuv420p final.mp4
 ```
+
+[![Watch the video](https://img.youtube.com/vi/_REN7EdnES0/maxresdefault.jpg)](https://www.youtube.com/watch?v=_REN7EdnES0)
