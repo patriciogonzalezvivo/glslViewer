@@ -943,6 +943,10 @@ void onKeyPress (int _key) {
 }
 
 void onMouseMove(float _x, float _y) {
+    if (screensaver) {
+        bRun = false;
+        bRun.store(false);
+    }
 }
 
 void onMouseClick(float _x, float _y, int _button) {
