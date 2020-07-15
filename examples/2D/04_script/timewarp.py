@@ -6,8 +6,6 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-from glslviewer import GlslViewer
-
 import sys, os
 import subprocess
 import time

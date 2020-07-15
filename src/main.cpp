@@ -944,8 +944,10 @@ void onKeyPress (int _key) {
 
 void onMouseMove(float _x, float _y) {
     if (screensaver) {
-        bRun = false;
-        bRun.store(false);
+        if (sandbox.isReady()) {
+            bRun = false;
+            bRun.store(false);
+        }
     }
 }
 
