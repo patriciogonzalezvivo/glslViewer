@@ -1,3 +1,9 @@
+glslviewer (1.6.2) UNRELEASED; urgency=low
+
+  * Bug fixes.
+
+ -- Patricio Gonzalez Vivo <patricio@ubuntu>  Wed, 15 Jul 2020 15:06:00 -0800
+
 glslviewer (1.6.1) UNRELEASED; urgency=medium
 
 A lot of new things but the biggest one are
@@ -8,7 +14,7 @@ A lot of new things but the biggest one are
 
   * bug fixes
 
- -- Patricio Gonzalez Vivo <patricio@ubuntu>  Frid, 10 Jul 2020 02:45:12 -0800
+ -- Patricio Gonzalez Vivo <patricio@ubuntu>  Fri, 10 Jul 2020 02:45:12 -0800
 
 glslviewer (1.6) UNRELEASED; urgency=medium
 

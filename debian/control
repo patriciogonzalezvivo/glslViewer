@@ -4,7 +4,7 @@ Priority: optional
 Maintainer: Patricio Gonzalez Vivo <patriciogonzalezvivo@gmail.com>
 Build-Depends: debhelper (>=9), pkg-config, libglfw3-dev, libglu1-mesa-dev, libxrandr-dev,
  libxi-dev, libxcursor-dev, libxinerama-dev
-Standards-Version: 1.6.1
+Standards-Version: 1.6.2
 Homepage: https://github.com/patriciogonzalezvivo/glslViewer
 
 Package: glslviewer
