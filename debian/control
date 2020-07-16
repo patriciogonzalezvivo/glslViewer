@@ -1,10 +1,10 @@
 Source: glslviewer
-Section: unknown
-Priority: optional
+Section: graphics
+Priority: extra
 Maintainer: Patricio Gonzalez Vivo <patriciogonzalezvivo@gmail.com>
 Build-Depends: debhelper (>=9), pkg-config, libglfw3-dev, libglu1-mesa-dev, libxrandr-dev,
  libxi-dev, libxcursor-dev, libxinerama-dev
-Standards-Version: 1.6.2
+Standards-Version: 1.6.3
 Homepage: https://github.com/patriciogonzalezvivo/glslViewer
 
 Package: glslviewer
