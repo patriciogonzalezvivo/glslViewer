@@ -1,4 +1,16 @@
-glslviewer (1.6.3) focal; urgency=extra
+glslviewer (1.6.4) focal; urgency=low
+
+  *  Third attempt to make a .deb on my ppa
+
+ -- Patricio Gonzalez Vivo <patriciogonzalezvivo@gmail.com>  Thu, 16 Jul 2020 16:34:02 -0700
+
+glslviewer (1.6.3) focal; urgency=low
+
+  * Second attempt to make a .deb package for my ppa
+
+ -- Patricio Gonzalez Vivo <patriciogonzalezvivo@gmail.com>  Thu, 16 Jul 2020 08:43:45 -0700
+
+glslviewer (1.6.2) focal; urgency=low
 
   * First official package
 
