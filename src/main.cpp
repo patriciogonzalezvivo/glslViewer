@@ -46,7 +46,7 @@ bool        execute_exit    = false;
 // Open Sound Control
 Osc osc_listener;
 
-std::string version = "1.6.5";
+std::string version = "1.6.6";
 std::string name = "GlslViewer";
 std::string header = name + " " + version + " by Patricio Gonzalez Vivo ( patriciogonzalezvivo.com )"; 
 

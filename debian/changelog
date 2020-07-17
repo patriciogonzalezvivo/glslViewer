@@ -1,3 +1,9 @@
+glslviewer (1.6.6) focal; urgency=low
+
+  * Fifth attempt to make a .deb on my PPA
+
+ -- Patricio Gonzalez Vivo <patriciogonzalezvivo@gmail.com>  Thu, 16 Jul 2020 20:52:49 -0700
+
 glslviewer (1.6.5) focal; urgency=low
 
   * Fourth attempt to make a .deb on my PPA
