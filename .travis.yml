@@ -1,11 +1,15 @@
 sudo: required
 language: generic
 
+git:
+  depth: 3
+  submodules: false
+
 services:
   - docker
 
 script:
-  - wget -O- https://travis.debian.net/script.sh | sh -
+  - wget -O- http://travis.debian.net/script.sh | sh -
 
 branches:
   except:
