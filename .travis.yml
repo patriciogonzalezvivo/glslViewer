@@ -12,4 +12,6 @@ if:
 
 branches:
   only:
-  - master
+    - master
+  except:
+    - /^debian\/\d/
