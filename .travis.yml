@@ -7,6 +7,6 @@ services:
 script:
   - wget -O- https://travis.debian.net/script.sh | sh -
 
-if:
-  tag IS blank
-
+branches:
+  except:
+    - /^debian\/\d/
