@@ -3,30 +3,11 @@ Section: graphics
 Priority: low
 Maintainer: Patricio Gonzalez Vivo <patriciogonzalezvivo@gmail.com>
 Build-Depends: debhelper (>=9), pkg-config, libglfw3, libglfw3-dev, libglu1-mesa-dev, libxext-dev, libxrandr-dev,
- libxxf86vm-dev, libxxf86vm1, libxi-dev, libxcursor-dev, libxinerama-dev, 
+ libxxf86vm-dev, libxxf86vm1, libxdamage-dev, libxdamage1, libxi-dev, libxcursor-dev, libxinerama-dev
 Standards-Version: 1.6.3
 Homepage: https://github.com/patriciogonzalezvivo/glslViewer
 
 Package: glslviewer
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
-Description: GlslViewer is a flexible console-base OpenGL Sandbox to display 2D/3D GLSL shaders that supports:
-
-* fragment and vertex shaders on GLSL 120
-* resolve #include dependencies
-* adding/deleting #define keys through console IN commands and OSC
-* automatically generated set of defines based on the platform, buffer, render pass, geometry attributes and materials properties.
-* passing custom uniforms (float, int, vec2, vec3 and vec4) through console IN or OSC
-* import of Textures (png, bmp, jpg, tga, hdr and gif)
-* import of Cubemaps and spherical harmonics (png, jpg, tga, hdr)
-* import LST, PLY, OBJ or GLTF files (and their dependencies)
-* default vert/frag shaders with PBR lighting model
-* hot reload of files on changes
-* One default light and one default camera
-* Interactive commands thought POSIX console IN/OUT or OSC
-* different debug modes (histogram, textures, buffers, bounding box, etc)
-* shadow maps
-* headless rendering
-* fullscreen and screensaver mode
-* image export
-* PNG sequence export
+Description: GlslViewer is a flexible console-base OpenGL Sandbox to display 2D/3D GLSL shaders
