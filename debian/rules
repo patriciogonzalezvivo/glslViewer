@@ -9,5 +9,5 @@ override_dh_auto_install:
 	install -D -m 0755 bin/glslScreenSaver $$(pwd)/debian/glslviewer/usr/bin/glslScreenSaver
 	install -D -m 0644 glslViewer.png $$(pwd)/debian/glslviewer/usr/share/pixmaps/glslViewer.png
 	install -D -m 0644 glslViewer.desktop $$(pwd)/debian/glslviewer/usr/share/applications/glslViewer.desktop
-	install -D -m 0644 glslViewer.desktop $$(pwd)/debian/glslviewer/usr/share/applications/glslScreenSaver.desktop
-	install -D -m 0644 glslViewer.desktop $$(pwd)/debian/glslviewer/usr/share/applications/glslScreenSaverDaemon.desktop
+	install -D -m 0644 glslScreenSaver.desktop $$(pwd)/debian/glslviewer/usr/share/applications/glslScreenSaver.desktop
+	install -D -m 0644 glslScreenSaverDaemon.desktop $$(pwd)/debian/glslviewer/usr/share/applications/glslScreenSaverDaemon.desktop
