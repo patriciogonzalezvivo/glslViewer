@@ -1,3 +1,10 @@
+glslviewer (1.6.8) focal; urgency=medium
+
+  * Adding GlslScreenSaver as part of the bin package
+  * trying out travis CI deployment
+
+ -- Patricio Gonzalez Vivo <patriciogonzalezvivo@gmail.com>  Sun, 19 Jul 2020 11:13:21 -0700
+
 glslviewer (1.6.7) focal; urgency=medium
 
   * Sixth attempt to make a .deb on my PPA
