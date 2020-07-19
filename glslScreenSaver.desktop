@@ -1,0 +1,19 @@
+[Desktop Entry]
+Version=1.6
+Name=GlslScreenSaver
+Name[en_GB]=GlslScreenSaver
+Name[en_US]=GlslScreenSaver
+GenericName=GlslScreenSaver
+GenericName[en_GB]=GlslScreenSaver
+GenericName[en_US]=GlslScreenSaver
+Comment=Run Glsl Shaders as screensavers using glslViewer
+Comment[en_GB]=Run Glsl Shaders as screensavers using glslViewer
+Comment[en_US]=Run Glsl Shaders as screensavers using glslViewer
+
+Type=Application
+Icon=/usr/share/pixmaps/glslViewer.png
+Exec=glslScreenSaver
+Hidden=false
+NoDisplay=false
+X-GNOME-Autostart-enabled=true
+

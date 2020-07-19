@@ -1,15 +1,18 @@
 sudo: required
 language: generic
-
 git:
   depth: 1
-
 services:
-  - docker
-
+- docker
 script:
-  - wget -O- http://travis.debian.net/script.sh | sh -
-
+- wget -O- http://travis.debian.net/script.sh | sh -
 branches:
   except:
-    - /^debian\/\d/
+  - "/^debian\\/\\d/"
+deploy:
+  provider: launchpad
+  slug: https://code.launchpad.net/~patriciogv/glslviewer/+git/glslviewer
+  oauth_token:
+    secure: E7gZDTioJ3eUlQLDW9TiVVRkNoG/5IgCP5Fmq6Hwbp2MGtoqiMd25WP3dkXlgqFn9weOFKL0wL8LPyDXINxHW13qZ27VeZ95PI4p5HouQ+FTQMfSL0u9PyqDlqipEpQ9TVmZS2I9hx4EtAOX09y1hLQn3Qc+7MBZZj68WffsL+U=
+  oauth_token_secret:
+    secure: g2LmJt+N2jV0KlYfdfNJ95ZCRKVEIw5INdGf2G47o4wC07TxEn4rNQ1N5XAkTFFzChpmidldCFIywqZRXXY2DLKz9UpLdFE9enuPo0kcOphSfXNr3ffQsQjRMJI7hy1D7dh83l7DhbjWHst04ffBAKEuv1BTTJInG2yB0ikpyME=
