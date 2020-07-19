@@ -35,22 +35,26 @@ GlslViewer gives support to:
 
 ## Wiki themes
 
-* What is GlslViewer [![Watch the video](https://img.youtube.com/vi/8qyFLgl0_FI/maxresdefault.jpg)](https://www.youtube.com/watch?v=8qyFLgl0_FI)
-* [Compiling GlslViewer](https://github.com/patriciogonzalezvivo/glslViewer/wiki/Compiling-GlslViewer)
+* [Installing](https://github.com/patriciogonzalezvivo/glslViewer/wiki/Installing)
+    * [Compiling from Source](https://github.com/patriciogonzalezvivo/glslViewer/wiki/Compiling)
+
 * [Using GlslViewer](https://github.com/patriciogonzalezvivo/glslViewer/wiki/Using-GlslViewer)
     * [Loading a single Fragment shader](https://github.com/patriciogonzalezvivo/glslViewer/wiki/Using-GlslViewer#1-loading-a-single-fragment-shader)
     * [Loading geometry and a vertex shader](https://github.com/patriciogonzalezvivo/glslViewer/wiki/Using-GlslViewer#2-loading-geometry-and-a-vertex-shader)
-    * [Load a model and edit the default PBR shader](https://github.com/patriciogonzalezvivo/glslViewer/wiki/Using-GlslViewer#21-load-a-model-and-edit-the-default-pbr-shader) [![Watch the video](https://img.youtube.com/vi/okZ5dOrxgZ8/maxresdefault.jpg)](https://www.youtube.com/watch?v=okZ5dOrxgZ8)
+    * [Load a model and edit the default PBR shader](https://github.com/patriciogonzalezvivo/glslViewer/wiki/Using-GlslViewer#21-load-a-model-and-edit-the-default-pbr-shader)
     * [Loading Textures](https://github.com/patriciogonzalezvivo/glslViewer/wiki/Using-GlslViewer#3-loading-textures)
     * [Other arguments](https://github.com/patriciogonzalezvivo/glslViewer/wiki/Using-GlslViewer#4-other-arguments)
     * [Console IN commands](https://github.com/patriciogonzalezvivo/glslViewer/wiki/Using-GlslViewer#console-in-commands)
 
-* **Convensions**: over all GlslViewer is designed to be flexible, that means that sticks very close to GLSL language. There is not extra languages or meta data on top. The only conventions comes on the native uniform names and defines GlslViewer use to send information like time, resolution, lights, vertex attributes, material properties, platform type, shadowmap name, etc. 
+* Convention: 
     * [Defines](https://github.com/patriciogonzalezvivo/glslViewer/wiki/GlslViewer-DEFINES)
+         * [Platform](https://github.com/patriciogonzalezvivo/glslViewer/wiki/GlslViewer-DEFINES#platform-defines)
+         * [Buffers & Render Passes](https://github.com/patriciogonzalezvivo/glslViewer/wiki/GlslViewer-DEFINES#buffers-and-render-passes)
+         * [Geometry Attributes](https://github.com/patriciogonzalezvivo/glslViewer/wiki/GlslViewer-DEFINES#geometry-defines)
+         * [Materials](https://github.com/patriciogonzalezvivo/glslViewer/wiki/GlslViewer-DEFINES#material-defines)
     * [Uniforms](https://github.com/patriciogonzalezvivo/glslViewer/wiki/GlslViewer-UNIFORMS)
-    * [Multiple buffers, background and postprocessing render pass](https://github.com/patriciogonzalezvivo/glslViewer/wiki/Multiple-render-passes-and-Buffers)
-* [Python wrapper](https://github.com/patriciogonzalezvivo/glslViewer/wiki/Python-wrapper-for-GlslViewer)
 
+* [Python wrapper](https://github.com/patriciogonzalezvivo/glslViewer/wiki/Python-wrapper-for-GlslViewer)
 
 ## Bugs to fix
 

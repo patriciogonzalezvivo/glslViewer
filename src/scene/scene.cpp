@@ -118,7 +118,7 @@ void Scene::setup(CommandList& _commands, Uniforms& _uniforms) {
 
         return false;
     },
-    "models                             print all the names of the models"));
+    "materials                           print all the materials names"));
 
     _commands.push_back(Command("blend", [&](const std::string& _line){ 
         std::vector<std::string> values = split(_line,',');
@@ -143,7 +143,7 @@ void Scene::setup(CommandList& _commands, Uniforms& _uniforms) {
 
         return false;
     },
-    "blend[,<alpha|add|multiply|screen|substract>]   get or set the blendign modes"));
+    "blend[,<alpha|add|multiply|screen|substract>]   get or set the blending modes"));
 
     _commands.push_back(Command("depth_test", [&](const std::string& _line){ 
         if (_line == "depth_test") {
@@ -160,7 +160,7 @@ void Scene::setup(CommandList& _commands, Uniforms& _uniforms) {
         }
         return false;
     },
-    "depth_test[,<on|off]   get or set the blendign modes"));
+    "depth_test[,<on|off]   turn on/off depth test"));
 
     _commands.push_back(Command("culling", [&](const std::string& _line){ 
         std::vector<std::string> values = split(_line,',');
@@ -200,7 +200,7 @@ void Scene::setup(CommandList& _commands, Uniforms& _uniforms) {
         }
         return false;
     },
-    "dynamic_shadows[on|off]            get or set dynamic shadows"));
+    "dynamic_shadows[,on|off]            get or set dynamic shadows"));
 
     _commands.push_back(Command("skybox_ground", [&](const std::string& _line){ 
         std::vector<std::string> values = split(_line,',');
