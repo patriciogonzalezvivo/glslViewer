@@ -11,9 +11,8 @@ branches:
     - "/^debian\\/\\d/"
 deploy:
   - provider: launchpad
-    slug: https://code.launchpad.net/~patriciogv/glslviewer/+git/glslviewer
+    slug: ~patriciogv/glslviewer/+git/glslviewer
     oauth_token:
       secure: "OW7GPoeGl8ZPX1ZSXixMgAAhvz2dI3Uif9NnIE7m1A3GMa8ctJKfAULtvjOM/iONYxOZvZeJLmPHYMCY/7L8OdvEJKP4+Dk0qJ/mIfCEKnulTzzjEKvEfos7/0Hjym5D0wVrNZEyiY8rUCm7MDmULHO7BYeBqrJLFJhlr5PZYyY="
-
     oauth_token_secret:
       secure: "A8ZuwfRxu+KsEnU7cMOR2J2DIlQVZO4cPdhXehEZzMXQ/e3/hDkIqw/LicGeR+rIwkG+xgeW1CKdUmXBsptmWhnh8pmSV6xFUXJAFGgaXe7I4WILncHk9AngK7hLRKJjBSjZSkJGGXlTrz7b0esNn9Gyh+QiqZ/CQUhErRwTKNA="
