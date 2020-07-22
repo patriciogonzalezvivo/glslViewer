@@ -27,7 +27,8 @@ float random (vec2 st) {
 }
 
 void main() {
-    vec2 st = v_texcoord;
+    vec2 pixel = 1. / u_resolution;
+    vec2 st = v_texcoord + pixel*0.03;
     // st.y = 1.0 - st.y;
 
 #ifdef BUFFER_0
@@ -36,7 +37,6 @@ void main() {
     //  Note: Here is where most of the action happens. But need's to read
     //  te content of the previous pass, for that we are making another buffer
     //  BUFFER_1 (u_buffer1)
-    vec2 pixel = 1./u_resolution;
 
     float kernel[9];
     kernel[0] = 0.707106781;
