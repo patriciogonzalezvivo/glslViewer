@@ -44,8 +44,8 @@ class GlslViewer:
             if options['headless']:
                 self.cmd.append('--headless')
 
-        if 'lifecode' in options:
-            if options['lifecode']:
+        if 'livecode' in options:
+            if options['livecode']:
                 self.cmd.append('-l')
 
         if 'cursor' in options:
@@ -107,6 +107,10 @@ class GlslViewer:
             for tex_name in options['textures_vflipped'].keys():
                 self.cmd.append('-' + tex_name)
                 self.cmd.append(options['textures_vflipped'][tex_name])
+
+        if 'osc_port' in options:
+            self.cmd.append('-p')
+            self.cmd.append(str(options['osc_port']))
 
 
     def start(self):
