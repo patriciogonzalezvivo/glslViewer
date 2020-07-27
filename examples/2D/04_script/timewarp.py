@@ -87,7 +87,7 @@ def interpolate(A_flow, A_div, A,
                 B_flow, B_div, B, 
                 sec, target_folder, start_index, width, height):
     
-    cmd = f"offload-glx glslViewer timewarp.frag --headless {A_flow} {A} {B_flow} {B} -w {width} -h {height} -e u_A,{A_div} -e u_B,{B_div} -E sequence,0,{sec}"
+    cmd = f"glslViewer timewarp.frag --headless {A_flow} {A} {B_flow} {B} -w {width} -h {height} -e u_A,{A_div} -e u_B,{B_div} -E sequence,0,{sec}"
     print(cmd)
     subprocess.call(cmd, shell=True) 
 

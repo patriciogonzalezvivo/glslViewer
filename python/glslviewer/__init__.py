@@ -184,6 +184,8 @@ class GlslViewer:
                 cmd += ',' + str(val)
         else:
             cmd += ',' + str(value)
+        
+        # print(cmd)
         return self.write(cmd)
 
 

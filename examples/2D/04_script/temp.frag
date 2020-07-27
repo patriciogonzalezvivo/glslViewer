@@ -6,7 +6,7 @@ uniform float u_temp;
 
 void main (void) {
     float temp_min = 20.;
-    float temp_max = 80.;
+    float temp_max = 50.;
     float temp = (u_temp-temp_min)/(temp_max-temp_min);
 
     vec3 cold = vec3(0.,0.,1.);
