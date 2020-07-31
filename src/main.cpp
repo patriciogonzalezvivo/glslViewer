@@ -775,7 +775,7 @@ int main(int argc, char **argv){
                     haveExt(argument,"tga") || haveExt(argument,"TGA") ||
                     haveExt(argument,"psd") || haveExt(argument,"PSD") ||
                     haveExt(argument,"gif") || haveExt(argument,"GIF") ||
-                    haveExt(argument,"bmp") || haveExt(argument,"BPM") ||
+                    haveExt(argument,"bmp") || haveExt(argument,"BMP") ||
                     haveExt(argument,"jpg") || haveExt(argument,"JPG") ||
                     haveExt(argument,"jpeg") || haveExt(argument,"JPEG")) {
 
