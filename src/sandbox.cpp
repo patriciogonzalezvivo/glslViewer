@@ -356,6 +356,27 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     },
     "camera_distance[,<dist>]       get or set the camera distance to the target."));
 
+    _commands.push_back(Command("camera_type", [&](const std::string& _line){ 
+        std::vector<std::string> values = split(_line,',');
+        if (values.size() == 2) {
+            if (values[1] == "ortho")
+                uniforms.getCamera().setType(CameraType::ORTHO);
+            else if (values[1] == "perspective")
+                uniforms.getCamera().setType(CameraType::PERSPECTIVE);
+            return true;
+        }
+        else {
+            CameraType type = uniforms.getCamera().getType();
+            if (type == CameraType::ORTHO)
+                std::cout << "ortho" << std::endl;
+            else
+                std::cout << "perspective" << std::endl;
+            return true;
+        }
+        return false;
+    },
+    "camera_distance[,<dist>]       get or set the camera distance to the target."));
+
     _commands.push_back(Command("camera_fov", [&](const std::string& _line){ 
         std::vector<std::string> values = split(_line,',');
         if (values.size() == 2) {

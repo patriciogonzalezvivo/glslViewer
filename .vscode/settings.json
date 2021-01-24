@@ -95,6 +95,5 @@
         "__memory": "cpp",
         "filesystem": "cpp",
         "forward_list": "cpp"
-    },
-    "python.pythonPath": "/bin/python3"
+    }
 }

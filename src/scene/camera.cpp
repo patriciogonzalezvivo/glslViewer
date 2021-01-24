@@ -13,7 +13,7 @@ Camera::Camera():
     m_target(0.0), 
     m_aspect(4.0f/3.0f), m_fov(45.), m_nearClip(0.01f), m_farClip(1000.0f), 
     m_exposure(2.60417e-05), m_ev100(14.9658), m_aperture(16), m_shutterSpeed(1.0f/125.0f), m_sensitivity(100.0f), 
-    m_type(CameraType::FREE) {
+    m_type(CameraType::PERSPECTIVE) {
     updateCameraSettings();
 }
 
@@ -27,7 +27,7 @@ void Camera::setViewport(int _width, int _height){
 }
 
 //Setting Functions
-void Camera::setMode(CameraType _type) {
+void Camera::setType(CameraType _type) {
     m_type = _type;
     lookAt(m_target);
     updateCameraSettings();
@@ -117,7 +117,7 @@ void Camera::updateCameraSettings() {
     if (m_type == CameraType::ORTHO) {
         m_projectionMatrix = glm::ortho(-1.5f * float(m_aspect), 1.5f * float(m_aspect), -1.5f, 1.5f, -10.0f, 10.f);
     }
-    else if (m_type == CameraType::FREE) {
+    else if (m_type == CameraType::PERSPECTIVE) {
         m_projectionMatrix = glm::perspective(m_fov, m_aspect, m_nearClip, m_farClip);
     }
     updateProjectionViewMatrix();

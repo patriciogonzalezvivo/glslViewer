@@ -3,7 +3,8 @@
 #include "node.h"
 
 enum CameraType {
-    ORTHO, FREE
+    ORTHO, 
+    PERSPECTIVE
 };
 
 class Camera: public Node {
@@ -11,7 +12,7 @@ public:
     Camera();
     virtual ~Camera();
 
-    virtual void        setMode(CameraType cam_mode);
+    virtual void        setType(CameraType cam_mode);
     virtual void        setFOV(double _fov);
     virtual void        setViewport(int _width, int _height);
     virtual void        setClipping(double _near_clip_distance, double _far_clip_distance);
