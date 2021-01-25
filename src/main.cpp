@@ -786,6 +786,8 @@ int main(int argc, char **argv){
                     haveExt(argument,"mp4") || haveExt(argument,"MP4") ||
                     haveExt(argument,"mpeg") || haveExt(argument,"MPEG") ||
                     argument.rfind("/dev/", 0) == 0 ||
+                    argument.rfind("http://", 0) == 0 ||
+                    argument.rfind("https://", 0) == 0 ||
                     argument.rfind("rtsp://", 0) == 0 ||
                     argument.rfind("rtmp://", 0) == 0) {
             if ( sandbox.uniforms.addStreamingTexture("u_tex"+toString(textureCounter), argument) )
