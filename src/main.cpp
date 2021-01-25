@@ -787,7 +787,6 @@ int main(int argc, char **argv){
                     haveExt(argument,"mpeg") || haveExt(argument,"MPEG") ||
                     argument.rfind("rtsp://", 0) == 0 ||
                     argument.rfind("rtmp://", 0) == 0) {
-            std::cout << "try to open video " << argument << std::endl;
             if ( sandbox.uniforms.addStreamingTexture("u_tex"+toString(textureCounter), argument) )
                 textureCounter++;
         }

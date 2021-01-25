@@ -5,6 +5,13 @@
 
 #ifdef SUPPORT_FOR_LIBAV 
 
+extern "C" {
+#include <libavutil/log.h>
+#include <libavutil/avutil.h>
+#include <sys/time.h>
+#include <libswresample/swresample.h>
+}
+
 TextureStream::TextureStream() {
 
     // initialize libav
@@ -57,6 +64,8 @@ bool TextureStream::load(const std::string& _filepath, bool _vFlip) {
         return false;
     }
 
+    av_log_set_level(AV_LOG_QUIET);
+
     // https://gist.github.com/rcolinray/7552384#file-gl_ffmpeg-cpp-L229
     // open video
     if (avformat_open_input(&av_format_ctx, _filepath.c_str(), NULL, NULL) < 0) {
@@ -87,9 +96,6 @@ bool TextureStream::load(const std::string& _filepath, bool _vFlip) {
             continue;
         }
         if (av_codec_params->codec_type == AVMEDIA_TYPE_VIDEO) {
-        // if (av_format_ctx->streams[i]->codec->codec_type == AVMEDIA_TYPE_VIDEO) {
-            // m_width = av_format_ctx->streams[i]->codec->width;
-            // m_height = av_format_ctx->streams[i]->codec->height;
             m_width = av_codec_params->width;
             m_height = av_codec_params->height;
             time_base = av_format_ctx->streams[i]->time_base;
@@ -114,17 +120,6 @@ bool TextureStream::load(const std::string& _filepath, bool _vFlip) {
         printf("Couldn't initialize AVCodecContext\n");
         return false;
     }
-
-    // av_video_stream = av_format_ctx->streams[stream_idx];
-    // av_codec_ctx = av_video_stream->codec;
-
-    // // find the decoder
-    // av_decoder = avcodec_find_decoder(av_codec_ctx->codec_id);
-    // if (av_decoder == NULL) {
-    //     std::cout << "failed to find decoder" << std::endl;
-    //     clear();
-    //     return false;
-    // }
 
     // open the decoder
     if (avcodec_open2(av_codec_ctx, av_decoder, NULL) < 0) {

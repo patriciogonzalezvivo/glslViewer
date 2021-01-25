@@ -10,10 +10,7 @@ extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavfilter/avfilter.h>
 #include <libavdevice/avdevice.h>
-#include <libswresample/swresample.h>
 #include <libswscale/swscale.h>
-#include <libavutil/avutil.h>
-#include <sys/time.h>
 }
 
 class TextureStream : public Texture {
