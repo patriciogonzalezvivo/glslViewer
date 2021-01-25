@@ -67,7 +67,7 @@ LDFLAGS += $(shell pkg-config --libs glfw3 glu gl x11 xrandr xi xxf86vm xcursor 
 
 else ifeq ($(PLATFORM),Linux)
 CFLAGS += -DPLATFORM_LINUX -DDRIVER_GLFW $(shell pkg-config --cflags glfw3 glu gl)
-LDFLAGS += $(shell pkg-config --libs glfw3 glu gl x11 xrandr xi xxf86vm xcursor xinerama xrender xext xdamage) -lpthread -ldl
+LDFLAGS += $(shell pkg-config --libs glfw3 glu gl x11 xrandr xi xxf86vm xcursor xinerama xrender xext xdamage) -lpthread -ldl -lavcodec -lavformat -lavfilter -lavdevice -lavutil -lswscale
 
 else ifeq ($(PLATFORM),Darwin)
 CXX = /usr/bin/clang++

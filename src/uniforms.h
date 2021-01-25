@@ -8,6 +8,7 @@
 #include "gl/fbo.h"
 #include "gl/shader.h"
 #include "gl/texture.h"
+#include "gl/textureStream.h"
 
 #include "scene/light.h"
 #include "scene/camera.h"
@@ -39,6 +40,7 @@ struct UniformFunction {
 
 typedef std::map<std::string, UniformFunction> UniformFunctionsList;
 typedef std::map<std::string, Texture*> TextureList;
+typedef std::map<std::string, TextureStream*> StreamsList;
 
 class Uniforms {
 public:
@@ -52,9 +54,11 @@ public:
     bool                    addTexture( const std::string& _name, const std::string& _path, WatchFileList& _files, bool _flip = true, bool _verbose = true );
     bool                    addBumpTexture( const std::string& _name, const std::string& _path, WatchFileList& _files, bool _flip = true, bool _verbose = true );
 
+    bool                    addStreamingTexture( const std::string& _name, const std::string& _url, bool _verbose = true );
+
     void                    setCubeMap( TextureCube* _cubemap );
     void                    setCubeMap( const std::string& _filename, WatchFileList& _files, bool _verbose = true);
-    
+
     // Check presence of uniforms on shaders
     void                    checkPresenceIn( const std::string &_vert_src, const std::string &_frag_src );
 
@@ -84,6 +88,7 @@ public:
 
     // Common 
     TextureList             textures;
+    StreamsList             streams;
     TextureCube*            cubemap;
     std::vector<Fbo>        buffers;
 

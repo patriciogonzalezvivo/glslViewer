@@ -305,7 +305,6 @@ void declareCommands() {
     },
     "undefine,<KEYWORD>             remove a define on the shader", false));
 
-
     commands.push_back(Command("reload", [&](const std::string& _line){ 
         if (_line == "reload" || _line == "reload,all") {
             fullFps = true;
@@ -780,6 +779,15 @@ int main(int argc, char **argv){
                     haveExt(argument,"jpeg") || haveExt(argument,"JPEG")) {
 
             if ( sandbox.uniforms.addTexture("u_tex"+toString(textureCounter), argument, files, vFlip) )
+                textureCounter++;
+        }
+        else if (   haveExt(argument,"mov") || haveExt(argument,"MOV") ||
+                    haveExt(argument,"mp4") || haveExt(argument,"MP4") ||
+                    haveExt(argument,"mpeg") || haveExt(argument,"MPEG") ||
+                    argument.rfind("rtsp://", 0) == 0 ||
+                    argument.rfind("rtmp://", 0) == 0) {
+            std::cout << "try to open video " << argument << std::endl;
+            if ( sandbox.uniforms.addStreamingTexture("u_tex"+toString(textureCounter), argument) )
                 textureCounter++;
         }
         else if ( argument == "-c" || argument == "-sh" ) {
