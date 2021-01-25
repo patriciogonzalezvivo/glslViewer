@@ -17,6 +17,9 @@ TextureStream::TextureStream() {
     // initialize libav
     av_register_all();
     avformat_network_init();
+    
+    //https://gist.github.com/shakkhar/619fd90ccbd17734089b
+    avdevice_register_all();
 
     av_format_ctx = NULL;
     stream_idx = -1;
