@@ -3,6 +3,8 @@
 #include <iostream>
 #include <fstream>
 
+#ifdef SUPPORT_FOR_LIBAV 
+
 TextureStream::TextureStream() {
 
     // initialize libav
@@ -219,43 +221,6 @@ bool TextureStream::update() {
     glBindTexture(GL_TEXTURE_2D, 0);
 
     return true;
-
-    // do {
-    //     if (av_read_frame(av_format_ctx, av_packet) < 0) {
-    //         av_free_packet(av_packet);
-    //         return false;
-    //     }
-        
-    //     if (av_packet->stream_index == stream_idx) {
-    //         int frame_finished = 0;
-        
-    //         if (avcodec_decode_video2(av_codec_ctx, av_frame, &frame_finished, av_packet) < 0) {
-    //             av_free_packet(av_packet);
-    //             return false;
-    //         }
-        
-    //         if (frame_finished) {
-    //             if (!conv_ctx) {
-    //                 AVPixelFormat source_pix_fmt = correct_for_deprecated_pixel_format(av_codec_ctx->pix_fmt);
-    //                 conv_ctx = sws_getContext(  av_codec_ctx->width, av_codec_ctx->height, source_pix_fmt, 
-    //                                             av_codec_ctx->width, av_codec_ctx->height, AV_PIX_FMT_RGB24,
-    //                                             SWS_BICUBIC, NULL, NULL, NULL);
-    //             }
-            
-    //             sws_scale(  conv_ctx, av_frame->data, av_frame->linesize, 0, 
-    //                         av_codec_ctx->height, gl_frame->data, gl_frame->linesize);
-                    
-    //             glBindTexture(GL_TEXTURE_2D, m_id);
-    //             glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, av_codec_ctx->width, av_codec_ctx->height, GL_RGB, GL_UNSIGNED_BYTE, gl_frame->data[0]);
-    //             glBindTexture(GL_TEXTURE_2D, 0);
-    //         }
-    //     }
-        
-    //     av_free_packet(av_packet);
-    // } while (av_packet->stream_index != stream_idx);
-        
-    // return true;
-
 }
 
 void  TextureStream::clear() {
@@ -284,3 +249,5 @@ void  TextureStream::clear() {
 
     m_id = 0;
 }
+
+#endif

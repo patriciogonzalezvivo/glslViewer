@@ -8,7 +8,9 @@
 #include "gl/fbo.h"
 #include "gl/shader.h"
 #include "gl/texture.h"
+#ifdef SUPPORT_FOR_LIBAV 
 #include "gl/textureStream.h"
+#endif
 
 #include "scene/light.h"
 #include "scene/camera.h"
@@ -40,7 +42,10 @@ struct UniformFunction {
 
 typedef std::map<std::string, UniformFunction> UniformFunctionsList;
 typedef std::map<std::string, Texture*> TextureList;
+
+#ifdef SUPPORT_FOR_LIBAV 
 typedef std::map<std::string, TextureStream*> StreamsList;
+#endif
 
 class Uniforms {
 public:
@@ -54,8 +59,9 @@ public:
     bool                    addTexture( const std::string& _name, const std::string& _path, WatchFileList& _files, bool _flip = true, bool _verbose = true );
     bool                    addBumpTexture( const std::string& _name, const std::string& _path, WatchFileList& _files, bool _flip = true, bool _verbose = true );
 
+#ifdef SUPPORT_FOR_LIBAV 
     bool                    addStreamingTexture( const std::string& _name, const std::string& _url, bool _verbose = true );
-
+#endif
     void                    setCubeMap( TextureCube* _cubemap );
     void                    setCubeMap( const std::string& _filename, WatchFileList& _files, bool _verbose = true);
 
@@ -88,7 +94,9 @@ public:
 
     // Common 
     TextureList             textures;
+#ifdef SUPPORT_FOR_LIBAV 
     StreamsList             streams;
+#endif
     TextureCube*            cubemap;
     std::vector<Fbo>        buffers;
 

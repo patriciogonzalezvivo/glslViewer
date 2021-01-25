@@ -781,6 +781,7 @@ int main(int argc, char **argv){
             if ( sandbox.uniforms.addTexture("u_tex"+toString(textureCounter), argument, files, vFlip) )
                 textureCounter++;
         }
+        #ifdef SUPPORT_FOR_LIBAV 
         else if (   haveExt(argument,"mov") || haveExt(argument,"MOV") ||
                     haveExt(argument,"mp4") || haveExt(argument,"MP4") ||
                     haveExt(argument,"mpeg") || haveExt(argument,"MPEG") ||
@@ -790,6 +791,7 @@ int main(int argc, char **argv){
             if ( sandbox.uniforms.addStreamingTexture("u_tex"+toString(textureCounter), argument) )
                 textureCounter++;
         }
+        #endif
         else if ( argument == "-c" || argument == "-sh" ) {
             if(++i < argc) {
                 argument = std::string(argv[i]);

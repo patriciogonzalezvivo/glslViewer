@@ -257,6 +257,7 @@ bool Uniforms::addBumpTexture(const std::string& _name, const std::string& _path
     return false;
 }
 
+#ifdef SUPPORT_FOR_LIBAV 
 bool Uniforms::addStreamingTexture( const std::string& _name, const std::string& _url, bool _verbose) {
     if (textures.find(_name) == textures.end()) {
 
@@ -283,6 +284,7 @@ bool Uniforms::addStreamingTexture( const std::string& _name, const std::string&
     }
     return false;
 }
+#endif
 
 void Uniforms::setCubeMap( TextureCube* _cubemap ) {
     if (cubemap)
@@ -435,10 +437,11 @@ bool Uniforms::haveChange() {
             break;
         }
     }
-
+#ifdef SUPPORT_FOR_LIBAV 
     for (StreamsList::iterator i = streams.begin(); i != streams.end(); ++i) {
         i->second->update();
-    }    
+    }  
+#endif  
 
     // std::cout << "  change " << m_change << std::endl;
     // std::cout << "  lights " << lightChange << std::endl;

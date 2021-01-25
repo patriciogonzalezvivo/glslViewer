@@ -3,6 +3,8 @@
 
 #include "texture.h"
 
+#ifdef SUPPORT_FOR_LIBAV
+
 extern "C" {
 #include <libavformat/avformat.h>
 #include <libavcodec/avcodec.h>
@@ -38,3 +40,4 @@ private:
 
 };
 
+#endif
