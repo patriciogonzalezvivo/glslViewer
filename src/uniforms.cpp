@@ -257,6 +257,35 @@ bool Uniforms::addBumpTexture(const std::string& _name, const std::string& _path
     return false;
 }
 
+#ifdef SUPPORT_FOR_LIBAV 
+bool Uniforms::addStreamingTexture( const std::string& _name, const std::string& _url, bool _verbose) {
+    if (textures.find(_name) == textures.end()) {
+
+        TextureStream* tex = new TextureStream();
+        // load an image into the texture
+        if (tex->load(_url, true)) {
+
+            // the image is loaded finish add the texture to the uniform list
+            textures[ _name ] = (Texture*)tex;
+            streams[ _name ] = tex;
+
+            if (_verbose) {
+                std::cout << "// " << _url << " loaded as streaming texture: " << std::endl;
+                std::cout << "//    uniform sampler2D " << _name  << ";"<< std::endl;
+                std::cout << "//    uniform vec2 " << _name  << "Resolution;"<< std::endl;
+            }
+
+            return true;
+        }
+        else
+            delete tex;
+
+
+    }
+    return false;
+}
+#endif
+
 void Uniforms::setCubeMap( TextureCube* _cubemap ) {
     if (cubemap)
         delete cubemap;
@@ -408,6 +437,11 @@ bool Uniforms::haveChange() {
             break;
         }
     }
+#ifdef SUPPORT_FOR_LIBAV 
+    for (StreamsList::iterator i = streams.begin(); i != streams.end(); ++i) {
+        i->second->update();
+    }  
+#endif  
 
     // std::cout << "  change " << m_change << std::endl;
     // std::cout << "  lights " << lightChange << std::endl;
@@ -439,6 +473,9 @@ void Uniforms::clear() {
         }
     }
     textures.clear();
+
+    // Streams are textures so it should be clear by now;
+    // streams.clear();
 
 }
 

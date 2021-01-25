@@ -9,6 +9,7 @@ OBJECTS := $(SOURCES:.cpp=.o)
 
 PLATFORM = $(shell uname)
 DRIVER ?= not_defined
+LIBAV ?= not_defined
 
 ifneq ("$(wildcard /opt/vc/include/bcm_host.h)","")
 	ifeq ($(shell cat /proc/cpuinfo | grep 'Revision' | awk '{print $$3}' ), c03111)
@@ -67,7 +68,7 @@ LDFLAGS += $(shell pkg-config --libs glfw3 glu gl x11 xrandr xi xxf86vm xcursor 
 
 else ifeq ($(PLATFORM),Linux)
 CFLAGS += -DPLATFORM_LINUX -DDRIVER_GLFW $(shell pkg-config --cflags glfw3 glu gl)
-LDFLAGS += $(shell pkg-config --libs glfw3 glu gl x11 xrandr xi xxf86vm xcursor xinerama xrender xext xdamage) -lpthread -ldl
+LDFLAGS += $(shell pkg-config --libs glfw3 glu gl x11 xrandr xi xxf86vm xcursor xinerama xrender xext xdamage) -lpthread -ldl 
 
 else ifeq ($(PLATFORM),Darwin)
 CXX = /usr/bin/clang++
@@ -76,6 +77,11 @@ CFLAGS += $(ARCH) -DPLATFORM_OSX -DDRIVER_GLFW -stdlib=libc++ $(shell pkg-config
 INCLUDES += -I/System/Library/Frameworks/GLUI.framework
 LDFLAGS += $(ARCH) -framework OpenGL -framework Cocoa -framework CoreVideo -framework IOKit $(shell pkg-config --libs glfw3)
 
+endif
+
+ifeq ($(LIBAV),true)
+LDFLAGS += -lavcodec -lavformat -lavfilter -lavdevice -lavutil -lswscale
+CFLAGS += -DSUPPORT_FOR_LIBAV 
 endif
 
 all: $(EXE)
