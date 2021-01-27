@@ -83,8 +83,8 @@ void printUsage(char * executableName) {
     std::cerr << "// Arguments:" << std::endl;
     std::cerr << "// <shader>.frag [<shader>.vert] - load shaders" << std::endl;
     std::cerr << "// [<mesh>.(obj/ply/stl/glb/gltf)] - load obj/ply/stl/glb/gltf file" << std::endl;
+    std::cerr << "// [<texture>.(png/tga/jpg/bmp/psd/gif/hdr/mov/mp4/rtsp/rtmp/etc)] - load and assign texture to uniform order" << std::endl;
     std::cerr << "// [-vFlip] - all textures after will be flipped vertically" << std::endl;
-    std::cerr << "// [<texture>.(png/tga/jpg/bmp/psd/gif/hdr)] - load and assign texture to uniform order" << std::endl;
     std::cerr << "// [-<uniformName> <texture>.(png/tga/jpg/bmp/psd/gif/hdr)] - add textures associated with different uniform sampler2D names" << std::endl;
     std::cerr << "// [-C <enviromental_map>.(png/tga/jpg/bmp/psd/gif/hdr)] - load a environmental map as cubemap" << std::endl;
     std::cerr << "// [-c <enviromental_map>.(png/tga/jpg/bmp/psd/gif/hdr)] - load a environmental map as cubemap but hided" << std::endl;

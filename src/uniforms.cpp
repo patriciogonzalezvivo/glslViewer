@@ -265,7 +265,6 @@ bool Uniforms::addBumpTexture(const std::string& _name, const std::string& _path
 bool Uniforms::addStreamingTexture( const std::string& _name, const std::string& _url, bool _vflip, bool _verbose) {
     if (textures.find(_name) == textures.end()) {
 
-
 #ifdef SUPPORT_FOR_LIBAV
         TextureStreamAV* tex = new TextureStreamAV();
         // load an image into the texture
