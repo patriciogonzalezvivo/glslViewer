@@ -2,10 +2,6 @@
 
 #include "glm/glm.hpp"
 
-#ifndef REST_SEC
-#define REST_SEC 0.016 // 60fps
-#endif
-
 enum WindowStyle {
     HEADLESS = 0,
     REGULAR,
@@ -26,6 +22,7 @@ void closeGL();
 void updateViewport();
 void setViewport(float _width, float _height);
 void setWindowSize(int _width, int _height);
+void setFps(int _fps);
 
 //	GET
 //----------------------------------------------
@@ -41,7 +38,8 @@ int getWindowHeight();
 glm::vec4 getDate();
 double getTime();
 double getDelta();
-double getFPS();
+double getFps();
+float  getRestSec();
 
 float getMouseX();
 float getMouseY();

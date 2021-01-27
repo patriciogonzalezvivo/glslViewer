@@ -50,7 +50,6 @@ std::string version = "1.6.8";
 std::string name = "GlslViewer";
 std::string header = name + " " + version + " by Patricio Gonzalez Vivo ( patriciogonzalezvivo.com )"; 
 
-const unsigned int micro_wait = REST_SEC * 1000000;
 bool fullFps = false;
 bool timeOut = false;
 bool screensaver = false;
@@ -94,6 +93,7 @@ void printUsage(char * executableName) {
     std::cerr << "// [-y <pixels>] - set the Y position of the billboard on the screen" << std::endl;
     std::cerr << "// [-w <pixels>] - set the width of the window" << std::endl;
     std::cerr << "// [-h <pixels>] - set the height of the billboard" << std::endl;
+    std::cerr << "// [--fps] <fps> - fix the max FPS" << std::endl;
     std::cerr << "// [-f|--fullscreen] - load the window in fullscreen" << std::endl;
     std::cerr << "// [-l|--life-coding] - live code mode, where the billboard is allways visible" << std::endl;
     std::cerr << "// [-ss|--screensaver] - screensaver mode, any pressed key will exit" << std::endl;
@@ -199,10 +199,17 @@ void declareCommands() {
     },
     "mouse                          return the mouse position.", false));
     
-    commands.push_back(Command("fps", [&](const std::string& _line){ 
-        if (_line == "fps") {
+    commands.push_back(Command("fps", [&](const std::string& _line){
+        std::vector<std::string> values = split(_line,',');
+        if (values.size() == 2) {
+            consoleMutex.lock();
+            setFps(toInt(values[1]));
+            consoleMutex.unlock();
+            return true;
+        }
+        else {
             // Force the output in floats
-            printf("%f\n", getFPS());
+            printf("%f\n", getFps());
             return true;
         }
         return false;
@@ -275,7 +282,7 @@ void declareCommands() {
                         filesMutex.lock();
                         fileChanged = i;
                         filesMutex.unlock();
-                        pal_sleep(micro_wait * 10.0);
+                        pal_sleep( getRestSec() * 10000000 );
                 }
             }
             fullFps = false;
@@ -295,7 +302,7 @@ void declareCommands() {
                         filesMutex.lock();
                         fileChanged = i;
                         filesMutex.unlock();
-                        pal_sleep(micro_wait * 10.0);
+                        pal_sleep( getRestSec() * 10000000 );
                 }
             }
             fullFps = false;
@@ -312,7 +319,7 @@ void declareCommands() {
                 filesMutex.lock();
                 fileChanged = i;
                 filesMutex.unlock();
-                pal_sleep(micro_wait * 10.0);
+                pal_sleep( getRestSec() * 10000000 );
             }
             fullFps = false;
             return true;
@@ -539,7 +546,7 @@ void declareCommands() {
                     }
                 }
                 std::cout << " ] " << pct << "%" << std::endl;
-                pal_sleep( micro_wait );
+                pal_sleep( getRestSec() * 1000000 );
             }
             return true;
         }
@@ -625,6 +632,12 @@ int main(int argc, char **argv){
             else
                 std::cout << "Argument '" << argument << "' should be followed by a <pixels>. Skipping argument." << std::endl;
         }
+        else if (   std::string(argv[i]) == "--fps" ) {
+            if(++i < argc)
+                setFps( toInt(std::string(argv[i])) );
+            else
+                std::cout << "Argument '" << argument << "' should be followed by a <pixels>. Skipping argument." << std::endl;
+        }
         else if (   std::string(argv[i]) == "--help" ) {
             displayHelp = true;
         }
@@ -672,7 +685,8 @@ int main(int argc, char **argv){
         std::string argument = std::string(argv[i]);
         if (    argument == "-x" || argument == "-y" ||
                 argument == "-w" || argument == "--width" ||
-                argument == "-h" || argument == "--height" ) {
+                argument == "-h" || argument == "--height" ||
+                argument == "--fps" ) {
             i++;
         }
         else if (   argument == "-l" ||
@@ -900,7 +914,7 @@ int main(int argc, char **argv){
 
         // If nothing in the scene change skip the frame and try to keep it at 60fps
         if (!timeOut && !fullFps && !sandbox.haveChange()) {
-            pal_sleep( micro_wait );
+            pal_sleep( getRestSec() * 1000000 );
             continue;
         }
 
@@ -1047,7 +1061,7 @@ void runCmd(const std::string &_cmd, std::mutex &_mutex) {
 //============================================================================
 void cinWatcherThread() {
     while (!sandbox.isReady()) {
-        pal_sleep( micro_wait );
+        pal_sleep( getRestSec() * 1000000 );
     }
 
     // Argument commands to execute comming from -e or -E

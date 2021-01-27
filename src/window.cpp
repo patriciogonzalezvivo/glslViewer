@@ -31,6 +31,7 @@ static double fTime = 0.0f;
 static double fDelta = 0.0f;
 static double fFPS = 0.0f;
 static float fPixelDensity = 1.0;
+static float fRestSec = 0.0167f; // default 60fps 
 
 extern void pal_sleep(uint64_t);
 
@@ -567,10 +568,9 @@ void updateGL(){
     #if defined(DRIVER_GLFW)
         double now = glfwGetTime();
 
-        // Fix the FPS to a max of 60fps (REST_SEC)
         float diff = now - fTime;
-        if (diff < REST_SEC) {
-            pal_sleep(int((REST_SEC - diff) * 1000000));
+        if (diff < fRestSec) {
+            pal_sleep(int((fRestSec - diff) * 1000000));
             now = glfwGetTime();
         }
 
@@ -825,8 +825,16 @@ double getDelta() {
     return fDelta;
 }
 
-double getFPS() {
+void setFps(int _fps) {
+    fRestSec = 1.0f/(float)_fps;
+}
+
+double getFps() {
     return fFPS;
+}
+
+float  getRestSec() {
+    return fRestSec;
 }
 
 float getMouseX(){
