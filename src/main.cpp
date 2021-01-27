@@ -46,7 +46,7 @@ bool        execute_exit    = false;
 // Open Sound Control
 Osc osc_listener;
 
-std::string version = "1.6.8";
+std::string version = "1.6.9";
 std::string name = "GlslViewer";
 std::string header = name + " " + version + " by Patricio Gonzalez Vivo ( patriciogonzalezvivo.com )"; 
 
@@ -214,7 +214,7 @@ void declareCommands() {
         }
         return false;
     },
-    "fps                            return u_fps, the number of frames per second.", false));
+    "fps                            return or set the amount of frames per second.", false));
 
     commands.push_back(Command("delta", [&](const std::string& _line){ 
         if (_line == "delta") {
