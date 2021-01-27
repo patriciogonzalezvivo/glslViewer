@@ -56,8 +56,7 @@ public:
     bool                    addTexture( const std::string& _name, Texture* _texture );
     bool                    addTexture( const std::string& _name, const std::string& _path, WatchFileList& _files, bool _flip = true, bool _verbose = true );
     bool                    addBumpTexture( const std::string& _name, const std::string& _path, WatchFileList& _files, bool _flip = true, bool _verbose = true );
-
-    bool                    addStreamingTexture( const std::string& _name, const std::string& _url, bool _verbose = true );
+    bool                    addStreamingTexture( const std::string& _name, const std::string& _url, bool _flip = true, bool _verbose = true );
 
     void                    setCubeMap( TextureCube* _cubemap );
     void                    setCubeMap( const std::string& _filename, WatchFileList& _files, bool _verbose = true);

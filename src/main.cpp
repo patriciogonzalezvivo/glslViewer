@@ -804,7 +804,7 @@ int main(int argc, char **argv){
                     argument.rfind("https://", 0) == 0 ||
                     argument.rfind("rtsp://", 0) == 0 ||
                     argument.rfind("rtmp://", 0) == 0) {
-            if ( sandbox.uniforms.addStreamingTexture("u_tex"+toString(textureCounter), argument) )
+            if ( sandbox.uniforms.addStreamingTexture("u_tex"+toString(textureCounter), argument, vFlip) )
                 textureCounter++;
         }
         #endif
