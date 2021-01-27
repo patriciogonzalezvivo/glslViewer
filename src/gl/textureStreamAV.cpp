@@ -1,9 +1,9 @@
-#include "textureStream.h"
+#include "textureStreamAV.h"
 
 #include <iostream>
 #include <fstream>
 
-#ifdef SUPPORT_FOR_LIBAV 
+#ifdef SUPPORT_FOR_LIBAV
 
 extern "C" {
 #include <libavutil/log.h>
@@ -12,7 +12,9 @@ extern "C" {
 #include <libswresample/swresample.h>
 }
 
-TextureStream::TextureStream() {
+#include "../io/pixels.h"
+
+TextureStreamAV::TextureStreamAV() {
 
     // initialize libav
     av_register_all();
@@ -22,7 +24,7 @@ TextureStream::TextureStream() {
     avdevice_register_all();
 
     av_format_ctx = NULL;
-    stream_idx = -1;
+    m_streamId = -1;
     av_video_stream = NULL;
     av_codec_ctx = NULL;
     av_decoder = NULL;
@@ -32,7 +34,7 @@ TextureStream::TextureStream() {
     conv_ctx = NULL;
 }
 
-TextureStream::~TextureStream() {
+TextureStreamAV::~TextureStreamAV() {
     clear();
 }
 
@@ -56,7 +58,7 @@ static AVPixelFormat correct_for_deprecated_pixel_format(AVPixelFormat pix_fmt) 
     }
 }
 
-bool TextureStream::load(const std::string& _filepath, bool _vFlip) {
+bool TextureStreamAV::load(const std::string& _path, bool _vFlip) {
 
     // https://github.com/bartjoyce/video-app/blob/master/src/video_reader.cpp#L35-L40
     // Open the file using libavformat
@@ -71,7 +73,7 @@ bool TextureStream::load(const std::string& _filepath, bool _vFlip) {
 
     // https://gist.github.com/rcolinray/7552384#file-gl_ffmpeg-cpp-L229
     // open video
-    if (avformat_open_input(&av_format_ctx, _filepath.c_str(), NULL, NULL) < 0) {
+    if (avformat_open_input(&av_format_ctx, _path.c_str(), NULL, NULL) < 0) {
         std::cout << "failed to open input" << std::endl;
         clear();
         return false;
@@ -85,9 +87,9 @@ bool TextureStream::load(const std::string& _filepath, bool _vFlip) {
     }
 
     // dump debug info
-    av_dump_format(av_format_ctx, 0, _filepath.c_str(), 0);
+    av_dump_format(av_format_ctx, 0, _path.c_str(), 0);
         
-    stream_idx = -1;
+    m_streamId = -1;
     AVCodecParameters* av_codec_params;
     AVCodec* av_codec;
 
@@ -102,12 +104,12 @@ bool TextureStream::load(const std::string& _filepath, bool _vFlip) {
             m_width = av_codec_params->width;
             m_height = av_codec_params->height;
             time_base = av_format_ctx->streams[i]->time_base;
-            stream_idx = i;
+            m_streamId = i;
             break;
         }
     }
 
-    if (stream_idx == -1) {
+    if (m_streamId == -1) {
         std::cout << "failed to find video stream" << std::endl;
         clear();
         return false;
@@ -164,15 +166,31 @@ bool TextureStream::load(const std::string& _filepath, bool _vFlip) {
 
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, m_width, m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 
+    m_path = _path;
+    m_vFlip = _vFlip;
+
     return true;
 }
 
-bool TextureStream::update() {
+bool TextureStreamAV::update() {
 
      // Decode one frame
     int response;
-    while (av_read_frame(av_format_ctx, av_packet) >= 0) {
-        if (av_packet->stream_index != stream_idx) {
+    bool running = true; 
+    while (running) {
+        response = av_read_frame(av_format_ctx, av_packet);
+
+        if (response < 0)
+            running = false;
+
+        // If finish LOOP it by loading it back again
+        if (response == AVERROR_EOF) {
+            avio_seek(av_format_ctx->pb, 0, SEEK_SET);
+            avformat_seek_file(av_format_ctx, m_streamId, 0, 0, av_format_ctx->streams[m_streamId]->duration, 0);
+            continue;
+        }
+
+        if (av_packet->stream_index != m_streamId) {
             av_packet_unref(av_packet);
             continue;
         }
@@ -212,16 +230,15 @@ bool TextureStream::update() {
     uint8_t* dest[4] = { frame_data, NULL, NULL, NULL };
     int dest_linesize[4] = { av_frame->width * 4, 0, 0, 0 };
     sws_scale(conv_ctx, av_frame->data, av_frame->linesize, 0, av_frame->height, dest, dest_linesize);
-    // sws_scale(  conv_ctx, av_frame->data, av_frame->linesize, 0, av_codec_ctx->height, gl_frame->data, gl_frame->linesize);
-    glBindTexture(GL_TEXTURE_2D, m_id);
-    // glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, av_codec_ctx->width, av_codec_ctx->height, GL_RGB, GL_UNSIGNED_BYTE, gl_frame->data[0]);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, m_width, m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, frame_data);
-    glBindTexture(GL_TEXTURE_2D, 0);
+
+    if (m_vFlip)
+        flipPixelsVertically(frame_data, av_codec_ctx->width, av_codec_ctx->height, 4);
+    Texture::load(av_codec_ctx->width, av_codec_ctx->height, 4, 8, frame_data);
 
     return true;
 }
 
-void  TextureStream::clear() {
+void  TextureStreamAV::clear() {
     if (conv_ctx)
         sws_freeContext(conv_ctx);
 

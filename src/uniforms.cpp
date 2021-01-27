@@ -6,6 +6,11 @@
 
 #include "tools/text.h"
 
+#include "gl/textureBump.h"
+#ifdef SUPPORT_FOR_LIBAV 
+#include "gl/textureStreamAV.h"
+#endif
+
 std::string UniformData::getType() {
     if (size == 1 && bInt) {
         return "int";
@@ -226,13 +231,13 @@ bool Uniforms::addBumpTexture(const std::string& _name, const std::string& _path
         
         // If we can lets proceed creating a texgure
         else {
-            Texture* tex = new Texture();
+            TextureBump* tex = new TextureBump();
 
             // load an image into the texture
-            if (tex->loadBump(_path, true)) {
+            if (tex->load(_path, true)) {
 
                 // the image is loaded finish add the texture to the uniform list
-                textures[ _name ] = tex;
+                textures[ _name ] = (Texture*)tex;
 
                 // and the file to the watch list
                 WatchFile file;
@@ -257,17 +262,18 @@ bool Uniforms::addBumpTexture(const std::string& _name, const std::string& _path
     return false;
 }
 
-#ifdef SUPPORT_FOR_LIBAV 
 bool Uniforms::addStreamingTexture( const std::string& _name, const std::string& _url, bool _verbose) {
     if (textures.find(_name) == textures.end()) {
 
-        TextureStream* tex = new TextureStream();
+
+#ifdef SUPPORT_FOR_LIBAV
+        TextureStreamAV* tex = new TextureStreamAV();
         // load an image into the texture
         if (tex->load(_url, true)) {
 
             // the image is loaded finish add the texture to the uniform list
             textures[ _name ] = (Texture*)tex;
-            streams[ _name ] = tex;
+            streams[ _name ] = (TextureStream*)tex;
 
             if (_verbose) {
                 std::cout << "// " << _url << " loaded as streaming texture: " << std::endl;
@@ -279,12 +285,12 @@ bool Uniforms::addStreamingTexture( const std::string& _name, const std::string&
         }
         else
             delete tex;
+#endif
 
 
     }
     return false;
 }
-#endif
 
 void Uniforms::setCubeMap( TextureCube* _cubemap ) {
     if (cubemap)
@@ -437,11 +443,10 @@ bool Uniforms::haveChange() {
             break;
         }
     }
-#ifdef SUPPORT_FOR_LIBAV 
+
     for (StreamsList::iterator i = streams.begin(); i != streams.end(); ++i) {
         i->second->update();
-    }  
-#endif  
+    }
 
     // std::cout << "  change " << m_change << std::endl;
     // std::cout << "  lights " << lightChange << std::endl;
@@ -451,6 +456,7 @@ bool Uniforms::haveChange() {
     // std::cout << "  u_camera " << getCamera().bChange << std::endl;
 
     return  m_change || 
+            streams.size() > 0 ||
             functions["u_time"].present || 
             functions["u_delta"].present ||
             functions["u_mouse"].present ||

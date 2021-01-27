@@ -10,7 +10,6 @@ public:
     virtual ~Texture();
 
     virtual bool    load(const std::string& _filepath, bool _vFlip);
-    virtual bool    loadBump(const std::string& _filepath, bool _vFlip);
     virtual bool    load(int _width, int _height, int _component, int _bits, const void* _data);
 
     virtual void    clear();
@@ -33,4 +32,6 @@ protected:
     int             m_height;
 
     GLuint          m_id;
+
+    bool	        m_vFlip;
 };
