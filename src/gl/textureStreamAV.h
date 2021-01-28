@@ -19,7 +19,7 @@ public:
     TextureStreamAV();
     virtual ~TextureStreamAV();
 
-    virtual bool    load(const std::string& _filepath, bool _vFlip);
+    virtual bool    load(const std::string& _filepath, bool _vFlip, bool _device = false);
     virtual bool    update();
     virtual void    clear();
 

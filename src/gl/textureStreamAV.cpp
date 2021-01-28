@@ -58,7 +58,7 @@ static AVPixelFormat correct_for_deprecated_pixel_format(AVPixelFormat pix_fmt) 
     }
 }
 
-bool TextureStreamAV::load(const std::string& _path, bool _vFlip) {
+bool TextureStreamAV::load(const std::string& _path, bool _vFlip, bool _device) {
 
     // https://github.com/bartjoyce/video-app/blob/master/src/video_reader.cpp#L35-L40
     // Open the file using libavformat
@@ -71,9 +71,24 @@ bool TextureStreamAV::load(const std::string& _path, bool _vFlip) {
 
     av_log_set_level(AV_LOG_QUIET);
 
+    int input_lodaded = -1;
+    if (_device) {
+        std::string driver = "video4linux2";
+
+        #ifdef PLATFORM_OSX 
+        driver = "avfoundation";
+        #elif defined(_WIN32)
+        driver = "vfwcap";
+        #endif
+
+        AVInputFormat *ifmt = av_find_input_format(driver.c_str());
+        input_lodaded = avformat_open_input(&av_format_ctx, _path.c_str(), ifmt, NULL);
+    }
+    else 
+        input_lodaded = avformat_open_input(&av_format_ctx, _path.c_str(), NULL, NULL);
+
     // https://gist.github.com/rcolinray/7552384#file-gl_ffmpeg-cpp-L229
-    // open video
-    if (avformat_open_input(&av_format_ctx, _path.c_str(), NULL, NULL) < 0) {
+    if (input_lodaded < 0) {
         std::cout << "failed to open input" << std::endl;
         clear();
         return false;
@@ -87,7 +102,7 @@ bool TextureStreamAV::load(const std::string& _path, bool _vFlip) {
     }
 
     // dump debug info
-    av_dump_format(av_format_ctx, 0, _path.c_str(), 0);
+    // av_dump_format(av_format_ctx, 0, _path.c_str(), 0);
         
     m_streamId = -1;
     AVCodecParameters* av_codec_params;

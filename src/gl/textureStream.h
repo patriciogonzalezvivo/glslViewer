@@ -5,5 +5,5 @@
 
 class TextureStream : public Texture {
 public:
-    virtual bool    update() = 0;
+    virtual bool    update() { return false; };
 };

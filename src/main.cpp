@@ -85,6 +85,7 @@ void printUsage(char * executableName) {
     std::cerr << "// [<mesh>.(obj/ply/stl/glb/gltf)] - load obj/ply/stl/glb/gltf file" << std::endl;
     std::cerr << "// [<texture>.(png/tga/jpg/bmp/psd/gif/hdr/mov/mp4/rtsp/rtmp/etc)] - load and assign texture to uniform order" << std::endl;
     std::cerr << "// [-vFlip] - all textures after will be flipped vertically" << std::endl;
+    std::cerr << "// [--video <video_device_number>] - open video device allocated wit that particular id" << std::endl;
     std::cerr << "// [-<uniformName> <texture>.(png/tga/jpg/bmp/psd/gif/hdr)] - add textures associated with different uniform sampler2D names" << std::endl;
     std::cerr << "// [-C <enviromental_map>.(png/tga/jpg/bmp/psd/gif/hdr)] - load a environmental map as cubemap" << std::endl;
     std::cerr << "// [-c <enviromental_map>.(png/tga/jpg/bmp/psd/gif/hdr)] - load a environmental map as cubemap but hided" << std::endl;
@@ -796,6 +797,13 @@ int main(int argc, char **argv){
                 textureCounter++;
         }
         #ifdef SUPPORT_FOR_LIBAV 
+        else if ( argument == "--video" ) {
+            if (++i < argc) {
+                argument = std::string(argv[i]);
+                if ( sandbox.uniforms.addStreamingTexture("u_tex"+toString(textureCounter), argument, vFlip, true) )
+                    textureCounter++;
+            }
+        }
         else if (   haveExt(argument,"mov") || haveExt(argument,"MOV") ||
                     haveExt(argument,"mp4") || haveExt(argument,"MP4") ||
                     haveExt(argument,"mpeg") || haveExt(argument,"MPEG") ||
@@ -804,7 +812,7 @@ int main(int argc, char **argv){
                     argument.rfind("https://", 0) == 0 ||
                     argument.rfind("rtsp://", 0) == 0 ||
                     argument.rfind("rtmp://", 0) == 0) {
-            if ( sandbox.uniforms.addStreamingTexture("u_tex"+toString(textureCounter), argument, vFlip) )
+            if ( sandbox.uniforms.addStreamingTexture("u_tex"+toString(textureCounter), argument, vFlip, false) )
                 textureCounter++;
         }
         #endif
