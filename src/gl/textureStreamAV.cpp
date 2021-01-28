@@ -58,7 +58,7 @@ static AVPixelFormat correct_for_deprecated_pixel_format(AVPixelFormat pix_fmt) 
     }
 }
 
-bool TextureStreamAV::load(const std::string& _path, bool _vFlip, bool _device) {
+bool TextureStreamAV::load(const std::string& _path, bool _vFlip) {
 
     // https://github.com/bartjoyce/video-app/blob/master/src/video_reader.cpp#L35-L40
     // Open the file using libavformat
@@ -72,7 +72,7 @@ bool TextureStreamAV::load(const std::string& _path, bool _vFlip, bool _device) 
     av_log_set_level(AV_LOG_QUIET);
 
     int input_lodaded = -1;
-    if (_device) {
+    if (device) {
         std::string driver = "video4linux2";
 
         #ifdef PLATFORM_OSX 
@@ -80,6 +80,8 @@ bool TextureStreamAV::load(const std::string& _path, bool _vFlip, bool _device) 
         #elif defined(_WIN32)
         driver = "vfwcap";
         #endif
+
+        std::cout << "Opening " << driver << " at " << _path << std::endl;
 
         AVInputFormat *ifmt = av_find_input_format(driver.c_str());
         input_lodaded = avformat_open_input(&av_format_ctx, _path.c_str(), ifmt, NULL);

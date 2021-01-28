@@ -267,9 +267,10 @@ bool Uniforms::addStreamingTexture( const std::string& _name, const std::string&
 
 #ifdef SUPPORT_FOR_LIBAV
         TextureStreamAV* tex = new TextureStreamAV();
-        // load an image into the texture
-        if (tex->load(_url, _vflip, _device)) {
+        tex->device = _device;
 
+        // load an image into the texture
+        if (tex->load(_url, _vflip)) {
             // the image is loaded finish add the texture to the uniform list
             textures[ _name ] = (Texture*)tex;
             streams[ _name ] = (TextureStream*)tex;
