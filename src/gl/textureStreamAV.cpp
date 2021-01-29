@@ -13,6 +13,8 @@ extern "C" {
 }
 
 #include "../io/pixels.h"
+#include "../tools/text.h"
+#include "../window.h"
 
 TextureStreamAV::TextureStreamAV() {
 
@@ -59,6 +61,7 @@ static AVPixelFormat correct_for_deprecated_pixel_format(AVPixelFormat pix_fmt) 
 }
 
 bool TextureStreamAV::load(const std::string& _path, bool _vFlip) {
+    m_vFlip = _vFlip;
 
     // https://github.com/bartjoyce/video-app/blob/master/src/video_reader.cpp#L35-L40
     // Open the file using libavformat
@@ -77,14 +80,17 @@ bool TextureStreamAV::load(const std::string& _path, bool _vFlip) {
 
         #ifdef PLATFORM_OSX 
         driver = "avfoundation";
+        m_vFlip = !m_vFlip;
         #elif defined(_WIN32)
         driver = "vfwcap";
         #endif
-
-        std::cout << "Opening " << driver << " at " << _path << std::endl;
+        AVDictionary *options = NULL;
+        av_dict_set(&options, "framerate", "30", 0);
+        // av_dict_set(&options, "framerate", toString(getFps()).c_str(), 0);
+        // std::cout << "Opening " << driver << " at " << _path << std::endl;
 
         AVInputFormat *ifmt = av_find_input_format(driver.c_str());
-        input_lodaded = avformat_open_input(&av_format_ctx, _path.c_str(), ifmt, NULL);
+        input_lodaded = avformat_open_input(&av_format_ctx, _path.c_str(), ifmt, &options);
     }
     else 
         input_lodaded = avformat_open_input(&av_format_ctx, _path.c_str(), NULL, NULL);
@@ -184,7 +190,6 @@ bool TextureStreamAV::load(const std::string& _path, bool _vFlip) {
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, m_width, m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 
     m_path = _path;
-    m_vFlip = _vFlip;
 
     return true;
 }
@@ -193,6 +198,7 @@ bool TextureStreamAV::update() {
 
      // Decode one frame
     int response;
+    int got_picture;
     bool running = true; 
     while (running) {
         response = av_read_frame(av_format_ctx, av_packet);
@@ -212,19 +218,31 @@ bool TextureStreamAV::update() {
             continue;
         }
 
-        response = avcodec_send_packet(av_codec_ctx, av_packet);
-        if (response < 0) {
-            printf("Failed to decode packet: %s\n", av_make_error(response));
-            return false;
+        if (device) {
+            response = avcodec_decode_video2(av_codec_ctx, av_frame, &got_picture, av_packet);
+            if (response < 0) {
+                printf("Failed to decode packet: %s\n", av_make_error(response));
+                return false;
+            }
+            if (!got_picture) {
+                return false;
+            }
         }
-
-        response = avcodec_receive_frame(av_codec_ctx, av_frame);
-        if (response == AVERROR(EAGAIN) || response == AVERROR_EOF) {
-            av_packet_unref(av_packet);
-            continue;
-        } else if (response < 0) {
-            printf("Failed to decode packet: %s\n", av_make_error(response));
-            return false;
+        else {
+            response = avcodec_send_packet(av_codec_ctx, av_packet);
+            if (response < 0) {
+                printf("Failed to decode packet: %s\n", av_make_error(response));
+                return false;
+            }
+            response = avcodec_receive_frame(av_codec_ctx, av_frame);
+            if (response == AVERROR(EAGAIN) || response == AVERROR_EOF) {
+                av_packet_unref(av_packet);
+                continue;
+            } 
+            else if (response < 0) {
+                printf("Failed to decode packet: %s\n", av_make_error(response));
+                return false;
+            }
         }
 
         av_packet_unref(av_packet);
