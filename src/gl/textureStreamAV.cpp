@@ -80,7 +80,6 @@ bool TextureStreamAV::load(const std::string& _path, bool _vFlip) {
 
         #ifdef PLATFORM_OSX 
         driver = "avfoundation";
-        m_vFlip = !m_vFlip;
         #elif defined(_WIN32)
         driver = "vfwcap";
         #endif
