@@ -7,6 +7,7 @@
 #include "tools/text.h"
 
 #include "gl/textureBump.h"
+#include "gl/textureStreamSequence.h"
 #ifdef SUPPORT_FOR_LIBAV 
 #include "gl/textureStreamAV.h"
 #endif
@@ -265,6 +266,28 @@ bool Uniforms::addBumpTexture(const std::string& _name, const std::string& _path
 bool Uniforms::addStreamingTexture( const std::string& _name, const std::string& _url, bool _vflip, bool _device, bool _verbose) {
     if (textures.find(_name) == textures.end()) {
 
+        // Check if it's a PNG Sequence
+        if (check_for_pattern(_url)) {
+            TextureStreamSequence *tex = new TextureStreamSequence();
+
+            if (tex->load(_url, _vflip)) {
+                // the image is loaded finish add the texture to the uniform list
+                textures[ _name ] = (Texture*)tex;
+                streams[ _name ] = (TextureStream*)tex;
+
+                if (_verbose) {
+                    std::cout << "// " << _url << " sequence loaded as streaming texture: " << std::endl;
+                    std::cout << "//    uniform sampler2D " << _name  << ";"<< std::endl;
+                    std::cout << "//    uniform vec2 " << _name  << "Resolution;"<< std::endl;
+                }
+
+                return true;
+            }
+            else
+                delete tex;
+            
+        }
+        else {
 #ifdef SUPPORT_FOR_LIBAV
         TextureStreamAV* tex = new TextureStreamAV();
         tex->device = _device;
@@ -286,6 +309,8 @@ bool Uniforms::addStreamingTexture( const std::string& _name, const std::string&
         else
             delete tex;
 #endif
+        }
+
 
     }
     return false;

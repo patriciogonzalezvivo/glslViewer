@@ -31,5 +31,6 @@ std::string toString(FileType _type);
 std::string getBaseDir (const std::string& filepath);
 std::string getAbsPath (const std::string& _filename);
 std::string urlResolve(const std::string& _filename, const std::string& _pwd, const List& _include_folders);
+std::vector<std::string> glob(const std::string& _pattern);
 
 

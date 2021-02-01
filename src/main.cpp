@@ -793,7 +793,11 @@ int main(int argc, char **argv){
                     haveExt(argument,"jpg") || haveExt(argument,"JPG") ||
                     haveExt(argument,"jpeg") || haveExt(argument,"JPEG")) {
 
-            if ( sandbox.uniforms.addTexture("u_tex"+toString(textureCounter), argument, files, vFlip) )
+            if (check_for_pattern(argument)) {
+                if ( sandbox.uniforms.addStreamingTexture("u_tex"+toString(textureCounter), argument, vFlip, false) )
+                    textureCounter++;
+            }
+            else if ( sandbox.uniforms.addTexture("u_tex"+toString(textureCounter), argument, files, vFlip) )
                 textureCounter++;
         }
         #ifdef SUPPORT_FOR_LIBAV 
@@ -855,7 +859,22 @@ int main(int argc, char **argv){
             std::string parameterPair = argument.substr( argument.find_last_of('-') + 1 );
             if(++i < argc) {
                 argument = std::string(argv[i]);
-                sandbox.uniforms.addTexture(parameterPair, argument, files, vFlip);
+
+                // If it's a video file, capture device, streaming url or Image sequence
+                if (haveExt(argument,"mov") || haveExt(argument,"MOV") ||
+                    haveExt(argument,"mp4") || haveExt(argument,"MP4") ||
+                    haveExt(argument,"mpeg") || haveExt(argument,"MPEG") ||
+                    argument.rfind("/dev/", 0) == 0 ||
+                    argument.rfind("http://", 0) == 0 ||
+                    argument.rfind("https://", 0) == 0 ||
+                    argument.rfind("rtsp://", 0) == 0 ||
+                    argument.rfind("rtmp://", 0) == 0 ||
+                    check_for_pattern(argument) ) {
+                    sandbox.uniforms.addStreamingTexture(parameterPair, argument, vFlip, false);
+                }
+                // Else load it as a single texture
+                else 
+                    sandbox.uniforms.addTexture(parameterPair, argument, files, vFlip);
             }
             else
                 std::cout << "Argument '" << argument << "' should be followed by a <texture>. Skipping argument." << std::endl;

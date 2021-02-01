@@ -5,6 +5,7 @@
 #include <iterator>     // std::back_inserter
 #include <algorithm>    // std::unique
 #include <sys/stat.h>
+#include <glob.h>
 
 bool haveExt(const std::string& _file, const std::string& _ext){
     return _file.find( "." + _ext) != std::string::npos;
@@ -156,4 +157,15 @@ std::string toString(FileType _type) {
     else {
         return "-undefined-";
     }
+}
+
+std::vector<std::string> glob(const std::string& _pattern) {
+    glob_t glob_result;
+    glob(_pattern.c_str(), GLOB_TILDE, NULL, &glob_result);
+    std::vector<std::string> files;
+    for (unsigned int i = 0; i < glob_result.gl_pathc; ++i) {
+        files.push_back(std::string(glob_result.gl_pathv[i]));
+    }
+    globfree(&glob_result);
+    return files;
 }

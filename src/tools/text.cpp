@@ -322,3 +322,8 @@ std::string getUniformName(const std::string& _str) {
     std::vector<std::string> values = split(_str, '.');
     return "u_" + toLower( toUnderscore( purifyString( values[0] ) ) );
 }
+
+bool check_for_pattern(const std::string& _str) {
+    return  (_str.find('*') != std::string::npos) ||
+            (_str.find('?') != std::string::npos);
+}
