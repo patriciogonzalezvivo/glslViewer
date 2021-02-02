@@ -58,8 +58,8 @@ EGLDisplay display;
 EGLContext context;
 EGLSurface surface;
 
-void* getEGLDisplay() {
-    return &display;
+EGLDisplay getEGLDisplay() {
+    return display;
 }
 
 // unsigned long long timeStart;

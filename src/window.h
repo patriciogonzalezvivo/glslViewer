@@ -60,5 +60,6 @@ void onViewportResize(int _width, int _height);
 void onScroll(float _yoffset);
 
 #ifndef DRIVER_GLFW
-void* getEGLDisplay();
+#include "gl/gl.h"
+EGLDisplay getEGLDisplay();
 #endif
