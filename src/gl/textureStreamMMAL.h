@@ -28,11 +28,12 @@ protected:
     static void camera_control_callback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer);
     static void video_output_callback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer);
 
-    MMAL_PORT_T *preview_port = NULL;
-    MMAL_PORT_T *video_port = NULL;
-    MMAL_PORT_T *still_port = NULL;
-    MMAL_QUEUE_T *video_queue = NULL;
-    MMAL_POOL_T *video_pool = NULL;
+    MMAL_COMPONENT_T    *camera_component = NULL;
+    MMAL_PORT_T         *preview_port   = NULL;
+    MMAL_PORT_T         *video_port     = NULL;
+    MMAL_PORT_T         *still_port     = NULL;
+    MMAL_QUEUE_T        *video_queue    = NULL;
+    MMAL_POOL_T         *video_pool     = NULL;
 
     //RASPICAM_CAMERA_PARAMETERS cameraParameters;
 
