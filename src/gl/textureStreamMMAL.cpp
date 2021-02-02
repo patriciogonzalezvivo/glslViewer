@@ -81,8 +81,8 @@ bool TextureStreamMMAL::load(const std::string& _filepath, bool _vFlip) {
         
     //set camera parameters.
     MMAL_PARAMETER_CAMERA_CONFIG_T cam_config;
-    cam_config.hdr = MMAL_PARAMETER_CAMERA_CONFIG;
-    cam_config.hdr.size = sizeof(cam_config);
+    //cam_config.hdr = MMAL_PARAMETER_CAMERA_CONFIG;
+    //cam_config.hdr.size = sizeof(cam_config);
     cam_config.max_stills_w = m_width;
     cam_config.max_stills_h = m_height;
     cam_config.stills_yuv422 = 0;
@@ -256,7 +256,7 @@ bool TextureStreamMMAL::load(const std::string& _filepath, bool _vFlip) {
         glGenTextures(1, &m_id);
     glBindTexture(GL_TEXTURE_2D, m_id);
         
-    return;
+    return true;
 }
 
 void TextureStreamMMAL::camera_control_callback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer) {
