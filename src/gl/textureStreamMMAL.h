@@ -3,8 +3,7 @@
 
 #include "textureStream.h"
 
-// #define PLATFORM_RPI
-#if defined(PLATFORM_RPI) || defined(PLATFORM_RPI4)
+#if defined(DRIVER_VC)
 
 #include "interface/mmal/mmal.h"
 #include "interface/mmal/mmal_logging.h"

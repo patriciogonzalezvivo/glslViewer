@@ -3,7 +3,7 @@
 
 #include <iostream>
 
-#if defined(PLATFORM_RPI) || defined(PLATFORM_RPI4)
+#if defined(DRIVER_VC)
 
 // Standard port setting for the camera component
 #define MMAL_CAMERA_PREVIEW_PORT 0
