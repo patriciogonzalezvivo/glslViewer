@@ -893,9 +893,8 @@ bool TextureStreamMMAL::update() {
         // mmal_buffer_header_mem_lock(buf);
         // printf("Buffer received with length %d\n", buf->length);
 
-        updateTexture(getEGLDisplay(), EGL_IMAGE_BRCM_MULTIMEDIA, (EGLClientBuffer)buf->data, &m_id, &yimg);
-        // updateTexture(getEGLDisplay(), EGL_IMAGE_BRCM_MULTIMEDIA_U, (EGLClientBuffer)buf->data, &m_id, &uimg);
-        // updateTexture(getEGLDisplay(), EGL_IMAGE_BRCM_MULTIMEDIA_Y, (EGLClientBuffer)buf->data, &m_id, &yimg);
+        // updateTexture(getEGLDisplay(), EGL_IMAGE_BRCM_MULTIMEDIA, (EGLClientBuffer)buf->data, &m_id, &img);
+        updateTexture(getEGLDisplay(), EGL_IMAGE_BRCM_MULTIMEDIA_Y, (EGLClientBuffer)buf->data, &m_id, &yimg);
         // updateTexture(getEGLDisplay(), EGL_IMAGE_BRCM_MULTIMEDIA_U, (EGLClientBuffer)buf->data, &m_id, &uimg);
         // updateTexture(getEGLDisplay(), EGL_IMAGE_BRCM_MULTIMEDIA_V, (EGLClientBuffer)buf->data, &m_id, &vimg);
         
