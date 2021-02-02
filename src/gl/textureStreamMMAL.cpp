@@ -827,40 +827,40 @@ bool TextureStreamMMAL::load(const std::string& _filepath, bool _vFlip) {
 
 void TextureStreamMMAL::camera_control_callback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer) {
     printf("Camera control callback\n\n");
-	return;
+    return;
 }
 
 void TextureStreamMMAL::video_output_callback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer) {
-    //to handle the user not reading frames, remove and return any pre-existing ones
-	if (mmal_queue_length(video_queue)>=2) {
+    // //to handle the user not reading frames, remove and return any pre-existing ones
+    // if (mmal_queue_length(video_queue)>=2) {
 
-		if(MMAL_BUFFER_HEADER_T* existing_buffer = mmal_queue_get(video_queue)) {
+    //  if(MMAL_BUFFER_HEADER_T* existing_buffer = mmal_queue_get(video_queue)) {
 
-			mmal_buffer_header_release(existing_buffer);
-			if (port->is_enabled) {
-				MMAL_STATUS_T status;
-				MMAL_BUFFER_HEADER_T *new_buffer;
-				new_buffer = mmal_queue_get(video_pool->queue);
+    //      mmal_buffer_header_release(existing_buffer);
+    //      if (port->is_enabled) {
+    //          MMAL_STATUS_T status;
+    //          MMAL_BUFFER_HEADER_T *new_buffer;
+    //          new_buffer = mmal_queue_get(video_pool->queue);
 
-				if (new_buffer)
-				    status = mmal_port_send_buffer(port, new_buffer);
+    //          if (new_buffer)
+    //              status = mmal_port_send_buffer(port, new_buffer);
 
-				if (!new_buffer || status != MMAL_SUCCESS)
-				    printf("Unable to return a buffer to the video port\n\n");
-			}	
-		}
-	}
+    //          if (!new_buffer || status != MMAL_SUCCESS)
+    //              printf("Unable to return a buffer to the video port\n\n");
+    //      }   
+    //  }
+    // }
 
-	//add the buffer to the output queue
-	mmal_queue_put(video_queue, buffer);
+    // //add the buffer to the output queue
+    // mmal_queue_put(video_queue, buffer);
 
-	//printf("Video buffer callback, output queue len=%d\n\n", mmal_queue_length(OutputQueue));
+    //printf("Video buffer callback, output queue len=%d\n\n", mmal_queue_length(OutputQueue));
 }
 
 bool TextureStreamMMAL::update() {
     if (m_id == 0)
-        return;
-        
+        return false;
+
     if (MMAL_BUFFER_HEADER_T* buf = mmal_queue_get(video_queue)) {
         // mmal_buffer_header_mem_lock(buf);
         
