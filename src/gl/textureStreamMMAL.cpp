@@ -868,7 +868,7 @@ bool TextureStreamMMAL::update() {
 
         EGLDisplay* display = (EGLDisplay*)getEGLDisplay();
 
-        check();
+        // check();
         if (yimg != EGL_NO_IMAGE_KHR){
             eglDestroyImageKHR(*display, yimg);
             yimg = EGL_NO_IMAGE_KHR;
@@ -879,9 +879,9 @@ bool TextureStreamMMAL::update() {
                                     EGL_IMAGE_BRCM_MULTIMEDIA_Y, 
                                     (EGLClientBuffer) buf->data, 
                                     NULL );
-        check();
+        // check();
         glEGLImageTargetTexture2DOES(GL_TEXTURE_EXTERNAL_OES, yimg);
-        check();
+        // check();
         
         // glBindTexture(GL_TEXTURE_EXTERNAL_OES, cam_utex);
         // check();
