@@ -80,7 +80,7 @@ MMAL_PORT_T         *preview_port   = NULL;
 MMAL_PORT_T         *video_port     = NULL;
 MMAL_PORT_T         *still_port     = NULL;
 MMAL_QUEUE_T        *video_queue    = NULL;
-MMAL_POOL_T         *video_pool     = NULL;
+MMAL_POOL_T         *video_pool     = NULL;m_id
 
 RASPICAM_CAMERA_PARAMETERS camera_parameters;
 
@@ -729,12 +729,6 @@ bool TextureStreamMMAL::load(const std::string& _filepath, bool _vFlip) {
         return false;
     }
 
-    // Set up the camera_parameters to default
-    raspicamcontrol_set_defaults(&camera_parameters);
-    
-    //apply all camera parameters
-    raspicamcontrol_set_all_parameters(camera_component, &camera_parameters);
-
     status = mmal_port_parameter_set_boolean(preview_port, MMAL_PARAMETER_ZERO_COPY, MMAL_TRUE);
     if (status != MMAL_SUCCESS) {
         printf("Failed to enable zero copy on camera video port\n");
@@ -777,6 +771,12 @@ bool TextureStreamMMAL::load(const std::string& _filepath, bool _vFlip) {
         printf("Failed to enable video port\n");
         exit(1);
     }
+
+    // Set up the camera_parameters to default
+    raspicamcontrol_set_defaults(&camera_parameters);
+    
+    //apply all camera parameters
+    raspicamcontrol_set_all_parameters(camera_component, &camera_parameters);
 
     //enable the camera
     status = mmal_component_enable(camera_component);
@@ -833,7 +833,9 @@ void TextureStreamMMAL::camera_control_callback(MMAL_PORT_T *port, MMAL_BUFFER_H
 void TextureStreamMMAL::video_output_callback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer) {
     //to handle the user not reading frames, remove and return any pre-existing ones
 	if (mmal_queue_length(video_queue)>=2) {
+
 		if(MMAL_BUFFER_HEADER_T* existing_buffer = mmal_queue_get(video_queue)) {
+            
 			mmal_buffer_header_release(existing_buffer);
 			if (port->is_enabled) {
 				MMAL_STATUS_T status;
@@ -856,10 +858,11 @@ void TextureStreamMMAL::video_output_callback(MMAL_PORT_T *port, MMAL_BUFFER_HEA
 }
 
 bool TextureStreamMMAL::update() {
-    if (MMAL_BUFFER_HEADER_T* buf = mmal_queue_get(video_queue)) {
+    if (m_id != 0 && MMAL_BUFFER_HEADER_T* buf = mmal_queue_get(video_queue)) {
         // mmal_buffer_header_mem_lock(buf);
         
-        // printf("Buffer received with length %d\n", buf->length);
+        printf("Buffer received with length %d\n", buf->length);
+
         // glBindTexture(GL_TEXTURE_EXTERNAL_OES, cam_ytex);
         glBindTexture(GL_TEXTURE_EXTERNAL_OES, m_id);
 
