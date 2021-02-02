@@ -879,7 +879,7 @@ int raspitexutil_do_update_texture(EGLDisplay *display, EGLenum target,
     return 0;
 }
 
-bool TextureStreamMMAL::update() {m_id
+bool TextureStreamMMAL::update() {
     if (m_id == 0)
         return false;
 
