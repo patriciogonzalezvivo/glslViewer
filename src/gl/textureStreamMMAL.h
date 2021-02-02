@@ -33,6 +33,7 @@ protected:
     //RASPICAM_CAMERA_PARAMETERS cameraParameters;
 
     // GLuint cam_ytex, cam_utex, cam_vtex;
+    EGLImageKHR img = EGL_NO_IMAGE_KHR;
     EGLImageKHR yimg = EGL_NO_IMAGE_KHR;
     EGLImageKHR uimg = EGL_NO_IMAGE_KHR;
     EGLImageKHR vimg = EGL_NO_IMAGE_KHR;
