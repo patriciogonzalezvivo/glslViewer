@@ -80,7 +80,7 @@ MMAL_PORT_T         *preview_port   = NULL;
 MMAL_PORT_T         *video_port     = NULL;
 MMAL_PORT_T         *still_port     = NULL;
 MMAL_QUEUE_T        *video_queue    = NULL;
-MMAL_POOL_T         *video_pool     = NULL;m_id
+MMAL_POOL_T         *video_pool     = NULL;
 
 RASPICAM_CAMERA_PARAMETERS camera_parameters;
 
@@ -835,7 +835,7 @@ void TextureStreamMMAL::video_output_callback(MMAL_PORT_T *port, MMAL_BUFFER_HEA
 	if (mmal_queue_length(video_queue)>=2) {
 
 		if(MMAL_BUFFER_HEADER_T* existing_buffer = mmal_queue_get(video_queue)) {
-            
+
 			mmal_buffer_header_release(existing_buffer);
 			if (port->is_enabled) {
 				MMAL_STATUS_T status;
