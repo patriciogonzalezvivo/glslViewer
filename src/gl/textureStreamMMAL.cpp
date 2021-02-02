@@ -858,7 +858,10 @@ void TextureStreamMMAL::video_output_callback(MMAL_PORT_T *port, MMAL_BUFFER_HEA
 }
 
 bool TextureStreamMMAL::update() {
-    if (m_id != 0 && MMAL_BUFFER_HEADER_T* buf = mmal_queue_get(video_queue)) {
+    if (m_id == 0)
+        return;
+        
+    if (MMAL_BUFFER_HEADER_T* buf = mmal_queue_get(video_queue)) {
         // mmal_buffer_header_mem_lock(buf);
         
         printf("Buffer received with length %d\n", buf->length);
