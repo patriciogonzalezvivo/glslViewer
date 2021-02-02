@@ -616,23 +616,24 @@ bool TextureStreamMMAL::load(const std::string& _filepath, bool _vFlip) {
 
     MMAL_COMPONENT_T *camera = 0;
     MMAL_ES_FORMAT_T *format;
-        
+
     MMAL_STATUS_T status;
         
-    /* Create the component */
+    //create the camera component
     status = mmal_component_create(MMAL_COMPONENT_DEFAULT_CAMERA, &camera);
-
     if (status != MMAL_SUCCESS) {
         printf("Failed to create camera component : error %d\n", status);
-        exit(1);
+        return false;
     }
 
+    //check we have output ports
     if (!camera->output_num) {
         status = MMAL_ENOSYS;
         printf("Camera doesn't have output ports\n");
-        exit(1);
+        return false;
     }
 
+    // Get the 3 ports
     preview_port = camera->output[MMAL_CAMERA_PREVIEW_PORT];
     video_port = camera->output[MMAL_CAMERA_VIDEO_PORT];
     still_port = camera->output[MMAL_CAMERA_CAPTURE_PORT];
@@ -642,10 +643,10 @@ bool TextureStreamMMAL::load(const std::string& _filepath, bool _vFlip) {
     if (status != MMAL_SUCCESS) {
         printf("Unable to enable control port : error %d\n", status);
         mmal_component_destroy(camera);
-        exit(1);
+        return false;
     }
         
-    //set camera parameters.
+    //  set up the camera configuration
     MMAL_PARAMETER_CAMERA_CONFIG_T cam_config;
     cam_config.hdr.id = MMAL_PARAMETER_CAMERA_CONFIG;
     cam_config.hdr.size = sizeof(cam_config);
@@ -659,12 +660,11 @@ bool TextureStreamMMAL::load(const std::string& _filepath, bool _vFlip) {
     cam_config.stills_capture_circular_buffer_height = 0;
     cam_config.fast_preview_resume = 0;
     cam_config.use_stc_timestamp = MMAL_PARAM_TIMESTAMP_MODE_RESET_STC;
-
     status = mmal_port_parameter_set(camera->control, &cam_config.hdr);
     if (status != MMAL_SUCCESS) {
         printf("Unable to set camera parameters : error %d\n", status);
         mmal_component_destroy(camera);
-        exit(1);
+        return false;
     }
         
     // setup preview port format - QUESTION: Needed if we aren't using preview?
@@ -679,12 +679,11 @@ bool TextureStreamMMAL::load(const std::string& _filepath, bool _vFlip) {
     format->es->video.crop.height = m_height;
     format->es->video.frame_rate.num = m_fps;
     format->es->video.frame_rate.den = 1;
-
     status = mmal_port_format_commit(preview_port);
     if (status != MMAL_SUCCESS) {
         printf("Couldn't set preview port format : error %d\n", status);
         mmal_component_destroy(camera);
-        exit(1);
+        return false;
     }
 
     //setup video port format
@@ -699,12 +698,11 @@ bool TextureStreamMMAL::load(const std::string& _filepath, bool _vFlip) {
     format->es->video.crop.height = m_height;
     format->es->video.frame_rate.num = m_fps;
     format->es->video.frame_rate.den = 1;
-
     status = mmal_port_format_commit(video_port);
     if (status != MMAL_SUCCESS) {
         printf("Couldn't set video port format : error %d\n", status);
         mmal_component_destroy(camera);
-        exit(1);
+        return false;
     }
         
     //setup still port format
@@ -724,19 +722,26 @@ bool TextureStreamMMAL::load(const std::string& _filepath, bool _vFlip) {
     if (status != MMAL_SUCCESS) {
         printf("Couldn't set still port format : error %d\n", status);
         mmal_component_destroy(camera);
-        exit(1);
+        return false;
     }
+
+    // Set up the camera_parameters to default
+    raspicamcontrol_set_defaults(&cameraParameters);
+    
+    //apply all camera parameters
+    raspicamcontrol_set_all_parameters(camera, &cameraParameters);
+
         
     status = mmal_port_parameter_set_boolean(preview_port, MMAL_PARAMETER_ZERO_COPY, MMAL_TRUE);
     if (status != MMAL_SUCCESS) {
         printf("Failed to enable zero copy on camera video port\n");
-        exit(1);
+        return false;
     }
         
     status = mmal_port_format_commit(preview_port);
     if (status != MMAL_SUCCESS) {
         printf("camera format couldn't be set\n");
-        exit(1);
+        return false;
     }
         
     /* For GL a pool of opaque buffer handles must be allocated in the client.
@@ -750,7 +755,7 @@ bool TextureStreamMMAL::load(const std::string& _filepath, bool _vFlip) {
     if (!video_pool) {
         printf("Error allocating camera video pool. Buffer num: %d Buffer size: %d\n", preview_port->buffer_num, preview_port->buffer_size);
         status = MMAL_ENOMEM;
-        exit(1);
+        return false;
     }
     printf("Allocated %d MMAL buffers of size %d.\n", preview_port->buffer_num, preview_port->buffer_size);
 
@@ -759,7 +764,7 @@ bool TextureStreamMMAL::load(const std::string& _filepath, bool _vFlip) {
     if (!video_queue) {
         printf("Error allocating video buffer queue\n");
         status = MMAL_ENOMEM;
-        exit(1);
+        return false;
     }
 
     /* Enable video port callback */
@@ -769,18 +774,13 @@ bool TextureStreamMMAL::load(const std::string& _filepath, bool _vFlip) {
         printf("Failed to enable video port\n");
         exit(1);
     }
-        
-    // Set up the camera_parameters to default
-    raspicamcontrol_set_defaults(&cameraParameters);
-    //apply all camera parameters
-    raspicamcontrol_set_all_parameters(camera, &cameraParameters);
 
     //enable the camera
     status = mmal_component_enable(camera);
     if (status != MMAL_SUCCESS) {
         printf("Couldn't enable camera\n\n");
         mmal_component_destroy(camera);
-        exit(1);
+        return false;
     }
         
     //send all the buffers in our pool to the video port ready for use
@@ -799,15 +799,12 @@ bool TextureStreamMMAL::load(const std::string& _filepath, bool _vFlip) {
             }
         }
     }
-        
-    /*
+      
     //begin capture
-    if (mmal_port_parameter_set_boolean(preview_port, MMAL_PARAMETER_CAPTURE, 1) != MMAL_SUCCESS)
-    {
+    if (mmal_port_parameter_set_boolean(preview_port, MMAL_PARAMETER_CAPTURE, 1) != MMAL_SUCCESS) {
         printf("Failed to start capture\n\n");
-        exit(1);
+        return false;
     }
-    */
         
     printf("Camera initialized.\n");
         
