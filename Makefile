@@ -41,7 +41,7 @@ ifeq ($(DRIVER),vc)
 				-I/opt/vc/include/interface/vcos/pthreads \
 				-I/opt/vc/include/interface/vmcs_host/linux
 	LDFLAGS +=  -L/opt/vc/lib/ \
-				-lmmal \
+				-lmmal -lmmal_core -lmmal_util -lmmal_vc_client  \
 				-lbcm_host \
 				-lpthread
 

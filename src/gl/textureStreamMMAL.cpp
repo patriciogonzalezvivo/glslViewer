@@ -38,7 +38,7 @@ TextureStreamMMAL::TextureStreamMMAL() {
 }
 
 TextureStreamMMAL::~TextureStreamMMAL() {
-
+    clear();
 }
 
 bool TextureStreamMMAL::load(const std::string& _filepath, bool _vFlip) {
@@ -81,8 +81,8 @@ bool TextureStreamMMAL::load(const std::string& _filepath, bool _vFlip) {
         
     //set camera parameters.
     MMAL_PARAMETER_CAMERA_CONFIG_T cam_config;
-    //cam_config.hdr = MMAL_PARAMETER_CAMERA_CONFIG;
-    //cam_config.hdr.size = sizeof(cam_config);
+    cam_config.hdr.id = MMAL_PARAMETER_CAMERA_CONFIG;
+    cam_config.hdr.size = sizeof(cam_config);
     cam_config.max_stills_w = m_width;
     cam_config.max_stills_h = m_height;
     cam_config.stills_yuv422 = 0;
