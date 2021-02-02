@@ -23,10 +23,10 @@ public:
     virtual bool    update();
     virtual void    clear();
 
-private:
+protected:
 
-    void camera_control_callback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer);
-    void video_output_callback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer);
+    static void camera_control_callback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer);
+    static void video_output_callback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer);
 
     MMAL_PORT_T *preview_port = NULL;
     MMAL_PORT_T *video_port = NULL;
@@ -34,13 +34,14 @@ private:
     MMAL_QUEUE_T *video_queue = NULL;
     MMAL_POOL_T *video_pool = NULL;
 
-    RASPICAM_CAMERA_PARAMETERS cameraParameters;
+    //RASPICAM_CAMERA_PARAMETERS cameraParameters;
 
     // GLuint cam_ytex, cam_utex, cam_vtex;
     EGLImageKHR yimg = EGL_NO_IMAGE_KHR;
     EGLImageKHR uimg = EGL_NO_IMAGE_KHR;
     EGLImageKHR vimg = EGL_NO_IMAGE_KHR;
 
+    int m_fps;
 };
 
 #endif

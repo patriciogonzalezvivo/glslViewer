@@ -1,6 +1,8 @@
 #include "textureStreamMMAL.h"
 #include "../window.h"
 
+#include <iostream>
+
 #if defined(PLATFORM_RPI) || defined(PLATFORM_RPI4)
 
 // Standard port setting for the camera component
@@ -43,7 +45,7 @@ bool TextureStreamMMAL::load(const std::string& _filepath, bool _vFlip) {
     m_width = 640;
     m_height = 480;
     m_fps = 30;
-    m_path = _filePath;
+    m_path = _filepath;
     m_vFlip = _vFlip;
 
     MMAL_COMPONENT_T *camera = 0;
@@ -69,12 +71,7 @@ bool TextureStreamMMAL::load(const std::string& _filepath, bool _vFlip) {
     video_port = camera->output[MMAL_CAMERA_VIDEO_PORT];
     still_port = camera->output[MMAL_CAMERA_CAPTURE_PORT];
         
-    // Enable the camera, and tell it its control callback function    if (_verbose) {
-                    std::cout << "// " << _url << " loaded as streaming texture: " << std::endl;
-                    std::cout << "//    uniform sampler2D " << _name  << ";"<< std::endl;
-                    std::cout << "//    uniform vec2 " << _name  << "Resolution;"<< std::endl;
-                }
-
+    // Enable the camera, and tell it its control callback function
     status = mmal_port_enable(camera->control, camera_control_callback);
     if (status != MMAL_SUCCESS) {
         printf("Unable to enable control port : error %d\n", status);
@@ -208,9 +205,9 @@ bool TextureStreamMMAL::load(const std::string& _filepath, bool _vFlip) {
     }
         
     // Set up the camera_parameters to default
-    raspicamcontrol_set_defaults(&cameraParameters);
+    //raspicamcontrol_set_defaults(&cameraParameters);
     //apply all camera parameters
-    raspicamcontrol_set_all_parameters(camera, &cameraParameters);
+    //raspicamcontrol_set_all_parameters(camera, &cameraParameters);
 
     //enable the camera
     status = mmal_component_enable(camera);
