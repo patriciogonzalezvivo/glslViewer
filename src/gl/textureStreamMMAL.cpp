@@ -823,7 +823,7 @@ bool TextureStreamMMAL::load(const std::string& _filepath, bool _vFlip) {
     glBindTexture(GL_TEXTURE_EXTERNAL_OES, m_id);
 
     // Load the texture
-    glTexImage2D ( GL_TEXTURE_2D, 0, GL_RGBA, IMAGE_SIZE_WIDTH, IMAGE_SIZE_HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL );
+    glTexImage2D ( GL_TEXTURE_2D, 0, GL_RGBA, m_width, m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL );
 
     // Set the filtering mode
     glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
