@@ -833,7 +833,6 @@ bool TextureStreamMMAL::load(const std::string& _filepath, bool _vFlip) {
 }
 
 void TextureStreamMMAL::bind() {
-    // glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_EXTERNAL_OES, m_id);
 }
 
@@ -866,9 +865,9 @@ void TextureStreamMMAL::video_output_callback(MMAL_PORT_T *port, MMAL_BUFFER_HEA
     // printf("Video buffer callback, output queue len=%d\n\n", mmal_queue_length(video_queue));
 }
 
-int raspitexutil_do_update_texture(EGLDisplay display, EGLenum target,
+int updateTexture(EGLDisplay display, EGLenum target,
                                    EGLClientBuffer mm_buf, GLuint *texture, EGLImageKHR *egl_image) {
-    vcos_log_trace("%s: mm_buf %u", VCOS_FUNCTION, (unsigned) mm_buf);
+    // vcos_log_trace("%s: mm_buf %u", VCOS_FUNCTION, (unsigned) mm_buf);
     glBindTexture(GL_TEXTURE_EXTERNAL_OES, *texture);
     if (*egl_image != EGL_NO_IMAGE_KHR) {
         /* Discard the EGL image for the preview frame */
@@ -889,11 +888,7 @@ bool TextureStreamMMAL::update() {
         mmal_buffer_header_mem_lock(buf);
         // printf("Buffer received with length %d\n", buf->length);
 
-        // glBindTexture(GL_TEXTURE_EXTERNAL_OES, cam_ytex);
-        // glBindTexture(GL_TEXTURE_EXTERNAL_OES, m_id);
-
-        EGLDisplay display = getEGLDisplay();
-        raspitexutil_do_update_texture(display, EGL_IMAGE_BRCM_MULTIMEDIA, (EGLClientBuffer)buf->data, &m_id, &yimg);
+        updateTexture(getEGLDisplay(), EGL_IMAGE_BRCM_MULTIMEDIA_Y, (EGLClientBuffer)buf->data, &m_id, &yimg);
         // // check();
         // if (yimg != EGL_NO_IMAGE_KHR){
         //     eglDestroyImageKHR(*display, yimg);
