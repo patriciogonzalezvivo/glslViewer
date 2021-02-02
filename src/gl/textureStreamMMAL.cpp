@@ -619,7 +619,7 @@ bool TextureStreamMMAL::load(const std::string& _filepath, bool _vFlip) {
     status = mmal_component_create(MMAL_COMPONENT_DEFAULT_CAMERA, &camera_component);
     if (status != MMAL_SUCCESS) {
         printf("Failed to create camera component : error %d\n", status);
-        close();
+        clear();
         return false;
     }
 
@@ -627,7 +627,7 @@ bool TextureStreamMMAL::load(const std::string& _filepath, bool _vFlip) {
     if (!camera_component->output_num) {
         status = MMAL_ENOSYS;
         printf("Camera doesn't have output ports\n");
-        close();
+        clear();
         return false;
     }
 
@@ -640,7 +640,7 @@ bool TextureStreamMMAL::load(const std::string& _filepath, bool _vFlip) {
     status = mmal_port_enable(camera_component->control, camera_control_callback);
     if (status != MMAL_SUCCESS) {
         printf("Unable to enable control port : error %d\n", status);
-        close();
+        clear();
         return false;
     }
         
@@ -661,7 +661,7 @@ bool TextureStreamMMAL::load(const std::string& _filepath, bool _vFlip) {
     status = mmal_port_parameter_set(camera_component->control, &cam_config.hdr);
     if (status != MMAL_SUCCESS) {
         printf("Unable to set camera parameters : error %d\n", status);
-        close();
+        clear();
         return false;
     }
         
@@ -680,7 +680,7 @@ bool TextureStreamMMAL::load(const std::string& _filepath, bool _vFlip) {
     status = mmal_port_format_commit(preview_port);
     if (status != MMAL_SUCCESS) {
         printf("Couldn't set preview port format : error %d\n", status);
-        close();
+        clear();
         return false;
     }
 
@@ -699,7 +699,7 @@ bool TextureStreamMMAL::load(const std::string& _filepath, bool _vFlip) {
     status = mmal_port_format_commit(video_port);
     if (status != MMAL_SUCCESS) {
         printf("Couldn't set video port format : error %d\n", status);
-        close();
+        clear();
         return false;
     }
         
@@ -719,7 +719,7 @@ bool TextureStreamMMAL::load(const std::string& _filepath, bool _vFlip) {
     status = mmal_port_format_commit(still_port);
     if (status != MMAL_SUCCESS) {
         printf("Couldn't set still port format : error %d\n", status);
-        close();
+        clear();
         return false;
     }
 
@@ -773,10 +773,10 @@ bool TextureStreamMMAL::load(const std::string& _filepath, bool _vFlip) {
     }
 
     //enable the camera
-    status = mmal_component_enable(camera);
+    status = mmal_component_enable(camera_component);
     if (status != MMAL_SUCCESS) {
         printf("Couldn't enable camera\n\n");
-        close();
+        clear();
         return false;
     }
         
@@ -798,7 +798,7 @@ bool TextureStreamMMAL::load(const std::string& _filepath, bool _vFlip) {
     }
       
     //begin capture
-    if (mmal_port_parameter_set_boolean(preview_port, MMAL_PARAMETER_CAPTURE, 1) != MMAL_SUCCESS) {
+    if (mmal_port_parameter_set_boolean(video_port, MMAL_PARAMETER_CAPTURE, 1) != MMAL_SUCCESS) {
         printf("Failed to start capture\n\n");
         return false;
     }
@@ -820,11 +820,33 @@ bool TextureStreamMMAL::load(const std::string& _filepath, bool _vFlip) {
 }
 
 void TextureStreamMMAL::camera_control_callback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer) {
-
+    printf("Camera control callback\n\n");
+	return;
 }
 
 void TextureStreamMMAL::video_output_callback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer) {
+    //to handle the user not reading frames, remove and return any pre-existing ones
+	if (mmal_queue_length(video_queue)>=2) {
+		if(MMAL_BUFFER_HEADER_T* existing_buffer = mmal_queue_get(video_queue)) {
+			mmal_buffer_header_release(existing_buffer);
+			if (port->is_enabled) {
+				MMAL_STATUS_T status;
+				MMAL_BUFFER_HEADER_T *new_buffer;
+				new_buffer = mmal_queue_get(video_pool->queue);
+                
+				if (new_buffer)
+				    status = mmal_port_send_buffer(port, new_buffer);
 
+				if (!new_buffer || status != MMAL_SUCCESS)
+				    printf("Unable to return a buffer to the video port\n\n");
+			}	
+		}
+	}
+
+	//add the buffer to the output queue
+	mmal_queue_put(video_queue, buffer);
+
+	//printf("Video buffer callback, output queue len=%d\n\n", mmal_queue_length(OutputQueue));
 }
 
 bool TextureStreamMMAL::update() {
