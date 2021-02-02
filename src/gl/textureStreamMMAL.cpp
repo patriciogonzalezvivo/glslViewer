@@ -861,7 +861,7 @@ bool TextureStreamMMAL::update() {
         return false;
 
     if (MMAL_BUFFER_HEADER_T* buf = mmal_queue_get(video_queue)) {
-        // mmal_buffer_header_mem_lock(buf);
+        mmal_buffer_header_mem_lock(buf);
         
         printf("Buffer received with length %d\n", buf->length);
 
@@ -915,7 +915,7 @@ bool TextureStreamMMAL::update() {
         // glEGLImageTargetTexture2DOES(GL_TEXTURE_EXTERNAL_OES, vimg);
         // check();
         
-        // mmal_buffer_header_mem_unlock(buf);
+        mmal_buffer_header_mem_unlock(buf);
         mmal_buffer_header_release(buf);
         
         if(preview_port->is_enabled){
