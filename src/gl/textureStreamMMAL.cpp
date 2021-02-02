@@ -76,6 +76,12 @@ typedef struct {
    int shutter_speed;         /// 0 = auto, otherwise the shutter speed in ms
 } RASPICAM_CAMERA_PARAMETERS;
 
+MMAL_PORT_T         *preview_port   = NULL;
+MMAL_PORT_T         *video_port     = NULL;
+MMAL_PORT_T         *still_port     = NULL;
+MMAL_QUEUE_T        *video_queue    = NULL;
+MMAL_POOL_T         *video_pool     = NULL;
+
 RASPICAM_CAMERA_PARAMETERS camera_parameters;
 
 /**
@@ -833,7 +839,7 @@ void TextureStreamMMAL::video_output_callback(MMAL_PORT_T *port, MMAL_BUFFER_HEA
 				MMAL_STATUS_T status;
 				MMAL_BUFFER_HEADER_T *new_buffer;
 				new_buffer = mmal_queue_get(video_pool->queue);
-                
+
 				if (new_buffer)
 				    status = mmal_port_send_buffer(port, new_buffer);
 
