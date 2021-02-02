@@ -23,6 +23,9 @@ public:
     virtual bool    update();
     virtual void    clear();
 
+    virtual void    bind();
+    virtual void    unbind();
+
 protected:
 
     static void camera_control_callback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer);

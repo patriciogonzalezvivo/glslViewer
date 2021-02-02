@@ -825,6 +825,15 @@ bool TextureStreamMMAL::load(const std::string& _filepath, bool _vFlip) {
     return true;
 }
 
+void TextureStreamMMAL::bind() {
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_EXTERNAL_OES, m_id);
+}
+
+void TextureStreamMMAL::unbind() {
+    glBindTexture(GL_TEXTURE_2D, 0);
+}
+
 void TextureStreamMMAL::camera_control_callback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer) {
     printf("Camera control callback\n\n");
     return;
@@ -860,8 +869,7 @@ bool TextureStreamMMAL::update() {
 
     if (MMAL_BUFFER_HEADER_T* buf = mmal_queue_get(video_queue)) {
         mmal_buffer_header_mem_lock(buf);
-        
-        printf("Buffer received with length %d\n", buf->length);
+        // printf("Buffer received with length %d\n", buf->length);
 
         // glBindTexture(GL_TEXTURE_EXTERNAL_OES, cam_ytex);
         glBindTexture(GL_TEXTURE_EXTERNAL_OES, m_id);
