@@ -820,7 +820,14 @@ bool TextureStreamMMAL::load(const std::string& _filepath, bool _vFlip) {
     glEnable(GL_TEXTURE_2D);
     if (m_id == 0)
         glGenTextures(1, &m_id);
-    glBindTexture(GL_TEXTURE_2D, m_id);
+    glBindTexture(GL_TEXTURE_EXTERNAL_OES, m_id);
+
+    // Load the texture
+    glTexImage2D ( GL_TEXTURE_2D, 0, GL_RGBA, IMAGE_SIZE_WIDTH, IMAGE_SIZE_HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL );
+
+    // Set the filtering mode
+    glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
+    glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
         
     return true;
 }
@@ -890,8 +897,7 @@ bool TextureStreamMMAL::update() {
         // glBindTexture(GL_TEXTURE_EXTERNAL_OES, m_id);
 
         EGLDisplay display = getEGLDisplay();
-
-        raspitexutil_do_update_texture(display, EGL_IMAGE_BRCM_MULTIMEDIA_Y, (EGLClientBuffer)buf->data, &m_id, &yimg);
+        raspitexutil_do_update_texture(display, EGL_IMAGE_BRCM_MULTIMEDIA, (EGLClientBuffer)buf->data, &m_id, &yimg);
         // // check();
         // if (yimg != EGL_NO_IMAGE_KHR){
         //     eglDestroyImageKHR(*display, yimg);
