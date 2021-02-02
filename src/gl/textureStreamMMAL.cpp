@@ -865,8 +865,7 @@ void TextureStreamMMAL::video_output_callback(MMAL_PORT_T *port, MMAL_BUFFER_HEA
     // printf("Video buffer callback, output queue len=%d\n\n", mmal_queue_length(video_queue));
 }
 
-int updateTexture(EGLDisplay display, EGLenum target,
-                                   EGLClientBuffer mm_buf, GLuint *texture, EGLImageKHR *egl_image) {
+void updateTexture(EGLDisplay display, EGLenum target, EGLClientBuffer mm_buf, GLuint *texture, EGLImageKHR *egl_image) {
     // vcos_log_trace("%s: mm_buf %u", VCOS_FUNCTION, (unsigned) mm_buf);
     glBindTexture(GL_TEXTURE_EXTERNAL_OES, *texture);
     if (*egl_image != EGL_NO_IMAGE_KHR) {
@@ -875,9 +874,14 @@ int updateTexture(EGLDisplay display, EGLenum target,
         *egl_image = EGL_NO_IMAGE_KHR;
     }
 
-    *egl_image = eglCreateImageKHR(display, EGL_NO_CONTEXT, target, mm_buf, NULL);
+    const EGLint attribs[] = {
+			EGL_GL_TEXTURE_LEVEL_KHR, 0,
+			EGL_IMAGE_PRESERVED_KHR, EGL_TRUE,
+			EGL_NONE, EGL_NONE
+	};
+
+    *egl_image = eglCreateImageKHR(display, EGL_NO_CONTEXT, target, mm_buf, attribs);
     glEGLImageTargetTexture2DOES(GL_TEXTURE_EXTERNAL_OES, *egl_image);
-    return 0;
 }
 
 bool TextureStreamMMAL::update() {
@@ -888,51 +892,11 @@ bool TextureStreamMMAL::update() {
         mmal_buffer_header_mem_lock(buf);
         // printf("Buffer received with length %d\n", buf->length);
 
-        updateTexture(getEGLDisplay(), EGL_IMAGE_BRCM_MULTIMEDIA_Y, (EGLClientBuffer)buf->data, &m_id, &yimg);
-        // // check();
-        // if (yimg != EGL_NO_IMAGE_KHR){
-        //     eglDestroyImageKHR(*display, yimg);
-        //     yimg = EGL_NO_IMAGE_KHR;
-        // }
-
-        // yimg = eglCreateImageKHR(   *display, 
-        //                             EGL_NO_CONTEXT, 
-        //                             EGL_IMAGE_BRCM_MULTIMEDIA_Y, 
-        //                             (EGLClientBuffer) buf->data, 
-        //                             NULL );
-        // // check();
-        // glEGLImageTargetTexture2DOES(GL_TEXTURE_EXTERNAL_OES, yimg);
-        // // check();
-        
-        // glBindTexture(GL_TEXTURE_EXTERNAL_OES, cam_utex);
-        // check();
-        // if(uimg != EGL_NO_IMAGE_KHR){
-        //     eglDestroyImageKHR(*display, uimg);
-        //     uimg = EGL_NO_IMAGE_KHR;
-        // }
-        // uimg = eglCreateImageKHR(*display, 
-        //     EGL_NO_CONTEXT, 
-        //     EGL_IMAGE_BRCM_MULTIMEDIA_U, 
-        //     (EGLClientBuffer) buf->data, 
-        //     NULL);
-        // check();
-        // glEGLImageTargetTexture2DOES(GL_TEXTURE_EXTERNAL_OES, uimg);
-        // check();
-        
-        // glBindTexture(GL_TEXTURE_EXTERNAL_OES, cam_vtex);
-        // check();
-        // if(vimg != EGL_NO_IMAGE_KHR){
-        //     eglDestroyImageKHR(*display, vimg);
-        //     vimg = EGL_NO_IMAGE_KHR;
-        // }
-        // vimg = eglCreateImageKHR(*display, 
-        //     EGL_NO_CONTEXT, 
-        //     EGL_IMAGE_BRCM_MULTIMEDIA_V, 
-        //     (EGLClientBuffer) buf->data, 
-        //     NULL);
-        // check();
-        // glEGLImageTargetTexture2DOES(GL_TEXTURE_EXTERNAL_OES, vimg);
-        // check();
+        updateTexture(getEGLDisplay(), EGL_IMAGE_BRCM_MULTIMEDIA, (EGLClientBuffer)buf->data, &m_id, &yimg);
+        // updateTexture(getEGLDisplay(), EGL_IMAGE_BRCM_MULTIMEDIA_U, (EGLClientBuffer)buf->data, &m_id, &uimg);
+        // updateTexture(getEGLDisplay(), EGL_IMAGE_BRCM_MULTIMEDIA_Y, (EGLClientBuffer)buf->data, &m_id, &yimg);
+        // updateTexture(getEGLDisplay(), EGL_IMAGE_BRCM_MULTIMEDIA_U, (EGLClientBuffer)buf->data, &m_id, &uimg);
+        // updateTexture(getEGLDisplay(), EGL_IMAGE_BRCM_MULTIMEDIA_V, (EGLClientBuffer)buf->data, &m_id, &vimg);
         
         mmal_buffer_header_mem_unlock(buf);
         mmal_buffer_header_release(buf);
