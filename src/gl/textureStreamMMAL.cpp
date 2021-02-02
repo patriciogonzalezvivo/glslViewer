@@ -803,11 +803,11 @@ bool TextureStreamMMAL::load(const std::string& _filepath, bool _vFlip) {
         }
     }
       
-    // //begin capture
-    // if (mmal_port_parameter_set_boolean(video_port, MMAL_PARAMETER_CAPTURE, 1) != MMAL_SUCCESS) {
-    //     printf("Failed to start capture\n\n");
-    //     return false;
-    // }
+    //begin capture
+    if (mmal_port_parameter_set_boolean(video_port, MMAL_PARAMETER_CAPTURE, 1) != MMAL_SUCCESS) {
+        printf("Failed to start capture\n\n");
+        return false;
+    }
         
     printf("Camera initialized.\n");
         
