@@ -58,6 +58,10 @@ EGLDisplay display;
 EGLContext context;
 EGLSurface surface;
 
+void* getEGLDisplay() {
+    return &display;
+}
+
 // unsigned long long timeStart;
 std::string device_mouse = "/dev/input/mice";
 std::string device_screen = "/dev/dri/card1";

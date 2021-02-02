@@ -11,6 +11,9 @@
 #ifdef SUPPORT_FOR_LIBAV 
 #include "gl/textureStreamAV.h"
 #endif
+#if defined(PLATFORM_RPI) || defined(PLATFORM_RPI4)
+#include "gl/textureStreamMMAL.h"
+#endif
 
 std::string UniformData::getType() {
     if (size == 1 && bInt) {
@@ -287,6 +290,29 @@ bool Uniforms::addStreamingTexture( const std::string& _name, const std::string&
                 delete tex;
             
         }
+#if defined(PLATFORM_RPI) || defined(PLATFORM_RPI4)
+        // if the user is asking for a device on a RaspberryPI hardware
+        else if (_device) {
+            TextureStreamMMAL* tex = new TextureStreamMALL();
+
+            // load an image into the texture
+            if (tex->load(_url, _vflip)) {
+                // the image is loaded finish add the texture to the uniform list
+                textures[ _name ] = (Texture*)tex;
+                streams[ _name ] = (TextureStream*)tex;
+
+                if (_verbose) {
+                    std::cout << "// " << _url << " loaded as streaming texture: " << std::endl;
+                    std::cout << "//    uniform sampler2D " << _name  << ";"<< std::endl;
+                    std::cout << "//    uniform vec2 " << _name  << "Resolution;"<< std::endl;
+                }
+
+                return true;
+            }
+            else
+                delete tex;
+        }
+#endif
         else {
 #ifdef SUPPORT_FOR_LIBAV
         TextureStreamAV* tex = new TextureStreamAV();

@@ -58,3 +58,7 @@ void onMouseClick(float _x, float _y, int _button);
 void onMouseDrag(float _x, float _y, int _button);
 void onViewportResize(int _width, int _height);
 void onScroll(float _yoffset);
+
+#ifndef DRIVER_GLFW
+void* getEGLDisplay();
+#endif
