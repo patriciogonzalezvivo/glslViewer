@@ -879,7 +879,7 @@ int raspitexutil_do_update_texture(EGLDisplay *display, EGLenum target,
     return 0;
 }
 
-bool TextureStreamMMAL::update() {
+bool TextureStreamMMAL::update() {m_id
     if (m_id == 0)
         return false;
 
@@ -892,7 +892,7 @@ bool TextureStreamMMAL::update() {
 
         EGLDisplay* display = (EGLDisplay*)getEGLDisplay();
 
-        raspitexutil_do_update_texture(display, EGL_IMAGE_BRCM_MULTIMEDIA_Y, (EGLClientBuffer) buf->data, m_id, yimg);
+        raspitexutil_do_update_texture(display, EGL_IMAGE_BRCM_MULTIMEDIA_Y, (EGLClientBuffer)buf->data, &m_id, &yimg);
         // // check();
         // if (yimg != EGL_NO_IMAGE_KHR){
         //     eglDestroyImageKHR(*display, yimg);
