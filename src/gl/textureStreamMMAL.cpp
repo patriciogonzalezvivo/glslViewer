@@ -865,7 +865,7 @@ void TextureStreamMMAL::video_output_callback(MMAL_PORT_T *port, MMAL_BUFFER_HEA
 
 int raspitexutil_do_update_texture(EGLDisplay display, EGLenum target,
                                    EGLClientBuffer mm_buf, GLuint *texture, EGLImageKHR *egl_image) {
-    // vcos_log_trace("%s: mm_buf %u", VCOS_FUNCTION, (unsigned) mm_buf);
+    vcos_log_trace("%s: mm_buf %u", VCOS_FUNCTION, (unsigned) mm_buf);
     glBindTexture(GL_TEXTURE_EXTERNAL_OES, *texture);
     if (*egl_image != EGL_NO_IMAGE_KHR) {
         /* Discard the EGL image for the preview frame */
