@@ -863,6 +863,22 @@ void TextureStreamMMAL::video_output_callback(MMAL_PORT_T *port, MMAL_BUFFER_HEA
     // printf("Video buffer callback, output queue len=%d\n\n", mmal_queue_length(video_queue));
 }
 
+int raspitexutil_do_update_texture(EGLDisplay display, EGLenum target,
+                                   EGLClientBuffer mm_buf, GLuint *texture, EGLImageKHR *egl_image) {
+    vcos_log_trace("%s: mm_buf %u", VCOS_FUNCTION, (unsigned) mm_buf);
+    glBindTexture(GL_TEXTURE_EXTERNAL_OES, *texture);
+    if (*egl_image != EGL_NO_IMAGE_KHR) {
+        /* Discard the EGL image for the preview frame */
+        eglDestroyImageKHR(display, *egl_image);
+        *egl_image = EGL_NO_IMAGE_KHR;
+    }
+
+    *egl_image = eglCreateImageKHR(display, EGL_NO_CONTEXT, target, mm_buf, NULL);
+    glEGLImageTargetTexture2DOES(GL_TEXTURE_EXTERNAL_OES, *egl_image);
+
+    return 0;
+}
+
 bool TextureStreamMMAL::update() {
     if (m_id == 0)
         return false;
@@ -872,24 +888,25 @@ bool TextureStreamMMAL::update() {
         // printf("Buffer received with length %d\n", buf->length);
 
         // glBindTexture(GL_TEXTURE_EXTERNAL_OES, cam_ytex);
-        glBindTexture(GL_TEXTURE_EXTERNAL_OES, m_id);
+        // glBindTexture(GL_TEXTURE_EXTERNAL_OES, m_id);
 
         EGLDisplay* display = (EGLDisplay*)getEGLDisplay();
 
-        // check();
-        if (yimg != EGL_NO_IMAGE_KHR){
-            eglDestroyImageKHR(*display, yimg);
-            yimg = EGL_NO_IMAGE_KHR;
-        }
+        raspitexutil_do_update_texture(*display, EGL_IMAGE_BRCM_MULTIMEDIA_Y, (EGLClientBuffer) buf->data, m_id, yimg)
+        // // check();
+        // if (yimg != EGL_NO_IMAGE_KHR){
+        //     eglDestroyImageKHR(*display, yimg);
+        //     yimg = EGL_NO_IMAGE_KHR;
+        // }
 
-        yimg = eglCreateImageKHR(   *display, 
-                                    EGL_NO_CONTEXT, 
-                                    EGL_IMAGE_BRCM_MULTIMEDIA_Y, 
-                                    (EGLClientBuffer) buf->data, 
-                                    NULL );
-        // check();
-        glEGLImageTargetTexture2DOES(GL_TEXTURE_EXTERNAL_OES, yimg);
-        // check();
+        // yimg = eglCreateImageKHR(   *display, 
+        //                             EGL_NO_CONTEXT, 
+        //                             EGL_IMAGE_BRCM_MULTIMEDIA_Y, 
+        //                             (EGLClientBuffer) buf->data, 
+        //                             NULL );
+        // // check();
+        // glEGLImageTargetTexture2DOES(GL_TEXTURE_EXTERNAL_OES, yimg);
+        // // check();
         
         // glBindTexture(GL_TEXTURE_EXTERNAL_OES, cam_utex);
         // check();
