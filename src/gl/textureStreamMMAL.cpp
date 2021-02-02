@@ -831,8 +831,8 @@ void TextureStreamMMAL::camera_control_callback(MMAL_PORT_T *port, MMAL_BUFFER_H
 }
 
 void TextureStreamMMAL::video_output_callback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer) {
-    // //to handle the user not reading frames, remove and return any pre-existing ones
-    // if (mmal_queue_length(video_queue)>=2) {
+    //to handle the user not reading frames, remove and return any pre-existing ones
+    if (mmal_queue_length(video_queue)>=2) {
 
     //  if(MMAL_BUFFER_HEADER_T* existing_buffer = mmal_queue_get(video_queue)) {
 
@@ -849,12 +849,12 @@ void TextureStreamMMAL::video_output_callback(MMAL_PORT_T *port, MMAL_BUFFER_HEA
     //              printf("Unable to return a buffer to the video port\n\n");
     //      }   
     //  }
-    // }
+    }
 
-    // //add the buffer to the output queue
-    // mmal_queue_put(video_queue, buffer);
+    //add the buffer to the output queue
+    mmal_queue_put(video_queue, buffer);
 
-    //printf("Video buffer callback, output queue len=%d\n\n", mmal_queue_length(OutputQueue));
+    printf("Video buffer callback, output queue len=%d\n\n", mmal_queue_length(video_queue));
 }
 
 bool TextureStreamMMAL::update() {
