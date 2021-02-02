@@ -23,7 +23,6 @@ public:
     virtual void    clear();
 
     virtual void    bind();
-    virtual void    unbind();
 
 protected:
 

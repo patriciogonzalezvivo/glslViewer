@@ -823,22 +823,18 @@ bool TextureStreamMMAL::load(const std::string& _filepath, bool _vFlip) {
     glBindTexture(GL_TEXTURE_EXTERNAL_OES, m_id);
 
     // Load the texture
-    glTexImage2D ( GL_TEXTURE_2D, 0, GL_RGBA, m_width, m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL );
+    glTexImage2D ( GL_TEXTURE_EXTERNAL_OES, 0, GL_RGBA, m_width, m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL );
 
     // Set the filtering mode
-    glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
-    glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+    glTexParameteri ( GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+    glTexParameteri ( GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
         
     return true;
 }
 
 void TextureStreamMMAL::bind() {
-    glActiveTexture(GL_TEXTURE0);
+    // glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_EXTERNAL_OES, m_id);
-}
-
-void TextureStreamMMAL::unbind() {
-    glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 void TextureStreamMMAL::camera_control_callback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer) {

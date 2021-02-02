@@ -420,7 +420,8 @@ void Shader::setUniformTextureCube(const std::string& _name, const TextureCube* 
 void Shader::setUniformTexture(const std::string& _name, const Texture* _tex, unsigned int _texLoc) {
     if (isInUse()) {
         glActiveTexture(GL_TEXTURE0 + _texLoc);
-        glBindTexture(GL_TEXTURE_2D, _tex->getId());
+        // glBindTexture(GL_TEXTURE_2D, _tex->getId());
+        _tex->bind();
         glUniform1i(getUniformLocation(_name), _texLoc);
     }
 }
