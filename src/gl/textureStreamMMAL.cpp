@@ -863,13 +863,13 @@ void TextureStreamMMAL::video_output_callback(MMAL_PORT_T *port, MMAL_BUFFER_HEA
     // printf("Video buffer callback, output queue len=%d\n\n", mmal_queue_length(video_queue));
 }
 
-int raspitexutil_do_update_texture(EGLDisplay display, EGLenum target,
+int raspitexutil_do_update_texture(EGLDisplay *display, EGLenum target,
                                    EGLClientBuffer mm_buf, GLuint *texture, EGLImageKHR *egl_image) {
-    vcos_log_trace("%s: mm_buf %u", VCOS_FUNCTION, (unsigned) mm_buf);
+    // vcos_log_trace("%s: mm_buf %u", VCOS_FUNCTION, (unsigned) mm_buf);
     glBindTexture(GL_TEXTURE_EXTERNAL_OES, *texture);
     if (*egl_image != EGL_NO_IMAGE_KHR) {
         /* Discard the EGL image for the preview frame */
-        eglDestroyImageKHR(display, *egl_image);
+        eglDestroyImageKHR(*display, *egl_image);
         *egl_image = EGL_NO_IMAGE_KHR;
     }
 
@@ -892,7 +892,7 @@ bool TextureStreamMMAL::update() {
 
         EGLDisplay* display = (EGLDisplay*)getEGLDisplay();
 
-        raspitexutil_do_update_texture(*display, EGL_IMAGE_BRCM_MULTIMEDIA_Y, (EGLClientBuffer) buf->data, m_id, yimg);
+        raspitexutil_do_update_texture(display, EGL_IMAGE_BRCM_MULTIMEDIA_Y, (EGLClientBuffer) buf->data, m_id, yimg);
         // // check();
         // if (yimg != EGL_NO_IMAGE_KHR){
         //     eglDestroyImageKHR(*display, yimg);
