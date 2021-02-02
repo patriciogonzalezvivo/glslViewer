@@ -873,9 +873,8 @@ int raspitexutil_do_update_texture(EGLDisplay display, EGLenum target,
         *egl_image = EGL_NO_IMAGE_KHR;
     }
 
-    *egl_image = eglCreateImageKHR(display, EGL_NO_CONTEXT, target, mm_buf, NULL);
+    *egl_image = eglCreateImageKHR(display, getEGLContext(), target, mm_buf, NULL);
     glEGLImageTargetTexture2DOES(GL_TEXTURE_EXTERNAL_OES, *egl_image);
-
     return 0;
 }
 

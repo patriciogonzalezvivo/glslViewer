@@ -62,4 +62,5 @@ void onScroll(float _yoffset);
 #ifndef DRIVER_GLFW
 #include "gl/gl.h"
 EGLDisplay getEGLDisplay();
+EGLContext getEGLContext();
 #endif
