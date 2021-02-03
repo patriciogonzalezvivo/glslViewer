@@ -14,7 +14,7 @@ public:
 
     virtual void    clear();
 
-    virtual const GLuint    getId() const { return m_id; };
+    virtual const GLuint    getTextureId() const { return m_id; };
     virtual std::string     getFilePath() const { return m_path; };
     virtual int             getWidth() const { return m_width; };
     virtual int             getHeight() const { return m_height; };

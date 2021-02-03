@@ -409,49 +409,44 @@ void Shader::setUniform(const std::string& _name, const glm::vec4 *_array, unsig
     }
 }
 
-void Shader::setUniformTextureCube(const std::string& _name, const TextureCube* _tex, unsigned int _texLoc) {
+void Shader::setUniformTexture(const std::string& _name, GLuint _textureId, unsigned int _texLoc) {
     if (isInUse()) {
         glActiveTexture(GL_TEXTURE0 + _texLoc);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, _tex->getId());
+        glBindTexture(GL_TEXTURE_2D, _textureId);
         glUniform1i(getUniformLocation(_name), _texLoc);
     }
 }
 
 void Shader::setUniformTexture(const std::string& _name, const Texture* _tex, unsigned int _texLoc) {
-    if (isInUse()) {
-        glActiveTexture(GL_TEXTURE0 + _texLoc);
-        // glBindTexture(GL_TEXTURE_2D, _tex->getId());
-        _tex->bind();
-        glUniform1i(getUniformLocation(_name), _texLoc);
-    }
+    setUniformTexture(_name, _tex->getTextureId(), _texLoc);
 }
 
 void Shader::setUniformTexture(const std::string& _name, const Fbo* _fbo, unsigned int _texLoc) {
-    if (isInUse()) {
-        glActiveTexture(GL_TEXTURE0 + _texLoc);
-        glBindTexture(GL_TEXTURE_2D, _fbo->getTextureId());
-        glUniform1i(getUniformLocation(_name), _texLoc);
-    }
+    setUniformTexture(_name, _fbo->getTextureId(), _texLoc);
 }
 
 void Shader::setUniformDepthTexture(const std::string& _name, const Fbo* _fbo, unsigned int _texLoc) {
-    if (isInUse()) {
-        glActiveTexture(GL_TEXTURE0 + _texLoc);
-        glBindTexture(GL_TEXTURE_2D, _fbo->getDepthTextureId());
-        glUniform1i(getUniformLocation(_name), _texLoc);
-    }
+    setUniformTexture(_name, _fbo->getDepthTextureId(), _texLoc);
 }
 
 void Shader::setUniformTexture(const std::string& _name, const Texture* _tex) {
-    setUniformTexture(_name, _tex, textureIndex++);
+    setUniformTexture(_name, _tex->getTextureId(), textureIndex++);
 }
 
 void  Shader::setUniformTexture(const std::string& _name, const Fbo* _fbo) {
-    setUniformTexture(_name, _fbo, textureIndex++);
+    setUniformTexture(_name, _fbo->getTextureId(), textureIndex++);
 }
 
 void  Shader::setUniformDepthTexture(const std::string& _name, const Fbo* _fbo) {
-    setUniformDepthTexture(_name, _fbo, textureIndex++);
+    setUniformTexture(_name, _fbo->getDepthTextureId(), textureIndex++);
+}
+
+void Shader::setUniformTextureCube(const std::string& _name, const TextureCube* _tex, unsigned int _texLoc) {
+    if (isInUse()) {
+        glActiveTexture(GL_TEXTURE0 + _texLoc);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, _tex->getTextureId());
+        glUniform1i(getUniformLocation(_name), _texLoc);
+    }
 }
 
 void  Shader::setUniformTextureCube(const std::string& _name, const TextureCube* _tex) {

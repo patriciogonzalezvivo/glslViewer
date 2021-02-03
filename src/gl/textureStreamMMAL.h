@@ -4,6 +4,8 @@
 #include "textureStream.h"
 
 #if defined(DRIVER_VC)
+#include "shader.h"
+#include "vbo.h"
 
 #include "interface/mmal/mmal.h"
 #include "interface/mmal/mmal_logging.h"
@@ -22,7 +24,6 @@ public:
     virtual bool    update();
     virtual void    clear();
 
-    virtual void    bind();
 
 protected:
 
@@ -32,13 +33,12 @@ protected:
     MMAL_COMPONENT_T    *camera_component = NULL;
     //RASPICAM_CAMERA_PARAMETERS cameraParameters;
 
-    // GLuint cam_ytex, cam_utex, cam_vtex;
-    EGLImageKHR img = EGL_NO_IMAGE_KHR;
-    EGLImageKHR yimg = EGL_NO_IMAGE_KHR;
-    EGLImageKHR uimg = EGL_NO_IMAGE_KHR;
-    EGLImageKHR vimg = EGL_NO_IMAGE_KHR;
-
-    int m_fps;
+    GLuint      m_fbo_id;
+    GLuint      m_old_fbo_id;
+    GLuint      m_id_Y, m_id_U, m_id_V;
+    EGLImageKHR yimg, uimg, vimg;
+    Shader      m_shader;
+    Vbo*        m_vbo;
 };
 
 #endif

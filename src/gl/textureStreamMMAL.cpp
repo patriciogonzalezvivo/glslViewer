@@ -1,9 +1,11 @@
 #include "textureStreamMMAL.h"
-#include "../window.h"
+
+#if defined(DRIVER_VC)
 
 #include <iostream>
 
-#if defined(DRIVER_VC)
+#include "../window.h"
+#include "../tools/geom.h"
 
 // Standard port setting for the camera component
 #define MMAL_CAMERA_PREVIEW_PORT 0
@@ -601,7 +603,14 @@ int raspicamcontrol_set_all_parameters(MMAL_COMPONENT_T *camera, const RASPICAM_
     return result;
 }
 
-TextureStreamMMAL::TextureStreamMMAL() {
+TextureStreamMMAL::TextureStreamMMAL() : 
+    camera_component(NULL),
+    m_fbo_id(0), m_old_fbo_id(0),
+    m_id_Y(0), m_id_U(0), m_id_V(0),
+    yimg(EGL_NO_IMAGE_KHR),
+    uimg(EGL_NO_IMAGE_KHR),
+    vimg(EGL_NO_IMAGE_KHR),
+    m_vbo(nullptr) {
 
 }
 
@@ -612,7 +621,7 @@ TextureStreamMMAL::~TextureStreamMMAL() {
 bool TextureStreamMMAL::load(const std::string& _filepath, bool _vFlip) {
     m_width = 640;
     m_height = 480;
-    m_fps = 30;
+    int fps = 30;
     m_path = _filepath;
     m_vFlip = _vFlip;
 
@@ -681,7 +690,7 @@ bool TextureStreamMMAL::load(const std::string& _filepath, bool _vFlip) {
     format->es->video.crop.y = 0;
     format->es->video.crop.width = m_width;
     format->es->video.crop.height = m_height;
-    format->es->video.frame_rate.num = m_fps;
+    format->es->video.frame_rate.num =  fps;
     format->es->video.frame_rate.den = 1;
     status = mmal_port_format_commit(preview_port);
     if (status != MMAL_SUCCESS) {
@@ -700,7 +709,7 @@ bool TextureStreamMMAL::load(const std::string& _filepath, bool _vFlip) {
     format->es->video.crop.y = 0;
     format->es->video.crop.width = m_width;
     format->es->video.crop.height = m_height;
-    format->es->video.frame_rate.num = m_fps;
+    format->es->video.frame_rate.num =  fps;
     format->es->video.frame_rate.den = 1;
     status = mmal_port_format_commit(video_port);
     if (status != MMAL_SUCCESS) {
@@ -808,32 +817,103 @@ bool TextureStreamMMAL::load(const std::string& _filepath, bool _vFlip) {
         printf("Failed to start capture\n\n");
         return false;
     }
-        
-    printf("Camera initialized.\n");
-        
-    // //Setup the camera's textures and EGL images.
-    // glGenTextures(1, &cam_ytex);
-    // glGenTextures(1, &cam_utex);
-    // glGenTextures(1, &cam_vtex);
+    
+    glEnable(GL_TEXTURE_2D);
+    
+    // Setup the camera's textures and EGL images.
+    if (m_id_Y == 0)
+        glGenTextures(1, &m_id_Y);
+    if (m_id_U == 0)
+        glGenTextures(1, &m_id_U);
+    if (m_id_V == 0)
+        glGenTextures(1, &m_id_V);
+
+    // Allocate framebuffer
+    if (m_fbo_id == 0)
+        glGenFramebuffers(1, &m_fbo_id);
 
     // Generate an OpenGL texture ID for this texturez
-    glEnable(GL_TEXTURE_2D);
     if (m_id == 0)
         glGenTextures(1, &m_id);
-    glBindTexture(GL_TEXTURE_EXTERNAL_OES, m_id);
+    
+    // Texture properties
+    glBindTexture(GL_TEXTURE_2D, m_id);
+    // Allocate the texture
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_width, m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
-    // Load the texture
-    glTexImage2D ( GL_TEXTURE_EXTERNAL_OES, 0, GL_RGBA, m_width, m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL );
+    // Bind Texture ID with the FBO
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_id, 0);
 
-    // Set the filtering mode
-    glTexParameteri ( GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
-    glTexParameteri ( GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-        
-    return true;
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    m_vbo = rect(0.0,0.0,1.0,1.0).getVbo();
+
+    const std::string vert = R"(
+#ifdef GL_ES
+precision mediump float;
+#endif
+
+attribute vec4 a_position;
+attribute vec2 a_texcoord;
+
+varying vec4 v_position;
+varying vec2 v_texcoord;
+
+void main(void) {
+    v_position =  a_position;
+    v_texcoord = a_texcoord;
+    
+    gl_Position = v_position;
+}
+)";
+
+    const std::string frag = R"(
+#extension GL_OES_EGL_image_external : require
+
+#ifdef GL_ES
+precision mediump float;
+#endif
+
+uniform vec2 u_resolution;
+
+uniform samplerExternalOES u_texY;
+uniform samplerExternalOES u_texU;
+uniform samplerExternalOES u_texV;
+
+#ifdef YUV_SDTV
+const mat3 yuv2rgb_mat = mat3(
+  1.,       1. ,      1.,
+  0.,       -.39465,  2.03211,
+  1.13983,  -.58060,  0.
+);
+#else
+const mat3 yuv2rgb_mat = mat3(
+  1.,       1. ,      1.,
+  0.,       -.21482,  2.12798,
+  1.28033,  -.38059,  0.
+);
+#endif
+
+void main (void) {
+    vec2 st = gl_FragCoord.xy/u_resolution.xy;
+
+    vec3 yuv = vec3(0.0);
+    yuv.r = texture2D(u_texY, st).r;
+    yuv.g = texture2D(u_texU, st).r;
+    yuv.b = texture2D(u_texV, st).r;
+
+    gl_Fragrgb = vec4(yuv2rgb_mat * yuv, 1.0);
 }
 
-void TextureStreamMMAL::bind() {
-    glBindTexture(GL_TEXTURE_EXTERNAL_OES, m_id);
+)";
+
+    m_shader.load(frag, vert, false);
+
+    return true;
 }
 
 void TextureStreamMMAL::camera_control_callback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer) {
@@ -892,16 +972,14 @@ bool TextureStreamMMAL::update() {
     if (MMAL_BUFFER_HEADER_T* buf = mmal_queue_get(video_queue)) {
         // mmal_buffer_header_mem_lock(buf);
         // printf("Buffer received with length %d\n", buf->length);
-
-        // updateTexture(getEGLDisplay(), EGL_IMAGE_BRCM_MULTIMEDIA, (EGLClientBuffer)buf->data, &m_id, &img);
-        updateTexture(getEGLDisplay(), EGL_IMAGE_BRCM_MULTIMEDIA_Y, (EGLClientBuffer)buf->data, &m_id, &yimg);
-        // updateTexture(getEGLDisplay(), EGL_IMAGE_BRCM_MULTIMEDIA_U, (EGLClientBuffer)buf->data, &m_id, &uimg);
-        // updateTexture(getEGLDisplay(), EGL_IMAGE_BRCM_MULTIMEDIA_V, (EGLClientBuffer)buf->data, &m_id, &vimg);
+        updateTexture(getEGLDisplay(), EGL_IMAGE_BRCM_MULTIMEDIA_Y, (EGLClientBuffer)buf->data, &m_id_Y, &yimg);
+        updateTexture(getEGLDisplay(), EGL_IMAGE_BRCM_MULTIMEDIA_U, (EGLClientBuffer)buf->data, &m_id_U, &uimg);
+        updateTexture(getEGLDisplay(), EGL_IMAGE_BRCM_MULTIMEDIA_V, (EGLClientBuffer)buf->data, &m_id_V, &vimg);
         
         // mmal_buffer_header_mem_unlock(buf);
         mmal_buffer_header_release(buf);
         
-        if(preview_port->is_enabled){
+        if (preview_port->is_enabled) {
             MMAL_STATUS_T status;
             MMAL_BUFFER_HEADER_T *new_buffer;
             new_buffer = mmal_queue_get(video_pool->queue);
@@ -910,6 +988,24 @@ bool TextureStreamMMAL::update() {
             if (!new_buffer || status != MMAL_SUCCESS)
                 printf("Unable to return a buffer to the video port\n\n");
         }
+
+        // bind FBO
+        glGetIntegerv(GL_FRAMEBUFFER_BINDING, (GLint *)&m_old_fbo_id);
+        glBindTexture(GL_TEXTURE_2D, 0);
+        glEnable(GL_TEXTURE_2D);
+        glBindFramebuffer(GL_FRAMEBUFFER, m_fbo_id);
+        glViewport(0.0f, 0.0f, m_width, m_height);
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        m_shader.use();
+        m_shader.setUniformTexture("u_texY", m_id_Y, 0);
+        m_shader.setUniformTexture("u_texU", m_id_U, 1);
+        m_shader.setUniformTexture("u_texV", m_id_V, 2);
+        m_vbo->render( &m_shader );
+
+        // unbind FBO
+        glBindFramebuffer(GL_FRAMEBUFFER, m_old_fbo_id);
         
         return true;
     }
@@ -930,7 +1026,17 @@ void TextureStreamMMAL::clear() {
     if (m_id != 0)
         glDeleteTextures(1, &m_id);
         
-    m_id = 0;
+    if (m_id_Y!= 0)
+        glDeleteTextures(1, &m_id_Y);
+
+    if (m_id_U!= 0)
+        glDeleteTextures(1, &m_id_U);
+
+    if (m_id_V!= 0)
+        glDeleteTextures(1, &m_id_V);
+
+    if (m_fbo_id != 0)
+        glDeleteFramebuffers(1, &m_fbo_id);
 }
 
 

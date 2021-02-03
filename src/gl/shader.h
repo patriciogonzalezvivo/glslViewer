@@ -59,6 +59,7 @@ public:
     void    setUniformDepthTexture(const std::string& _name, const Fbo* _fbo);
     void    setUniformTextureCube(const std::string& _name, const TextureCube* _tex);
 
+    void    setUniformTexture(const std::string& _name, GLuint _textureId, unsigned int _texLoc);
     void    setUniformTexture(const std::string& _name, const Texture* _tex, unsigned int _texLoc);
     void    setUniformTexture(const std::string& _name, const Fbo* _fbo, unsigned int _texLoc);
     void    setUniformDepthTexture(const std::string& _name, const Fbo* _fbo, unsigned int _texLoc);
