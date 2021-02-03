@@ -1037,6 +1037,9 @@ void TextureStreamMMAL::clear() {
 
     if (m_fbo_id != 0)
         glDeleteFramebuffers(1, &m_fbo_id);
+
+    if (m_vbo)
+        delete m_vbo;
 }
 
 
