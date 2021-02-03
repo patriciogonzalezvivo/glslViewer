@@ -906,9 +906,8 @@ void main (void) {
     yuv.g = texture2D(u_texU, st).r;
     yuv.b = texture2D(u_texV, st).r;
 
-    gl_Fragrgb = vec4(yuv2rgb_mat * yuv, 1.0);
+    gl_FragColor = vec4(yuv2rgb_mat * yuv, 1.0);
 }
-
 )";
 
     m_shader.load(frag, vert, false);
@@ -999,6 +998,7 @@ bool TextureStreamMMAL::update() {
         glClear(GL_COLOR_BUFFER_BIT);
 
         m_shader.use();
+        m_shader.setUniform("u_resolution", float(getWindowWidth()), float(getWindowHeight()));
         m_shader.setUniformTexture("u_texY", m_id_Y, 0);
         m_shader.setUniformTexture("u_texU", m_id_U, 1);
         m_shader.setUniformTexture("u_texV", m_id_V, 2);
