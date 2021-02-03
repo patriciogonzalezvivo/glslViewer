@@ -35,8 +35,8 @@ protected:
 
     GLuint      m_fbo_id;
     GLuint      m_old_fbo_id;
-    GLuint      m_id_Y, m_id_U, m_id_V;
-    EGLImageKHR yimg, uimg, vimg;
+    GLuint      m_brcm_id;
+    EGLImageKHR m_egl_img;
     Shader      m_shader;
     Vbo*        m_vbo;
 };
