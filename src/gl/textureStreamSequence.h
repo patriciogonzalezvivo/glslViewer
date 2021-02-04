@@ -15,7 +15,8 @@ public:
 
 private:
 
-    std::vector<unsigned char*>  m_frames;
+    std::vector<void*>  m_frames;
     size_t  m_currentFrame;
+    size_t  m_bits;
 
 };
