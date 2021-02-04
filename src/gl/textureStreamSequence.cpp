@@ -30,10 +30,12 @@ bool TextureStreamSequence::update() {
     if (m_frames.size() == 0)
         return false;
 
-    bool loaded = Texture::load(m_width, m_height, 4, 8, m_frames[ m_currentFrame ]);
-    m_currentFrame = (m_currentFrame + 1) % m_frames.size();
+    if ( Texture::load(m_width, m_height, 4, 8, m_frames[ m_currentFrame ]) ) {
+        m_currentFrame = (m_currentFrame + 1) % m_frames.size();
+        return true;
+    }
 
-    return loaded;
+    return false;
 }
 
 void TextureStreamSequence::clear() {

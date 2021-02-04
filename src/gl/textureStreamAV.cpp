@@ -267,9 +267,9 @@ bool TextureStreamAV::update() {
 
     if (m_vFlip)
         flipPixelsVertically(frame_data, av_codec_ctx->width, av_codec_ctx->height, 4);
-    Texture::load(av_codec_ctx->width, av_codec_ctx->height, 4, 8, frame_data);
+    ;
 
-    return true;
+    return Texture::load(av_codec_ctx->width, av_codec_ctx->height, 4, 8, frame_data);
 }
 
 void  TextureStreamAV::clear() {

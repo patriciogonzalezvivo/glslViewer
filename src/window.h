@@ -34,7 +34,6 @@ glm::mat4 getOrthoMatrix();
 int getWindowWidth();
 int getWindowHeight();
 
-
 glm::vec4 getDate();
 double getTime();
 double getDelta();

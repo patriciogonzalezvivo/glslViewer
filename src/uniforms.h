@@ -54,6 +54,7 @@ public:
     bool                    addTexture( const std::string& _name, const std::string& _path, WatchFileList& _files, bool _flip = true, bool _verbose = true );
     bool                    addBumpTexture( const std::string& _name, const std::string& _path, WatchFileList& _files, bool _flip = true, bool _verbose = true );
     bool                    addStreamingTexture( const std::string& _name, const std::string& _url, bool _flip = true, bool _device = false, bool _verbose = true );
+    void                    updateStreammingTextures();
 
     void                    setCubeMap( TextureCube* _cubemap );
     void                    setCubeMap( const std::string& _filename, WatchFileList& _files, bool _verbose = true);
@@ -61,10 +62,11 @@ public:
     // Check presence of uniforms on shaders
     void                    checkPresenceIn( const std::string &_vert_src, const std::string &_frag_src );
 
+
     // Feed uniforms to a specific shader
     bool                    feedTo( Shader &_shader );
 
-    Camera&                 getCamera() { return cameras[0]; } 
+    Camera&                 getCamera() { return cameras[0]; }
 
     // Debug
     void                    print(bool _all);

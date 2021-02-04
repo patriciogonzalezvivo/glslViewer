@@ -342,6 +342,14 @@ bool Uniforms::addStreamingTexture( const std::string& _name, const std::string&
     return false;
 }
 
+void Uniforms::updateStreammingTextures() {
+    for (StreamsList::iterator i = streams.begin(); i != streams.end(); ++i) {
+        if(i->second->update()) {
+            m_change = true;
+        }
+    }
+}
+
 void Uniforms::setCubeMap( TextureCube* _cubemap ) {
     if (cubemap)
         delete cubemap;
@@ -492,10 +500,6 @@ bool Uniforms::haveChange() {
             lightChange = true;
             break;
         }
-    }
-
-    for (StreamsList::iterator i = streams.begin(); i != streams.end(); ++i) {
-        i->second->update();
     }
 
     // std::cout << "  change " << m_change << std::endl;

@@ -45,14 +45,16 @@ Sandbox::Sandbox():
 
     // TIME UNIFORMS
     //
-    uniforms.functions["u_time"] = UniformFunction( "float", 
-    [this](Shader& _shader) {
+    uniforms.functions["u_frame"] = UniformFunction( "int", [this](Shader& _shader) {
+        _shader.setUniform("u_frame", (int)m_frame);
+    }, [this]() { return toString(m_frame); } );
+
+    uniforms.functions["u_time"] = UniformFunction( "float", [this](Shader& _shader) {
         if (m_record) _shader.setUniform("u_time", m_record_head);
         else _shader.setUniform("u_time", float(getTime()));
     }, []() { return toString(getTime()); } );
 
-    uniforms.functions["u_delta"] = UniformFunction("float", 
-    [this](Shader& _shader) {
+    uniforms.functions["u_delta"] = UniformFunction("float", [this](Shader& _shader) {
         if (m_record) _shader.setUniform("u_delta", float(m_record_fdelta));
         else _shader.setUniform("u_delta", float(getDelta()));
     },
@@ -711,6 +713,11 @@ void Sandbox::_renderBuffers() {
 }
 
 void Sandbox::render() {
+    // UPDATE STREAMING TEXTURES
+    // -----------------------------------------------
+    if (m_initialized)
+        uniforms.updateStreammingTextures();
+
     // RENDER SHADOW MAP
     // -----------------------------------------------
     if (geom_index != -1)
@@ -991,7 +998,6 @@ void Sandbox::renderDone() {
     if (m_histogram)
         onHistogram();
 
-    m_frame++;
 
     unflagChange();
 
@@ -999,6 +1005,9 @@ void Sandbox::renderDone() {
         m_initialized = true;
         updateViewport();
         flagChange();
+    }
+    else {
+        m_frame++;
     }
 }
 

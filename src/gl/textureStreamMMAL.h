@@ -33,12 +33,12 @@ protected:
     MMAL_COMPONENT_T    *camera_component = NULL;
     //RASPICAM_CAMERA_PARAMETERS cameraParameters;
 
-    GLuint      m_fbo_id;
-    GLuint      m_old_fbo_id;
-    GLuint      m_brcm_id;
-    EGLImageKHR m_egl_img;
-    Shader      m_shader;
-    Vbo*        m_vbo;
+    GLuint          m_fbo_id;
+    GLuint          m_old_fbo_id;
+    GLuint          m_brcm_id;
+    EGLImageKHR     m_egl_img;
+    Shader          m_shader;
+    Vbo*            m_vbo;
 };
 
 #endif

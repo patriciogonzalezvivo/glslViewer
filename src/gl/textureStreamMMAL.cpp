@@ -617,11 +617,14 @@ TextureStreamMMAL::~TextureStreamMMAL() {
 }
 
 bool TextureStreamMMAL::load(const std::string& _filepath, bool _vFlip) {
+    m_path = _filepath;
+    m_vFlip = _vFlip;
+
     m_width = 1920;//640;
     m_height = 1080;//480;
     int fps = 30;//60;
-    m_path = _filepath;
-    m_vFlip = _vFlip;
+
+    // Use _filepath for encoding widthxheightxfpsxrotation?
 
     camera_component = 0;
     MMAL_ES_FORMAT_T *format;
@@ -760,7 +763,7 @@ bool TextureStreamMMAL::load(const std::string& _filepath, bool _vFlip) {
         status = MMAL_ENOMEM;
         return false;
     }
-    printf("Allocated %d MMAL buffers of size %d.\n", preview_port->buffer_num, preview_port->buffer_size);
+    //printf("Allocated %d MMAL buffers of size %d.\n", preview_port->buffer_num, preview_port->buffer_size);
 
     /* Place filled buffers from the preview port in a queue to render */
     video_queue = mmal_queue_create();
