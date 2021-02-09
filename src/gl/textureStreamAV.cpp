@@ -16,29 +16,7 @@ extern "C" {
 #include "../tools/text.h"
 #include "../window.h"
 
-TextureStreamAV::TextureStreamAV() {
-
-    // initialize libav
-    av_register_all();
-    avformat_network_init();
-    
-    //https://gist.github.com/shakkhar/619fd90ccbd17734089b
-    avdevice_register_all();
-
-    av_format_ctx = NULL;
-    m_streamId = -1;
-    av_video_stream = NULL;
-    av_codec_ctx = NULL;
-    av_decoder = NULL;
-    av_frame = NULL;
-    av_packet = NULL;
-    frame_data = NULL;
-    conv_ctx = NULL;
-}
-
-TextureStreamAV::~TextureStreamAV() {
-    clear();
-}
+#define EPS 0.000025
 
 // av_err2str returns a temporary array. This doesn't work in gcc.
 // This function can be used as a replacement for av_err2str.
@@ -58,6 +36,37 @@ static AVPixelFormat correct_for_deprecated_pixel_format(AVPixelFormat pix_fmt) 
         case AV_PIX_FMT_YUVJ440P: return AV_PIX_FMT_YUV440P;
         default:                  return pix_fmt;
     }
+}
+
+// helper function as taken from OpenCV ffmpeg reader
+double r2d(AVRational r) {
+    return r.num == 0 || r.den == 0 ? 0. : (double)r.num / (double)r.den;
+}
+
+TextureStreamAV::TextureStreamAV() : 
+    device(false), 
+    av_format_ctx(NULL),
+    av_codec_ctx(NULL),
+    av_video_stream(NULL),
+    av_decoder(NULL),
+    av_frame(NULL),
+    av_packet(NULL),
+    conv_ctx(NULL),
+    frame_data(NULL),
+    m_currentFrame(-1),
+    m_streamId(-1)
+    {
+
+    // initialize libav
+    av_register_all();
+    avformat_network_init();
+    
+    //https://gist.github.com/shakkhar/619fd90ccbd17734089b
+    avdevice_register_all();
+}
+
+TextureStreamAV::~TextureStreamAV() {
+    clear();
 }
 
 bool TextureStreamAV::load(const std::string& _path, bool _vFlip) {
@@ -209,6 +218,7 @@ bool TextureStreamAV::update() {
         if (response == AVERROR_EOF) {
             avio_seek(av_format_ctx->pb, 0, SEEK_SET);
             avformat_seek_file(av_format_ctx, m_streamId, 0, 0, av_format_ctx->streams[m_streamId]->duration, 0);
+            m_currentFrame = 0;
             continue;
         }
 
@@ -267,9 +277,59 @@ bool TextureStreamAV::update() {
 
     if (m_vFlip)
         flipPixelsVertically(frame_data, av_codec_ctx->width, av_codec_ctx->height, 4);
-    ;
-
+    
+    m_currentFrame++;
     return Texture::load(av_codec_ctx->width, av_codec_ctx->height, 4, 8, frame_data);
+}
+
+double TextureStreamAV::getFPS() {
+    double fps = r2d(av_format_ctx->streams[m_streamId]->r_frame_rate);
+
+    if (fps < EPS)
+        fps = 1.0 / r2d(av_format_ctx->streams[m_streamId]->codec->time_base);
+    
+    return fps;
+}
+
+float TextureStreamAV::getTotalSeconds() {
+    double sec = (double)av_format_ctx->duration / (double)AV_TIME_BASE;
+    
+    if (sec < EPS)
+        sec = (double)av_format_ctx->streams[m_streamId]->duration * r2d(av_format_ctx->streams[m_streamId]->time_base);
+    
+    if (sec < EPS)
+        sec = (double)av_format_ctx->streams[m_streamId]->duration * r2d(av_format_ctx->streams[m_streamId]->time_base);
+    
+    return sec;
+
+}
+
+int TextureStreamAV::getTotalFrames() {
+    if (av_format_ctx == NULL)
+        return -1;
+
+    if (device)
+        return 1;
+    
+    int64_t nbf = av_format_ctx->streams[m_streamId]->nb_frames;
+    
+    if (nbf == 0)
+        nbf = (int64_t)floor(getTotalSeconds() * getFPS() + 0.5);
+
+    return nbf;
+}
+
+double TextureStreamAV::dts_to_sec(int64_t dts) {
+    return (double)(dts - av_format_ctx->streams[m_streamId]->start_time) * r2d(av_format_ctx->streams[m_streamId]->time_base);
+}
+
+int64_t TextureStreamAV::dts_to_frame_number(int64_t dts) {
+    double sec = dts_to_sec(dts);
+    return (int64_t)(getFPS() * sec + 0.5);
+}
+
+int TextureStreamAV::getCurrentFrame() {
+    return (device)? 1 : m_currentFrame;
 }
 
 void  TextureStreamAV::clear() {
@@ -285,10 +345,9 @@ void  TextureStreamAV::clear() {
     if (av_codec_ctx)
         avcodec_close(av_codec_ctx);
         
-    if (av_format_ctx) {
+    if (av_format_ctx)
         avformat_free_context(av_format_ctx);
         // avformat_close_input(&av_format_ctx);
-    }
 
     if (frame_data) 
         delete frame_data;

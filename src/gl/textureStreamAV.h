@@ -19,6 +19,11 @@ public:
     TextureStreamAV();
     virtual ~TextureStreamAV();
 
+    virtual float   getTotalSeconds();
+    virtual int     getTotalFrames();
+    virtual int     getCurrentFrame();
+    virtual double  getFPS();
+
     virtual bool    load(const std::string& _filepath, bool _vFlip);
     virtual bool    update();
     virtual void    clear();
@@ -26,6 +31,8 @@ public:
     bool device;
 
 private:
+    double          dts_to_sec(int64_t dts);
+    int64_t         dts_to_frame_number(int64_t dts);
 
     AVFormatContext *av_format_ctx;
     AVCodecContext  *av_codec_ctx;
@@ -37,6 +44,7 @@ private:
     SwsContext      *conv_ctx;
         
     uint8_t         *frame_data;
+    long            m_currentFrame;
     int             m_streamId;
 
 };

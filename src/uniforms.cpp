@@ -212,8 +212,8 @@ bool Uniforms::addTexture(const std::string& _name, const std::string& _path, Wa
 
                 if (_verbose) {
                     std::cout << "// " << _path << " loaded as: " << std::endl;
-                    std::cout << "//    uniform sampler2D " << _name  << ";"<< std::endl;
-                    std::cout << "//    uniform vec2 " << _name  << "Resolution;"<< std::endl;
+                    std::cout << "//    uniform sampler2D   " << _name  << ";"<< std::endl;
+                    std::cout << "//    uniform vec2        " << _name  << "Resolution;"<< std::endl;
                 }
 
                 return true;
@@ -253,8 +253,8 @@ bool Uniforms::addBumpTexture(const std::string& _name, const std::string& _path
 
                 if (_verbose) {
                     std::cout << "// " << _path << " loaded and transform to normalmap as: " << std::endl;
-                    std::cout << "//    uniform sampler2D " << _name  << ";"<< std::endl;
-                    std::cout << "//    uniform vec2 " << _name  << "Resolution;"<< std::endl;
+                    std::cout << "//    uniform sampler2D   " << _name  << ";"<< std::endl;
+                    std::cout << "//    uniform vec2        " << _name  << "Resolution;"<< std::endl;
                 }
 
                 return true;
@@ -280,8 +280,10 @@ bool Uniforms::addStreamingTexture( const std::string& _name, const std::string&
 
                 if (_verbose) {
                     std::cout << "// " << _url << " sequence loaded as streaming texture: " << std::endl;
-                    std::cout << "//    uniform sampler2D " << _name  << ";"<< std::endl;
-                    std::cout << "//    uniform vec2 " << _name  << "Resolution;"<< std::endl;
+                    std::cout << "//    uniform sampler2D   " << _name  << ";"<< std::endl;
+                    std::cout << "//    uniform vec2        " << _name  << "Resolution;"<< std::endl;
+                    std::cout << "//    uniform float       " << _name  << "CurrentFrame;"<< std::endl;
+                    std::cout << "//    uniform float       " << _name  << "TotalFrames;"<< std::endl;
                 }
 
                 return true;
@@ -303,8 +305,8 @@ bool Uniforms::addStreamingTexture( const std::string& _name, const std::string&
 
                 if (_verbose) {
                     std::cout << "// " << _url << " loaded as streaming texture: " << std::endl;
-                    std::cout << "//    uniform sampler2D " << _name  << ";"<< std::endl;
-                    std::cout << "//    uniform vec2 " << _name  << "Resolution;"<< std::endl;
+                    std::cout << "//    uniform sampler2D   " << _name  << ";"<< std::endl;
+                    std::cout << "//    uniform vec2        " << _name  << "Resolution;"<< std::endl;
                 }
 
                 return true;
@@ -326,8 +328,13 @@ bool Uniforms::addStreamingTexture( const std::string& _name, const std::string&
 
             if (_verbose) {
                 std::cout << "// " << _url << " loaded as streaming texture: " << std::endl;
-                std::cout << "//    uniform sampler2D " << _name  << ";"<< std::endl;
-                std::cout << "//    uniform vec2 " << _name  << "Resolution;"<< std::endl;
+                std::cout << "//    uniform sampler2D   " << _name  << ";"<< std::endl;
+                std::cout << "//    uniform vec2        " << _name  << "Resolution;"<< std::endl;
+
+                if (!_device) {
+                    std::cout << "//    uniform float       " << _name  << "CurrentFrame;" << std::endl;
+                    std::cout << "//    uniform float       " << _name  << "TotalFrames;" << std::endl;
+                }
             }
 
             return true;
@@ -433,6 +440,11 @@ bool Uniforms::feedTo( Shader &_shader ) {
         _shader.setUniform(it->first+"Resolution", float(it->second->getWidth()), float(it->second->getHeight()));
     }
 
+    for (StreamsList::iterator it = streams.begin(); it != streams.end(); ++it) {
+        _shader.setUniform(it->first+"CurrentFrame", float(it->second->getCurrentFrame()));
+        _shader.setUniform(it->first+"TotalFrames", float(it->second->getTotalFrames()));
+    }
+
     // Pass Buffers Uniforms
     for (unsigned int i = 0; i < buffers.size(); i++) {
         _shader.setUniformTexture("u_buffer" + toString(i), &buffers[i], _shader.textureIndex++ );
@@ -449,7 +461,6 @@ bool Uniforms::feedTo( Shader &_shader ) {
         if (lights[0].falloff > 0)
             _shader.setUniform("u_lightFalloff", lights[0].falloff);
         _shader.setUniform("u_lightMatrix", lights[0].getBiasMVPMatrix() );
-        // _shader.setUniformDepthTexture("u_lightShadowMap", lights[0].getShadowMap() );
     }
     else {
         for (unsigned int i = 0; i < lights.size(); i++) {
@@ -462,7 +473,6 @@ bool Uniforms::feedTo( Shader &_shader ) {
             if (lights[i].falloff > 0)
                 _shader.setUniform("u_lightFalloff", lights[i].falloff);
             _shader.setUniform("u_lightMatrix", lights[i].getBiasMVPMatrix() );
-            // _shader.setUniformDepthTexture("u_lightShadowMap", lights[i].getShadowMap() );
         }
     }
 
@@ -589,34 +599,38 @@ void Uniforms::printBuffers() {
 }
 
 void Uniforms::printTextures(){
-     for (TextureList::iterator it = textures.begin(); it != textures.end(); ++it) {
+    for (TextureList::iterator it = textures.begin(); it != textures.end(); ++it) {
         std::cout << "sampler2D," << it->first << ',' << it->second->getFilePath() << std::endl;
+        std::cout << "vec2," << it->first << "Resolution," << toString(it->second->getWidth(), 1) << "," << toString(it->second->getHeight(), 1) << std::endl;
+    }
+
+    for (StreamsList::iterator it = streams.begin(); it != streams.end(); ++it) {
+        std::cout << "float," << it->first+"CurrentFrame," << toString(it->second->getCurrentFrame(), 1) << std::endl;
+        std::cout << "float," << it->first+"TotalFrames," << toString(it->second->getTotalFrames(), 1) << std::endl;
     }
 }
 
 void Uniforms::printLights() {
     if (lights.size() == 1) {
         if (lights[0].getType() != LIGHT_DIRECTIONAL)
-            std::cout << "u_light," << toString( lights[0].getPosition() ) << std::endl;
-        std::cout << "u_lightColor," << toString( lights[0].color )  << std::endl;
+            std::cout << "vect3,u_light," << toString( lights[0].getPosition() ) << std::endl;
+        std::cout << "vect3,u_lightColor," << toString( lights[0].color )  << std::endl;
         if (lights[0].getType() == LIGHT_DIRECTIONAL || lights[0].getType() == LIGHT_SPOT)
-            std::cout << "u_lightDirection," << toString( lights[0].direction ) << std::endl;
-        std::cout << "u_lightIntensity," << toString( lights[0].intensity, 3) << std::endl;
+            std::cout << "vect3,u_lightDirection," << toString( lights[0].direction ) << std::endl;
+        std::cout << "float,u_lightIntensity," << toString( lights[0].intensity, 3) << std::endl;
         if (lights[0].falloff > 0.0)
-            std::cout << "u_lightFalloff," << toString( lights[0].falloff, 3) << std::endl;
-        // std::cout << "sampler2D,u_lightShadowMap" << std::endl;
+            std::cout << "float,u_lightFalloff," << toString( lights[0].falloff, 3) << std::endl;
     }
     else if (lights.size() > 1) {
         for (unsigned int i = 0; i < lights.size(); i++) {
             if (lights[i].getType() != LIGHT_DIRECTIONAL)
-                std::cout << "u_light," << toString( lights[i].getPosition() ) << std::endl;
-            std::cout << "u_lightColor," << toString( lights[i].color )  << std::endl;
+                std::cout << "vec3,u_light," << toString( lights[i].getPosition() ) << std::endl;
+            std::cout << "vec3,u_lightColor," << toString( lights[i].color )  << std::endl;
             if (lights[i].getType() == LIGHT_DIRECTIONAL || lights[i].getType() == LIGHT_SPOT)
-                std::cout << "u_lightDirection," << toString( lights[i].direction ) << std::endl;
-            std::cout << "u_lightIntensity," << toString( lights[i].intensity, 3) << std::endl;
+                std::cout << "vec3,u_lightDirection," << toString( lights[i].direction ) << std::endl;
+            std::cout << "float,u_lightIntensity," << toString( lights[i].intensity, 3) << std::endl;
             if (lights[i].falloff > 0.0)
-                std::cout << "u_lightFalloff," << toString( lights[i].falloff, 3) << std::endl;
-            // std::cout << "sampler2D,u_lightShadowMap" << std::endl;
+                std::cout << "float,u_lightFalloff," << toString( lights[i].falloff, 3) << std::endl;
         }
     }
 }
