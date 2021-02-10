@@ -11,8 +11,7 @@
 #include "libdrm/drm_fourcc.h"
 #endif
 
-//#define TEXTURE_TARGET GL_TEXTURE_EXTERNAL_OES
-#define TEXTURE_TARGET GL_TEXTURE_2D
+#define TEXTURE_TARGET GL_TEXTURE_EXTERNAL_OES
 
 // Standard port setting for the camera component
 #define MMAL_CAMERA_PREVIEW_PORT 0
@@ -890,14 +889,13 @@ void main(void) {
 )";
 
     const std::string frag = R"(
-//#extension GL_OES_EGL_image_external : require
+#extension GL_OES_EGL_image_external : require
 
 #ifdef GL_ES
 precision mediump float;
 #endif
 
-//uniform samplerExternalOES u_tex;
-uniform sampler2D u_tex;
+uniform samplerExternalOES u_tex;
 varying vec2 v_texcoord;
 
 void main (void) {
@@ -985,11 +983,10 @@ void updateTexture(EGLDisplay display, EGLenum target, EGLClientBuffer mm_buf, G
             EGL_GL_TEXTURE_LEVEL_KHR, 0,
             EGL_IMAGE_PRESERVED_KHR, EGL_TRUE,
             EGL_NONE, EGL_NONE
-    };
-    //*egl_image = eglCreateImageKHR(display, EGL_NO_CONTEXT, target, mm_buf, attribs);  
+    };  
     
     #ifndef DRIVER_LEGACY
-    *egl_image = createImage(display, getEGLContext(), target, mm_buf, attribs);
+    *egl_image = createImage(display, EGL_NO_CONTEXT, target, mm_buf, attribs);
     imageTargetTexture2D(TEXTURE_TARGET, *egl_image);
     #else
     *egl_image = eglCreateImageKHR(display, EGL_NO_CONTEXT, target, mm_buf, attribs);
@@ -1003,7 +1000,6 @@ bool TextureStreamMMAL::update() {
 
     if (MMAL_BUFFER_HEADER_T* buf = mmal_queue_get(video_queue)) {
         mmal_buffer_header_mem_lock(buf);
-        printf("Buffer received with length %d\n", buf->length);
         
         updateTexture(getEGLDisplay(), EGL_IMAGE_BRCM_MULTIMEDIA, (EGLClientBuffer)buf->data, &m_brcm_id, &egl_img);
         
