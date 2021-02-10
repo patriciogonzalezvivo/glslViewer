@@ -11,8 +11,6 @@
 #include "libdrm/drm_fourcc.h"
 #endif
 
-#define TEXTURE_TARGET GL_TEXTURE_EXTERNAL_OES
-
 // Standard port setting for the camera component
 #define MMAL_CAMERA_PREVIEW_PORT 0
 #define MMAL_CAMERA_VIDEO_PORT 1
@@ -821,16 +819,17 @@ bool TextureStreamMMAL::load(const std::string& _filepath, bool _vFlip) {
         }
     }
     
-    
+   /* 
     //begin capture
     if (mmal_port_parameter_set_boolean(video_port, MMAL_PARAMETER_CAPTURE, 1) != MMAL_SUCCESS) {
         printf("Failed to start capture\n\n");
         return false;
     }
+    */
     
     // Setup the camera's textures and EGL images.
-    if (m_brcm_id == 0)
-        glGenTextures(1, &m_brcm_id);
+    if (m_id == 0)
+        glGenTextures(1, &m_id);
 
     glEnable(GL_TEXTURE_2D);
 
@@ -853,12 +852,12 @@ bool TextureStreamMMAL::load(const std::string& _filepath, bool _vFlip) {
     // Texture properties
     glBindTexture(GL_TEXTURE_2D, m_id);
     // Allocate the texture
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_width, m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_width, m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-    
+   
     // Bind Texture ID with the FBO
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_id, 0);
 
@@ -968,7 +967,7 @@ void imageTargetTexture2D(EGLenum target, EGLImageKHR image) {
 
 void updateTexture(EGLDisplay display, EGLenum target, EGLClientBuffer mm_buf, GLuint *texture, EGLImageKHR *egl_image) {
     //vcos_log_trace("%s: mm_buf %u", VCOS_FUNCTION, (unsigned) mm_buf);
-    glBindTexture(TEXTURE_TARGET, *texture);
+    glBindTexture(GL_TEXTURE_EXTERNAL_OES, *texture);
     if (*egl_image != EGL_NO_IMAGE_KHR) {
         /* Discard the EGL image for the preview frame */
         #ifndef DRIVER_LEGACY
@@ -987,10 +986,10 @@ void updateTexture(EGLDisplay display, EGLenum target, EGLClientBuffer mm_buf, G
     
     #ifndef DRIVER_LEGACY
     *egl_image = createImage(display, EGL_NO_CONTEXT, target, mm_buf, attribs);
-    imageTargetTexture2D(TEXTURE_TARGET, *egl_image);
+    imageTargetTexture2D(GL_TEXTURE_EXTERNAL_OES, *egl_image);
     #else
     *egl_image = eglCreateImageKHR(display, EGL_NO_CONTEXT, target, mm_buf, attribs);
-    glEGLImageTargetTexture2DOES(TEXTURE_TARGET, *egl_image);
+    glEGLImageTargetTexture2DOES(GL_TEXTURE_EXTERNAL_OES, *egl_image);
     #endif
 }
 
