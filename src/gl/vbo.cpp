@@ -145,7 +145,7 @@ void Vbo::render(Shader* _shader) {
     // Enable vertex attribs via vertex layout object
     m_vertexLayout->enable(_shader);
 
-#if !defined(PLATFORM_RPI) && !defined(PLATFORM_RPI4) && !defined(PLATFORM_WINDOWS)
+#if !defined(PLATFORM_RPI) && !defined(PLATFORM_WINDOWS)
     if (m_drawMode == GL_POINTS) {
         glEnable(GL_POINT_SPRITE);
         glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
@@ -154,7 +154,7 @@ void Vbo::render(Shader* _shader) {
 
     // Draw as elements or arrays
     if (m_nIndices > 0) {
-        #if defined(PLATFORM_RPI) || defined(PLATFORM_RPI4) 
+        #if defined(PLATFORM_RPI)
         glDrawElements(m_drawMode, m_nIndices, GL_UNSIGNED_SHORT, 0);
         #else
         glDrawElements(m_drawMode, m_nIndices, GL_UNSIGNED_INT, 0);

@@ -40,7 +40,7 @@ bool Texture::load(int _width, int _height, int _channels, int _bits, const void
     else if (_channels == 3) {
         format = GL_RGB;
     }
-#if !defined(PLATFORM_RPI) && !defined(PLATFORM_RPI4)
+#if !defined(PLATFORM_RPI)
     else if (_channels == 2) {
         format = GL_RG;
     } 
@@ -67,7 +67,7 @@ bool Texture::load(int _width, int _height, int _channels, int _bits, const void
     m_width = _width;
     m_height = _height;
     
-#if defined(PLATFORM_RPI) || defined(PLATFORM_RPI4)
+#if defined(PLATFORM_RPI)
     int max_size = std::max(m_width, m_height);
     if ( max_size > 1024) {
         float factor = max_size/1024.0;
@@ -126,7 +126,7 @@ bool Texture::load(const std::string& _path, bool _vFlip) {
     else if (   ext == "png" || ext == "PNG" ||
                 ext == "psd" || ext == "PSD" ||
                 ext == "tga" || ext == "TGA") {
-#if defined(PLATFORM_RPI) || defined(PLATFORM_RPI4)
+#if defined(PLATFORM_RPI)
         // If we are in a Raspberry Pi don't take the risk of loading a 16bit image
         unsigned char* pixels = loadPixels(_path, &m_width, &m_height, RGB_ALPHA, _vFlip);
         load(m_width, m_height, 4, 8, pixels);

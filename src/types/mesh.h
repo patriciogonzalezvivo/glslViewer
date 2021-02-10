@@ -7,7 +7,7 @@
 
 #include "../gl/vbo.h"
 
-#if defined(PLATFORM_RPI) || defined(PLATFORM_RPI4) 
+#if defined(PLATFORM_RPI)
 #define INDEX_TYPE uint16_t
 #else
 #define INDEX_TYPE uint32_t

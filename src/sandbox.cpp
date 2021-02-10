@@ -84,7 +84,7 @@ Sandbox::Sandbox():
         }
     });
 
-    #if !defined(PLATFORM_RPI) && !defined(PLATFORM_RPI4)
+    #if !defined(PLATFORM_RPI)
     uniforms.functions["u_sceneDepth"] = UniformFunction("sampler2D", [this](Shader& _shader) {
         if (m_postprocessing && m_scene_fbo.getTextureId()) {
             _shader.setUniformDepthTexture("u_sceneDepth", &m_scene_fbo, _shader.textureIndex++ );
@@ -868,7 +868,7 @@ void Sandbox::renderUI() {
                     yOffset -= yStep * 2.0;
                 }
 
-                #if !defined(PLATFORM_RPI) && !defined(PLATFORM_RPI4)
+                #if !defined(PLATFORM_RPI)
                 if (uniforms.functions["u_sceneDepth"].present) {
                     m_billboard_shader.setUniform("u_scale", xStep, yStep);
                     m_billboard_shader.setUniform("u_translate", xOffset, yOffset);
@@ -884,7 +884,7 @@ void Sandbox::renderUI() {
                 #endif
             }
 
-        #if !defined(PLATFORM_RPI) && !defined(PLATFORM_RPI4) 
+        #if !defined(PLATFORM_RPI) 
             if (uniforms.functions["u_lightShadowMap"].present) {
                 float x = xOffset;
                 float y = (float)(getWindowHeight()) - xOffset;
