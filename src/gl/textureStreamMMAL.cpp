@@ -1,16 +1,18 @@
 #include "textureStreamMMAL.h"
 
-#if defined(DRIVER_FAKE_KMS)
-#include "bcm_host.h"
-#include "libdrm/drm_fourcc.h"
-#endif
-
 #ifdef PLATFORM_RPI
 
 #include <iostream>
 
 #include "../window.h"
 #include "../tools/geom.h"
+
+#if defined(DRIVER_FAKE_KMS)
+#include "libdrm/drm_fourcc.h"
+#endif
+
+//#define TEXTURE_TARGET GL_TEXTURE_EXTERNAL_OES
+#define TEXTURE_TARGET GL_TEXTURE_2D
 
 // Standard port setting for the camera component
 #define MMAL_CAMERA_PREVIEW_PORT 0
@@ -613,7 +615,6 @@ TextureStreamMMAL::TextureStreamMMAL() :
     camera_component(NULL),
     m_fbo_id(0), m_old_fbo_id(0),
     m_brcm_id(0),
-    //m_egl_img(EGL_NO_IMAGE_KHR),
     m_vbo(nullptr) {
     #ifndef DRIVER_LEGACY
     // bcm_host is initialated on the creation of the window in LEGACY
@@ -821,21 +822,21 @@ bool TextureStreamMMAL::load(const std::string& _filepath, bool _vFlip) {
         }
     }
     
-    /*
+    
     //begin capture
     if (mmal_port_parameter_set_boolean(video_port, MMAL_PARAMETER_CAPTURE, 1) != MMAL_SUCCESS) {
         printf("Failed to start capture\n\n");
         return false;
     }
-    */
     
-    //glEnable(GL_TEXTURE_2D);
-    
+   
+    /*
     // Setup the camera's textures and EGL images.
-    if (m_id == 0)
-        glGenTextures(1, &m_id);
+    if (m_brcm_id == 0)
+        glGenTextures(1, &m_brcm_id);
 
     glEnable(GL_TEXTURE_2D);
+
     // Allocate framebuffer
     if (m_fbo_id == 0)
         glGenFramebuffers(1, &m_fbo_id);
@@ -847,21 +848,21 @@ bool TextureStreamMMAL::load(const std::string& _filepath, bool _vFlip) {
     glBindFramebuffer(GL_FRAMEBUFFER, m_fbo_id);
     glViewport(0.0f, 0.0f, m_width, m_height);
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-
-    // Generate an OpenGL texture ID for this texturez
+*/
+    // Generate an OpenGL texture ID for this texture
     if (m_id == 0)
         glGenTextures(1, &m_id);
     
     // Texture properties
     glBindTexture(GL_TEXTURE_2D, m_id);
     // Allocate the texture
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_width, m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-    //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, getWindowWidth(), getWindowHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_width, m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    
+    /*
     // Bind Texture ID with the FBO
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_id, 0);
 
@@ -908,8 +909,7 @@ void main (void) {
 )";
 
     m_shader.load(frag, vert, false);
-
-
+*/
     return true;
 }
 
@@ -973,7 +973,7 @@ void imageTargetTexture2D(EGLenum target, EGLImageKHR image) {
 
 void updateTexture(EGLDisplay display, EGLenum target, EGLClientBuffer mm_buf, GLuint *texture, EGLImageKHR *egl_image) {
     //vcos_log_trace("%s: mm_buf %u", VCOS_FUNCTION, (unsigned) mm_buf);
-    glBindTexture(GL_TEXTURE_EXTERNAL_OES, *texture);
+    glBindTexture(TEXTURE_TARGET, *texture);
     if (*egl_image != EGL_NO_IMAGE_KHR) {
         /* Discard the EGL image for the preview frame */
         #ifndef DRIVER_LEGACY
@@ -992,11 +992,11 @@ void updateTexture(EGLDisplay display, EGLenum target, EGLClientBuffer mm_buf, G
     //*egl_image = eglCreateImageKHR(display, EGL_NO_CONTEXT, target, mm_buf, attribs);  
     
     #ifndef DRIVER_LEGACY
-    *egl_image = createImage(display, getEGLContext(), target, mm_buf, NULL);
-    imageTargetTexture2D(GL_TEXTURE_EXTERNAL_OES, *egl_image);
+    *egl_image = createImage(display, getEGLContext(), target, mm_buf, attribs);
+    imageTargetTexture2D(TEXTURE_TARGET, *egl_image);
     #else
     *egl_image = eglCreateImageKHR(display, EGL_NO_CONTEXT, target, mm_buf, attribs);
-    glEGLImageTargetTexture2DOES(GL_TEXTURE_EXTERNAL_OES, *egl_image);
+    glEGLImageTargetTexture2DOES(TEXTURE_TARGET, *egl_image);
     #endif
 }
 
@@ -1007,6 +1007,9 @@ bool TextureStreamMMAL::update() {
     if (MMAL_BUFFER_HEADER_T* buf = mmal_queue_get(video_queue)) {
         mmal_buffer_header_mem_lock(buf);
         //printf("Buffer received with length %d\n", buf->length);
+        
+        updateTexture(getEGLDisplay(), EGL_IMAGE_BRCM_MULTIMEDIA, (EGLClientBuffer)buf->data, &m_id, &egl_img);
+/*
         updateTexture(getEGLDisplay(), EGL_IMAGE_BRCM_MULTIMEDIA, (EGLClientBuffer)buf->data, &m_brcm_id, &egl_img);
         
         // bind FBO
@@ -1016,8 +1019,6 @@ bool TextureStreamMMAL::update() {
         glEnable(GL_TEXTURE_2D);
         glBindFramebuffer(GL_FRAMEBUFFER, m_fbo_id);
         glViewport(0.0f, 0.0f, m_width, m_height);
-        //glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-        //glClear(GL_COLOR_BUFFER_BIT);
 
         m_shader.use();
         m_shader.setUniformTexture("u_tex", m_brcm_id, 1);
@@ -1026,7 +1027,7 @@ bool TextureStreamMMAL::update() {
         // unbind FBO
         glBindFramebuffer(GL_FRAMEBUFFER, m_old_fbo_id);
         glViewport(0.0f, 0.0f, getWindowWidth(), getWindowHeight());
-
+*/
         mmal_buffer_header_mem_unlock(buf);
         mmal_buffer_header_release(buf);
         
