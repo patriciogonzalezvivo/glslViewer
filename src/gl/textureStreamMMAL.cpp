@@ -1,6 +1,7 @@
 #include "textureStreamMMAL.h"
 
 #if defined(DRIVER_GBM)
+#include "bcm_host.h"
 #include "libdrm/drm_fourcc.h"
 #endif
 
@@ -613,7 +614,9 @@ TextureStreamMMAL::TextureStreamMMAL() :
     m_brcm_id(0),
     m_egl_img(EGL_NO_IMAGE_KHR),
     m_vbo(nullptr) {
-
+    #ifdef DRIVER_GBM
+    bcm_host_init();
+    #endif
 }
 
 TextureStreamMMAL::~TextureStreamMMAL() {

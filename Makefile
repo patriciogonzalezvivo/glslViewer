@@ -58,8 +58,8 @@ else ifeq ($(DRIVER),gbm)
 				-I/opt/vc/include/
 	LDFLAGS +=  -ldrm -lgbm \
 				-L/opt/vc/lib/ \
-				-lmmal -lmmal_core -lmmal_util -lmmal_vc_client -lvcos \
-				-lGLESv2 -lEGL\
+				-lmmal -lmmal_core -lmmal_util -lmmal_vc_client -lvcos -lbcm_host \
+				-lGLESv2 -lEGL \
 				-lpthread
 
 else ifeq ($(PLATFORM),RPI)
