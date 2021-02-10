@@ -54,7 +54,7 @@ ifeq ($(PLATFORM), RPI)
 	
 	else ifeq ($(DRIVER),glfw)
 		CFLAGS += -DDRIVER_GLFW $(shell pkg-config --cflags glfw3 glu gl)
-		LDFLAGS += $(shell pkg-config --libs glfw3 glu gl x11 xrandr xi xxf86vm xcursor xinerama xrender xext xdamage) -ldl
+		LDFLAGS += $(shell pkg-config --libs glfw3 glu gl x11 xrandr xi xxf86vm xcursor xinerama xrender xext xdamage) -lEGL -ldl
 	endif
 
 	INCLUDES += -I/opt/vc/include/ \

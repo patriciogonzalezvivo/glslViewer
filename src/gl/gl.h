@@ -15,10 +15,11 @@
 #define GLFW_INCLUDE_GLEXT
 #define GLFW_EXPOSE_NATIVE_EGL
 #define GL_GLEXT_PROTOTYPES
-//#define GLFW_INCLUDE_ES1
-//#define GLFW_INCLUDE_GLCOREARB
+#define GLFW_INCLUDE_ES2
+#define GLFW_INCLUDE_GLCOREARB
 #include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
+#include <EGL/eglext.h>
 
 #else
 #include <EGL/egl.h>

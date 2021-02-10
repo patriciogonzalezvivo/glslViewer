@@ -292,7 +292,7 @@ bool Uniforms::addStreamingTexture( const std::string& _name, const std::string&
                 delete tex;
             
         }
-#ifndef DRIVER_GLFW
+#ifdef PLATFORM_RPI
         // if the user is asking for a device on a RaspberryPI hardware
         else if (_device) {
             TextureStreamMMAL* tex = new TextureStreamMMAL();

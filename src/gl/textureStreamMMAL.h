@@ -3,7 +3,7 @@
 
 #include "textureStream.h"
 
-#ifndef DRIVER_GLFW
+#ifdef PLATFORM_RPI
 #include "gl.h"
 #include "shader.h"
 #include "vbo.h"
@@ -37,7 +37,7 @@ protected:
     GLuint          m_fbo_id;
     GLuint          m_old_fbo_id;
     GLuint          m_brcm_id;
-    EGLImageKHR     m_egl_img;
+    //EGLImageKHR     m_egl_img;
     Shader          m_shader;
     Vbo*            m_vbo;
 };

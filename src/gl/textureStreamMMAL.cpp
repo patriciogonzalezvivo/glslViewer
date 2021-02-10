@@ -5,7 +5,7 @@
 #include "libdrm/drm_fourcc.h"
 #endif
 
-#ifndef DRIVER_GLFW
+#ifdef PLATFORM_RPI
 
 #include <iostream>
 
@@ -88,6 +88,7 @@ MMAL_PORT_T         *video_port     = NULL;
 MMAL_PORT_T         *still_port     = NULL;
 MMAL_QUEUE_T        *video_queue    = NULL;
 MMAL_POOL_T         *video_pool     = NULL;
+EGLImageKHR         egl_img         = EGL_NO_IMAGE_KHR;
 
 RASPICAM_CAMERA_PARAMETERS camera_parameters;
 
@@ -612,9 +613,10 @@ TextureStreamMMAL::TextureStreamMMAL() :
     camera_component(NULL),
     m_fbo_id(0), m_old_fbo_id(0),
     m_brcm_id(0),
-    m_egl_img(EGL_NO_IMAGE_KHR),
+    //m_egl_img(EGL_NO_IMAGE_KHR),
     m_vbo(nullptr) {
-    #ifdef DRIVER_FAKE_KMS
+    #ifndef DRIVER_LEGACY
+    // bcm_host is initialated on the creation of the window in LEGACY
     bcm_host_init();
     #endif
 }
@@ -940,7 +942,7 @@ void TextureStreamMMAL::video_output_callback(MMAL_PORT_T *port, MMAL_BUFFER_HEA
     // printf("Video buffer callback, output queue len=%d\n\n", mmal_queue_length(video_queue));
 }
 
-#if defined(DRIVER_FAKE_KMS)
+#ifndef DRIVER_LEGACY
 static PFNEGLCREATEIMAGEKHRPROC createImageProc = NULL;
 static PFNEGLDESTROYIMAGEKHRPROC destroyImageProc = NULL;
 static PFNGLEGLIMAGETARGETTEXTURE2DOESPROC imageTargetTexture2DProc = NULL;
@@ -974,7 +976,7 @@ void updateTexture(EGLDisplay display, EGLenum target, EGLClientBuffer mm_buf, G
     glBindTexture(GL_TEXTURE_EXTERNAL_OES, *texture);
     if (*egl_image != EGL_NO_IMAGE_KHR) {
         /* Discard the EGL image for the preview frame */
-        #ifdef DRIVER_FAKE_KMS
+        #ifndef DRIVER_LEGACY
         destroyImage(display, *egl_image);
         #else
         eglDestroyImageKHR(display, *egl_image);
@@ -989,7 +991,7 @@ void updateTexture(EGLDisplay display, EGLenum target, EGLClientBuffer mm_buf, G
     };
     //*egl_image = eglCreateImageKHR(display, EGL_NO_CONTEXT, target, mm_buf, attribs);  
     
-    #ifdef DRIVER_FAKE_KMS
+    #ifndef DRIVER_LEGACY
     *egl_image = createImage(display, getEGLContext(), target, mm_buf, NULL);
     imageTargetTexture2D(GL_TEXTURE_EXTERNAL_OES, *egl_image);
     #else
@@ -1005,7 +1007,7 @@ bool TextureStreamMMAL::update() {
     if (MMAL_BUFFER_HEADER_T* buf = mmal_queue_get(video_queue)) {
         mmal_buffer_header_mem_lock(buf);
         //printf("Buffer received with length %d\n", buf->length);
-        updateTexture(getEGLDisplay(), EGL_IMAGE_BRCM_MULTIMEDIA, (EGLClientBuffer)buf->data, &m_brcm_id, &m_egl_img);
+        updateTexture(getEGLDisplay(), EGL_IMAGE_BRCM_MULTIMEDIA, (EGLClientBuffer)buf->data, &m_brcm_id, &egl_img);
         
         // bind FBO
         glDisable(GL_DEPTH_TEST);
