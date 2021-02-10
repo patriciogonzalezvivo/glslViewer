@@ -93,7 +93,7 @@ bool TextureStreamSequence::update() {
 
 void TextureStreamSequence::clear() {
     for (size_t i = 0; i < m_frames.size(); i++)
-        delete [] m_frames[i];
+        delete [] (m_frames[i]);
 
     m_frames.clear();
 
