@@ -11,7 +11,7 @@
 #ifdef SUPPORT_FOR_LIBAV 
 #include "gl/textureStreamAV.h"
 #endif
-#if defined(PLATFORM_RPI) || defined(PLATFORM_RPI4)
+#if defined(PLATFORM_RPI)
 #include "gl/textureStreamMMAL.h"
 #endif
 
@@ -292,7 +292,7 @@ bool Uniforms::addStreamingTexture( const std::string& _name, const std::string&
                 delete tex;
             
         }
-#if defined(PLATFORM_RPI) || defined(PLATFORM_RPI4) 
+#ifndef DRIVER_GLFW
         // if the user is asking for a device on a RaspberryPI hardware
         else if (_device) {
             TextureStreamMMAL* tex = new TextureStreamMMAL();

@@ -5,7 +5,7 @@
 #include "libdrm/drm_fourcc.h"
 #endif
 
-#if defined(PLATFORM_RPI) || defined(PLATFORM_RPI4)
+#ifndef DRIVER_GLFW
 
 #include <iostream>
 

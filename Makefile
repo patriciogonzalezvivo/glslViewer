@@ -12,13 +12,12 @@ DRIVER ?= not_defined
 LIBAV ?= not_defined
 
 ifneq ("$(wildcard /opt/vc/include/bcm_host.h)","")
+	PLATFORM = RPI
 	ifeq ($(shell cat /proc/cpuinfo | grep 'Revision' | awk '{print $$3}' ), c03111)
-		PLATFORM = RPI4
 		ifeq ($(DRIVER),not_defined)
 			DRIVER = gbm
 		endif
 	else
-		PLATFORM = RPI
 		ifeq ($(DRIVER),not_defined)
 			DRIVER = vc
 		endif
@@ -35,8 +34,29 @@ $(info ${PLATFORM} platform with $(DRIVER) drivers)
 INCLUDES +=	-Isrc/ -Iinclude/
 CFLAGS += -Wall -O3 -std=c++11 -fpermissive
 
-ifeq ($(DRIVER),vc)
-	CFLAGS += -DGLM_FORCE_CXX14 -DPLATFORM_RPI -DDRIVER_VC -Wno-psabi
+ifeq ($(PLATFORM), RPI)
+	CFLAGS += -DPLATFORM_RPI -Wno-psabi
+	
+	ifeq ($(DRIVER),vc)
+		CFLAGS += -DGLM_FORCE_CXX14 -DDRIVER_VC
+		ifeq ($(shell . /etc/os-release && echo $$PRETTY_NAME),Raspbian GNU/Linux 8 (jessie))
+			LDFLAGS += -lGLESv2 -lEGL
+		else
+			LDFLAGS += -lbrcmGLESv2 -lbrcmEGL
+		endif
+
+	else ifeq ($(DRIVER),gbm)
+		CFLAGS += -DDRIVER_GBM
+		INCLUDES += -I/usr/include/libdrm \
+					-I/usr/include/GLES2
+		LDFLAGS +=  -ldrm -lgbm \
+					-lGLESv2 -lEGL
+	
+	else ifeq ($(DRIVER),glfw)
+		CFLAGS += -DDRIVER_GLFW $(shell pkg-config --cflags glfw3 glu gl)
+		LDFLAGS += $(shell pkg-config --libs glfw3 glu gl x11 xrandr xi xxf86vm xcursor xinerama xrender xext xdamage) -ldl
+	endif
+
 	INCLUDES += -I/opt/vc/include/ \
 				-I/opt/vc/include/interface/vcos/pthreads \
 				-I/opt/vc/include/interface/vmcs_host/linux
@@ -44,31 +64,6 @@ ifeq ($(DRIVER),vc)
 				-lmmal -lmmal_core -lmmal_util -lmmal_vc_client -lvcos \
 				-lbcm_host \
 				-lpthread
-
-	ifeq ($(shell . /etc/os-release && echo $$PRETTY_NAME),Raspbian GNU/Linux 8 (jessie))
-	-	LDFLAGS += -lGLESv2 -lEGL
-	else
-		LDFLAGS += -lbrcmGLESv2 -lbrcmEGL
-	endif
-
-else ifeq ($(DRIVER),gbm)
-	CFLAGS += -DPLATFORM_RPI4 -DDRIVER_GBM -Wno-psabi
-	INCLUDES += -I/usr/include/libdrm \
-				-I/usr/include/GLES2 \
-				-I/opt/vc/include/
-	LDFLAGS +=  -ldrm -lgbm \
-				-L/opt/vc/lib/ \
-				-lmmal -lmmal_core -lmmal_util -lmmal_vc_client -lvcos -lbcm_host \
-				-lGLESv2 -lEGL \
-				-lpthread
-
-else ifeq ($(PLATFORM),RPI)
-CFLAGS += -DPLATFORM_RPI -DDRIVER_GLFW -Wno-psabi $(shell pkg-config --cflags glfw3 glu gl)
-LDFLAGS += $(shell pkg-config --libs glfw3 glu gl x11 xrandr xi xxf86vm xcursor xinerama xrender xext xdamage) -lpthread -ldl
-
-else ifeq ($(PLATFORM),RPI4)
-CFLAGS += -DPLATFORM_RPI4 -DDRIVER_GLFW -Wno-psabi $(shell pkg-config --cflags glfw3 glu gl)
-LDFLAGS += $(shell pkg-config --libs glfw3 glu gl x11 xrandr xi xxf86vm xcursor xinerama xrender xext xdamage) -lpthread -ldl
 
 else ifeq ($(PLATFORM),Linux)
 CFLAGS += -DPLATFORM_LINUX -DDRIVER_GLFW $(shell pkg-config --cflags glfw3 glu gl)

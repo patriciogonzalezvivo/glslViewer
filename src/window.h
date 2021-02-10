@@ -1,5 +1,6 @@
 #pragma once
 
+#include "gl/gl.h"
 #include "glm/glm.hpp"
 
 enum WindowStyle {
@@ -58,8 +59,7 @@ void onMouseDrag(float _x, float _y, int _button);
 void onViewportResize(int _width, int _height);
 void onScroll(float _yoffset);
 
-#ifndef DRIVER_GLFW
-#include "gl/gl.h"
+#ifdef PLATFORM_RPI
 EGLDisplay getEGLDisplay();
 EGLContext getEGLContext();
 #endif

@@ -9,7 +9,7 @@
 #include <unistd.h>
 #endif 
 
-#include "gl/gl.h"
+//#include "gl/gl.h"
 #include "glm/gtc/matrix_transform.hpp"
 #include "tools/text.h"
 
@@ -42,6 +42,12 @@ extern void pal_sleep(uint64_t);
 static bool left_mouse_button_down = false;
 static GLFWwindow* window;
 
+#ifdef PLATFORM_RPI
+#include "GLFW/glfw3native.h"
+EGLDisplay getEGLDisplay() { return glfwGetEGLDisplay(); }
+EGLContext getEGLContext() { return glfwGetEGLContext(window); }
+#endif
+
 #else
 // NON GLWF globals (we have to do all brute force)
 // --------------------------------------------------
@@ -58,13 +64,8 @@ EGLDisplay display;
 EGLContext context;
 EGLSurface surface;
 
-EGLDisplay getEGLDisplay() {
-    return display;
-}
-
-EGLContext getEGLContext() {
-    return context;
-}
+EGLDisplay getEGLDisplay() { return display; }
+EGLContext getEGLContext() { return context; }
 
 // unsigned long long timeStart;
 std::string device_mouse = "/dev/input/mice";

@@ -14,7 +14,6 @@
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 #include <gbm.h>
-//#undef countof
 
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
@@ -31,8 +30,14 @@
 #elif defined(_WIN32)
 #include <GL/glew.h>
 #else
+
 // ANY LINUX using GLFW 
+#define GLFW_INCLUDE_GLEXT
+#define GLFW_EXPOSE_NATIVE_EGL
 #define GL_GLEXT_PROTOTYPES
+//#define GLFW_INCLUDE_ES1
+//#define GLFW_INCLUDE_GLCOREARB
 #include <GLFW/glfw3.h>
+#include <GLFW/glfw3native.h>
 
 #endif
