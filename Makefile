@@ -15,11 +15,11 @@ ifneq ("$(wildcard /opt/vc/include/bcm_host.h)","")
 	PLATFORM = RPI
 	ifeq ($(shell cat /proc/cpuinfo | grep 'Revision' | awk '{print $$3}' ), c03111)
 		ifeq ($(DRIVER),not_defined)
-			DRIVER = gbm
+			DRIVER = fake_kms
 		endif
 	else
 		ifeq ($(DRIVER),not_defined)
-			DRIVER = vc
+			DRIVER = legacy
 		endif
 	endif
 else

@@ -28,7 +28,7 @@
 #endif
 
 // MACOS
-elif defined(PLATFORM_OSX)          // MACOS 
+#elif defined(PLATFORM_OSX)          // MACOS 
 #define GL_PROGRAM_BINARY_LENGTH 0x8741
 #include <GLFW/glfw3.h>
 #include <OpenGL/gl.h>
