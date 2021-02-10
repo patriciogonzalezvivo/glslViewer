@@ -29,7 +29,7 @@ bool TextureStreamSequence::load(const std::string& _path, bool _vFlip) {
 
             m_bits = 8;
             unsigned char* pixels = loadPixels(files[i], &m_width, &m_height, RGB_ALPHA, _vFlip);
-            #if defined(PLATFORM_RPI)
+            #ifdef PLATFORM_RPI
             int max_size = std::max(m_width, m_height);
             if ( max_size > 1024) {
                 float factor = max_size/1024.0;
@@ -51,7 +51,7 @@ bool TextureStreamSequence::load(const std::string& _path, bool _vFlip) {
             // m_bits = 8;
             // unsigned char* pixels = loadPixels(files[i], &m_width, &m_height, RGB_ALPHA, _vFlip);
 
-            #if defined(PLATFORM_RPI)
+            #ifdef PLATFORM_RPI
             m_bits = 8;
             // If we are in a Raspberry Pi don't take the risk of loading a 16bit image
             unsigned char* pixels = loadPixels(files[i], &m_width, &m_height, RGB_ALPHA, _vFlip);

@@ -37,16 +37,16 @@ CFLAGS += -Wall -O3 -std=c++11 -fpermissive
 ifeq ($(PLATFORM), RPI)
 	CFLAGS += -DPLATFORM_RPI -Wno-psabi
 	
-	ifeq ($(DRIVER),vc)
-		CFLAGS += -DGLM_FORCE_CXX14 -DDRIVER_VC
+	ifeq ($(DRIVER),legacy)
+		CFLAGS += -DGLM_FORCE_CXX14 -DDRIVER_LEGACY
 		ifeq ($(shell . /etc/os-release && echo $$PRETTY_NAME),Raspbian GNU/Linux 8 (jessie))
 			LDFLAGS += -lGLESv2 -lEGL
 		else
 			LDFLAGS += -lbrcmGLESv2 -lbrcmEGL
 		endif
 
-	else ifeq ($(DRIVER),gbm)
-		CFLAGS += -DDRIVER_GBM
+	else ifeq ($(DRIVER),kms)
+		CFLAGS += -DDRIVER_KMS
 		INCLUDES += -I/usr/include/libdrm \
 					-I/usr/include/GLES2
 		LDFLAGS +=  -ldrm -lgbm \

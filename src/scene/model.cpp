@@ -8,7 +8,7 @@ Model::Model():
     m_bbmin(100000.0), m_bbmax(-1000000.),
     m_name(""), m_area(0.0f) {
 
-#if defined(PLATFORM_RPI)
+#ifdef PLATFORM_RPI
     addDefine("LIGHT_SHADOWMAP", "u_lightShadowMap");
     addDefine("LIGHT_SHADOWMAP_SIZE", "512.0");
 #else

@@ -140,10 +140,10 @@ static const char *eglGetErrorStr() {
 }
 #endif
 
-#if defined(DRIVER_VC)
+#if defined(DRIVER_LEGACY)
 DISPMANX_DISPLAY_HANDLE_T dispman_display;
 
-#elif defined(DRIVER_GBM)
+#elif defined(DRIVER_FAKE_KMS)
 // https://github.com/matusnovak/rpi-opengl-without-x/blob/master/triangle_rpi4.c
 
 int device;
@@ -206,10 +206,10 @@ static void initHost() {
     if (bHostInited)
         return;
 
-    #if defined(DRIVER_VC)
+    #if defined(DRIVER_LEGACY)
     bcm_host_init();
 
-    #elif defined(DRIVER_GBM)
+    #elif defined(DRIVER_FAKE_KMS)
     // You can try chaning this to "card0" if "card1" does not work.
     device = open(device_screen.c_str(), O_RDWR | O_CLOEXEC);
 
@@ -252,10 +252,10 @@ static EGLDisplay getDisplay() {
     initHost();
     // printf("resolution: %ix%i\n", mode.hdisplay, mode.vdisplay);
 
-    #if defined(DRIVER_VC)
+    #if defined(DRIVER_LEGACY)
     return eglGetDisplay(EGL_DEFAULT_DISPLAY);
 
-    #elif defined(DRIVER_GBM)
+    #elif defined(DRIVER_FAKE_KMS)
 
     return eglGetDisplay(gbmDevice);
     #endif
@@ -309,7 +309,7 @@ void initGL (glm::ivec4 &_viewport, WindowStyle _style) {
         if (eglChooseConfig(display, configAttribs, &config, 1, &numConfigs) == EGL_FALSE) {
             std::cerr << "Failed to get EGL configs! Error: " << eglGetErrorStr() << std::endl;
             eglTerminate(display);
-            #ifdef DRIVER_GBM
+            #ifdef DRIVER_FAKE_KMS
             gbmClean();
             #endif
             return EXIT_FAILURE;
@@ -320,13 +320,13 @@ void initGL (glm::ivec4 &_viewport, WindowStyle _style) {
         if (context == EGL_NO_CONTEXT) {
             std::cerr << "Failed to create EGL context! Error: " << eglGetErrorStr() << std::endl;
             eglTerminate(display);
-            #ifdef DRIVER_GBM
+            #ifdef DRIVER_FAKE_KMS
             gbmClean();
             #endif
             return EXIT_FAILURE;
         }
 
-        #ifdef DRIVER_VC
+        #ifdef DRIVER_LEGACY
         static EGL_DISPMANX_WINDOW_T nativeviewport;
 
         VC_RECT_T dst_rect;
@@ -371,7 +371,7 @@ void initGL (glm::ivec4 &_viewport, WindowStyle _style) {
         assert(surface != EGL_NO_SURFACE);
         check();
 
-        #elif defined(DRIVER_GBM)
+        #elif defined(DRIVER_FAKE_KMS)
         surface = eglCreateWindowSurface(display, config, gbmSurface, NULL);
         if (surface == EGL_NO_SURFACE) {
             std::cerr << "Failed to create EGL surface! Error: " << eglGetErrorStr() << std::endl;
@@ -545,10 +545,10 @@ bool isGL(){
     #if defined(DRIVER_GLFW)
         return !glfwWindowShouldClose(window);
 
-    #elif defined(DRIVER_VC)
+    #elif defined(DRIVER_LEGACY)
         return bHostInited;
 
-    #elif defined(DRIVER_GBM)
+    #elif defined(DRIVER_FAKE_KMS)
         return true;
 
     #endif
@@ -679,7 +679,7 @@ void renderGL(){
 
 #else
     eglSwapBuffers(display, surface);
-    #if defined(DRIVER_GBM)
+    #if defined(DRIVER_FAKE_KMS)
     gbmSwapBuffers();
     #endif
 
@@ -702,11 +702,11 @@ void closeGL(){
         eglTerminate(display);
         eglReleaseThread();
 
-        #if defined(DRIVER_VC)
+        #if defined(DRIVER_LEGACY)
         vc_dispmanx_display_close(dispman_display);
         bcm_host_deinit();
 
-        #elif defined(DRIVER_GBM)
+        #elif defined(DRIVER_FAKE_KMS)
         gbmClean();
         close(device);
         #endif
@@ -747,7 +747,7 @@ glm::ivec2 getScreenSize() {
         screen.x = mode->width;
         screen.y = mode->height;
 
-    #elif defined(DRIVER_VC)
+    #elif defined(DRIVER_LEGACY)
         if (!bHostInited)
             initHost();
 
@@ -757,7 +757,7 @@ glm::ivec2 getScreenSize() {
         assert(success >= 0);
         screen = glm::ivec2(screen_width, screen_height);
 
-    #elif defined(DRIVER_GBM)
+    #elif defined(DRIVER_FAKE_KMS)
         if (!bHostInited)
             initHost();
 

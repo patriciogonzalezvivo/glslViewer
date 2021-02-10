@@ -244,7 +244,7 @@ GLuint Shader::compileShader(const std::string& _src, GLenum _type, bool _verbos
     GLint infoLength = 0;
     glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &infoLength);
     
-#if defined(PLATFORM_RPI) 
+#ifdef PLATFORM_RPI
     if (infoLength > 1 && !isCompiled) {
 #else
     if (infoLength > 1) {

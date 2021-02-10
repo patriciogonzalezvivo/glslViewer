@@ -407,7 +407,7 @@ bool TextureCube::load(const std::string &_path, bool _vFlip) {
         SH[i] = SH[i] * (32.0f / (float)sh_samples);
     }
 
-#if defined(PLATFORM_RPI)
+#ifdef PLATFORM_RPI
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -542,7 +542,7 @@ bool TextureCube::generate(SkyBox* _skybox, int _width ) {
         SH[i] = SH[i] * (32.0f / (float)sh_samples);
     }
 
-#if defined(PLATFORM_RPI)
+#ifdef PLATFORM_RPI
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);

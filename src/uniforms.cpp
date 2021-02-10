@@ -11,7 +11,7 @@
 #ifdef SUPPORT_FOR_LIBAV 
 #include "gl/textureStreamAV.h"
 #endif
-#if defined(PLATFORM_RPI)
+#ifdef PLATFORM_RPI
 #include "gl/textureStreamMMAL.h"
 #endif
 

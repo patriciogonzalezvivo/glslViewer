@@ -5,7 +5,7 @@
 #include "gl.h"
 #include "vertexLayout.h"
 
-#if defined(PLATFORM_RPI)
+#ifdef PLATFORM_RPI
 #define INDEX_TYPE_GL GLushort
 #else
 #define INDEX_TYPE_GL GLuint

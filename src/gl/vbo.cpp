@@ -154,7 +154,7 @@ void Vbo::render(Shader* _shader) {
 
     // Draw as elements or arrays
     if (m_nIndices > 0) {
-        #if defined(PLATFORM_RPI)
+        #ifdef PLATFORM_RPI
         glDrawElements(m_drawMode, m_nIndices, GL_UNSIGNED_SHORT, 0);
         #else
         glDrawElements(m_drawMode, m_nIndices, GL_UNSIGNED_INT, 0);

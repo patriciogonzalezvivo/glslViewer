@@ -1,6 +1,6 @@
 #include "textureStreamMMAL.h"
 
-#if defined(DRIVER_GBM)
+#if defined(DRIVER_FAKE_KMS)
 #include "bcm_host.h"
 #include "libdrm/drm_fourcc.h"
 #endif
@@ -614,7 +614,7 @@ TextureStreamMMAL::TextureStreamMMAL() :
     m_brcm_id(0),
     m_egl_img(EGL_NO_IMAGE_KHR),
     m_vbo(nullptr) {
-    #ifdef DRIVER_GBM
+    #ifdef DRIVER_FAKE_KMS
     bcm_host_init();
     #endif
 }
@@ -940,7 +940,7 @@ void TextureStreamMMAL::video_output_callback(MMAL_PORT_T *port, MMAL_BUFFER_HEA
     // printf("Video buffer callback, output queue len=%d\n\n", mmal_queue_length(video_queue));
 }
 
-#if defined(DRIVER_GBM)
+#if defined(DRIVER_FAKE_KMS)
 static PFNEGLCREATEIMAGEKHRPROC createImageProc = NULL;
 static PFNEGLDESTROYIMAGEKHRPROC destroyImageProc = NULL;
 static PFNGLEGLIMAGETARGETTEXTURE2DOESPROC imageTargetTexture2DProc = NULL;
@@ -974,7 +974,7 @@ void updateTexture(EGLDisplay display, EGLenum target, EGLClientBuffer mm_buf, G
     glBindTexture(GL_TEXTURE_EXTERNAL_OES, *texture);
     if (*egl_image != EGL_NO_IMAGE_KHR) {
         /* Discard the EGL image for the preview frame */
-        #ifdef DRIVER_GBM
+        #ifdef DRIVER_FAKE_KMS
         destroyImage(display, *egl_image);
         #else
         eglDestroyImageKHR(display, *egl_image);
@@ -989,7 +989,7 @@ void updateTexture(EGLDisplay display, EGLenum target, EGLClientBuffer mm_buf, G
     };
     //*egl_image = eglCreateImageKHR(display, EGL_NO_CONTEXT, target, mm_buf, attribs);  
     
-    #ifdef DRIVER_GBM
+    #ifdef DRIVER_FAKE_KMS
     *egl_image = createImage(display, getEGLContext(), target, mm_buf, NULL);
     imageTargetTexture2D(GL_TEXTURE_EXTERNAL_OES, *egl_image);
     #else

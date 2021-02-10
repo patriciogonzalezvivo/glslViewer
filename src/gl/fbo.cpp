@@ -97,7 +97,7 @@ void Fbo::allocate(const uint32_t _width, const uint32_t _height, FboType _type)
         // Color
         glBindTexture(GL_TEXTURE_2D, m_id);
 
-#if defined(PLATFORM_RPI)
+#ifdef PLATFORM_RPI
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_width, m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 #else
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16, m_width, m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
@@ -116,7 +116,7 @@ void Fbo::allocate(const uint32_t _width, const uint32_t _height, FboType _type)
     if (m_depth) {
         glBindRenderbuffer(GL_RENDERBUFFER, m_depth_buffer);
 
-#if defined(PLATFORM_RPI)
+#ifdef PLATFORM_RPI
         glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16, m_width, m_height);
 #else
         glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, m_width, m_height);
@@ -131,7 +131,7 @@ void Fbo::allocate(const uint32_t _width, const uint32_t _height, FboType _type)
                 glGenTextures(1, &m_depth_id);
 
             glBindTexture(GL_TEXTURE_2D, m_depth_id);
-#if defined(PLATFORM_RPI)
+#ifdef PLATFORM_RPI
             glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT16, m_width, m_height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
             // glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT16, m_width, m_height, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_INT, NULL);
             // glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT16, m_width, m_height, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT, NULL);
