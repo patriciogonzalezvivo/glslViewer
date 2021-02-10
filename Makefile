@@ -45,8 +45,8 @@ ifeq ($(PLATFORM), RPI)
 			LDFLAGS += -lbrcmGLESv2 -lbrcmEGL
 		endif
 
-	else ifeq ($(DRIVER),kms)
-		CFLAGS += -DDRIVER_KMS
+	else ifeq ($(DRIVER),fake_kms)
+		CFLAGS += -DDRIVER_FAKE_KMS
 		INCLUDES += -I/usr/include/libdrm \
 					-I/usr/include/GLES2
 		LDFLAGS +=  -ldrm -lgbm \
