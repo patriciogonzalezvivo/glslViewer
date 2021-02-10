@@ -54,9 +54,12 @@ ifeq ($(DRIVER),vc)
 else ifeq ($(DRIVER),gbm)
 	CFLAGS += -DPLATFORM_RPI4 -DDRIVER_GBM -Wno-psabi
 	INCLUDES += -I/usr/include/libdrm \
-				-I/usr/include/GLES2
-	LDFLAGS +=  -lGLESv2 -lEGL \
-				-ldrm -lgbm \
+				-I/usr/include/GLES2 \
+				-I/opt/vc/include/
+	LDFLAGS +=  -ldrm -lgbm \
+				-L/opt/vc/lib/ \
+				-lmmal -lmmal_core -lmmal_util -lmmal_vc_client -lvcos \
+				-lGLESv2 -lEGL\
 				-lpthread
 
 else ifeq ($(PLATFORM),RPI)

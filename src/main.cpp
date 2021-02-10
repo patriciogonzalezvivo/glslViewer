@@ -799,8 +799,7 @@ int main(int argc, char **argv){
             }
             else if ( sandbox.uniforms.addTexture("u_tex"+toString(textureCounter), argument, files, vFlip) )
                 textureCounter++;
-        }
-        #ifdef SUPPORT_FOR_LIBAV 
+        } 
         else if ( argument == "--video" ) {
             if (++i < argc) {
                 argument = std::string(argv[i]);
@@ -819,7 +818,6 @@ int main(int argc, char **argv){
             if ( sandbox.uniforms.addStreamingTexture("u_tex"+toString(textureCounter), argument, vFlip, false) )
                 textureCounter++;
         }
-        #endif
         else if ( argument == "-c" || argument == "-sh" ) {
             if(++i < argc) {
                 argument = std::string(argv[i]);

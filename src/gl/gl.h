@@ -14,6 +14,7 @@
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 #include <gbm.h>
+//#undef countof
 
 #include <EGL/egl.h>
 #include <EGL/eglext.h>

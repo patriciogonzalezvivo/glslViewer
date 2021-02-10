@@ -804,7 +804,8 @@ namespace glm
 #endif
 
 #if GLM_HAS_CONSTEXPR_PARTIAL
-	namespace glm
+/*
+    namespace glm
 	{
 		template <typename T, std::size_t N>
 		constexpr std::size_t countof(T const (&)[N])
@@ -812,6 +813,7 @@ namespace glm
 			return N;
 		}
 	}//namespace glm
+*/
 #	define GLM_COUNTOF(arr) glm::countof(arr)
 #elif defined(_MSC_VER)
 #	define GLM_COUNTOF(arr) _countof(arr)

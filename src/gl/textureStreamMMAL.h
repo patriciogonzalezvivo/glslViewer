@@ -3,7 +3,7 @@
 
 #include "textureStream.h"
 
-#if defined(DRIVER_VC)
+#if defined(PLATFORM_RPI) || defined(PLATFORM_RPI4) 
 #include "shader.h"
 #include "vbo.h"
 

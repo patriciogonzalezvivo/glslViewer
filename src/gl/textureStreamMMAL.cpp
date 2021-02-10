@@ -1,6 +1,10 @@
 #include "textureStreamMMAL.h"
 
-#if defined(DRIVER_VC)
+#if defined(DRIVER_GBM)
+#include "libdrm/drm_fourcc.h"
+#endif
+
+#if defined(PLATFORM_RPI) || defined(PLATFORM_RPI4)
 
 #include <iostream>
 
@@ -531,7 +535,7 @@ int raspicamcontrol_set_shutter_speed(MMAL_COMPONENT_T *camera, int speed) {
  * Asked GPU how much memory it has allocated
  *
  * @return amount of memory in MB
- */
+ 
 static int raspicamcontrol_get_mem_gpu(void) {
     char response[80] = "";
     int gpu_mem = 0;
@@ -540,11 +544,11 @@ static int raspicamcontrol_get_mem_gpu(void) {
     return gpu_mem;
 }
 
-/**
+**
  * Ask GPU about its camera abilities
  * @param supported None-zero if software supports the camera 
  * @param detected  None-zero if a camera has been detected
- */
+ *
 static void raspicamcontrol_get_camera(int *supported, int *detected) {
     char response[80] = "";
     if (vc_gencmd(response, sizeof response, "get_camera") == 0)
@@ -556,11 +560,11 @@ static void raspicamcontrol_get_camera(int *supported, int *detected) {
     }
 }
 
-/**
+**
  * Check to see if camera is supported, and we have allocated enough meooryAsk GPU about its camera abilities
  * @param supported None-zero if software supports the camera 
  * @param detected  None-zero if a camera has been detected
- */
+ *
 void raspicamcontrol_check_configuration(int min_gpu_mem) {
     int gpu_mem = raspicamcontrol_get_mem_gpu();
     int supported = 0, detected = 0;
@@ -575,7 +579,7 @@ void raspicamcontrol_check_configuration(int min_gpu_mem) {
         vcos_log_error("Failed to run camera app. Please check for firmware updates\n");
 }
 
-/**
+**
  * Set the specified camera to all the specified settings
  * @param camera Pointer to camera component
  * @param params Pointer to parameter block containing parameters
@@ -823,7 +827,7 @@ bool TextureStreamMMAL::load(const std::string& _filepath, bool _vFlip) {
     //glEnable(GL_TEXTURE_2D);
     
     // Setup the camera's textures and EGL images.
-    if (m_brcm_id == 0)
+    if (m_id == 0)
         glGenTextures(1, &m_id);
 
     glEnable(GL_TEXTURE_2D);
@@ -860,7 +864,7 @@ bool TextureStreamMMAL::load(const std::string& _filepath, bool _vFlip) {
     glBindTexture(GL_TEXTURE_2D, 0);
     glViewport(0.0f, 0.0f, getWindowWidth(), getWindowHeight());
 
-
+    glEnable(GL_TEXTURE_EXTERNAL_OES);
     m_vbo = rect(0.0,0.0,1.0,1.0).getVbo();
 
     const std::string vert = R"(
@@ -890,6 +894,7 @@ precision mediump float;
 #endif
 
 uniform samplerExternalOES u_tex;
+//uniform sampler2D u_tex;
 varying vec2 v_texcoord;
 
 void main (void) {
@@ -932,24 +937,62 @@ void TextureStreamMMAL::video_output_callback(MMAL_PORT_T *port, MMAL_BUFFER_HEA
     // printf("Video buffer callback, output queue len=%d\n\n", mmal_queue_length(video_queue));
 }
 
+#if defined(DRIVER_GBM)
+static PFNEGLCREATEIMAGEKHRPROC createImageProc = NULL;
+static PFNEGLDESTROYIMAGEKHRPROC destroyImageProc = NULL;
+static PFNGLEGLIMAGETARGETTEXTURE2DOESPROC imageTargetTexture2DProc = NULL;
+
+EGLImageKHR createImage(EGLDisplay dpy, EGLContext ctx, EGLenum target,
+                        EGLClientBuffer buffer, const EGLint *attrib_list) {
+    if (!createImageProc) {
+        createImageProc = (PFNEGLCREATEIMAGEKHRPROC) eglGetProcAddress("eglCreateImageKHR");
+    }
+    return createImageProc(dpy, ctx, target, buffer, attrib_list);
+}
+
+EGLBoolean destroyImage(EGLDisplay dpy, EGLImageKHR image) {
+    if (!destroyImageProc) {
+        destroyImageProc = (PFNEGLCREATEIMAGEKHRPROC) eglGetProcAddress("eglDestroyImageKHR");
+    }
+    return destroyImageProc(dpy, image);
+}
+
+void imageTargetTexture2D(EGLenum target, EGLImageKHR image) {
+    if (!imageTargetTexture2DProc) {
+        imageTargetTexture2DProc =
+            (PFNEGLCREATEIMAGEKHRPROC) eglGetProcAddress("glEGLImageTargetTexture2DOES");
+    }
+    imageTargetTexture2DProc(target, image);
+}
+#endif
+
 void updateTexture(EGLDisplay display, EGLenum target, EGLClientBuffer mm_buf, GLuint *texture, EGLImageKHR *egl_image) {
-    vcos_log_trace("%s: mm_buf %u", VCOS_FUNCTION, (unsigned) mm_buf);
+    //vcos_log_trace("%s: mm_buf %u", VCOS_FUNCTION, (unsigned) mm_buf);
     glBindTexture(GL_TEXTURE_EXTERNAL_OES, *texture);
     if (*egl_image != EGL_NO_IMAGE_KHR) {
         /* Discard the EGL image for the preview frame */
+        #ifdef DRIVER_GBM
+        destroyImage(display, *egl_image);
+        #else
         eglDestroyImageKHR(display, *egl_image);
+        #endif
         *egl_image = EGL_NO_IMAGE_KHR;
     }
-    
+  
     const EGLint attribs[] = {
             EGL_GL_TEXTURE_LEVEL_KHR, 0,
             EGL_IMAGE_PRESERVED_KHR, EGL_TRUE,
             EGL_NONE, EGL_NONE
     };
+    //*egl_image = eglCreateImageKHR(display, EGL_NO_CONTEXT, target, mm_buf, attribs);  
+    
+    #ifdef DRIVER_GBM
+    *egl_image = createImage(display, getEGLContext(), target, mm_buf, NULL);
+    imageTargetTexture2D(GL_TEXTURE_EXTERNAL_OES, *egl_image);
+    #else
     *egl_image = eglCreateImageKHR(display, EGL_NO_CONTEXT, target, mm_buf, attribs);
-    //*egl_image = eglCreateImageKHR(display, EGL_NO_CONTEXT, target, mm_buf, NULL);
-
     glEGLImageTargetTexture2DOES(GL_TEXTURE_EXTERNAL_OES, *egl_image);
+    #endif
 }
 
 bool TextureStreamMMAL::update() {
