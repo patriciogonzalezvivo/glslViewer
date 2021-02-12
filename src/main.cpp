@@ -17,6 +17,7 @@
 #include "io/fs.h"
 #include "io/osc.h"
 #include "tools/text.h"
+#include "shaders/default.h"
 
 // GLOBAL VARIABLES
 //============================================================================
@@ -604,6 +605,8 @@ int main(int argc, char **argv){
 
     WindowStyle windowStyle = REGULAR;
     bool displayHelp = false;
+    bool willLoadGeometry = false;
+    bool willLoadTextures = false;
     for (int i = 1; i < argc ; i++) {
         std::string argument = std::string(argv[i]);
 
@@ -662,6 +665,31 @@ int main(int argc, char **argv){
                     std::string(argv[i]) == "--screensaver") {
             windowStyle = FULLSCREEN;
             screensaver = true;
+        }
+        else if ( ( haveExt(argument,"ply") || haveExt(argument,"PLY") ||
+                    haveExt(argument,"obj") || haveExt(argument,"OBJ") ||
+                    haveExt(argument,"stl") || haveExt(argument,"STL") ||
+                    haveExt(argument,"glb") || haveExt(argument,"GLB") ||
+                    haveExt(argument,"gltf") || haveExt(argument,"GLTF") ) ) {
+            willLoadGeometry = true;
+        }
+        else if (   haveExt(argument,"hdr") || haveExt(argument,"HDR") ||
+                    haveExt(argument,"png") || haveExt(argument,"PNG") ||
+                    haveExt(argument,"tga") || haveExt(argument,"TGA") ||
+                    haveExt(argument,"psd") || haveExt(argument,"PSD") ||
+                    haveExt(argument,"gif") || haveExt(argument,"GIF") ||
+                    haveExt(argument,"bmp") || haveExt(argument,"BMP") ||
+                    haveExt(argument,"jpg") || haveExt(argument,"JPG") ||
+                    haveExt(argument,"jpeg") || haveExt(argument,"JPEG") ||
+                    haveExt(argument,"mov") || haveExt(argument,"MOV") ||
+                    haveExt(argument,"mp4") || haveExt(argument,"MP4") ||
+                    haveExt(argument,"mpeg") || haveExt(argument,"MPEG") ||
+                    argument.rfind("/dev/", 0) == 0 ||
+                    argument.rfind("http://", 0) == 0 ||
+                    argument.rfind("https://", 0) == 0 ||
+                    argument.rfind("rtsp://", 0) == 0 ||
+                    argument.rfind("rtmp://", 0) == 0 ) {
+            willLoadTextures = true;
         }
         
     }
@@ -733,7 +761,12 @@ int main(int argc, char **argv){
                 std::cout << "File " << argv[i] << " not founded. Creating a default fragment shader with that name"<< std::endl;
 
                 std::ofstream out(argv[i]);
-                out << default_scene_frag;
+                if (willLoadGeometry)
+                    out << default_scene_frag;
+                else if (willLoadTextures)
+                    out << default_texture_frag;
+                else 
+                    out << default_frag;
                 out.close();
             }
 
