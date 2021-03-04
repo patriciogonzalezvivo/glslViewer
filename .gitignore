@@ -25,3 +25,12 @@ python/glslviewer.egg-info/*
 *.filters
 *.user
 *.sln
+.vs/glslViewer/v15/.suo
+.vs/glslViewer/v15/Browse.VC.db
+.vs/glslViewer/v15/Solution.VC.db
+.vs/glslViewer/v15/Solution.VC.db-shm
+.vs/glslViewer/v15/Solution.VC.db-wal
+.vs/ProjectSettings.json
+.vs/slnx.sqlite
+.vs/VSWorkspaceState.json
+premake5.exe
