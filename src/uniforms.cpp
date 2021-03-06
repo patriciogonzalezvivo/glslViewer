@@ -13,6 +13,7 @@
 #endif
 #ifdef PLATFORM_RPI
 #include "gl/textureStreamMMAL.h"
+#include "gl/textureStreamOM.h"
 #endif
 
 std::string UniformData::getType() {
@@ -296,6 +297,26 @@ bool Uniforms::addStreamingTexture( const std::string& _name, const std::string&
         // if the user is asking for a device on a RaspberryPI hardware
         else if (_device) {
             TextureStreamMMAL* tex = new TextureStreamMMAL();
+
+            // load an image into the texture
+            if (tex->load(_url, _vflip)) {
+                // the image is loaded finish add the texture to the uniform list
+                textures[ _name ] = (Texture*)tex;
+                streams[ _name ] = (TextureStream*)tex;
+
+                if (_verbose) {
+                    std::cout << "// " << _url << " loaded as streaming texture: " << std::endl;
+                    std::cout << "//    uniform sampler2D   " << _name  << ";"<< std::endl;
+                    std::cout << "//    uniform vec2        " << _name  << "Resolution;"<< std::endl;
+                }
+
+                return true;
+            }
+            else
+                delete tex;
+        }
+        else if (haveExt(_url,"h264")) {
+            TextureStreamOM* tex = new TextureStreamOM();
 
             // load an image into the texture
             if (tex->load(_url, _vflip)) {
