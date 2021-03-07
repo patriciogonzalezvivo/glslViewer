@@ -1,13 +1,10 @@
-#include "textureStreamOM.h"
+#include "textureStreamOMX.h"
 
 #ifdef PLATFORM_RPI
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include "bcm_host.h"
-#include "ilclient.h"
 
 #include "../window.h"
 
@@ -36,7 +33,7 @@ void my_fill_buffer_done(void* data, COMPONENT_T* comp) {
       printf("OMX_FillThisBuffer failed in callback\n");
 }
 
-TextureStreamOM::TextureStreamOM() : 
+TextureStreamOMX::TextureStreamOMX() : 
     m_file(NULL),
     m_eglImage(0);
     m_video_decode(NULL),
@@ -48,11 +45,11 @@ TextureStreamOM::TextureStreamOM() :
 
 }
 
-TextureStreamOM::~TextureStreamOM() {
+TextureStreamOMX::~TextureStreamOMX() {
     clear();
 }
 
-bool TextureStreamOM::load(const std::string& _filepath, bool _vFlip) {
+bool TextureStreamOMX::load(const std::string& _filepath, bool _vFlip) {
 
     // TODOs:
     //  - get video width and height
@@ -171,7 +168,7 @@ bool TextureStreamOM::load(const std::string& _filepath, bool _vFlip) {
     return false;
 }
 
-bool TextureStreamOM::update() {
+bool TextureStreamOMX::update() {
     unsigned int data_len = 0;
 
     if ( (m_buffer = ilclient_get_input_buffer(m_video_decode, 130, 1)) != NULL ) {
@@ -250,7 +247,7 @@ bool TextureStreamOM::update() {
 
 }
 
-void TextureStreamOM::clear() {
+void TextureStreamOMX::clear() {
     m_buffer->nFilledLen = 0;
     m_buffer->nFlags = OMX_BUFFERFLAG_TIME_UNKNOWN | OMX_BUFFERFLAG_EOS;
 

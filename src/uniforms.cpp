@@ -13,7 +13,7 @@
 #endif
 #ifdef PLATFORM_RPI
 #include "gl/textureStreamMMAL.h"
-#include "gl/textureStreamOM.h"
+#include "gl/textureStreamOMX.h"
 #endif
 
 std::string UniformData::getType() {
@@ -316,7 +316,7 @@ bool Uniforms::addStreamingTexture( const std::string& _name, const std::string&
                 delete tex;
         }
         else if (haveExt(_url,"h264")) {
-            TextureStreamOM* tex = new TextureStreamOM();
+            TextureStreamOMX* tex = new TextureStreamOMX();
 
             // load an image into the texture
             if (tex->load(_url, _vflip)) {

@@ -4,12 +4,15 @@
 
 #ifdef PLATFORM_RPI
 
+#include "bcm_host.h"
+#include "ilclient.h"
+
 #include <stdio.h>
 
-class TextureStreamOM : public TextureStream {
+class TextureStreamOMX : public TextureStream {
 public:
-    TextureStreamOM();
-    virtual ~TextureStreamOM();
+    TextureStreamOMX();
+    virtual ~TextureStreamOMX();
 
     virtual bool    load(const std::string& _filepath, bool _vFlip);
     virtual bool    update();
