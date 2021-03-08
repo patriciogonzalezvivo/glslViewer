@@ -32,28 +32,7 @@
   _ilct->source = (a); _ilct->source_port = (b); \
   _ilct->sink = (c); _ilct->sink_port = (d);} while(0)
 
-#define ILC_GET_HANDLE(x) ilclient_get_handle(x)
-
-#ifndef OMX_SKIP64BIT
-#define ilclient_ticks_from_s64(s) (s)
-#define ilclient_ticks_to_s64(t)   (t)
-#else
-static inline OMX_TICKS ilclient_ticks_from_s64(int64_t s) {
-   OMX_TICKS ret;
-   ret.nLowPart = s;
-   ret.nHighPart = s>>32;
-   return ret;
-}
-static inline int64_t ilclient_ticks_to_s64(OMX_TICKS t) {
-   uint64_t u = t.nLowPart | ((uint64_t)t.nHighPart << 32);
-   return u;
-}
-#endif
-
 #define VCOS_LOG_CATEGORY (&ilclient_log_category)
-#ifndef ILCLIENT_THREAD_DEFAULT_STACK_SIZE
-#define ILCLIENT_THREAD_DEFAULT_STACK_SIZE   (6<<10)
-#endif
 
 typedef enum {
     ILCLIENT_EMPTY_BUFFER_DONE  = 0x1,
@@ -83,31 +62,30 @@ static VCOS_LOG_CAT_T ilclient_log_category;
 
 typedef struct _ILEVENT_T ILEVENT_T;
 struct _ILEVENT_T {
-    OMX_EVENTTYPE eEvent;
-    OMX_U32 nData1;
-    OMX_U32 nData2;
-    OMX_PTR pEventData;
-    struct _ILEVENT_T *next;
+    OMX_EVENTTYPE       eEvent;
+    OMX_U32             nData1;
+    OMX_U32             nData2;
+    OMX_PTR             pEventData;
+    struct _ILEVENT_T*  next;
 };
 
 #define NUM_EVENTS 100
 struct _ILCLIENT_T {
-    ILEVENT_T *event_list;
-    VCOS_SEMAPHORE_T event_sema;
-    ILEVENT_T event_rep[NUM_EVENTS];
-
-    ILCLIENT_CALLBACK_T port_settings_callback;
-    void *port_settings_callback_data;
-    ILCLIENT_CALLBACK_T eos_callback;
-    void *eos_callback_data;
-    ILCLIENT_CALLBACK_T error_callback;
-    void *error_callback_data;
-    ILCLIENT_BUFFER_CALLBACK_T fill_buffer_done_callback;
-    void *fill_buffer_done_callback_data;
-    ILCLIENT_BUFFER_CALLBACK_T empty_buffer_done_callback;
-    void *empty_buffer_done_callback_data;
-    ILCLIENT_CALLBACK_T configchanged_callback;
-    void *configchanged_callback_data;
+    ILEVENT_T*                  event_list;
+    VCOS_SEMAPHORE_T            event_sema;
+    ILEVENT_T                   event_rep[NUM_EVENTS];
+    ILCLIENT_CALLBACK_T         port_settings_callback;
+    void*                       port_settings_callback_data;
+    ILCLIENT_CALLBACK_T         eos_callback;
+    void*                       eos_callback_data;
+    ILCLIENT_CALLBACK_T         error_callback;
+    void*                       error_callback_data;
+    ILCLIENT_BUFFER_CALLBACK_T  fill_buffer_done_callback;
+    void*                       fill_buffer_done_callback_data;
+    ILCLIENT_BUFFER_CALLBACK_T  empty_buffer_done_callback;
+    void*                       empty_buffer_done_callback_data;
+    ILCLIENT_CALLBACK_T         configchanged_callback;
+    void*                       configchanged_callback_data;
 };
 
 struct _COMPONENT_T {
@@ -126,24 +104,13 @@ struct _COMPONENT_T {
     ILCLIENT_T *client;
 };
 
-#define random_wait()
-static char *states[] = {"Invalid", "Loaded", "Idle", "Executing", "Pause", "WaitingForResources"};
-
 typedef enum {
     ILCLIENT_ERROR_UNPOPULATED  = 0x1,
     ILCLIENT_ERROR_SAMESTATE    = 0x2,
     ILCLIENT_ERROR_BADPARAMETER = 0x4
 } ILERROR_MASK_T;
 
-// static OMX_ERRORTYPE ilclient_empty_buffer_done(OMX_IN OMX_HANDLETYPE hComponent, OMX_IN OMX_PTR pAppData, OMX_IN OMX_BUFFERHEADERTYPE* pBuffer);
-// static OMX_ERRORTYPE ilclient_empty_buffer_done_error(OMX_IN OMX_HANDLETYPE hComponent, OMX_IN OMX_PTR pAppData, OMX_IN OMX_BUFFERHEADERTYPE* pBuffer);
-// static OMX_ERRORTYPE ilclient_fill_buffer_done(OMX_OUT OMX_HANDLETYPE hComponent, OMX_OUT OMX_PTR pAppData, OMX_OUT OMX_BUFFERHEADERTYPE* pBuffer);
-// static OMX_ERRORTYPE ilclient_fill_buffer_done_error(OMX_OUT OMX_HANDLETYPE hComponent, OMX_OUT OMX_PTR pAppData, OMX_OUT OMX_BUFFERHEADERTYPE* pBuffer);
-// static OMX_ERRORTYPE ilclient_event_handler(OMX_IN OMX_HANDLETYPE hComponent, OMX_IN OMX_PTR pAppData, OMX_IN OMX_EVENTTYPE eEvent, OMX_IN OMX_U32 nData1, OMX_IN OMX_U32 nData2, OMX_IN OMX_PTR pEventData);
-// static void ilclient_lock_events(ILCLIENT_T *st);
-// static void ilclient_unlock_events(ILCLIENT_T *st);
-
-void ilclient_debug_output(char *format, ...) {
+void ilclient_debug_output(const char *format, ...) {
     va_list args;
 
     va_start(args, format);
@@ -268,6 +235,8 @@ static OMX_ERRORTYPE ilclient_event_handler(OMX_IN OMX_HANDLETYPE hComponent,
 
     vc_assert(st->client->event_list);
     event = st->client->event_list;
+
+    static const char *states[] = {"Invalid", "Loaded", "Idle", "Executing", "Pause", "WaitingForResources"};
 
     switch (eEvent) {
     case OMX_EventCmdComplete:
@@ -747,15 +716,6 @@ int ilclient_remove_event(COMPONENT_T *st, OMX_EVENTTYPE eEvent, OMX_U32 nData1,
     return 0;
 }
 
-/***********************************************************
- * Name: ilclient_state_transition
- *
- * Description: Transitions a null terminated list of IL components to
- * a given state.  All components are told to transition in a random
- * order before any are checked for transition completion.
- *
- * Returns: void
- ***********************************************************/
 void ilclient_state_transition(COMPONENT_T *list[], OMX_STATETYPE state) {
     OMX_ERRORTYPE error;
     int i, num;
@@ -783,15 +743,12 @@ void ilclient_state_transition(COMPONENT_T *list[], OMX_STATETYPE state) {
 
         list[min]->priv = 0;
 
-        random_wait();
         //Clear error event for this component
         vcos_event_flags_get(&list[min]->event, ILCLIENT_EVENT_ERROR, VCOS_OR_CONSUME, 0, &set);
 
         error = OMX_SendCommand(list[min]->comp, OMX_CommandStateSet, state, NULL);
         vc_assert(error == OMX_ErrorNone);
     }
-
-    random_wait();
 
     for (i=0; i<num; i++)
         if (ilclient_wait_for_command_complete(list[i], OMX_CommandStateSet, state) < 0)
@@ -1119,7 +1076,7 @@ int ilclient_enable_port_buffers(COMPONENT_T *comp, int portIndex, ILCLIENT_MALL
     OMX_PARAM_PORTDEFINITIONTYPE portdef;
     OMX_BUFFERHEADERTYPE *list = NULL, **end = &list;
     OMX_STATETYPE state;
-    int i;
+    unsigned int i;
 
     memset(&portdef, 0, sizeof(OMX_PARAM_PORTDEFINITIONTYPE));
     portdef.nSize = sizeof(OMX_PARAM_PORTDEFINITIONTYPE);
@@ -1352,7 +1309,7 @@ int ilclient_get_port_index(COMPONENT_T *comp, OMX_DIRTYPE dir, OMX_PORTDOMAINTY
 
             param.nSize = sizeof(param);
             param.nVersion.nVersion = OMX_VERSION;
-            error = OMX_GetParameter(ILC_GET_HANDLE(comp), port_types[i].param, &param);
+            error = OMX_GetParameter(ilclient_get_handle(comp), port_types[i].param, &param);
             assert(error == OMX_ErrorNone);
 
             // for each port of this type...
@@ -1364,7 +1321,7 @@ int ilclient_get_port_index(COMPONENT_T *comp, OMX_DIRTYPE dir, OMX_PORTDOMAINTY
                 portdef.nVersion.nVersion = OMX_VERSION;
                 portdef.nPortIndex = port;
 
-                error = OMX_GetParameter(ILC_GET_HANDLE(comp), OMX_IndexParamPortDefinition, &portdef);
+                error = OMX_GetParameter(ilclient_get_handle(comp), OMX_IndexParamPortDefinition, &portdef);
                 assert(error == OMX_ErrorNone);
 
                 if (portdef.eDir == dir) {
@@ -1384,15 +1341,11 @@ int ilclient_suggest_bufsize(COMPONENT_T *comp, OMX_U32 nBufSizeHint) {
     param.nSize = sizeof(param);
     param.nVersion.nVersion = OMX_VERSION;
     param.nBufferSize = nBufSizeHint;
-    error = OMX_SetParameter(ILC_GET_HANDLE(comp), OMX_IndexParamBrcmOutputBufferSize,
+    error = OMX_SetParameter(ilclient_get_handle(comp), OMX_IndexParamBrcmOutputBufferSize,
                                 &param);
     assert(error == OMX_ErrorNone);
 
     return (error == OMX_ErrorNone) ? 0 : -1;
-}
-
-unsigned int ilclient_stack_size(void) {
-    return ILCLIENT_THREAD_DEFAULT_STACK_SIZE;
 }
 
 // --------------------------------- 
@@ -1420,7 +1373,7 @@ OMX_ERRORTYPE OMX_APIENTRY OMX_Init(void) {
 
     vcos_mutex_lock(&lock);
     
-    if(coreInit == 0) {
+    if (coreInit == 0) {
         // we need to connect via an ILCS connection to VideoCore
         VCHI_INSTANCE_T initialise_instance;
         VCHI_CONNECTION_T *connection;
@@ -1432,7 +1385,7 @@ OMX_ERRORTYPE OMX_APIENTRY OMX_Init(void) {
 
         ilcs_service = ilcs_init((VCHIQ_INSTANCE_T) initialise_instance, (void **) &connection, &config, 0);
 
-        if(ilcs_service == NULL) {
+        if (ilcs_service == NULL) {
             err = OMX_ErrorHardware;
             goto end;
         }
@@ -1449,14 +1402,14 @@ end:
 
 /* OMX_Deinit */
 OMX_ERRORTYPE OMX_APIENTRY OMX_Deinit(void) {
-    if(coreInit == 0) // || (coreInit == 1 && nActiveHandles > 0))
+    if (coreInit == 0) // || (coreInit == 1 && nActiveHandles > 0))
         return OMX_ErrorNotReady;
 
     vcos_mutex_lock(&lock);
 
     coreInit--;
 
-    if(coreInit == 0) {
+    if (coreInit == 0) {
         // we need to teardown the ILCS connection to VideoCore
         ilcs_deinit(ilcs_service);
         ilcs_service = NULL;
@@ -1470,7 +1423,7 @@ OMX_ERRORTYPE OMX_APIENTRY OMX_Deinit(void) {
 
 /* OMX_ComponentNameEnum */
 OMX_ERRORTYPE OMX_APIENTRY OMX_ComponentNameEnum(OMX_OUT OMX_STRING cComponentName, OMX_IN  OMX_U32 nNameLength, OMX_IN  OMX_U32 nIndex) {
-    if(ilcs_service == NULL)
+    if (ilcs_service == NULL)
         return OMX_ErrorBadParameter;
 
     return vcil_out_component_name_enum(ilcs_get_common(ilcs_service), cComponentName, nNameLength, nIndex);
@@ -1484,7 +1437,7 @@ OMX_ERRORTYPE OMX_APIENTRY OMX_GetHandle(OMX_OUT OMX_HANDLETYPE* pHandle, OMX_IN
     OMX_HANDLETYPE hHandle = 0;
 
     if (pHandle == NULL || cComponentName == NULL || pCallBacks == NULL || ilcs_service == NULL) {
-        if(pHandle)
+        if (pHandle)
             *pHandle = NULL;
         return OMX_ErrorBadParameter;
     }
@@ -1504,13 +1457,12 @@ OMX_ERRORTYPE OMX_APIENTRY OMX_GetHandle(OMX_OUT OMX_HANDLETYPE* pHandle, OMX_IN
         if (eError == OMX_ErrorNone) {
             // Check that all function pointers have been filled in.
             // All fields should be non-zero.
-            int i;
             uint32_t *p = (uint32_t *) pComp;
-            for(i=0; i<sizeof(OMX_COMPONENTTYPE)>>2; i++)
-                if(*p++ == 0)
+            for (unsigned int i = 0; i<sizeof(OMX_COMPONENTTYPE)>>2; i++)
+                if (*p++ == 0)
                 eError = OMX_ErrorInvalidComponent;
 
-            if(eError != OMX_ErrorNone && pComp->ComponentDeInit)
+            if (eError != OMX_ErrorNone && pComp->ComponentDeInit)
                 pComp->ComponentDeInit(hHandle);
         }      
 
@@ -1629,7 +1581,7 @@ int thread_run = 0;
 void my_fill_buffer_done(void* data, COMPONENT_T* comp) {
    OMX_STATETYPE state;
 
-   if (OMX_GetState(ILC_GET_HANDLE(egl_render), &state) != OMX_ErrorNone) {
+   if (OMX_GetState(ilclient_get_handle(egl_render), &state) != OMX_ErrorNone) {
       printf("OMX_FillThisBuffer failed while getting egl_render component state\n");
       return;
    }
@@ -1733,7 +1685,7 @@ bool TextureStreamOMX::load(const std::string& _filepath, bool _vFlip) {
     cstate.nVersion.nVersion = OMX_VERSION;
     cstate.eState = OMX_TIME_ClockStateWaitingForStartTime;
     cstate.nWaitMask = 1;
-    if (clock != NULL && OMX_SetParameter(ILC_GET_HANDLE(clock), OMX_IndexConfigTimeClockState, &cstate) != OMX_ErrorNone)
+    if (clock != NULL && OMX_SetParameter(ilclient_get_handle(clock), OMX_IndexConfigTimeClockState, &cstate) != OMX_ErrorNone)
         m_status = -13;
 
     // create video_scheduler
@@ -1762,7 +1714,7 @@ bool TextureStreamOMX::load(const std::string& _filepath, bool _vFlip) {
     format.eCompressionFormat = OMX_VIDEO_CodingAVC;
 
     if (m_status == 0 &&
-        OMX_SetParameter(ILC_GET_HANDLE(m_video_decode), OMX_IndexParamVideoPortFormat, &format) == OMX_ErrorNone &&
+        OMX_SetParameter(ilclient_get_handle(m_video_decode), OMX_IndexParamVideoPortFormat, &format) == OMX_ErrorNone &&
         ilclient_enable_port_buffers(m_video_decode, 130, NULL, NULL, NULL) == 0) {
             
         m_port_settings_changed = 0;
@@ -1813,12 +1765,12 @@ bool TextureStreamOMX::update() {
 
             // Enable the output port and tell egl_render to use the texture as a buffer
             //ilclient_enable_port(egl_render, 221); THIS BLOCKS SO CAN'T BE USED
-            if (OMX_SendCommand(ILC_GET_HANDLE(egl_render), OMX_CommandPortEnable, 221, NULL) != OMX_ErrorNone) {
+            if (OMX_SendCommand(ilclient_get_handle(egl_render), OMX_CommandPortEnable, 221, NULL) != OMX_ErrorNone) {
                 printf("OMX_CommandPortEnable failed.\n");
                 exit(1);
             }
 
-            if (OMX_UseEGLImage(ILC_GET_HANDLE(egl_render), &eglBuffer, 221, NULL, eglImage) != OMX_ErrorNone) {
+            if (OMX_UseEGLImage(ilclient_get_handle(egl_render), &eglBuffer, 221, NULL, eglImage) != OMX_ErrorNone) {
                 printf("OMX_UseEGLImage failed.\n");
                 exit(1);
             }
@@ -1827,7 +1779,7 @@ bool TextureStreamOMX::update() {
             ilclient_change_component_state(egl_render, OMX_StateExecuting);
 
             // Request egl_render to write data to the texture buffer
-            if (OMX_FillThisBuffer(ILC_GET_HANDLE(egl_render), eglBuffer) != OMX_ErrorNone) {
+            if (OMX_FillThisBuffer(ilclient_get_handle(egl_render), eglBuffer) != OMX_ErrorNone) {
                 printf("OMX_FillThisBuffer failed.\n");
                 exit(1);
             }
@@ -1847,7 +1799,7 @@ bool TextureStreamOMX::update() {
         else
             m_buffer->nFlags = OMX_BUFFERFLAG_TIME_UNKNOWN;
 
-        if (OMX_EmptyThisBuffer(ILC_GET_HANDLE(m_video_decode), m_buffer) != OMX_ErrorNone) {
+        if (OMX_EmptyThisBuffer(ilclient_get_handle(m_video_decode), m_buffer) != OMX_ErrorNone) {
             m_status = -6;
             return false;
         }
@@ -1859,7 +1811,7 @@ void TextureStreamOMX::clear() {
     m_buffer->nFilledLen = 0;
     m_buffer->nFlags = OMX_BUFFERFLAG_TIME_UNKNOWN | OMX_BUFFERFLAG_EOS;
 
-    if (OMX_EmptyThisBuffer(ILC_GET_HANDLE(m_video_decode), m_buffer) != OMX_ErrorNone)
+    if (OMX_EmptyThisBuffer(ilclient_get_handle(m_video_decode), m_buffer) != OMX_ErrorNone)
         m_status = -20;
 
     // need to flush the renderer to allow video_decode to disable its input port
@@ -1881,11 +1833,11 @@ void TextureStreamOMX::clear() {
         * free the output eglBuffer, and finally request the state transition
         * from to Loaded.
         */
-    OMX_ERRORTYPE omx_err = OMX_SendCommand(ILC_GET_HANDLE(egl_render), OMX_CommandPortDisable, 221, NULL);
+    OMX_ERRORTYPE omx_err = OMX_SendCommand(ilclient_get_handle(egl_render), OMX_CommandPortDisable, 221, NULL);
     if (omx_err != OMX_ErrorNone)
         printf("Failed OMX_SendCommand\n");
     
-    omx_err = OMX_FreeBuffer(ILC_GET_HANDLE(egl_render), 221, eglBuffer);
+    omx_err = OMX_FreeBuffer(ilclient_get_handle(egl_render), 221, eglBuffer);
     if (omx_err != OMX_ErrorNone)
         printf("OMX_FreeBuffer failed\n");
 
