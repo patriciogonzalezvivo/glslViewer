@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <iostream>
 
 #include <stdarg.h>
 #include <ctype.h>
@@ -15,7 +16,12 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "IL/OMX_Component.h"
+#include "bcm_host.h"
+
+#include <IL/OMX_Types.h>
+#include <IL/OMX_Component.h>
+#include <IL/OMX_Broadcom.h>
+
 #include "interface/vcos/vcos.h"
 #include "interface/vcos/vcos_logging.h"
 
@@ -25,14 +31,34 @@
 
 #include "../window.h"
 
-#define IMAGE_SIZE_WIDTH 1920
-#define IMAGE_SIZE_HEIGHT 1080
+// --------------------------------- ilclient.c 
+
+#define IMAGE_SIZE_WIDTH 256 //1920
+#define IMAGE_SIZE_HEIGHT 256 //1080
+#define ILC_GET_HANDLE(x) ilclient_get_handle(x)
 
 #define set_tunnel(t,a,b,c,d)  do {TUNNEL_T *_ilct = (t); \
   _ilct->source = (a); _ilct->source_port = (b); \
   _ilct->sink = (c); _ilct->sink_port = (d);} while(0)
 
 #define VCOS_LOG_CATEGORY (&ilclient_log_category)
+
+typedef struct _ILCLIENT_T ILCLIENT_T;
+
+struct _COMPONENT_T;
+typedef struct _COMPONENT_T COMPONENT_T;
+
+typedef void (*ILCLIENT_CALLBACK_T)(void *userdata, COMPONENT_T *comp, OMX_U32 data);
+typedef void (*ILCLIENT_BUFFER_CALLBACK_T)(void *data, COMPONENT_T *comp);
+typedef void *(*ILCLIENT_MALLOC_T)(void *userdata, VCOS_UNSIGNED size, VCOS_UNSIGNED align, const char *description);
+typedef void (*ILCLIENT_FREE_T)(void *userdata, void *pointer);
+
+typedef struct {
+    COMPONENT_T*    source;         // The source component
+    int             source_port;    // The output port index on the source component
+    COMPONENT_T*    sink;           // The sink component
+    int             sink_port;      // The input port index on the sink component
+} TUNNEL_T;
 
 typedef enum {
     ILCLIENT_EMPTY_BUFFER_DONE  = 0x1,
@@ -112,7 +138,6 @@ typedef enum {
 
 void ilclient_debug_output(const char *format, ...) {
     va_list args;
-
     va_start(args, format);
     vcos_vlog_info(format, args);
     va_end(args);
@@ -149,6 +174,7 @@ static OMX_ERRORTYPE ilclient_empty_buffer_done(OMX_IN OMX_HANDLETYPE hComponent
 
 static OMX_ERRORTYPE ilclient_empty_buffer_done_error(OMX_IN OMX_HANDLETYPE hComponent, OMX_IN OMX_PTR pAppData, OMX_IN OMX_BUFFERHEADERTYPE* pBuffer) {
     vc_assert(0);
+    std::cout << "ilclient_empty_buffer_done_error" << std::endl;
     return OMX_ErrorNone;
 }
 
@@ -181,20 +207,14 @@ static OMX_ERRORTYPE ilclient_fill_buffer_done(OMX_OUT OMX_HANDLETYPE hComponent
     return OMX_ErrorNone;
 }
 
-static OMX_ERRORTYPE ilclient_fill_buffer_done_error(OMX_OUT OMX_HANDLETYPE hComponent,
-      OMX_OUT OMX_PTR pAppData,
-      OMX_OUT OMX_BUFFERHEADERTYPE* pBuffer) {
+static OMX_ERRORTYPE ilclient_fill_buffer_done_error(OMX_OUT OMX_HANDLETYPE hComponent, OMX_OUT OMX_PTR pAppData, OMX_OUT OMX_BUFFERHEADERTYPE* pBuffer) {
     vc_assert(0);
+    std::cout << "ilclient_empty_buffer_done_error" << std::endl;
     return OMX_ErrorNone;
 }
 
-static void ilclient_lock_events(ILCLIENT_T *st) {
-    vcos_semaphore_wait(&st->event_sema);
-}
-
-static void ilclient_unlock_events(ILCLIENT_T *st) {
-    vcos_semaphore_post(&st->event_sema);
-}
+static void ilclient_lock_events(ILCLIENT_T *st) { vcos_semaphore_wait(&st->event_sema); }
+static void ilclient_unlock_events(ILCLIENT_T *st) { vcos_semaphore_post(&st->event_sema); }
 
 static OMX_ERRORTYPE ilclient_event_handler(OMX_IN OMX_HANDLETYPE hComponent,
                                             OMX_IN OMX_PTR pAppData,
@@ -459,34 +479,9 @@ void ilclient_destroy(ILCLIENT_T *st) {
     vcos_log_unregister(VCOS_LOG_CATEGORY);
 }
 
-void ilclient_set_port_settings_callback(ILCLIENT_T *st, ILCLIENT_CALLBACK_T func, void *userdata) {
-    st->port_settings_callback = func;
-    st->port_settings_callback_data = userdata;
-}
-
-void ilclient_set_eos_callback(ILCLIENT_T *st, ILCLIENT_CALLBACK_T func, void *userdata) {
-    st->eos_callback = func;
-    st->eos_callback_data = userdata;
-}
-
-void ilclient_set_error_callback(ILCLIENT_T *st, ILCLIENT_CALLBACK_T func, void *userdata) {
-    st->error_callback = func;
-    st->error_callback_data = userdata;
-}
-
 void ilclient_set_fill_buffer_done_callback(ILCLIENT_T *st, ILCLIENT_BUFFER_CALLBACK_T func, void *userdata) {
     st->fill_buffer_done_callback = func;
     st->fill_buffer_done_callback_data = userdata;
-}
-
-void ilclient_set_empty_buffer_done_callback(ILCLIENT_T *st, ILCLIENT_BUFFER_CALLBACK_T func, void *userdata) {
-    st->empty_buffer_done_callback = func;
-    st->empty_buffer_done_callback_data = userdata;
-}
-
-void ilclient_set_configchanged_callback(ILCLIENT_T *st, ILCLIENT_CALLBACK_T func, void *userdata) {
-    st->configchanged_callback = func;
-    st->configchanged_callback_data = userdata;
 }
 
 int ilclient_wait_for_command_complete_dual(COMPONENT_T *comp, OMX_COMMANDTYPE command, OMX_U32 nData2, COMPONENT_T *other) {
@@ -569,7 +564,6 @@ int ilclient_wait_for_command_complete(COMPONENT_T *comp, OMX_COMMANDTYPE comman
     return ilclient_wait_for_command_complete_dual(comp, command, nData2, NULL);
 }
 
-
 void ilclient_disable_port(COMPONENT_T *comp, int portIndex) {
     OMX_ERRORTYPE error;
     error = OMX_SendCommand(comp->comp, OMX_CommandPortDisable, portIndex, NULL);
@@ -598,7 +592,7 @@ int ilclient_create_component(ILCLIENT_T *client, COMPONENT_T **comp, char *name
 
     memset(*comp, 0, sizeof(COMPONENT_T));
 
-#define COMP_PREFIX "OMX.broadcom."
+    #define COMP_PREFIX "OMX.broadcom."
 
     status = vcos_event_flags_create(&(*comp)->event,"il:comp");
     vc_assert(status == VCOS_SUCCESS);
@@ -622,7 +616,6 @@ int ilclient_create_component(ILCLIENT_T *client, COMPONENT_T **comp, char *name
         OMX_UUIDTYPE uid;
         char name[128];
         OMX_VERSIONTYPE compVersion, specVersion;
-
         if (OMX_GetComponentVersion((*comp)->comp, name, &compVersion, &specVersion, &uid) == OMX_ErrorNone) {
             char *p = (char *) uid + strlen(COMP_PREFIX);
 
@@ -944,29 +937,7 @@ void ilclient_return_events(COMPONENT_T *comp) {
     ilclient_unlock_events(comp->client);
 }
 
-void ilclient_cleanup_components(COMPONENT_T *list[]) {
-    int i;
-    OMX_ERRORTYPE error;
 
-    i=0;
-    while (list[i]) {
-        ilclient_return_events(list[i]);
-        if (list[i]->comp) {
-            error = OMX_FreeHandle(list[i]->comp);
-            vc_assert(error == OMX_ErrorNone);
-        }
-        i++;
-    }
-
-    i=0;
-    while (list[i]) {
-        vcos_event_flags_delete(&list[i]->event);
-        vcos_semaphore_delete(&list[i]->sema);
-        vcos_free(list[i]);
-        list[i] = NULL;
-        i++;
-    }
-}
 
 int ilclient_change_component_state(COMPONENT_T *comp, OMX_STATETYPE state) {
     OMX_ERRORTYPE error;
@@ -1019,9 +990,9 @@ void ilclient_disable_port_buffers(COMPONENT_T *comp, int portIndex, OMX_BUFFERH
                     OMX_BUFFERHEADERTYPE *pBuffer = clist;
                     
                     if (!prev)
-                        clist = *head = (OMX_BUFFERHEADERTYPE *) pBuffer->pAppPrivate;
+                        clist = *head = (OMX_BUFFERHEADERTYPE*) pBuffer->pAppPrivate;
                     else
-                        clist = prev->pAppPrivate = (OMX_BUFFERHEADERTYPE *) pBuffer->pAppPrivate;
+                        clist = prev->pAppPrivate = (OMX_BUFFERHEADERTYPE*) pBuffer->pAppPrivate;
                     
                     pBuffer->pAppPrivate = list;
                     list = pBuffer;
@@ -1348,259 +1319,281 @@ int ilclient_suggest_bufsize(COMPONENT_T *comp, OMX_U32 nBufSizeHint) {
     return (error == OMX_ErrorNone) ? 0 : -1;
 }
 
-// --------------------------------- 
+void ilclient_cleanup_components(COMPONENT_T *list[]) {
+    OMX_ERRORTYPE error;
 
-static int coreInit = 0;
-static int nActiveHandles = 0;
-static ILCS_SERVICE_T *ilcs_service = NULL;
-static VCOS_MUTEX_T lock;
-static VCOS_ONCE_T once = VCOS_ONCE_INIT;
-
-/* Atomic creation of lock protecting shared state */
-static void initOnce(void) {
-    VCOS_STATUS_T status;
-    status = vcos_mutex_create(&lock, VCOS_FUNCTION);
-    vcos_demand(status == VCOS_SUCCESS);
-}
-
-/* OMX_Init */
-OMX_ERRORTYPE OMX_APIENTRY OMX_Init(void) {
-    VCOS_STATUS_T status;
-    OMX_ERRORTYPE err = OMX_ErrorNone;
-
-    status = vcos_once(&once, initOnce);
-    vcos_demand(status == VCOS_SUCCESS);
-
-    vcos_mutex_lock(&lock);
-    
-    if (coreInit == 0) {
-        // we need to connect via an ILCS connection to VideoCore
-        VCHI_INSTANCE_T initialise_instance;
-        VCHI_CONNECTION_T *connection;
-        ILCS_CONFIG_T config;
-
-        vc_host_get_vchi_state(&initialise_instance, &connection);
-
-        vcilcs_config(&config);
-
-        ilcs_service = ilcs_init((VCHIQ_INSTANCE_T) initialise_instance, (void **) &connection, &config, 0);
-
-        if (ilcs_service == NULL) {
-            err = OMX_ErrorHardware;
-            goto end;
+    int i = 0;
+    while (list[i]) {
+        ilclient_return_events(list[i]);
+        if (list[i]->comp) {
+            error = OMX_FreeHandle(list[i]->comp);
+            vc_assert(error == OMX_ErrorNone);
         }
-
-        coreInit = 1;
-    }
-    else
-        coreInit++;
-
-end:
-    vcos_mutex_unlock(&lock);
-    return err;
-}
-
-/* OMX_Deinit */
-OMX_ERRORTYPE OMX_APIENTRY OMX_Deinit(void) {
-    if (coreInit == 0) // || (coreInit == 1 && nActiveHandles > 0))
-        return OMX_ErrorNotReady;
-
-    vcos_mutex_lock(&lock);
-
-    coreInit--;
-
-    if (coreInit == 0) {
-        // we need to teardown the ILCS connection to VideoCore
-        ilcs_deinit(ilcs_service);
-        ilcs_service = NULL;
+        i++;
     }
 
-    vcos_mutex_unlock(&lock);
-    
-    return OMX_ErrorNone;
-}
-
-
-/* OMX_ComponentNameEnum */
-OMX_ERRORTYPE OMX_APIENTRY OMX_ComponentNameEnum(OMX_OUT OMX_STRING cComponentName, OMX_IN  OMX_U32 nNameLength, OMX_IN  OMX_U32 nIndex) {
-    if (ilcs_service == NULL)
-        return OMX_ErrorBadParameter;
-
-    return vcil_out_component_name_enum(ilcs_get_common(ilcs_service), cComponentName, nNameLength, nIndex);
-}
-
-
-/* OMX_GetHandle */
-OMX_ERRORTYPE OMX_APIENTRY OMX_GetHandle(OMX_OUT OMX_HANDLETYPE* pHandle, OMX_IN  OMX_STRING cComponentName, OMX_IN  OMX_PTR pAppData, OMX_IN  OMX_CALLBACKTYPE* pCallBacks) {
-    OMX_ERRORTYPE eError;
-    OMX_COMPONENTTYPE *pComp;
-    OMX_HANDLETYPE hHandle = 0;
-
-    if (pHandle == NULL || cComponentName == NULL || pCallBacks == NULL || ilcs_service == NULL) {
-        if (pHandle)
-            *pHandle = NULL;
-        return OMX_ErrorBadParameter;
+    i=0;
+    while (list[i]) {
+        vcos_event_flags_delete(&list[i]->event);
+        vcos_semaphore_delete(&list[i]->sema);
+        vcos_free(list[i]);
+        list[i] = NULL;
+        i++;
     }
-
-    {
-        pComp = (OMX_COMPONENTTYPE *)malloc(sizeof(OMX_COMPONENTTYPE));
-        if (!pComp) {
-            vcos_assert(0);
-            return OMX_ErrorInsufficientResources;
-        }
-        memset(pComp, 0, sizeof(OMX_COMPONENTTYPE));
-        hHandle = (OMX_HANDLETYPE)pComp;
-        pComp->nSize = sizeof(OMX_COMPONENTTYPE);
-        pComp->nVersion.nVersion = OMX_VERSION;
-        eError = vcil_out_create_component(ilcs_get_common(ilcs_service), hHandle, cComponentName);
-
-        if (eError == OMX_ErrorNone) {
-            // Check that all function pointers have been filled in.
-            // All fields should be non-zero.
-            uint32_t *p = (uint32_t *) pComp;
-            for (unsigned int i = 0; i<sizeof(OMX_COMPONENTTYPE)>>2; i++)
-                if (*p++ == 0)
-                eError = OMX_ErrorInvalidComponent;
-
-            if (eError != OMX_ErrorNone && pComp->ComponentDeInit)
-                pComp->ComponentDeInit(hHandle);
-        }      
-
-        if (eError == OMX_ErrorNone) {
-            eError = pComp->SetCallbacks(hHandle,pCallBacks,pAppData);
-            if (eError != OMX_ErrorNone)
-                pComp->ComponentDeInit(hHandle);
-        }
-
-        if (eError == OMX_ErrorNone) {
-            *pHandle = hHandle;
-        }
-        else {
-            *pHandle = NULL;
-            free(pComp);
-        }
-    } 
-
-    if (eError == OMX_ErrorNone) {
-        vcos_mutex_lock(&lock);
-        nActiveHandles++;
-        vcos_mutex_unlock(&lock);
-    }
-
-    return eError;
 }
-
-/* OMX_FreeHandle */
-OMX_ERRORTYPE OMX_APIENTRY OMX_FreeHandle(OMX_IN OMX_HANDLETYPE hComponent) {
-    OMX_ERRORTYPE eError = OMX_ErrorNone;
-    OMX_COMPONENTTYPE *pComp;
-
-    if (hComponent == NULL || ilcs_service == NULL)
-        return OMX_ErrorBadParameter;
-
-    pComp = (OMX_COMPONENTTYPE*)hComponent;
-
-    if (ilcs_service == NULL)
-        return OMX_ErrorBadParameter;
-
-    eError = (pComp->ComponentDeInit)(hComponent);
-    if (eError == OMX_ErrorNone) {
-        vcos_mutex_lock(&lock);
-        --nActiveHandles;
-        vcos_mutex_unlock(&lock);
-        free(pComp);
-    }
-
-    vcos_assert(nActiveHandles >= 0);
-
-    return eError;
-}
-
-/* OMX_SetupTunnel */
-OMX_ERRORTYPE OMX_APIENTRY OMX_SetupTunnel(OMX_IN OMX_HANDLETYPE hOutput, OMX_IN OMX_U32 nPortOutput, OMX_IN OMX_HANDLETYPE hInput, OMX_IN OMX_U32 nPortInput) {
-    OMX_ERRORTYPE eError = OMX_ErrorNone;
-    OMX_COMPONENTTYPE *pCompIn, *pCompOut;
-    OMX_TUNNELSETUPTYPE oTunnelSetup;
-
-    if ((hOutput == NULL && hInput == NULL) || ilcs_service == NULL)
-        return OMX_ErrorBadParameter;
-
-    oTunnelSetup.nTunnelFlags = 0;
-    oTunnelSetup.eSupplier = OMX_BufferSupplyUnspecified;
-
-    pCompOut = (OMX_COMPONENTTYPE*)hOutput;
-
-    if (hOutput){
-        eError = pCompOut->ComponentTunnelRequest(hOutput, nPortOutput, hInput, nPortInput, &oTunnelSetup);
-    }
-
-    if (eError == OMX_ErrorNone && hInput) {
-        pCompIn = (OMX_COMPONENTTYPE*)hInput;
-        eError = pCompIn->ComponentTunnelRequest(hInput, nPortInput, hOutput, nPortOutput, &oTunnelSetup);
-
-        if (eError != OMX_ErrorNone && hOutput) {
-            /* cancel tunnel request on output port since input port failed */
-            pCompOut->ComponentTunnelRequest(hOutput, nPortOutput, NULL, 0, NULL);
-        }
-    }
-    return eError;
-}
-
-/* OMX_GetComponentsOfRole */
-OMX_ERRORTYPE OMX_GetComponentsOfRole(OMX_IN OMX_STRING role, OMX_INOUT OMX_U32 *pNumComps, OMX_INOUT OMX_U8  **compNames) {
-    OMX_ERRORTYPE eError = OMX_ErrorNone;
-    *pNumComps = 0;
-    return eError;
-}
-
-/* OMX_GetRolesOfComponent */
-OMX_ERRORTYPE OMX_GetRolesOfComponent(OMX_IN OMX_STRING compName, OMX_INOUT OMX_U32 *pNumRoles, OMX_OUT OMX_U8 **roles) {
-    OMX_ERRORTYPE eError = OMX_ErrorNone;
-    *pNumRoles = 0;
-    return eError;
-}
-
-/* OMX_GetDebugInformation */
-OMX_ERRORTYPE OMX_GetDebugInformation (OMX_OUT OMX_STRING debugInfo, OMX_INOUT OMX_S32 *pLen) {
-    if (ilcs_service == NULL)
-        return OMX_ErrorBadParameter;
-
-    return vcil_out_get_debug_information(ilcs_get_common(ilcs_service), debugInfo, pLen);
-}
-
 
 // ---------------------------------
+
+// static pthread_t thread1;
 
 static OMX_BUFFERHEADERTYPE* eglBuffer = NULL;
 static COMPONENT_T* egl_render = NULL;
 
-static void* eglImage = 0;
-
+// static void* eglImage = 0;
 int thread_run = 0;
 
 void my_fill_buffer_done(void* data, COMPONENT_T* comp) {
-   OMX_STATETYPE state;
+    OMX_STATETYPE state;
 
-   if (OMX_GetState(ilclient_get_handle(egl_render), &state) != OMX_ErrorNone) {
-      printf("OMX_FillThisBuffer failed while getting egl_render component state\n");
-      return;
-   }
+    if (OMX_GetState(ILC_GET_HANDLE(egl_render), &state) != OMX_ErrorNone) {
+        printf("OMX_FillThisBuffer failed while getting egl_render component state\n");
+        return;
+    }
 
-   if (state != OMX_StateExecuting)
-      return;
+    if (state != OMX_StateExecuting)
+        return;
 
-   if (OMX_FillThisBuffer(ilclient_get_handle(egl_render), eglBuffer) != OMX_ErrorNone)
-      printf("OMX_FillThisBuffer failed in callback\n");
+    if (OMX_FillThisBuffer(ilclient_get_handle(egl_render), eglBuffer) != OMX_ErrorNone)
+        printf("OMX_FillThisBuffer failed in callback\n");
 }
 
+
+// Modified function prototype to work with pthreads
+void *decode_video(const char* filename, void* eglImage) {
+    // const char* filename = "/opt/vc/src/hello_pi/hello_video/test.h264";
+    // eglImage = arg;
+
+    if (eglImage == 0) {
+        printf("eglImage is null.\n");
+        exit(1);
+    }
+
+    OMX_VIDEO_PARAM_PORTFORMATTYPE format;
+    OMX_TIME_CONFIG_CLOCKSTATETYPE cstate;
+    OMX_ERRORTYPE omx_err;
+    COMPONENT_T *video_decode = NULL, *video_scheduler = NULL, *clock = NULL;
+    COMPONENT_T *list[5];
+    TUNNEL_T tunnel[4];
+    ILCLIENT_T *client;
+    FILE *in;
+    int status = 0;
+    unsigned int data_len = 0;
+
+    thread_run = 1;
+
+    memset(list, 0, sizeof(list));
+    memset(tunnel, 0, sizeof(tunnel));
+
+    if((in = fopen(filename, "rb")) == NULL)
+        return (void *)-2;
+
+    if((client = ilclient_init()) == NULL) {
+        fclose(in);
+        return (void *)-3;
+    }
+
+    if(OMX_Init() != OMX_ErrorNone) {
+        ilclient_destroy(client);
+        fclose(in);
+        return (void *)-4;
+    }
+
+    // callback
+    ilclient_set_fill_buffer_done_callback(client, my_fill_buffer_done, 0);
+
+    // create video_decode
+    if(ilclient_create_component(client, &video_decode, "video_decode", ILCLIENT_DISABLE_ALL_PORTS | ILCLIENT_ENABLE_INPUT_BUFFERS) != 0)
+        status = -14;
+    list[0] = video_decode;
+
+    // create egl_render
+    if(status == 0 && ilclient_create_component(client, &egl_render, "egl_render", ILCLIENT_DISABLE_ALL_PORTS | ILCLIENT_ENABLE_OUTPUT_BUFFERS) != 0)
+        status = -14;
+    list[1] = egl_render;
+
+    // create clock
+    if(status == 0 && ilclient_create_component(client, &clock, "clock", ILCLIENT_DISABLE_ALL_PORTS) != 0)
+        status = -14;
+    list[2] = clock;
+
+    memset(&cstate, 0, sizeof(cstate));
+    cstate.nSize = sizeof(cstate);
+    cstate.nVersion.nVersion = OMX_VERSION;
+    cstate.eState = OMX_TIME_ClockStateWaitingForStartTime;
+    cstate.nWaitMask = 1;
+    if(clock != NULL && OMX_SetParameter(ILC_GET_HANDLE(clock), OMX_IndexConfigTimeClockState, &cstate) != OMX_ErrorNone)
+        status = -13;
+
+    // create video_scheduler
+    if(status == 0 && ilclient_create_component(client, &video_scheduler, "video_scheduler", ILCLIENT_DISABLE_ALL_PORTS) != 0)
+        status = -14;
+    list[3] = video_scheduler;
+
+    set_tunnel(tunnel, video_decode, 131, video_scheduler, 10);
+    set_tunnel(tunnel+1, video_scheduler, 11, egl_render, 220);
+    set_tunnel(tunnel+2, clock, 80, video_scheduler, 12);
+
+    // setup clock tunnel first
+    if(status == 0 && ilclient_setup_tunnel(tunnel+2, 0, 0) != 0)
+        status = -15;
+    else
+        ilclient_change_component_state(clock, OMX_StateExecuting);
+
+    if(status == 0)
+        ilclient_change_component_state(video_decode, OMX_StateIdle);
+
+    memset(&format, 0, sizeof(OMX_VIDEO_PARAM_PORTFORMATTYPE));
+    format.nSize = sizeof(OMX_VIDEO_PARAM_PORTFORMATTYPE);
+    format.nVersion.nVersion = OMX_VERSION;
+    format.nPortIndex = 130;
+    format.eCompressionFormat = OMX_VIDEO_CodingAVC;
+
+    if(status == 0 &&
+        OMX_SetParameter(ILC_GET_HANDLE(video_decode), OMX_IndexParamVideoPortFormat, &format) == OMX_ErrorNone &&
+        ilclient_enable_port_buffers(video_decode, 130, NULL, NULL, NULL) == 0) {
+        OMX_BUFFERHEADERTYPE *buf;
+        int port_settings_changed = 0;
+        int first_packet = 1;
+
+        ilclient_change_component_state(video_decode, OMX_StateExecuting);
+
+        while((buf = ilclient_get_input_buffer(video_decode, 130, 1)) != NULL) {
+            // feed data and wait until we get port settings changed
+            unsigned char *dest = buf->pBuffer;
+
+            // loop if at end
+            if (feof(in))
+                rewind(in);
+
+            data_len += fread(dest, 1, buf->nAllocLen-data_len, in);
+
+            if(port_settings_changed == 0 &&
+                ((data_len > 0 && ilclient_remove_event(video_decode, OMX_EventPortSettingsChanged, 131, 0, 0, 1) == 0) ||
+                (data_len == 0 && ilclient_wait_for_event(video_decode, OMX_EventPortSettingsChanged, 131, 0, 0, 1,
+                                                        ILCLIENT_EVENT_ERROR | ILCLIENT_PARAMETER_CHANGED, 10000) == 0))) {
+                port_settings_changed = 1;
+
+                if(ilclient_setup_tunnel(tunnel, 0, 0) != 0) {
+                    status = -7;
+                    break;
+                }
+
+                ilclient_change_component_state(video_scheduler, OMX_StateExecuting);
+
+                // now setup tunnel to egl_render
+                if(ilclient_setup_tunnel(tunnel+1, 0, 1000) != 0) {
+                    status = -12;
+                    break;
+                }
+
+                // Set egl_render to idle
+                ilclient_change_component_state(egl_render, OMX_StateIdle);
+
+                // Enable the output port and tell egl_render to use the texture as a buffer
+                //ilclient_enable_port(egl_render, 221); THIS BLOCKS SO CAN'T BE USED
+                if (OMX_SendCommand(ILC_GET_HANDLE(egl_render), OMX_CommandPortEnable, 221, NULL) != OMX_ErrorNone) {
+                    printf("OMX_CommandPortEnable failed.\n");
+                    exit(1);
+                }
+
+                if (OMX_UseEGLImage(ILC_GET_HANDLE(egl_render), &eglBuffer, 221, NULL, eglImage) != OMX_ErrorNone) {
+                    printf("OMX_UseEGLImage failed.\n");
+                    exit(1);
+                }
+
+                // Set egl_render to executing
+                ilclient_change_component_state(egl_render, OMX_StateExecuting);
+
+
+                // Request egl_render to write data to the texture buffer
+                if(OMX_FillThisBuffer(ILC_GET_HANDLE(egl_render), eglBuffer) != OMX_ErrorNone) {
+                    printf("OMX_FillThisBuffer failed.\n");
+                    exit(1);
+                }
+            }
+
+            if(!data_len)
+                break;
+
+            if(!thread_run)
+                break;
+
+            buf->nFilledLen = data_len;
+            data_len = 0;
+
+            buf->nOffset = 0;
+            if(first_packet) {
+                buf->nFlags = OMX_BUFFERFLAG_STARTTIME;
+                first_packet = 0;
+            }
+            else
+                buf->nFlags = OMX_BUFFERFLAG_TIME_UNKNOWN;
+
+            if(OMX_EmptyThisBuffer(ILC_GET_HANDLE(video_decode), buf) != OMX_ErrorNone) {
+                status = -6;
+                break;
+            }
+        }
+
+        buf->nFilledLen = 0;
+        buf->nFlags = OMX_BUFFERFLAG_TIME_UNKNOWN | OMX_BUFFERFLAG_EOS;
+
+        if(OMX_EmptyThisBuffer(ILC_GET_HANDLE(video_decode), buf) != OMX_ErrorNone)
+            status = -20;
+
+        // need to flush the renderer to allow video_decode to disable its input port
+        ilclient_flush_tunnels(tunnel, 0);
+
+        ilclient_disable_port_buffers(video_decode, 130, NULL, NULL, NULL);
+    }
+
+    fclose(in);
+
+    ilclient_disable_tunnel(tunnel);
+    ilclient_disable_tunnel(tunnel+1);
+    ilclient_disable_tunnel(tunnel+2);
+    ilclient_teardown_tunnels(tunnel);
+
+    ilclient_state_transition(list, OMX_StateIdle);
+    
+    /*
+        * To cleanup egl_render, we need to first disable its output port, then
+        * free the output eglBuffer, and finally request the state transition
+        * from to Loaded.
+        */
+    omx_err = OMX_SendCommand(ILC_GET_HANDLE(egl_render), OMX_CommandPortDisable, 221, NULL);
+    if (omx_err != OMX_ErrorNone)
+        printf("Failed OMX_SendCommand\n");
+    
+    omx_err = OMX_FreeBuffer(ILC_GET_HANDLE(egl_render), 221, eglBuffer);
+    if(omx_err != OMX_ErrorNone)
+        printf("OMX_FreeBuffer failed\n");
+
+    ilclient_state_transition(list, OMX_StateLoaded);
+    
+    ilclient_cleanup_components(list);
+
+    OMX_Deinit();
+
+    ilclient_destroy(client);
+    return (void *)status;
+}
+
+// -------------------------------------------------------------------------------
+
 TextureStreamOMX::TextureStreamOMX() : 
-    m_file(NULL),
-    m_eglImage(0),
-    m_video_decode(NULL),
-    m_video_scheduler(NULL),
-    m_port_settings_changed(0),
-    m_first_packet(1),
-    m_status(0)
+    m_eglImage(NULL),
+    m_thread { }
     {
 
 }
@@ -1630,224 +1623,26 @@ bool TextureStreamOMX::load(const std::string& _filepath, bool _vFlip) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
     /* Create EGL Image */
-    m_eglImage = eglCreateImageKHR(
-                    getEGLDisplay(),
-                    getEGLContext(),
-                    EGL_GL_TEXTURE_2D_KHR,
-                    (EGLClientBuffer)m_id,
-                    0);
-        
+    m_eglImage = eglCreateImageKHR( getEGLDisplay(), getEGLContext(), EGL_GL_TEXTURE_2D_KHR, (EGLClientBuffer)m_id, 0);
     if (m_eglImage == EGL_NO_IMAGE_KHR) {
         printf("eglCreateImageKHR failed.\n");
         exit(1);
     }
 
-    memset(m_list, 0, sizeof(m_list));
-    memset(m_tunnel, 0, sizeof(m_tunnel));
-
-    if ((m_file = fopen(_filepath.c_str(), "rb")) == NULL)
-        return (void *)-2;
-
-    if ((m_client = ilclient_init()) == NULL) {
-        fclose(m_file);
-        return (void *)-3;
-    }
-
-    if (OMX_Init() != OMX_ErrorNone) {
-        ilclient_destroy(m_client);
-        fclose(m_file);
-        return (void *)-4;
-    }
-
-    // callback
-    ilclient_set_fill_buffer_done_callback(m_client, my_fill_buffer_done, 0);
-
-    // create video_decode
-    if (ilclient_create_component(m_client, &m_video_decode, "video_decode", ILCLIENT_DISABLE_ALL_PORTS | ILCLIENT_ENABLE_INPUT_BUFFERS) != 0)
-        m_status = -14;
-    m_list[0] = m_video_decode;
-
-    // create egl_render
-    if (m_status == 0 && ilclient_create_component(m_client, &egl_render, "egl_render", ILCLIENT_DISABLE_ALL_PORTS | ILCLIENT_ENABLE_OUTPUT_BUFFERS) != 0)
-        m_status = -14;
-    m_list[1] = egl_render;
-
-    // create clock
-    COMPONENT_T* clock = NULL;
-    if (m_status == 0 && ilclient_create_component(m_client, &clock, "clock", ILCLIENT_DISABLE_ALL_PORTS) != 0)
-        m_status = -14;
-    m_list[2] = clock;
-
-    OMX_TIME_CONFIG_CLOCKSTATETYPE cstate;
-
-    memset(&cstate, 0, sizeof(cstate));
-    cstate.nSize = sizeof(cstate);
-    cstate.nVersion.nVersion = OMX_VERSION;
-    cstate.eState = OMX_TIME_ClockStateWaitingForStartTime;
-    cstate.nWaitMask = 1;
-    if (clock != NULL && OMX_SetParameter(ilclient_get_handle(clock), OMX_IndexConfigTimeClockState, &cstate) != OMX_ErrorNone)
-        m_status = -13;
-
-    // create video_scheduler
-    if (m_status == 0 && ilclient_create_component(m_client, &m_video_scheduler, "video_scheduler", ILCLIENT_DISABLE_ALL_PORTS) != 0)
-        m_status = -14;
-    m_list[3] = m_video_scheduler;
-
-    set_tunnel(m_tunnel, m_video_decode, 131, m_video_scheduler, 10);
-    set_tunnel(m_tunnel+1, m_video_scheduler, 11, egl_render, 220);
-    set_tunnel(m_tunnel+2, clock, 80, m_video_scheduler, 12);
-
-    // setup clock tunnel first
-    if (m_status == 0 && ilclient_setup_tunnel(m_tunnel+2, 0, 0) != 0)
-        m_status = -15;
-    else
-        ilclient_change_component_state(clock, OMX_StateExecuting);
-
-    if (m_status == 0)
-        ilclient_change_component_state(m_video_decode, OMX_StateIdle);
-
-    OMX_VIDEO_PARAM_PORTFORMATTYPE format;
-    memset(&format, 0, sizeof(OMX_VIDEO_PARAM_PORTFORMATTYPE));
-    format.nSize = sizeof(OMX_VIDEO_PARAM_PORTFORMATTYPE);
-    format.nVersion.nVersion = OMX_VERSION;
-    format.nPortIndex = 130;
-    format.eCompressionFormat = OMX_VIDEO_CodingAVC;
-
-    if (m_status == 0 &&
-        OMX_SetParameter(ilclient_get_handle(m_video_decode), OMX_IndexParamVideoPortFormat, &format) == OMX_ErrorNone &&
-        ilclient_enable_port_buffers(m_video_decode, 130, NULL, NULL, NULL) == 0) {
-            
-        m_port_settings_changed = 0;
-        m_first_packet = 1;
-
-        ilclient_change_component_state(m_video_decode, OMX_StateExecuting);
-
-        return true;
-   }
-
-    return false;
-}
-
-bool TextureStreamOMX::update() {
-    unsigned int data_len = 0;
-
-    if ( (m_buffer = ilclient_get_input_buffer(m_video_decode, 130, 1)) != NULL ) {
-        // feed data and wait until we get port settings changed
-        unsigned char *dest = m_buffer->pBuffer;
-
-        // loop if at end
-        if (feof(m_file))
-            rewind(m_file);
-
-        data_len += fread(dest, 1, m_buffer->nAllocLen - data_len, m_file);
-
-        if  (m_port_settings_changed == 0 &&
-            ((data_len > 0 && ilclient_remove_event(m_video_decode, OMX_EventPortSettingsChanged, 131, 0, 0, 1) == 0) ||
-             (data_len == 0 && ilclient_wait_for_event(m_video_decode, OMX_EventPortSettingsChanged, 131, 0, 0, 1,
-                                                       ILCLIENT_EVENT_ERROR | ILCLIENT_PARAMETER_CHANGED, 10000) == 0))) {
-            m_port_settings_changed = 1;
-
-            if (ilclient_setup_tunnel(m_tunnel, 0, 0) != 0) {
-                m_status = -7;
-                return false;
-            }
-
-            ilclient_change_component_state(m_video_scheduler, OMX_StateExecuting);
-
-            // now setup tunnel to egl_render
-            if (ilclient_setup_tunnel(m_tunnel+1, 0, 1000) != 0) {
-                m_status = -12;
-                return false;
-            }
-
-            // Set egl_render to idle
-            ilclient_change_component_state(egl_render, OMX_StateIdle);
-
-            // Enable the output port and tell egl_render to use the texture as a buffer
-            //ilclient_enable_port(egl_render, 221); THIS BLOCKS SO CAN'T BE USED
-            if (OMX_SendCommand(ilclient_get_handle(egl_render), OMX_CommandPortEnable, 221, NULL) != OMX_ErrorNone) {
-                printf("OMX_CommandPortEnable failed.\n");
-                exit(1);
-            }
-
-            if (OMX_UseEGLImage(ilclient_get_handle(egl_render), &eglBuffer, 221, NULL, eglImage) != OMX_ErrorNone) {
-                printf("OMX_UseEGLImage failed.\n");
-                exit(1);
-            }
-
-            // Set egl_render to executing
-            ilclient_change_component_state(egl_render, OMX_StateExecuting);
-
-            // Request egl_render to write data to the texture buffer
-            if (OMX_FillThisBuffer(ilclient_get_handle(egl_render), eglBuffer) != OMX_ErrorNone) {
-                printf("OMX_FillThisBuffer failed.\n");
-                exit(1);
-            }
-        }
-
-        if (!data_len)
-            return false;
-
-        m_buffer->nFilledLen = data_len;
-        data_len = 0;
-
-        m_buffer->nOffset = 0;
-        if (m_first_packet) {
-            m_buffer->nFlags = OMX_BUFFERFLAG_STARTTIME;
-            m_first_packet = 0;
-        }
-        else
-            m_buffer->nFlags = OMX_BUFFERFLAG_TIME_UNKNOWN;
-
-        if (OMX_EmptyThisBuffer(ilclient_get_handle(m_video_decode), m_buffer) != OMX_ErrorNone) {
-            m_status = -6;
-            return false;
-        }
-    }
-
+    m_thread = std::thread{decode_video, _filepath.c_str(), m_eglImage};
+    
+    return true;
 }
 
 void TextureStreamOMX::clear() {
-    m_buffer->nFilledLen = 0;
-    m_buffer->nFlags = OMX_BUFFERFLAG_TIME_UNKNOWN | OMX_BUFFERFLAG_EOS;
-
-    if (OMX_EmptyThisBuffer(ilclient_get_handle(m_video_decode), m_buffer) != OMX_ErrorNone)
-        m_status = -20;
-
-    // need to flush the renderer to allow video_decode to disable its input port
-    ilclient_flush_tunnels(m_tunnel, 0);
-
-    ilclient_disable_port_buffers(m_video_decode, 130, NULL, NULL, NULL);
-
-    fclose(m_file);
-
-    ilclient_disable_tunnel(m_tunnel);
-    ilclient_disable_tunnel(m_tunnel+1);
-    ilclient_disable_tunnel(m_tunnel+2);
-    ilclient_teardown_tunnels(m_tunnel);
-
-    ilclient_state_transition(m_list, OMX_StateIdle);
-    
-    /*
-        * To cleanup egl_render, we need to first disable its output port, then
-        * free the output eglBuffer, and finally request the state transition
-        * from to Loaded.
-        */
-    OMX_ERRORTYPE omx_err = OMX_SendCommand(ilclient_get_handle(egl_render), OMX_CommandPortDisable, 221, NULL);
-    if (omx_err != OMX_ErrorNone)
-        printf("Failed OMX_SendCommand\n");
-    
-    omx_err = OMX_FreeBuffer(ilclient_get_handle(egl_render), 221, eglBuffer);
-    if (omx_err != OMX_ErrorNone)
-        printf("OMX_FreeBuffer failed\n");
-
-    ilclient_state_transition(m_list, OMX_StateLoaded);
-    
-    ilclient_cleanup_components(m_list);
-
-    OMX_Deinit();
-
-    ilclient_destroy(m_client);
+    thread_run = 0;
+    // pthread_join(thread1, NULL);
+    m_thread.join();
+	
+    if (m_eglImage != 0) {
+        if (!eglDestroyImageKHR(getEGLDisplay(), (EGLImageKHR) m_eglImage))
+            printf("eglDestroyImageKHR failed.");
+    }
 
     if (m_id != 0)
         glDeleteTextures(1, &m_id);
