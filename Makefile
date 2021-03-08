@@ -37,7 +37,9 @@ INCLUDES +=	-Isrc/ -Iinclude/
 CFLAGS += -Wall -O3 -std=c++11 -fpermissive
 
 ifeq ($(PLATFORM), RPI)
-	CFLAGS += -DPLATFORM_RPI -Wno-psabi
+	CFLAGS += -DPLATFORM_RPI -Wno-psabi 
+	CFLAGS += -DUSE_VCHIQ_ARM -DOMX_SKIP64BIT
+	# CFLAGS += -DSTANDALONE -D__STDC_CONSTANT_MACROS -D__STDC_LIMIT_MACROS -DTARGET_POSIX -D_LINUX -fPIC -DPIC -D_REENTRANT -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 -U_FORTIFY_SOURCE -Wall -g -DHAVE_LIBOPENMAX=2 -DOMX -ftree-vectorize -pipe -DUSE_EXTERNAL_OMX -DHAVE_LIBBCM_HOST -DUSE_EXTERNAL_LIBBCM_HOST -Wno-psabi
 	
 	ifeq ($(DRIVER),legacy)
 		CFLAGS += -DGLM_FORCE_CXX14 -DDRIVER_LEGACY
@@ -64,7 +66,8 @@ ifeq ($(PLATFORM), RPI)
 				-I/opt/vc/include/interface/vmcs_host/linux
 	LDFLAGS +=  -L/opt/vc/lib/ \
 				-lmmal -lmmal_core -lmmal_util -lmmal_vc_client -lvcos \
-				-lbcm_host \
+				-lopenmaxil -lvchiq_arm \
+				-lbcm_host\
 				-lpthread
 
 else ifeq ($(PLATFORM),Linux)
