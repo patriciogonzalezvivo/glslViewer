@@ -13,7 +13,8 @@ LIBAV ?= not_defined
 
 ifneq ("$(wildcard /opt/vc/include/bcm_host.h)","")
 	PLATFORM = RPI
-	ifeq ($(shell cat /proc/cpuinfo | grep 'Revision' | awk '{print $$3}' ), c03111)
+	RPI_REVISION = $(shell cat /proc/cpuinfo | grep 'Revision' | awk '{print $$3}')
+	ifeq ($(RPI_REVISION),$(filter $(RPI_REVISION),a03111 b03111 b03112 b03114 c03111 c03112 c03114 d03114))
 		ifeq ($(DRIVER),not_defined)
 			DRIVER = fake_kms
 		endif
