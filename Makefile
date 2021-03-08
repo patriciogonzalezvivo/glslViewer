@@ -3,8 +3,10 @@ EXE = ./bin/glslViewer
 CXX = g++
 SOURCES := 	$(wildcard include/*/*.cc) $(wildcard src/*.cpp) $(wildcard src/*/*.cpp) \
 			$(wildcard include/oscpack/osc/*.cpp) $(wildcard include/oscpack/ip/posix/*.cpp)
+
 HEADERS := 	$(wildcard include/*/*.h) $(wildcard src/*.h) $(wildcard src/*.h) $(wildcard src/*/*.h) \
 			$(wildcard include/oscpack/osc/*.h)   $(wildcard include/oscpack/ip/posix/*.h)
+			# $(wildcard include/ilclient/*.h)
 OBJECTS := $(SOURCES:.cpp=.o)
 
 PLATFORM = $(shell uname)

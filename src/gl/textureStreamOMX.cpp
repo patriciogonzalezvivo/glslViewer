@@ -35,9 +35,9 @@ void my_fill_buffer_done(void* data, COMPONENT_T* comp) {
 
 TextureStreamOMX::TextureStreamOMX() : 
     m_file(NULL),
-    m_eglImage(0);
+    m_eglImage(0),
     m_video_decode(NULL),
-    m_video_scheduler(NULL)
+    m_video_scheduler(NULL),
     m_port_settings_changed(0),
     m_first_packet(1),
     m_status(0)
@@ -85,7 +85,7 @@ bool TextureStreamOMX::load(const std::string& _filepath, bool _vFlip) {
     memset(m_list, 0, sizeof(m_list));
     memset(m_tunnel, 0, sizeof(m_tunnel));
 
-    if ((m_file = fopen(filename, "rb")) == NULL)
+    if ((m_file = fopen(_filepath.c_str(), "rb")) == NULL)
         return (void *)-2;
 
     if ((m_client = ilclient_init()) == NULL) {
@@ -133,17 +133,17 @@ bool TextureStreamOMX::load(const std::string& _filepath, bool _vFlip) {
         m_status = -14;
     m_list[3] = m_video_scheduler;
 
-    set_tunnel(tunnel, m_video_decode, 131, m_video_scheduler, 10);
-    set_tunnel(tunnel+1, m_video_scheduler, 11, egl_render, 220);
-    set_tunnel(tunnel+2, clock, 80, m_video_scheduler, 12);
+    set_tunnel(m_tunnel, m_video_decode, 131, m_video_scheduler, 10);
+    set_tunnel(m_tunnel+1, m_video_scheduler, 11, egl_render, 220);
+    set_tunnel(m_tunnel+2, clock, 80, m_video_scheduler, 12);
 
     // setup clock tunnel first
-    if (status == 0 && ilclient_setup_tunnel(tunnel+2, 0, 0) != 0)
-        status = -15;
+    if (m_status == 0 && ilclient_setup_tunnel(m_tunnel+2, 0, 0) != 0)
+        m_status = -15;
     else
         ilclient_change_component_state(clock, OMX_StateExecuting);
 
-    if (status == 0)
+    if (m_status == 0)
         ilclient_change_component_state(m_video_decode, OMX_StateIdle);
 
     OMX_VIDEO_PARAM_PORTFORMATTYPE format;
@@ -176,8 +176,8 @@ bool TextureStreamOMX::update() {
         unsigned char *dest = m_buffer->pBuffer;
 
         // loop if at end
-        if (feof(in))
-            rewind(in);
+        if (feof(m_file))
+            rewind(m_file);
 
         data_len += fread(dest, 1, m_buffer->nAllocLen - data_len, m_file);
 
@@ -239,7 +239,7 @@ bool TextureStreamOMX::update() {
         else
             m_buffer->nFlags = OMX_BUFFERFLAG_TIME_UNKNOWN;
 
-        if (OMX_EmptyThisBuffer(ILC_GET_HANDLE(video_decode), buf) != OMX_ErrorNone) {
+        if (OMX_EmptyThisBuffer(ILC_GET_HANDLE(m_video_decode), m_buffer) != OMX_ErrorNone) {
             m_status = -6;
             return false;
         }
@@ -259,7 +259,7 @@ void TextureStreamOMX::clear() {
 
     ilclient_disable_port_buffers(m_video_decode, 130, NULL, NULL, NULL);
 
-    fclose(in);
+    fclose(m_file);
 
     ilclient_disable_tunnel(m_tunnel);
     ilclient_disable_tunnel(m_tunnel+1);

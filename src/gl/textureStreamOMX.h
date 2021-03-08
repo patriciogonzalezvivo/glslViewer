@@ -5,7 +5,7 @@
 #ifdef PLATFORM_RPI
 
 #include "bcm_host.h"
-#include "ilclient.h"
+#include "ilclient/ilclient.h"
 
 #include <stdio.h>
 
