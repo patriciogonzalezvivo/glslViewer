@@ -33,8 +33,8 @@
 
 // --------------------------------- ilclient.c 
 
-#define IMAGE_SIZE_WIDTH 256 //1920
-#define IMAGE_SIZE_HEIGHT 256 //1080
+#define IMAGE_SIZE_WIDTH 1920
+#define IMAGE_SIZE_HEIGHT 1080
 #define ILC_GET_HANDLE(x) ilclient_get_handle(x)
 
 #define set_tunnel(t,a,b,c,d)  do {TUNNEL_T *_ilct = (t); \
@@ -1351,6 +1351,8 @@ static COMPONENT_T* egl_render = NULL;
 
 // static void* eglImage = 0;
 int thread_run = 0;
+int video_width = 1920;
+int video_height = 1080;
 
 void my_fill_buffer_done(void* data, COMPONENT_T* comp) {
     OMX_STATETYPE state;
@@ -1457,6 +1459,13 @@ void *decode_video(const char* filename, void* eglImage) {
     format.nVersion.nVersion = OMX_VERSION;
     format.nPortIndex = 130;
     format.eCompressionFormat = OMX_VIDEO_CodingAVC;
+
+    OMX_PARAM_PORTDEFINITIONTYPE portdef;
+    portdef.nSize = sizeof(OMX_PARAM_PORTDEFINITIONTYPE);
+    portdef.nVersion.nVersion = OMX_VERSION;
+    portdef.nPortIndex = 131;
+    OMX_GetParameter(ILC_GET_HANDLE(video_decode), OMX_IndexParamPortDefinitionType, portdef);
+    printf("Width: %d, Height: %d\n", portdef.format.video.nFrameWidth, portdef.format.nFrameHeight);        
 
     if(status == 0 &&
         OMX_SetParameter(ILC_GET_HANDLE(video_decode), OMX_IndexParamVideoPortFormat, &format) == OMX_ErrorNone &&
