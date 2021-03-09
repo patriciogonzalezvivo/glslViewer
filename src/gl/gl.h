@@ -28,11 +28,9 @@
 #include <GLES2/gl2ext.h>
 #endif
 
-#ifndef DRIVER_LEGACY
 EGLImageKHR createImage(EGLDisplay dpy, EGLContext ctx, EGLenum target, EGLClientBuffer buffer, const EGLint *attrib_list);
 EGLBoolean destroyImage(EGLDisplay dpy, EGLImageKHR image);
 void imageTargetTexture2D(EGLenum target, EGLImageKHR image);
-#endif
 
 // MACOS
 #elif defined(PLATFORM_OSX)          // MACOS 

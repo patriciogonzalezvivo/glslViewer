@@ -11,7 +11,7 @@ static PFNGLEGLIMAGETARGETTEXTURE2DOESPROC imageTargetTexture2DProc = NULL;
 EGLImageKHR createImage(EGLDisplay dpy, EGLContext ctx, EGLenum target, EGLClientBuffer buffer, const EGLint *attrib_list) {
 
     #ifdef DRIVER_LEGACY
-    return eglCreateImageKHR(dsp, ctx, target, buffer, attrib_list);
+    return eglCreateImageKHR(dpy, ctx, target, buffer, attrib_list);
 
     #else
     if (!createImageProc)
