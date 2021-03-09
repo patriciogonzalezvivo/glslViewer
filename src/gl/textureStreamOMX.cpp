@@ -1638,7 +1638,8 @@ bool TextureStreamOMX::load(const std::string& _filepath, bool _vFlip) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
     /* Create EGL Image */
-    m_eglImage = eglCreateImageKHR( getEGLDisplay(), getEGLContext(), EGL_GL_TEXTURE_2D_KHR, (EGLClientBuffer)m_id, 0);
+    m_eglImage = createImage( getEGLDisplay(), getEGLContext(), EGL_GL_TEXTURE_2D_KHR, (EGLClientBuffer)m_id, 0);
+    
     if (m_eglImage == EGL_NO_IMAGE_KHR) {
         printf("eglCreateImageKHR failed.\n");
         exit(1);
@@ -1656,7 +1657,7 @@ void TextureStreamOMX::clear() {
     m_thread.join();
 	
     if (m_eglImage != 0) {
-        if (!eglDestroyImageKHR(getEGLDisplay(), (EGLImageKHR) m_eglImage))
+        if (!destroyImage(getEGLDisplay(), (EGLImageKHR) m_eglImage))
             printf("eglDestroyImageKHR failed.");
     }
 

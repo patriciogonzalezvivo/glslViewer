@@ -936,45 +936,12 @@ void TextureStreamMMAL::video_output_callback(MMAL_PORT_T *port, MMAL_BUFFER_HEA
     // printf("Video buffer callback, output queue len=%d\n\n", mmal_queue_length(video_queue));
 }
 
-#ifndef DRIVER_LEGACY
-static PFNEGLCREATEIMAGEKHRPROC createImageProc = NULL;
-static PFNEGLDESTROYIMAGEKHRPROC destroyImageProc = NULL;
-static PFNGLEGLIMAGETARGETTEXTURE2DOESPROC imageTargetTexture2DProc = NULL;
-
-EGLImageKHR createImage(EGLDisplay dpy, EGLContext ctx, EGLenum target,
-                        EGLClientBuffer buffer, const EGLint *attrib_list) {
-    if (!createImageProc) {
-        createImageProc = (PFNEGLCREATEIMAGEKHRPROC) eglGetProcAddress("eglCreateImageKHR");
-    }
-    return createImageProc(dpy, ctx, target, buffer, attrib_list);
-}
-
-EGLBoolean destroyImage(EGLDisplay dpy, EGLImageKHR image) {
-    if (!destroyImageProc) {
-        destroyImageProc = (PFNEGLCREATEIMAGEKHRPROC) eglGetProcAddress("eglDestroyImageKHR");
-    }
-    return destroyImageProc(dpy, image);
-}
-
-void imageTargetTexture2D(EGLenum target, EGLImageKHR image) {
-    if (!imageTargetTexture2DProc) {
-        imageTargetTexture2DProc =
-            (PFNEGLCREATEIMAGEKHRPROC) eglGetProcAddress("glEGLImageTargetTexture2DOES");
-    }
-    imageTargetTexture2DProc(target, image);
-}
-#endif
-
 void updateTexture(EGLDisplay display, EGLenum target, EGLClientBuffer mm_buf, GLuint *texture, EGLImageKHR *egl_image) {
     //vcos_log_trace("%s: mm_buf %u", VCOS_FUNCTION, (unsigned) mm_buf);
     glBindTexture(GL_TEXTURE_EXTERNAL_OES, *texture);
     if (*egl_image != EGL_NO_IMAGE_KHR) {
         /* Discard the EGL image for the preview frame */
-        #ifndef DRIVER_LEGACY
         destroyImage(display, *egl_image);
-        #else
-        eglDestroyImageKHR(display, *egl_image);
-        #endif
         *egl_image = EGL_NO_IMAGE_KHR;
     }
   
@@ -984,13 +951,8 @@ void updateTexture(EGLDisplay display, EGLenum target, EGLClientBuffer mm_buf, G
             EGL_NONE, EGL_NONE
     };  
     
-    #ifndef DRIVER_LEGACY
     *egl_image = createImage(display, EGL_NO_CONTEXT, target, mm_buf, attribs);
     imageTargetTexture2D(GL_TEXTURE_EXTERNAL_OES, *egl_image);
-    #else
-    *egl_image = eglCreateImageKHR(display, EGL_NO_CONTEXT, target, mm_buf, attribs);
-    glEGLImageTargetTexture2DOES(GL_TEXTURE_EXTERNAL_OES, *egl_image);
-    #endif
 }
 
 bool TextureStreamMMAL::update() {
