@@ -3,8 +3,10 @@ EXE = ./bin/glslViewer
 CXX = g++
 SOURCES := 	$(wildcard include/*/*.cc) $(wildcard src/*.cpp) $(wildcard src/*/*.cpp) \
 			$(wildcard include/oscpack/osc/*.cpp) $(wildcard include/oscpack/ip/posix/*.cpp)
+
 HEADERS := 	$(wildcard include/*/*.h) $(wildcard src/*.h) $(wildcard src/*.h) $(wildcard src/*/*.h) \
 			$(wildcard include/oscpack/osc/*.h)   $(wildcard include/oscpack/ip/posix/*.h)
+			# $(wildcard include/ilclient/*.h)
 OBJECTS := $(SOURCES:.cpp=.o)
 
 PLATFORM = $(shell uname)
@@ -36,7 +38,11 @@ INCLUDES +=	-Isrc/ -Iinclude/
 CFLAGS += -Wall -O3 -std=c++11 -fpermissive
 
 ifeq ($(PLATFORM), RPI)
-	CFLAGS += -DPLATFORM_RPI -Wno-psabi
+	CFLAGS += -DPLATFORM_RPI -Wno-psabi 
+	CFLAGS += -DUSE_VCHIQ_ARM -DOMX_SKIP64BIT
+	CFLAGS += -DHAVE_LIBBCM_HOST -DUSE_EXTERNAL_LIBBCM_HOST
+	CFLAGS += -DHAVE_LIBOPENMAX=2 -DOMX -DUSE_EXTERNAL_OMX 
+	# CFLAGS += -DSTANDALONE -D__STDC_CONSTANT_MACROS -D__STDC_LIMIT_MACROS -DTARGET_POSIX -D_LINUX -fPIC -DPIC -ftree-vectorize -pipe -D_REENTRANT -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 -U_FORTIFY_SOURCE -g 
 	
 	ifeq ($(DRIVER),legacy)
 		CFLAGS += -DGLM_FORCE_CXX14 -DDRIVER_LEGACY
@@ -63,6 +69,7 @@ ifeq ($(PLATFORM), RPI)
 				-I/opt/vc/include/interface/vmcs_host/linux
 	LDFLAGS +=  -L/opt/vc/lib/ \
 				-lmmal -lmmal_core -lmmal_util -lmmal_vc_client -lvcos \
+				-lopenmaxil -lvchiq_arm \
 				-lbcm_host \
 				-lpthread
 

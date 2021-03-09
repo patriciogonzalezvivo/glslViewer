@@ -843,6 +843,7 @@ int main(int argc, char **argv){
         else if (   haveExt(argument,"mov") || haveExt(argument,"MOV") ||
                     haveExt(argument,"mp4") || haveExt(argument,"MP4") ||
                     haveExt(argument,"mpeg") || haveExt(argument,"MPEG") ||
+                    haveExt(argument,"h264") ||
                     argument.rfind("/dev/", 0) == 0 ||
                     argument.rfind("http://", 0) == 0 ||
                     argument.rfind("https://", 0) == 0 ||
