@@ -6,6 +6,7 @@
 
 #include "../window.h"
 #include "../tools/geom.h"
+#include "../tools/text.h"
 
 #if defined(DRIVER_FAKE_KMS)
 #include "libdrm/drm_fourcc.h"
@@ -627,11 +628,21 @@ bool TextureStreamMMAL::load(const std::string& _filepath, bool _vFlip) {
     m_path = _filepath;
     m_vFlip = _vFlip;
 
-    m_width = 1920;//640;
-    m_height = 1080;//480;
-    int fps = 30;//60;
+    m_width = 1920;     //640;
+    m_height = 1080;    //480;
+    int fps = 30;       //60;
+    int rot = 0;
 
     // Use _filepath for encoding widthxheightxfpsxrotation?
+    std::vector<std::string> values = split(_filepath, 'x');
+    if (values.size() >= 2) {
+        m_width = toInt(values[0]);
+        m_height = toInt(values[1]);
+    }
+    if (values.size() >= 3)
+        fps = toInt(values[2]);
+    if (values.size() >= 4)
+        rot = toInt(values[3]);
 
     camera_component = 0;
     MMAL_ES_FORMAT_T *format;
@@ -790,6 +801,8 @@ bool TextureStreamMMAL::load(const std::string& _filepath, bool _vFlip) {
 
     // Set up the camera_parameters to default
     raspicamcontrol_set_defaults(&camera_parameters);
+
+    camera_parameters.rotation = rot;
     
     // Apply all camera parameters
     raspicamcontrol_set_all_parameters(camera_component, &camera_parameters);
