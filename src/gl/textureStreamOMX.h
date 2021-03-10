@@ -17,7 +17,7 @@ public:
 
 protected:
     static void* decode_video(const char* filename, void* _streamTexture);
-    
+
     void*       m_eglImage;
     std::thread m_thread;
     bool        m_changed;

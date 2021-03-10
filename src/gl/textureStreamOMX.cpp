@@ -29,10 +29,21 @@
 #include "interface/vmcs_host/vchost.h"
 #include "interface/vmcs_host/vcilcs_common.h"
 
+#ifdef SUPPORT_FOR_LIBAV
+extern "C" {
+#include "libavcodec/avcodec.h"
+#include <libavformat/avformat.h>
+#include "libavutil/mathematics.h"
+#include "libavutil/samplefmt.h"
+#include "libavresample/avresample.h"
+}
+#endif
+
 #include "../window.h"
 
-// --------------------------------- ilclient.c 
-#define ILC_GET_HANDLE(x) ilclient_get_handle(x)
+// IL Client from /opt/vc/src/hello_pi/libs/ilclient/ilclient.c 
+// more info at https://jan.newmarch.name/RPi/OpenMAX/ILClient/
+// --------------------------------- 
 
 #define set_tunnel(t,a,b,c,d)  do {TUNNEL_T *_ilct = (t); \
   _ilct->source = (a); _ilct->source_port = (b); \
@@ -1339,19 +1350,84 @@ void ilclient_cleanup_components(COMPONENT_T *list[]) {
     }
 }
 
-// ---------------------------------
+// Helping functions from https://jan.newmarch.name/RPi/OpenMAX/Video/
+// ---------------------------------------------------------------
 
-// static pthread_t thread1;
+void get_output_port_settings(COMPONENT_T *component) {
+    OMX_PARAM_PORTDEFINITIONTYPE portdef;
+
+    printf("Port settings changed\n");
+    // need to setup the input for the resizer with the output of the
+    // decoder
+    portdef.nSize = sizeof(OMX_PARAM_PORTDEFINITIONTYPE);
+    portdef.nVersion.nVersion = OMX_VERSION;
+    portdef.nPortIndex = 131;
+    OMX_GetParameter(ilclient_get_handle(component), OMX_IndexParamPortDefinition, &portdef);
+
+    unsigned int uWidth = (unsigned int) portdef.format.video.nFrameWidth;
+    unsigned int uHeight = (unsigned int) portdef.format.video.nFrameHeight;
+    unsigned int uStride = (unsigned int) portdef.format.video.nStride;
+    unsigned int uSliceHeight = (unsigned int) portdef.format.video.nSliceHeight;
+    printf("Frame width %d, frame height %d, stride %d, slice height %d\n", uWidth, uHeight, uStride, uSliceHeight);
+    printf("Getting format Compression 0x%x Color Format: 0x%x\n", (unsigned int) portdef.format.video.eCompressionFormat, (unsigned int) portdef.format.video.eColorFormat);
+}
+
+
+static OMX_ERRORTYPE set_video_decoder_input_format(COMPONENT_T *component) {
+   // set input video format
+    printf("Setting video decoder format\n");
+    OMX_VIDEO_PARAM_PORTFORMATTYPE format;
+    memset(&format, 0, sizeof(OMX_VIDEO_PARAM_PORTFORMATTYPE));
+    format.nSize = sizeof(OMX_VIDEO_PARAM_PORTFORMATTYPE);
+    format.nVersion.nVersion = OMX_VERSION;
+    format.nPortIndex = 130;
+    format.eCompressionFormat = OMX_VIDEO_CodingAVC;
+    OMX_SetParameter(ilclient_get_handle(component), OMX_IndexParamVideoPortFormat, &format);
+}
 
 static OMX_BUFFERHEADERTYPE* eglBuffer = NULL;
 static COMPONENT_T* egl_render = NULL;
-
 int thread_run = 0;
+
+#ifdef SUPPORT_FOR_LIBAV
+static AVStream *video_stream = NULL;
+AVFormatContext *pFormatCtx = NULL;
+static int video_stream_idx = -1;
+
+void get_info(const char *filename, int* _width, int* _height) {
+    // Register all formats and codecs
+    av_register_all();
+    av_log_set_level(AV_LOG_QUIET);
+
+    if (avformat_open_input(&pFormatCtx, filename, NULL, NULL)!=0)
+        fprintf(stderr, "Can't get format\n");
+        return -1; // Couldn't open file
+    
+    // Retrieve stream information
+    if (avformat_find_stream_info(pFormatCtx, NULL) < 0)
+        return -1; // Couldn't find stream information
+
+    int ret = av_find_best_stream(pFormatCtx, AVMEDIA_TYPE_VIDEO, -1, -1, NULL, 0);
+    if (ret >= 0) {
+        video_stream_idx = ret;
+        video_stream = pFormatCtx->streams[video_stream_idx];
+        *_width     = video_stream->codec->width;
+        *_height    = video_stream->codec->height;
+
+        AVCodec *codec = avcodec_find_decoder(video_stream->codec->codec_id);
+        if (codec)
+            printf("Codec name %s\n", codec->name);
+    }
+
+    if (pFormatCtx)
+        avformat_free_context(pFormatCtx);
+}
+#endif
 
 void my_fill_buffer_done(void* data, COMPONENT_T* comp) {
     OMX_STATETYPE state;
 
-    if (OMX_GetState(ILC_GET_HANDLE(egl_render), &state) != OMX_ErrorNone) {
+    if (OMX_GetState(ilclient_get_handle(egl_render), &state) != OMX_ErrorNone) {
         printf("OMX_FillThisBuffer failed while getting egl_render component state\n");
         return;
     }
@@ -1363,7 +1439,6 @@ void my_fill_buffer_done(void* data, COMPONENT_T* comp) {
         printf("OMX_FillThisBuffer failed in callback\n");
 }
 
-
 // Modified function prototype to work with pthreads
 void* TextureStreamOMX::decode_video(const char* filename, void* _streamTexture) {
     TextureStreamOMX* stream = (TextureStreamOMX*)_streamTexture;
@@ -1374,7 +1449,6 @@ void* TextureStreamOMX::decode_video(const char* filename, void* _streamTexture)
         exit(1);
     }
 
-    OMX_VIDEO_PARAM_PORTFORMATTYPE format;
     OMX_TIME_CONFIG_CLOCKSTATETYPE cstate;
     OMX_ERRORTYPE omx_err;
     
@@ -1431,7 +1505,7 @@ void* TextureStreamOMX::decode_video(const char* filename, void* _streamTexture)
     cstate.nVersion.nVersion = OMX_VERSION;
     cstate.eState = OMX_TIME_ClockStateWaitingForStartTime;
     cstate.nWaitMask = 1;
-    if (clock != NULL && OMX_SetParameter(ILC_GET_HANDLE(clock), OMX_IndexConfigTimeClockState, &cstate) != OMX_ErrorNone)
+    if (clock != NULL && OMX_SetParameter(ilclient_get_handle(clock), OMX_IndexConfigTimeClockState, &cstate) != OMX_ErrorNone)
         status = -13;
 
     // create video_scheduler
@@ -1443,6 +1517,8 @@ void* TextureStreamOMX::decode_video(const char* filename, void* _streamTexture)
     set_tunnel(tunnel+1, video_scheduler, 11, egl_render, 220);
     set_tunnel(tunnel+2, clock, 80, video_scheduler, 12);
 
+    get_output_port_settings(video_decode);
+
     // setup clock tunnel first
     if (status == 0 && ilclient_setup_tunnel(tunnel+2, 0, 0) != 0)
         status = -15;
@@ -1452,16 +1528,10 @@ void* TextureStreamOMX::decode_video(const char* filename, void* _streamTexture)
     if (status == 0)
         ilclient_change_component_state(video_decode, OMX_StateIdle);
 
-    memset(&format, 0, sizeof(OMX_VIDEO_PARAM_PORTFORMATTYPE));
-    format.nSize = sizeof(OMX_VIDEO_PARAM_PORTFORMATTYPE);
-    format.nVersion.nVersion = OMX_VERSION;
-    format.nPortIndex = 130;
-    format.eCompressionFormat = OMX_VIDEO_CodingAVC;
-
-
     if (status == 0 &&
-        OMX_SetParameter(ILC_GET_HANDLE(video_decode), OMX_IndexParamVideoPortFormat, &format) == OMX_ErrorNone &&
+        set_video_decoder_input_format(video_decode) == OMX_ErrorNone &&
         ilclient_enable_port_buffers(video_decode, 130, NULL, NULL, NULL) == 0) {
+        
         OMX_BUFFERHEADERTYPE *buf;
         int port_settings_changed = 0;
         int first_packet = 1;
@@ -1503,12 +1573,12 @@ void* TextureStreamOMX::decode_video(const char* filename, void* _streamTexture)
 
                 // Enable the output port and tell egl_render to use the texture as a buffer
                 //ilclient_enable_port(egl_render, 221); THIS BLOCKS SO CAN'T BE USED
-                if (OMX_SendCommand(ILC_GET_HANDLE(egl_render), OMX_CommandPortEnable, 221, NULL) != OMX_ErrorNone) {
+                if (OMX_SendCommand(ilclient_get_handle(egl_render), OMX_CommandPortEnable, 221, NULL) != OMX_ErrorNone) {
                     printf("OMX_CommandPortEnable failed.\n");
                     exit(1);
                 }
 
-                if (OMX_UseEGLImage(ILC_GET_HANDLE(egl_render), &eglBuffer, 221, NULL, eglImage) != OMX_ErrorNone) {
+                if (OMX_UseEGLImage(ilclient_get_handle(egl_render), &eglBuffer, 221, NULL, eglImage) != OMX_ErrorNone) {
                     printf("OMX_UseEGLImage failed.\n");
                     exit(1);
                 }
@@ -1518,7 +1588,7 @@ void* TextureStreamOMX::decode_video(const char* filename, void* _streamTexture)
 
 
                 // Request egl_render to write data to the texture buffer
-                if (OMX_FillThisBuffer(ILC_GET_HANDLE(egl_render), eglBuffer) != OMX_ErrorNone) {
+                if (OMX_FillThisBuffer(ilclient_get_handle(egl_render), eglBuffer) != OMX_ErrorNone) {
                     printf("OMX_FillThisBuffer failed.\n");
                     exit(1);
                 }
@@ -1535,24 +1605,13 @@ void* TextureStreamOMX::decode_video(const char* filename, void* _streamTexture)
 
             buf->nOffset = 0;
             if (first_packet) {
-                OMX_PARAM_PORTDEFINITIONTYPE portdef;
-                portdef.nSize = sizeof(OMX_PARAM_PORTDEFINITIONTYPE);
-                portdef.nVersion.nVersion = OMX_VERSION;
-                portdef.nPortIndex = 131;
-                OMX_GetParameter(ILC_GET_HANDLE(video_decode), OMX_IndexParamPortDefinition, &portdef);
-
-                stream->m_width = portdef.format.image.nFrameWidth;
-                stream->m_height = portdef.format.image.nFrameHeight;
-                stream->m_changed = true;
-                // printf("Width: %d, Height: %d\n", portdef.format.video.nFrameWidth, portdef.format.nFrameHeight);
-
                 buf->nFlags = OMX_BUFFERFLAG_STARTTIME;
                 first_packet = 0;
             }
             else
                 buf->nFlags = OMX_BUFFERFLAG_TIME_UNKNOWN;
 
-            if (OMX_EmptyThisBuffer(ILC_GET_HANDLE(video_decode), buf) != OMX_ErrorNone) {
+            if (OMX_EmptyThisBuffer(ilclient_get_handle(video_decode), buf) != OMX_ErrorNone) {
                 status = -6;
                 break;
             }
@@ -1561,7 +1620,7 @@ void* TextureStreamOMX::decode_video(const char* filename, void* _streamTexture)
         buf->nFilledLen = 0;
         buf->nFlags = OMX_BUFFERFLAG_TIME_UNKNOWN | OMX_BUFFERFLAG_EOS;
 
-        if (OMX_EmptyThisBuffer(ILC_GET_HANDLE(video_decode), buf) != OMX_ErrorNone)
+        if (OMX_EmptyThisBuffer(ilclient_get_handle(video_decode), buf) != OMX_ErrorNone)
             status = -20;
 
         // need to flush the renderer to allow video_decode to disable its input port
@@ -1584,11 +1643,11 @@ void* TextureStreamOMX::decode_video(const char* filename, void* _streamTexture)
         * free the output eglBuffer, and finally request the state transition
         * from to Loaded.
         */
-    omx_err = OMX_SendCommand(ILC_GET_HANDLE(egl_render), OMX_CommandPortDisable, 221, NULL);
+    omx_err = OMX_SendCommand(ilclient_get_handle(egl_render), OMX_CommandPortDisable, 221, NULL);
     if (omx_err != OMX_ErrorNone)
         printf("Failed OMX_SendCommand\n");
     
-    omx_err = OMX_FreeBuffer(ILC_GET_HANDLE(egl_render), 221, eglBuffer);
+    omx_err = OMX_FreeBuffer(ilclient_get_handle(egl_render), 221, eglBuffer);
     if (omx_err != OMX_ErrorNone)
         printf("OMX_FreeBuffer failed\n");
 
@@ -1617,10 +1676,15 @@ TextureStreamOMX::~TextureStreamOMX() {
     clear();
 }
 
+// Mostly from https://jan.newmarch.name/RPi/OpenMAX/EGL/
 bool TextureStreamOMX::load(const std::string& _filepath, bool _vFlip) {
 
     // TODOs:
     //  - get video width and height
+
+    #ifdef SUPPORT_FOR_LIBAV
+    get_info(_filepath.c_str(), &m_width, &m_height);
+    #endif
 
     glEnable(GL_TEXTURE_2D);
 
@@ -1655,7 +1719,7 @@ void TextureStreamOMX::clear() {
     thread_run = 0;
     // pthread_join(thread1, NULL);
     m_thread.join();
-	
+        
     if (m_eglImage != 0) {
         if (!destroyImage(getEGLDisplay(), (EGLImageKHR) m_eglImage))
             printf("eglDestroyImageKHR failed.");
