@@ -1350,6 +1350,21 @@ void ilclient_cleanup_components(COMPONENT_T *list[]) {
     }
 }
 
+// -------------------------------------------------------------------------------
+
+TextureStreamOMX::TextureStreamOMX() : 
+    m_eglImage(NULL),
+    m_thread {},
+    m_changed(false)
+    {
+    m_width = 1920;
+    m_height = 1080;
+}
+
+TextureStreamOMX::~TextureStreamOMX() {
+    clear();
+}
+
 // Helping functions from https://jan.newmarch.name/RPi/OpenMAX/Video/
 // ---------------------------------------------------------------
 
@@ -1449,6 +1464,45 @@ void get_info(const char *filename, int* _width, int* _height) {
         avformat_free_context(pFormatCtx);
 }
 #endif
+
+// Mostly from https://jan.newmarch.name/RPi/OpenMAX/EGL/
+bool TextureStreamOMX::load(const std::string& _filepath, bool _vFlip) {
+
+    // TODOs:
+    //  - get video width and height
+
+    #ifdef SUPPORT_FOR_LIBAV
+    get_info(_filepath.c_str(), &m_width, &m_height);
+    #endif
+
+    glEnable(GL_TEXTURE_2D);
+
+    // load three texture buffers but use them on six OGL|ES texture surfaces
+    if (m_id == 0)
+        glGenTextures(1, &m_id);
+    glBindTexture(GL_TEXTURE_2D, m_id);
+
+    glTexImage2D(   GL_TEXTURE_2D, 0, GL_RGBA, m_width, m_height, 0,
+                    GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+    /* Create EGL Image */
+    m_eglImage = createImage( getEGLDisplay(), getEGLContext(), EGL_GL_TEXTURE_2D_KHR, (EGLClientBuffer)m_id, 0);
+    
+    if (m_eglImage == EGL_NO_IMAGE_KHR) {
+        printf("eglCreateImageKHR failed.\n");
+        exit(1);
+    }
+
+    m_thread = std::thread{decode_video, _filepath.c_str(), this};
+    
+    return true;
+}
+
 
 static OMX_ERRORTYPE set_video_decoder_input_format(COMPONENT_T *component) {
    // set input video format
@@ -1704,59 +1758,6 @@ void* TextureStreamOMX::decode_video(const char* filename, void* _streamTexture)
 
     ilclient_destroy(client);
     return (void *)status;
-}
-
-// -------------------------------------------------------------------------------
-
-TextureStreamOMX::TextureStreamOMX() : 
-    m_eglImage(NULL),
-    m_thread {},
-    m_changed(false)
-    {
-    m_width = 1920;
-    m_height = 1080;
-}
-
-TextureStreamOMX::~TextureStreamOMX() {
-    clear();
-}
-
-// Mostly from https://jan.newmarch.name/RPi/OpenMAX/EGL/
-bool TextureStreamOMX::load(const std::string& _filepath, bool _vFlip) {
-
-    // TODOs:
-    //  - get video width and height
-
-    #ifdef SUPPORT_FOR_LIBAV
-    get_info(_filepath.c_str(), &m_width, &m_height);
-    #endif
-
-    glEnable(GL_TEXTURE_2D);
-
-    // load three texture buffers but use them on six OGL|ES texture surfaces
-    if (m_id == 0)
-        glGenTextures(1, &m_id);
-    glBindTexture(GL_TEXTURE_2D, m_id);
-
-    glTexImage2D(   GL_TEXTURE_2D, 0, GL_RGBA, m_width, m_height, 0,
-                    GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-    /* Create EGL Image */
-    m_eglImage = createImage( getEGLDisplay(), getEGLContext(), EGL_GL_TEXTURE_2D_KHR, (EGLClientBuffer)m_id, 0);
-    
-    if (m_eglImage == EGL_NO_IMAGE_KHR) {
-        printf("eglCreateImageKHR failed.\n");
-        exit(1);
-    }
-
-    m_thread = std::thread{decode_video, _filepath.c_str(), this};
-    
-    return true;
 }
 
 
