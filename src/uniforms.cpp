@@ -315,7 +315,7 @@ bool Uniforms::addStreamingTexture( const std::string& _name, const std::string&
             else
                 delete tex;
         }
-        else if (haveExt(_url,"h264")) {
+        else if ( haveExt(_url,"h264") || haveExt(_url,"H264") ) {
             TextureStreamOMX* tex = new TextureStreamOMX();
 
             // load an image into the texture

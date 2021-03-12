@@ -842,6 +842,8 @@ int main(int argc, char **argv){
         }
         else if (   haveExt(argument,"mov") || haveExt(argument,"MOV") ||
                     haveExt(argument,"mp4") || haveExt(argument,"MP4") ||
+                    haveExt(argument,"mkv") || haveExt(argument,"MKV") ||
+                    haveExt(argument,"mpg") || haveExt(argument,"MPG") ||
                     haveExt(argument,"mpeg") || haveExt(argument,"MPEG") ||
                     haveExt(argument,"h264") ||
                     argument.rfind("/dev/", 0) == 0 ||
