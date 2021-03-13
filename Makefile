@@ -6,7 +6,6 @@ SOURCES := 	$(wildcard include/*/*.cc) $(wildcard src/*.cpp) $(wildcard src/*/*.
 
 HEADERS := 	$(wildcard include/*/*.h) $(wildcard src/*.h) $(wildcard src/*.h) $(wildcard src/*/*.h) \
 			$(wildcard include/oscpack/osc/*.h)   $(wildcard include/oscpack/ip/posix/*.h)
-			# $(wildcard include/ilclient/*.h)
 OBJECTS := $(SOURCES:.cpp=.o)
 
 PLATFORM = $(shell uname)
@@ -42,7 +41,6 @@ ifeq ($(PLATFORM), RPI)
 	CFLAGS += -DUSE_VCHIQ_ARM -DOMX_SKIP64BIT
 	CFLAGS += -DHAVE_LIBBCM_HOST -DUSE_EXTERNAL_LIBBCM_HOST
 	CFLAGS += -DHAVE_LIBOPENMAX=2 -DOMX -DUSE_EXTERNAL_OMX 
-	# CFLAGS += -DSTANDALONE -D__STDC_CONSTANT_MACROS -D__STDC_LIMIT_MACROS -DTARGET_POSIX -D_LINUX -fPIC -DPIC -ftree-vectorize -pipe -D_REENTRANT -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 -U_FORTIFY_SOURCE -g 
 	
 	ifeq ($(DRIVER),legacy)
 		CFLAGS += -DGLM_FORCE_CXX14 -DDRIVER_LEGACY
@@ -51,6 +49,12 @@ ifeq ($(PLATFORM), RPI)
 		else
 			LDFLAGS += -lbrcmGLESv2 -lbrcmEGL
 		endif
+		ILCLIENT_DIR = /opt/vc/src/hello_pi/libs/ilclient
+		ILCLIENT = $(ILCLIENT_DIR)/libilclient.a
+		INCLUDES += -I$(ILCLIENT_DIR)
+		LDFLAGS += -L$(ILCLIENT_DIR) \
+					-lilclient
+		EXE_DEPS += $(ILCLIENT)
 
 	else ifeq ($(DRIVER),fake_kms)
 		CFLAGS += -DDRIVER_FAKE_KMS
@@ -97,8 +101,11 @@ all: $(EXE)
 	@echo $@
 	$(CXX) $(CFLAGS) $(INCLUDES) -g -c $< -o $@ -Wno-deprecated-declarations
 
-$(EXE): $(OBJECTS) $(HEADERS)
+$(EXE): $(OBJECTS) $(HEADERS) $(EXE_DEPS)
 	$(CXX) $(CFLAGS) $(OBJECTS) $(LDFLAGS) -rdynamic -o $@
+
+${ILCLIENT}:
+	$(MAKE) -C $(ILCLIENT_DIR)
 
 clean:
 	@rm -rvf $(EXE) src/*.o src/*/*.o include/*/*.o include/*/*/*.o include/*/*/*/*.o *.dSYM 
