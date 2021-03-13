@@ -31,11 +31,11 @@
 
 #ifdef SUPPORT_FOR_LIBAV
 extern "C" {
-#include "libavcodec/avcodec.h"
+#include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
-#include "libavutil/mathematics.h"
-#include "libavutil/samplefmt.h"
-#include "libavresample/avresample.h"
+#include <libavutil/mathematics.h>
+#include <libavutil/samplefmt.h>
+//#include <libavresample/avresample.h>
 }
 #endif
 
