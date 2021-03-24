@@ -3,6 +3,10 @@
 #include "scene/scene.h"
 #include "types/list.h"
 
+#include "thread_pool/thread_pool.hpp"
+
+#include <atomic>
+
 enum ShaderType {
     FRAGMENT = 0,
     VERTEX = 1
@@ -130,4 +134,6 @@ private:
     bool                m_showTextures;
     bool                m_showPasses;
     
+	std::atomic<int>		m_task_count {0};
+	thread_pool::ThreadPool m_save_thread;
 };

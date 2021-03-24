@@ -19,7 +19,10 @@
 #include "shaders/wireframe2D.h"
 #include "shaders/fxaa.h"
 
+#include <thread>
+
 std::string default_scene_frag = default_scene_frag0 + default_scene_frag1 + default_scene_frag2 + default_scene_frag3;
+#include <memory>
 
 // ------------------------------------------------------------------------- CONTRUCTOR
 Sandbox::Sandbox(): 
@@ -40,7 +43,12 @@ Sandbox::Sandbox():
     // Scene
     m_view2d(1.0), m_lat(180.0), m_lon(0.0), m_frame(0), m_change(true), m_initialized(false), m_error_screen(true),
     // Debug
-    m_showTextures(false), m_showPasses(false)
+    m_showTextures(false), m_showPasses(false),
+	
+	m_task_count(0),
+
+
+	m_save_thread(10)
 {
 
     // TIME UNIFORMS
@@ -106,6 +114,10 @@ Sandbox::Sandbox():
 }
 
 Sandbox::~Sandbox() {
+	/** make sure every frame is saved before exiting **/
+	while (m_task_count > 0) {
+		std::this_thread::sleep_for(std::chrono::milliseconds{10});
+	}
 }
 
 // ------------------------------------------------------------------------- SET
@@ -1190,10 +1202,38 @@ void Sandbox::onScreenshot(std::string _file) {
             savePixelsHDR(_file, pixels, getWindowWidth(), getWindowHeight());
         }
         else {
-            unsigned char* pixels = new unsigned char[getWindowWidth() * getWindowHeight()*4];
-            glReadPixels(0, 0, getWindowWidth(), getWindowHeight(), GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-            savePixels(_file, pixels, getWindowWidth(), getWindowHeight());
-            delete[] pixels;
+			int w = getWindowWidth();
+			int h = getWindowHeight();
+			auto pixels = std::unique_ptr<unsigned char[]>(new unsigned char [w * h * 4]);
+            glReadPixels(0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, pixels.get());
+
+			struct Job {
+				std::string file_name;
+				int w;
+				int h;
+				std::unique_ptr<unsigned char[]> pixels;
+				std::atomic<int> * m_task_count;
+
+				/** the function that is being invoked when the task is done **/
+				void operator()() {
+					savePixels(file_name, pixels.get(), w, h);
+					(*m_task_count)--;
+				}
+			};
+
+			/** we render faster than we can safe frames. In that case the current thread might help out a bit
+			 * by saving the frame synchronously, that way we don not use to much ram to store the frames we have not saved yet */
+			int num_tasks = m_task_count.load();
+			if (num_tasks > 50) {
+				savePixels(_file, pixels.get(), w, h);
+			}
+			else {
+			/** don't forget to increment the task counter.
+			 * Otherwise not every frame gets saved because the program might finish before saving all frames has finished
+			 */
+				m_task_count++;
+				m_save_thread.Submit(Job { _file, w, h, std::move(pixels), &m_task_count });
+			}
         }
     
         if (!m_record) {
