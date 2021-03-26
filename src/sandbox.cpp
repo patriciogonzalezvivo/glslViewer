@@ -22,8 +22,8 @@
 
 #include <thread>
 
-#ifndef GLSLVIEWER_MAX_NUM_FRAMES_IN_QUEUE
-#define GLSLVIEWER_MAX_NUM_FRAMES_IN_QUEUE 50
+#ifndef MAX_NUM_FRAMES_IN_QUEUE
+#define MAX_NUM_FRAMES_IN_QUEUE 50
 #endif
 
 std::string default_scene_frag = default_scene_frag0 + default_scene_frag1 + default_scene_frag2 + default_scene_frag3;
@@ -1228,7 +1228,7 @@ void Sandbox::onScreenshot(std::string _file) {
 
             /** we render faster than we can safe frames. In that case the current thread might help out a bit
              * by saving the frame synchronously, that way we don not use to much ram to store the frames we have not saved yet */
-            if (m_task_count > GLSLVIEWER_MAX_NUM_FRAMES_IN_QUEUE)
+            if (m_task_count > MAX_NUM_FRAMES_IN_QUEUE)
                 savePixels(_file, pixels.get(), width, height);
             else {
             /** don't forget to increment the task counter.
