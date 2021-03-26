@@ -19,7 +19,12 @@
 #include "shaders/wireframe2D.h"
 #include "shaders/fxaa.h"
 
+
 #include <thread>
+
+#ifndef GLSLVIEWER_MAX_NUM_FRAMES_IN_QUEUE
+#define GLSLVIEWER_MAX_NUM_FRAMES_IN_QUEUE 50
+#endif
 
 std::string default_scene_frag = default_scene_frag0 + default_scene_frag1 + default_scene_frag2 + default_scene_frag3;
 #include <memory>
@@ -44,11 +49,10 @@ Sandbox::Sandbox():
     m_view2d(1.0), m_lat(180.0), m_lon(0.0), m_frame(0), m_change(true), m_initialized(false), m_error_screen(true),
     // Debug
     m_showTextures(false), m_showPasses(false),
-	
-	m_task_count(0),
+    m_task_count(0),
 
 
-	m_save_thread(10)
+    m_save_threads(std::max(1, static_cast<int>(std::thread::hardware_concurrency()) - 1))
 {
 
     // TIME UNIFORMS
@@ -114,10 +118,10 @@ Sandbox::Sandbox():
 }
 
 Sandbox::~Sandbox() {
-	/** make sure every frame is saved before exiting **/
-	while (m_task_count > 0) {
-		std::this_thread::sleep_for(std::chrono::milliseconds{10});
-	}
+    /** make sure every frame is saved before exiting **/
+    while (m_task_count > 0) {
+        std::this_thread::sleep_for(std::chrono::milliseconds{10});
+    }
 }
 
 // ------------------------------------------------------------------------- SET
@@ -1202,38 +1206,37 @@ void Sandbox::onScreenshot(std::string _file) {
             savePixelsHDR(_file, pixels, getWindowWidth(), getWindowHeight());
         }
         else {
-			int w = getWindowWidth();
-			int h = getWindowHeight();
-			auto pixels = std::unique_ptr<unsigned char[]>(new unsigned char [w * h * 4]);
-            glReadPixels(0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, pixels.get());
+            int width = getWindowWidth();
+            int height = getWindowHeight();
+            auto pixels = std::unique_ptr<unsigned char[]>(new unsigned char [width * height * 4]);
+            glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixels.get());
 
-			struct Job {
-				std::string file_name;
-				int w;
-				int h;
-				std::unique_ptr<unsigned char[]> pixels;
-				std::atomic<int> * m_task_count;
+            /** Just a small helper that captures all the relevant data to save an image **/
+            struct Job {
+                std::string m_file_name;
+                int m_width;
+                int m_height;
+                std::unique_ptr<unsigned char[]> m_pixels;
+                std::atomic<int> * m_task_count;
 
-				/** the function that is being invoked when the task is done **/
-				void operator()() {
-					savePixels(file_name, pixels.get(), w, h);
-					(*m_task_count)--;
-				}
-			};
+                /** the function that is being invoked when the task is done **/
+                void operator()() {
+                    savePixels(m_file_name, m_pixels.get(), m_width, m_height);
+                    (*m_task_count)--;
+                }
+            };
 
-			/** we render faster than we can safe frames. In that case the current thread might help out a bit
-			 * by saving the frame synchronously, that way we don not use to much ram to store the frames we have not saved yet */
-			int num_tasks = m_task_count.load();
-			if (num_tasks > 50) {
-				savePixels(_file, pixels.get(), w, h);
-			}
-			else {
-			/** don't forget to increment the task counter.
-			 * Otherwise not every frame gets saved because the program might finish before saving all frames has finished
-			 */
-				m_task_count++;
-				m_save_thread.Submit(Job { _file, w, h, std::move(pixels), &m_task_count });
-			}
+            /** we render faster than we can safe frames. In that case the current thread might help out a bit
+             * by saving the frame synchronously, that way we don not use to much ram to store the frames we have not saved yet */
+            if (m_task_count > GLSLVIEWER_MAX_NUM_FRAMES_IN_QUEUE)
+                savePixels(_file, pixels.get(), width, height);
+            else {
+            /** don't forget to increment the task counter.
+             * Otherwise not every frame gets saved because the program might finish before saving all frames has finished
+             */
+                m_task_count++;
+                m_save_threads.Submit(Job { _file, width, height, std::move(pixels), &m_task_count });
+            }
         }
     
         if (!m_record) {

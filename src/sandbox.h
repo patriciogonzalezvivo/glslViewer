@@ -135,5 +135,5 @@ private:
     bool                m_showPasses;
     
 	std::atomic<int>		m_task_count {0};
-	thread_pool::ThreadPool m_save_thread;
+	thread_pool::ThreadPool m_save_threads;
 };
