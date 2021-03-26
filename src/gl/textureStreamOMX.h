@@ -2,7 +2,7 @@
 
 #include "textureStream.h"
 
-#ifdef PLATFORM_RPI
+#ifdef DRIVER_LEGACY
 
 #include <thread>
 

@@ -315,6 +315,7 @@ bool Uniforms::addStreamingTexture( const std::string& _name, const std::string&
             else
                 delete tex;
         }
+#ifdef DRIVER_LEGACY
         else if ( haveExt(_url,"h264") || haveExt(_url,"H264") ) {
             TextureStreamOMX* tex = new TextureStreamOMX();
 
@@ -335,6 +336,7 @@ bool Uniforms::addStreamingTexture( const std::string& _name, const std::string&
             else
                 delete tex;
         }
+#endif
 #endif
         else {
 #ifdef SUPPORT_FOR_LIBAV

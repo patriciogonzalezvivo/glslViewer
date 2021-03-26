@@ -1,6 +1,6 @@
 #include "textureStreamOMX.h"
 
-#ifdef PLATFORM_RPI
+#ifdef DRIVER_LEGACY
 
 #include <stdio.h>
 #include <stdlib.h>
