@@ -91,12 +91,8 @@ LDFLAGS += $(ARCH) -framework OpenGL -framework Cocoa -framework CoreVideo -fram
 endif
 
 ifeq ($(LIBAV),true)
-CFLAGS += -DSUPPORT_FOR_LIBAV 
-ifeq ($(PLATFORM),Darwin) 
-CFLAGS += $(shell pkg-config --cflags libavformat)
-LDFLAGS += -L/opt/homebrew/Cellar/ffmpeg/4.3.2_3/lib
-endif
-LDFLAGS += -lavcodec -lavformat -lavfilter -lavdevice -lavutil -lswscale
+CFLAGS += -DSUPPORT_FOR_LIBAV $(shell pkg-config --cflags libavcodec libavformat libavfilter libavdevice libavutil libswscale)
+LDFLAGS += $(shell pkg-config --libs libavcodec libavformat libavfilter libavdevice libavutil libswscale)
 endif
 
 all: $(EXE)
