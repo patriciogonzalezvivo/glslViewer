@@ -47,7 +47,6 @@ TextureStreamAV::TextureStreamAV() :
     device(false), 
     av_format_ctx(NULL),
     av_codec_ctx(NULL),
-    av_video_stream(NULL),
     av_decoder(NULL),
     av_frame(NULL),
     av_packet(NULL),

@@ -118,7 +118,6 @@ bool loadSTL(WatchFileList& _files, Materials& _materials, Models& _models, int 
                 if (ret == 1 && std::string("endloop") == word)
                     break;
                 else if (ret == 1 && std::string("vertex") == word) {
-                    glm::vec3 v;
                     double vd[3];
                     int ret = fscanf(stl_file, "%lg %lg %lg", vd, vd+1, vd+2);
                     if (ret != 3) {

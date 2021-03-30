@@ -85,14 +85,18 @@ else ifeq ($(PLATFORM),Darwin)
 CXX = /usr/bin/clang++
 ARCH = -arch $(shell uname -m)
 CFLAGS += $(ARCH) -DPLATFORM_OSX -DDRIVER_GLFW -stdlib=libc++ $(shell pkg-config --cflags glfw3)
-INCLUDES += -I/System/Library/Frameworks/GLUI.framework
+INCLUDES += -I/System/Library/Frameworks/GLUI.framework 
 LDFLAGS += $(ARCH) -framework OpenGL -framework Cocoa -framework CoreVideo -framework IOKit $(shell pkg-config --libs glfw3)
 
 endif
 
 ifeq ($(LIBAV),true)
-LDFLAGS += -lavcodec -lavformat -lavfilter -lavdevice -lavutil -lswscale
 CFLAGS += -DSUPPORT_FOR_LIBAV 
+ifeq ($(PLATFORM),Darwin) 
+CFLAGS += $(shell pkg-config --cflags libavformat)
+LDFLAGS += -L/opt/homebrew/Cellar/ffmpeg/4.3.2_3/lib
+endif
+LDFLAGS += -lavcodec -lavformat -lavfilter -lavdevice -lavutil -lswscale
 endif
 
 all: $(EXE)

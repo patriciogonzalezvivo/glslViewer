@@ -36,7 +36,6 @@ private:
 
     AVFormatContext *av_format_ctx;
     AVCodecContext  *av_codec_ctx;
-    AVStream        *av_video_stream;
     AVCodec         *av_decoder;
     AVFrame         *av_frame;
     AVPacket        *av_packet;
