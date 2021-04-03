@@ -124,6 +124,7 @@ private:
     unsigned int        m_frame;
     bool                m_change;
     bool                m_initialized;
+    bool                m_error_screen;
 
     //  Debug
     bool                m_showTextures;

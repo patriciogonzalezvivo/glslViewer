@@ -16,7 +16,7 @@ public:
     virtual ~Shader();
 
     void    use();
-    bool    load(const std::string& _fragmentSrc, const std::string& _vertexSrc, bool _verbose = false);
+    bool    load(const std::string& _fragmentSrc, const std::string& _vertexSrc, bool _verbose = false, bool _error_screen = true);
     bool    reload(bool _verbose = false);
     
     const   GLuint  getProgram() const { return m_program; };

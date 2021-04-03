@@ -12,8 +12,11 @@
 #include "shaders/default_error.h"
 
 Shader::Shader():
+    m_fragmentSource(error_frag),
+    m_vertexSource(error_vert),
     m_program(0), 
     m_fragmentShader(0),m_vertexShader(0) {
+
 
     // Adding default defines
     addDefine("GLSLVIEWER", 160);
@@ -34,7 +37,7 @@ Shader::~Shader() {
         glDeleteProgram(m_program);
 }
 
-bool Shader::load(const std::string& _fragmentSrc, const std::string& _vertexSrc, bool _verbose) {
+bool Shader::load(const std::string& _fragmentSrc, const std::string& _vertexSrc, bool _verbose, bool _error_screen) {
     std::chrono::time_point<std::chrono::steady_clock> start_time, end_time;
     start_time = std::chrono::steady_clock::now();
     m_defineChange = false;
@@ -42,14 +45,22 @@ bool Shader::load(const std::string& _fragmentSrc, const std::string& _vertexSrc
     m_vertexShader = compileShader(_vertexSrc, GL_VERTEX_SHADER, _verbose);
 
     if (!m_vertexShader) {
-        load(error_frag, error_vert, false);
+        if (_error_screen)
+            load(error_frag, error_vert, false);
+        else
+            load(m_fragmentSource, m_vertexSource, false);
+
         return false;
     }
 
     m_fragmentShader = compileShader(_fragmentSrc, GL_FRAGMENT_SHADER, _verbose);
 
     if (!m_fragmentShader) {
-        load(error_frag, error_vert, false);
+        if (_error_screen)
+            load(error_frag, error_vert, false);
+        else
+            load(m_fragmentSource, m_vertexSource, false);
+
         return false;
     }
 

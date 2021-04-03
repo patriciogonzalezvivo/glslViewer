@@ -38,7 +38,7 @@ Sandbox::Sandbox():
     // Histogram
     m_histogram_texture(nullptr), m_histogram(false),
     // Scene
-    m_view2d(1.0), m_lat(180.0), m_lon(0.0), m_frame(0), m_change(true), m_initialized(false),
+    m_view2d(1.0), m_lat(180.0), m_lon(0.0), m_frame(0), m_change(true), m_initialized(false), m_error_screen(true),
     // Debug
     m_showTextures(false), m_showPasses(false)
 {
@@ -224,6 +224,23 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         return false;
     },
     "buffers                        return a list of buffers as their uniform name.", false));
+
+    _commands.push_back(Command("error_screen", [&](const std::string& _line){ 
+        if (_line == "error_screen") {
+            std::string rta = m_error_screen ? "on" : "off";
+            std::cout << "error_screen," << rta << std::endl; 
+            
+            return true;
+        }
+        else {
+            std::vector<std::string> values = split(_line,',');
+            if (values.size() == 2) {
+                m_error_screen = (values[1] == "on");
+            }
+        }
+        return false;
+    },
+    "error_screen                   display magenta screen on errors", false));
 
     // LIGTH
     _commands.push_back(Command("lights", [&](const std::string& _line){ 
@@ -423,6 +440,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     },
     "camera_exposure[,<aper.>,<shutter>,<sensit.>]  get or set the camera exposure values."));
 
+
     // LOAD SHACER 
     // -----------------------------------------------
 
@@ -584,7 +602,7 @@ bool Sandbox::reloadShaders( WatchFileList &_files ) {
 
         // Reload the shader
         m_canvas_shader.detach(GL_FRAGMENT_SHADER | GL_VERTEX_SHADER);
-        m_canvas_shader.load(m_frag_source, m_vert_source, verbose);
+        m_canvas_shader.load(m_frag_source, m_vert_source, verbose, m_error_screen);
     }
     else {
         if (verbose)
