@@ -978,7 +978,7 @@ void Sandbox::renderUI() {
         }
     }
 
-    if (cursor) {
+    if (cursor && getMouseEntered()) {
         if (m_cross_vbo == nullptr) 
             m_cross_vbo = cross(glm::vec3(0.0, 0.0, 0.0), 10.).getVbo();
 

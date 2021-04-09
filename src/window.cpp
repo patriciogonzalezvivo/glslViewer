@@ -18,6 +18,7 @@
 const std::string appTitle = "glslViewer";
 static glm::mat4 orthoMatrix;
 typedef struct {
+    bool      entered;
     float     x,y;
     int       button;
     float     velX,velY;
@@ -466,6 +467,11 @@ void initGL (glm::ivec4 &_viewport, WindowStyle _style) {
             onScroll(-yoffset * fPixelDensity);
         });
 
+        // callback when the mouse cursor enters/leaves
+        glfwSetCursorEnterCallback(window, [](GLFWwindow* _window, int entered) {
+            mouse.entered = (bool)entered;
+        });
+
         // callback when the mouse cursor moves
         glfwSetCursorPosCallback(window, [](GLFWwindow* _window, double x, double y) {
             // Convert x,y to pixel coordinates relative to viewport.
@@ -876,4 +882,8 @@ int getMouseButton(){
 
 glm::vec4 getMouse4() {
     return mouse4;
+}
+
+bool getMouseEntered(){
+    return mouse.entered;
 }
