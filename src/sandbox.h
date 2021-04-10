@@ -134,6 +134,7 @@ private:
     bool                m_showTextures;
     bool                m_showPasses;
     
-	std::atomic<int>		m_task_count {0};
-	thread_pool::ThreadPool m_save_threads;
+    std::atomic<int>        m_task_count {0};
+    std::atomic<long long> m_max_mem_in_queue {0};
+    thread_pool::ThreadPool m_save_threads;
 };
