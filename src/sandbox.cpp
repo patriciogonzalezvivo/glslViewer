@@ -19,6 +19,8 @@
 #include "shaders/wireframe2D.h"
 #include "shaders/fxaa.h"
 
+#include <memory>
+
 std::string default_scene_frag = default_scene_frag0 + default_scene_frag1 + default_scene_frag2 + default_scene_frag3;
 
 // ------------------------------------------------------------------------- CONTRUCTOR
@@ -40,7 +42,13 @@ Sandbox::Sandbox():
     // Scene
     m_view2d(1.0), m_lat(180.0), m_lon(0.0), m_frame(0), m_change(true), m_initialized(false), m_error_screen(true),
     // Debug
-    m_showTextures(false), m_showPasses(false)
+    m_showTextures(false), m_showPasses(false),
+    m_task_count(0),
+
+    /** allow 500 MB to be used for the image save queue **/
+    m_max_mem_in_queue(500 * 1024 * 1024),
+
+    m_save_threads(std::max(1, static_cast<int>(std::thread::hardware_concurrency()) - 1))
 {
 
     // TIME UNIFORMS
@@ -106,6 +114,13 @@ Sandbox::Sandbox():
 }
 
 Sandbox::~Sandbox() {
+    /** make sure every frame is saved before exiting **/
+    if (m_task_count > 0) {
+        std::cout << "saving remaining frames to disk, this might take a while ..." << std::endl;
+    }
+    while (m_task_count > 0) {
+        std::this_thread::sleep_for(std::chrono::milliseconds{10});
+    }
 }
 
 // ------------------------------------------------------------------------- SET
@@ -440,6 +455,16 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     },
     "camera_exposure[,<aper.>,<shutter>,<sensit.>]  get or set the camera exposure values."));
 
+    _commands.push_back(Command("max_mem_in_queue", [&](const std::string & line) {
+        std::vector<std::string> values = split(line,',');
+        if (values.size() == 2) {
+            m_max_mem_in_queue = std::stoll(values[1]);
+        }
+        else {
+            std::cout << m_max_mem_in_queue.load() << std::endl;
+        }
+        return false;
+    }, "set the maximum amount of memory used by a queue to save images to disk, note: a higher amount of memory can result in better save times"));
 
     // LOAD SHACER 
     // -----------------------------------------------
@@ -1190,10 +1215,58 @@ void Sandbox::onScreenshot(std::string _file) {
             savePixelsHDR(_file, pixels, getWindowWidth(), getWindowHeight());
         }
         else {
-            unsigned char* pixels = new unsigned char[getWindowWidth() * getWindowHeight()*4];
-            glReadPixels(0, 0, getWindowWidth(), getWindowHeight(), GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-            savePixels(_file, pixels, getWindowWidth(), getWindowHeight());
-            delete[] pixels;
+            int width = getWindowWidth();
+            int height = getWindowHeight();
+            auto pixels = std::unique_ptr<unsigned char[]>(new unsigned char [width * height * 4]);
+            glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixels.get());
+
+            /** Just a small helper that captures all the relevant data to save an image **/
+            class Job {
+                std::string m_file_name;
+                int m_width;
+                int m_height;
+                std::unique_ptr<unsigned char[]> m_pixels;
+                std::atomic<int> * m_task_count;
+                std::atomic<long long> * m_max_mem_in_queue;
+
+                long mem_consumed_by_pixels() const { return m_width * m_height * 4; }
+                /** the function that is being invoked when the task is done **/
+                public:
+                void operator()() {
+                    if (m_pixels) {
+                        savePixels(m_file_name, m_pixels.get(), m_width, m_height);
+                        m_pixels = nullptr;
+                        (*m_task_count)--;
+                        (*m_max_mem_in_queue) += mem_consumed_by_pixels();
+                    }
+                }
+
+
+                Job (const Job& ) = delete;
+                Job (Job && ) = default;
+                Job(std::string file_name, int width, int height, std::unique_ptr<unsigned char[]>&& pixels,
+                        std::atomic<int>& task_count, std::atomic<long long>& max_mem_in_queue):
+                    m_file_name(std::move(file_name)),
+                    m_width(width),
+                    m_height(height),
+                    m_pixels(std::move(pixels)),
+                    m_task_count(&task_count),
+                    m_max_mem_in_queue(&max_mem_in_queue) {
+                    if (m_pixels) {
+                        task_count++;
+                        max_mem_in_queue -= mem_consumed_by_pixels();
+                    }
+                }
+            };
+            Job saver(std::move(_file), width, height, std::move(pixels), m_task_count, m_max_mem_in_queue);
+            /** we render faster than we can safe frames. In that case the current thread might help out a bit
+             * by saving the frame synchronously, that way we don not use to much ram to store the frames we have not saved yet */
+            if (m_max_mem_in_queue <= 0) {
+                saver();
+            }
+            else {
+                m_save_threads.Submit(std::move(saver));
+            }
         }
     
         if (!m_record) {
