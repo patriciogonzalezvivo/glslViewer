@@ -19,15 +19,9 @@
 #include "shaders/wireframe2D.h"
 #include "shaders/fxaa.h"
 
-
-#include <thread>
-
-#ifndef MAX_NUM_FRAMES_IN_QUEUE
-#define MAX_NUM_FRAMES_IN_QUEUE 50
-#endif
+#include <memory>
 
 std::string default_scene_frag = default_scene_frag0 + default_scene_frag1 + default_scene_frag2 + default_scene_frag3;
-#include <memory>
 
 // ------------------------------------------------------------------------- CONTRUCTOR
 Sandbox::Sandbox(): 
