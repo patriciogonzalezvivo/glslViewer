@@ -464,7 +464,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
             std::cout << m_max_mem_in_queue.load() << std::endl;
         }
         return false;
-    }, "set the maximum amount of memory used by a queue to save images to disk, note: a higher amount of memory can result in better save times"));
+    }, "max_mem_in_queue[,<bytes>]     set the maximum amount of memory used by a queue to export images to disk"));
 
     // LOAD SHACER 
     // -----------------------------------------------
@@ -1258,9 +1258,13 @@ void Sandbox::onScreenshot(std::string _file) {
                     }
                 }
             };
+
             Job saver(std::move(_file), width, height, std::move(pixels), m_task_count, m_max_mem_in_queue);
-            /** we render faster than we can safe frames. In that case the current thread might help out a bit
-             * by saving the frame synchronously, that way we don not use to much ram to store the frames we have not saved yet */
+            /** In the case that we render faster than we can safe frames, more and more frames
+			 * have to be stored temporary in the save queue. That means that more and more ram is used.
+			 * If to much is memory is used, we save the current frame directly to prevent that the system
+			 * is running out of memory. Otherwise we put the frame in to the thread queue, so that we can utilize
+			 * multilple cpu cores */
             if (m_max_mem_in_queue <= 0) {
                 saver();
             }
