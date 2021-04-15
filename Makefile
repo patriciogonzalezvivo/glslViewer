@@ -75,7 +75,7 @@ ifeq ($(PLATFORM), RPI)
 				-lmmal -lmmal_core -lmmal_util -lmmal_vc_client -lvcos \
 				-lopenmaxil -lvchiq_arm \
 				-lbcm_host \
-				-lpthread
+				-lpthread -latomic
 
 else ifeq ($(PLATFORM),Linux)
 CFLAGS += -DPLATFORM_LINUX -DDRIVER_GLFW $(shell pkg-config --cflags glfw3 glu gl)
