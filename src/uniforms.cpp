@@ -49,7 +49,7 @@ UniformFunction::UniformFunction(const std::string &_type, std::function<void(Sh
 
 // UNIFORMS
 
-Uniforms::Uniforms(): cubemap(nullptr), m_change(false) {
+Uniforms::Uniforms(): cubemap(nullptr), m_change(false), m_is_audio_init(false) {
 
     // set the right distance to the camera
     // Set up camera
@@ -370,6 +370,32 @@ bool Uniforms::addStreamingTexture( const std::string& _name, const std::string&
 
     }
     return false;
+}
+
+bool Uniforms::addAudioTexture(const std::string& _name, bool _verbose) {
+
+#ifdef SUPPORT_FOR_LIBAV
+    // already init
+    if (m_is_audio_init) return false;
+
+    auto tex = new TextureAudio();
+
+    // TODO: add configurable device
+    // TODO: add flipping mode for audio texture
+    if (tex->load()) {
+
+        if (_verbose) {
+            std::cout << "//    loaded audio texture: " << std::endl;
+            std::cout << "//    uniform sampler2D   " << _name  << ";"<< std::endl;
+        }
+            textures[ _name ] = (Texture*)tex;
+            streams[ _name ] = (TextureStream*)tex;
+            m_is_audio_init = true;
+            return true;
+    }
+    else
+#endif
+        return false;
 }
 
 void Uniforms::updateStreammingTextures() {

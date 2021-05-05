@@ -9,6 +9,7 @@
 #include "gl/shader.h"
 #include "gl/texture.h"
 #include "gl/textureStream.h"
+#include "gl/textureAudio.h"
 
 #include "scene/light.h"
 #include "scene/camera.h"
@@ -54,6 +55,7 @@ public:
     bool                    addTexture( const std::string& _name, const std::string& _path, WatchFileList& _files, bool _flip = true, bool _verbose = true );
     bool                    addBumpTexture( const std::string& _name, const std::string& _path, WatchFileList& _files, bool _flip = true, bool _verbose = true );
     bool                    addStreamingTexture( const std::string& _name, const std::string& _url, bool _flip = true, bool _device = false, bool _verbose = true );
+    bool                    addAudioTexture( const std::string& _name, bool _verbose = true);
     void                    updateStreammingTextures();
 
     void                    setCubeMap( TextureCube* _cubemap );
@@ -100,6 +102,7 @@ public:
 
 protected:
     bool                    m_change;
+    bool                    m_is_audio_init;
 };
 
 
