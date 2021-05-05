@@ -54,7 +54,7 @@ ifeq ($(PLATFORM), RPI)
 		INCLUDES += -I$(ILCLIENT_DIR)
 		LDFLAGS += -L$(ILCLIENT_DIR) \
 					-lilclient -ldl
-		EXE_DEPS += $(ILCLIENT)
+		DEPS += $(ILCLIENT)
 
 	else ifeq ($(DRIVER),fake_kms)
 		CFLAGS += -DDRIVER_FAKE_KMS
@@ -93,6 +93,9 @@ endif
 ifeq ($(LIBAV),true)
 CFLAGS += -DSUPPORT_FOR_LIBAV $(shell pkg-config --cflags libavcodec libavformat libavfilter libavdevice libavutil libswscale)
 LDFLAGS += $(shell pkg-config --libs libavcodec libavformat libavfilter libavdevice libavutil libswscale)
+MINIAUDIO = include/miniaudio/miniaudio.h
+HEADERS += ${MINIAUDIO}
+DEPS += ${MINIAUDIO}
 endif
 
 all: $(EXE)
@@ -101,11 +104,15 @@ all: $(EXE)
 	@echo $@
 	$(CXX) $(CFLAGS) $(INCLUDES) -g -c $< -o $@ -Wno-deprecated-declarations
 
-$(EXE): $(OBJECTS) $(HEADERS) $(EXE_DEPS)
+$(EXE): $(DEPS) $(OBJECTS) $(HEADERS)
 	$(CXX) $(CFLAGS) $(OBJECTS) $(LDFLAGS) -rdynamic -o $@
 
 ${ILCLIENT}:
 	$(MAKE) -C $(ILCLIENT_DIR)
+
+${MINIAUDIO}:
+	@echo "fetch miniaudio library"
+	@git submodule update --init include/miniaudio/
 
 clean:
 	@rm -rvf $(EXE) src/*.o src/*/*.o include/*/*.o include/*/*/*.o include/*/*/*/*.o *.dSYM 
