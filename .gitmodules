@@ -1,3 +1,6 @@
 [submodule "include/glfw"]
 	path = include/glfw
 	url = https://github.com/glfw/glfw
+[submodule "include/miniaudio"]
+	path = include/miniaudio
+	url = https://github.com/mackron/miniaudio
