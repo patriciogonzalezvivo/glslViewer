@@ -53,7 +53,7 @@ ifeq ($(PLATFORM), RPI)
 		ILCLIENT = $(ILCLIENT_DIR)/libilclient.a
 		INCLUDES += -I$(ILCLIENT_DIR)
 		LDFLAGS += -L$(ILCLIENT_DIR) \
-					-lilclient
+					-lilclient -ldl
 		EXE_DEPS += $(ILCLIENT)
 
 	else ifeq ($(DRIVER),fake_kms)
@@ -61,7 +61,7 @@ ifeq ($(PLATFORM), RPI)
 		INCLUDES += -I/usr/include/libdrm \
 					-I/usr/include/GLES2
 		LDFLAGS +=  -ldrm -lgbm \
-					-lGLESv2 -lEGL
+					-lGLESv2 -lEGL -ldl
 	
 	else ifeq ($(DRIVER),glfw)
 		CFLAGS += -DDRIVER_GLFW $(shell pkg-config --cflags glfw3 glu gl)
