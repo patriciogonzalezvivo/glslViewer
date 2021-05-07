@@ -117,7 +117,7 @@ bool Texture::load(const std::string& _path, bool _vFlip) {
 
         unsigned char* pixels = loadPixels(_path, &m_width, &m_height, RGB_ALPHA, _vFlip);
         load(m_width, m_height, 4, 8, pixels);
-        delete pixels;
+        freePixels(pixels);
     }
 
     // PNG 1/2/4/8/16-bit-per-channel
@@ -130,11 +130,11 @@ bool Texture::load(const std::string& _path, bool _vFlip) {
         // If we are in a Raspberry Pi don't take the risk of loading a 16bit image
         unsigned char* pixels = loadPixels(_path, &m_width, &m_height, RGB_ALPHA, _vFlip);
         load(m_width, m_height, 4, 8, pixels);
-        delete pixels;
+        freePixels(pixels);
 #else
         uint16_t* pixels = loadPixels16(_path, &m_width, &m_height, RGB_ALPHA, _vFlip);
         load(m_width, m_height, 4, 16, pixels);
-        delete pixels;
+        freePixels(pixels);
 #endif
     }
 
@@ -142,7 +142,7 @@ bool Texture::load(const std::string& _path, bool _vFlip) {
     else if (ext == "hdr" || ext == "HDR") {
         float* pixels = loadPixelsHDR(_path, &m_width, &m_height, _vFlip);
         load(m_width, m_height, 3, 32, pixels);
-        delete pixels;
+        freePixels(pixels);
     }
 
     m_path = _path;
