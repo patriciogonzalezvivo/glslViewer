@@ -19,6 +19,7 @@ bool            savePixelsHDR(const std::string& _path, float* _pixels, int _wid
 unsigned char*  loadPixels(const std::string& _path, int *_width, int *_height, Channels _channels = RGB, bool _vFlip = true);
 uint16_t *      loadPixels16(const std::string& _path, int *_width, int *_height, Channels _channels = RGB, bool _vFlip = true);
 float*          loadPixelsHDR(const std::string& _path, int *_width, int *_height, bool _vFlip = true);
+void            freePixels(void *pixels);
 
 template<typename T>
 void rescalePixels(const T* _src, int _srcWidth, int _srcHeight, int _srcChannels, int _dstWidth, int _dstHeight, T* _dst) {
