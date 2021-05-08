@@ -387,6 +387,7 @@ bool Uniforms::addAudioTexture(const std::string& _name, bool _verbose) {
         if (_verbose) {
             std::cout << "//    loaded audio texture: " << std::endl;
             std::cout << "//    uniform sampler2D   " << _name  << ";"<< std::endl;
+            std::cout << "//    uniform vec2        " << _name  << "Resolution;"<< std::endl;
         }
             textures[ _name ] = (Texture*)tex;
             streams[ _name ] = (TextureStream*)tex;

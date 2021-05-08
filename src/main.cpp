@@ -856,7 +856,7 @@ int main(int argc, char **argv){
                 textureCounter++;
         }
         else if ( argument == "--audio" || argument == "-a" ) {
-            if ( sandbox.uniforms.addAudioTexture("u_tex"+toString(textureCounter), sandbox.verbose) )
+            if ( sandbox.uniforms.addAudioTexture("u_tex"+toString(textureCounter), true) )
                 textureCounter++;
         }
         else if ( argument == "-c" || argument == "-sh" ) {
