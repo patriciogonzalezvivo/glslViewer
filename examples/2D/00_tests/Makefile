@@ -24,3 +24,6 @@ test_out_jpg:
 
 test_out_hdr:
 	glslViewer test.frag in.png -E screenshot,out.hdr
+
+test_audio:
+	glslViewer test_audio.frag --audio
