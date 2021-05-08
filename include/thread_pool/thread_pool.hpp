@@ -32,7 +32,7 @@ class ThreadPool {
     num_threads = std::max(1U, num_threads);
     while (num_threads-- != 0) {
       threads_.emplace_back(ThreadPool::Task, this);
-      thread_ids_.emplace(threads_.back().get_id(), threads_.size() - 1);
+      thread_ids_.emplace(std::make_pair(threads_.back().get_id(), threads_.size() - 1));
     }
   }
 
