@@ -43,8 +43,8 @@ void main() {
     vec2 ipos = floor(st*grid);
     vec2 fpos = fract(st*grid);
 
-    float value = texture2D(u_buffer0, vec2(ipos.x * pixel.x, 0.1) ).y;
-    value = pow(value, 12.) * 100.0;
+    float value = texture2D(u_buffer0, vec2(ipos.x * pixel.x * 2., 0.1) ).x;
+    value = pow(value, 6.) * 100.0;
 
     fpos.y = (mod(ipos.y,2.) == 0.)? 1.0-fpos.y : fpos.y;
     color.r += stroke(st.y, data.y, 0.01);

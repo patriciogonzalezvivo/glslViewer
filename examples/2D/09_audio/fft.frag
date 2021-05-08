@@ -17,10 +17,11 @@ vec3 heatmap(float v) {
 void main (void) {
     vec3 color = vec3(0.0);
     vec2 st = gl_FragCoord.xy/u_resolution.xy;
+    float half_bar = 1./u_tex0Resolution.x;
 
-    float bars = 10.;
+    float bars = 20.;
     float bar = decimation(st.x, bars);
-    vec4 value = texture2D(u_tex0, vec2(bar, 0.5) );
+    vec4 value = texture2D(u_tex0, vec2(bar + half_bar, 0.5) );
 
     color += heatmap(bar) * step(st.y, value.x);
 
