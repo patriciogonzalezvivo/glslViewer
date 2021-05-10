@@ -1,5 +1,7 @@
 // Created by Sergei B (https://github.com/bespsm)
 // Example of basic audio wave and frequency data usage.
+// Reference shader on shadertoy: 
+// https://www.shadertoy.com/view/ssSXRy
 
 #ifdef GL_ES
 precision mediump float;
