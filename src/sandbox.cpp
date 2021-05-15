@@ -18,14 +18,34 @@
 #include "shaders/histogram.h"
 #include "shaders/wireframe2D.h"
 #include "shaders/fxaa.h"
+#include "shaders/holo.h"
 
 #include <memory>
 
 std::string default_scene_frag = default_scene_frag0 + default_scene_frag1 + default_scene_frag2 + default_scene_frag3;
 
+// const int holo_width = 2048;
+// const int holo_height = 2048;
+// const int holo_columns = 4;
+// const int holo_rows = 8;
+// const int holo_totalViews = 32;
+
+const int holo_width = 4096;
+const int holo_height = 4096;
+const int holo_columns = 5;
+const int holo_rows = 9;
+const int holo_totalViews = 45;
+
+const float holo_dpi = 324.0;
+const float holo_pitch = 52.58737671470091;
+const float holo_slope = -7.196136200157333;
+const float holo_center = 0.4321881363063158;
+const int holo_ri = 0;
+const int holo_bi = 2;
+
 // ------------------------------------------------------------------------- CONTRUCTOR
 Sandbox::Sandbox(): 
-    frag_index(-1), vert_index(-1), geom_index(-1),
+    frag_index(-1), vert_index(-1), geom_index(-1), holo(-1),
     verbose(false), cursor(true), fxaa(false),
     // Main Vert/Frag/Geom
     m_frag_source(""), m_vert_source(""),
@@ -111,6 +131,24 @@ Sandbox::Sandbox():
     });
 
     uniforms.functions["u_modelViewProjectionMatrix"] = UniformFunction("mat4");
+
+    if (holo > 0) {
+        uniforms.functions["u_holoTile"] = UniformFunction("vec3", [this](Shader& _shader) {
+            _shader.setUniform("u_holoTile", glm::vec3(holo_columns, holo_rows, holo_totalViews));
+        });
+
+        uniforms.functions["u_holoDpi"] = UniformFunction("float", [this](Shader& _shader) {
+            _shader.setUniform("u_holoDpi", holo_dpi);
+        });
+
+        uniforms.functions["u_holoCalibration"] = UniformFunction("vec4", [this](Shader& _shader) {
+            _shader.setUniform("u_holoCalibration", holo_dpi, holo_pitch, holo_slope, holo_center);
+        });
+
+        uniforms.functions["u_holoRB"] = UniformFunction("vec2", [this](Shader& _shader) {
+            _shader.setUniform("u_holoRB", float(holo_ri), float(holo_bi));
+        });
+    } 
 }
 
 Sandbox::~Sandbox() {
@@ -221,7 +259,9 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         if (_line == "buffers") {
             uniforms.printBuffers();
             if (m_postprocessing) {
-                if (fxaa)
+                if (holo > 0)
+                    std::cout << "HOLO";
+                else if (fxaa)
                     std::cout << "FXAA";
                 else
                     std::cout << "Custom";
@@ -616,6 +656,21 @@ int Sandbox::getRecordedPercentage() {
 
 // ------------------------------------------------------------------------- RELOAD SHADER
 
+void Sandbox::_updateSceneBuffer(int _width, int _height) {
+    FboType type = uniforms.functions["u_sceneDepth"].present ? COLOR_DEPTH_TEXTURES : COLOR_TEXTURE_DEPTH_BUFFER;
+
+    if (holo > 0) {
+        _width = holo_width;
+        _height= holo_height;
+    }
+
+    if (!m_scene_fbo.isAllocated() ||
+        m_scene_fbo.getType() != type || 
+        m_scene_fbo.getWidth() != _width || 
+        m_scene_fbo.getHeight() != _height )
+        m_scene_fbo.allocate(_width, _height, type);
+}
+
 bool Sandbox::reloadShaders( WatchFileList &_files ) {
     flagChange();
 
@@ -681,6 +736,15 @@ bool Sandbox::reloadShaders( WatchFileList &_files ) {
         m_postprocessing_shader.load(m_frag_source, billboard_vert, false);
         m_postprocessing = havePostprocessing;
     }
+    else if (holo > 0) {
+        m_postprocessing_shader.load(holo_frag, billboard_vert, false);
+        uniforms.functions["u_scene"].present = true;
+        uniforms.functions["u_holoTile"].present = true;
+        uniforms.functions["u_holoCalibration"].present = true;
+        uniforms.functions["u_holoRB"].present = true;
+        
+        m_postprocessing = true;
+    }
     else if (fxaa) {
         m_postprocessing_shader.load(fxaa_frag, billboard_vert, false);
         uniforms.functions["u_scene"].present = true;
@@ -689,11 +753,8 @@ bool Sandbox::reloadShaders( WatchFileList &_files ) {
     else 
         m_postprocessing = false;
 
-    if (m_postprocessing || m_histogram) { //|| uniforms.functions["u_scene"].present) {
-        FboType type = uniforms.functions["u_sceneDepth"].present ? COLOR_DEPTH_TEXTURES : COLOR_TEXTURE_DEPTH_BUFFER;
-        if (!m_scene_fbo.isAllocated() || m_scene_fbo.getType() != type)
-            m_scene_fbo.allocate(getWindowWidth(), getWindowHeight(), type);
-    }
+    if (m_postprocessing || m_histogram)
+        _updateSceneBuffer(getWindowWidth(), getWindowHeight());
 
     return true;
 }
@@ -756,7 +817,36 @@ void Sandbox::_renderBuffers() {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
+void setVirtualCameraForView(Camera &camera, float scale, int currentViewIndex) {
+    // The standard model Looking Glass screen is roughly 4.75" vertically. If we
+    // assume the average viewing distance for a user sitting at their desk is
+    // about 36", our field of view should be about 14°. There is no correct
+    // answer, as it all depends on your expected user's distance from the Looking
+    // Glass, but we've found the most success using this figure.
+
+    const float fov =  glm::radians(14.0f);
+    const float viewCone = glm::radians(40.0);   // view cone of hardware, always around 40
+    float aspectRatio =  (float)getWindowWidth()/(float)getWindowHeight();
+
+    // start at -viewCone * 0.5 and go up to viewCone * 0.5
+    float offsetAngle = (float(currentViewIndex) / (float(holo_totalViews) - 1.0f) - 0.5f) * viewCone;
+
+    // calculate the offset that the camera should move
+    float offset = -camera.getDistance() * tan(offsetAngle);
+
+    // modify the view matrix (position)
+    // determine the local direction of the offset 
+    glm::vec3 offsetLocal = camera.getPosition() + camera.getXAxis() * offset;
+    glm::mat4 viewMatrix = glm::translate(camera.getViewMatrix(), offsetLocal);
+    glm::mat4 projectionMatrix = glm::perspective(fov, camera.getAspect(), camera.getNearClip(), camera.getFarClip());
+    // modify the projection matrix, relative to the camera size and aspect ratio
+    projectionMatrix[2][0] += offset / (scale * aspectRatio);
+
+    camera.setProjectionViewMatrix(projectionMatrix, viewMatrix);
+}
+
 void Sandbox::render() {
+
     // UPDATE STREAMING TEXTURES
     // -----------------------------------------------
     if (m_initialized)
@@ -780,11 +870,7 @@ void Sandbox::render() {
             m_record_fbo.allocate(getWindowWidth(), getWindowHeight(), COLOR_TEXTURE_DEPTH_BUFFER);
 
     if (m_postprocessing || m_histogram ) {
-        if (!m_scene_fbo.isAllocated()) {
-            FboType type = uniforms.functions["u_sceneDepth"].present ? COLOR_DEPTH_TEXTURES : COLOR_TEXTURE_DEPTH_BUFFER;
-            m_scene_fbo.allocate(getWindowWidth(), getWindowHeight(), type);
-        }
-
+        _updateSceneBuffer(getWindowWidth(), getWindowHeight());
         m_scene_fbo.bind();
     }
     else if (screenshotFile != "" || m_record )
@@ -806,9 +892,51 @@ void Sandbox::render() {
         m_billboard_vbo->render( &m_canvas_shader );
     }
     else {
-        m_scene.render(uniforms);
-        if (m_scene.showGrid || m_scene.showAxis || m_scene.showBBoxes)
-            m_scene.renderDebug(uniforms);
+
+        if (holo > 0) {
+            // save the viewport for the total quilt
+            GLint viewport[4];
+            glGetIntegerv(GL_VIEWPORT, viewport);
+
+            // get quilt view dimensions
+            int qs_viewWidth = int(float(holo_width) / float(holo_columns));
+            int qs_viewHeight = int(float(holo_height) / float(holo_rows));
+
+            // render views and copy each view to the quilt
+            for (int viewIndex = 0; viewIndex < holo_totalViews; viewIndex++) {
+                // get the x and y origin for this view
+                int x = (viewIndex % holo_columns) * qs_viewWidth;
+                int y = int(float(viewIndex) / float(holo_columns)) * qs_viewHeight;
+
+                // set the viewport to the view to control the projection extent
+                glViewport(x, y, qs_viewWidth, qs_viewHeight);
+
+                // set the scissor to the view to restrict calls like glClear from making modifications
+                glEnable(GL_SCISSOR_TEST);
+                glScissor(x, y, qs_viewWidth, qs_viewHeight);
+
+                // set up the camera rotation and position for current view
+                setVirtualCameraForView( uniforms.getCamera(), m_scene.getArea(), viewIndex);
+
+                m_scene.render(uniforms);
+
+                if (m_scene.showGrid || m_scene.showAxis || m_scene.showBBoxes)
+                    m_scene.renderDebug(uniforms);
+
+                // reset viewport
+                glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
+
+                // restore scissor
+                glDisable(GL_SCISSOR_TEST);
+                glScissor(viewport[0], viewport[1], viewport[2], viewport[3]);
+            }
+        }
+        else {
+            m_scene.render(uniforms);
+            if (m_scene.showGrid || m_scene.showAxis || m_scene.showBBoxes)
+                m_scene.renderDebug(uniforms);
+        }
+
     }
     
     // ----------------------------------------------- < main scene end
@@ -1197,7 +1325,7 @@ void Sandbox::onViewportResize(int _newWidth, int _newHeight) {
         uniforms.buffers[i].allocate(_newWidth, _newHeight, COLOR_TEXTURE);
 
     if (m_postprocessing || m_histogram)
-        m_scene_fbo.allocate(_newWidth, _newHeight, uniforms.functions["u_sceneDepth"].present ? COLOR_DEPTH_TEXTURES : COLOR_TEXTURE_DEPTH_BUFFER);
+        _updateSceneBuffer(_newWidth, _newHeight);
 
     if (m_record || screenshotFile != "")
         m_record_fbo.allocate(_newWidth, _newHeight, COLOR_TEXTURE_DEPTH_BUFFER);

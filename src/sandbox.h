@@ -68,11 +68,14 @@ public:
     int                 vert_index;
     int                 geom_index;
 
+    int                 holo;
+    
     bool                verbose;
     bool                cursor;
     bool                fxaa;
 
 private:
+    void                _updateSceneBuffer(int _width, int _height);
     void                _updateBuffers();
     void                _renderBuffers();
 

@@ -18,6 +18,8 @@ public:
     virtual void        setClipping(double _near_clip_distance, double _far_clip_distance);
     virtual void        setDistance(float _distance);
     virtual void        setTarget(glm::vec3 _target);
+    virtual void        setProjectionMatrix(const glm::mat4 &_project);
+    virtual void        setProjectionViewMatrix(const glm::mat4 &_project, const glm::mat4 &_view);
 
     virtual void        setExposure(float _aperture, float _shutterSpeed, float _sensitivity);
 
@@ -26,6 +28,7 @@ public:
 
     //Getting Functions
     const float         getFOV() const { return m_fov; }
+    const float         getAspect() const { return m_aspect; }
     const float         getFarClip() const { return m_farClip; }
     const float         getNearClip() const { return m_nearClip; }
     const float         getDistance() const { return glm::length(getPosition()); }
@@ -43,13 +46,14 @@ public:
     const glm::mat4&    getProjectionMatrix() const { return m_projectionMatrix; }
     const glm::mat4&    getProjectionViewMatrix() const { return m_projectionViewMatrix; }
 
+    virtual void        updateCameraSettings();
+
 protected:
 
     virtual void        onPositionChanged();
     virtual void        onOrientationChanged();
     virtual void        onScaleChanged();
 
-    virtual void        updateCameraSettings();
     virtual void        updateProjectionViewMatrix();
 
 private:
