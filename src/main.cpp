@@ -859,6 +859,11 @@ int main(int argc, char **argv){
             if ( sandbox.uniforms.addAudioTexture("u_tex"+toString(textureCounter), true) )
                 textureCounter++;
         }
+        else if ( argument == "--holo" ) {
+            if (++i < argc) {
+                sandbox.holo = toInt(argv[i]);
+            }
+        }
         else if ( argument == "-c" || argument == "-sh" ) {
             if(++i < argc) {
                 argument = std::string(argv[i]);

@@ -24,17 +24,17 @@
 
 std::string default_scene_frag = default_scene_frag0 + default_scene_frag1 + default_scene_frag2 + default_scene_frag3;
 
-// const int holo_width = 2048;
-// const int holo_height = 2048;
-// const int holo_columns = 4;
-// const int holo_rows = 8;
-// const int holo_totalViews = 32;
+int holo_width = 2048;
+int holo_height = 2048;
+int holo_columns = 4;
+int holo_rows = 8;
+int holo_totalViews = 32;
 
-const int holo_width = 4096;
-const int holo_height = 4096;
-const int holo_columns = 5;
-const int holo_rows = 9;
-const int holo_totalViews = 45;
+// const int holo_width = 4096;
+// const int holo_height = 4096;
+// const int holo_columns = 5;
+// const int holo_rows = 9;
+// const int holo_totalViews = 45;
 
 const float holo_dpi = 324.0;
 const float holo_pitch = 52.58737671470091;
@@ -131,24 +131,6 @@ Sandbox::Sandbox():
     });
 
     uniforms.functions["u_modelViewProjectionMatrix"] = UniformFunction("mat4");
-
-    if (holo > 0) {
-        uniforms.functions["u_holoTile"] = UniformFunction("vec3", [this](Shader& _shader) {
-            _shader.setUniform("u_holoTile", glm::vec3(holo_columns, holo_rows, holo_totalViews));
-        });
-
-        uniforms.functions["u_holoDpi"] = UniformFunction("float", [this](Shader& _shader) {
-            _shader.setUniform("u_holoDpi", holo_dpi);
-        });
-
-        uniforms.functions["u_holoCalibration"] = UniformFunction("vec4", [this](Shader& _shader) {
-            _shader.setUniform("u_holoCalibration", holo_dpi, holo_pitch, holo_slope, holo_center);
-        });
-
-        uniforms.functions["u_holoRB"] = UniformFunction("vec2", [this](Shader& _shader) {
-            _shader.setUniform("u_holoRB", float(holo_ri), float(holo_bi));
-        });
-    } 
 }
 
 Sandbox::~Sandbox() {
@@ -259,7 +241,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         if (_line == "buffers") {
             uniforms.printBuffers();
             if (m_postprocessing) {
-                if (holo > 0)
+                if (holo >= 0)
                     std::cout << "HOLO";
                 else if (fxaa)
                     std::cout << "FXAA";
@@ -562,6 +544,39 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     // -------------------------------------------------
     uniforms.getCamera().setViewport(getWindowWidth(), getWindowHeight());
 
+    if (holo >= 0) {
+        uniforms.functions["u_holoTile"] = UniformFunction("vec3", [this](Shader& _shader) {
+            _shader.setUniform("u_holoTile", glm::vec3(holo_columns, holo_rows, holo_totalViews));
+        });
+
+        uniforms.functions["u_holoDpi"] = UniformFunction("float", [this](Shader& _shader) {
+            _shader.setUniform("u_holoDpi", holo_dpi);
+        });
+
+        uniforms.functions["u_holoCalibration"] = UniformFunction("vec4", [this](Shader& _shader) {
+            _shader.setUniform("u_holoCalibration", holo_dpi, holo_pitch, holo_slope, holo_center);
+        });
+
+        uniforms.functions["u_holoRB"] = UniformFunction("vec2", [this](Shader& _shader) {
+            _shader.setUniform("u_holoRB", float(holo_ri), float(holo_bi));
+        });
+
+        if (holo == 1) {
+            holo_width = 4096;
+            holo_height = 4096;
+            holo_columns = 5;
+            holo_rows = 9;
+            holo_totalViews = 45;
+        }
+        else if (holo == 2) {
+            holo_width = 4096 * 2;
+            holo_height = 4096 * 2;
+            holo_columns = 5;
+            holo_rows = 9;
+            holo_totalViews = 45;
+        }
+    } 
+
     // Prepare viewport
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glClear(GL_COLOR_BUFFER_BIT);
@@ -659,7 +674,7 @@ int Sandbox::getRecordedPercentage() {
 void Sandbox::_updateSceneBuffer(int _width, int _height) {
     FboType type = uniforms.functions["u_sceneDepth"].present ? COLOR_DEPTH_TEXTURES : COLOR_TEXTURE_DEPTH_BUFFER;
 
-    if (holo > 0) {
+    if (holo >= 0) {
         _width = holo_width;
         _height= holo_height;
     }
@@ -736,7 +751,7 @@ bool Sandbox::reloadShaders( WatchFileList &_files ) {
         m_postprocessing_shader.load(m_frag_source, billboard_vert, false);
         m_postprocessing = havePostprocessing;
     }
-    else if (holo > 0) {
+    else if (holo >= 0) {
         m_postprocessing_shader.load(holo_frag, billboard_vert, false);
         uniforms.functions["u_scene"].present = true;
         uniforms.functions["u_holoTile"].present = true;
@@ -893,7 +908,7 @@ void Sandbox::render() {
     }
     else {
 
-        if (holo > 0) {
+        if (holo >= 0) {
             // save the viewport for the total quilt
             GLint viewport[4];
             glGetIntegerv(GL_VIEWPORT, viewport);
@@ -912,8 +927,8 @@ void Sandbox::render() {
                 glViewport(x, y, qs_viewWidth, qs_viewHeight);
 
                 // set the scissor to the view to restrict calls like glClear from making modifications
-                glEnable(GL_SCISSOR_TEST);
-                glScissor(x, y, qs_viewWidth, qs_viewHeight);
+                // glEnable(GL_SCISSOR_TEST);
+                // glScissor(x, y, qs_viewWidth, qs_viewHeight);
 
                 // set up the camera rotation and position for current view
                 setVirtualCameraForView( uniforms.getCamera(), m_scene.getArea(), viewIndex);
@@ -927,8 +942,8 @@ void Sandbox::render() {
                 glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
 
                 // restore scissor
-                glDisable(GL_SCISSOR_TEST);
-                glScissor(viewport[0], viewport[1], viewport[2], viewport[3]);
+                // glDisable(GL_SCISSOR_TEST);
+                // glScissor(viewport[0], viewport[1], viewport[2], viewport[3]);
             }
         }
         else {
