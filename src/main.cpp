@@ -103,6 +103,7 @@ void printUsage(char * executableName) {
     std::cerr << "// [--headless] - headless rendering. Very useful for making images or benchmarking." << std::endl;
     std::cerr << "// [--nocursor] - hide cursor" << std::endl;
     std::cerr << "// [--fxaa] - set FXAA as postprocess filter" << std::endl;
+    std::cerr << "// [--holoplay <0/1/2>] - HoloPlay volumetric postprocess" << std::endl;
     std::cerr << "// [-I<include_folder>] - add an include folder to default for #include files" << std::endl;
     std::cerr << "// [-D<define>] - add system #defines directly from the console argument" << std::endl;
     std::cerr << "// [-p <osc_port>] - open OSC listening port" << std::endl;
@@ -859,9 +860,9 @@ int main(int argc, char **argv){
             if ( sandbox.uniforms.addAudioTexture("u_tex"+toString(textureCounter), true) )
                 textureCounter++;
         }
-        else if ( argument == "--holo" ) {
+        else if ( argument == "--holoplay" ) {
             if (++i < argc) {
-                sandbox.holo = toInt(argv[i]);
+                sandbox.holoplay = toInt(argv[i]);
             }
         }
         else if ( argument == "-c" || argument == "-sh" ) {

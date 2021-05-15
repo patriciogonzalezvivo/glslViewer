@@ -18,34 +18,21 @@
 #include "shaders/histogram.h"
 #include "shaders/wireframe2D.h"
 #include "shaders/fxaa.h"
-#include "shaders/holo.h"
+#include "shaders/holoplay.h"
 
 #include <memory>
 
 std::string default_scene_frag = default_scene_frag0 + default_scene_frag1 + default_scene_frag2 + default_scene_frag3;
 
-int holo_width = 2048;
-int holo_height = 2048;
-int holo_columns = 4;
-int holo_rows = 8;
-int holo_totalViews = 32;
-
-// const int holo_width = 4096;
-// const int holo_height = 4096;
-// const int holo_columns = 5;
-// const int holo_rows = 9;
-// const int holo_totalViews = 45;
-
-const float holo_dpi = 324.0;
-const float holo_pitch = 52.58737671470091;
-const float holo_slope = -7.196136200157333;
-const float holo_center = 0.4321881363063158;
-const int holo_ri = 0;
-const int holo_bi = 2;
+int holoplay_width = 2048;
+int holoplay_height = 2048;
+int holoplay_columns = 4;
+int holoplay_rows = 8;
+int holoplay_totalViews = 32;
 
 // ------------------------------------------------------------------------- CONTRUCTOR
 Sandbox::Sandbox(): 
-    frag_index(-1), vert_index(-1), geom_index(-1), holo(-1),
+    frag_index(-1), vert_index(-1), geom_index(-1), holoplay(-1),
     verbose(false), cursor(true), fxaa(false),
     // Main Vert/Frag/Geom
     m_frag_source(""), m_vert_source(""),
@@ -241,7 +228,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         if (_line == "buffers") {
             uniforms.printBuffers();
             if (m_postprocessing) {
-                if (holo >= 0)
+                if (holoplay >= 0)
                     std::cout << "HOLO";
                 else if (fxaa)
                     std::cout << "FXAA";
@@ -544,36 +531,39 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     // -------------------------------------------------
     uniforms.getCamera().setViewport(getWindowWidth(), getWindowHeight());
 
-    if (holo >= 0) {
-        uniforms.functions["u_holoTile"] = UniformFunction("vec3", [this](Shader& _shader) {
-            _shader.setUniform("u_holoTile", glm::vec3(holo_columns, holo_rows, holo_totalViews));
+    if (holoplay >= 0) {
+        uniforms.functions["u_holoPlayTile"] = UniformFunction("vec3", [](Shader& _shader) {
+            _shader.setUniform("u_holoPlayTile", glm::vec3(holoplay_columns, holoplay_rows, holoplay_totalViews));
         });
 
-        uniforms.functions["u_holoDpi"] = UniformFunction("float", [this](Shader& _shader) {
-            _shader.setUniform("u_holoDpi", holo_dpi);
+        uniforms.functions["u_holoPlayCalibration"] = UniformFunction("vec4", [](Shader& _shader) {
+            _shader.setUniform("u_holoPlayCalibration", holoplay_dpi, holoplay_pitch, holoplay_slope, holoplay_center);
         });
 
-        uniforms.functions["u_holoCalibration"] = UniformFunction("vec4", [this](Shader& _shader) {
-            _shader.setUniform("u_holoCalibration", holo_dpi, holo_pitch, holo_slope, holo_center);
+        uniforms.functions["u_holoPlayRB"] = UniformFunction("vec2", [](Shader& _shader) {
+            _shader.setUniform("u_holoPlayRB", float(holoplay_ri), float(holoplay_bi));
         });
 
-        uniforms.functions["u_holoRB"] = UniformFunction("vec2", [this](Shader& _shader) {
-            _shader.setUniform("u_holoRB", float(holo_ri), float(holo_bi));
-        });
-
-        if (holo == 1) {
-            holo_width = 4096;
-            holo_height = 4096;
-            holo_columns = 5;
-            holo_rows = 9;
-            holo_totalViews = 45;
+        if (holoplay == 0) {
+            holoplay_width = 2048;
+            holoplay_height = 2048;
+            holoplay_columns = 4;
+            holoplay_rows = 8;
+            holoplay_totalViews = 32;
         }
-        else if (holo == 2) {
-            holo_width = 4096 * 2;
-            holo_height = 4096 * 2;
-            holo_columns = 5;
-            holo_rows = 9;
-            holo_totalViews = 45;
+        else if (holoplay == 1) {
+            holoplay_width = 4096;
+            holoplay_height = 4096;
+            holoplay_columns = 5;
+            holoplay_rows = 9;
+            holoplay_totalViews = 45;
+        }
+        else if (holoplay == 2) {
+            holoplay_width = 4096 * 2;
+            holoplay_height = 4096 * 2;
+            holoplay_columns = 5;
+            holoplay_rows = 9;
+            holoplay_totalViews = 45;
         }
     } 
 
@@ -674,9 +664,9 @@ int Sandbox::getRecordedPercentage() {
 void Sandbox::_updateSceneBuffer(int _width, int _height) {
     FboType type = uniforms.functions["u_sceneDepth"].present ? COLOR_DEPTH_TEXTURES : COLOR_TEXTURE_DEPTH_BUFFER;
 
-    if (holo >= 0) {
-        _width = holo_width;
-        _height= holo_height;
+    if (holoplay >= 0) {
+        _width = holoplay_width;
+        _height= holoplay_height;
     }
 
     if (!m_scene_fbo.isAllocated() ||
@@ -751,12 +741,12 @@ bool Sandbox::reloadShaders( WatchFileList &_files ) {
         m_postprocessing_shader.load(m_frag_source, billboard_vert, false);
         m_postprocessing = havePostprocessing;
     }
-    else if (holo >= 0) {
-        m_postprocessing_shader.load(holo_frag, billboard_vert, false);
+    else if (holoplay >= 0) {
+        m_postprocessing_shader.load(holoplay_frag, billboard_vert, false);
         uniforms.functions["u_scene"].present = true;
-        uniforms.functions["u_holoTile"].present = true;
-        uniforms.functions["u_holoCalibration"].present = true;
-        uniforms.functions["u_holoRB"].present = true;
+        uniforms.functions["u_holoPlayTile"].present = true;
+        uniforms.functions["u_holoPlayCalibration"].present = true;
+        uniforms.functions["u_holoPlayRB"].present = true;
         
         m_postprocessing = true;
     }
@@ -844,7 +834,7 @@ void setVirtualCameraForView(Camera &camera, float scale, int currentViewIndex) 
     float aspectRatio =  (float)getWindowWidth()/(float)getWindowHeight();
 
     // start at -viewCone * 0.5 and go up to viewCone * 0.5
-    float offsetAngle = (float(currentViewIndex) / (float(holo_totalViews) - 1.0f) - 0.5f) * viewCone;
+    float offsetAngle = (float(currentViewIndex) / (float(holoplay_totalViews) - 1.0f) - 0.5f) * viewCone;
 
     // calculate the offset that the camera should move
     float offset = -camera.getDistance() * tan(offsetAngle);
@@ -908,20 +898,20 @@ void Sandbox::render() {
     }
     else {
 
-        if (holo >= 0) {
+        if (holoplay >= 0) {
             // save the viewport for the total quilt
             GLint viewport[4];
             glGetIntegerv(GL_VIEWPORT, viewport);
 
             // get quilt view dimensions
-            int qs_viewWidth = int(float(holo_width) / float(holo_columns));
-            int qs_viewHeight = int(float(holo_height) / float(holo_rows));
+            int qs_viewWidth = int(float(holoplay_width) / float(holoplay_columns));
+            int qs_viewHeight = int(float(holoplay_height) / float(holoplay_rows));
 
             // render views and copy each view to the quilt
-            for (int viewIndex = 0; viewIndex < holo_totalViews; viewIndex++) {
+            for (int viewIndex = 0; viewIndex < holoplay_totalViews; viewIndex++) {
                 // get the x and y origin for this view
-                int x = (viewIndex % holo_columns) * qs_viewWidth;
-                int y = int(float(viewIndex) / float(holo_columns)) * qs_viewHeight;
+                int x = (viewIndex % holoplay_columns) * qs_viewWidth;
+                int y = int(float(viewIndex) / float(holoplay_columns)) * qs_viewHeight;
 
                 // set the viewport to the view to control the projection extent
                 glViewport(x, y, qs_viewWidth, qs_viewHeight);

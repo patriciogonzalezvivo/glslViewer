@@ -68,7 +68,7 @@ public:
     int                 vert_index;
     int                 geom_index;
 
-    int                 holo;
+    int                 holoplay;
     
     bool                verbose;
     bool                cursor;
