@@ -141,5 +141,5 @@ void Model::render(Shader* _shader) {
 
 void Model::renderBbox(Shader* _shader) {
     if (m_bbox_vbo)
-        m_model_vbo->render(_shader);
+        m_bbox_vbo->render(_shader);
 }
