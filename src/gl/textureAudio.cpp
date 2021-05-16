@@ -1,4 +1,5 @@
 #include "textureAudio.h"
+#include "tools/text.h"
 
 #include <iostream>
 #include <mutex>
@@ -58,12 +59,20 @@ TextureAudio::~TextureAudio() {
     this->clear();
 }
 
-bool TextureAudio::load(bool verbose, int in_device_id) {
+bool TextureAudio::load(const std::string &_device_id_str, bool /*_vFlip*/) {
 
     ma_uint32 playbackDeviceCount = 0;
     ma_uint32 captureDeviceCount = 0;
     int default_device_id = -1;
-    ma_uint32 device_id = 0;
+    int device_id = 0;
+    int _device_id_int = -1;
+
+    if (isInt(_device_id_str)) {
+        _device_id_int = toInt(_device_id_str);
+    }
+    else {
+        std::cout << "Device id " << _device_id_str << " is incorrect, default device will be used.\n";
+    }
 
     if (ma_context_init(NULL, 0, NULL, &context) != MA_SUCCESS) {
         std::cout <<  "Failed to initialize context.\n";
@@ -76,16 +85,12 @@ bool TextureAudio::load(bool verbose, int in_device_id) {
         return false;
     }
 
-    if (verbose) {
-        std::cout << "Capture devices available\n";
-    }
+    std::cout << "Capture devices available\n";
     for (ma_uint32 iDevice = 0; iDevice < captureDeviceCount; ++iDevice) {
         if (pCaptureDeviceInfos[iDevice].isDefault == true) {
             default_device_id = iDevice;
         }
-        if (verbose) {
-            std::cout << "    " << iDevice << ": " << pCaptureDeviceInfos[iDevice].name << "\n";
-        }
+        std::cout << "    " << iDevice << ": " << pCaptureDeviceInfos[iDevice].name << "\n";
     }
 
     // there is no default (miniaudio bug) or no capture devices
@@ -95,22 +100,20 @@ bool TextureAudio::load(bool verbose, int in_device_id) {
         return false;
     }
 
-    if (in_device_id == -1) {
+    if (_device_id_int == -1) {
         device_id = default_device_id;
     }
-    else if (in_device_id < -1 || in_device_id > (captureDeviceCount - 1)) {
+    else if (_device_id_int < -1 || _device_id_int > int(captureDeviceCount - 1)) {
         // warning if non-default device id is incorrect
-        std::cout << "Device number " << in_device_id << " is incorrect, default device will be used.\n";
+        std::cout << "Device id " << _device_id_int << " is incorrect, default device will be used.\n";
         device_id = default_device_id;
     }
     else {
-        device_id = in_device_id;
+        device_id = _device_id_int;
     }
 
-    if (verbose) {
-        std::cout << "Loading capture device\n";
-        std::cout << "    " << device_id << ": " << pCaptureDeviceInfos[device_id].name << "\n";
-    }
+    std::cout << "Loading capture device\n";
+    std::cout << "    " << device_id << ": " << pCaptureDeviceInfos[device_id].name << "\n";
 
     // set up audio format
     a_deviceConfig = ma_device_config_init(ma_device_type_capture);

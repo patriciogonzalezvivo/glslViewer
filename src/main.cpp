@@ -857,14 +857,16 @@ int main(int argc, char **argv){
                 textureCounter++;
         }
         else if ( argument == "--audio" || argument == "-a" ) {
-            int device_id = -1; //default device id
-            if (++i < argc) {
-                argument = std::string(argv[i]);
-                if (isDigit(argument)) {
-                    device_id = toInt(argument);
+            std::string device_id = "-1"; //default device id
+            // device_id is optional argument, not iterate yet
+            if ((i + 1) < argc) {
+                argument = std::string(argv[i + 1]);
+                if (isInt(argument)) {
+                    device_id = argument;
+                    i++;
                 }
             }
-            if ( sandbox.uniforms.addAudioTexture("u_tex"+toString(textureCounter), device_id, true) )
+            if ( sandbox.uniforms.addAudioTexture("u_tex"+toString(textureCounter), device_id, vFlip, true) )
                 textureCounter++;
         }
         else if ( argument == "--holoplay" ) {

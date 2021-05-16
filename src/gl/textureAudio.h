@@ -10,7 +10,7 @@ public:
     TextureAudio();
     virtual ~TextureAudio();
 
-    virtual bool    load(bool verbose, int device_id = -1);
+    virtual bool    load(const std::string &_path, bool _vFlip);
     virtual bool    update();
     virtual void    clear();
 private:

@@ -55,7 +55,7 @@ public:
     bool                    addTexture( const std::string& _name, const std::string& _path, WatchFileList& _files, bool _flip = true, bool _verbose = true );
     bool                    addBumpTexture( const std::string& _name, const std::string& _path, WatchFileList& _files, bool _flip = true, bool _verbose = true );
     bool                    addStreamingTexture( const std::string& _name, const std::string& _url, bool _flip = true, bool _device = false, bool _verbose = true );
-    bool                    addAudioTexture( const std::string& _name, int device_id, bool _verbose = true);
+    bool                    addAudioTexture( const std::string& _name, const std::string& device_id, bool _flip = false, bool _verbose = true );
     void                    updateStreammingTextures();
 
     void                    setCubeMap( TextureCube* _cubemap );
