@@ -424,7 +424,7 @@ bool Uniforms::addStreamingTexture( const std::string& _name, const std::string&
     return false;
 }
 
-bool Uniforms::addAudioTexture(const std::string& _name, bool _verbose) {
+bool Uniforms::addAudioTexture(const std::string& _name, int device_id, bool _verbose) {
 
 #ifdef SUPPORT_FOR_LIBAV
     // already init
@@ -432,9 +432,8 @@ bool Uniforms::addAudioTexture(const std::string& _name, bool _verbose) {
 
     auto tex = new TextureAudio();
 
-    // TODO: add configurable device
     // TODO: add flipping mode for audio texture
-    if (tex->load("dummy load", false)) {
+    if (tex->load(_verbose, device_id)) {
 
         if (_verbose) {
             std::cout << "//    loaded audio texture: " << std::endl;

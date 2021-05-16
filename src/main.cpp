@@ -87,7 +87,7 @@ void printUsage(char * executableName) {
     std::cerr << "// [<texture>.(png/tga/jpg/bmp/psd/gif/hdr/mov/mp4/rtsp/rtmp/etc)] - load and assign texture to uniform order" << std::endl;
     std::cerr << "// [-vFlip] - all textures after will be flipped vertically" << std::endl;
     std::cerr << "// [--video <video_device_number>] - open video device allocated wit that particular id" << std::endl;
-    std::cerr << "// [--audio] - open default capture device allocated as sampler2D texture with particular id" << std::endl;
+    std::cerr << "// [--audio <capture_device_id>] - open audio capture device allocated as sampler2D texture. If id is not selected, default will be used" << std::endl;
     std::cerr << "// [-<uniformName> <texture>.(png/tga/jpg/bmp/psd/gif/hdr)] - add textures associated with different uniform sampler2D names" << std::endl;
     std::cerr << "// [-C <enviromental_map>.(png/tga/jpg/bmp/psd/gif/hdr)] - load a environmental map as cubemap" << std::endl;
     std::cerr << "// [-c <enviromental_map>.(png/tga/jpg/bmp/psd/gif/hdr)] - load a environmental map as cubemap but hided" << std::endl;
@@ -857,7 +857,14 @@ int main(int argc, char **argv){
                 textureCounter++;
         }
         else if ( argument == "--audio" || argument == "-a" ) {
-            if ( sandbox.uniforms.addAudioTexture("u_tex"+toString(textureCounter), true) )
+            int device_id = -1; //default device id
+            if (++i < argc) {
+                argument = std::string(argv[i]);
+                if (isDigit(argument)) {
+                    device_id = toInt(argument);
+                }
+            }
+            if ( sandbox.uniforms.addAudioTexture("u_tex"+toString(textureCounter), device_id, true) )
                 textureCounter++;
         }
         else if ( argument == "--holoplay" ) {
