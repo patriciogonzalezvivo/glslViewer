@@ -55,7 +55,7 @@ TextureAudio::~TextureAudio() {
     this->clear();
 }
 
-bool TextureAudio::load() {
+bool TextureAudio::load(const std::string& _filepath, bool _vFlip) {
     // set up audio format
     a_deviceConfig = ma_device_config_init(ma_device_type_capture);
     a_deviceConfig.capture.format   = ma_format_u8;

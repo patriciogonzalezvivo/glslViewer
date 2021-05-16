@@ -94,6 +94,11 @@
         "unordered_set": "cpp",
         "__memory": "cpp",
         "filesystem": "cpp",
-        "forward_list": "cpp"
+        "forward_list": "cpp",
+        "compare": "cpp",
+        "concepts": "cpp",
+        "semaphore": "cpp",
+        "ranges": "cpp",
+        "stop_token": "cpp"
     }
 }

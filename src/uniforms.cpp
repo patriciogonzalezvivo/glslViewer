@@ -6,6 +6,9 @@
 
 #include "tools/text.h"
 
+#include "phonedepth/extract_depthmap.h"
+#include "io/pixels.h"
+
 #include "gl/textureBump.h"
 #include "gl/textureStreamSequence.h"
 #ifdef SUPPORT_FOR_LIBAV 
@@ -193,9 +196,10 @@ bool Uniforms::addTexture(const std::string& _name, const std::string& _path, Wa
         // If we can not get file stamp proably is not a file
         if (stat(_path.c_str(), &st) != 0 )
             std::cerr << "Error watching for file " << _path << std::endl;
-        
+
         // If we can lets proceed creating a texgure
         else {
+
             Texture* tex = new Texture();
             // load an image into the texture
             if (tex->load(_path, _flip)) {
@@ -215,6 +219,54 @@ bool Uniforms::addTexture(const std::string& _name, const std::string& _path, Wa
                     std::cout << "// " << _path << " loaded as: " << std::endl;
                     std::cout << "//    uniform sampler2D   " << _name  << ";"<< std::endl;
                     std::cout << "//    uniform vec2        " << _name  << "Resolution;"<< std::endl;
+                }
+
+                if (haveExt(_path,"jpeg")) {
+                    const unsigned char *cv = NULL, *dm = NULL, *extra = NULL;
+                    size_t cv_size = 0, dm_size = 0, extra_size = 0;
+                    image_type_t dm_type = TYPE_NONE, extra_type = TYPE_NONE;
+
+                    //  proceed to check if it have depth data
+                    if (extract_depth(  _path.c_str(), 
+                                        &cv, &cv_size,
+                                        &dm, &dm_size, &dm_type,  
+                                        &extra, &extra_size, &extra_type) == 1) {
+
+                        if (dm_type == TYPE_JPEG) {
+                            int width, height;
+                            unsigned char* pixels = loadPixels(dm, dm_size, &width, &height, RGB, _flip);
+
+                            Texture* tex_dm = new Texture();
+                            if (tex_dm->load(width, height, 3, 8, pixels)) {
+                                textures[ _name + "Depth"] = tex_dm;
+
+                                if (_verbose) {
+                                    std::cout << "//    uniform sampler2D   " << _name  << "Depth;"<< std::endl;
+                                    std::cout << "//    uniform vec2        " << _name  << "DepthResolution;"<< std::endl;
+                                }
+                            }
+                            
+                            freePixels(pixels);
+                        }
+
+                        if (extra_type == TYPE_JPEG) {
+                            int width, height;
+                            unsigned char* pixels = loadPixels(extra, extra_size, &width, &height, RGB, _flip);
+
+                            Texture* tex_extra = new Texture();
+                            if (tex_extra->load(width, height, 3, 8, pixels)) {
+                                textures[ _name + "Extra"] = tex_extra;
+
+                                if (_verbose) {
+                                    std::cout << "//    uniform sampler2D   " << _name  << "Extra;"<< std::endl;
+                                    std::cout << "//    uniform vec2        " << _name  << "ExtraResolution;"<< std::endl;
+                                }
+                            }
+                            
+                            freePixels(pixels);
+                        }
+
+                    }
                 }
 
                 return true;
@@ -382,7 +434,7 @@ bool Uniforms::addAudioTexture(const std::string& _name, bool _verbose) {
 
     // TODO: add configurable device
     // TODO: add flipping mode for audio texture
-    if (tex->load()) {
+    if (tex->load("dummy load", false)) {
 
         if (_verbose) {
             std::cout << "//    loaded audio texture: " << std::endl;

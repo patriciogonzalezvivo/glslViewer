@@ -419,6 +419,11 @@ bool loadGLTF(Uniforms& _uniforms, WatchFileList& _files, Materials& _materials,
     return true;
 }
 
+unsigned char* loadPixels(unsigned char const *_data, int len, int *_width, int *_height, Channels _channels, bool _vFlip) {
+    int comp;
+    unsigned char* pixels = stbi_load_from_memory(_data, len, _width, _height, &comp, (_channels == RGB)? STBI_rgb : STBI_rgb_alpha);
+    return pixels;
+} 
 
 unsigned char* loadPixels(const std::string& _path, int *_width, int *_height, Channels _channels, bool _vFlip) {
     stbi_set_flip_vertically_on_load(_vFlip);
