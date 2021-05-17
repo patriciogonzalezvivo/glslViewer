@@ -7,7 +7,8 @@ enum WindowStyle {
     HEADLESS = 0,
     REGULAR,
     ALLWAYS_ON_TOP,
-    FULLSCREEN
+    FULLSCREEN,
+    HOLOPLAY
 };
 
 //	GL Context

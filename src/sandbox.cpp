@@ -845,7 +845,7 @@ void setVirtualCameraForView(Camera &camera, float scale, int currentViewIndex) 
     glm::mat4 viewMatrix = glm::translate(camera.getViewMatrix(), offsetLocal);
     glm::mat4 projectionMatrix = glm::perspective(fov, camera.getAspect(), camera.getNearClip(), camera.getFarClip());
     // modify the projection matrix, relative to the camera size and aspect ratio
-    projectionMatrix[2][0] += offset / (scale * aspectRatio);
+    projectionMatrix[2][0] += offset / (scale * 2.0 * aspectRatio);
 
     camera.setProjectionViewMatrix(projectionMatrix, viewMatrix);
 }
@@ -1316,7 +1316,7 @@ void Sandbox::onMouseDrag(float _x, float _y, int _button) {
         float dist = uniforms.getCamera().getDistance();
         dist += (-.008f * getMouseVelY());
         if (dist > 0.0f) {
-            uniforms.getCamera().setDistance( dist );
+            uniforms.getCamera().orbit(m_lat, m_lon, dist);
         }
     }
 

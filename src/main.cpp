@@ -654,6 +654,9 @@ int main(int argc, char **argv){
                     std::string(argv[i]) == "--fullscreen" ) {
             windowStyle = FULLSCREEN;
         }
+        else if (   std::string(argv[i]) == "--holoplay") {
+            windowStyle = HOLOPLAY;
+        }
         else if (   std::string(argv[i]) == "-l" ||
                     std::string(argv[i]) == "--life-coding" ){
         #ifndef DRIVER_GLFW
