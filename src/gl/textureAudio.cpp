@@ -1,4 +1,5 @@
 #include "textureAudio.h"
+#include "tools/text.h"
 
 #include <iostream>
 #include <mutex>
@@ -22,6 +23,9 @@ extern "C" {
 ma_device_config a_deviceConfig;
 ma_device a_device;
 static RDFTContext *ctx;
+ma_context context;
+ma_device_info* pPlaybackDeviceInfos;
+ma_device_info* pCaptureDeviceInfos;
 
 std::mutex mtx;
 
@@ -55,9 +59,65 @@ TextureAudio::~TextureAudio() {
     this->clear();
 }
 
-bool TextureAudio::load(const std::string& _filepath, bool _vFlip) {
+bool TextureAudio::load(const std::string &_device_id_str, bool /*_vFlip*/) {
+
+    ma_uint32 playbackDeviceCount = 0;
+    ma_uint32 captureDeviceCount = 0;
+    int default_device_id = -1;
+    int device_id = 0;
+    int _device_id_int = -1;
+
+    if (isInt(_device_id_str)) {
+        _device_id_int = toInt(_device_id_str);
+    }
+    else {
+        std::cout << "Device id " << _device_id_str << " is incorrect, default device will be used.\n";
+    }
+
+    if (ma_context_init(NULL, 0, NULL, &context) != MA_SUCCESS) {
+        std::cout <<  "Failed to initialize context.\n";
+        return false;
+    }
+
+    if (ma_context_get_devices(&context, &pPlaybackDeviceInfos, &playbackDeviceCount, &pCaptureDeviceInfos, &captureDeviceCount) != MA_SUCCESS) {
+        std::cout << "Failed to retrieve device information.\n";
+        ma_context_uninit(&context);
+        return false;
+    }
+
+    std::cout << "Capture devices available\n";
+    for (ma_uint32 iDevice = 0; iDevice < captureDeviceCount; ++iDevice) {
+        if (pCaptureDeviceInfos[iDevice].isDefault == true) {
+            default_device_id = iDevice;
+        }
+        std::cout << "    " << iDevice << ": " << pCaptureDeviceInfos[iDevice].name << "\n";
+    }
+
+    // there is no default (miniaudio bug) or no capture devices
+    if (default_device_id == -1 || captureDeviceCount == 0) {
+        std::cout << "No capture devices available.\n";
+        ma_context_uninit(&context);
+        return false;
+    }
+
+    if (_device_id_int == -1) {
+        device_id = default_device_id;
+    }
+    else if (_device_id_int < -1 || _device_id_int > int(captureDeviceCount - 1)) {
+        // warning if non-default device id is incorrect
+        std::cout << "Device id " << _device_id_int << " is incorrect, default device will be used.\n";
+        device_id = default_device_id;
+    }
+    else {
+        device_id = _device_id_int;
+    }
+
+    std::cout << "Loading capture device\n";
+    std::cout << "    " << device_id << ": " << pCaptureDeviceInfos[device_id].name << "\n";
+
     // set up audio format
     a_deviceConfig = ma_device_config_init(ma_device_type_capture);
+    a_deviceConfig.capture.pDeviceID = &pCaptureDeviceInfos[device_id].id;
     a_deviceConfig.capture.format   = ma_format_u8;
     a_deviceConfig.capture.channels = 1;
     a_deviceConfig.sampleRate       = 44100;
@@ -65,7 +125,8 @@ bool TextureAudio::load(const std::string& _filepath, bool _vFlip) {
     a_deviceConfig.pUserData        = &m_buffer_wr;
 
     // init default capture device
-    if (ma_device_init(NULL, &a_deviceConfig, &a_device) != MA_SUCCESS) {
+    if (ma_device_init(&context, &a_deviceConfig, &a_device) != MA_SUCCESS) {
+        ma_context_uninit(&context);
         std::cout << "Failed to initialize capture device." << std::endl;
         return false;
     }
@@ -73,6 +134,7 @@ bool TextureAudio::load(const std::string& _filepath, bool _vFlip) {
     // start capture device
     if (ma_device_start(&a_device) != MA_SUCCESS) {
         ma_device_uninit(&a_device);
+        ma_context_uninit(&context);
         std::cout << "Failed to start device."  << std::endl;
         return false;
     }
@@ -80,6 +142,8 @@ bool TextureAudio::load(const std::string& _filepath, bool _vFlip) {
     // init dft calculator
     ctx = av_rdft_init((int) log2(m_buf_len), DFT_R2C);
     if (!ctx) {
+        ma_device_uninit(&a_device);
+        ma_context_uninit(&context);
         std::cout << "Failed to init dft calculator."  << std::endl;
         return false;
     }
@@ -147,6 +211,7 @@ bool TextureAudio::update() {
 
 void TextureAudio::clear() {
     ma_device_uninit(&a_device);
+    ma_context_uninit(&context);
 
    if (ctx) {
         av_rdft_end(ctx); 

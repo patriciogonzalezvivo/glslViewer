@@ -10,7 +10,7 @@ public:
     TextureAudio();
     virtual ~TextureAudio();
 
-    virtual bool    load(const std::string& _filepath, bool _vFlip);
+    virtual bool    load(const std::string &_path, bool _vFlip);
     virtual bool    update();
     virtual void    clear();
 private:
