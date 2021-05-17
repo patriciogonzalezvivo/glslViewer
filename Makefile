@@ -121,6 +121,7 @@ clean:
 	@rm -rvf $(EXE) src/*.o src/*/*.o include/*/*.o include/*/*/*.o include/*/*/*/*.o *.dSYM 
 	
 install:
+	@rm -rfv /usr/local/bin/glslScreenSaver /usr/local/bin/glslLoader /usr/local/bin/$(EXE)
 	@cp bin/glslScreenSaver /usr/local/bin
 	@cp bin/glslLoader /usr/local/bin
 	@cp $(EXE) /usr/local/bin

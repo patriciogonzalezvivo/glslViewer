@@ -418,7 +418,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         }
         return false;
     },
-    "camera_distance[,<dist>]       get or set the camera distance to the target."));
+    "camera_type[,<ortho|perspective>] get or set the camera type"));
 
     _commands.push_back(Command("camera_fov", [&](const std::string& _line){ 
         std::vector<std::string> values = split(_line,',');
