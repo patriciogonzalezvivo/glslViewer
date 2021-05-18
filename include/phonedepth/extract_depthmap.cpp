@@ -5,7 +5,11 @@
 #include <inttypes.h>
 #include <string.h>
 #include <ctype.h>
+#ifdef _WIN32
+
+#else
 #include <unistd.h>
+#endif
 #include <sys/types.h>
 
 #define MIN(a, b)  ( (a) < (b) ? (a) : (b) )
@@ -61,7 +65,7 @@ static void print_hex_string(const unsigned char *data, const size_t len) {
     putchar('\n');
 }
 
-static void print_hex(const unsigned char *file_data, const unsigned char *data, const size_t len) __attribute__((unused));
+static void print_hex(const unsigned char* file_data, const unsigned char* data, const size_t len); //__attribute__((unused));
 static void print_hex(const unsigned char *file_data, const unsigned char *data, const size_t len) {
     const size_t len_round_up = ((len + 15) / 16) * 16;
     for (size_t i = 0; i < len_round_up; i++) {
@@ -126,7 +130,10 @@ static int parse_exif (const unsigned char *data, const size_t size, uint32_t *o
     union {
         unsigned char c[2];
         uint16_t s;
-    } endianess_check = {.c = {0xbe, 0xef}};
+    } endianess_check;
+
+    endianess_check.c[0] = 0xbe;
+    endianess_check.c[1] = 0xef;
     if (data[0] == 'I' && data[1] == 'I')
         do_endianess_swap = endianess_check.s == 0xbeef; // file is little endian
     else if (data[0] == 'M' && data[1] == 'M')
