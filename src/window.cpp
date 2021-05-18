@@ -421,16 +421,22 @@ void initGL (glm::ivec4 &_viewport, WindowStyle _style) {
 
     // #ifndef PLATFORM_LINUX
         else if (_style == HOLOPLAY) {
+            glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
+            glfwWindowHint(GLFW_CENTER_CURSOR, false);
+            glfwWindowHint(GLFW_DECORATED, false);
+            glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, true);
+
             int count;
             GLFWmonitor **monitors = glfwGetMonitors(&count);
             const GLFWvidmode* mode = glfwGetVideoMode(monitors[1]);
             _viewport.z = mode->width;
             _viewport.w = mode->height;
-            glfwWindowHint(GLFW_RED_BITS, mode->redBits);
-            glfwWindowHint(GLFW_GREEN_BITS, mode->greenBits);
-            glfwWindowHint(GLFW_BLUE_BITS, mode->blueBits);
-            glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
-            window = glfwCreateWindow(_viewport.z, _viewport.w, appTitle.c_str(), monitors[1], NULL);
+
+            int xpos, ypos;
+            glfwGetMonitorPos(monitors[1], &xpos, &ypos);
+            window = glfwCreateWindow(_viewport.z, _viewport.w, appTitle.c_str(), NULL, NULL);
+            
+            glfwSetWindowPos(window, xpos, ypos);
         }
     // #endif
     
