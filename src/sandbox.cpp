@@ -517,14 +517,17 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     // -----------------------------------------------
 
     if (geom_index == -1) {
-        // m_canvas_shader.addDefine("MODEL_VERTEX_EX_COLORS");
-        // m_canvas_shader.addDefine("MODEL_VERTEX_EX_NORMALS");
         m_canvas_shader.addDefine("MODEL_VERTEX_TEXCOORD");
-        // m_canvas_shader.addDefine("MODEL_VERTEX_TANGENT");
+        uniforms.getCamera().orbit(m_lat, m_lon, 2.0);
     }
     else {
         m_scene.setup( _commands, uniforms);
         m_scene.loadGeometry( uniforms, _files, geom_index, verbose );
+
+        if (holoplay >= 0 )
+            uniforms.getCamera().orbit(m_lat, m_lon, m_scene.getArea() * 8.5);
+        else
+            uniforms.getCamera().orbit(m_lat, m_lon, m_scene.getArea() * 2.0);
     }
 
     // FINISH SCENE SETUP
@@ -565,6 +568,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
             holoplay_rows = 9;
             holoplay_totalViews = 45;
         }
+        uniforms.getCamera().setFOV(glm::radians(14.0f));
     } 
 
     // Prepare viewport
@@ -829,23 +833,24 @@ void setVirtualCameraForView(Camera &camera, float scale, int currentViewIndex) 
     // answer, as it all depends on your expected user's distance from the Looking
     // Glass, but we've found the most success using this figure.
 
-    const float fov =  glm::radians(14.0f);
-    const float viewCone = glm::radians(40.0);   // view cone of hardware, always around 40
-    float aspectRatio =  (float)getWindowWidth()/(float)getWindowHeight();
-
     // start at -viewCone * 0.5 and go up to viewCone * 0.5
+    const float viewCone = glm::radians(40.0);   // view cone of hardware, always around 40
     float offsetAngle = (float(currentViewIndex) / (float(holoplay_totalViews) - 1.0f) - 0.5f) * viewCone;
 
     // calculate the offset that the camera should move
-    float offset = -camera.getDistance() * tan(offsetAngle);
+    float offset = -camera.getDistance() * tan(offsetAngle) * 0.5f;
 
     // modify the view matrix (position)
     // determine the local direction of the offset 
-    glm::vec3 offsetLocal = camera.getPosition() + camera.getXAxis() * offset;
+    glm::vec3 offsetLocal = camera.getXAxis() * offset;
     glm::mat4 viewMatrix = glm::translate(camera.getViewMatrix(), offsetLocal);
+
+    const float fov =  glm::radians(14.0f);
     glm::mat4 projectionMatrix = glm::perspective(fov, camera.getAspect(), camera.getNearClip(), camera.getFarClip());
     // modify the projection matrix, relative to the camera size and aspect ratio
-    projectionMatrix[2][0] += offset / (scale * 2.0 * aspectRatio);
+
+    float aspectRatio =  (float)getWindowWidth()/(float)getWindowHeight();
+    projectionMatrix[2][0] += offset / (scale *  aspectRatio);
 
     camera.setProjectionViewMatrix(projectionMatrix, viewMatrix);
 }
@@ -907,18 +912,17 @@ void Sandbox::render() {
             int qs_viewWidth = int(float(holoplay_width) / float(holoplay_columns));
             int qs_viewHeight = int(float(holoplay_height) / float(holoplay_rows));
 
+            // float cam_dist = uniforms.getCamera().getDistance();
+
             // render views and copy each view to the quilt
             for (int viewIndex = 0; viewIndex < holoplay_totalViews; viewIndex++) {
                 // get the x and y origin for this view
                 int x = (viewIndex % holoplay_columns) * qs_viewWidth;
                 int y = int(float(viewIndex) / float(holoplay_columns)) * qs_viewHeight;
 
+                // get the x and y origin for this view
                 // set the viewport to the view to control the projection extent
                 glViewport(x, y, qs_viewWidth, qs_viewHeight);
-
-                // set the scissor to the view to restrict calls like glClear from making modifications
-                // glEnable(GL_SCISSOR_TEST);
-                // glScissor(x, y, qs_viewWidth, qs_viewHeight);
 
                 // set up the camera rotation and position for current view
                 setVirtualCameraForView( uniforms.getCamera(), m_scene.getArea(), viewIndex);
@@ -930,11 +934,9 @@ void Sandbox::render() {
 
                 // reset viewport
                 glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
-
-                // restore scissor
-                // glDisable(GL_SCISSOR_TEST);
-                // glScissor(viewport[0], viewport[1], viewport[2], viewport[3]);
             }
+
+            // uniforms.getCamera().orbit(m_lat, m_lon, cam_dist);
         }
         else {
             m_scene.render(uniforms);

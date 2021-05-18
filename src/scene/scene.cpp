@@ -482,8 +482,6 @@ bool Scene::loadGeometry(Uniforms& _uniforms, WatchFileList& _files, int _index,
     m_origin.setPosition( -centroid );
     m_floor_height = min_v.y;
 
-    _uniforms.getCamera().setPosition(glm::vec3(0.0,0.0,-m_area * 2.0));
-
     // Setup light
     if (_uniforms.lights.size() == 0)
         _uniforms.lights.push_back( Light( glm::vec3(0.0,m_area*100.0,m_area*100.0), -1.0 ) );

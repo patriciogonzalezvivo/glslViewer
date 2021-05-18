@@ -419,6 +419,7 @@ void initGL (glm::ivec4 &_viewport, WindowStyle _style) {
             window = glfwCreateWindow(_viewport.z, _viewport.w, appTitle.c_str(), monitor, NULL);
         }
 
+    // #ifndef PLATFORM_LINUX
         else if (_style == HOLOPLAY) {
             int count;
             GLFWmonitor **monitors = glfwGetMonitors(&count);
@@ -431,6 +432,8 @@ void initGL (glm::ivec4 &_viewport, WindowStyle _style) {
             glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
             window = glfwCreateWindow(_viewport.z, _viewport.w, appTitle.c_str(), monitors[1], NULL);
         }
+    // #endif
+    
         else
             window = glfwCreateWindow(_viewport.z, _viewport.w, appTitle.c_str(), NULL, NULL);
 

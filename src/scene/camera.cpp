@@ -123,6 +123,11 @@ void Camera::updateCameraSettings() {
     updateProjectionViewMatrix();
 }
 
+void Camera::setProjectionMatrix(const glm::mat4 &_project) {
+    m_projectionMatrix = _project;
+    bChange = true;
+}
+
 void Camera::setProjectionViewMatrix(const glm::mat4 &_project, const glm::mat4 &_view) {
     m_projectionMatrix = _project;
     m_projectionViewMatrix = m_projectionMatrix * _view;
