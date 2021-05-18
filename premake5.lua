@@ -49,6 +49,21 @@ project "skylight"
         "include/skylight", 
     }
 
+project "phonedepth"
+    
+    kind "StaticLib"
+
+    files 
+    {
+        "include/phonedepth/**"
+    }
+
+    includedirs
+    {
+        "include/", 
+        "include/phonedepth", 
+    }
+
 ------------------------------------------------------------------------
     
 project "glfw"
@@ -141,7 +156,7 @@ project "glslViewer"
 
     links 
     {
-        "oscpack", "skylight", "glfw", "glew"
+        "oscpack", "skylight", "glfw", "glew", "phonedepth"
     }
 
     debugdir("examples/3D/01_lighting")
