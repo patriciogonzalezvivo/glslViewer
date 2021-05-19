@@ -37,6 +37,8 @@ protected:
     Fbo                 m_shadowMap;
     glm::mat4           m_mvp_biased;
     glm::mat4           m_mvp;
-    
+
     LightType           m_type;
+    
+    GLint               m_viewport[4];
 };

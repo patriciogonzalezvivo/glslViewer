@@ -1,5 +1,7 @@
 #include "light.h"
 
+#include <iostream>
+
 Light::Light(): 
     color(1.0), 
     direction(0.0),
@@ -8,6 +10,7 @@ Light::Light():
     m_mvp_biased(1.0), 
     m_mvp(1.0), 
     m_type(LIGHT_DIRECTIONAL) {
+    std::fill(m_viewport, m_viewport+4, 0);
 }
 
 Light::Light(glm::vec3 _dir): m_mvp_biased(1.0), m_mvp(1.0) {
@@ -16,6 +19,7 @@ Light::Light(glm::vec3 _dir): m_mvp_biased(1.0), m_mvp(1.0) {
     falloff = -1.0; 
     m_type = LIGHT_DIRECTIONAL;
     direction = normalize(_dir);
+    std::fill(m_viewport, m_viewport+4, 0);
 }
 
 Light::Light(glm::vec3 _pos, float _falloff): m_mvp_biased(1.0), m_mvp(1.0) {
@@ -25,6 +29,7 @@ Light::Light(glm::vec3 _pos, float _falloff): m_mvp_biased(1.0), m_mvp(1.0) {
     m_type = LIGHT_POINT;
     setPosition(_pos);
     falloff = _falloff;
+    std::fill(m_viewport, m_viewport+4, 0);
 }
 
 Light::Light(glm::vec3 _pos, glm::vec3 _dir, float _falloff): m_mvp_biased(1.0), m_mvp(1.0) {
@@ -73,6 +78,9 @@ glm::mat4 Light::getBiasMVPMatrix() {
 }
 
 void Light::bindShadowMap() {
+
+    glGetIntegerv(GL_VIEWPORT, m_viewport);
+
     if (m_shadowMap.getDepthTextureId() == 0) {
         #ifdef PLATFORM_RPI
         // m_shadowMap.allocate(512, 512, DEPTH_TEXTURE);
@@ -92,4 +100,5 @@ void Light::unbindShadowMap() {
     // glDisable(GL_CULL_FACE);
     glDisable(GL_DEPTH_TEST);
     m_shadowMap.unbind();
+    glViewport(m_viewport[0], m_viewport[1], m_viewport[2], m_viewport[3]);
 }
