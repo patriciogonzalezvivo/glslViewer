@@ -422,9 +422,7 @@ void initGL (glm::ivec4 &_viewport, WindowStyle _style) {
     // #ifndef PLATFORM_LINUX
         else if (_style == HOLOPLAY) {
             glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
-            glfwWindowHint(GLFW_CENTER_CURSOR, false);
             glfwWindowHint(GLFW_DECORATED, false);
-            glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, true);
 
             int count;
             GLFWmonitor **monitors = glfwGetMonitors(&count);
