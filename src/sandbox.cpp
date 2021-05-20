@@ -535,6 +535,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     uniforms.getCamera().setViewport(getWindowWidth(), getWindowHeight());
 
     if (holoplay >= 0) {
+        addDefine("HOLOPLAY", toString(holoplay));
         uniforms.functions["u_holoPlayTile"] = UniformFunction("vec3", [](Shader& _shader) {
             _shader.setUniform("u_holoPlayTile", glm::vec3(holoplay_columns, holoplay_rows, holoplay_totalViews));
         });

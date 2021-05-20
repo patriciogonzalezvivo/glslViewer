@@ -14,7 +14,10 @@ This way you can quickly start editing a shader not from scratch.
 ## Content
 
 * [Pipeline examples](https://github.com/patriciogonzalezvivo/glslViewer/tree/master/examples/3D/00_pipeline)
-
+* [Lighting examples](https://github.com/patriciogonzalezvivo/glslViewer/tree/master/examples/3D/01_lighting)
+* [Materials examples](https://github.com/patriciogonzalezvivo/glslViewer/tree/master/examples/3D/02_materials)
+* [Models examples](https://github.com/patriciogonzalezvivo/glslViewer/tree/master/examples/3D/03_models)
+* [Vertex animations examples](https://github.com/patriciogonzalezvivo/glslViewer/tree/master/examples/3D/04_vertex)
 
 ------------ 
 
