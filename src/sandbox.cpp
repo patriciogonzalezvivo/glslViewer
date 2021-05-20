@@ -827,7 +827,7 @@ void Sandbox::_renderBuffers() {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
-void setVirtualCameraForView(Camera &camera, float scale, int currentViewIndex) {
+glm::vec3 setVirtualCameraForView(Camera &camera, float scale, int currentViewIndex) {
     // The standard model Looking Glass screen is roughly 4.75" vertically. If we
     // assume the average viewing distance for a user sitting at their desk is
     // about 36", our field of view should be about 14°. There is no correct
@@ -854,6 +854,8 @@ void setVirtualCameraForView(Camera &camera, float scale, int currentViewIndex) 
     projectionMatrix[2][0] += offset / (scale *  aspectRatio);
 
     camera.setProjectionViewMatrix(projectionMatrix, viewMatrix);
+
+    return offsetLocal;
 }
 
 void Sandbox::render() {
@@ -913,6 +915,8 @@ void Sandbox::render() {
             int qs_viewWidth = int(float(holoplay_width) / float(holoplay_columns));
             int qs_viewHeight = int(float(holoplay_height) / float(holoplay_rows));
 
+            glm::vec3 offset;
+
             // render views and copy each view to the quilt
             for (int viewIndex = 0; viewIndex < holoplay_totalViews; viewIndex++) {
                 // get the x and y origin for this view
@@ -928,7 +932,9 @@ void Sandbox::render() {
                 glScissor(x, y, qs_viewWidth, qs_viewHeight);
 
                 // set up the camera rotation and position for current view
-                setVirtualCameraForView( uniforms.getCamera(), m_scene.getArea(), viewIndex);
+                offset = setVirtualCameraForView( uniforms.getCamera(), m_scene.getArea(), viewIndex);
+                uniforms.set("u_holoPlayOffset", offset.x, offset.y, offset.z);
+                uniforms.set("u_holoPlayViewport", x, y, qs_viewWidth, qs_viewHeight);
 
                 m_scene.render(uniforms);
 

@@ -58,6 +58,11 @@ public:
     bool                    addAudioTexture( const std::string& _name, const std::string& device_id, bool _flip = false, bool _verbose = true );
     void                    updateStreammingTextures();
 
+    void                    set( const std::string& _name, float _value);
+    void                    set( const std::string& _name, float _x, float _y);
+    void                    set( const std::string& _name, float _x, float _y, float _z);
+    void                    set( const std::string& _name, float _x, float _y, float _z, float _w);
+    
     void                    setCubeMap( TextureCube* _cubemap );
     void                    setCubeMap( const std::string& _filename, WatchFileList& _files, bool _verbose = true);
 

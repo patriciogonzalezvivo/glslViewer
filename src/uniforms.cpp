@@ -438,6 +438,40 @@ void Uniforms::updateStreammingTextures() {
     }
 }
 
+void Uniforms::set( const std::string& _name, float _value) {
+    data[_name].bInt = false;
+    data[_name].size = 1;
+    data[_name].value[0] = _value;
+    data[_name].change = true;
+}
+
+void Uniforms::set( const std::string& _name, float _x, float _y) {
+    data[_name].bInt = false;
+    data[_name].size = 2;
+    data[_name].value[0] = _x;
+    data[_name].value[1] = _y;
+    data[_name].change = true;
+}
+
+void Uniforms::set( const std::string& _name, float _x, float _y, float _z) {
+    data[_name].bInt = false;
+    data[_name].size = 3;
+    data[_name].value[0] = _x;
+    data[_name].value[1] = _y;
+    data[_name].value[2] = _z;
+    data[_name].change = true;
+}
+
+void Uniforms::set( const std::string& _name, float _x, float _y, float _z, float _w) {
+    data[_name].bInt = false;
+    data[_name].size = 4;
+    data[_name].value[0] = _x;
+    data[_name].value[1] = _y;
+    data[_name].value[2] = _z;
+    data[_name].value[3] = _w;
+    data[_name].change = true;
+}
+
 void Uniforms::setCubeMap( TextureCube* _cubemap ) {
     if (cubemap)
         delete cubemap;
