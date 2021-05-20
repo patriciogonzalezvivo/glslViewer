@@ -419,7 +419,6 @@ void initGL (glm::ivec4 &_viewport, WindowStyle _style) {
             window = glfwCreateWindow(_viewport.z, _viewport.w, appTitle.c_str(), monitor, NULL);
         }
 
-    // #ifndef PLATFORM_LINUX
         else if (_style == HOLOPLAY) {
             glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
             glfwWindowHint(GLFW_DECORATED, false);
@@ -436,7 +435,6 @@ void initGL (glm::ivec4 &_viewport, WindowStyle _style) {
             
             glfwSetWindowPos(window, xpos, ypos);
         }
-    // #endif
     
         else
             window = glfwCreateWindow(_viewport.z, _viewport.w, appTitle.c_str(), NULL, NULL);

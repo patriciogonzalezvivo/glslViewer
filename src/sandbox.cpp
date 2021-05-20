@@ -912,8 +912,6 @@ void Sandbox::render() {
             int qs_viewWidth = int(float(holoplay_width) / float(holoplay_columns));
             int qs_viewHeight = int(float(holoplay_height) / float(holoplay_rows));
 
-            // float cam_dist = uniforms.getCamera().getDistance();
-
             // render views and copy each view to the quilt
             for (int viewIndex = 0; viewIndex < holoplay_totalViews; viewIndex++) {
                 // get the x and y origin for this view
@@ -924,9 +922,9 @@ void Sandbox::render() {
                 // set the viewport to the view to control the projection extent
                 glViewport(x, y, qs_viewWidth, qs_viewHeight);
 
-                // // set the scissor to the view to restrict calls like glClear from making modifications
-                // glEnable(GL_SCISSOR_TEST);
-                // glScissor(x, y, qs_viewWidth, qs_viewHeight);
+                // set the scissor to the view to restrict calls like glClear from making modifications
+                glEnable(GL_SCISSOR_TEST);
+                glScissor(x, y, qs_viewWidth, qs_viewHeight);
 
                 // set up the camera rotation and position for current view
                 setVirtualCameraForView( uniforms.getCamera(), m_scene.getArea(), viewIndex);
@@ -939,12 +937,10 @@ void Sandbox::render() {
                 // reset viewport
                 glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
 
-                // // restore scissor
-                // glDisable(GL_SCISSOR_TEST);
-                // glScissor(viewport[0], viewport[1], viewport[2], viewport[3]);
+                // restore scissor
+                glDisable(GL_SCISSOR_TEST);
+                glScissor(viewport[0], viewport[1], viewport[2], viewport[3]);
             }
-
-            // uniforms.getCamera().orbit(m_lat, m_lon, cam_dist);
         }
         else {
             m_scene.render(uniforms);

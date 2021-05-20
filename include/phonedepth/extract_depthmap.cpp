@@ -610,9 +610,11 @@ int parse_huawei_trailer(const unsigned char *data, const size_t size,
 }
 
 // read color images and depth maps from Apple files
-int parse_apple_trailer(const unsigned char *data, const unsigned char **cv, size_t *cv_size,
+int parse_apple_trailer(const unsigned char *data, 
+                        const unsigned char **cv, size_t *cv_size,
                         const unsigned char **dm, size_t *dm_size, image_type_t *dm_type,
-                        const unsigned char **extra, size_t *extra_size, image_type_t *extra_type) {
+                        const unsigned char **mask, size_t *mask_size, image_type_t *mask_type) {
+
     // Apple just concatenates three JPEGs. First the color view, then a tiny depth map
     // and then a mostly black and white dm.
 
@@ -624,21 +626,95 @@ int parse_apple_trailer(const unsigned char *data, const unsigned char **cv, siz
 
     *cv = file_data;
     *cv_size = data - file_data;
-    *extra = data;
-    *extra_size = trailer - data;
-    *extra_type = TYPE_JPEG;
-
-    *dm = trailer;
-    *dm_size = file_size - *cv_size - *extra_size;
+    *dm = data;
+    *dm_size = trailer - data;
     *dm_type = TYPE_JPEG;
+    size_t first_two_photo_sizes = *dm_size + *cv_size;
+    *mask = trailer;
+    *mask_size = file_size - *cv_size - *dm_size;
+    *mask_type = TYPE_JPEG;
+
+    unsigned char *trailer2;
+
+    // other times it has more masks which displaces the location of the depth photo, so
+    // if there are still photos left
+    if (trailer + 2 < file_data + file_size) {
+        trailer2 =  (unsigned char*)parse_jpeg(trailer, &_orientation);
+        if (trailer2 == 0) {
+            if (*mask_size > 0 && *dm_size > *mask_size) {
+                *dm_size = file_size - *cv_size - *dm_size;
+                *dm = trailer;
+            }
+            return 1;
+        }
+        *mask_size = trailer2 - trailer;
+    }
+    if (*mask_size > 0 && *dm_size > *mask_size) {
+        *dm_size = file_size - *cv_size - *dm_size;
+        *dm = trailer;
+    }
+    size_t noSize = -1;
+    const unsigned char **extras[8] = {mask,mask,mask,mask,mask,mask,mask,mask};
+    const unsigned char *trailers[8];
+    trailers[0] = trailer;
+    *mask_size = noSize;
+    size_t extras_size[8] = {*mask_size,noSize,noSize,noSize,noSize,noSize,noSize,noSize};
+    const unsigned char **placeholder_dm = dm;
+    size_t *placeholder_dm_size = dm_size;
+    int how_many_photos = 0;
+
+    // if there are still photos left
+    for (int i = 0 ; i < 5; i++) {
+        // if the place at the start of the last photo accessed is less than the entire file size
+        // there is data left so lets keep going!
+        if (trailers[i] + 2 < file_data + file_size) {
+
+            trailers[i+1] =  (unsigned char*)parse_jpeg(trailers[i], &_orientation);
+            if (trailers[i+1] == 0) {
+                return 1;
+            }
+
+            if (extras_size[i] == noSize) {
+                extras_size[i] = trailers[i+1]-trailers[i];
+            }
+            if (i == 0) {
+                *mask_size = trailers[i+1]-trailers[i];
+            }
+            *extras[i+1] = trailers[i+1];
+
+            // if there no extra data left then this is the final size
+            if (!(trailers[i+1] + 2 < file_data + file_size)) {
+                size_t allExtraPhotoSizes = 0;
+                for (int j = 0; j < i+1 ; j++) {
+                    allExtraPhotoSizes += extras_size[j];
+                }
+                extras_size[i+1] = file_size - first_two_photo_sizes - *mask_size - allExtraPhotoSizes;
+            }
+
+            //for the selfies always the 6th photo (4th here bc the first two were already taken out) 
+            // (except if the 6th photo is garbage)
+            if (i == 4 && extras_size[i] > 0.) {
+                placeholder_dm_size = &extras_size[i];
+                placeholder_dm = &trailers[i];
+            }
+        }
+        else{
+            how_many_photos = i;
+            break;
+        }
+        how_many_photos = i;
+    }
+    if (how_many_photos >= 4) {
+        *dm_size = *placeholder_dm_size;
+        *dm = *placeholder_dm ;
+    }
 
     return 1;
 }
 
 int extract_depth(const char *filename, 
                   const unsigned char **cv, size_t *cv_size,
-                  const unsigned char **dm, size_t *dm_size, image_type_t *dm_type,  
-                  const unsigned char **extra, size_t *extra_size, image_type_t *extra_type) {
+                  const unsigned char **dm, size_t *dm_size, image_type_t *dm_type) {
 
     int data_found = 0;
     uint32_t orientation = 0;
@@ -667,6 +743,10 @@ int extract_depth(const char *filename,
     // printf("Parsing JPEG structure\n\n");
     const unsigned char *trailer = parse_jpeg(file_data, &orientation);
 
+    const unsigned char *extra = NULL;
+    size_t extra_size = 0;
+    image_type_t extra_type = TYPE_NONE;
+
     // look for the Samsung data
     if (parse_samsung_trailer(file_data, file_size, cv, cv_size, dm, dm_size,
                                 &dm_width, &dm_height, dm_type, &orientation)) {
@@ -679,7 +759,7 @@ int extract_depth(const char *filename,
         data_found = 1;
     }
     else if (parse_apple_trailer( trailer, cv, cv_size, dm, dm_size,
-                                  dm_type, extra, extra_size, extra_type)) {
+                                  dm_type, &extra, &extra_size, &extra_type)) {
         // printf("\nApple depth data founded\n");
         data_found = 1;
     }
