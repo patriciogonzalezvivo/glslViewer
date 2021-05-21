@@ -67,7 +67,7 @@ Uniforms::Uniforms(): cubemap(nullptr), m_change(false), m_is_audio_init(false) 
     // CAMERA UNIFORMS
     //
     functions["u_camera"] = UniformFunction("vec3", [this](Shader& _shader) {
-        _shader.setUniform("u_camera", -getCamera().getPosition());
+        _shader.setUniform("u_camera", -getCamera().getPosition() );
     },
     [this]() { return toString(-getCamera().getPosition(), ','); });
 
@@ -443,6 +443,8 @@ void Uniforms::set( const std::string& _name, float _value) {
     data[_name].size = 1;
     data[_name].value[0] = _value;
     data[_name].change = true;
+
+    m_change = true;
 }
 
 void Uniforms::set( const std::string& _name, float _x, float _y) {
@@ -451,6 +453,8 @@ void Uniforms::set( const std::string& _name, float _x, float _y) {
     data[_name].value[0] = _x;
     data[_name].value[1] = _y;
     data[_name].change = true;
+
+    m_change = true;
 }
 
 void Uniforms::set( const std::string& _name, float _x, float _y, float _z) {
@@ -470,6 +474,8 @@ void Uniforms::set( const std::string& _name, float _x, float _y, float _z, floa
     data[_name].value[2] = _z;
     data[_name].value[3] = _w;
     data[_name].change = true;
+
+    m_change = true;
 }
 
 void Uniforms::setCubeMap( TextureCube* _cubemap ) {

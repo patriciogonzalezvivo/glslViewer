@@ -3,12 +3,12 @@ precision mediump float;
 #endif
 
 uniform vec3    u_light;
+uniform vec2    u_resolution;
 
 #ifdef HOLOPLAY
 uniform vec4    u_holoPlayViewport;
 #define RESOLUTION u_holoPlayViewport.zw
 #else
-uniform vec2    u_resolution;
 #define RESOLUTION u_resolution
 #endif
 
@@ -31,7 +31,7 @@ void main(void) {
    vec2 st = gl_FragCoord.xy/RESOLUTION;
 
 #ifdef BACKGROUND
-    st = ratio(st, RESOLUTION);
+    st = ratio(st, u_resolution);
     color *= vec3(0.5) * step(0.5, fract((st.x - st.y - u_time * 0.05) * 20.));
 #else
     #ifdef MODEL_VERTEX_COLOR

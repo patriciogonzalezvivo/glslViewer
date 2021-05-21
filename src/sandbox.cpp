@@ -523,11 +523,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     else {
         m_scene.setup( _commands, uniforms);
         m_scene.loadGeometry( uniforms, _files, geom_index, verbose );
-
-        if (holoplay >= 0 )
-            uniforms.getCamera().orbit(m_lat, m_lon, m_scene.getArea() * 8.5);
-        else
-            uniforms.getCamera().orbit(m_lat, m_lon, m_scene.getArea() * 2.0);
+        uniforms.getCamera().orbit(m_lat, m_lon, m_scene.getArea() * 2.0);
     }
 
     // FINISH SCENE SETUP
@@ -536,17 +532,22 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
 
     if (holoplay >= 0) {
         addDefine("HOLOPLAY", toString(holoplay));
-        uniforms.functions["u_holoPlayTile"] = UniformFunction("vec3", [](Shader& _shader) {
-            _shader.setUniform("u_holoPlayTile", glm::vec3(holoplay_columns, holoplay_rows, holoplay_totalViews));
-        });
 
-        uniforms.functions["u_holoPlayCalibration"] = UniformFunction("vec4", [](Shader& _shader) {
-            _shader.setUniform("u_holoPlayCalibration", holoplay_dpi, holoplay_pitch, holoplay_slope, holoplay_center);
-        });
+        uniforms.getCamera().setFOV(glm::radians(14.0f));
+        // uniforms.getCamera().setClipping(0.01, 100.0);
 
-        uniforms.functions["u_holoPlayRB"] = UniformFunction("vec2", [](Shader& _shader) {
-            _shader.setUniform("u_holoPlayRB", float(holoplay_ri), float(holoplay_bi));
-        });
+        if (geom_index != -1)
+            uniforms.getCamera().orbit(m_lat, m_lon, m_scene.getArea() * 8.5);
+
+        // uniforms.functions["u_camera"] = UniformFunction("vec3", [this](Shader& _shader) {
+        //     glm::mat4 viewModel = glm::inverse(uniforms.getCamera().getViewMatrix());
+        //     _shader.setUniform("u_camera", glm::vec3(viewModel[3]) );
+        // },
+        // [this]() { 
+        //     glm::mat4 viewModel = glm::inverse(uniforms.getCamera().getViewMatrix());
+        //     glm::vec3 pos = glm::vec3(viewModel[3]);
+        //     return toString(pos, ','); 
+        // });
 
         if (holoplay == 0) {
             holoplay_width = 2048;
@@ -569,7 +570,6 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
             holoplay_rows = 9;
             holoplay_totalViews = 45;
         }
-        uniforms.getCamera().setFOV(glm::radians(14.0f));
     } 
 
     // Prepare viewport
@@ -749,10 +749,6 @@ bool Sandbox::reloadShaders( WatchFileList &_files ) {
     else if (holoplay >= 0) {
         m_postprocessing_shader.load(holoplay_frag, billboard_vert, false);
         uniforms.functions["u_scene"].present = true;
-        uniforms.functions["u_holoPlayTile"].present = true;
-        uniforms.functions["u_holoPlayCalibration"].present = true;
-        uniforms.functions["u_holoPlayRB"].present = true;
-        
         m_postprocessing = true;
     }
     else if (fxaa) {
@@ -827,7 +823,7 @@ void Sandbox::_renderBuffers() {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
-glm::vec3 setVirtualCameraForView(Camera &camera, float scale, int currentViewIndex) {
+glm::mat4 setVirtualCameraForView(Camera &camera, float scale, int currentViewIndex) {
     // The standard model Looking Glass screen is roughly 4.75" vertically. If we
     // assume the average viewing distance for a user sitting at their desk is
     // about 36", our field of view should be about 14°. There is no correct
@@ -855,7 +851,7 @@ glm::vec3 setVirtualCameraForView(Camera &camera, float scale, int currentViewIn
 
     camera.setProjectionViewMatrix(projectionMatrix, viewMatrix);
 
-    return offsetLocal;
+    return viewMatrix;
 }
 
 void Sandbox::render() {
@@ -894,15 +890,67 @@ void Sandbox::render() {
 
     // RENDER CONTENT
     if (geom_index == -1) {
-        // Load main shader
-        m_canvas_shader.use();
 
-        // Update Uniforms and textures variables
-        uniforms.feedTo( m_canvas_shader );
+         if (holoplay >= 0) {
+            // save the viewport for the total quilt
+            GLint viewport[4];
+            glGetIntegerv(GL_VIEWPORT, viewport);
 
-        // Pass special uniforms
-        m_canvas_shader.setUniform("u_modelViewProjectionMatrix", glm::mat4(1.));
-        m_billboard_vbo->render( &m_canvas_shader );
+            // get quilt view dimensions
+            int qs_viewWidth = int(float(holoplay_width) / float(holoplay_columns));
+            int qs_viewHeight = int(float(holoplay_height) / float(holoplay_rows));
+
+            // Load main shader
+            m_canvas_shader.use();
+
+            // render views and copy each view to the quilt
+            for (int viewIndex = 0; viewIndex < holoplay_totalViews; viewIndex++) {
+                // get the x and y origin for this view
+                int x = (viewIndex % holoplay_columns) * qs_viewWidth;
+                int y = int(float(viewIndex) / float(holoplay_columns)) * qs_viewHeight;
+
+                // get the x and y origin for this view
+                // set the viewport to the view to control the projection extent
+                glViewport(x, y, qs_viewWidth, qs_viewHeight);
+
+                // // set the scissor to the view to restrict calls like glClear from making modifications
+                glEnable(GL_SCISSOR_TEST);
+                glScissor(x, y, qs_viewWidth, qs_viewHeight);
+
+                // set up the camera rotation and position for current view
+                glm::mat4 view = setVirtualCameraForView( uniforms.getCamera(), 5.0, viewIndex);
+                uniforms.set("u_holoPlayTile", float(holoplay_columns), float(holoplay_rows), float(holoplay_totalViews));
+                uniforms.set("u_holoPlayViewport", float(x), float(y), float(qs_viewWidth), float(qs_viewHeight));
+                uniforms.set("u_holoPlayView", float(viewIndex));
+                glm::vec3 pos = glm::vec3(glm::inverse( view )[3]);
+                uniforms.set("u_holoPlayCamera", pos.x, pos.y, pos.z);
+
+                // Update Uniforms and textures variables
+                uniforms.feedTo( m_canvas_shader );
+
+                // Pass special uniforms
+                m_canvas_shader.setUniform("u_modelViewProjectionMatrix", glm::mat4(1.));
+                m_billboard_vbo->render( &m_canvas_shader );
+
+                // reset viewport
+                glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
+
+                // // restore scissor
+                glDisable(GL_SCISSOR_TEST);
+                glScissor(viewport[0], viewport[1], viewport[2], viewport[3]);
+            }
+        }
+        else {
+            // Load main shader
+            m_canvas_shader.use();
+
+            // Update Uniforms and textures variables
+            uniforms.feedTo( m_canvas_shader );
+
+            // Pass special uniforms
+            m_canvas_shader.setUniform("u_modelViewProjectionMatrix", glm::mat4(1.));
+            m_billboard_vbo->render( &m_canvas_shader );
+        }
     }
     else {
 
@@ -915,7 +963,6 @@ void Sandbox::render() {
             int qs_viewWidth = int(float(holoplay_width) / float(holoplay_columns));
             int qs_viewHeight = int(float(holoplay_height) / float(holoplay_rows));
 
-            glm::vec3 offset;
 
             // render views and copy each view to the quilt
             for (int viewIndex = 0; viewIndex < holoplay_totalViews; viewIndex++) {
@@ -932,9 +979,13 @@ void Sandbox::render() {
                 glScissor(x, y, qs_viewWidth, qs_viewHeight);
 
                 // set up the camera rotation and position for current view
-                offset = setVirtualCameraForView( uniforms.getCamera(), m_scene.getArea(), viewIndex);
-                uniforms.set("u_holoPlayOffset", offset.x, offset.y, offset.z);
-                uniforms.set("u_holoPlayViewport", x, y, qs_viewWidth, qs_viewHeight);
+                glm::mat4 view = setVirtualCameraForView( uniforms.getCamera(), m_scene.getArea(), viewIndex);
+                uniforms.set("u_holoPlayTile", float(holoplay_columns), float(holoplay_rows), float(holoplay_totalViews));
+                uniforms.set("u_holoPlayViewport", float(x), float(y), float(qs_viewWidth), float(qs_viewHeight));
+                uniforms.set("u_holoPlayView", float(viewIndex));
+                glm::vec3 pos = glm::vec3(glm::inverse( view )[3]);
+                uniforms.set("u_holoPlayCamera", pos.x, pos.y, pos.z);
+
 
                 m_scene.render(uniforms);
 
@@ -970,6 +1021,12 @@ void Sandbox::render() {
 
         // Update uniforms and textures
         uniforms.feedTo( m_postprocessing_shader );
+
+        if (holoplay >= 0) {
+            m_postprocessing_shader.setUniform("u_holoPlayTile", float(holoplay_columns), float(holoplay_rows), float(holoplay_totalViews));
+            m_postprocessing_shader.setUniform("u_holoPlayCalibration", holoplay_dpi, holoplay_pitch, holoplay_slope, holoplay_center);
+            m_postprocessing_shader.setUniform("u_holoPlayRB", float(holoplay_ri), float(holoplay_bi));
+        }
 
         // Pass textures of buffers
         for (unsigned int i = 0; i < uniforms.buffers.size(); i++)

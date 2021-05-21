@@ -12,6 +12,14 @@ uniform mat4    u_modelViewProjectionMatrix;
 uniform mat3    u_normalMatrix;
 uniform vec3    u_camera;
 
+
+#ifdef HOLOPLAY
+uniform vec3    u_holoPlayCamera;
+#define CAMERA  u_holoPlayCamera
+#else
+#define CAMERA  u_camera
+#endif
+
 attribute vec4  a_position;
 varying vec4    v_position;
 
@@ -30,10 +38,10 @@ attribute vec2  a_texcoord;
 varying vec2    v_texcoord;
 #endif
 
-const float etaR = 0.64;
-const float etaG = 0.65;
-const float etaB = 0.66;
-const float fresnelPower = 6.0;
+const float     etaR = 0.64;
+const float     etaG = 0.65;
+const float     etaB = 0.66;
+const float     fresnelPower = 6.0;
 
 const float f = ((1.0-etaG)*(1.0-etaG)) / ((1.0+etaG)*(1.0+etaG));
 
@@ -58,13 +66,7 @@ void main(void) {
     v_texcoord = a_texcoord;
     #endif
 
-#ifdef HOLOPLAY
-    vec3 cam = (inverse(u_viewMatrix) * vec4(0.0, 0.0, length(u_camera), 0.0)).xyz;
-#else
-    vec3 cam = u_camera;
-#endif
-
-    vec3 i = normalize(v_position.xyz - cam);
+    vec3 i = normalize(v_position.xyz - CAMERA);
     v_ratio = f + (1.0 - f) * pow((1.0 - dot(-i, v_normal)), fresnelPower);
 
     v_refractR = refract(i, v_normal, etaR);

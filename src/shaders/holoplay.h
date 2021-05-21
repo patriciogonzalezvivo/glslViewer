@@ -37,7 +37,6 @@ vec2 quilt_map(vec3 tile, vec2 pos, float a) {
 void main (void) {
     vec3 color = vec3(0.0);
     vec2 st = gl_FragCoord.xy/u_resolution.xy;
-    float screen_aspect = u_resolution.x/u_resolution.y;
 
     float pitch = -u_resolution.x / u_holoPlayCalibration.x  * u_holoPlayCalibration.y * sin(atan(abs(u_holoPlayCalibration.z)));
     float tilt = u_resolution.y / (u_resolution.x * u_holoPlayCalibration.z);
