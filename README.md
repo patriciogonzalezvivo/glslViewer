@@ -55,14 +55,6 @@ GlslViewer gives support to:
          * [Geometry Attributes](https://github.com/patriciogonzalezvivo/glslViewer/wiki/GlslViewer-DEFINES#geometry-defines)
          * [Materials](https://github.com/patriciogonzalezvivo/glslViewer/wiki/GlslViewer-DEFINES#material-defines)
     * [Uniforms](https://github.com/patriciogonzalezvivo/glslViewer/wiki/GlslViewer-UNIFORMS)
-    
-## Bugs to fix
-
-[ ] [Support for GL (Full KMS) or GL (Fake KMS) on RaspberryPi](https://github.com/patriciogonzalezvivo/glslViewer/issues/135)
-
-[ ] Depth frag shader for scene depthmap  ( `u_sceneDepth` ) instead of rendering to multiple targets ( only on RPI )
-
-[ ] Depth frag shader for light's shadowMap, to work on RPI
 
 
 ## Author
@@ -93,5 +85,7 @@ Thanks to:
 * [Philip Rideout](http://prideout.net/) and [Romain Guy](http://www.curious-creature.com/) general generosity to share their code and experience
 
 * [Mihai Sebea](https://codepatcher.wordpress.com) for porting it to windows(TM) 
+
+* [Sergei B](https://github.com/bespsm) for adding support for Audio textures
 
 ![](images/dof.gif)
