@@ -16,19 +16,10 @@
 precision mediump float;
 #endif
 
-uniform mat4        u_viewMatrix;
 uniform vec3        u_camera;
-uniform vec3        u_light;
-uniform vec3        u_lightColor;
-
 uniform vec2        u_resolution;
 uniform float       u_frame;
 uniform float       u_time;
-
-uniform vec4        u_holoPlayViewport;
-uniform vec3        u_holoPlayCamera;
-uniform vec3        u_holoPlayTile;
-uniform float       u_holoPlayView;
 
 varying vec2        v_texcoord;
 
