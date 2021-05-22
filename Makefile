@@ -122,7 +122,7 @@ clean:
 	@rm -rvf $(EXE) src/*.o src/*/*.o include/*/*.o include/*/*/*.o include/*/*/*/*.o *.dSYM 
 	
 install:
-	@rm -rfv /usr/local/bin/$(EXE)
+	@rm -rf /usr/local/bin/$(EXE)
 	@cp $(EXE) /usr/local/bin
 
 uninstall:
