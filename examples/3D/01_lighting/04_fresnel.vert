@@ -12,14 +12,6 @@ uniform mat4    u_modelViewProjectionMatrix;
 uniform mat3    u_normalMatrix;
 uniform vec3    u_camera;
 
-
-#ifdef HOLOPLAY
-uniform vec3    u_holoPlayCamera;
-#define CAMERA  u_holoPlayCamera
-#else
-#define CAMERA  u_camera
-#endif
-
 attribute vec4  a_position;
 varying vec4    v_position;
 
@@ -66,7 +58,7 @@ void main(void) {
     v_texcoord = a_texcoord;
     #endif
 
-    vec3 i = normalize(v_position.xyz - CAMERA);
+    vec3 i = normalize(v_position.xyz - u_camera);
     v_ratio = f + (1.0 - f) * pow((1.0 - dot(-i, v_normal)), fresnelPower);
 
     v_refractR = refract(i, v_normal, etaR);

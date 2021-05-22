@@ -169,13 +169,13 @@ void Node::rotate(const glm::quat& _q) {
 }
 
 void Node::rotateAround(const glm::quat& _q, const glm::vec3& _point) {
-    setPosition( (getPosition() - _point) * _q + _point);
+    setPosition( (m_position - _point) * _q + _point);
     onOrientationChanged();
     onPositionChanged();
 }
 
 void Node::lookAt(const glm::vec3& _lookAtPosition, glm::vec3 _upVector ) {
-    glm::mat4 m = glm::lookAt(-getPosition(), _lookAtPosition, _upVector);
+    glm::mat4 m = glm::lookAt(-m_position, _lookAtPosition, _upVector);
     setOrientation(glm::toQuat(m));
 }
 

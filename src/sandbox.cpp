@@ -534,20 +534,11 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         addDefine("HOLOPLAY", toString(holoplay));
 
         uniforms.getCamera().setFOV(glm::radians(14.0f));
+        uniforms.getCamera().setType(CameraType::PERSPECTIVE_VIRTUAL_OFFSET);
         // uniforms.getCamera().setClipping(0.01, 100.0);
 
         if (geom_index != -1)
             uniforms.getCamera().orbit(m_lat, m_lon, m_scene.getArea() * 8.5);
-
-        // uniforms.functions["u_camera"] = UniformFunction("vec3", [this](Shader& _shader) {
-        //     glm::mat4 viewModel = glm::inverse(uniforms.getCamera().getViewMatrix());
-        //     _shader.setUniform("u_camera", glm::vec3(viewModel[3]) );
-        // },
-        // [this]() { 
-        //     glm::mat4 viewModel = glm::inverse(uniforms.getCamera().getViewMatrix());
-        //     glm::vec3 pos = glm::vec3(viewModel[3]);
-        //     return toString(pos, ','); 
-        // });
 
         if (holoplay == 0) {
             holoplay_width = 2048;
@@ -823,37 +814,6 @@ void Sandbox::_renderBuffers() {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
-glm::mat4 setVirtualCameraForView(Camera &camera, float scale, int currentViewIndex) {
-    // The standard model Looking Glass screen is roughly 4.75" vertically. If we
-    // assume the average viewing distance for a user sitting at their desk is
-    // about 36", our field of view should be about 14°. There is no correct
-    // answer, as it all depends on your expected user's distance from the Looking
-    // Glass, but we've found the most success using this figure.
-
-    // start at -viewCone * 0.5 and go up to viewCone * 0.5
-    const float viewCone = glm::radians(40.0);   // view cone of hardware, always around 40
-    float offsetAngle = (float(currentViewIndex) / (float(holoplay_totalViews) - 1.0f) - 0.5f) * viewCone;
-
-    // calculate the offset that the camera should move
-    float offset = -camera.getDistance() * tan(offsetAngle) * 0.5f;
-
-    // modify the view matrix (position)
-    // determine the local direction of the offset 
-    glm::vec3 offsetLocal = camera.getXAxis() * offset;
-    glm::mat4 viewMatrix = glm::translate(camera.getViewMatrix(), offsetLocal);
-
-    const float fov =  glm::radians(14.0f);
-    glm::mat4 projectionMatrix = glm::perspective(fov, camera.getAspect(), camera.getNearClip(), camera.getFarClip());
-    // modify the projection matrix, relative to the camera size and aspect ratio
-
-    float aspectRatio =  (float)getWindowWidth()/(float)getWindowHeight();
-    projectionMatrix[2][0] += offset / (scale *  aspectRatio);
-
-    camera.setProjectionViewMatrix(projectionMatrix, viewMatrix);
-
-    return viewMatrix;
-}
-
 void Sandbox::render() {
 
     // UPDATE STREAMING TEXTURES
@@ -918,12 +878,9 @@ void Sandbox::render() {
                 glScissor(x, y, qs_viewWidth, qs_viewHeight);
 
                 // set up the camera rotation and position for current view
-                glm::mat4 view = setVirtualCameraForView( uniforms.getCamera(), 5.0, viewIndex);
+                uniforms.getCamera().setVirtualOffset(5.0, viewIndex, holoplay_totalViews);
                 uniforms.set("u_holoPlayTile", float(holoplay_columns), float(holoplay_rows), float(holoplay_totalViews));
                 uniforms.set("u_holoPlayViewport", float(x), float(y), float(qs_viewWidth), float(qs_viewHeight));
-                uniforms.set("u_holoPlayView", float(viewIndex));
-                glm::vec3 pos = glm::vec3(glm::inverse( view )[3]);
-                uniforms.set("u_holoPlayCamera", pos.x, pos.y, pos.z);
 
                 // Update Uniforms and textures variables
                 uniforms.feedTo( m_canvas_shader );
@@ -979,13 +936,9 @@ void Sandbox::render() {
                 glScissor(x, y, qs_viewWidth, qs_viewHeight);
 
                 // set up the camera rotation and position for current view
-                glm::mat4 view = setVirtualCameraForView( uniforms.getCamera(), m_scene.getArea(), viewIndex);
+                uniforms.getCamera().setVirtualOffset(m_scene.getArea(), viewIndex, holoplay_totalViews);
                 uniforms.set("u_holoPlayTile", float(holoplay_columns), float(holoplay_rows), float(holoplay_totalViews));
                 uniforms.set("u_holoPlayViewport", float(x), float(y), float(qs_viewWidth), float(qs_viewHeight));
-                uniforms.set("u_holoPlayView", float(viewIndex));
-                glm::vec3 pos = glm::vec3(glm::inverse( view )[3]);
-                uniforms.set("u_holoPlayCamera", pos.x, pos.y, pos.z);
-
 
                 m_scene.render(uniforms);
 

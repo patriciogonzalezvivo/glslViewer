@@ -1,4 +1,5 @@
 #include "camera.h"
+#include "../window.h"
 
 #include "glm/gtc/matrix_inverse.hpp"
 
@@ -29,6 +30,7 @@ void Camera::setViewport(int _width, int _height){
 //Setting Functions
 void Camera::setType(CameraType _type) {
     m_type = _type;
+    m_viewMatrix = getTransformMatrix();
     lookAt(m_target);
     updateCameraSettings();
 }
@@ -54,31 +56,83 @@ void Camera::setDistance(float _distance) {
     lookAt(m_target);
 }
 
-    /** Sets this camera's exposure (default is 16, 1/125s, 100 ISO)
-     * from https://github.com/google/filament/blob/master/filament/src/Exposure.cpp
-     *
-     * The exposure ultimately controls the scene's brightness, just like with a real camera.
-     * The default values provide adequate exposure for a camera placed outdoors on a sunny day
-     * with the sun at the zenith.
-     *
-     * @param aperture      Aperture in f-stops, clamped between 0.5 and 64.
-     *                      A lower \p aperture value *increases* the exposure, leading to
-     *                      a brighter scene. Realistic values are between 0.95 and 32.
-     *
-     * @param shutterSpeed  Shutter speed in seconds, clamped between 1/25,000 and 60.
-     *                      A lower shutter speed increases the exposure. Realistic values are
-     *                      between 1/8000 and 30.
-     *
-     * @param sensitivity   Sensitivity in ISO, clamped between 10 and 204,800.
-     *                      A higher \p sensitivity increases the exposure. Realistice values are
-     *                      between 50 and 25600.
-     *
-     * @note
-     * With the default parameters, the scene must contain at least one Light of intensity
-     * similar to the sun (e.g.: a 100,000 lux directional light).
-     *
-     * @see Light, Exposure
-     */
+void Camera::setVirtualOffset(float scale, int currentViewIndex, int totalViews) {
+    // The standard model Looking Glass screen is roughly 4.75" vertically. If we
+    // assume the average viewing distance for a user sitting at their desk is
+    // about 36", our field of view should be about 14°. There is no correct
+    // answer, as it all depends on your expected user's distance from the Looking
+    // Glass, but we've found the most success using this figure.
+
+    // start at -viewCone * 0.5 and go up to viewCone * 0.5
+    const float viewCone = glm::radians(40.0);   // view cone of hardware, always around 40
+    float offsetAngle = (float(currentViewIndex) / (float(totalViews) - 1.0f) - 0.5f) * viewCone;
+
+    // calculate the offset that the camera should move
+    float offset = -getDistance() * tan(offsetAngle) * 0.5f;
+
+    // modify the view matrix (position)
+    // determine the local direction of the offset 
+    glm::vec3 offsetLocal = getXAxis() * offset;
+    m_viewMatrix = glm::translate(getTransformMatrix(), offsetLocal);
+
+    const float fov =  glm::radians(14.0f);
+    glm::mat4 projectionMatrix = glm::perspective(fov, getAspect(), getNearClip(), getFarClip());
+    // modify the projection matrix, relative to the camera size and aspect ratio
+
+    float aspectRatio =  (float)getWindowWidth()/(float)getWindowHeight();
+    projectionMatrix[2][0] += offset / (scale * aspectRatio);
+
+    m_projectionMatrix = projectionMatrix;
+    m_projectionViewMatrix = projectionMatrix * m_viewMatrix;
+    m_normalMatrix = glm::transpose(glm::inverse(glm::mat3(m_viewMatrix)));
+    bChange = true;
+
+    // updateProjectionViewMatrix();
+}
+
+const glm::mat4& Camera::getViewMatrix() const {
+    if (m_type == CameraType::PERSPECTIVE_VIRTUAL_OFFSET )
+        return m_viewMatrix;
+    else 
+        return getTransformMatrix(); 
+}
+
+glm::vec3 Camera::getPosition() const {
+    if (m_type == CameraType::PERSPECTIVE_VIRTUAL_OFFSET )
+        return -glm::vec3(glm::inverse(m_viewMatrix)[3]);
+    else 
+        return m_position;
+}
+
+const float Camera::getDistance() const { 
+    return glm::length(m_position);
+}
+
+/** Sets this camera's exposure (default is 16, 1/125s, 100 ISO)
+ * from https://github.com/google/filament/blob/master/filament/src/Exposure.cpp
+ *
+ * The exposure ultimately controls the scene's brightness, just like with a real camera.
+ * The default values provide adequate exposure for a camera placed outdoors on a sunny day
+ * with the sun at the zenith.
+ *
+ * @param aperture      Aperture in f-stops, clamped between 0.5 and 64.
+ *                      A lower \p aperture value *increases* the exposure, leading to
+ *                      a brighter scene. Realistic values are between 0.95 and 32.
+ *
+ * @param shutterSpeed  Shutter speed in seconds, clamped between 1/25,000 and 60.
+ *                      A lower shutter speed increases the exposure. Realistic values are
+ *                      between 1/8000 and 30.
+ *
+ * @param sensitivity   Sensitivity in ISO, clamped between 10 and 204,800.
+ *                      A higher \p sensitivity increases the exposure. Realistice values are
+ *                      between 50 and 25600.
+ *
+ * @note
+ * With the default parameters, the scene must contain at least one Light of intensity
+ * similar to the sun (e.g.: a 100,000 lux directional light).
+ *
+ * @see Light, Exposure
+ */
 
 void  Camera::setExposure(float _aperture, float _shutterSpeed, float _sensitivity) {
     m_aperture = _aperture;
@@ -114,25 +168,12 @@ void  Camera::setExposure(float _aperture, float _shutterSpeed, float _sensitivi
 void Camera::updateCameraSettings() {
     setExposure(getAperture(), getShutterSpeed(), getSensitivity());
     
-    if (m_type == CameraType::ORTHO) {
+    if (m_type == CameraType::ORTHO)
         m_projectionMatrix = glm::ortho(-1.5f * float(m_aspect), 1.5f * float(m_aspect), -1.5f, 1.5f, -10.0f, 10.f);
-    }
-    else if (m_type == CameraType::PERSPECTIVE) {
+    else
         m_projectionMatrix = glm::perspective(m_fov, m_aspect, m_nearClip, m_farClip);
-    }
+    
     updateProjectionViewMatrix();
-}
-
-void Camera::setProjectionMatrix(const glm::mat4 &_project) {
-    m_projectionMatrix = _project;
-    bChange = true;
-}
-
-void Camera::setProjectionViewMatrix(const glm::mat4 &_project, const glm::mat4 &_view) {
-    m_projectionMatrix = _project;
-    m_projectionViewMatrix = m_projectionMatrix * _view;
-    m_normalMatrix = glm::transpose(glm::inverse(glm::mat3(_view)));
-    bChange = true;
 }
 
 void Camera::updateProjectionViewMatrix() {

@@ -67,7 +67,7 @@ protected:
     virtual void        onOrientationChanged() {};
     virtual void        onScaleChanged() {};
 
-private:
+// private:
     glm::mat4           m_transformMatrix;
     glm::vec3           m_axis[3];
 
