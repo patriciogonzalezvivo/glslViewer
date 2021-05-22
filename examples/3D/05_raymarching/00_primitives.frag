@@ -1,5 +1,3 @@
-#version 130
-
 // The MIT License
 // Copyright © 2013 Inigo Quilez
 // Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
@@ -34,11 +32,9 @@ uniform float       u_holoPlayView;
 
 varying vec2        v_texcoord;
 
-#if HW_PERFORMANCE==0
+// make this 2 or 3 for antialiasing
 #define AA 1
-#else
-#define AA 2   // make this 2 or 3 for antialiasing
-#endif
+// #define AA 2
 
 //------------------------------------------------------------------
 float dot2( in vec2 v ) { return dot(v,v); }
@@ -330,7 +326,7 @@ vec2 opU( vec2 d1, vec2 d2 )
 
 //------------------------------------------------------------------
 
-#define ZERO (min(int(u_frame),0))
+#define ZERO int(min(u_frame,0.0))
 
 //------------------------------------------------------------------
 
@@ -463,23 +459,11 @@ float calcSoftshadow( in vec3 ro, in vec3 rd, in float mint, in float tmax )
 // http://iquilezles.org/www/articles/normalsSDF/normalsSDF.htm
 vec3 calcNormal( in vec3 pos )
 {
-#if 0
     vec2 e = vec2(1.0,-1.0)*0.5773*0.0005;
     return normalize( e.xyy*map( pos + e.xyy ).x + 
 					  e.yyx*map( pos + e.yyx ).x + 
 					  e.yxy*map( pos + e.yxy ).x + 
-					  e.xxx*map( pos + e.xxx ).x );
-#else
-    // inspired by tdhooper and klems - a way to prevent the compiler from inlining map() 4 times
-    vec3 n = vec3(0.0);
-    for( int i=ZERO; i<4; i++ )
-    {
-        vec3 e = 0.5773*(2.0*vec3((((i+3)>>1)&1),((i>>1)&1),(i&1))-1.0);
-        n += e*map(pos+0.0005*e).x;
-      //if( n.x+n.y+n.z>100.0 ) break;
-    }
-    return normalize(n);
-#endif    
+					  e.xxx*map( pos + e.xxx ).x );  
 }
 
 float calcAO( in vec3 pos, in vec3 nor )
