@@ -25,7 +25,6 @@ varying vec2        v_texcoord;
 
 // make this 2 or 3 for antialiasing
 #define AA 1
-// #define AA 2
 
 //------------------------------------------------------------------
 float dot2( in vec2 v ) { return dot(v,v); }
