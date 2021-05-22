@@ -122,20 +122,8 @@ clean:
 	@rm -rvf $(EXE) src/*.o src/*/*.o include/*/*.o include/*/*/*.o include/*/*/*/*.o *.dSYM 
 	
 install:
-	@rm -rfv /usr/local/bin/glslScreenSaver /usr/local/bin/glslLoader /usr/local/bin/$(EXE)
-	@cp bin/glslScreenSaver /usr/local/bin
-	@cp bin/glslLoader /usr/local/bin
+	@rm -rfv /usr/local/bin/$(EXE)
 	@cp $(EXE) /usr/local/bin
-
-install_python:
-	@sudo python setup.py install
-	@sudo python3 setup.py install
-
-clean_python:
-	@rm -rvf build
-	@rm -rvf dist]
-	@rm -rvf python/glslviewer.egg-info
 
 uninstall:
 	@rm /usr/local/$(EXE)
-	@rm /usr/local/bin/glslLoader
