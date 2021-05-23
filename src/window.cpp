@@ -70,7 +70,12 @@ EGLContext getEGLContext() { return context; }
 
 // unsigned long long timeStart;
 std::string device_mouse = "/dev/input/mice";
+
+#ifdef DRIVER_CARD0
+std::string device_screen = "/dev/dri/card0";
+#else
 std::string device_screen = "/dev/dri/card1";
+#endif
 
 // get Time Function
 struct timespec time_start;

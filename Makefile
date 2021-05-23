@@ -14,6 +14,7 @@ OBJECTS := $(SOURCES:.cpp=.o)
 PLATFORM = $(shell uname)
 DRIVER ?= not_defined
 LIBAV ?= not_defined
+CARD ?= not_defined
 
 ifneq ("$(wildcard /opt/vc/include/bcm_host.h)","")
 	PLATFORM = RPI
@@ -21,6 +22,9 @@ ifneq ("$(wildcard /opt/vc/include/bcm_host.h)","")
 	ifeq ($(RPI_REVISION),$(filter $(RPI_REVISION),a03111 b03111 b03112 b03114 c03111 c03112 c03114 d03114))
 		ifeq ($(DRIVER),not_defined)
 			DRIVER = fake_kms
+			ifeq ($(CARD),not_defined)
+				CARD=0
+			endif
 		endif
 	else
 		ifeq ($(DRIVER),not_defined)
@@ -65,7 +69,13 @@ ifeq ($(PLATFORM), RPI)
 					-I/usr/include/GLES2
 		LDFLAGS +=  -ldrm -lgbm \
 					-lGLESv2 -lEGL -ldl
-	
+
+		ifeq ($(CARD),0)
+			CFLAGS += -DDRIVER_CARD0
+		else
+			CFLAGS += -DDRIVER_CARD1
+		endif
+
 	else ifeq ($(DRIVER),glfw)
 		CFLAGS += -DDRIVER_GLFW $(shell pkg-config --cflags glfw3 glu gl)
 		LDFLAGS += $(shell pkg-config --libs glfw3 glu gl x11 xrandr xi xxf86vm xcursor xinerama xrender xext xdamage) -lEGL -ldl
