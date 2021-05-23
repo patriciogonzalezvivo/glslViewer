@@ -6,3 +6,6 @@ chataigne:
 
 touchOSC:
 	glslViewer touchOSC.frag -p 8000 -l
+
+ossia:
+	glslViewer ossia.frag -p 9996 -l

@@ -10,13 +10,12 @@
 
 * [Script example](https://github.com/patriciogonzalezvivo/glslViewer/tree/main/examples/2D/04_scripts) example using a bash script to feed uniforms to a shader
 
-* [ORCA example](https://github.com/patriciogonzalezvivo/glslViewer/tree/main/examples/2D/05_orca) example made by Johan Ismael of how to connect [ORCA](https://100r.co/pages/orca.html), Ableton (MIDI) and glslViewer (OSC)
+* [OSC examples](https://github.com/patriciogonzalezvivo/glslViewer/tree/main/examples/2D/05_OSC) example on how to connect with different programs through OSC
 
-* [Chataigne example](https://github.com/patriciogonzalezvivo/glslViewer/tree/main/examples/2D/06_chataigne) example on how to send animated values in [Chataigne](http://benjamin.kuperberg.fr/chataigne/en) to glslViewer through OSC
+* [Audio example](https://github.com/patriciogonzalezvivo/glslViewer/tree/main/examples/2D/06_audio) examples on how visualize sound through audio textures
 
-* [TouchOSC example](https://github.com/patriciogonzalezvivo/glslViewer/tree/main/examples/2D/07_touchOSC) example on how to send values from [OSCTouch](https://hexler.net/products/touchosc) to glslViewer through OSC
+* [RayMarching example](https://github.com/patriciogonzalezvivo/glslViewer/tree/main/examples/2D/07_raymarching)
 
-* [Score example](https://github.com/patriciogonzalezvivo/glslViewer/tree/main/examples/2D/08_score) example on how to send animated values from [Ossia Score](https://ossia.io/) to glslViewer through OSC
 
 ------------
 
