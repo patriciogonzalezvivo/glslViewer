@@ -1,4 +1,4 @@
-EXE = ./bin/glslViewer
+EXE = ./glslViewer
 
 CXX = g++
 SOURCES := 	$(wildcard include/*/*.cc) $(wildcard src/*.cpp) $(wildcard src/*/*.cpp) \
