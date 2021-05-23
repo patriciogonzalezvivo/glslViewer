@@ -2,20 +2,15 @@
 .DS_Store
 *.o
 
-bin/glslViewer
-bin/x32/*
-bin/x64/*
+glslViewer
+x32/*
+x64/*
 
 debian/glslviewer
 debian/debhelper-build-stamp
 debian/files
 debian/glslviewer.debhelper.log
 debian/glslviewer.substvars
-
-obj/*
-dist/*
-build/*
-python/glslviewer.egg-info/*
 
 .vscode/browse.db*
 .vs/glslViewer/v16/.suo

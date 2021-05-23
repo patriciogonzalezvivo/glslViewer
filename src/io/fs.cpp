@@ -55,7 +55,9 @@ const char* realpath(const char* str, void*)
 }
 #endif 
 std::string getAbsPath(const std::string& _path) {
-    std::string abs_path = realpath(_path.c_str(), NULL);
+    const char * real_path = realpath(_path.c_str(), NULL);
+    std::string abs_path(real_path);
+    free((void*)real_path);
     std::size_t found = abs_path.find_last_of("\\/");
     if (found) return abs_path.substr(0, found);
     else return "";

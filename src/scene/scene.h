@@ -42,6 +42,7 @@ public:
     bool            loadGeometry(Uniforms& _uniforms, WatchFileList& _files, int _index, bool _verbose);
     bool            loadShaders(const std::string& _fragmentShader, const std::string& _vertexShader, bool _verbose);
 
+
     void            addDefine(const std::string& _define, const std::string& _value);
     void            delDefine(const std::string& _define);
     void            printDefines();
@@ -57,6 +58,8 @@ public:
     void            flagChange();
     void            unflagChange();
     bool            haveChange() const;
+    
+    float           getArea() const { return m_area; }
 
     void            render(Uniforms& _uniforms);
     void            renderFloor(Uniforms& _uniforms, const glm::mat4& _mvp);

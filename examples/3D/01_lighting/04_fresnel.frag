@@ -5,19 +5,20 @@ precision mediump float;
 // By Karim Naaji
 // https://github.com/karimnaaji/hdreffects/blob/master/build/shaders/fresnel.frag
 
-
 uniform samplerCube u_cubeMap;
+uniform vec2        u_resolution;
+uniform float       u_time;
 
-varying vec4 v_position;
-varying vec4 v_color;
-varying vec3 v_normal;
-varying vec2 v_texcoord;
+varying vec4        v_position;
+varying vec4        v_color;
+varying vec3        v_normal;
+varying vec2        v_texcoord;
 
-varying vec3 v_reflect;
-varying vec3 v_refractR;
-varying vec3 v_refractG;
-varying vec3 v_refractB;
-varying float v_ratio;
+varying vec3        v_reflect;
+varying vec3        v_refractR;
+varying vec3        v_refractG;
+varying vec3        v_refractB;
+varying float       v_ratio;
 
 void main(void) {
    vec3 color = vec3(1.0);

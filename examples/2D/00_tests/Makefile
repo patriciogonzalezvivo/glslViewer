@@ -13,6 +13,9 @@ test_in_gif:
 test_in_psd:
 	glslViewer test.frag in.psd
 
+test_in_depth:
+	glslViewer test_depth.frag iphone_depth.jpeg -w 576 -h 768 -l -e textures,on
+
 test_out_png:
 	glslViewer test.frag in.png -E screenshot,out.png
 
@@ -24,3 +27,6 @@ test_out_jpg:
 
 test_out_hdr:
 	glslViewer test.frag in.png -E screenshot,out.hdr
+
+test_audio:
+	glslViewer test_audio.frag --audio

@@ -1,11 +1,14 @@
-EXE = ./bin/glslViewer
+EXE = ./glslViewer
 
 CXX = g++
 SOURCES := 	$(wildcard include/*/*.cc) $(wildcard src/*.cpp) $(wildcard src/*/*.cpp) \
-			$(wildcard include/oscpack/osc/*.cpp) $(wildcard include/oscpack/ip/posix/*.cpp)
+			$(wildcard include/oscpack/osc/*.cpp) $(wildcard include/oscpack/ip/posix/*.cpp) \
+			$(wildcard include/phonedepth/extract_depthmap.cpp)
 
 HEADERS := 	$(wildcard include/*/*.h) $(wildcard src/*.h) $(wildcard src/*.h) $(wildcard src/*/*.h) \
-			$(wildcard include/oscpack/osc/*.h)   $(wildcard include/oscpack/ip/posix/*.h)
+			$(wildcard include/oscpack/osc/*.h)   $(wildcard include/oscpack/ip/posix/*.h) \
+			$(wildcard include/phonedepth/extract_depthmap.h)
+			
 OBJECTS := $(SOURCES:.cpp=.o)
 
 PLATFORM = $(shell uname)
@@ -57,15 +60,15 @@ ifeq ($(PLATFORM), RPI)
 		ILCLIENT = $(ILCLIENT_DIR)/libilclient.a
 		INCLUDES += -I$(ILCLIENT_DIR)
 		LDFLAGS += -L$(ILCLIENT_DIR) \
-					-lilclient
-		EXE_DEPS += $(ILCLIENT)
+					-lilclient -ldl
+		DEPS += $(ILCLIENT)
 
 	else ifeq ($(DRIVER),fake_kms)
 		CFLAGS += -DDRIVER_FAKE_KMS
 		INCLUDES += -I/usr/include/libdrm \
 					-I/usr/include/GLES2
 		LDFLAGS +=  -ldrm -lgbm \
-					-lGLESv2 -lEGL
+					-lGLESv2 -lEGL -ldl
 
 		ifeq ($(CARD),0)
 			CFLAGS += -DDRIVER_CARD0
@@ -90,6 +93,7 @@ ifeq ($(PLATFORM), RPI)
 else ifeq ($(PLATFORM),Linux)
 CFLAGS += -DPLATFORM_LINUX -DDRIVER_GLFW $(shell pkg-config --cflags glfw3 glu gl)
 LDFLAGS += $(shell pkg-config --libs glfw3 glu gl x11 xrandr xi xxf86vm xcursor xinerama xrender xext xdamage) -lpthread -ldl 
+LIBAV = true
 
 else ifeq ($(PLATFORM),Darwin)
 CXX = /usr/bin/clang++
@@ -97,12 +101,15 @@ ARCH = -arch $(shell uname -m)
 CFLAGS += $(ARCH) -DPLATFORM_OSX -DDRIVER_GLFW -stdlib=libc++ $(shell pkg-config --cflags glfw3)
 INCLUDES += -I/System/Library/Frameworks/GLUI.framework 
 LDFLAGS += $(ARCH) -framework OpenGL -framework Cocoa -framework CoreVideo -framework IOKit $(shell pkg-config --libs glfw3)
-
+LIBAV = true
 endif
 
 ifeq ($(LIBAV),true)
 CFLAGS += -DSUPPORT_FOR_LIBAV $(shell pkg-config --cflags libavcodec libavformat libavfilter libavdevice libavutil libswscale)
 LDFLAGS += $(shell pkg-config --libs libavcodec libavformat libavfilter libavdevice libavutil libswscale)
+MINIAUDIO = include/miniaudio/miniaudio.h
+HEADERS += ${MINIAUDIO}
+DEPS += ${MINIAUDIO}
 endif
 
 all: $(EXE)
@@ -111,29 +118,22 @@ all: $(EXE)
 	@echo $@
 	$(CXX) $(CFLAGS) $(INCLUDES) -g -c $< -o $@ -Wno-deprecated-declarations
 
-$(EXE): $(OBJECTS) $(HEADERS) $(EXE_DEPS)
+$(EXE): $(DEPS) $(OBJECTS) $(HEADERS)
 	$(CXX) $(CFLAGS) $(OBJECTS) $(LDFLAGS) -rdynamic -o $@
 
 ${ILCLIENT}:
 	$(MAKE) -C $(ILCLIENT_DIR)
 
+${MINIAUDIO}:
+	@echo "fetch miniaudio library"
+	@git submodule update --init include/miniaudio/
+
 clean:
 	@rm -rvf $(EXE) src/*.o src/*/*.o include/*/*.o include/*/*/*.o include/*/*/*/*.o *.dSYM 
 	
 install:
-	@cp bin/glslScreenSaver /usr/local/bin
-	@cp bin/glslLoader /usr/local/bin
+	@rm -rf /usr/local/bin/$(EXE)
 	@cp $(EXE) /usr/local/bin
-
-install_python:
-	@sudo python setup.py install
-	@sudo python3 setup.py install
-
-clean_python:
-	@rm -rvf build
-	@rm -rvf dist]
-	@rm -rvf python/glslviewer.egg-info
 
 uninstall:
 	@rm /usr/local/$(EXE)
-	@rm /usr/local/bin/glslLoader

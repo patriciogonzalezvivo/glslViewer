@@ -44,6 +44,10 @@ bool isDigit(const std::string& _string) {
   return _string.find_first_not_of( "0123456789" ) == std::string::npos;
 }
 
+bool isInt(const std::string& _string) {
+  return _string.find_first_not_of( "0123456789-" ) == std::string::npos;
+}
+
 bool isFloat(const std::string& _string) {
     std::istringstream iss(_string);
     float dummy;

@@ -342,7 +342,7 @@ bool TextureCube::load(const std::string &_path, bool _vFlip) {
             sh_samples += faces[i]->calculateSH(SH);
         }
 
-        delete[] data;
+        freePixels(data);
         for(int i = 0; i < 6; ++i) {
             delete[] faces[i]->data;
             delete faces[i];
@@ -394,7 +394,7 @@ bool TextureCube::load(const std::string &_path, bool _vFlip) {
             sh_samples += faces[i]->calculateSH(SH);
         }
 
-        delete[] data;
+        freePixels(data);
         for(int i = 0; i < 6; ++i) {
             delete[] faces[i]->data;
             delete faces[i];

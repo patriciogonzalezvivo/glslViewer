@@ -2,16 +2,24 @@
 precision mediump float;
 #endif
 
-uniform vec3 u_light;
-uniform vec2 u_resolution;
-uniform float u_time;
+uniform vec3    u_light;
+uniform vec2    u_resolution;
+
+#ifdef HOLOPLAY
+uniform vec4    u_holoPlayViewport;
+#define RESOLUTION u_holoPlayViewport.zw
+#else
+#define RESOLUTION u_resolution
+#endif
+
+uniform float   u_time;
 
 #ifdef MODEL_VERTEX_COLOR
-varying vec4 v_color;
+varying vec4    v_color;
 #endif
 
 #ifdef MODEL_VERTEX_NORMAL
-varying vec3 v_normal;
+varying vec3    v_normal;
 #endif
 
 #include "../../2D/02_pixelspiritdeck/lib/ratio.glsl"
@@ -19,7 +27,8 @@ varying vec3 v_normal;
 
 void main(void) {
    vec3 color = vec3(1.0);
-   vec2 st = gl_FragCoord.xy/u_resolution.xy;
+
+   vec2 st = gl_FragCoord.xy/RESOLUTION;
 
 #ifdef BACKGROUND
     st = ratio(st, u_resolution);

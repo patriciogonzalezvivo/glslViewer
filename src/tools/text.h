@@ -32,6 +32,8 @@ bool beginsWith(const std::string& _stringA, const std::string& _stringB);
 
 bool isDigit(const std::string& _string);
 
+bool isInt(const std::string& _string);
+
 // Split a string into a vector of strings 
 std::vector<std::string> split(const std::string& _string, char _sep, bool _tolerate_empty = false);
 

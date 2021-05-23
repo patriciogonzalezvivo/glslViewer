@@ -18,14 +18,21 @@
 #include "shaders/histogram.h"
 #include "shaders/wireframe2D.h"
 #include "shaders/fxaa.h"
+#include "shaders/holoplay.h"
 
 #include <memory>
 
 std::string default_scene_frag = default_scene_frag0 + default_scene_frag1 + default_scene_frag2 + default_scene_frag3;
 
+int holoplay_width = 2048;
+int holoplay_height = 2048;
+int holoplay_columns = 4;
+int holoplay_rows = 8;
+int holoplay_totalViews = 32;
+
 // ------------------------------------------------------------------------- CONTRUCTOR
 Sandbox::Sandbox(): 
-    frag_index(-1), vert_index(-1), geom_index(-1),
+    frag_index(-1), vert_index(-1), geom_index(-1), holoplay(-1),
     verbose(false), cursor(true), fxaa(false),
     // Main Vert/Frag/Geom
     m_frag_source(""), m_vert_source(""),
@@ -221,7 +228,9 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         if (_line == "buffers") {
             uniforms.printBuffers();
             if (m_postprocessing) {
-                if (fxaa)
+                if (holoplay >= 0)
+                    std::cout << "HOLO";
+                else if (fxaa)
                     std::cout << "FXAA";
                 else
                     std::cout << "Custom";
@@ -409,7 +418,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         }
         return false;
     },
-    "camera_distance[,<dist>]       get or set the camera distance to the target."));
+    "camera_type[,<ortho|perspective>] get or set the camera type"));
 
     _commands.push_back(Command("camera_fov", [&](const std::string& _line){ 
         std::vector<std::string> values = split(_line,',');
@@ -508,19 +517,51 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     // -----------------------------------------------
 
     if (geom_index == -1) {
-        // m_canvas_shader.addDefine("MODEL_VERTEX_EX_COLORS");
-        // m_canvas_shader.addDefine("MODEL_VERTEX_EX_NORMALS");
         m_canvas_shader.addDefine("MODEL_VERTEX_TEXCOORD");
-        // m_canvas_shader.addDefine("MODEL_VERTEX_TANGENT");
+        uniforms.getCamera().orbit(m_lat, m_lon, 2.0);
     }
     else {
         m_scene.setup( _commands, uniforms);
         m_scene.loadGeometry( uniforms, _files, geom_index, verbose );
+        uniforms.getCamera().orbit(m_lat, m_lon, m_scene.getArea() * 2.0);
     }
 
     // FINISH SCENE SETUP
     // -------------------------------------------------
     uniforms.getCamera().setViewport(getWindowWidth(), getWindowHeight());
+
+    if (holoplay >= 0) {
+        addDefine("HOLOPLAY", toString(holoplay));
+
+        uniforms.getCamera().setFOV(glm::radians(14.0f));
+        uniforms.getCamera().setType(CameraType::PERSPECTIVE_VIRTUAL_OFFSET);
+        // uniforms.getCamera().setClipping(0.01, 100.0);
+
+        if (geom_index != -1)
+            uniforms.getCamera().orbit(m_lat, m_lon, m_scene.getArea() * 8.5);
+
+        if (holoplay == 0) {
+            holoplay_width = 2048;
+            holoplay_height = 2048;
+            holoplay_columns = 4;
+            holoplay_rows = 8;
+            holoplay_totalViews = 32;
+        }
+        else if (holoplay == 1) {
+            holoplay_width = 4096;
+            holoplay_height = 4096;
+            holoplay_columns = 5;
+            holoplay_rows = 9;
+            holoplay_totalViews = 45;
+        }
+        else if (holoplay == 2) {
+            holoplay_width = 4096 * 2;
+            holoplay_height = 4096 * 2;
+            holoplay_columns = 5;
+            holoplay_rows = 9;
+            holoplay_totalViews = 45;
+        }
+    } 
 
     // Prepare viewport
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
@@ -616,6 +657,21 @@ int Sandbox::getRecordedPercentage() {
 
 // ------------------------------------------------------------------------- RELOAD SHADER
 
+void Sandbox::_updateSceneBuffer(int _width, int _height) {
+    FboType type = uniforms.functions["u_sceneDepth"].present ? COLOR_DEPTH_TEXTURES : COLOR_TEXTURE_DEPTH_BUFFER;
+
+    if (holoplay >= 0) {
+        _width = holoplay_width;
+        _height= holoplay_height;
+    }
+
+    if (!m_scene_fbo.isAllocated() ||
+        m_scene_fbo.getType() != type || 
+        m_scene_fbo.getWidth() != _width || 
+        m_scene_fbo.getHeight() != _height )
+        m_scene_fbo.allocate(_width, _height, type);
+}
+
 bool Sandbox::reloadShaders( WatchFileList &_files ) {
     flagChange();
 
@@ -681,6 +737,11 @@ bool Sandbox::reloadShaders( WatchFileList &_files ) {
         m_postprocessing_shader.load(m_frag_source, billboard_vert, false);
         m_postprocessing = havePostprocessing;
     }
+    else if (holoplay >= 0) {
+        m_postprocessing_shader.load(holoplay_frag, billboard_vert, false);
+        uniforms.functions["u_scene"].present = true;
+        m_postprocessing = true;
+    }
     else if (fxaa) {
         m_postprocessing_shader.load(fxaa_frag, billboard_vert, false);
         uniforms.functions["u_scene"].present = true;
@@ -689,11 +750,8 @@ bool Sandbox::reloadShaders( WatchFileList &_files ) {
     else 
         m_postprocessing = false;
 
-    if (m_postprocessing || m_histogram) { //|| uniforms.functions["u_scene"].present) {
-        FboType type = uniforms.functions["u_sceneDepth"].present ? COLOR_DEPTH_TEXTURES : COLOR_TEXTURE_DEPTH_BUFFER;
-        if (!m_scene_fbo.isAllocated() || m_scene_fbo.getType() != type)
-            m_scene_fbo.allocate(getWindowWidth(), getWindowHeight(), type);
-    }
+    if (m_postprocessing || m_histogram)
+        _updateSceneBuffer(getWindowWidth(), getWindowHeight());
 
     return true;
 }
@@ -757,6 +815,7 @@ void Sandbox::_renderBuffers() {
 }
 
 void Sandbox::render() {
+
     // UPDATE STREAMING TEXTURES
     // -----------------------------------------------
     if (m_initialized)
@@ -780,11 +839,7 @@ void Sandbox::render() {
             m_record_fbo.allocate(getWindowWidth(), getWindowHeight(), COLOR_TEXTURE_DEPTH_BUFFER);
 
     if (m_postprocessing || m_histogram ) {
-        if (!m_scene_fbo.isAllocated()) {
-            FboType type = uniforms.functions["u_sceneDepth"].present ? COLOR_DEPTH_TEXTURES : COLOR_TEXTURE_DEPTH_BUFFER;
-            m_scene_fbo.allocate(getWindowWidth(), getWindowHeight(), type);
-        }
-
+        _updateSceneBuffer(getWindowWidth(), getWindowHeight());
         m_scene_fbo.bind();
     }
     else if (screenshotFile != "" || m_record )
@@ -795,20 +850,115 @@ void Sandbox::render() {
 
     // RENDER CONTENT
     if (geom_index == -1) {
-        // Load main shader
-        m_canvas_shader.use();
 
-        // Update Uniforms and textures variables
-        uniforms.feedTo( m_canvas_shader );
+         if (holoplay >= 0) {
+            // save the viewport for the total quilt
+            GLint viewport[4];
+            glGetIntegerv(GL_VIEWPORT, viewport);
 
-        // Pass special uniforms
-        m_canvas_shader.setUniform("u_modelViewProjectionMatrix", glm::mat4(1.));
-        m_billboard_vbo->render( &m_canvas_shader );
+            // get quilt view dimensions
+            int qs_viewWidth = int(float(holoplay_width) / float(holoplay_columns));
+            int qs_viewHeight = int(float(holoplay_height) / float(holoplay_rows));
+
+            // Load main shader
+            m_canvas_shader.use();
+
+            // render views and copy each view to the quilt
+            for (int viewIndex = 0; viewIndex < holoplay_totalViews; viewIndex++) {
+                // get the x and y origin for this view
+                int x = (viewIndex % holoplay_columns) * qs_viewWidth;
+                int y = int(float(viewIndex) / float(holoplay_columns)) * qs_viewHeight;
+
+                // get the x and y origin for this view
+                // set the viewport to the view to control the projection extent
+                glViewport(x, y, qs_viewWidth, qs_viewHeight);
+
+                // // set the scissor to the view to restrict calls like glClear from making modifications
+                glEnable(GL_SCISSOR_TEST);
+                glScissor(x, y, qs_viewWidth, qs_viewHeight);
+
+                // set up the camera rotation and position for current view
+                uniforms.getCamera().setVirtualOffset(5.0, viewIndex, holoplay_totalViews);
+                uniforms.set("u_holoPlayTile", float(holoplay_columns), float(holoplay_rows), float(holoplay_totalViews));
+                uniforms.set("u_holoPlayViewport", float(x), float(y), float(qs_viewWidth), float(qs_viewHeight));
+
+                // Update Uniforms and textures variables
+                uniforms.feedTo( m_canvas_shader );
+
+                // Pass special uniforms
+                m_canvas_shader.setUniform("u_modelViewProjectionMatrix", glm::mat4(1.));
+                m_billboard_vbo->render( &m_canvas_shader );
+
+                // reset viewport
+                glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
+
+                // // restore scissor
+                glDisable(GL_SCISSOR_TEST);
+                glScissor(viewport[0], viewport[1], viewport[2], viewport[3]);
+            }
+        }
+        else {
+            // Load main shader
+            m_canvas_shader.use();
+
+            // Update Uniforms and textures variables
+            uniforms.feedTo( m_canvas_shader );
+
+            // Pass special uniforms
+            m_canvas_shader.setUniform("u_modelViewProjectionMatrix", glm::mat4(1.));
+            m_billboard_vbo->render( &m_canvas_shader );
+        }
     }
     else {
-        m_scene.render(uniforms);
-        if (m_scene.showGrid || m_scene.showAxis || m_scene.showBBoxes)
-            m_scene.renderDebug(uniforms);
+
+        if (holoplay >= 0) {
+            // save the viewport for the total quilt
+            GLint viewport[4];
+            glGetIntegerv(GL_VIEWPORT, viewport);
+
+            // get quilt view dimensions
+            int qs_viewWidth = int(float(holoplay_width) / float(holoplay_columns));
+            int qs_viewHeight = int(float(holoplay_height) / float(holoplay_rows));
+
+
+            // render views and copy each view to the quilt
+            for (int viewIndex = 0; viewIndex < holoplay_totalViews; viewIndex++) {
+                // get the x and y origin for this view
+                int x = (viewIndex % holoplay_columns) * qs_viewWidth;
+                int y = int(float(viewIndex) / float(holoplay_columns)) * qs_viewHeight;
+
+                // get the x and y origin for this view
+                // set the viewport to the view to control the projection extent
+                glViewport(x, y, qs_viewWidth, qs_viewHeight);
+
+                // set the scissor to the view to restrict calls like glClear from making modifications
+                glEnable(GL_SCISSOR_TEST);
+                glScissor(x, y, qs_viewWidth, qs_viewHeight);
+
+                // set up the camera rotation and position for current view
+                uniforms.getCamera().setVirtualOffset(m_scene.getArea(), viewIndex, holoplay_totalViews);
+                uniforms.set("u_holoPlayTile", float(holoplay_columns), float(holoplay_rows), float(holoplay_totalViews));
+                uniforms.set("u_holoPlayViewport", float(x), float(y), float(qs_viewWidth), float(qs_viewHeight));
+
+                m_scene.render(uniforms);
+
+                if (m_scene.showGrid || m_scene.showAxis || m_scene.showBBoxes)
+                    m_scene.renderDebug(uniforms);
+
+                // reset viewport
+                glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
+
+                // restore scissor
+                glDisable(GL_SCISSOR_TEST);
+                glScissor(viewport[0], viewport[1], viewport[2], viewport[3]);
+            }
+        }
+        else {
+            m_scene.render(uniforms);
+            if (m_scene.showGrid || m_scene.showAxis || m_scene.showBBoxes)
+                m_scene.renderDebug(uniforms);
+        }
+
     }
     
     // ----------------------------------------------- < main scene end
@@ -824,6 +974,12 @@ void Sandbox::render() {
 
         // Update uniforms and textures
         uniforms.feedTo( m_postprocessing_shader );
+
+        if (holoplay >= 0) {
+            m_postprocessing_shader.setUniform("u_holoPlayTile", float(holoplay_columns), float(holoplay_rows), float(holoplay_totalViews));
+            m_postprocessing_shader.setUniform("u_holoPlayCalibration", holoplay_dpi, holoplay_pitch, holoplay_slope, holoplay_center);
+            m_postprocessing_shader.setUniform("u_holoPlayRB", float(holoplay_ri), float(holoplay_bi));
+        }
 
         // Pass textures of buffers
         for (unsigned int i = 0; i < uniforms.buffers.size(); i++)
@@ -1183,7 +1339,7 @@ void Sandbox::onMouseDrag(float _x, float _y, int _button) {
         float dist = uniforms.getCamera().getDistance();
         dist += (-.008f * getMouseVelY());
         if (dist > 0.0f) {
-            uniforms.getCamera().setDistance( dist );
+            uniforms.getCamera().orbit(m_lat, m_lon, dist);
         }
     }
 
@@ -1197,7 +1353,7 @@ void Sandbox::onViewportResize(int _newWidth, int _newHeight) {
         uniforms.buffers[i].allocate(_newWidth, _newHeight, COLOR_TEXTURE);
 
     if (m_postprocessing || m_histogram)
-        m_scene_fbo.allocate(_newWidth, _newHeight, uniforms.functions["u_sceneDepth"].present ? COLOR_DEPTH_TEXTURES : COLOR_TEXTURE_DEPTH_BUFFER);
+        _updateSceneBuffer(_newWidth, _newHeight);
 
     if (m_record || screenshotFile != "")
         m_record_fbo.allocate(_newWidth, _newHeight, COLOR_TEXTURE_DEPTH_BUFFER);
@@ -1259,17 +1415,23 @@ void Sandbox::onScreenshot(std::string _file) {
                 }
             };
 
-            Job saver(std::move(_file), width, height, std::move(pixels), m_task_count, m_max_mem_in_queue);
+            std::shared_ptr<Job> saverPtr = std::make_shared<Job>(std::move(_file), width, height, std::move(pixels), m_task_count, m_max_mem_in_queue);
             /** In the case that we render faster than we can safe frames, more and more frames
 			 * have to be stored temporary in the save queue. That means that more and more ram is used.
 			 * If to much is memory is used, we save the current frame directly to prevent that the system
 			 * is running out of memory. Otherwise we put the frame in to the thread queue, so that we can utilize
 			 * multilple cpu cores */
             if (m_max_mem_in_queue <= 0) {
+                Job& saver = *saverPtr;
                 saver();
             }
             else {
-                m_save_threads.Submit(std::move(saver));
+                auto func = [saverPtr]()
+                {
+                    Job& saver = *saverPtr;
+                    saver();
+                };
+                m_save_threads.Submit(std::move(func));
             }
         }
     

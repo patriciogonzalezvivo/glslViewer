@@ -6,6 +6,9 @@
 
 #include "tools/text.h"
 
+#include "phonedepth/extract_depthmap.h"
+#include "io/pixels.h"
+
 #include "gl/textureBump.h"
 #include "gl/textureStreamSequence.h"
 #ifdef SUPPORT_FOR_LIBAV 
@@ -49,7 +52,7 @@ UniformFunction::UniformFunction(const std::string &_type, std::function<void(Sh
 
 // UNIFORMS
 
-Uniforms::Uniforms(): cubemap(nullptr), m_change(false) {
+Uniforms::Uniforms(): cubemap(nullptr), m_change(false), m_is_audio_init(false) {
 
     // set the right distance to the camera
     // Set up camera
@@ -64,7 +67,7 @@ Uniforms::Uniforms(): cubemap(nullptr), m_change(false) {
     // CAMERA UNIFORMS
     //
     functions["u_camera"] = UniformFunction("vec3", [this](Shader& _shader) {
-        _shader.setUniform("u_camera", -getCamera().getPosition());
+        _shader.setUniform("u_camera", -getCamera().getPosition() );
     },
     [this]() { return toString(-getCamera().getPosition(), ','); });
 
@@ -193,9 +196,10 @@ bool Uniforms::addTexture(const std::string& _name, const std::string& _path, Wa
         // If we can not get file stamp proably is not a file
         if (stat(_path.c_str(), &st) != 0 )
             std::cerr << "Error watching for file " << _path << std::endl;
-        
+
         // If we can lets proceed creating a texgure
         else {
+
             Texture* tex = new Texture();
             // load an image into the texture
             if (tex->load(_path, _flip)) {
@@ -215,6 +219,34 @@ bool Uniforms::addTexture(const std::string& _name, const std::string& _path, Wa
                     std::cout << "// " << _path << " loaded as: " << std::endl;
                     std::cout << "//    uniform sampler2D   " << _name  << ";"<< std::endl;
                     std::cout << "//    uniform vec2        " << _name  << "Resolution;"<< std::endl;
+                }
+
+                if (haveExt(_path,"jpeg")) {
+                    const unsigned char *cv = NULL, *dm = NULL;
+                    size_t cv_size = 0, dm_size = 0;
+                    image_type_t dm_type = TYPE_NONE;
+
+                    //  proceed to check if it have depth data
+                    if (extract_depth(  _path.c_str(), 
+                                        &cv, &cv_size,
+                                        &dm, &dm_size, &dm_type) == 1) {
+
+                        if (dm_type == TYPE_JPEG) {
+                            int width, height;
+                            unsigned char* pixels = loadPixels(dm, dm_size, &width, &height, RGB, _flip);
+
+                            Texture* tex_dm = new Texture();
+                            if (tex_dm->load(width, height, 3, 8, pixels)) {
+                                textures[ _name + "Depth"] = tex_dm;
+
+                                if (_verbose) {
+                                    std::cout << "//    uniform sampler2D   " << _name  << "Depth;"<< std::endl;
+                                    std::cout << "//    uniform vec2        " << _name  << "DepthResolution;"<< std::endl;
+                                }
+                            }   
+                            freePixels(pixels);
+                        }
+                    }
                 }
 
                 return true;
@@ -372,12 +404,78 @@ bool Uniforms::addStreamingTexture( const std::string& _name, const std::string&
     return false;
 }
 
+bool Uniforms::addAudioTexture(const std::string& _name, const std::string& device_id, bool _flip, bool _verbose) {
+
+#ifdef SUPPORT_FOR_LIBAV
+    // already init
+    if (m_is_audio_init) return false;
+
+    auto tex = new TextureAudio();
+
+    // TODO: add flipping mode for audio texture
+    if (tex->load(device_id, _flip)) {
+
+        if (_verbose) {
+            std::cout << "//    loaded audio texture: " << std::endl;
+            std::cout << "//    uniform sampler2D   " << _name  << ";"<< std::endl;
+            std::cout << "//    uniform vec2        " << _name  << "Resolution;"<< std::endl;
+        }
+            textures[ _name ] = (Texture*)tex;
+            streams[ _name ] = (TextureStream*)tex;
+            m_is_audio_init = true;
+            return true;
+    }
+    else
+#endif
+        return false;
+}
+
 void Uniforms::updateStreammingTextures() {
     for (StreamsList::iterator i = streams.begin(); i != streams.end(); ++i) {
         if(i->second->update()) {
             m_change = true;
         }
     }
+}
+
+void Uniforms::set( const std::string& _name, float _value) {
+    data[_name].bInt = false;
+    data[_name].size = 1;
+    data[_name].value[0] = _value;
+    data[_name].change = true;
+
+    m_change = true;
+}
+
+void Uniforms::set( const std::string& _name, float _x, float _y) {
+    data[_name].bInt = false;
+    data[_name].size = 2;
+    data[_name].value[0] = _x;
+    data[_name].value[1] = _y;
+    data[_name].change = true;
+
+    m_change = true;
+}
+
+void Uniforms::set( const std::string& _name, float _x, float _y, float _z) {
+    data[_name].bInt = false;
+    data[_name].size = 3;
+    data[_name].value[0] = _x;
+    data[_name].value[1] = _y;
+    data[_name].value[2] = _z;
+    data[_name].change = true;
+}
+
+void Uniforms::set( const std::string& _name, float _x, float _y, float _z, float _w) {
+    data[_name].bInt = false;
+    data[_name].size = 4;
+    data[_name].value[0] = _x;
+    data[_name].value[1] = _y;
+    data[_name].value[2] = _z;
+    data[_name].value[3] = _w;
+    data[_name].change = true;
+
+    m_change = true;
 }
 
 void Uniforms::setCubeMap( TextureCube* _cubemap ) {

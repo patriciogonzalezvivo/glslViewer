@@ -24,11 +24,10 @@ precision mediump float;
 
 uniform samplerCube u_cubeMap;
 
-varying vec4    v_position;
+varying vec4        v_position;
 
 void main(void) {
     vec4 reflection = textureCube(u_cubeMap, v_position.xyz);
-    // reflection = reflection / (reflection + vec4(1.0));
     reflection.rgb = pow(reflection.rgb, vec3(0.4545454545));
     gl_FragColor = reflection;
 }

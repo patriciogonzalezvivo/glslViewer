@@ -3,8 +3,10 @@ Section: graphics
 Priority: extra
 Maintainer: Patricio Gonzalez Vivo <patriciogonzalezvivo@gmail.com>
 Build-Depends: debhelper (>=9), pkg-config, libglfw3, libglfw3-dev, libglu1-mesa-dev, libxext-dev, libxrandr-dev,
- libxxf86vm-dev, libxxf86vm1, libxdamage-dev, libxdamage1, libxi-dev, libxcursor-dev, libxinerama-dev
-Standards-Version: 1.6.7
+ libxxf86vm-dev, libxxf86vm1, libxdamage-dev, libxdamage1, libxi-dev, libxcursor-dev, libxinerama-dev, ffmpeg,
+ libavcodec-dev, libavcodec-extra, libavfilter-dev, libavfilter-extra, libavdevice-dev, libavformat-dev, libavutil-dev,
+ libswscale-dev, libv4l-dev, libjpeg-dev, libpng-dev, libtiff-dev
+Standards-Version: 1.7.0
 Homepage: https://github.com/patriciogonzalezvivo/glslViewer
 
 Package: glslviewer

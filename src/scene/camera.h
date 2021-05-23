@@ -4,7 +4,8 @@
 
 enum CameraType {
     ORTHO, 
-    PERSPECTIVE
+    PERSPECTIVE,
+    PERSPECTIVE_VIRTUAL_OFFSET
 };
 
 class Camera: public Node {
@@ -18,6 +19,7 @@ public:
     virtual void        setClipping(double _near_clip_distance, double _far_clip_distance);
     virtual void        setDistance(float _distance);
     virtual void        setTarget(glm::vec3 _target);
+    virtual void        setVirtualOffset(float _scale, int _currentViewIndex, int _totalViews);
 
     virtual void        setExposure(float _aperture, float _shutterSpeed, float _sensitivity);
 
@@ -26,9 +28,10 @@ public:
 
     //Getting Functions
     const float         getFOV() const { return m_fov; }
+    const float         getAspect() const { return m_aspect; }
     const float         getFarClip() const { return m_farClip; }
     const float         getNearClip() const { return m_nearClip; }
-    const float         getDistance() const { return glm::length(getPosition()); }
+    const float         getDistance() const;
 
     const float         getEv100() const { return m_ev100; }
     const float         getExposure() const { return m_exposure; }
@@ -38,10 +41,12 @@ public:
     const glm::vec3     getTarget() const { return m_target; }
     
     const CameraType&   getType() const { return m_type;};
+    virtual glm::vec3   getPosition() const;
+    const glm::mat4&    getViewMatrix() const;
     const glm::mat3&    getNormalMatrix() const { return m_normalMatrix; }
-    const glm::mat4&    getViewMatrix() const { return getTransformMatrix(); }
     const glm::mat4&    getProjectionMatrix() const { return m_projectionMatrix; }
     const glm::mat4&    getProjectionViewMatrix() const { return m_projectionViewMatrix; }
+
 
 protected:
 

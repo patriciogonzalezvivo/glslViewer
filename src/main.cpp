@@ -47,7 +47,7 @@ bool        execute_exit    = false;
 // Open Sound Control
 Osc osc_listener;
 
-std::string version = "1.6.9";
+std::string version = "1.7.0";
 std::string name = "GlslViewer";
 std::string header = name + " " + version + " by Patricio Gonzalez Vivo ( patriciogonzalezvivo.com )"; 
 
@@ -68,16 +68,20 @@ void onExit();
 void printUsage(char * executableName) {
     std::cerr << "// " << header << std::endl;
     std::cerr << "// "<< std::endl;
-    std::cerr << "// Swiss army knife of GLSL Shaders. Loads frag/vertex shaders, images and " << std::endl;
-    std::cerr << "// geometries. Will reload automatically on changes. Support for multi  "<< std::endl;
-    std::cerr << "// buffers, background and postprocessing passes. Can render headlessly and "<< std::endl;
-    std::cerr << "// into a file. Use POSIX STANDARD CONSOLE IN/OUT to comunicate (uniforms,"<< std::endl;
-    std::cerr << "// camera position, scene description and  commands) to and with other "<< std::endl;
-    std::cerr << "// programs. Compatible with Linux and MacOS, runs from command line with"<< std::endl;
-    std::cerr << "// out X11 environment on RaspberryPi devices. "<< std::endl;
+    std::cerr << "// Swiss army knife of GLSL Shaders. Loads frag/vertex shaders, images, " << std::endl;
+    std::cerr << "// videos, audio, geometries and much more. Your assets will reload  "<< std::endl;
+    std::cerr << "// automatically on changes. It have support for multiple buffers,  "<< std::endl;
+    std::cerr << "// background and postprocessing passes. It can render headlessly into"<< std::endl;
+    std::cerr << "// a file, a PNG sequence, or fullscreen, as a screensaver, live mode (allways "<< std::endl;
+    std::cerr << "// on top) or to volumetric displays. "<< std::endl;
+    std::cerr << "// Use POSIX STANDARD CONSOLE IN/OUT to comunicate (uniforms, camera "<< std::endl;
+    std::cerr << "// properties, lights and other scene properties) to and with other "<< std::endl;
+    std::cerr << "// programs. Compatible with Linux, MacOS and Windows, runs from "<< std::endl;
+    std::cerr << "// command line with or outside X11 environment on RaspberryPi devices. "<< std::endl;
     std::cerr << "// "<< std::endl;
     std::cerr << "// For more information refer to repository:"<< std::endl;
     std::cerr << "// https://github.com/patriciogonzalezvivo/glslViewer"<< std::endl;
+    std::cerr << "// or joing the #glslViewer channel in https://shader.zone/"<< std::endl;
     std::cerr << "// "<< std::endl;
     std::cerr << "// Usage: " << executableName << " [Arguments]"<< std::endl;
     std::cerr << "// "<< std::endl;
@@ -87,6 +91,7 @@ void printUsage(char * executableName) {
     std::cerr << "// [<texture>.(png/tga/jpg/bmp/psd/gif/hdr/mov/mp4/rtsp/rtmp/etc)] - load and assign texture to uniform order" << std::endl;
     std::cerr << "// [-vFlip] - all textures after will be flipped vertically" << std::endl;
     std::cerr << "// [--video <video_device_number>] - open video device allocated wit that particular id" << std::endl;
+    std::cerr << "// [--audio <capture_device_id>] - open audio capture device allocated as sampler2D texture. If id is not selected, default will be used" << std::endl;
     std::cerr << "// [-<uniformName> <texture>.(png/tga/jpg/bmp/psd/gif/hdr)] - add textures associated with different uniform sampler2D names" << std::endl;
     std::cerr << "// [-C <enviromental_map>.(png/tga/jpg/bmp/psd/gif/hdr)] - load a environmental map as cubemap" << std::endl;
     std::cerr << "// [-c <enviromental_map>.(png/tga/jpg/bmp/psd/gif/hdr)] - load a environmental map as cubemap but hided" << std::endl;
@@ -102,6 +107,7 @@ void printUsage(char * executableName) {
     std::cerr << "// [--headless] - headless rendering. Very useful for making images or benchmarking." << std::endl;
     std::cerr << "// [--nocursor] - hide cursor" << std::endl;
     std::cerr << "// [--fxaa] - set FXAA as postprocess filter" << std::endl;
+    std::cerr << "// [--holoplay <0/1/2>] - HoloPlay volumetric postprocess" << std::endl;
     std::cerr << "// [-I<include_folder>] - add an include folder to default for #include files" << std::endl;
     std::cerr << "// [-D<define>] - add system #defines directly from the console argument" << std::endl;
     std::cerr << "// [-p <osc_port>] - open OSC listening port" << std::endl;
@@ -652,6 +658,9 @@ int main(int argc, char **argv){
                     std::string(argv[i]) == "--fullscreen" ) {
             windowStyle = FULLSCREEN;
         }
+        else if (   std::string(argv[i]) == "--holoplay") {
+            windowStyle = HOLOPLAY;
+        }
         else if (   std::string(argv[i]) == "-l" ||
                     std::string(argv[i]) == "--life-coding" ){
         #ifndef DRIVER_GLFW
@@ -853,6 +862,24 @@ int main(int argc, char **argv){
                     argument.rfind("rtmp://", 0) == 0) {
             if ( sandbox.uniforms.addStreamingTexture("u_tex"+toString(textureCounter), argument, vFlip, false) )
                 textureCounter++;
+        }
+        else if ( argument == "--audio" || argument == "-a" ) {
+            std::string device_id = "-1"; //default device id
+            // device_id is optional argument, not iterate yet
+            if ((i + 1) < argc) {
+                argument = std::string(argv[i + 1]);
+                if (isInt(argument)) {
+                    device_id = argument;
+                    i++;
+                }
+            }
+            if ( sandbox.uniforms.addAudioTexture("u_tex"+toString(textureCounter), device_id, vFlip, true) )
+                textureCounter++;
+        }
+        else if ( argument == "--holoplay" ) {
+            if (++i < argc) {
+                sandbox.holoplay = toInt(argv[i]);
+            }
         }
         else if ( argument == "-c" || argument == "-sh" ) {
             if(++i < argc) {

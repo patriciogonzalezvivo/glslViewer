@@ -1,3 +1,11 @@
+glslviewer (1.7.0) focal; urgency=medium
+
+  * Adding support for Video and Audio textures
+  * Adding support for Looking Glass Portrait displays
+  * Dropping support for Python wrapper, glslLoad and glslScreenSaver
+
+ -- Patricio Gonzalez Vivo <patriciogonzalezvivo@gmail.com>  Sat, 22 May 2021 11:13:21 -0700
+
 glslviewer (1.6.8) focal; urgency=medium
 
   * Adding GlslScreenSaver as part of the bin package
