@@ -348,8 +348,8 @@ void  TextureStreamAV::clear() {
         avformat_free_context(av_format_ctx);
         // avformat_close_input(&av_format_ctx);
 
-    if (frame_data) 
-        delete frame_data;
+    if (frame_data)
+        free(frame_data);
 
     if (m_id != 0)
         glDeleteTextures(1, &m_id);

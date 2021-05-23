@@ -67,7 +67,7 @@ bool TextureBump::load(const std::string& _path, bool _vFlip) {
                 i++;
             }
         }
-        delete pixels;
+        freePixels(pixels);
 
         Texture::load(m_width, m_height, 4, 32, &result[0]);
     }
