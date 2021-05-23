@@ -1,6 +1,6 @@
 # glslViewer [![Build Status](https://travis-ci.org/patriciogonzalezvivo/glslViewer.svg?branch=master)](https://travis-ci.org/patriciogonzalezvivo/glslViewer)
 
-![](images/00.gif)
+![](.github/images/00.gif)
 
 [![Donate](https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=4BQMKQJDQ9XH6)
 
@@ -8,7 +8,7 @@ GlslViewer is a flexible console-base OpenGL Sandbox to display 2D/3D GLSL shade
 
 Joing [#GlslViewer channel on shader.zone discord](https://shader.zone/) to learn how to use it, share work and get help.
 
-![](images/scene.png)
+![](.github/images/scene.png)
 
 GlslViewer gives support to:
 
@@ -32,7 +32,7 @@ GlslViewer gives support to:
 * image export
 * PNG sequence export
 
-![](images/01.gif)
+![](.github/images/01.gif)
 
 ## Wiki themes
 
@@ -88,4 +88,4 @@ Thanks to:
 
 * [Sergei B](https://github.com/bespsm) for adding support for Audio textures
 
-![](images/dof.gif)
+![](.github/images/dof.gif)
