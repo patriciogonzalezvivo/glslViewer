@@ -19,6 +19,7 @@
 #include "shaders/wireframe2D.h"
 #include "shaders/fxaa.h"
 #include "shaders/holoplay.h"
+#include "shaders/poissonfill.h"
 
 #include <memory>
 
@@ -38,6 +39,8 @@ Sandbox::Sandbox():
     m_frag_source(""), m_vert_source(""),
     // Buffers
     m_buffers_total(0),
+    // Poisson Fill
+    m_poissonfill(false),
     // PostProcessing
     m_postprocessing(false),
     // Geometry helpers
@@ -728,6 +731,16 @@ bool Sandbox::reloadShaders( WatchFileList &_files ) {
     // UPDATE Buffers
     m_buffers_total = count_buffers(m_frag_source);
     _updateBuffers();
+
+    m_poissonfill = check_for_poissonfill(getSource(FRAGMENT));
+    if (m_poissonfill) {
+        m_poissonfill_shader.addDefine("POISSON_FILL");
+        m_poissonfill_shader.load(m_frag_source, billboard_vert, false);
+        m_poissonfill_fbo.allocate(getWindowWidth(), getWindowHeight(), COLOR_TEXTURE);
+
+        uniforms.poissonfill.allocate(getWindowWidth(), getWindowHeight());
+        uniforms.poissonfill.shader.load(poissonfill_frag, billboard_vert, false);
+    }
     
     // UPDATE Postprocessing
     bool havePostprocessing = check_for_postprocessing(getSource(FRAGMENT));
@@ -831,6 +844,23 @@ void Sandbox::render() {
     // -----------------------------------------------
     if (uniforms.buffers.size() > 0)
         _renderBuffers();
+
+    if (m_poissonfill) {
+        glDisable(GL_BLEND);
+        m_poissonfill_fbo.bind();
+        m_poissonfill_shader.use();
+
+        // Update uniforms and textures
+        uniforms.feedTo( m_poissonfill_shader );
+        m_billboard_vbo->render( &m_poissonfill_shader );
+
+        m_poissonfill_fbo.unbind();
+
+        uniforms.poissonfill.process(m_billboard_vbo, &m_poissonfill_fbo);
+
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    }
     
     // MAIN SCENE
     // ----------------------------------------------- < main scene start
@@ -1342,8 +1372,6 @@ void Sandbox::onMouseDrag(float _x, float _y, int _button) {
             uniforms.getCamera().orbit(m_lat, m_lon, dist);
         }
     }
-
-    // flagChange();
 }
 
 void Sandbox::onViewportResize(int _newWidth, int _newHeight) {
@@ -1352,7 +1380,10 @@ void Sandbox::onViewportResize(int _newWidth, int _newHeight) {
     for (unsigned int i = 0; i < uniforms.buffers.size(); i++) 
         uniforms.buffers[i].allocate(_newWidth, _newHeight, COLOR_TEXTURE);
 
-    if (m_postprocessing || m_histogram)
+    if (m_poissonfill) 
+        m_poissonfill_fbo.allocate(_newWidth, _newHeight, COLOR_TEXTURE);
+
+    if (m_postprocessing || m_histogram || m_poissonfill)
         _updateSceneBuffer(_newWidth, _newHeight);
 
     if (m_record || screenshotFile != "")

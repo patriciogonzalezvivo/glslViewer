@@ -322,6 +322,22 @@ bool check_for_postprocessing(const std::string& _source) {
     return false;
 }
 
+bool check_for_poissonfill(const std::string& _source) {
+    // Split Source code in lines
+    std::vector<std::string> lines = split(_source, '\n');
+
+    std::regex re(R"((?:^\s*#if|^\s*#elif)(?:\s+)(defined\s*\(\s*POISSON_FILL)(?:\s*\))|(?:^\s*#ifdef\s+POISSON_FILL)|(?:^\s*#ifndef\s+POISSON_FILL))");
+    std::smatch match;
+
+    for (unsigned int l = 0; l < lines.size(); l++) {
+        if (std::regex_search(lines[l], match, re)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 std::string getUniformName(const std::string& _str) {
     std::vector<std::string> values = split(_str, '.');
     return "u_" + toLower( toUnderscore( purifyString( values[0] ) ) );

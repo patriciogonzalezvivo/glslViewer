@@ -98,6 +98,11 @@ private:
     Scene               m_scene;
     Fbo                 m_scene_fbo;
 
+    // Poisson Fill
+    Shader              m_poissonfill_shader;
+    Fbo                 m_poissonfill_fbo;
+    bool                m_poissonfill;
+
     // Postprocessing
     Shader              m_postprocessing_shader;
     bool                m_postprocessing;

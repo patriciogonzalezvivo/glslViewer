@@ -10,6 +10,7 @@
 #include "gl/texture.h"
 #include "gl/textureStream.h"
 #include "gl/textureAudio.h"
+#include "gl/pyramid.h"
 
 #include "scene/light.h"
 #include "scene/camera.h"
@@ -100,6 +101,7 @@ public:
 
     TextureCube*            cubemap;
     std::vector<Fbo>        buffers;
+    Pyramid                 poissonfill;
 
     // 3d Scene Uniforms 
     std::vector<Camera>     cameras;

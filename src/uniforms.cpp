@@ -124,7 +124,7 @@ Uniforms::Uniforms(): cubemap(nullptr), m_change(false), m_is_audio_init(false) 
         _shader.setUniform("u_projectionMatrix", getCamera().getProjectionMatrix());
     });
 
-     // IBL UNIFORM
+    // IBL UNIFORM
     functions["u_cubeMap"] = UniformFunction("samplerCube", [this](Shader& _shader) {
         if (cubemap) {
             _shader.setUniformTextureCube("u_cubeMap", (TextureCube*)cubemap);
@@ -134,6 +134,12 @@ Uniforms::Uniforms(): cubemap(nullptr), m_change(false), m_is_audio_init(false) 
     functions["u_SH"] = UniformFunction("vec3", [this](Shader& _shader) {
         if (cubemap) {
             _shader.setUniform("u_SH", cubemap->SH, 9);
+        }
+    });
+
+    functions["u_poissonFill"] = UniformFunction("sampler2D", [this](Shader& _shader) {
+        if (poissonfill.isAllocated()) {
+            _shader.setUniformTexture("u_poissonFill", poissonfill.getResult());
         }
     });
 }
