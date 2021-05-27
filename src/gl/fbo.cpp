@@ -170,7 +170,7 @@ void Fbo::bind() {
         glEnable(GL_TEXTURE_2D);
         glBindFramebuffer(GL_FRAMEBUFFER, m_fbo_id);
         glViewport(0.0f, 0.0f, m_width, m_height);
-        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
         if (m_depth)
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
