@@ -16,6 +16,7 @@ void main (void) {
 
 #if defined(POISSON_FILL)
     color = texture2D(u_tex0, st);
+    // color.a = min(color.r, min(color.g, color.b));
 
 #else
     color = texture2D(u_poissonFill, st);
