@@ -732,14 +732,31 @@ bool Sandbox::reloadShaders( WatchFileList &_files ) {
     m_buffers_total = count_buffers(m_frag_source);
     _updateBuffers();
 
+    // Poisson Fill
     m_poissonfill = check_for_poissonfill(getSource(FRAGMENT));
     if (m_poissonfill) {
-        m_poissonfill_shader.addDefine("POISSON_FILL");
-        m_poissonfill_shader.load(m_frag_source, billboard_vert, false);
+        m_poissonfill_subshader.addDefine("POISSON_FILL");
+        m_poissonfill_subshader.load(m_frag_source, billboard_vert, false);
         m_poissonfill_fbo.allocate(getWindowWidth(), getWindowHeight(), COLOR_TEXTURE);
 
         uniforms.poissonfill.allocate(getWindowWidth(), getWindowHeight());
-        uniforms.poissonfill.shader.load(poissonfill_frag, billboard_vert, false);
+
+        if (!m_poissonfill_shader.isLoaded()) {
+            m_poissonfill_shader.load(poissonfill_frag, billboard_vert, false);
+            uniforms.poissonfill.pass = [this](Fbo *_target, const Fbo *_tex0, const Fbo *_tex1) {
+                _target->bind();
+                glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+                glClear(GL_COLOR_BUFFER_BIT);
+                m_poissonfill_shader.use();
+                m_poissonfill_shader.setUniformTexture("u_tex0", _tex0, 1);
+                if (_tex1 != NULL)
+                    m_poissonfill_shader.setUniformTexture("u_tex1", _tex1, 2);
+                m_poissonfill_shader.setUniform("u_isup", _tex1 != NULL);
+                m_poissonfill_shader.setUniform("u_resolution", (float)_target->getWidth(), (float)_target->getHeight());
+                m_billboard_vbo->render( &m_poissonfill_shader );
+                _target->unbind();
+            };
+        }
     }
     
     // UPDATE Postprocessing
@@ -848,15 +865,15 @@ void Sandbox::render() {
     if (m_poissonfill) {
         glDisable(GL_BLEND);
         m_poissonfill_fbo.bind();
-        m_poissonfill_shader.use();
+        m_poissonfill_subshader.use();
 
         // Update uniforms and textures
-        uniforms.feedTo( m_poissonfill_shader );
-        m_billboard_vbo->render( &m_poissonfill_shader );
+        uniforms.feedTo( m_poissonfill_subshader );
+        m_billboard_vbo->render( &m_poissonfill_subshader );
 
         m_poissonfill_fbo.unbind();
 
-        uniforms.poissonfill.process(m_billboard_vbo, &m_poissonfill_fbo);
+        uniforms.poissonfill.process(&m_poissonfill_fbo);
 
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

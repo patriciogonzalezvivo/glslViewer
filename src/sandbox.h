@@ -99,6 +99,7 @@ private:
     Fbo                 m_scene_fbo;
 
     // Poisson Fill
+    Shader              m_poissonfill_subshader;
     Shader              m_poissonfill_shader;
     Fbo                 m_poissonfill_fbo;
     bool                m_poissonfill;
