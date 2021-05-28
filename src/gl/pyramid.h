@@ -28,12 +28,8 @@ public:
 
     std::function<void(Fbo*,const Fbo*,const Fbo*)> pass;
 private:
-    // void    pass(Vbo* _vbo, Fbo *_target, const Fbo *_tex0, const Fbo *_tex1);
-
     Fbo     m_downs[PYRAMID_MAX_LAYERS];
     Fbo     m_ups[PYRAMID_MAX_LAYERS];
 
-    int     m_width;
-    int     m_height;
     int     m_depth;
 };

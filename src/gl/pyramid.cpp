@@ -3,7 +3,7 @@
 #include <iostream>
 #include "gl.h"
 
-Pyramid::Pyramid(): m_width(0), m_height(0), m_depth(0) {
+Pyramid::Pyramid(): m_depth(0) {
 }
 
 Pyramid::~Pyramid() {
@@ -12,20 +12,20 @@ Pyramid::~Pyramid() {
 void Pyramid::allocate(int _width, int _height) {
     m_depth = log2(std::min(_width, _height)) - 1;
     m_depth = std::min(PYRAMID_MAX_LAYERS, m_depth);
-    m_width = _width;
-    m_height = _height;
-    std::cout << m_depth << std::endl;
+
+    float w = _width;
+    float h = _height;
 
     for (int i = 0; i < m_depth; i++) {
-        _width /= 2;
-        _height /= 2;
-        m_downs[i].allocate(_width, _height, COLOR_TEXTURE);
+        w *= 0.5f;
+        h *= 0.5f;
+        m_downs[i].allocate(w, h, COLOR_TEXTURE);
     }
     
     for (int i = 0; i < m_depth; i++) {
-        _width *= 2;
-        _height *= 2;
-        m_ups[i].allocate(_width, _height, COLOR_TEXTURE);
+        w *= 2.0f;
+        h *= 2.0f;
+        m_ups[i].allocate(w, h, COLOR_TEXTURE);
     }
 }
 

@@ -575,7 +575,6 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
 
     // Turn on Alpha blending
     glEnable(GL_BLEND);
-    // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_DST_ALPHA);
 
     // Clear the background
@@ -738,12 +737,12 @@ bool Sandbox::reloadShaders( WatchFileList &_files ) {
         m_poissonfill_subshader.addDefine("POISSON_FILL");
         m_poissonfill_subshader.load(m_frag_source, billboard_vert, false);
         m_poissonfill_fbo.allocate(getWindowWidth(), getWindowHeight(), COLOR_TEXTURE);
-
         uniforms.poissonfill.allocate(getWindowWidth(), getWindowHeight());
 
         if (!m_poissonfill_shader.isLoaded()) {
             m_poissonfill_shader.load(poissonfill_frag, billboard_vert, false);
             uniforms.poissonfill.pass = [this](Fbo *_target, const Fbo *_tex0, const Fbo *_tex1) {
+                glViewport(0, 0, _target->getWidth(), _target->getHeight());
                 _target->bind();
                 glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
                 glClear(GL_COLOR_BUFFER_BIT);
@@ -863,9 +862,14 @@ void Sandbox::render() {
         _renderBuffers();
 
     if (m_poissonfill) {
-        glDisable(GL_BLEND);
+        // glEnable(GL_BLEND);
+        // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_DST_ALPHA);
+
         m_poissonfill_fbo.bind();
         m_poissonfill_subshader.use();
+
+        // Clear the background
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Update uniforms and textures
         uniforms.feedTo( m_poissonfill_subshader );
@@ -873,10 +877,13 @@ void Sandbox::render() {
 
         m_poissonfill_fbo.unbind();
 
+        GLint viewport[4];
+        glGetIntegerv(GL_VIEWPORT, viewport);
         uniforms.poissonfill.process(&m_poissonfill_fbo);
+        glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
 
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        // glEnable(GL_BLEND);
+        // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     }
     
     // MAIN SCENE
@@ -1397,8 +1404,10 @@ void Sandbox::onViewportResize(int _newWidth, int _newHeight) {
     for (unsigned int i = 0; i < uniforms.buffers.size(); i++) 
         uniforms.buffers[i].allocate(_newWidth, _newHeight, COLOR_TEXTURE);
 
-    if (m_poissonfill) 
+    if (m_poissonfill) {
         m_poissonfill_fbo.allocate(_newWidth, _newHeight, COLOR_TEXTURE);
+        uniforms.poissonfill.allocate(getWindowWidth(), getWindowHeight());
+    }
 
     if (m_postprocessing || m_histogram || m_poissonfill)
         _updateSceneBuffer(_newWidth, _newHeight);

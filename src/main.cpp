@@ -605,8 +605,8 @@ int main(int argc, char **argv){
         windowPosAndSize.w = screen.y;
     #else
         // OSX/LINUX default windows size
-        windowPosAndSize.z = 500;
-        windowPosAndSize.w = 500;
+        windowPosAndSize.z = 512;
+        windowPosAndSize.w = 512;
     #endif
 
     WindowStyle windowStyle = REGULAR;
@@ -664,8 +664,8 @@ int main(int argc, char **argv){
         else if (   std::string(argv[i]) == "-l" ||
                     std::string(argv[i]) == "--life-coding" ){
         #ifndef DRIVER_GLFW
-            windowPosAndSize.x = windowPosAndSize.z - 500;
-            windowPosAndSize.z = windowPosAndSize.w = 500;
+            windowPosAndSize.x = windowPosAndSize.z - 512;
+            windowPosAndSize.z = windowPosAndSize.w = 512;
         #else
             windowStyle = ALLWAYS_ON_TOP;
         #endif

@@ -3,47 +3,50 @@
 #include <string>
 
 const std::string poissonfill_frag = R"(
+#ifdef GL_ES
+precision mediump float;
+#endif
+
 uniform sampler2D   u_tex0;
 uniform sampler2D   u_tex1;
 uniform vec2        u_resolution;
 uniform bool        u_isup;
-                        
-float h1(int i) {
-    if (i == 0 || i == 4)
+
+#define saturate(x) clamp(x, 0.0, 1.0)
+
+float h1(float i) {
+    if (i == 0.0 || i == 4.0)
         return 0.1507;
     
-    if (i == 1 || i == 3)
+    if (i == 1.0 || i == 3.0)
         return 0.6836;
 
     return 1.0334;
 }
 
-float G(int i) {
-    if (i == 0 || i == 2)
+float G(float i) {
+    if (i == 0.0 || i == 2.0)
         return 0.0312;
 
     return 0.7753;
 }
 
 void main() {
+    vec2 st = gl_FragCoord.xy/u_resolution;
     vec2 pixel = 1.0/u_resolution;
 
-    int i = int(gl_FragCoord.y-0.5);
-    int j = int(gl_FragCoord.x-0.5);
+    st -= pixel * 0.5;
 
     if (!u_isup) {
-        int x = j * 2;
-        int y = i * 2;
+        st *= 2.0;
         vec4 acc = vec4(0.0);
-        for (int dy = -2; dy <= 2; dy++) {
-            for (int dx = -2; dx <= 2; dx++) {
-                float nx = float(x + dx + 1);
-                float ny = float(y + dy + 1);
-                if (nx < 0.0 || nx >= u_resolution.x || ny < 0.0 || ny >= u_resolution.y)
+        for (float dy = -2.0; dy <= 2.0; dy++) {
+            for (float dx = -2.0; dx <= 2.0; dx++) {
+                vec2 uv = st + vec2(dx, dy) * pixel;
+                uv += pixel;
+                if (uv.x < 0.0 || uv.x >= 1.0 || uv.y < 0.0 || uv.y >= 1.0)
                     continue;
-                
-                vec4 col = texture2D(u_tex0, vec2(nx, ny) * pixel);
-                acc += col * h1(dx+2) * h1(dy+2);
+                acc += texture2D(u_tex0, saturate(uv)) * h1(dx + 2.0) * h1(dy + 2.0);
             }
         }
 
@@ -55,26 +58,23 @@ void main() {
     else {
         float h2 = 0.0270;
         vec4 acc = vec4(0.0);
-        for (int dy = -1; dy <= 1; dy++) {
-            for (int dx = -1; dx <= 1; dx++) {
-                float nx = float(j + dx + 1);
-                float ny = float(i + dy + 1);
-                if (nx < 0.0 || nx >= u_resolution.x || ny < 0.0 || ny >= u_resolution.y)
+        for (float dy = -1.0; dy <= 1.0; dy++) {
+            for (float dx = -1.0; dx <= 1.0; dx++) {
+                vec2 uv = st + vec2(dx, dy) * pixel;
+                uv += pixel;
+                if (uv.x < 0.0 || uv.x >= 1.0 || uv.y < 0.0 || uv.y >= 1.0)
                     continue;
-
-                vec4 col = texture2D(u_tex0, vec2(nx, ny) * pixel);
-                acc += col * G(dx+1) * G(dy+1);
+                acc += texture2D(u_tex0, saturate(uv)) * G(dx + 1.0) * G(dy + 1.0);
             }
         }
-        for (int dy = -2; dy <= 2; dy++) {
-            for (int dx = -2; dx <= 2; dx++) {
-                float nx = float(j + dx);
-                float ny = float(i + dy);
-                if (nx < 0.0 || nx >= u_resolution.x || ny < 0.0 || ny >= u_resolution.y)
+
+        for (float dy = -2.0; dy <= 2.0; dy++) {
+            for (float dx = -2.0; dx <= 2.0; dx++) {
+                vec2 uv = st + vec2(dx, dy) * pixel;
+                uv *= 0.5;
+                if (uv.x < 0.0 || uv.x >= 1.0 || uv.y < 0.0 || uv.y >= 1.0)
                     continue;
-                
-                vec4 col = texture2D(u_tex1, vec2(nx, ny) * 0.5 * pixel);
-                acc += col * h2 * h1(dx+2) * h1(dy+2);
+                acc += texture2D(u_tex1, saturate(uv)) * h2 * h1(dx + 2.0) * h1(dy + 2.0);
             }
         }
 
