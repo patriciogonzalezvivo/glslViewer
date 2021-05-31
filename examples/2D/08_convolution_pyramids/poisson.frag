@@ -5,14 +5,10 @@ precision mediump float;
 
 uniform vec2        u_resolution;
 
+uniform sampler2D   u_poissonFill;
 uniform sampler2D   u_tex0;
 uniform vec2        u_tex0Resolution;
 
-uniform sampler2D   u_poissonFill;
-
-float rgb2luma(in vec3 color) {
-    return dot(color, vec3(0.299, 0.587, 0.114));
-}
 
 void main (void) {
     vec4 color = vec4(0.0);

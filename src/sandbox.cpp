@@ -747,9 +747,10 @@ bool Sandbox::reloadShaders( WatchFileList &_files ) {
                 glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
                 glClear(GL_COLOR_BUFFER_BIT);
                 m_poissonfill_shader.use();
-                m_poissonfill_shader.setUniformTexture("u_tex0", _tex0, 1);
+                m_poissonfill_shader.textureIndex = geom_index == -1 ? 1 : 0;
+                m_poissonfill_shader.setUniformTexture("u_tex0", _tex0);
                 if (_tex1 != NULL)
-                    m_poissonfill_shader.setUniformTexture("u_tex1", _tex1, 2);
+                    m_poissonfill_shader.setUniformTexture("u_tex1", _tex1);
                 m_poissonfill_shader.setUniform("u_isup", _tex1 != NULL);
                 m_poissonfill_shader.setUniform("u_resolution", (float)_target->getWidth(), (float)_target->getHeight());
                 m_billboard_vbo->render( &m_poissonfill_shader );
@@ -862,8 +863,9 @@ void Sandbox::render() {
         _renderBuffers();
 
     if (m_poissonfill) {
-        // glEnable(GL_BLEND);
+        glEnable(GL_BLEND);
         // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_DST_ALPHA);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
         m_poissonfill_fbo.bind();
         m_poissonfill_subshader.use();
@@ -876,14 +878,7 @@ void Sandbox::render() {
         m_billboard_vbo->render( &m_poissonfill_subshader );
 
         m_poissonfill_fbo.unbind();
-
-        GLint viewport[4];
-        glGetIntegerv(GL_VIEWPORT, viewport);
         uniforms.poissonfill.process(&m_poissonfill_fbo);
-        glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
-
-        // glEnable(GL_BLEND);
-        // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     }
     
     // MAIN SCENE
@@ -1082,6 +1077,8 @@ void Sandbox::renderUI() {
 
         // DEBUG BUFFERS
         int nTotal = uniforms.buffers.size();
+        if (m_poissonfill)
+            nTotal += uniforms.functions["u_poissonFill"].present;
         if (m_postprocessing) {
             nTotal += uniforms.functions["u_scene"].present;
             nTotal += uniforms.functions["u_sceneDepth"].present;
@@ -1109,6 +1106,18 @@ void Sandbox::renderUI() {
                 m_billboard_shader.setUniformTexture("u_tex0", &uniforms.buffers[i]);
                 m_billboard_vbo->render(&m_billboard_shader);
                 yOffset -= yStep * 2.0;
+            }
+
+            if (m_poissonfill) {
+                if (uniforms.functions["u_poissonFill"].present) {
+                    m_billboard_shader.setUniform("u_depth", 0.0f);
+                    m_billboard_shader.setUniform("u_scale", xStep, yStep);
+                    m_billboard_shader.setUniform("u_translate", xOffset, yOffset);
+                    m_billboard_shader.setUniform("u_modelViewProjectionMatrix", getOrthoMatrix());
+                    m_billboard_shader.setUniformTexture("u_tex0", uniforms.poissonfill.getResult(), 0);
+                    m_billboard_vbo->render(&m_billboard_shader);
+                    yOffset -= yStep * 2.0;
+                }
             }
 
             if (m_postprocessing) {

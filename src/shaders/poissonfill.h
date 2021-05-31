@@ -12,8 +12,6 @@ uniform sampler2D   u_tex1;
 uniform vec2        u_resolution;
 uniform bool        u_isup;
 
-#define saturate(x) clamp(x, 0.0, 1.0)
-
 float h1(float i) {
     if (i == 0.0 || i == 4.0)
         return 0.1507;
@@ -41,9 +39,9 @@ void main() {
         for (float dy = -2.0; dy <= 2.0; dy++) {
             for (float dx = -2.0; dx <= 2.0; dx++) {
                 vec2 uv = st + vec2(dx, dy) * pixel;
-                // if (uv.x < 0.0 || uv.x >= 1.0 || uv.y < 0.0 || uv.y >= 1.0)
-                    // continue;
-                acc += texture2D(u_tex0, saturate(uv)) * h1(dx + 2.0) * h1(dy + 2.0);
+                if (uv.x < 0.0 || uv.x >= 1.0 || uv.y < 0.0 || uv.y >= 1.0)
+                    continue;
+                acc += texture2D(u_tex0, uv) * h1(dx + 2.0) * h1(dy + 2.0);
             }
         }
 
@@ -58,18 +56,18 @@ void main() {
         for (float dy = -1.0; dy <= 1.0; dy++) {
             for (float dx = -1.0; dx <= 1.0; dx++) {
                 vec2 uv = st + vec2(dx, dy) * pixel;
-                // if (uv.x < 0.0 || uv.x >= 1.0 || uv.y < 0.0 || uv.y >= 1.0)
-                    // continue;
-                acc += texture2D(u_tex0, saturate(uv)) * G(dx + 1.0) * G(dy + 1.0);
+                if (uv.x < 0.0 || uv.x >= 1.0 || uv.y < 0.0 || uv.y >= 1.0)
+                    continue;
+                acc += texture2D(u_tex0, uv) * G(dx + 1.0) * G(dy + 1.0);
             }
         }
 
         for (float dy = -2.0; dy <= 2.0; dy++) {
             for (float dx = -2.0; dx <= 2.0; dx++) {
                 vec2 uv = st + vec2(dx, dy) * pixel;
-                // if (uv.x < 0.0 || uv.x >= 1.0 || uv.y < 0.0 || uv.y >= 1.0)
-                    // continue;
-                acc += texture2D(u_tex1, saturate(uv)) * h2 * h1(dx + 2.0) * h1(dy + 2.0);
+                if (uv.x < 0.0 || uv.x >= 1.0 || uv.y < 0.0 || uv.y >= 1.0)
+                    continue;
+                acc += texture2D(u_tex1, uv) * h2 * h1(dx + 2.0) * h1(dy + 2.0);
             }
         }
 
