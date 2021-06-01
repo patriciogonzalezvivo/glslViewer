@@ -67,6 +67,7 @@ void main() {
                 vec2 uv = st + vec2(dx, dy) * pixel;
                 if (uv.x < 0.0 || uv.x >= 1.0 || uv.y < 0.0 || uv.y >= 1.0)
                     continue;
+                uv *= 0.5;
                 acc += texture2D(u_tex1, uv) * h2 * h1(dx + 2.0) * h1(dy + 2.0);
             }
         }
