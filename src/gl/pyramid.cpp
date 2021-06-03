@@ -20,12 +20,14 @@ void Pyramid::allocate(int _width, int _height) {
         w *= 0.5f;
         h *= 0.5f;
         m_downs[i].allocate(w, h, COLOR_TEXTURE);
+        // std::cout << w << "x" << h << std::endl;
     }
     
     for (int i = 0; i < m_depth; i++) {
         w *= 2.0f;
         h *= 2.0f;
         m_ups[i].allocate(w, h, COLOR_TEXTURE);
+        // std::cout << w << "x" << h << std::endl;
     }
 }
 

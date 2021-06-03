@@ -742,7 +742,6 @@ bool Sandbox::reloadShaders( WatchFileList &_files ) {
         if (!m_poissonfill_shader.isLoaded()) {
             m_poissonfill_shader.load(poissonfill_frag, billboard_vert, false);
             uniforms.poissonfill.pass = [this](Fbo *_target, const Fbo *_tex0, const Fbo *_tex1) {
-                glViewport(0, 0, _target->getWidth(), _target->getHeight());
                 _target->bind();
                 glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
                 glClear(GL_COLOR_BUFFER_BIT);
@@ -752,6 +751,7 @@ bool Sandbox::reloadShaders( WatchFileList &_files ) {
                 if (_tex1 != NULL)
                     m_poissonfill_shader.setUniformTexture("u_tex1", _tex1);
                 m_poissonfill_shader.setUniform("u_isup", _tex1 != NULL);
+                m_poissonfill_shader.setUniform("u_pixel", 1.0f/((float)_target->getWidth()), 1.0f/((float)_target->getHeight()));
                 m_poissonfill_shader.setUniform("u_resolution", (float)_target->getWidth(), (float)_target->getHeight());
                 m_billboard_vbo->render( &m_poissonfill_shader );
                 _target->unbind();

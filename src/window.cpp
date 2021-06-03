@@ -406,6 +406,8 @@ void initGL (glm::ivec4 &_viewport, WindowStyle _style) {
             exit(-1);
         }
 
+        glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GL_TRUE);
+
         if (_style == HEADLESS)
             glfwWindowHint(GLFW_VISIBLE, GL_FALSE);
             
