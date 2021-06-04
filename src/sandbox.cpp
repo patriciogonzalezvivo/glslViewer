@@ -747,8 +747,8 @@ bool Sandbox::reloadShaders( WatchFileList &_files ) {
                 glClear(GL_COLOR_BUFFER_BIT);
                 m_poissonfill_shader.use();
                 m_poissonfill_shader.textureIndex = geom_index == -1 ? 1 : 0;
-                m_poissonfill_shader.setUniformTexture("u_tex0", _tex0);
                 m_poissonfill_shader.setUniform("u_isup", _tex1 != NULL);
+                m_poissonfill_shader.setUniformTexture("u_tex0", _tex0);
                 if (_tex1 != NULL)
                     m_poissonfill_shader.setUniformTexture("u_tex1", _tex1);
                 m_poissonfill_shader.setUniform("u_pixel", 1.0f/((float)_target->getWidth()), 1.0f/((float)_target->getHeight()));
