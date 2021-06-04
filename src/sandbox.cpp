@@ -748,11 +748,10 @@ bool Sandbox::reloadShaders( WatchFileList &_files ) {
                 m_poissonfill_shader.use();
                 m_poissonfill_shader.textureIndex = geom_index == -1 ? 1 : 0;
                 m_poissonfill_shader.setUniformTexture("u_tex0", _tex0);
+                m_poissonfill_shader.setUniform("u_isup", _tex1 != NULL);
                 if (_tex1 != NULL)
                     m_poissonfill_shader.setUniformTexture("u_tex1", _tex1);
-                m_poissonfill_shader.setUniform("u_isup", _tex1 != NULL);
                 m_poissonfill_shader.setUniform("u_pixel", 1.0f/((float)_target->getWidth()), 1.0f/((float)_target->getHeight()));
-                m_poissonfill_shader.setUniform("u_resolution", (float)_target->getWidth(), (float)_target->getHeight());
                 m_billboard_vbo->render( &m_poissonfill_shader );
                 _target->unbind();
             };
@@ -1110,12 +1109,28 @@ void Sandbox::renderUI() {
 
             if (m_poissonfill) {
                 if (uniforms.functions["u_poissonFill"].present) {
-                    m_billboard_shader.setUniform("u_depth", 0.0f);
-                    m_billboard_shader.setUniform("u_scale", xStep, yStep);
-                    m_billboard_shader.setUniform("u_translate", xOffset, yOffset);
-                    m_billboard_shader.setUniform("u_modelViewProjectionMatrix", getOrthoMatrix());
-                    m_billboard_shader.setUniformTexture("u_tex0", uniforms.poissonfill.getResult(), 0);
-                    m_billboard_vbo->render(&m_billboard_shader);
+                    float _x = 0;
+                    float _sw = xStep;
+                    float _sh = yStep; 
+                    for (int i = 0; i < uniforms.poissonfill.getDepth() * 2; i++ ) {
+                        m_billboard_shader.setUniform("u_depth", 0.0f);
+                        m_billboard_shader.setUniform("u_scale", _sw, _sh);
+                        m_billboard_shader.setUniform("u_translate", xOffset + _x, yOffset);
+                        m_billboard_shader.setUniform("u_modelViewProjectionMatrix", getOrthoMatrix());
+                        m_billboard_shader.setUniformTexture("u_tex0", uniforms.poissonfill.getResult(i), 0);
+                        m_billboard_vbo->render(&m_billboard_shader);
+
+                        _x += _sw;
+                        if (i < uniforms.poissonfill.getDepth()) {
+                            _sw *= 0.5;
+                            _sh *= 0.5;
+                        }
+                        else {
+                            _sw *= 2.0;
+                            _sh *= 2.0;
+                        }
+                        _x += _sw;
+                    }
                     yOffset -= yStep * 2.0;
                 }
             }

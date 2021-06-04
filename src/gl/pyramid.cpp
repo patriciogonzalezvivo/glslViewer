@@ -36,7 +36,7 @@ void Pyramid::process(const Fbo *_input) {
     pass(&m_downs[0], _input, NULL);
 
     for (i = 1; i < m_depth; i++)
-        pass(&m_downs[i], &(m_downs[i-1]),NULL);
+        pass(&m_downs[i], &(m_downs[i-1]), NULL);
     
     pass(&m_ups[0], &(m_downs[m_depth-2]), &(m_downs[m_depth-1]));
     
@@ -44,4 +44,11 @@ void Pyramid::process(const Fbo *_input) {
         pass(&m_ups[i], &(m_downs[m_depth-i-2]),&(m_ups[i-1]));
     
     pass(&m_ups[m_depth-1], _input, &(m_ups[m_depth-2]));
+}
+
+const Fbo* Pyramid::getResult(unsigned int index) const { 
+    if (index < m_depth)
+        return &m_ups[m_depth - 1 - index];
+    else
+        return &m_downs[m_depth * 2 - index - 1];
 }

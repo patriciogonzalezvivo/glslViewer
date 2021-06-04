@@ -24,7 +24,8 @@ public:
     void    process(const Fbo *_fbo);
 
     bool    isAllocated() const {return m_depth != 0; }
-    const Fbo* getResult() const { return &m_ups[m_depth-1]; }
+    int     getDepth() const { return m_depth; }
+    const Fbo* getResult(unsigned int index = 0) const;
 
     std::function<void(Fbo*,const Fbo*,const Fbo*)> pass;
 private:

@@ -33,52 +33,40 @@ float G(float i) {
 varying vec2 v_texcoord;
 
 void main() {
+    vec4 color = vec4(0.0);
     vec2 st = v_texcoord;
     vec2 pixel = u_pixel;
+    st += pixel * 0.5;
 
     if (!u_isup) {
-        st *= 2.0;
-        vec4 acc = vec4(0.0);
+        // IS DOWN
         for (float dy = -2.0; dy <= 2.0; dy++) {
             for (float dx = -2.0; dx <= 2.0; dx++) {
                 vec2 uv = st + vec2(dx, dy) * pixel;
-                // if (uv.x < 0.0 || uv.x >= 1.0 || uv.y < 0.0 || uv.y >= 1.0)
-                //     continue;
-                acc += texture2D(u_tex0, uv) * h1(dx + 2.0) * h1(dy + 2.0);
+                if (uv.x < 0.0 || uv.x >= 1.0 || uv.y < 0.0 || uv.y >= 1.0)
+                    continue;
+                color += texture2D(u_tex0, uv) * h1(dx + 2.0) * h1(dy + 2.0);
             }
         }
-
-        if (acc.a == 0.0) 
-            gl_FragColor = acc;
-        else
-            gl_FragColor = vec4(acc.rgb/acc.a,1.0);
     }
     else {
-        float h2 = 0.0270;
-        vec4 highp acc = vec4(0.0);
+        // IS UP
+        const float h2 = 0.0270;
         for (float dy = -1.0; dy <= 1.0; dy++) {
             for (float dx = -1.0; dx <= 1.0; dx++) {
-                vec2 uv = st + vec2(dx, dy) * pixel;
-                // if (uv.x < 0.0 || uv.x >= 1.0 || uv.y < 0.0 || uv.y >= 1.0)
-                //     continue;
-                acc += texture2D(u_tex0, uv) * G(dx + 1.0) * G(dy + 1.0);
+                vec2 uv = st + vec2(dx - 0.75, dy - 0.75) * pixel;
+                color += texture2D(u_tex0, clamp(uv, 0.0, 1.0)) * G(dx + 1.0) * G(dy + 1.0);
             }
         }
 
         for (float dy = -2.0; dy <= 2.0; dy++) {
             for (float dx = -2.0; dx <= 2.0; dx++) {
-                vec2 uv = st + vec2(dx, dy) * pixel;
-                // if (uv.x < 0.0 || uv.x >= 1.0 || uv.y < 0.0 || uv.y >= 1.0)
-                //     continue;
-                uv *= 0.5;
-                acc += texture2D(u_tex1, uv) * h2 * h1(dx + 2.0) * h1(dy + 2.0);
+                vec2 uv = st + vec2(dx - 0.75, dy - 0.75) * pixel;
+                color += texture2D(u_tex1, clamp(uv, 0.0, 1.0)) * h2 * h1(dx + 2.0) * h1(dy + 2.0);
             }
         }
-
-        if (acc.a == 0.0)
-            gl_FragColor = acc;
-        else
-            gl_FragColor = vec4(acc.rgb/acc.a,1.0);
     }
+
+    gl_FragColor = (color.a == 0.0)? color : vec4(color.rgb/color.a, 1.0);
 }
 )";
