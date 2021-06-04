@@ -35,14 +35,17 @@ void Pyramid::process(const Fbo *_input) {
     int i;
     pass(&m_downs[0], _input, NULL);
 
+    // DOWNSCALE
     for (i = 1; i < m_depth; i++)
         pass(&m_downs[i], &(m_downs[i-1]), NULL);
     
+    // UPSCALE
     pass(&m_ups[0], &(m_downs[m_depth-2]), &(m_downs[m_depth-1]));
     
     for (i = 1; i < m_depth-1; i++)
-        pass(&m_ups[i], &(m_downs[m_depth-i-2]),&(m_ups[i-1]));
+        pass(&m_ups[i], &(m_downs[m_depth-i-2]), &(m_ups[i-1]));
     
+    // FINISH re inserting the original input
     pass(&m_ups[m_depth-1], _input, &(m_ups[m_depth-2]));
 }
 

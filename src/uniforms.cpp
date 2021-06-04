@@ -137,9 +137,9 @@ Uniforms::Uniforms(): cubemap(nullptr), m_change(false), m_is_audio_init(false) 
         }
     });
 
-    functions["u_poissonFill"] = UniformFunction("sampler2D", [this](Shader& _shader) {
-        if (poissonfill.isAllocated()) {
-            _shader.setUniformTexture("u_poissonFill", poissonfill.getResult());
+    functions["u_convolutionPyramid"] = UniformFunction("sampler2D", [this](Shader& _shader) {
+        if (convolution_pyramid.isAllocated()) {
+            _shader.setUniformTexture("u_convolutionPyramid", convolution_pyramid.getResult());
         }
     });
 }

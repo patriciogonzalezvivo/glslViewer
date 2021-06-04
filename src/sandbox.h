@@ -98,11 +98,11 @@ private:
     Scene               m_scene;
     Fbo                 m_scene_fbo;
 
-    // Poisson Fill
-    Shader              m_poissonfill_subshader;
-    Shader              m_poissonfill_shader;
-    Fbo                 m_poissonfill_fbo;
-    bool                m_poissonfill;
+    // Pyramid Convolution
+    Shader              m_convolution_pyramid_subshader;
+    Shader              m_convolution_pyramid_shader;
+    Fbo                 m_convolution_pyramid_fbo;
+    bool                m_convolution_pyramid;
 
     // Postprocessing
     Shader              m_postprocessing_shader;

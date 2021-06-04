@@ -101,7 +101,7 @@ public:
 
     TextureCube*            cubemap;
     std::vector<Fbo>        buffers;
-    Pyramid                 poissonfill;
+    Pyramid                 convolution_pyramid;
 
     // 3d Scene Uniforms 
     std::vector<Camera>     cameras;
