@@ -1,2 +1,2 @@
 poisson_fill:
-	glslViewer poisson_custom.frag un_poisson.png -l
+	glslViewer poisson_fill.frag un_poisson.png -l
