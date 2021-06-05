@@ -9,3 +9,6 @@ stars:
 
 stars_trail:
 	glslViewer pcl.ply stars.vert pcl_trail.frag -l 
+
+gpgpu:
+	glslViewer pcl.ply gpgpu.vert gpgpu.frag -e buffers,on -l 
