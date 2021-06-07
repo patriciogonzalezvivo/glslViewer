@@ -2,6 +2,12 @@
 
 #include <string>
 
+// Reference:
+// - Convolution Pyramids, Farbman et al., 2011 (https://www.cse.huji.ac.il/labs/cglab/projects/convpyr/data/convpyr-small.pdf)
+// - Rendu (https://github.com/kosua20/Rendu)
+// - ofxPoissonFill (https://github.com/LingDong-/ofxPoissonFill)
+//
+
 const std::string poissonfill_frag = R"(
 #ifdef GL_ES
 precision mediump float;
