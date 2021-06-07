@@ -322,6 +322,38 @@ bool check_for_postprocessing(const std::string& _source) {
     return false;
 }
 
+bool check_for_convolution_pyramid(const std::string& _source) {
+    // Split Source code in lines
+    std::vector<std::string> lines = split(_source, '\n');
+
+    std::regex re(R"((?:^\s*#if|^\s*#elif)(?:\s+)(defined\s*\(\s*CONVOLUTION_PYRAMID)(?:\s*\))|(?:^\s*#ifdef\s+CONVOLUTION_PYRAMID)|(?:^\s*#ifndef\s+CONVOLUTION_PYRAMID))");
+    std::smatch match;
+
+    for (unsigned int l = 0; l < lines.size(); l++) {
+        if (std::regex_search(lines[l], match, re)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool check_for_convolution_pyramid_algorithm(const std::string& _source) {
+    // Split Source code in lines
+    std::vector<std::string> lines = split(_source, '\n');
+
+    std::regex re(R"((?:^\s*#if|^\s*#elif)(?:\s+)(defined\s*\(\s*CONVOLUTION_PYRAMID_ALGORITHM)(?:\s*\))|(?:^\s*#ifdef\s+CONVOLUTION_PYRAMID_ALGORITHM)|(?:^\s*#ifndef\s+CONVOLUTION_PYRAMID_ALGORITHM))");
+    std::smatch match;
+
+    for (unsigned int l = 0; l < lines.size(); l++) {
+        if (std::regex_search(lines[l], match, re)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 std::string getUniformName(const std::string& _str) {
     std::vector<std::string> values = split(_str, '.');
     return "u_" + toLower( toUnderscore( purifyString( values[0] ) ) );

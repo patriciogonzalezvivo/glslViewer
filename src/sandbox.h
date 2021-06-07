@@ -98,6 +98,12 @@ private:
     Scene               m_scene;
     Fbo                 m_scene_fbo;
 
+    // Pyramid Convolution
+    Shader              m_convolution_pyramid_subshader;
+    Shader              m_convolution_pyramid_shader;
+    Fbo                 m_convolution_pyramid_fbo;
+    bool                m_convolution_pyramid;
+
     // Postprocessing
     Shader              m_postprocessing_shader;
     bool                m_postprocessing;
