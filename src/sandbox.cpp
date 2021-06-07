@@ -749,18 +749,25 @@ bool Sandbox::reloadShaders( WatchFileList &_files ) {
         
         // if (!m_convolution_pyramid_shader.isLoaded()) 
         {
-            uniforms.convolution_pyramid.pass = [this](Fbo *_target, const Fbo *_tex0, const Fbo *_tex1) {
+            uniforms.convolution_pyramid.pass = [this](Fbo *_target, const Fbo *_tex0, const Fbo *_tex1, int _depth) {
                 _target->bind();
                 glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
                 glClear(GL_COLOR_BUFFER_BIT);
                 m_convolution_pyramid_shader.use();
+
+                uniforms.feedTo(m_convolution_pyramid_shader);
+
+                m_convolution_pyramid_shader.setUniform("u_convolutionPyramidDepth", _depth);
+                m_convolution_pyramid_shader.setUniform("u_convolutionPyramidDepths", uniforms.convolution_pyramid.getDepth());
                 m_convolution_pyramid_shader.setUniform("u_convolutionPyramidUpscaling", _tex1 != NULL);
+
                 m_convolution_pyramid_shader.textureIndex = geom_index == -1 ? 1 : 0;
                 m_convolution_pyramid_shader.setUniformTexture("u_convolutionPyramidTex0", _tex0);
                 if (_tex1 != NULL)
                     m_convolution_pyramid_shader.setUniformTexture("u_convolutionPyramidTex1", _tex1);
                 m_convolution_pyramid_shader.setUniform("u_resolution", ((float)_target->getWidth()), ((float)_target->getHeight()));
                 m_convolution_pyramid_shader.setUniform("u_pixel", 1.0f/((float)_target->getWidth()), 1.0f/((float)_target->getHeight()));
+
                 m_billboard_vbo->render( &m_convolution_pyramid_shader );
                 _target->unbind();
             };

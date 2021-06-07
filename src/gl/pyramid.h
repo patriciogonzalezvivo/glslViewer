@@ -27,7 +27,7 @@ public:
     int     getDepth() const { return m_depth; }
     const Fbo* getResult(unsigned int index = 0) const;
 
-    std::function<void(Fbo*,const Fbo*,const Fbo*)> pass;
+    std::function<void(Fbo*,const Fbo*,const Fbo*, int)> pass;
 private:
     Fbo     m_downs[PYRAMID_MAX_LAYERS];
     Fbo     m_ups[PYRAMID_MAX_LAYERS];
