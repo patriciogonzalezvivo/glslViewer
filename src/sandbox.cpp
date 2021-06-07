@@ -1083,6 +1083,38 @@ void Sandbox::render() {
 
 
 void Sandbox::renderUI() {
+    // IN PUT TEXTURES
+    if (m_showTextures) {        
+        glDisable(GL_DEPTH_TEST);
+
+        int nTotal = uniforms.textures.size();
+        if (nTotal > 0) {
+            float w = (float)(getWindowWidth());
+            float h = (float)(getWindowHeight());
+            float scale = fmin(1.0f / (float)(nTotal), 0.25) * 0.5;
+            float xStep = w * scale;
+            float yStep = h * scale;
+            float xOffset = xStep;
+            float yOffset = h - yStep;
+
+            if (!m_billboard_shader.isLoaded())
+                m_billboard_shader.load(dynamic_billboard_frag, dynamic_billboard_vert, false);
+
+            m_billboard_shader.use();
+
+            for (std::map<std::string, Texture*>::iterator it = uniforms.textures.begin(); it != uniforms.textures.end(); it++) {
+                m_billboard_shader.setUniform("u_depth", 0.0f);
+                m_billboard_shader.setUniform("u_scale", xStep, yStep);
+                m_billboard_shader.setUniform("u_translate", xOffset, yOffset);
+                m_billboard_shader.setUniform("u_modelViewProjectionMatrix", getOrthoMatrix());
+                m_billboard_shader.setUniformTexture("u_tex0", it->second, 0);
+                m_billboard_vbo->render(&m_billboard_shader);
+                yOffset -= yStep * 2.0;
+            }
+        }
+    }
+
+    // RESULTING BUFFERS
     if (m_showPasses) {        
         glDisable(GL_DEPTH_TEST);
 
@@ -1101,7 +1133,7 @@ void Sandbox::renderUI() {
             float scale = fmin(1.0f / (float)(nTotal), 0.25) * 0.5;
             float xStep = w * scale;
             float yStep = h * scale;
-            float xOffset = xStep;
+            float xOffset = w - xStep;
             float yOffset = h - yStep;
 
             if (!m_billboard_shader.isLoaded())
@@ -1132,7 +1164,7 @@ void Sandbox::renderUI() {
                         m_billboard_shader.setUniformTexture("u_tex0", uniforms.convolution_pyramid.getResult(i), 0);
                         m_billboard_vbo->render(&m_billboard_shader);
 
-                        _x += _sw;
+                        _x -= _sw;
                         if (i < uniforms.convolution_pyramid.getDepth()) {
                             _sw *= 0.5;
                             _sh *= 0.5;
@@ -1141,7 +1173,7 @@ void Sandbox::renderUI() {
                             _sw *= 2.0;
                             _sh *= 2.0;
                         }
-                        _x += _sw;
+                        _x -= _sw;
                     }
                     yOffset -= yStep * 2.0;
                 }
@@ -1216,36 +1248,6 @@ void Sandbox::renderUI() {
             m_histogram_shader.setUniform("u_modelViewProjectionMatrix", getOrthoMatrix());
             m_histogram_shader.setUniformTexture("u_sceneHistogram", m_histogram_texture, 0);
             m_billboard_vbo->render(&m_histogram_shader);
-        }
-    }
-
-    if (m_showTextures) {        
-        glDisable(GL_DEPTH_TEST);
-
-        int nTotal = uniforms.textures.size();
-        if (nTotal > 0) {
-            float w = (float)(getWindowWidth());
-            float h = (float)(getWindowHeight());
-            float scale = fmin(1.0f / (float)(nTotal), 0.25) * 0.5;
-            float yStep = h * scale;
-            float xStep = h * scale;
-            float xOffset = w - xStep;
-            float yOffset = h - yStep;
-
-            if (!m_billboard_shader.isLoaded())
-                m_billboard_shader.load(dynamic_billboard_frag, dynamic_billboard_vert, false);
-
-            m_billboard_shader.use();
-
-            for (std::map<std::string, Texture*>::iterator it = uniforms.textures.begin(); it != uniforms.textures.end(); it++) {
-                m_billboard_shader.setUniform("u_depth", 0.0f);
-                m_billboard_shader.setUniform("u_scale", xStep, yStep);
-                m_billboard_shader.setUniform("u_translate", xOffset, yOffset);
-                m_billboard_shader.setUniform("u_modelViewProjectionMatrix", getOrthoMatrix());
-                m_billboard_shader.setUniformTexture("u_tex0", it->second, 0);
-                m_billboard_vbo->render(&m_billboard_shader);
-                yOffset -= yStep * 2.0;
-            }
         }
     }
 
