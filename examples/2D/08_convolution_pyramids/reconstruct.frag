@@ -22,13 +22,17 @@ void main (void) {
     vec2 st = gl_FragCoord.xy/u_resolution;
     vec2 pixel = 1.0/u_resolution;
 
+    vec3 edge = laplace(u_tex0, st, pixel * 4.0);
+
 #if defined(CONVOLUTION_PYRAMID)
-    color.rgb = laplace(u_tex0, st, pixel * 4.0);
+    color.rgb = edge;
     color.a = step(.1, dot(color.rgb, color.rgb) );
 
 #else
     color = texture2D(u_convolutionPyramid, st); 
-    color = mix(color, texture2D(u_tex0, st), step(st.x, u_mouse.x/u_resolution.x));
+
+    color.rgb = mix(texture2D(u_tex0, st).rgb, color.rgb, step(st.y, u_mouse.y/u_resolution.y));
+    color.rgb = mix(color.rgb, edge, step(st.x, u_mouse.x/u_resolution.x));
 
 #endif
 
