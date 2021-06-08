@@ -7,5 +7,5 @@ poisson_fill:
 poisson_blend:
 	glslViewer poisson_blend.frag --u_target target.png --u_source source.jpg --u_source_mask source_mask.png -l
 
-reconstruct:
-	glslViewer reconstruct.frag chart.png -l
+laplacian_integrator:
+	glslViewer laplacian_integrator.frag chart.png -l
