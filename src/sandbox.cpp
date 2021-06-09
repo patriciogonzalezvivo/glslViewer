@@ -40,7 +40,7 @@ Sandbox::Sandbox():
     // Buffers
     m_buffers_total(0),
     // Poisson Fill
-    m_convolution_pyramid(false),
+    m_convolution_pyramid_total(0),
     // PostProcessing
     m_postprocessing(false),
     // Geometry helpers
@@ -731,51 +731,9 @@ bool Sandbox::reloadShaders( WatchFileList &_files ) {
     m_buffers_total = count_buffers(m_frag_source);
     _updateBuffers();
 
-    // Poisson Fill
-    m_convolution_pyramid = check_for_convolution_pyramid(getSource(FRAGMENT));
-    if (m_convolution_pyramid) {
-        m_convolution_pyramid_subshader.addDefine("CONVOLUTION_PYRAMID");
-        m_convolution_pyramid_subshader.load(m_frag_source, billboard_vert, false);
-        m_convolution_pyramid_fbo.allocate(getWindowWidth(), getWindowHeight(), COLOR_TEXTURE);
-        uniforms.convolution_pyramid.allocate(getWindowWidth(), getWindowHeight());
-
-        if (check_for_convolution_pyramid_algorithm(getSource(FRAGMENT))) {
-            m_convolution_pyramid_shader.addDefine("CONVOLUTION_PYRAMID_ALGORITHM");
-            m_convolution_pyramid_shader.load(m_frag_source, billboard_vert, false);
-        }
-        else {
-            m_convolution_pyramid_shader.load(poissonfill_frag, billboard_vert, false);
-        }
-        
-        // if (!m_convolution_pyramid_shader.isLoaded()) 
-        {
-            uniforms.convolution_pyramid.pass = [this](Fbo *_target, const Fbo *_tex0, const Fbo *_tex1, int _depth) {
-                _target->bind();
-                glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-                glClear(GL_COLOR_BUFFER_BIT);
-                m_convolution_pyramid_shader.use();
-
-                uniforms.feedTo(m_convolution_pyramid_shader);
-
-                m_convolution_pyramid_shader.setUniform("u_convolutionPyramidDepth", _depth);
-                m_convolution_pyramid_shader.setUniform("u_convolutionPyramidDepths", uniforms.convolution_pyramid.getDepth());
-                m_convolution_pyramid_shader.setUniform("u_convolutionPyramidUpscaling", _tex1 != NULL);
-
-                m_convolution_pyramid_shader.textureIndex = geom_index == -1 ? 1 : 0;
-                m_convolution_pyramid_shader.setUniformTexture("u_convolutionPyramidTex0", _tex0);
-                if (_tex1 != NULL)
-                    m_convolution_pyramid_shader.setUniformTexture("u_convolutionPyramidTex1", _tex1);
-                m_convolution_pyramid_shader.setUniform("u_resolution", ((float)_target->getWidth()), ((float)_target->getHeight()));
-                m_convolution_pyramid_shader.setUniform("u_pixel", 1.0f/((float)_target->getWidth()), 1.0f/((float)_target->getHeight()));
-
-                m_billboard_vbo->render( &m_convolution_pyramid_shader );
-                _target->unbind();
-            };
-        }
-
-        
-
-    }
+    // Convolution Pyramids
+    m_convolution_pyramid_total = count_convolution_pyramid(getSource(FRAGMENT));
+    _updateConvolutionPyramids();
     
     // UPDATE Postprocessing
     bool havePostprocessing = check_for_postprocessing(getSource(FRAGMENT));
@@ -835,6 +793,59 @@ void Sandbox::_updateBuffers() {
     }
 }
 
+void Sandbox::_updateConvolutionPyramids() {
+    if ( m_convolution_pyramid_total != int(uniforms.convolution_pyramids.size()) ) {
+
+        if (verbose)
+            std::cout << "Removing " << uniforms.convolution_pyramids.size() << " convolution pyramids to create  " << m_convolution_pyramid_total << std::endl;
+
+        uniforms.convolution_pyramids.clear();
+        m_convolution_pyramid_fbos.clear();
+        m_convolution_pyramid_subshaders.clear();
+        for (int i = 0; i < m_convolution_pyramid_total; i++) {
+            uniforms.convolution_pyramids.push_back( Pyramid() );
+            uniforms.convolution_pyramids[i].allocate(getWindowWidth(), getWindowHeight());
+            uniforms.convolution_pyramids[i].pass = [this](Fbo *_target, const Fbo *_tex0, const Fbo *_tex1, int _depth) {
+                _target->bind();
+                glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+                glClear(GL_COLOR_BUFFER_BIT);
+                m_convolution_pyramid_shader.use();
+
+                uniforms.feedTo(m_convolution_pyramid_shader);
+
+                m_convolution_pyramid_shader.setUniform("u_convolutionPyramidDepth", _depth);
+                m_convolution_pyramid_shader.setUniform("u_convolutionPyramidTotalDepth", uniforms.convolution_pyramids[0].getDepth());
+                m_convolution_pyramid_shader.setUniform("u_convolutionPyramidUpscaling", _tex1 != NULL);
+
+                m_convolution_pyramid_shader.textureIndex = geom_index == -1 ? 1 : 0;
+                m_convolution_pyramid_shader.setUniformTexture("u_convolutionPyramidTex0", _tex0);
+                if (_tex1 != NULL)
+                    m_convolution_pyramid_shader.setUniformTexture("u_convolutionPyramidTex1", _tex1);
+                m_convolution_pyramid_shader.setUniform("u_resolution", ((float)_target->getWidth()), ((float)_target->getHeight()));
+                m_convolution_pyramid_shader.setUniform("u_pixel", 1.0f/((float)_target->getWidth()), 1.0f/((float)_target->getHeight()));
+
+                m_billboard_vbo->render( &m_convolution_pyramid_shader );
+                _target->unbind();
+            };
+            m_convolution_pyramid_fbos.push_back( Fbo() );
+            m_convolution_pyramid_fbos[i].allocate(getWindowWidth(), getWindowHeight(), COLOR_TEXTURE);
+            m_convolution_pyramid_subshaders.push_back( Shader() );
+        }
+    }
+    
+    if (check_for_convolution_pyramid_algorithm(getSource(FRAGMENT))) {
+        m_convolution_pyramid_shader.addDefine("CONVOLUTION_PYRAMID_ALGORITHM");
+        m_convolution_pyramid_shader.load(m_frag_source, billboard_vert, false);
+    }
+    else
+        m_convolution_pyramid_shader.load(poissonfill_frag, billboard_vert, false);
+
+    for (unsigned int i = 0; i < m_convolution_pyramid_subshaders.size(); i++) {
+        m_convolution_pyramid_subshaders[i].addDefine("CONVOLUTION_PYRAMID_" + toString(i));
+        m_convolution_pyramid_subshaders[i].load(m_frag_source, billboard_vert, false);
+    }
+}
+
 // ------------------------------------------------------------------------- DRAW
 void Sandbox::_renderBuffers() {
     glDisable(GL_BLEND);
@@ -862,6 +873,34 @@ void Sandbox::_renderBuffers() {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
+void Sandbox::_renderConvolutionPyramids() {
+    // 
+    // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_DST_ALPHA);
+    // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    for (unsigned int i = 0; i < m_convolution_pyramid_subshaders.size(); i++) {
+        glDisable(GL_BLEND);
+
+        m_convolution_pyramid_fbos[i].bind();
+        m_convolution_pyramid_subshaders[i].use();
+
+        // Clear the background
+        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        // Update uniforms and textures
+        uniforms.feedTo( m_convolution_pyramid_subshaders[i] );
+        m_billboard_vbo->render( &m_convolution_pyramid_subshaders[i] );
+
+        m_convolution_pyramid_fbos[i].unbind();
+
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        uniforms.convolution_pyramids[i].process(&m_convolution_pyramid_fbos[i]);
+    }
+
+}
+
 void Sandbox::render() {
 
     // UPDATE STREAMING TEXTURES
@@ -880,24 +919,8 @@ void Sandbox::render() {
     if (uniforms.buffers.size() > 0)
         _renderBuffers();
 
-    if (m_convolution_pyramid) {
-        glEnable(GL_BLEND);
-        // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_DST_ALPHA);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-        m_convolution_pyramid_fbo.bind();
-        m_convolution_pyramid_subshader.use();
-
-        // Clear the background
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        // Update uniforms and textures
-        uniforms.feedTo( m_convolution_pyramid_subshader );
-        m_billboard_vbo->render( &m_convolution_pyramid_subshader );
-
-        m_convolution_pyramid_fbo.unbind();
-        uniforms.convolution_pyramid.process(&m_convolution_pyramid_fbo);
-    }
+    if (m_convolution_pyramid_total > 0)
+        _renderConvolutionPyramids();
     
     // MAIN SCENE
     // ----------------------------------------------- < main scene start
@@ -1127,8 +1150,8 @@ void Sandbox::renderUI() {
 
         // DEBUG BUFFERS
         int nTotal = uniforms.buffers.size();
-        if (m_convolution_pyramid)
-            nTotal += uniforms.functions["u_convolutionPyramid"].present;
+        if (m_convolution_pyramid_total > 0)
+            nTotal += uniforms.convolution_pyramids.size();
         if (m_postprocessing) {
             nTotal += uniforms.functions["u_scene"].present;
             nTotal += uniforms.functions["u_sceneDepth"].present;
@@ -1158,32 +1181,30 @@ void Sandbox::renderUI() {
                 yOffset -= yStep * 2.0;
             }
 
-            if (m_convolution_pyramid) {
-                if (uniforms.functions["u_convolutionPyramid"].present) {
-                    float _x = 0;
-                    float _sw = xStep;
-                    float _sh = yStep; 
-                    for (int i = 0; i < uniforms.convolution_pyramid.getDepth() * 2; i++ ) {
-                        m_billboard_shader.setUniform("u_depth", 0.0f);
-                        m_billboard_shader.setUniform("u_scale", _sw, _sh);
-                        m_billboard_shader.setUniform("u_translate", xOffset + _x, yOffset);
-                        m_billboard_shader.setUniform("u_modelViewProjectionMatrix", getOrthoMatrix());
-                        m_billboard_shader.setUniformTexture("u_tex0", uniforms.convolution_pyramid.getResult(i), 0);
-                        m_billboard_vbo->render(&m_billboard_shader);
+            for (unsigned int i = 0; i < uniforms.convolution_pyramids.size(); i++) {
+                float _x = 0;
+                float _sw = xStep;
+                float _sh = yStep; 
+                for (int j = 0; j < uniforms.convolution_pyramids[i].getDepth() * 2; j++ ) {
+                    m_billboard_shader.setUniform("u_depth", 0.0f);
+                    m_billboard_shader.setUniform("u_scale", _sw, _sh);
+                    m_billboard_shader.setUniform("u_translate", xOffset + _x, yOffset);
+                    m_billboard_shader.setUniform("u_modelViewProjectionMatrix", getOrthoMatrix());
+                    m_billboard_shader.setUniformTexture("u_tex0", uniforms.convolution_pyramids[i].getResult(j), 0);
+                    m_billboard_vbo->render(&m_billboard_shader);
 
-                        _x -= _sw;
-                        if (i < uniforms.convolution_pyramid.getDepth()) {
-                            _sw *= 0.5;
-                            _sh *= 0.5;
-                        }
-                        else {
-                            _sw *= 2.0;
-                            _sh *= 2.0;
-                        }
-                        _x -= _sw;
+                    _x -= _sw;
+                    if (j < uniforms.convolution_pyramids[i].getDepth()) {
+                        _sw *= 0.5;
+                        _sh *= 0.5;
                     }
-                    yOffset -= yStep * 2.0;
+                    else {
+                        _sw *= 2.0;
+                        _sh *= 2.0;
+                    }
+                    _x -= _sw;
                 }
+                yOffset -= yStep * 2.0;
             }
 
             if (m_postprocessing) {
@@ -1449,12 +1470,14 @@ void Sandbox::onViewportResize(int _newWidth, int _newHeight) {
     for (unsigned int i = 0; i < uniforms.buffers.size(); i++) 
         uniforms.buffers[i].allocate(_newWidth, _newHeight, COLOR_TEXTURE);
 
-    if (m_convolution_pyramid) {
-        m_convolution_pyramid_fbo.allocate(_newWidth, _newHeight, COLOR_TEXTURE);
-        uniforms.convolution_pyramid.allocate(getWindowWidth(), getWindowHeight());
+    if (m_convolution_pyramid_fbos.size() > 0) {
+        for (unsigned int i = 0; i < uniforms.convolution_pyramids.size(); i++) {
+            m_convolution_pyramid_fbos[i].allocate(_newWidth, _newHeight, COLOR_TEXTURE);
+            uniforms.convolution_pyramids[i].allocate(getWindowWidth(), getWindowHeight());
+        }
     }
 
-    if (m_postprocessing || m_histogram || m_convolution_pyramid)
+    if (m_postprocessing || m_histogram)
         _updateSceneBuffer(_newWidth, _newHeight);
 
     if (m_record || screenshotFile != "")

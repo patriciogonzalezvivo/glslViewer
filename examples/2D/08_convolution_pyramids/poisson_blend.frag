@@ -15,7 +15,7 @@ uniform sampler2D   u_buffer1;
 uniform sampler2D   u_buffer2;
 uniform sampler2D   u_buffer3;
 
-uniform sampler2D   u_convolutionPyramid;
+uniform sampler2D   u_convolutionPyramid0;
 uniform sampler2D   u_convolutionPyramidTex0;
 uniform sampler2D   u_convolutionPyramidTex1;
 uniform bool        u_convolutionPyramidUpscaling;
@@ -60,7 +60,7 @@ void main (void) {
     color.rgb = laplace(u_buffer0, st, pixel * 2.0);
     color.rgb = color.rgb * 0.5 + 0.5;
 
-#elif defined(CONVOLUTION_PYRAMID)
+#elif defined(CONVOLUTION_PYRAMID_0)
     // COPY TARGET with out MASK area
     color = texture2D(u_target, st);
     color *= 1.0-texture2D(u_buffer0, st).a;
@@ -100,7 +100,7 @@ void main (void) {
     color = (color.a == 0.0)? color : vec4(color.rgb/color.a, 1.0);
 
 #else
-    color = texture2D(u_convolutionPyramid, st);
+    color = texture2D(u_convolutionPyramid0, st);
     
     // vec4 naive = mix( texture2D(u_target,st), texture2D(u_buffer0,st), texture2D(u_buffer0,st).a );
     // color = mix(color, naive, step(st.x, u_mouse.x/u_resolution.x));

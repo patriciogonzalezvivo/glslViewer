@@ -6,11 +6,11 @@ precision mediump float;
 uniform sampler2D   u_tex0;
 uniform vec2        u_tex0Resolution;
 
-uniform sampler2D   u_convolutionPyramid;
+uniform sampler2D   u_convolutionPyramid0;
 uniform sampler2D   u_convolutionPyramidTex0;
 uniform sampler2D   u_convolutionPyramidTex1;
-uniform int         u_convolutionPyramidDepths;
 uniform int         u_convolutionPyramidDepth;
+uniform int         u_convolutionPyramidTotalDepth;
 uniform bool        u_convolutionPyramidUpscaling;
 
 uniform vec2        u_resolution;
@@ -43,15 +43,15 @@ void main (void) {
     vec2 pixel = 1.0/u_resolution;
     float sdf = rectSDF(st, vec2(1.0));
 
-#if defined(CONVOLUTION_PYRAMID)
+#if defined(CONVOLUTION_PYRAMID_0)
     color = texture2D(u_tex0, st);
-    color.rgb *= color.a;
+    color.rgb *= step(0.001, color.a);
 
 #elif defined(CONVOLUTION_PYRAMID_ALGORITHM)
     if (!u_convolutionPyramidUpscaling) {
         for (int dy = -2; dy <= 2; dy++) {
             for (int dx = -2; dx <= 2; dx++) {
-                vec2 uv = st + vec2(float(dx), float(dy)) * pixel;
+                vec2 uv = st + vec2(float(dx), float(dy)) * pixel * 0.5;
                 if (uv.x <= 0.0 || uv.x >= 1.0 || uv.y <= 0.0 || uv.y >= 1.0)
                     continue;
                 vec4 prev = texture2D(u_convolutionPyramidTex0, saturate(uv)) * h1[ absi(dx) ] * h1[ absi(dy) ];
@@ -61,7 +61,7 @@ void main (void) {
             }
         }
     }
-    else if (modi(int(u_time),u_convolutionPyramidDepths) == u_convolutionPyramidDepth) {
+    else if (modi(int(u_time),u_convolutionPyramidTotalDepth) == u_convolutionPyramidDepth) {
         color = texture2D(u_convolutionPyramidTex0, st);
     }
     else {
@@ -74,7 +74,7 @@ void main (void) {
 
         for (int dy = -2; dy <= 2; dy++) {
             for (int dx = -2; dx <= 2; dx++) {
-                vec2 uv = st + vec2(float(dx), float(dy)) * pixel * 2.;
+                vec2 uv = st + vec2(float(dx), float(dy)) * pixel;
                 color += texture2D(u_convolutionPyramidTex1, saturate(uv)) * h2 * h1[ absi(dx) ] * h1[ absi(dy) ];
             }
         }
@@ -82,7 +82,7 @@ void main (void) {
     color = (color.a == 0.0)? color : vec4(color.rgb/color.a, 1.0);
 
 #else
-    color = texture2D(u_convolutionPyramid, st);
+    color = texture2D(u_convolutionPyramid0, st);
 
 #endif
 

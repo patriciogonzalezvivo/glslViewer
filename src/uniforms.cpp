@@ -136,12 +136,6 @@ Uniforms::Uniforms(): cubemap(nullptr), m_change(false), m_is_audio_init(false) 
             _shader.setUniform("u_SH", cubemap->SH, 9);
         }
     });
-
-    functions["u_convolutionPyramid"] = UniformFunction("sampler2D", [this](Shader& _shader) {
-        if (convolution_pyramid.isAllocated()) {
-            _shader.setUniformTexture("u_convolutionPyramid", convolution_pyramid.getResult());
-        }
-    });
 }
 
 Uniforms::~Uniforms(){
@@ -572,10 +566,13 @@ bool Uniforms::feedTo( Shader &_shader ) {
         _shader.setUniform(it->first+"TotalFrames", float(it->second->getTotalFrames()));
     }
 
-    // Pass Buffers Uniforms
-    for (unsigned int i = 0; i < buffers.size(); i++) {
+    // Pass Buffers Texture
+    for (unsigned int i = 0; i < buffers.size(); i++)
         _shader.setUniformTexture("u_buffer" + toString(i), &buffers[i], _shader.textureIndex++ );
-    }
+
+    // Pass Convolution Piramids resultant Texture
+    for (unsigned int i = 0; i < convolution_pyramids.size(); i++)
+        _shader.setUniformTexture("u_convolutionPyramid" + toString(i), convolution_pyramids[i].getResult(), _shader.textureIndex++ );
     
     // Pass Light Uniforms
     if (lights.size() == 1) {
@@ -717,6 +714,9 @@ void Uniforms::print(bool _all) {
 void Uniforms::printBuffers() {
     for (size_t i = 0; i < buffers.size(); i++)
         std::cout << "sampler2D,u_buffer" << i << std::endl;
+
+    for (size_t i = 0; i < convolution_pyramids.size(); i++)
+        std::cout << "sampler2D,u_convolutionPyramid" << i << std::endl;
     
     if (functions["u_scene"].present)
         std::cout << "sampler2D,u_scene" << std::endl;

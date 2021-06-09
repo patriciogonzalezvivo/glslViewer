@@ -7,7 +7,7 @@ uniform sampler2D   u_tex0;
 uniform vec2        u_tex0Resolution;
 uniform vec2        u_resolution;
 
-uniform sampler2D   u_convolutionPyramid;
+uniform sampler2D   u_convolutionPyramid0;
 uniform sampler2D   u_convolutionPyramidTex0;
 uniform sampler2D   u_convolutionPyramidTex1;
 uniform bool        u_convolutionPyramidUpscaling;
@@ -23,19 +23,17 @@ void main (void) {
     vec4 color = vec4(0.0);
     vec2 st = gl_FragCoord.xy/u_resolution;
 
-#if defined(CONVOLUTION_PYRAMID)
+#if defined(CONVOLUTION_PYRAMID_0)
     color = texture2D(u_tex0, st);
 
-//
 // #elif defined(CONVOLUTION_PYRAMID_ALGORITHM)
 // // Buy default CONVOLUTION_PYRAMID_ALGORITHM looks like this:
-//
 //     vec2 pixel = 1.0/u_resolution;
-//
+
 //     if (!u_convolutionPyramidUpscaling) {
 //         for (int dy = -2; dy <= 2; dy++) {
 //             for (int dx = -2; dx <= 2; dx++) {
-//                 vec2 uv = st + vec2(float(dx), float(dy)) * pixel;
+//                 vec2 uv = st + vec2(float(dx), float(dy)) * pixel * 0.5;
 //                 if (uv.x <= 0.0 || uv.x >= 1.0 || uv.y <= 0.0 || uv.y >= 1.0)
 //                     continue;
 //                 color += texture2D(u_convolutionPyramidTex0, saturate(uv)) * h1[ absi(dx) ] * h1[ absi(dy) ];
@@ -49,18 +47,20 @@ void main (void) {
 //                 color += texture2D(u_convolutionPyramidTex0, saturate(uv)) * g[ absi(dx) ] * g[ absi(dy) ];
 //             }
 //         }
-//
+
 //         for (int dy = -2; dy <= 2; dy++) {
 //             for (int dx = -2; dx <= 2; dx++) {
-//                 vec2 uv = st + vec2(float(dx), float(dy)) * pixel * 2.;
+//                 vec2 uv = st + vec2(float(dx), float(dy)) * pixel;
+//                 if (uv.x <= 0.0 || uv.x >= 1.0 || uv.y <= 0.0 || uv.y >= 1.0)
+//                     continue;
 //                 color += texture2D(u_convolutionPyramidTex1, saturate(uv)) * h2 * h1[ absi(dx) ] * h1[ absi(dy) ];
 //             }
 //         }
 //     }
-//
+
 //     color = (color.a == 0.0)? color : vec4(color.rgb/color.a, 1.0);
 #else
-    color = texture2D(u_convolutionPyramid, st);
+    color = texture2D(u_convolutionPyramid0, st);
 
 #endif
 

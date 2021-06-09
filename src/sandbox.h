@@ -76,7 +76,9 @@ public:
 
 private:
     void                _updateSceneBuffer(int _width, int _height);
+    void                _updateConvolutionPyramids();
     void                _updateBuffers();
+    void                _renderConvolutionPyramids();
     void                _renderBuffers();
 
     // Main Shader
@@ -99,10 +101,10 @@ private:
     Fbo                 m_scene_fbo;
 
     // Pyramid Convolution
-    Shader              m_convolution_pyramid_subshader;
+    std::vector<Fbo>    m_convolution_pyramid_fbos;
+    std::vector<Shader> m_convolution_pyramid_subshaders;
     Shader              m_convolution_pyramid_shader;
-    Fbo                 m_convolution_pyramid_fbo;
-    bool                m_convolution_pyramid;
+    int                 m_convolution_pyramid_total;
 
     // Postprocessing
     Shader              m_postprocessing_shader;

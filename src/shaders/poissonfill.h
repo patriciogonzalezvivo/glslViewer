@@ -61,7 +61,7 @@ void main() {
         //
         for (int dy = -2; dy <= 2; dy++) {
             for (int dx = -2; dx <= 2; dx++) {
-                vec2 uv = st + vec2(float(dx), float(dy)) * pixel;
+                vec2 uv = st + vec2(float(dx), float(dy)) * pixel * 0.5;
                 if (uv.x <= 0.0 || uv.x >= 1.0 || uv.y <= 0.0 || uv.y >= 1.0)
                     continue;
                 color += texture2D(u_convolutionPyramidTex0, saturate(uv)) * H1(dx) * H1(dy);
@@ -84,6 +84,8 @@ void main() {
         for (int dy = -2; dy <= 2; dy++) {
             for (int dx = -2; dx <= 2; dx++) {
                 vec2 uv = st + vec2(float(dx), float(dy)) * pixel * 2.0;
+                if (uv.x <= 0.0 || uv.x >= 1.0 || uv.y <= 0.0 || uv.y >= 1.0)
+                    continue;
                 color += texture2D(u_convolutionPyramidTex1, saturate(uv)) * h2 * H1(dx) * H1(dy);
             }
         }

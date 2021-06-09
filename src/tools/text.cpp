@@ -322,20 +322,47 @@ bool check_for_postprocessing(const std::string& _source) {
     return false;
 }
 
-bool check_for_convolution_pyramid(const std::string& _source) {
+// Count how many CONVOLUTION_PYRAMID_ are in the shader
+int count_convolution_pyramid(const std::string& _source) {
     // Split Source code in lines
     std::vector<std::string> lines = split(_source, '\n');
 
-    std::regex re(R"((?:^\s*#if|^\s*#elif)(?:\s+)(defined\s*\(\s*CONVOLUTION_PYRAMID)(?:\s*\))|(?:^\s*#ifdef\s+CONVOLUTION_PYRAMID)|(?:^\s*#ifndef\s+CONVOLUTION_PYRAMID))");
+    // Group results in a vector to check for duplicates
+    std::vector<std::string> results;
+
+    // Regext to search for #ifdef BUFFER_[NUMBER], #if defined( BUFFER_[NUMBER] ) and #elif defined( BUFFER_[NUMBER] ) occurences
+    std::regex re(R"((?:^\s*#if|^\s*#elif)(?:\s+)(defined\s*\(\s*CONVOLUTION_PYRAMID_)(\d+)(?:\s*\))|(?:^\s*#ifdef\s+CONVOLUTION_PYRAMID_)(\d+))");
     std::smatch match;
 
+    // For each line search for
     for (unsigned int l = 0; l < lines.size(); l++) {
+
+        // if there are matches
         if (std::regex_search(lines[l], match, re)) {
-            return true;
+            // Depending the case can be in the 2nd or 3rd group
+            std::string number = std::ssub_match(match[2]).str();
+            if (number.size() == 0) {
+                number = std::ssub_match(match[3]).str();
+            }
+
+            // Check if it's already defined
+            bool already = false;
+            for (unsigned int i = 0; i < results.size(); i++) {
+                if (results[i] == number) {
+                    already = true;
+                    break;
+                }
+            }
+
+            // If it's not add it
+            if (!already) {
+                results.push_back(number);
+            }
         }
     }
 
-    return false;
+    // return the number of results
+    return results.size();
 }
 
 bool check_for_convolution_pyramid_algorithm(const std::string& _source) {
