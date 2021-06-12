@@ -19,11 +19,6 @@ const vec3  h1      = vec3(.7, 0.5, 0.15);
 const float h2      = .2;
 const vec2  g       = vec2(0.547, 0.175);
 
-// Poisson Fill
-// const vec3  h1      = vec3(1.0334, 0.6836, 0.1507);
-// const float h2      = 0.0270;
-// const vec2  g       = vec2(0.7753, 0.0312);
-
 #define saturate(x) clamp(x, 0.0, 1.0)
 #define absi(x)     ( (x < 0)? x * -1 : x )
 
@@ -31,7 +26,7 @@ bool isOutside(vec2 pos) {
     return (pos.x < 0.0 || pos.y < 0.0 || pos.x > 1.0 || pos.y > 1.0);
 }
 
-vec3 laplace(sampler2D tex, vec2 st, vec2 pixel, float pixelpad) {
+vec3 laplacian(sampler2D tex, vec2 st, vec2 pixel, float pixelpad) {
     vec3 color = vec3(0.0);
     vec2 uv = st * vec2(1.0 + pixelpad * 2.0 * pixel) - pixelpad * pixel;
 
@@ -54,10 +49,8 @@ void main (void) {
     vec2 pixel = 1.0/u_resolution;
 
 #if defined(CONVOLUTION_PYRAMID_0)
-    color.rgb = laplace(u_tex0, st, pixel, 1.0);
-
+    color.rgb = laplacian(u_tex0, st, pixel, 1.0);
     color.xyz *= 0.25;
-
     color.rgb = color.xyz * 0.5 + 0.5;
 
 #elif defined(CONVOLUTION_PYRAMID_ALGORITHM)
@@ -77,7 +70,7 @@ void main (void) {
     else {
         for (int dy = -1; dy <= 1; dy++) {
             for (int dx = -1; dx <= 1; dx++) {
-                vec2 uv = st + vec2(float(dx), float(dy)) * pixel * 0.5;
+                vec2 uv = st + vec2(float(dx), float(dy)) * pixel;
 
                 vec4 sample = texture2D(u_convolutionPyramidTex0, uv);
                 sample.xyz = sample.rgb * 2.0 - 1.0;
@@ -102,7 +95,7 @@ void main (void) {
 #else
     color.rgb = (texture2D(u_convolutionPyramid0, st).rgb * 2.0 - 1.0) * 4.0;
 
-    // vec3 edge = laplace(u_tex0, st, pixel, 1.0);
+    // vec3 edge = laplacian(u_tex0, st, pixel, 1.0);
     // color.rgb = mix(edge, color.rgb, step(st.y - st.x, 0.));
     // color.rgb = mix(texture2D(u_tex0, st).rgb, color.rgb, step(st.x, u_mouse.x/u_resolution.x));
 

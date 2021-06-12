@@ -25,8 +25,8 @@ const float h2 = 0.0270;
 const vec2 g = vec2(0.7753, 0.0312);
 
 #define saturate(x) clamp(x, 0.0, 1.0)
-#define absi(x)     ( (x < 0)? x * -1 : x )  
-#define NON_CONST_ARRAY_INDEX
+#define absi(x)     ( (x < 0)? x * -1 : x )
+// #define NON_CONST_ARRAY_INDEX
 
 float H1(int i) {
 #ifndef NON_CONST_ARRAY_INDEX
