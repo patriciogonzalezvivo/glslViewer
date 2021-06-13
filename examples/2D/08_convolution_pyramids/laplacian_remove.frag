@@ -7,6 +7,10 @@ uniform sampler2D   u_tex0;
 uniform vec2        u_tex0Resolution;
 
 uniform vec2        u_resolution;
+uniform vec2        u_mouse;
+
+uniform sampler2D   u_buffer0;
+uniform sampler2D   u_buffer1;
 
 uniform sampler2D   u_convolutionPyramid0;
 uniform sampler2D   u_convolutionPyramidTex0;
@@ -27,10 +31,22 @@ void main (void) {
     vec2 st = gl_FragCoord.xy/u_resolution;
     vec2 pixel = 1.0/u_resolution;
 
-#if defined(CONVOLUTION_PYRAMID_0)
+#if defined(BUFFER_0)
+    color = texture2D(u_buffer1, st);
+
+    vec2 mouse = u_mouse/u_resolution;
+    float sdf = distance(st, mouse); 
+    float padding = 0.025;
+    color += (mouse.x > padding && mouse.y > padding && mouse.x < (1.0-padding) && mouse.y < (1.0-padding) ) ? step(sdf, 0.02) : 0.0 ;
+
+#elif defined(BUFFER_1)
+    color = texture2D(u_buffer0, st);
+
+#elif defined(CONVOLUTION_PYRAMID_0)
     color.rgb = laplacian(u_tex0, st, pixel, 1.0);
 
-    color.xyz *= 0.25;
+    color *= 1.0-texture2D(u_buffer0, st).r;
+
     color.rgb = color.xyz * 0.5 + 0.5;
 
 #elif defined(CONVOLUTION_PYRAMID_ALGORITHM)
@@ -50,7 +66,7 @@ void main (void) {
     else {
         for (int dy = -1; dy <= 1; dy++) {
             for (int dx = -1; dx <= 1; dx++) {
-                vec2 uv = st + vec2(float(dx), float(dy)) * pixel;
+                vec2 uv = st + vec2(float(dx), float(dy)) * pixel * 0.5;
 
                 vec4 sample = texture2D(u_convolutionPyramidTex0, uv);
                 sample.xyz = sample.rgb * 2.0 - 1.0;
@@ -60,7 +76,7 @@ void main (void) {
 
         for (int dy = -2; dy <= 2; dy++) {
             for (int dx = -2; dx <= 2; dx++) {
-                vec2 uv = st + vec2(float(dx), float(dy)) * pixel;
+                vec2 uv = st + vec2(float(dx), float(dy)) * pixel * 2.0;
                 if (uv.x <= 0.0 || uv.x >= 1.0 || uv.y <= 0.0 || uv.y >= 1.0)
                     continue;
 
@@ -73,17 +89,14 @@ void main (void) {
 
     color.rgb = color.xyz * 0.5 + 0.5;
 #else
-    color.rgb = (texture2D(u_convolutionPyramid0, st).rgb * 2.0 - 1.0) * 4.0;
-
-    vec3 edge = laplacian(u_tex0, st, pixel, 1.0);
-    color.rgb = mix(edge, color.rgb, step(st.y - st.x, 0.));
+    color.rgb = (texture2D(u_convolutionPyramid0, st).rgb - 0.5) * 4.0;
 
 #endif
 
     gl_FragColor = color;
 }
 
-// Useful functions
+// Usefull functions
 
 bool isOutside(vec2 pos) {
     return (pos.x < 0.0 || pos.y < 0.0 || pos.x > 1.0 || pos.y > 1.0);
@@ -105,4 +118,3 @@ vec3 laplacian(sampler2D tex, vec2 st, vec2 pixel, float pixelpad) {
     if (!isOutside(uv001)) color.xyz -= texture2D(u_tex0, uv001).rgb;
     return color;
 }
-
