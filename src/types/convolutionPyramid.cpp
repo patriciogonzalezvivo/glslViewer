@@ -1,17 +1,17 @@
-#include "pyramid.h"
+#include "convolutionPyramid.h"
 #include <algorithm>
 #include <iostream>
-#include "gl.h"
+// #include "../gl/gl.h"
 
-Pyramid::Pyramid(): m_depth(0) {
+ConvolutionPyramid::ConvolutionPyramid(): m_depth(0) {
 }
 
-Pyramid::~Pyramid() {
+ConvolutionPyramid::~ConvolutionPyramid() {
 }
 
-void Pyramid::allocate(int _width, int _height) {
+void ConvolutionPyramid::allocate(int _width, int _height) {
     m_depth = log2(std::min(_width, _height)) - 1;
-    m_depth = std::min(PYRAMID_MAX_LAYERS, m_depth);
+    m_depth = std::min(CONVOLUTION_PYRAMID_MAX_LAYERS, m_depth);
 
     float w = _width;
     float h = _height;
@@ -19,19 +19,19 @@ void Pyramid::allocate(int _width, int _height) {
     for (int i = 0; i < m_depth; i++) {
         w *= 0.5f;
         h *= 0.5f;
-        m_downs[i].allocate(w, h, COLOR_TEXTURE);
+        m_downs[i].allocate(w, h, COLOR_TEXTURE, NEAREST, CLAMP);
         // std::cout << w << "x" << h << std::endl;
     }
     
     for (int i = 0; i < m_depth; i++) {
         w *= 2.0f;
         h *= 2.0f;
-        m_ups[i].allocate(w, h, COLOR_TEXTURE);
+        m_ups[i].allocate(w, h, COLOR_TEXTURE, NEAREST, CLAMP);
         // std::cout << w << "x" << h << std::endl;
     }
 }
 
-void Pyramid::process(const Fbo *_input) {
+void ConvolutionPyramid::process(const Fbo *_input) {
     int i;
     pass(&m_downs[0], _input, NULL, 0);
 
@@ -49,7 +49,7 @@ void Pyramid::process(const Fbo *_input) {
     pass(&m_ups[m_depth-1], _input, &(m_ups[m_depth-2]), 0);
 }
 
-const Fbo* Pyramid::getResult(unsigned int index) const { 
+const Fbo* ConvolutionPyramid::getResult(unsigned int index) const { 
     if (index < m_depth)
         return &m_ups[m_depth - 1 - index];
     else

@@ -1,8 +1,8 @@
 #pragma once
 
-#include "vbo.h"
-#include "fbo.h"
-#include "shader.h"
+#include "../gl/vbo.h"
+#include "../gl/fbo.h"
+#include "../gl/shader.h"
 
 #include <functional>
 
@@ -12,12 +12,12 @@
 // - ofxPoissonFill (https://github.com/LingDong-/ofxPoissonFill)
 //
 
-#define PYRAMID_MAX_LAYERS 12
+#define CONVOLUTION_PYRAMID_MAX_LAYERS 12
 
-class Pyramid {
+class ConvolutionPyramid {
 public:
-    Pyramid();
-    virtual ~Pyramid();
+    ConvolutionPyramid();
+    virtual ~ConvolutionPyramid();
 
     void    allocate(int _width, int _height);
     void    process(const Fbo *_fbo);
@@ -28,8 +28,8 @@ public:
 
     std::function<void(Fbo*,const Fbo*,const Fbo*, int)> pass;
 private:
-    Fbo     m_downs[PYRAMID_MAX_LAYERS];
-    Fbo     m_ups[PYRAMID_MAX_LAYERS];
+    Fbo     m_downs[CONVOLUTION_PYRAMID_MAX_LAYERS];
+    Fbo     m_ups[CONVOLUTION_PYRAMID_MAX_LAYERS];
 
     int     m_depth;
 };

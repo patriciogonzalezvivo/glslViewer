@@ -26,7 +26,7 @@ void main (void) {
     // Source (needs scale and translation)
     float src_scale = 2.5;
     vec2 src_pos = vec2(0.0, 0.1);
-    // src_pos = 1.0-u_mouse/u_resolution * 2.0;
+    src_pos = 1.0-u_mouse/u_resolution * 2.0;
     vec2 src_uv = ((st-0.5) * vec2(u_sourceResolution.y/u_sourceResolution.x,1.0) * src_scale + 0.5) + src_pos;
     vec4 src = texture2D(u_source, saturate(src_uv));
     float msk = texture2D(u_source_mask, saturate(src_uv)).r;

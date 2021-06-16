@@ -15,8 +15,8 @@ uniform bool        u_convolutionPyramidUpscaling;
 
 // Laplacian Integrator
 const vec3  h1      = vec3(.7, 0.5, 0.15);
-const float h2      = .2;
-const vec2  g       = vec2(0.547, 0.175);
+const float h2      = .225;
+const vec2  g       = vec2(0.547, 0.175) * 2.;
 
 #define saturate(x) clamp(x, 0.0, 1.0)
 #define absi(x)     ( (x < 0)? x * -1 : x )
@@ -24,16 +24,15 @@ vec3 laplacian(sampler2D tex, vec2 st, vec2 pixel, float pixelpad);
 
 void main (void) {
     vec4 color = vec4(0.0, 0.0, 0.0, 1.0);
-    vec2 st = gl_FragCoord.xy/u_resolution;
+    vec2 st = floor(gl_FragCoord.xy)/u_resolution;
     vec2 pixel = 1.0/u_resolution;
 
 #if defined(CONVOLUTION_PYRAMID_0)
-    color.rgb = laplacian(u_tex0, st, pixel, 1.0);
-
-    color.xyz *= 0.25;
+    color.rgb = laplacian(u_tex0, st, pixel, 1.0) * 0.5;
     color.rgb = color.xyz * 0.5 + 0.5;
 
 #elif defined(CONVOLUTION_PYRAMID_ALGORITHM)
+
     if (!u_convolutionPyramidUpscaling) {
         for (int dy = -2; dy <= 2; dy++) {
             for (int dx = -2; dx <= 2; dx++) {
@@ -46,11 +45,15 @@ void main (void) {
                 color += sample * h1[ absi(dx) ] * h1[ absi(dy) ];
             }
         }
+
+        color.rgb = color.xyz * 0.5 + 0.5;
     }
     else {
         for (int dy = -1; dy <= 1; dy++) {
             for (int dx = -1; dx <= 1; dx++) {
                 vec2 uv = st + vec2(float(dx), float(dy)) * pixel;
+                if (uv.x <= 0.0 || uv.x >= 1.0 || uv.y <= 0.0 || uv.y >= 1.0)
+                    continue;
 
                 vec4 sample = texture2D(u_convolutionPyramidTex0, uv);
                 sample.xyz = sample.rgb * 2.0 - 1.0;
@@ -60,23 +63,22 @@ void main (void) {
 
         for (int dy = -2; dy <= 2; dy++) {
             for (int dx = -2; dx <= 2; dx++) {
-                vec2 uv = st + vec2(float(dx), float(dy)) * pixel;
+                vec2 uv = st + vec2(float(dx), float(dy)) * 1.5 * pixel + 0.5 * pixel;
                 if (uv.x <= 0.0 || uv.x >= 1.0 || uv.y <= 0.0 || uv.y >= 1.0)
                     continue;
 
                 vec4 sample = texture2D(u_convolutionPyramidTex1, uv);
-                sample.xyz = sample.rgb * 2.0 - 1.0;
                 color += sample * h2 * h1[ absi(dx) ] * h1[ absi(dy) ];
             }
         }
     }
 
-    color.rgb = color.xyz * 0.5 + 0.5;
+    
 #else
-    color.rgb = (texture2D(u_convolutionPyramid0, st).rgb * 2.0 - 1.0) * 4.0;
+    color = texture2D(u_convolutionPyramid0, st);
 
-    vec3 edge = laplacian(u_tex0, st, pixel, 1.0);
-    color.rgb = mix(edge, color.rgb, step(st.y - st.x, 0.));
+    // vec3 edge = laplacian(u_tex0, st, pixel, 1.0);
+    // color.rgb = mix(edge, color.rgb, step(st.y - st.x, 0.));
 
 #endif
 

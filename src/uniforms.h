@@ -10,7 +10,8 @@
 #include "gl/texture.h"
 #include "gl/textureStream.h"
 #include "gl/textureAudio.h"
-#include "gl/pyramid.h"
+
+#include "types/convolutionPyramid.h"
 
 #include "scene/light.h"
 #include "scene/camera.h"
@@ -101,7 +102,7 @@ public:
 
     TextureCube*            cubemap;
     std::vector<Fbo>        buffers;
-    std::vector<Pyramid>    convolution_pyramids;
+    std::vector<ConvolutionPyramid> convolution_pyramids;
 
     // 3d Scene Uniforms 
     std::vector<Camera>     cameras;

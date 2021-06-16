@@ -44,8 +44,37 @@ Fbo::~Fbo() {
     }
 }
 
+GLenum getFilter( FboFilter _filter ) {
+    static GLenum filters[6] = {
+        GL_LINEAR, GL_NEAREST 
+        // GL_NEAREST_MIPMAP_NEAREST, 
+        // GL_LINEAR_MIPMAP_NEAREST, 
+        // GL_NEAREST_MIPMAP_LINEAR, 
+        // GL_LINEAR_MIPMAP_LINEAR 
+    };
+    return filters[_filter];
+}
 
-void Fbo::allocate(const uint32_t _width, const uint32_t _height, FboType _type) {
+GLenum getMagnificationFilter( FboFilter _filter ) {
+    // if(_filter == NEAREST_NEAREST || _filter == NEAREST_LINEAR) {
+    //     return getFilter(NEAREST);
+    // }
+    // if(_filter == LINEAR_NEAREST || _filter == LINEAR_LINEAR) {
+    //     return getFilter(LINEAR);
+    // }
+    return getFilter(_filter);
+}
+
+GLenum getMinificationFilter( FboFilter _filter )  {
+    return getFilter(_filter);
+}
+
+GLenum getWrap( FboWrap _wrap ) {
+    static GLenum wraps[3] = {GL_REPEAT, GL_CLAMP_TO_EDGE, GL_MIRRORED_REPEAT };
+    return wraps[_wrap];
+}
+
+void Fbo::allocate(const uint32_t _width, const uint32_t _height, FboType _type, FboFilter _filter, FboWrap _wrap) {
     m_type = _type;
 
     bool color_texture = true;
@@ -103,10 +132,10 @@ void Fbo::allocate(const uint32_t _width, const uint32_t _height, FboType _type)
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16, m_width, m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 #endif
 
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, getWrap(_wrap));
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, getWrap(_wrap));
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, getMagnificationFilter(_filter));
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, getMinificationFilter(_filter));
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_id, 0);
     }
 

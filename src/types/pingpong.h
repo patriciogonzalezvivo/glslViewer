@@ -1,6 +1,6 @@
 #pragma once
 
-#include "fbo.h"
+#include "../gl/fbo.h"
 
 class PingPong {
 public:

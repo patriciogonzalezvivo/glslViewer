@@ -30,6 +30,8 @@ void main (void) {
 // // Buy default CONVOLUTION_PYRAMID_ALGORITHM looks like this:
 //     vec2 pixel = 1.0/u_resolution;
 
+//     st -= pixel * 0.5;
+
 //     if (!u_convolutionPyramidUpscaling) {
 //         for (int dy = -2; dy <= 2; dy++) {
 //             for (int dx = -2; dx <= 2; dx++) {
@@ -50,7 +52,7 @@ void main (void) {
 
 //         for (int dy = -2; dy <= 2; dy++) {
 //             for (int dx = -2; dx <= 2; dx++) {
-//                 vec2 uv = st + vec2(float(dx), float(dy)) * pixel;
+//                 vec2 uv = st + vec2(float(dx), float(dy)) * 2.0 * pixel;
 //                 if (uv.x <= 0.0 || uv.x >= 1.0 || uv.y <= 0.0 || uv.y >= 1.0)
 //                     continue;
 //                 color += texture2D(u_convolutionPyramidTex1, saturate(uv)) * h2 * h1[ absi(dx) ] * h1[ absi(dy) ];

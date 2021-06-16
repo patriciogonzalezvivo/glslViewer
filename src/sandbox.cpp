@@ -803,7 +803,7 @@ void Sandbox::_updateConvolutionPyramids() {
         m_convolution_pyramid_fbos.clear();
         m_convolution_pyramid_subshaders.clear();
         for (int i = 0; i < m_convolution_pyramid_total; i++) {
-            uniforms.convolution_pyramids.push_back( Pyramid() );
+            uniforms.convolution_pyramids.push_back( ConvolutionPyramid() );
             uniforms.convolution_pyramids[i].allocate(getWindowWidth(), getWindowHeight());
             uniforms.convolution_pyramids[i].pass = [this](Fbo *_target, const Fbo *_tex0, const Fbo *_tex1, int _depth) {
                 _target->bind();

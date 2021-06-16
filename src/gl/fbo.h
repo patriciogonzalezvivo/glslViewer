@@ -3,7 +3,25 @@
 #include "gl.h"
 
 enum FboType {
-    COLOR_TEXTURE, COLOR_TEXTURE_DEPTH_BUFFER, COLOR_DEPTH_TEXTURES, DEPTH_TEXTURE
+    COLOR_TEXTURE = 0, 
+    COLOR_TEXTURE_DEPTH_BUFFER, 
+    COLOR_DEPTH_TEXTURES, 
+    DEPTH_TEXTURE
+};
+
+enum FboFilter {
+    LINEAR = 0,     // Bilinear, no mipmap.
+    NEAREST        // Nearest neighbour, no mipmap.
+    // NEAREST_NEAREST,// Nearest neighbour, closest mipmap.
+    // LINEAR_NEAREST, // Bilinear, closest mipmap.
+    // NEAREST_LINEAR, // Nearest neighbour, linear blend of mipmaps.
+    // LINEAR_LINEAR   // Bilinear, linear blend of mipmaps.
+};
+
+enum FboWrap {
+    REPEAT = 0,     // Repeat the texture.
+    CLAMP          // Clamp to the edges of the texture.
+    // MIRROR
 };
 
 class Fbo {
@@ -11,7 +29,7 @@ public:
     Fbo();
     virtual ~Fbo();
 
-    virtual void    allocate(const unsigned int _width, const unsigned int _height, FboType _type);
+    virtual void    allocate(const unsigned int _width, const unsigned int _height, FboType _type, FboFilter _filter = LINEAR, FboWrap _wrap = REPEAT);
     virtual void    bind();
     virtual void    unbind();
     
