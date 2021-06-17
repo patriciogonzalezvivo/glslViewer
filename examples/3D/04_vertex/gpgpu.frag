@@ -25,54 +25,51 @@ varying vec2        v_texcoord;
 float   random(vec2 st);
 vec3    random3(vec2 st);
 vec3    random3(vec3 p);
+vec3    snoise3( vec3 x );
 vec3    curlNoise(vec3 p);
 
+
 void main(void) {
-    vec3 color = vec3(0.0);
-    vec2 st = v_texcoord;
-    float alpha = 1.0;
+    vec4 color = vec4(0.0);
+    vec2 st = (floor(gl_FragCoord.xy) + 0.5) / u_resolution;
 
     vec3 pos = texture2D(u_buffer1, st).xyz * 2.0 - 1.0;
-
     vec4 vel_life = texture2D(u_buffer3, st);
     vec3 vel = vel_life.xyz * 2.0 - 1.0;
     float life = vel_life.a * 100.0;
+    float speed = 0.02;
 
     pos = u_frame < 1 ? random3(st) : pos;
-    vel = u_frame < 1 ? -normalize(pos) : vel;
+    vel = u_frame < 1 ? curlNoise(vec3(st,0.5)) : vel;
     life = u_frame < 1 ? random(st) : life;
 
 #if defined(BUFFER_0)
-    pos += vel;
-    color = fract(pos * 0.5 + 0.5);
+    color.rgb = fract( (pos + vel) * 0.5 + 0.5);
+    color.a = 1.0;
 
 #elif defined(BUFFER_1)
-    color = texture2D(u_buffer0, st).rgb;
+    color = texture2D(u_buffer0, st);
 
 #elif defined(BUFFER_2)
-    float speed = 0.02;
-
-    // vel *= 0.1;
-    vel = speed * curlNoise( pos);
-    life -= 0.3 * random(st + pos.xy);
+    vel = speed * curlNoise( pos * 0.5 );
+    life -= 0.03;
 
     if (life <= 0.0) {
-        vel = random3( vec3(st, u_time * 0.1) - pos);
+        vel = (curlNoise(vec3(st,0.5)) - pos);
         life = 100.0 * random(st + vec2(0.0, u_time * 0.1));
     }
-    alpha = life * 0.01;
 
-    color = clamp(vel * u_delta, -0.99, 0.99) * 0.5 + 0.5;
+    color.rgb = clamp(vel * u_delta, -0.99, 0.99) * 0.5 + 0.5;
+    color.a = life * 0.01;
 
 #elif defined(BUFFER_3)
-    color = texture2D(u_buffer2, st).rgb;
+    color = texture2D(u_buffer2, st);
 
 #else
-    color = v_color.rgb;
-    alpha = v_color.a;
+    color = v_color;
 #endif
 
-    gl_FragColor = vec4(color, alpha);
+    gl_FragColor = color;
 }
 
 
@@ -89,9 +86,9 @@ vec3 random3(vec2 p) {
 }
 
 vec3 random3(in vec3 p) {
-    p = vec3( dot(p, vec3(127.1, 311.7, 74.7)),
-            dot(p, vec3(269.5, 183.3, 246.1)),
-            dot(p, vec3(113.5, 271.9, 124.6)));
+    p = vec3( dot(p, vec3(12.1, 31.7, 74.7)),
+            dot(p, vec3(26.5, 18.3, 24.1)),
+            dot(p, vec3(13.5, 27.9, 14.6)));
     return -1. + 2. * fract(sin(p) * 43758.5453123);
 }
 
@@ -185,7 +182,7 @@ float snoise(in vec3 v) {
                                 dot(p2,x2), dot(p3,x3) ) );
 }
 
-vec3 snoise3( vec3 x ){
+vec3 snoise3( vec3 x ) {
     float s  = snoise(vec3( x ));
     float s1 = snoise(vec3( x.y - 19.1 , x.z + 33.4 , x.x + 47.2 ));
     float s2 = snoise(vec3( x.z + 74.2 , x.x - 124.5 , x.y + 99.4 ));

@@ -814,7 +814,7 @@ void Sandbox::_updateConvolutionPyramids() {
                 uniforms.feedTo(m_convolution_pyramid_shader);
 
                 m_convolution_pyramid_shader.setUniform("u_convolutionPyramidDepth", _depth);
-                m_convolution_pyramid_shader.setUniform("u_convolutionPyramidTotalDepth", uniforms.convolution_pyramids[0].getDepth());
+                m_convolution_pyramid_shader.setUniform("u_convolutionPyramidTotalDepth", (int)uniforms.convolution_pyramids[0].getDepth());
                 m_convolution_pyramid_shader.setUniform("u_convolutionPyramidUpscaling", _tex1 != NULL);
 
                 m_convolution_pyramid_shader.textureIndex = geom_index == -1 ? 1 : 0;
@@ -1185,7 +1185,7 @@ void Sandbox::renderUI() {
                 float _x = 0;
                 float _sw = xStep;
                 float _sh = yStep; 
-                for (int j = 0; j < uniforms.convolution_pyramids[i].getDepth() * 2; j++ ) {
+                for (unsigned int j = 0; j < uniforms.convolution_pyramids[i].getDepth() * 2; j++ ) {
                     m_billboard_shader.setUniform("u_depth", 0.0f);
                     m_billboard_shader.setUniform("u_scale", _sw, _sh);
                     m_billboard_shader.setUniform("u_translate", xOffset + _x, yOffset);

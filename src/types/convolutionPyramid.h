@@ -22,14 +22,14 @@ public:
     void    allocate(int _width, int _height);
     void    process(const Fbo *_fbo);
 
-    bool    isAllocated() const {return m_depth != 0; }
-    int     getDepth() const { return m_depth; }
-    const Fbo* getResult(unsigned int index = 0) const;
+    bool            isAllocated() const {return m_depth != 0; }
+    unsigned int    getDepth() const { return m_depth; }
+    const Fbo*      getResult(unsigned int index = 0) const;
 
     std::function<void(Fbo*,const Fbo*,const Fbo*, int)> pass;
 private:
     Fbo     m_downs[CONVOLUTION_PYRAMID_MAX_LAYERS];
     Fbo     m_ups[CONVOLUTION_PYRAMID_MAX_LAYERS];
 
-    int     m_depth;
+    unsigned int m_depth;
 };

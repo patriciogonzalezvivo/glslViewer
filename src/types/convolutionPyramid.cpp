@@ -11,28 +11,26 @@ ConvolutionPyramid::~ConvolutionPyramid() {
 
 void ConvolutionPyramid::allocate(int _width, int _height) {
     m_depth = log2(std::min(_width, _height)) - 1;
-    m_depth = std::min(CONVOLUTION_PYRAMID_MAX_LAYERS, m_depth);
+    m_depth = std::min((unsigned int)CONVOLUTION_PYRAMID_MAX_LAYERS, m_depth);
 
     float w = _width;
     float h = _height;
 
-    for (int i = 0; i < m_depth; i++) {
+    for (unsigned int i = 0; i < m_depth; i++) {
         w *= 0.5f;
         h *= 0.5f;
         m_downs[i].allocate(w, h, COLOR_TEXTURE, NEAREST, CLAMP);
-        // std::cout << w << "x" << h << std::endl;
     }
     
-    for (int i = 0; i < m_depth; i++) {
+    for (unsigned int i = 0; i < m_depth; i++) {
         w *= 2.0f;
         h *= 2.0f;
         m_ups[i].allocate(w, h, COLOR_TEXTURE, NEAREST, CLAMP);
-        // std::cout << w << "x" << h << std::endl;
     }
 }
 
 void ConvolutionPyramid::process(const Fbo *_input) {
-    int i;
+    unsigned int i;
     pass(&m_downs[0], _input, NULL, 0);
 
     // DOWNSCALE
