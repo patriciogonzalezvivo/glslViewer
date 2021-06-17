@@ -1,4 +1,6 @@
-
+//  Lot of smart tricks are taken from Jaume Sanchez Elias (@thespite)
+//  Polygon Shredder https://www.clicktorelease.com/code/polygon-shredder/
+//
 
 #ifdef GL_ES
 precision mediump float;
@@ -27,40 +29,61 @@ vec3    random3(vec2 st);
 vec3    random3(vec3 p);
 vec3    snoise3( vec3 x );
 vec3    curlNoise(vec3 p);
-
+mat4    rotationMatrix(vec3 axis, float angle);
 
 void main(void) {
     vec4 color = vec4(0.0);
     vec2 st = (floor(gl_FragCoord.xy) + 0.5) / u_resolution;
 
     vec3 pos = texture2D(u_buffer1, st).xyz * 2.0 - 1.0;
-    vec4 vel_life = texture2D(u_buffer3, st);
-    vec3 vel = vel_life.xyz * 2.0 - 1.0;
-    float life = vel_life.a * 100.0;
-    float speed = 0.02;
+    vec3 vel = texture2D(u_buffer3, st).xyz * 2.0 - 1.0;
+    float life = texture2D(u_buffer1, st).a * 100.0;
+    float speed = 1.;
+    
+    float s = st.x * life * 0.01;
+    if ( s > .95 ) speed = .75;
+    else if( s > .9 ) speed = .85;
+    else speed = 1.;
 
-    pos = u_frame < 1 ? random3(st) : pos;
+    speed *= 0.5;
+
+    pos = u_frame < 1 ? random3(st) * 0.01 : pos;
     vel = u_frame < 1 ? curlNoise(vec3(st,0.5)) : vel;
     life = u_frame < 1 ? random(st) : life;
 
 #if defined(BUFFER_0)
-    color.rgb = fract( (pos + vel) * 0.5 + 0.5);
-    color.a = 1.0;
+    pos += vel;
+    life -= 0.03;
+
+    if( length( pos ) > .75 )
+        pos = random3(pos + vec3(st, u_time)) * 0.1;
+
+    if (life <= 0.0) {
+        pos = ( rotationMatrix( vec3( 1., 0., 0. ), u_time * 0.5 ) * vec4(pos * 0.1, 0.0) ).xyz;
+        life = 100.0 * random(pos.xz);
+    }
+
+    pos = pos * 0.5 + 0.5;
+    color.rgb = pos;
+    color.a = life * 0.01;
 
 #elif defined(BUFFER_1)
     color = texture2D(u_buffer0, st);
 
 #elif defined(BUFFER_2)
-    vel = speed * curlNoise( pos * 0.5 );
-    life -= 0.03;
+    vel *= 0.5;
+    vel += speed * curlNoise( pos * .125 + vec3(st, u_time * 0.025)) * 0.5;
 
-    if (life <= 0.0) {
-        vel = (curlNoise(vec3(st,0.5)) - pos);
-        life = 100.0 * random(st + vec2(0.0, u_time * 0.1));
-    }
+    float dist = length( pos );
 
+    // Repulsion from the very center of the space
+    vel += normalize(pos) * speed * (1.0 - dist) * step(dist, 0.01);
+
+    // Atraction to the center of the space conform the leave
+    vel += -normalize(pos) * speed * pow(dist, 2.0);
+    
     color.rgb = clamp(vel * u_delta, -0.99, 0.99) * 0.5 + 0.5;
-    color.a = life * 0.01;
+    color.a = 1.0;
 
 #elif defined(BUFFER_3)
     color = texture2D(u_buffer2, st);
@@ -209,4 +232,17 @@ vec3 curlNoise( vec3 p ){
 
     const float divisor = 1.0 / ( 2.0 * e );
     return normalize( vec3( x , y , z ) * divisor );
+}
+
+mat4 rotationMatrix(vec3 axis, float angle) {
+
+    axis = normalize(axis);
+    float s = sin(angle);
+    float c = cos(angle);
+    float oc = 1.0 - c;
+
+    return mat4(oc * axis.x * axis.x + c,           oc * axis.x * axis.y - axis.z * s,  oc * axis.z * axis.x + axis.y * s,  0.0,
+                oc * axis.x * axis.y + axis.z * s,  oc * axis.y * axis.y + c,           oc * axis.y * axis.z - axis.x * s,  0.0,
+                oc * axis.z * axis.x - axis.y * s,  oc * axis.y * axis.z + axis.x * s,  oc * axis.z * axis.z + c,           0.0,
+                0.0,                                0.0,                                0.0,                                1.0);
 }

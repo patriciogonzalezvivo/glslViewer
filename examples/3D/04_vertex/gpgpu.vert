@@ -3,7 +3,8 @@
 precision mediump float;
 #endif
 
-uniform sampler2D   u_buffer0;
+uniform sampler2D   u_buffer0;  // pos
+uniform sampler2D   u_buffer2;  // vel 
 
 uniform mat4        u_modelMatrix;
 uniform mat4        u_viewMatrix;
@@ -26,22 +27,20 @@ void main(void) {
     v_texcoord = a_position.xy;
     vec2 pixel = 1.0/u_resolution;
 
-    float scale = 300.0;
+    float scale = 100.0;
+    // scale = 5.0+mix(5.0, 100., cos(u_time * 0.1) * 0.5 + 0.5);
 
     vec2 uv = v_texcoord + pixel * 0.5;
     uv = decimation(uv, u_resolution);
 
-    v_position.xyz = texture2D(u_buffer0, uv).xyz;
-    // v_color.rgb = v_position.xyz;
-    v_color.rgb = vec3(v_texcoord, a_position.z);
+    v_position.xyz = texture2D(u_buffer0, uv).xyz * 2.0 - 1.0;
+    v_color.rgb =  texture2D(u_buffer2, uv).xyz * 2.0 - 1.0;
+    v_color.rgb =  normalize(v_color.xyz) * 0.5 + 0.5;
+    v_position.xyz *= scale;
 
-    v_position.xyz = fract(v_position.xyz);
-    v_position.xyz = (v_position.xyz - 0.5) * scale;
-
-    float brightness = 1.0-distance(u_camera, v_position.xyz)/scale;
-    brightness = pow(brightness, 16.0);
-    v_color.a = brightness;
-    gl_PointSize = 5.0 * brightness;
+    float brightness = 1.0- max( 0.0, distance(u_camera, v_position.xyz)/ (scale * 2.0));
+    // v_color.a = pow(brightness, 1.0);
+    gl_PointSize = 10.0 * pow(brightness, 10.0);
     
     gl_Position = u_projectionMatrix * u_viewMatrix * v_position;
 }
