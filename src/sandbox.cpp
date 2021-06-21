@@ -50,7 +50,7 @@ Sandbox::Sandbox():
     // Histogram
     m_histogram_texture(nullptr), m_histogram(false),
     // Scene
-    m_view2d(1.0), m_lat(180.0), m_lon(0.0), m_frame(0), m_change(true), m_initialized(false), m_error_screen(true),
+    m_view2d(1.0), m_time_offset(0.0), m_lat(180.0), m_lon(0.0), m_frame(0), m_change(true), m_initialized(false), m_error_screen(true),
     // Debug
     m_showTextures(false), m_showPasses(false),
     m_task_count(0),
@@ -69,8 +69,8 @@ Sandbox::Sandbox():
 
     uniforms.functions["u_time"] = UniformFunction( "float", [this](Shader& _shader) {
         if (m_record) _shader.setUniform("u_time", m_record_head);
-        else _shader.setUniform("u_time", float(getTime()));
-    }, []() { return toString(getTime()); } );
+        else _shader.setUniform("u_time", float(getTime()) - m_time_offset);
+    }, [this]() { return toString(getTime() - m_time_offset); } );
 
     uniforms.functions["u_delta"] = UniformFunction("float", [this](Shader& _shader) {
         if (m_record) _shader.setUniform("u_delta", float(m_record_fdelta));
@@ -177,6 +177,25 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         return false;
     },
     "debug[,on|off]                 show/hide passes and textures elements", false));
+
+    _commands.push_back(Command("reset", [&](const std::string& _line){
+        if (_line == "reset") {
+            m_time_offset = getTime();
+            return true;
+        }
+        return false;
+    },
+    "reset                          reset timestamp back to zero", false));
+
+    _commands.push_back(Command("time", [&](const std::string& _line){ 
+        if (_line == "time") {
+            // Force the output in floats
+            printf("%f\n", getTime() - m_time_offset);
+            return true;
+        }
+        return false;
+    },
+    "time                           return u_time, the elapsed time.", false));
 
     _commands.push_back(Command("histogram", [&](const std::string& _line){
         if (_line == "histogram") {

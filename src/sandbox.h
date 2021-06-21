@@ -134,6 +134,7 @@ private:
 
     // Other state properties
     glm::mat3           m_view2d;
+    float               m_time_offset;
     float               m_lat;
     float               m_lon;
     unsigned int        m_frame;
@@ -146,6 +147,6 @@ private:
     bool                m_showPasses;
     
     std::atomic<int>        m_task_count {0};
-    std::atomic<long long> m_max_mem_in_queue {0};
+    std::atomic<long long>  m_max_mem_in_queue {0};
     thread_pool::ThreadPool m_save_threads;
 };

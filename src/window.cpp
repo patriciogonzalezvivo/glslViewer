@@ -601,7 +601,7 @@ void debounceSetWindowTitle(std::string title){
 }
 #endif
 
-void updateGL(){
+void updateGL() {
     // Update time
     // --------------------------------------------------------------------
 
@@ -616,7 +616,7 @@ void updateGL(){
 
     #else 
         // NON GLFW (VC or GBM) 
-        double now = getTimeSec();       
+        double now = getTimeSec();
     
     #endif
 
@@ -635,12 +635,12 @@ void updateGL(){
 
     // EVENTS
     // --------------------------------------------------------------------
-        #if defined(DRIVER_GLFW)
+    #if defined(DRIVER_GLFW)
         std::string title = appTitle + ":..: FPS:" + toString(fFPS);
         debounceSetWindowTitle(title);
         glfwPollEvents();
         
-        #else
+    #else
         const int XSIGN = 1<<4, YSIGN = 1<<5;
         static int fd = -1;
         if (fd<0) {
@@ -825,8 +825,6 @@ int getWindowHeight() {
 glm::mat4 getOrthoMatrix() {
     return orthoMatrix;
 }
-
-
 
 glm::vec4 getDate() {
 #ifdef _MSC_VER

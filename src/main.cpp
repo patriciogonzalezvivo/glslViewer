@@ -234,16 +234,6 @@ void declareCommands() {
     },
     "delta                          return u_delta, the secs between frames.", false));
 
-    commands.push_back(Command("time", [&](const std::string& _line){ 
-        if (_line == "time") {
-            // Force the output in floats
-            printf("%f\n", getTime());
-            return true;
-        }
-        return false;
-    },
-    "time                           return u_time, the elapsed time.", false));
-
     commands.push_back(Command("date", [&](const std::string& _line){ 
         if (_line == "date") {
             // Force the output in floats
