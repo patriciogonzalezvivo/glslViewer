@@ -1255,20 +1255,15 @@ void Sandbox::renderUI() {
 
         #if !defined(PLATFORM_RPI) 
             if (uniforms.functions["u_lightShadowMap"].present) {
-                float x = xOffset;
-                float y = (float)(getWindowHeight()) - xOffset;
-                float w = xOffset;
-                float h = xOffset;
-
                 for (unsigned int i = 0; i < uniforms.lights.size(); i++) {
                     if ( uniforms.lights[i].getShadowMap()->getDepthTextureId() ) {
-                        m_billboard_shader.setUniform("u_scale", w, h);
-                        m_billboard_shader.setUniform("u_translate", x, y);
+                        m_billboard_shader.setUniform("u_scale", xStep, yStep);
+                        m_billboard_shader.setUniform("u_translate", xOffset, yOffset);
                         m_billboard_shader.setUniform("u_depth", 0.0f);
                         m_billboard_shader.setUniform("u_modelViewProjectionMatrix", getOrthoMatrix());
                         m_billboard_shader.setUniformDepthTexture("u_tex0", uniforms.lights[i].getShadowMap());
                         m_billboard_vbo->render(&m_billboard_shader);
-                        x += w;
+                        yOffset -= yStep * 2.0;
                     }
                 }
             }
