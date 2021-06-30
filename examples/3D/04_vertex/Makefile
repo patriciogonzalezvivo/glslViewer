@@ -11,4 +11,7 @@ stars_trail:
 	glslViewer pcl.ply stars.vert pcl_trail.frag -l 
 
 gpgpu:
-	glslViewer pcl.ply gpgpu.vert gpgpu.frag -e buffers,on -l 
+	glslViewer pcl.ply gpgpu.vert gpgpu.frag -e buffers,on -e camera_position,-3.54947,-0.200495,-10.9241 -l 
+
+physarum:
+	glslViewer pcl.ply physarum.vert physarum.frag -l 

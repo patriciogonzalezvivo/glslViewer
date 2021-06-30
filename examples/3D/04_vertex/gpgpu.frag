@@ -1,10 +1,11 @@
-//  Lot of smart tricks are taken from Jaume Sanchez Elias (@thespite)
-//  Polygon Shredder https://www.clicktorelease.com/code/polygon-shredder/
-//
-
 #ifdef GL_ES
 precision mediump float;
 #endif
+
+//  Author Patricio Gonzalez Vivo  @patriciogv 
+//  w lot of smart tricks are taken from Jaume Sanchez Elias (@thespite)
+//  Polygon Shredder https://www.clicktorelease.com/code/polygon-shredder/
+//
 
 uniform sampler2D   u_scene;
 
@@ -30,10 +31,13 @@ vec3    random3(vec3 p);
 vec3    snoise3( vec3 x );
 vec3    curlNoise(vec3 p);
 mat4    rotationMatrix(vec3 axis, float angle);
+#define decimation(value, presicion) (floor(value * presicion)/presicion)
 
 void main(void) {
     vec4 color = vec4(0.0);
-    vec2 st = (floor(gl_FragCoord.xy) + 0.5) / u_resolution;
+    vec2 pixel = 1.0/ u_resolution;
+    vec2 st = gl_FragCoord.xy * pixel;
+    st = decimation(st, u_resolution) + 0.5 * pixel;
 
     vec3 pos = texture2D(u_buffer1, st).xyz * 2.0 - 1.0;
     vec3 vel = texture2D(u_buffer3, st).xyz * 2.0 - 1.0;
@@ -53,10 +57,10 @@ void main(void) {
 
 #if defined(BUFFER_0)
     pos += vel;
-    life -= 0.03;
+    life -= 0.003;
 
     if( length( pos ) > .75 )
-        pos = random3(pos + vec3(st, u_time)) * 0.1;
+        pos = random3(pos + vec3(st, u_time));
 
     if (life <= 0.0) {
         pos = ( rotationMatrix( vec3( 1., 0., 0. ), u_time * 0.5 ) * vec4(pos * 0.1, 0.0) ).xyz;
@@ -72,7 +76,7 @@ void main(void) {
 
 #elif defined(BUFFER_2)
     vel *= 0.5;
-    vel += speed * curlNoise( pos * .125 + vec3(st, u_time * 0.025)) * 0.5;
+    vel += speed * curlNoise( pos + u_time * 0.01) * 0.5;
 
     float dist = length( pos );
 

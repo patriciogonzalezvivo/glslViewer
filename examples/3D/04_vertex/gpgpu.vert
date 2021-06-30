@@ -1,7 +1,11 @@
-
 #ifdef GL_ES
 precision mediump float;
 #endif
+
+//  Author Patricio Gonzalez Vivo  @patriciogv 
+//  w lot of smart tricks are taken from Jaume Sanchez Elias (@thespite)
+//  Polygon Shredder https://www.clicktorelease.com/code/polygon-shredder/
+//
 
 uniform sampler2D   u_buffer0;  // pos
 uniform sampler2D   u_buffer2;  // vel 
@@ -27,11 +31,11 @@ void main(void) {
     v_texcoord = a_position.xy;
     vec2 pixel = 1.0/u_resolution;
 
-    float scale = 100.0;
+    float scale = 10.0;
     // scale = 5.0+mix(5.0, 100., cos(u_time * 0.1) * 0.5 + 0.5);
 
-    vec2 uv = v_texcoord + pixel * 0.5;
-    uv = decimation(uv, u_resolution);
+    vec2 uv = v_texcoord;
+    uv = decimation(uv, u_resolution) + 0.5 * pixel;
 
     v_position.xyz = texture2D(u_buffer0, uv).xyz * 2.0 - 1.0;
     v_color.rgb =  texture2D(u_buffer2, uv).xyz * 2.0 - 1.0;
