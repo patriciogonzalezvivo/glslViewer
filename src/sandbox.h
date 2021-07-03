@@ -12,6 +12,13 @@ enum ShaderType {
     VERTEX = 1
 };
 
+enum DefaultShaders {
+    VERT_DEFAULT = 0,
+    VERT_BILLBOARD = 1,
+    VERT_DYNAMIC_BILLBOARD = 2,
+    FRAG_DYNAMIC_BILLBOARD = 3
+};
+
 class Sandbox {
 public:
     Sandbox();
@@ -41,10 +48,11 @@ public:
 
     // Getting some data out of Sandbox
     std::string         getSource( ShaderType _type ) const;
+    Scene&              getScene() { return m_scene; }
+    std::string         getDefaultSrc( DefaultShaders _type );
 
     void                printDependencies( ShaderType _type ) const;
 
-    Scene&              getScene() { return m_scene; }
     
     // Some events
     void                onScroll( float _yoffset );

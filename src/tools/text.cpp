@@ -143,7 +143,7 @@ std::string toString(const glm::vec4& _vec, char _sep) {
     strStream << std::fixed << std::setprecision(3) << _vec.w;
     return strStream.str();
 }
-
+int  get_version(const std::string& program);
 // std::string toString(const glm::quat& _quat, char _sep) {
 //     std::ostringstream strStream;
 //     strStream << std::fixed << std::setprecision(3) << _quat.a << _sep;
@@ -227,6 +227,29 @@ std::string getLineNumber(const std::string& _source, unsigned _lineNumber) {
 // Quickly determine if a shader program contains the specified identifier.
 bool find_id(const std::string& program, const char* id) {
     return std::strstr(program.c_str(), id) != 0;
+}
+
+std::string get_version(const std::string& _src, size_t& _versionNumber) {
+    bool srcVersionFound = _src.substr(0, 8) == "#version"; 
+    std::string srcVersion = "";
+
+    if (srcVersionFound) {
+        // split _src into srcVersion and srcBody
+        std::istringstream srcIss(_src);
+
+        // the version line can be read without checking the result of getline(), srcVersionFound == true implies this
+        std::getline(srcIss, srcVersion);
+
+        std::istringstream versionIss(srcVersion);
+        std::string dataRead;
+        versionIss >> dataRead;             // consume the "#version" string which is guaranteed to be there
+        versionIss >> _versionNumber;    // try to read the next token and convert it to a number
+
+    }
+    else
+        _versionNumber = 100;
+
+    return srcVersion;
 }
 
 // Count how many BUFFERS are in the shader

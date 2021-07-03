@@ -161,7 +161,7 @@ GLuint Shader::compileShader(const std::string& _src, GLenum _type, bool _verbos
     bool zeroBasedLineDirective; // true for GLSL core 1.10 to 1.50
     bool srcVersionFound = _src.substr(0, 8) == "#version"; // true if user provided a #version directive at the beginning of _src
 
-    if(srcVersionFound) {
+    if (srcVersionFound) {
 
         //
         // split _src into srcVersion and srcBody
@@ -190,8 +190,8 @@ GLuint Shader::compileShader(const std::string& _src, GLenum _type, bool _verbos
 
         size_t glslVersionNumber = 0;
         std::istringstream versionIss(srcVersion);
-        versionIss >> dataRead; // consume the "#version" string which is guaranteed to be there
-        versionIss >> glslVersionNumber; // try to read the next token and convert it to a number
+        versionIss >> dataRead;             // consume the "#version" string which is guaranteed to be there
+        versionIss >> glslVersionNumber;    // try to read the next token and convert it to a number
 
         //
         // determine if the glsl version number starts numbering the #line directive from 0 or from 1
@@ -208,7 +208,8 @@ GLuint Shader::compileShader(const std::string& _src, GLenum _type, bool _verbos
 
         zeroBasedLineDirective = (glslVersionNumber >= 110 && glslVersionNumber <= 150);
 
-    } else {
+    }
+    else {
         // no #version directive found at the beginning of _src, which means...
         srcBody = _src; // ... _src contains the whole shader body and ...
         zeroBasedLineDirective = true; // ... glsl defaults to version 1.10, which starts numbering #line directives from 0.

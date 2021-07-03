@@ -500,20 +500,6 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     // LOAD SHACER 
     // -----------------------------------------------
 
-    if (vert_index != -1) {
-        // If there is a Vertex shader load it
-        m_vert_source = "";
-        m_vert_dependencies.clear();
-
-        loadFromPath(_files[vert_index].path, &m_vert_source, include_folders, &m_vert_dependencies);
-    }
-    else {
-        // If there is no use the default one
-        if (geom_index == -1)
-            m_vert_source = default_vert;
-        else
-            m_vert_source = default_scene_vert;
-    }
 
     if (frag_index != -1) {
         // If there is a Fragment shader load it
@@ -531,6 +517,16 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         else
             m_frag_source = default_scene_frag;
     }
+
+    if (vert_index != -1) {
+        // If there is a Vertex shader load it
+        m_vert_source = "";
+        m_vert_dependencies.clear();
+
+        loadFromPath(_files[vert_index].path, &m_vert_source, include_folders, &m_vert_dependencies);
+    }
+    else 
+        m_vert_source = getDefaultSrc(VERT_DEFAULT);   // If there is no use the default one
 
     // Init Scene elements
     m_billboard_vbo = rect(0.0,0.0,1.0,1.0).getVbo();
@@ -668,8 +664,39 @@ bool Sandbox::haveChange() {
 }
 
 std::string Sandbox::getSource(ShaderType _type) const {
-    if (_type == FRAGMENT) return m_frag_source;
-    else return m_vert_source;
+    return (_type == FRAGMENT)? m_frag_source : m_vert_source;
+}
+
+std::string Sandbox::getDefaultSrc( DefaultShaders _type ) {
+    size_t versionNumber = 100;
+    std::string rta = get_version(m_frag_source, versionNumber);
+
+    if (_type == VERT_DEFAULT) {
+        if (versionNumber < 300)
+            rta += (geom_index == -1) ? default_vert : default_scene_vert;
+        else if (versionNumber >= 300) 
+            rta += (geom_index == -1) ? default_vert_300 : default_scene_vert_300;
+    }
+    else if (_type == VERT_BILLBOARD) {
+        if (versionNumber < 300)
+            rta += billboard_vert;
+        else if (versionNumber >= 300) 
+            rta += billboard_vert_300;
+    }
+    else if (_type == VERT_DYNAMIC_BILLBOARD) {
+        if (versionNumber < 300)
+            rta += dynamic_billboard_vert;
+        else if (versionNumber >= 300) 
+            rta += dynamic_billboard_vert_300;
+    }
+    else if (_type == FRAG_DYNAMIC_BILLBOARD) {
+        if (versionNumber < 300)
+            rta += dynamic_billboard_frag;
+        else if (versionNumber >= 300) 
+            rta += dynamic_billboard_frag_300;
+    }
+
+    return rta;
 }
 
 int Sandbox::getRecordedPercentage() {
@@ -759,16 +786,16 @@ bool Sandbox::reloadShaders( WatchFileList &_files ) {
     if (havePostprocessing) {
         // Specific defines for this buffer
         m_postprocessing_shader.addDefine("POSTPROCESSING");
-        m_postprocessing_shader.load(m_frag_source, billboard_vert, false);
+        m_postprocessing_shader.load(m_frag_source, getDefaultSrc(VERT_BILLBOARD), false);
         m_postprocessing = havePostprocessing;
     }
     else if (holoplay >= 0) {
-        m_postprocessing_shader.load(holoplay_frag, billboard_vert, false);
+        m_postprocessing_shader.load(holoplay_frag, getDefaultSrc(VERT_BILLBOARD), false);
         uniforms.functions["u_scene"].present = true;
         m_postprocessing = true;
     }
     else if (fxaa) {
-        m_postprocessing_shader.load(fxaa_frag, billboard_vert, false);
+        m_postprocessing_shader.load(fxaa_frag, getDefaultSrc(VERT_BILLBOARD), false);
         uniforms.functions["u_scene"].present = true;
         m_postprocessing = true;
     }
@@ -799,7 +826,7 @@ void Sandbox::_updateBuffers() {
             // New Shader
             m_buffers_shaders.push_back( Shader() );
             m_buffers_shaders[i].addDefine("BUFFER_" + toString(i));
-            m_buffers_shaders[i].load(m_frag_source, billboard_vert, false);
+            m_buffers_shaders[i].load(m_frag_source, getDefaultSrc(VERT_BILLBOARD), false);
         }
     }
     else {
@@ -807,7 +834,7 @@ void Sandbox::_updateBuffers() {
 
             // Reload shader code
             m_buffers_shaders[i].addDefine("BUFFER_" + toString(i));
-            m_buffers_shaders[i].load(m_frag_source, billboard_vert, false);
+            m_buffers_shaders[i].load(m_frag_source, getDefaultSrc(VERT_BILLBOARD), false);
         }
     }
 }
@@ -854,14 +881,14 @@ void Sandbox::_updateConvolutionPyramids() {
     
     if (check_for_convolution_pyramid_algorithm(getSource(FRAGMENT))) {
         m_convolution_pyramid_shader.addDefine("CONVOLUTION_PYRAMID_ALGORITHM");
-        m_convolution_pyramid_shader.load(m_frag_source, billboard_vert, false);
+        m_convolution_pyramid_shader.load(m_frag_source, getDefaultSrc(VERT_BILLBOARD), false);
     }
     else
         m_convolution_pyramid_shader.load(poissonfill_frag, billboard_vert, false);
 
     for (unsigned int i = 0; i < m_convolution_pyramid_subshaders.size(); i++) {
         m_convolution_pyramid_subshaders[i].addDefine("CONVOLUTION_PYRAMID_" + toString(i));
-        m_convolution_pyramid_subshaders[i].load(m_frag_source, billboard_vert, false);
+        m_convolution_pyramid_subshaders[i].load(m_frag_source, getDefaultSrc(VERT_BILLBOARD), false);
     }
 }
 
@@ -1103,7 +1130,7 @@ void Sandbox::render() {
             m_record_fbo.bind();
 
         if (!m_billboard_shader.isLoaded())
-            m_billboard_shader.load(dynamic_billboard_frag, dynamic_billboard_vert, false);
+            m_billboard_shader.load(getDefaultSrc(FRAG_DYNAMIC_BILLBOARD), getDefaultSrc(VERT_DYNAMIC_BILLBOARD), false);
 
         m_billboard_shader.use();
         m_billboard_shader.setUniform("u_depth", 0.0f);
@@ -1118,7 +1145,7 @@ void Sandbox::render() {
         m_record_fbo.unbind();
 
         if (!m_billboard_shader.isLoaded())
-            m_billboard_shader.load(dynamic_billboard_frag, dynamic_billboard_vert, false);
+            m_billboard_shader.load(getDefaultSrc(FRAG_DYNAMIC_BILLBOARD), getDefaultSrc(VERT_DYNAMIC_BILLBOARD), false);
 
         m_billboard_shader.use();
         m_billboard_shader.setUniform("u_depth", 0.0f);
@@ -1147,7 +1174,7 @@ void Sandbox::renderUI() {
             float yOffset = h - yStep;
 
             if (!m_billboard_shader.isLoaded())
-                m_billboard_shader.load(dynamic_billboard_frag, dynamic_billboard_vert, false);
+                m_billboard_shader.load(getDefaultSrc(FRAG_DYNAMIC_BILLBOARD), getDefaultSrc(VERT_DYNAMIC_BILLBOARD), false);
 
             m_billboard_shader.use();
 
@@ -1186,7 +1213,7 @@ void Sandbox::renderUI() {
             float yOffset = h - yStep;
 
             if (!m_billboard_shader.isLoaded())
-                m_billboard_shader.load(dynamic_billboard_frag, dynamic_billboard_vert, false);
+                m_billboard_shader.load(getDefaultSrc(FRAG_DYNAMIC_BILLBOARD), getDefaultSrc(VERT_DYNAMIC_BILLBOARD), false);
 
             m_billboard_shader.use();
 
@@ -1280,7 +1307,7 @@ void Sandbox::renderUI() {
         float y = h;
 
         if (!m_histogram_shader.isLoaded())
-            m_histogram_shader.load(histogram_frag, dynamic_billboard_vert, false);
+            m_histogram_shader.load(histogram_frag, getDefaultSrc(VERT_DYNAMIC_BILLBOARD), false);
 
         m_histogram_shader.use();
         for (std::map<std::string, Texture*>::iterator it = uniforms.textures.begin(); it != uniforms.textures.end(); it++) {
