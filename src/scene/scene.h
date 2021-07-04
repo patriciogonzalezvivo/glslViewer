@@ -12,9 +12,6 @@
 
 #include "../scene/model.h"
 
-#include "../shaders/billboard.h"
-#include "../shaders/default_scene.h"
-
 enum CullingMode {
     NONE = 0,
     FRONT = 1,

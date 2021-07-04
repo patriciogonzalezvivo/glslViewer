@@ -17,7 +17,7 @@
 #include "io/fs.h"
 #include "io/osc.h"
 #include "tools/text.h"
-#include "shaders/default.h"
+#include "shaders/defaultShaders.h"
 
 // GLOBAL VARIABLES
 //============================================================================
@@ -761,11 +761,11 @@ int main(int argc, char **argv){
 
                 std::ofstream out(argv[i]);
                 if (willLoadGeometry)
-                    out << default_scene_frag;
+                    out << getDefaultSrc(FRAG_DEFAULT_SCENE);
                 else if (willLoadTextures)
-                    out << default_texture_frag;
+                    out << getDefaultSrc(FRAG_DEFAULT_TEXTURE);
                 else 
-                    out << default_frag;
+                    out << getDefaultSrc(FRAG_DEFAULT);
                 out.close();
             }
 
@@ -783,7 +783,7 @@ int main(int argc, char **argv){
                 std::cout << "File " << argv[i] << " not founded. Creating a default vertex shader with that name"<< std::endl;
 
                 std::ofstream out(argv[i]);
-                out << default_scene_vert;
+                out << getDefaultSrc(VERT_DEFAULT_SCENE);
                 out.close();
             }
 

@@ -7,7 +7,7 @@ const std::string default_scene_vert = R"(
 precision mediump float;
 #endif
 
-uniform mat4 u_modelViewProjectionMatrix;
+uniform mat4    u_modelViewProjectionMatrix;
 
 attribute vec4  a_position;
 varying vec4    v_position;

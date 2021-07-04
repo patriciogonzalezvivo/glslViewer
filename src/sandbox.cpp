@@ -13,18 +13,21 @@
 #include "glm/gtx/matrix_transform_2d.hpp"
 #include "glm/gtx/rotate_vector.hpp"
 
-#include "shaders/default.h"
-#include "shaders/dynamic_billboard.h"
-#include "shaders/histogram.h"
-#include "shaders/wireframe2D.h"
-#include "shaders/fxaa.h"
-#include "shaders/holoplay.h"
-#include "shaders/poissonfill.h"
+#include "shaders/defaultShaders.h"
 
 #include <memory>
 
-std::string default_scene_frag = default_scene_frag0 + default_scene_frag1 + default_scene_frag2 + default_scene_frag3;
+// This are hardcoded values for the Portrait HoloPlay by LGF.
+//  in order to render correctly make sure this values match your calibration file on your device
+// 
+const float holoplay_dpi    = 324.0;
+const float holoplay_pitch  = 52.58737671470091;
+const float holoplay_slope  = -7.196136200157333;
+const float holoplay_center = 0.4321881363063158;
+const int   holoplay_ri = 0;
+const int   holoplay_bi = 2;
 
+// This values will change based on the resolution
 int holoplay_width = 2048;
 int holoplay_height = 2048;
 int holoplay_columns = 4;
@@ -196,6 +199,16 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         return false;
     },
     "time                           return u_time, the elapsed time.", false));
+
+    _commands.push_back(Command("glsl_version", [&](const std::string& _line){ 
+        if (_line == "glsl_version") {
+            // Force the output in floats
+            printf("%i\n", getVersion());
+            return true;
+        }
+        return false;
+    },
+    "glsl_version                    return GLSL Version", false));
 
     _commands.push_back(Command("histogram", [&](const std::string& _line){
         if (_line == "histogram") {
@@ -506,16 +519,17 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         m_frag_source = "";
         m_frag_dependencies.clear();
 
-        if ( !loadFromPath(_files[frag_index].path, &m_frag_source, include_folders, &m_frag_dependencies) ) {
+        if ( !loadFromPath(_files[frag_index].path, &m_frag_source, include_folders, &m_frag_dependencies) )
             return;
-        }
+
+        setVersionFromCode(m_frag_source);
     }
     else {
         // If there is no use the default one
         if (geom_index == -1)
-            m_frag_source = default_frag;
+            m_frag_source = getDefaultSrc(FRAG_DEFAULT);
         else
-            m_frag_source = default_scene_frag;
+            m_frag_source = getDefaultSrc(FRAG_DEFAULT_SCENE);
     }
 
     if (vert_index != -1) {
@@ -525,8 +539,13 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
 
         loadFromPath(_files[vert_index].path, &m_vert_source, include_folders, &m_vert_dependencies);
     }
-    else 
-        m_vert_source = getDefaultSrc(VERT_DEFAULT);   // If there is no use the default one
+    else {
+        // If there is no use the default one
+        if (geom_index == -1)
+            m_vert_source = getDefaultSrc(VERT_DEFAULT);
+        else
+            m_vert_source = getDefaultSrc(VERT_DEFAULT_SCENE);
+    }
 
     // Init Scene elements
     m_billboard_vbo = rect(0.0,0.0,1.0,1.0).getVbo();
@@ -667,38 +686,6 @@ std::string Sandbox::getSource(ShaderType _type) const {
     return (_type == FRAGMENT)? m_frag_source : m_vert_source;
 }
 
-std::string Sandbox::getDefaultSrc( DefaultShaders _type ) {
-    size_t versionNumber = 100;
-    std::string rta = get_version(m_frag_source, versionNumber);
-
-    if (_type == VERT_DEFAULT) {
-        if (versionNumber < 300)
-            rta += (geom_index == -1) ? default_vert : default_scene_vert;
-        else if (versionNumber >= 300) 
-            rta += (geom_index == -1) ? default_vert_300 : default_scene_vert_300;
-    }
-    else if (_type == VERT_BILLBOARD) {
-        if (versionNumber < 300)
-            rta += billboard_vert;
-        else if (versionNumber >= 300) 
-            rta += billboard_vert_300;
-    }
-    else if (_type == VERT_DYNAMIC_BILLBOARD) {
-        if (versionNumber < 300)
-            rta += dynamic_billboard_vert;
-        else if (versionNumber >= 300) 
-            rta += dynamic_billboard_vert_300;
-    }
-    else if (_type == FRAG_DYNAMIC_BILLBOARD) {
-        if (versionNumber < 300)
-            rta += dynamic_billboard_frag;
-        else if (versionNumber >= 300) 
-            rta += dynamic_billboard_frag_300;
-    }
-
-    return rta;
-}
-
 int Sandbox::getRecordedPercentage() {
     return ((m_record_head - m_record_start) / (m_record_end - m_record_start)) * 100;
 }
@@ -790,12 +777,12 @@ bool Sandbox::reloadShaders( WatchFileList &_files ) {
         m_postprocessing = havePostprocessing;
     }
     else if (holoplay >= 0) {
-        m_postprocessing_shader.load(holoplay_frag, getDefaultSrc(VERT_BILLBOARD), false);
+        m_postprocessing_shader.load(getDefaultSrc(FRAG_HOLOPLAY), getDefaultSrc(VERT_BILLBOARD), false);
         uniforms.functions["u_scene"].present = true;
         m_postprocessing = true;
     }
     else if (fxaa) {
-        m_postprocessing_shader.load(fxaa_frag, getDefaultSrc(VERT_BILLBOARD), false);
+        m_postprocessing_shader.load(getDefaultSrc(FRAG_FXAA), getDefaultSrc(VERT_BILLBOARD), false);
         uniforms.functions["u_scene"].present = true;
         m_postprocessing = true;
     }
@@ -884,7 +871,7 @@ void Sandbox::_updateConvolutionPyramids() {
         m_convolution_pyramid_shader.load(m_frag_source, getDefaultSrc(VERT_BILLBOARD), false);
     }
     else
-        m_convolution_pyramid_shader.load(poissonfill_frag, billboard_vert, false);
+        m_convolution_pyramid_shader.load(getDefaultSrc(FRAG_POISSON), getDefaultSrc(VERT_BILLBOARD), false);
 
     for (unsigned int i = 0; i < m_convolution_pyramid_subshaders.size(); i++) {
         m_convolution_pyramid_subshaders[i].addDefine("CONVOLUTION_PYRAMID_" + toString(i));
@@ -1307,7 +1294,7 @@ void Sandbox::renderUI() {
         float y = h;
 
         if (!m_histogram_shader.isLoaded())
-            m_histogram_shader.load(histogram_frag, getDefaultSrc(VERT_DYNAMIC_BILLBOARD), false);
+            m_histogram_shader.load(getDefaultSrc(FRAG_HISTOGRAM), getDefaultSrc(VERT_DYNAMIC_BILLBOARD), false);
 
         m_histogram_shader.use();
         for (std::map<std::string, Texture*>::iterator it = uniforms.textures.begin(); it != uniforms.textures.end(); it++) {
@@ -1325,7 +1312,7 @@ void Sandbox::renderUI() {
             m_cross_vbo = cross(glm::vec3(0.0, 0.0, 0.0), 10.).getVbo();
 
         if (!m_wireframe2D_shader.isLoaded())
-            m_wireframe2D_shader.load(wireframe2D_frag, wireframe2D_vert, false);
+            m_wireframe2D_shader.load(getDefaultSrc(FRAG_WIREFRAME_2D), getDefaultSrc(VERT_WIREFRAME_2D), false);
 
         glLineWidth(2.0f);
         m_wireframe2D_shader.use();

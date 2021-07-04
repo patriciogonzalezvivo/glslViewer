@@ -22,26 +22,6 @@ void main(void) {
     gl_Position = u_modelViewProjectionMatrix * position;
 })";
 
-const std::string dynamic_billboard_vert_300 = R"(
-#ifdef GL_ES
-precision mediump float;
-#endif
-
-uniform mat4 u_modelViewProjectionMatrix;
-uniform vec2 u_translate;
-uniform vec2 u_scale;
-in      vec4 a_position;
-in      vec2 a_texcoord;
-out     vec2 v_texcoord;
-
-void main(void) {
-    vec4 position = a_position;
-    position.xy *= u_scale;
-    position.xy += u_translate;
-    v_texcoord = a_texcoord;
-    gl_Position = u_modelViewProjectionMatrix * position;
-})";
-
 const std::string dynamic_billboard_frag = R"(
 #ifdef GL_ES
 precision mediump float;
@@ -78,6 +58,27 @@ void main(void) {
 }
 )";
 
+const std::string dynamic_billboard_vert_300 = R"(
+#ifdef GL_ES
+precision mediump float;
+#endif
+
+uniform mat4 u_modelViewProjectionMatrix;
+uniform vec2 u_translate;
+uniform vec2 u_scale;
+in      vec4 a_position;
+in      vec2 a_texcoord;
+out     vec2 v_texcoord;
+
+void main(void) {
+    vec4 position = a_position;
+    position.xy *= u_scale;
+    position.xy += u_translate;
+    v_texcoord = a_texcoord;
+    gl_Position = u_modelViewProjectionMatrix * position;
+})";
+
+
 const std::string dynamic_billboard_frag_300 = R"(
 #ifdef GL_ES
 precision mediump float;
@@ -104,7 +105,7 @@ vec3 heatmap(float v) {
 
 void main(void) { 
     vec4 color = u_color;
-    color += texture2D(u_tex0, v_texcoord);
+    color += texture(u_tex0, v_texcoord);
     
     if (u_depth > 0.0) {
         color.r = linearizeDepth(color.r) * u_cameraFarClip;

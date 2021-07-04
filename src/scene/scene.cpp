@@ -12,9 +12,7 @@
 #include "tools/geom.h"
 #include "tools/text.h"
 
-#include "shaders/light_ui.h"
-#include "shaders/cubemap.h"
-#include "shaders/wireframe3D.h"
+#include "shaders/defaultShaders.h"
 
 #include "../io/ply.h"
 #include "../io/obj.h"
@@ -500,7 +498,7 @@ bool Scene::loadShaders(const std::string& _fragmentShader, const std::string& _
     if (m_background) {
         // Specific defines for this buffer
         m_background_shader.addDefine("BACKGROUND");
-        m_background_shader.load(_fragmentShader, billboard_vert, false);
+        m_background_shader.load(_fragmentShader, getDefaultSrc(VERT_BILLBOARD), false);
     }
 
     bool thereIsFloorDefine = check_for_floor(_fragmentShader) || check_for_floor(_vertexShader);
@@ -654,7 +652,7 @@ void Scene::renderBackground(Uniforms& _uniforms) {
     else if (_uniforms.cubemap && showCubebox) {
         if (!m_cubemap_vbo) {
             m_cubemap_vbo = cube(1.0f).getVbo();
-            m_cubemap_shader.load(cube_frag, cube_vert, false);
+            m_cubemap_shader.load(getDefaultSrc(FRAG_CUBEMAP), getDefaultSrc(VERT_CUBEMAP), false);
         }
 
         m_cubemap_shader.use();
@@ -679,7 +677,7 @@ void Scene::renderFloor(Uniforms& _uniforms, const glm::mat4& _mvp) {
             m_floor_subd = m_floor_subd_target;
 
             if (!m_floor_shader.isLoaded()) 
-                m_floor_shader.load(default_scene_frag, default_scene_vert, false);
+                m_floor_shader.load(getDefaultSrc(FRAG_DEFAULT_SCENE), getDefaultSrc(VERT_DEFAULT_SCENE), false);
 
             m_floor_shader.addDefine("FLOOR");
             m_floor_shader.addDefine("FLOOR_SUBD", m_floor_subd);
@@ -713,7 +711,7 @@ void Scene::renderDebug(Uniforms& _uniforms) {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 
     if (!m_wireframe3D_shader.isLoaded())
-        m_wireframe3D_shader.load(wireframe3D_frag, wireframe3D_vert, false);
+        m_wireframe3D_shader.load(getDefaultSrc(FRAG_WIREFRAME_3D), getDefaultSrc(VERT_WIREFRAME_3D), false);
 
     // Draw Bounding boxes
     if (showBBoxes) {
@@ -753,7 +751,7 @@ void Scene::renderDebug(Uniforms& _uniforms) {
     // Light
     {
         if (!m_lightUI_shader.isLoaded())
-            m_lightUI_shader.load(light_frag, light_vert, false);
+            m_lightUI_shader.load(getDefaultSrc(FRAG_LIGHT), getDefaultSrc(VERT_LIGHT), false);
 
         if (m_lightUI_vbo == nullptr)
             m_lightUI_vbo = rect(0.0,0.0,0.0,0.0).getVbo();
