@@ -598,6 +598,41 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
             holoplay_rows = 9;
             holoplay_totalViews = 45;
         }
+        else if (holoplay == 3) {
+            holoplay_width = 3360;
+            holoplay_height = 3360;
+            holoplay_columns = 8;
+            holoplay_rows = 6;
+            holoplay_totalViews = 48;
+        }
+        else if (holoplay == 4) {
+            holoplay_width = 4026;
+            holoplay_height = 4096;
+            holoplay_columns = 11;
+            holoplay_rows = 8;
+            holoplay_totalViews = 88;
+        }
+        else if (holoplay == 5) {
+            holoplay_width = 4225;
+            holoplay_height = 4095;
+            holoplay_columns = 13;
+            holoplay_rows = 7;
+            holoplay_totalViews = 91;
+        }
+        else if (holoplay == 6) {
+            holoplay_width = 4224;
+            holoplay_height = 4096;
+            holoplay_columns = 12;
+            holoplay_rows = 8;
+            holoplay_totalViews = 96;
+        }
+        else if (holoplay == 7) {
+            holoplay_width = 4224;
+            holoplay_height = 4230;
+            holoplay_columns = 12;
+            holoplay_rows = 9;
+            holoplay_totalViews = 108;
+        }
     } 
 
     // Prepare viewport
