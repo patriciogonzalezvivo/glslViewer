@@ -3,6 +3,7 @@
 #include <string>
 
 #include "gl.h"
+#include "props.h"
 
 class Texture {
 public:
@@ -10,7 +11,7 @@ public:
     virtual ~Texture();
 
     virtual bool    load(const std::string& _filepath, bool _vFlip);
-    virtual bool    load(int _width, int _height, int _component, int _bits, const void* _data);
+    virtual bool    load(int _width, int _height, int _component, int _bits, const void* _data, TextureFilter _filter = LINEAR, TextureWrap _wrap = REPEAT);
 
     virtual void    clear();
 
@@ -33,5 +34,5 @@ protected:
 
     GLuint          m_id;
 
-    bool	        m_vFlip;
+    bool            m_vFlip;
 };

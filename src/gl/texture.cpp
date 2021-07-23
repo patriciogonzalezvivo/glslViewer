@@ -19,7 +19,7 @@ void Texture::clear() {
     m_id = 0;
 }
 
-bool Texture::load(int _width, int _height, int _channels, int _bits, const void* _data) {
+bool Texture::load(int _width, int _height, int _channels, int _bits, const void* _data, TextureFilter _filter, TextureWrap _wrap) {
 
     // Generate an OpenGL texture ID for this texturez
     glEnable(GL_TEXTURE_2D);
@@ -28,10 +28,10 @@ bool Texture::load(int _width, int _height, int _channels, int _bits, const void
     glBindTexture(GL_TEXTURE_2D, m_id);
 
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, getMinificationFilter(_filter));
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, getMagnificationFilter(_filter));
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, getWrap(_wrap));
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, getWrap(_wrap));
 
     GLenum format = GL_RGBA;
     if (_channels == 4) {
