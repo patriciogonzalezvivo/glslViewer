@@ -17,7 +17,7 @@ public:
     Osc();
     ~Osc();
 
-    bool start(int _port, std::function<void(const std::string &_cmd, std::mutex &_mutex)> _runCmd);
+    bool start(int _port, std::function<void(const std::string &_cmd, std::mutex &_mutex)> _runCmd, bool verbose);
     void stop();
     bool isListening() const;
 
@@ -36,4 +36,5 @@ private:
 
     std::thread listenThread;   // listener thread
     std::mutex  m_mutex;
+    bool        m_verbose;
 };

@@ -734,7 +734,7 @@ int main(int argc, char **argv){
         }
         else if ( argument== "-p" || argument == "--port" ) {
             if(++i < argc)
-                osc_listener.start(toInt(std::string(argv[i])), runCmd);
+                osc_listener.start(toInt(std::string(argv[i])), runCmd, sandbox.verbose);
             else
                 std::cout << "Argument '" << argument << "' should be followed by an <osc_port>. Skipping argument." << std::endl;
         }
