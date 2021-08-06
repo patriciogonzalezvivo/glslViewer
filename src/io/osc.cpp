@@ -105,10 +105,10 @@ void Osc::ProcessMessage( const osc::ReceivedMessage& _m, const IpEndpointName& 
                 line += "," + toString( arg->AsInt64Unchecked() );
             }
             else if ( arg->IsFloat() ) {
-                line += "," + toString( arg->AsFloatUnchecked(), 3 );
+                line += "," + toString( arg->AsFloatUnchecked(), 8 );
             }
             else if ( arg->IsDouble() ) {
-                line += "," + toString( arg->AsDoubleUnchecked(), 6 );
+                line += "," + toString( arg->AsDoubleUnchecked(), 8 );
             }
             // else if(arg->IsRgbaColor()){
             //      line += "," + arg->AsRgbaColorUnchecked();
@@ -120,8 +120,8 @@ void Osc::ProcessMessage( const osc::ReceivedMessage& _m, const IpEndpointName& 
         }
 
         if (m_verbose) 
-            std::cout << std::setprecision(8) << line << std::endl;
-            
+            std::cout << line << std::endl;
+
         m_runCmd(line, m_mutex); 
     }
     catch( osc::Exception& e ) {

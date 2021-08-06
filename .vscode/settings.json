@@ -99,6 +99,7 @@
         "concepts": "cpp",
         "semaphore": "cpp",
         "ranges": "cpp",
-        "stop_token": "cpp"
+        "stop_token": "cpp",
+        "numbers": "cpp"
     }
 }
