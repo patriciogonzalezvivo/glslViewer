@@ -107,7 +107,7 @@ void printUsage(char * executableName) {
     std::cerr << "// [--headless] - headless rendering. Very useful for making images or benchmarking." << std::endl;
     std::cerr << "// [--nocursor] - hide cursor" << std::endl;
     std::cerr << "// [--fxaa] - set FXAA as postprocess filter" << std::endl;
-    std::cerr << "// [--holoplay <0/1/2>] - HoloPlay volumetric postprocess" << std::endl;
+    std::cerr << "// [--holoplay <[0..7]>] - HoloPlay volumetric postprocess (Looking Glass Model)" << std::endl;
     std::cerr << "// [-I<include_folder>] - add an include folder to default for #include files" << std::endl;
     std::cerr << "// [-D<define>] - add system #defines directly from the console argument" << std::endl;
     std::cerr << "// [-p <osc_port>] - open OSC listening port" << std::endl;
