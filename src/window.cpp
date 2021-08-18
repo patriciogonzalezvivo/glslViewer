@@ -12,6 +12,7 @@
 //#include "gl/gl.h"
 #include "glm/gtc/matrix_transform.hpp"
 #include "tools/text.h"
+#include <cstring>
 
 // Common global variables
 //----------------------------------------------------
