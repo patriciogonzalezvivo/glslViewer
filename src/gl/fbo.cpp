@@ -44,37 +44,7 @@ Fbo::~Fbo() {
     }
 }
 
-GLenum getFilter( FboFilter _filter ) {
-    static GLenum filters[6] = {
-        GL_LINEAR, GL_NEAREST 
-        // GL_NEAREST_MIPMAP_NEAREST, 
-        // GL_LINEAR_MIPMAP_NEAREST, 
-        // GL_NEAREST_MIPMAP_LINEAR, 
-        // GL_LINEAR_MIPMAP_LINEAR 
-    };
-    return filters[_filter];
-}
-
-GLenum getMagnificationFilter( FboFilter _filter ) {
-    // if(_filter == NEAREST_NEAREST || _filter == NEAREST_LINEAR) {
-    //     return getFilter(NEAREST);
-    // }
-    // if(_filter == LINEAR_NEAREST || _filter == LINEAR_LINEAR) {
-    //     return getFilter(LINEAR);
-    // }
-    return getFilter(_filter);
-}
-
-GLenum getMinificationFilter( FboFilter _filter )  {
-    return getFilter(_filter);
-}
-
-GLenum getWrap( FboWrap _wrap ) {
-    static GLenum wraps[3] = {GL_REPEAT, GL_CLAMP_TO_EDGE, GL_MIRRORED_REPEAT };
-    return wraps[_wrap];
-}
-
-void Fbo::allocate(const uint32_t _width, const uint32_t _height, FboType _type, FboFilter _filter, FboWrap _wrap) {
+void Fbo::allocate(const uint32_t _width, const uint32_t _height, FboType _type, TextureFilter _filter, TextureWrap _wrap) {
     m_type = _type;
 
     bool color_texture = true;

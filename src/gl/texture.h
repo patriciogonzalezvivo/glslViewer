@@ -3,14 +3,16 @@
 #include <string>
 
 #include "gl.h"
+#include "textureProps.h"
 
 class Texture {
 public:
     Texture();
     virtual ~Texture();
 
-    virtual bool    load(const std::string& _filepath, bool _vFlip);
-    virtual bool    load(int _width, int _height, int _component, int _bits, const void* _data);
+    virtual bool    load(const std::string& _filepath, bool _vFlip, TextureFilter _filter = LINEAR, TextureWrap _wrap = REPEAT);
+    virtual bool    load(int _width, int _height, int _component, int _bits, const void* _data, TextureFilter _filter = LINEAR, TextureWrap _wrap = REPEAT);
+    virtual bool    update(int _x, int _y, int _width, int _height, const void* _data);
 
     virtual void    clear();
 
@@ -30,6 +32,10 @@ protected:
 
     int             m_width;
     int             m_height;
+    GLenum          m_format;
+    GLenum          m_type;
+    TextureFilter   m_filter; 
+    TextureWrap     m_wrap;
 
     GLuint          m_id;
 
