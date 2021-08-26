@@ -12,6 +12,7 @@
 //#include "gl/gl.h"
 #include "glm/gtc/matrix_transform.hpp"
 #include "tools/text.h"
+#include <cstring>
 
 // Common global variables
 //----------------------------------------------------
@@ -432,12 +433,29 @@ void initGL (glm::ivec4 &_viewport, WindowStyle _style) {
 
             int count;
             GLFWmonitor **monitors = glfwGetMonitors(&count);
-            const GLFWvidmode* mode = glfwGetVideoMode(monitors[1]);
+            int monitorID = 1;
+
+            if(count > 2){ //if we have more than 2 screens, try and find the looking glass screen ID 
+                monitorID = -1;
+                for (int i = 0; i < count; i++){
+                    const char* name = glfwGetMonitorName(monitors[i]);
+                    if(name && strlen(name) >= 3){ // if monitor name is > than 3 chars
+                        if(name[0] == 'L' && name[1] == 'K' && name[2] == 'G'){ // found a match for the looking glass screen
+                            monitorID = i;
+                        }
+                    }
+                }
+                if(monitorID == -1){ //could not find the looking glass screen
+                    monitorID = 1;
+                }
+            }
+
+            const GLFWvidmode* mode = glfwGetVideoMode(monitors[monitorID]);
             _viewport.z = mode->width;
             _viewport.w = mode->height;
 
             int xpos, ypos;
-            glfwGetMonitorPos(monitors[1], &xpos, &ypos);
+            glfwGetMonitorPos(monitors[monitorID], &xpos, &ypos);
             window = glfwCreateWindow(_viewport.z, _viewport.w, appTitle.c_str(), NULL, NULL);
             
             glfwSetWindowPos(window, xpos, ypos);

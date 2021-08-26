@@ -39,5 +39,5 @@ protected:
 
     GLuint          m_id;
 
-    bool	        m_vFlip;
+    bool            m_vFlip;
 };

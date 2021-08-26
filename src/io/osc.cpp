@@ -12,12 +12,13 @@ bool Osc::isListening() const{
     return listenSocket != nullptr;
 }
 
-bool Osc::start(int _port, std::function<void(const std::string &_cmd, std::mutex &_mutex)> _runCmd) {
+bool Osc::start(int _port, std::function<void(const std::string &_cmd, std::mutex &_mutex)> _runCmd, bool _verbose) {
     if (listenSocket)
         return true;
 
     m_port = _port;
     m_runCmd = _runCmd;
+    m_verbose = _verbose;
         
     // // manually set larger buffer size instead of oscpack per-message size
     // if (UdpSocket::GetUdpBufferSize() == 0)
@@ -43,7 +44,7 @@ bool Osc::start(int _port, std::function<void(const std::string &_cmd, std::mute
         if (!what.empty() && what.back() == '\n') {
             what = what.substr(0, what.size()-1);
         }
-        std::cerr << "Osc, couldn't create receiver on port " << m_port << ": " << what << std::endl;
+        std::cerr << "// Osc, couldn't create receiver on port " << m_port << ": " << what << std::endl;
         if (socket != nullptr){
             delete socket;
             socket = nullptr;
@@ -51,7 +52,7 @@ bool Osc::start(int _port, std::function<void(const std::string &_cmd, std::mute
         return false;
     }
 
-    std::cout << "OSC listening at localhost:" << m_port << std::endl;
+    std::cout << "// OSC listening at localhost:" << m_port << std::endl;
 
     listenThread = std::thread([this]{
         while (listenSocket) {
@@ -104,10 +105,10 @@ void Osc::ProcessMessage( const osc::ReceivedMessage& _m, const IpEndpointName& 
                 line += "," + toString( arg->AsInt64Unchecked() );
             }
             else if ( arg->IsFloat() ) {
-                line += "," + toString( arg->AsFloatUnchecked(), 3 );
+                line += "," + toString( arg->AsFloatUnchecked(), 8 );
             }
             else if ( arg->IsDouble() ) {
-                line += "," + toString( arg->AsDoubleUnchecked(), 6 );
+                line += "," + toString( arg->AsDoubleUnchecked(), 8 );
             }
             // else if(arg->IsRgbaColor()){
             //      line += "," + arg->AsRgbaColorUnchecked();
@@ -118,8 +119,9 @@ void Osc::ProcessMessage( const osc::ReceivedMessage& _m, const IpEndpointName& 
             arg++;
         }
 
+        if (m_verbose) 
+            std::cout << line << std::endl;
 
-        std::cout << line << std::endl;
         m_runCmd(line, m_mutex); 
     }
     catch( osc::Exception& e ) {
