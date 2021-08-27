@@ -552,7 +552,7 @@ void declareCommands() {
     },
     "sequence,<A_sec>,<B_sec>[,fps] saves a sequence of images from A to B second.", false));
 
-    commands.push_back(Command("sec", [&](const std::string& _line){ 
+    commands.push_back(Command("secs", [&](const std::string& _line){ 
         std::vector<std::string> values = split(_line,',');
         if (values.size() >= 3) {
             int from = toInt(values[1]);
@@ -599,7 +599,7 @@ void declareCommands() {
         }
         return false;
     },
-    "sec,<A_sec>,<B_sec>[,fps] saves a sequence of images from A to B second.", false));
+    "secs,<A_sec>,<B_sec>[,fps] saves a sequence of images from A to B second.", false));
 
     commands.push_back(Command("frames", [&](const std::string& _line){ 
         std::vector<std::string> values = split(_line,',');
