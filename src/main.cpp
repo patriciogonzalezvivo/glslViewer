@@ -550,7 +550,7 @@ void declareCommands() {
         }
         return false;
     },
-    "sequence,<A_sec>,<B_sec>[,fps] saves a sequence of images from A to B second.", false));
+    "", false));
 
     commands.push_back(Command("secs", [&](const std::string& _line){ 
         std::vector<std::string> values = split(_line,',');
