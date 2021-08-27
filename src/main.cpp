@@ -518,7 +518,7 @@ void declareCommands() {
             }
 
             consoleMutex.lock();
-            sandbox.record(from, to, fps);
+            sandbox.recordSecs(from, to, fps);
             consoleMutex.unlock();
 
             std::cout << "// " << std::endl;
@@ -551,6 +551,104 @@ void declareCommands() {
         return false;
     },
     "sequence,<A_sec>,<B_sec>[,fps] saves a sequence of images from A to B second.", false));
+
+    commands.push_back(Command("sec", [&](const std::string& _line){ 
+        std::vector<std::string> values = split(_line,',');
+        if (values.size() >= 3) {
+            int from = toInt(values[1]);
+            int to = toInt(values[2]);
+            float fps = 24.0;
+
+            if (values.size() == 4)
+                fps = toFloat(values[3]);
+
+            if (from >= to) {
+                from = 0;
+            }
+
+            consoleMutex.lock();
+            sandbox.recordSecs(from, to, fps);
+            consoleMutex.unlock();
+
+            std::cout << "// " << std::endl;
+
+            int pct = 0;
+            while (pct < 100) {
+                // Delete previous line
+                const std::string deleteLine = "\e[2K\r\e[1A";
+                std::cout << deleteLine;
+
+                // Check progres.
+                consoleMutex.lock();
+                pct = sandbox.getRecordedPercentage();
+                consoleMutex.unlock();
+                
+                std::cout << "// [ ";
+                for (int i = 0; i < 50; i++) {
+                    if (i < pct/2) {
+                        std::cout << "#";
+                    }
+                    else {
+                        std::cout << ".";
+                    }
+                }
+                std::cout << " ] " << pct << "%" << std::endl;
+                pal_sleep( getRestSec() * 1000000 );
+            }
+            return true;
+        }
+        return false;
+    },
+    "sec,<A_sec>,<B_sec>[,fps] saves a sequence of images from A to B second.", false));
+
+    commands.push_back(Command("frames", [&](const std::string& _line){ 
+        std::vector<std::string> values = split(_line,',');
+        if (values.size() >= 3) {
+            float from = toFloat(values[1]);
+            float to = toFloat(values[2]);
+            float fps = 24.0;
+
+            if (values.size() == 4)
+                fps = toFloat(values[3]);
+
+            if (from >= to) {
+                from = 0.0;
+            }
+
+            consoleMutex.lock();
+            sandbox.recordFrames(from, to, fps);
+            consoleMutex.unlock();
+
+            std::cout << "// " << std::endl;
+
+            int pct = 0;
+            while (pct < 100) {
+                // Delete previous line
+                const std::string deleteLine = "\e[2K\r\e[1A";
+                std::cout << deleteLine;
+
+                // Check progres.
+                consoleMutex.lock();
+                pct = sandbox.getRecordedPercentage();
+                consoleMutex.unlock();
+                
+                std::cout << "// [ ";
+                for (int i = 0; i < 50; i++) {
+                    if (i < pct/2) {
+                        std::cout << "#";
+                    }
+                    else {
+                        std::cout << ".";
+                    }
+                }
+                std::cout << " ] " << pct << "%" << std::endl;
+                pal_sleep( getRestSec() * 1000000 );
+            }
+            return true;
+        }
+        return false;
+    },
+    "frames,<A_sec>,<B_sec>[,fps] saves a sequence of images from frame A to B.", false));
 
     commands.push_back(Command("q", [&](const std::string& _line){ 
         if (_line == "q") {

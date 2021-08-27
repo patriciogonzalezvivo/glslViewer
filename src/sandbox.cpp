@@ -49,7 +49,10 @@ Sandbox::Sandbox():
     // Geometry helpers
     m_billboard_vbo(nullptr), m_cross_vbo(nullptr),
     // Record
-    m_record_fdelta(0.04166666667), m_record_start(0.0f), m_record_head(0.0f), m_record_end(0.0f), m_record_counter(0), m_record(false),
+    m_record_fdelta(0.04166666667), m_record_counter(0), 
+    m_record_sec_start(0.0f), m_record_sec_head(0.0f), m_record_sec_end(0.0f), m_record_sec(false),
+    m_record_frame_start(0), m_record_frame_head(0), m_record_frame_end(0), m_record_frame(false),
+
     // Histogram
     m_histogram_texture(nullptr), m_histogram(false),
     // Scene
@@ -67,16 +70,19 @@ Sandbox::Sandbox():
     // TIME UNIFORMS
     //
     uniforms.functions["u_frame"] = UniformFunction( "int", [this](Shader& _shader) {
+        if (m_record_sec) _shader.setUniform("u_frame", (int)(m_record_sec_start / m_record_fdelta) + m_record_counter);
+        else if (m_record_frame) _shader.setUniform("u_frame", m_record_frame_head);
         _shader.setUniform("u_frame", (int)m_frame);
     }, [this]() { return toString(m_frame); } );
 
     uniforms.functions["u_time"] = UniformFunction( "float", [this](Shader& _shader) {
-        if (m_record) _shader.setUniform("u_time", m_record_head);
+        if (m_record_sec) _shader.setUniform("u_time", m_record_sec_head);
+        else if (m_record_frame) _shader.setUniform("u_time", m_record_frame_head * m_record_fdelta);
         else _shader.setUniform("u_time", float(getTime()) - m_time_offset);
     }, [this]() { return toString(getTime() - m_time_offset); } );
 
     uniforms.functions["u_delta"] = UniformFunction("float", [this](Shader& _shader) {
-        if (m_record) _shader.setUniform("u_delta", float(m_record_fdelta));
+        if (m_record_sec || m_record_frame) _shader.setUniform("u_delta", float(m_record_fdelta));
         else _shader.setUniform("u_delta", float(getDelta()));
     },
     []() { return toString(getDelta()); });
@@ -711,7 +717,7 @@ bool Sandbox::haveChange() {
     // std::cout << std::endl;
 
     return  m_change ||
-            m_record ||
+            m_record_sec || m_record_frame ||
             screenshotFile != "" ||
             m_scene.haveChange() ||
             uniforms.haveChange();
@@ -722,7 +728,12 @@ std::string Sandbox::getSource(ShaderType _type) const {
 }
 
 int Sandbox::getRecordedPercentage() {
-    return ((m_record_head - m_record_start) / (m_record_end - m_record_start)) * 100;
+    if (m_record_sec)
+        return ((m_record_sec_head - m_record_sec_start) / (m_record_sec_end - m_record_sec_start)) * 100;
+    else if (m_record_frame)
+        return ( (float)(m_record_frame_head - m_record_frame_start) / (float)(m_record_frame_end - m_record_frame_start)) * 100;
+    else 
+        return 100;
 }
 
 // ------------------------------------------------------------------------- RELOAD SHADER
@@ -992,7 +1003,7 @@ void Sandbox::render() {
     
     // MAIN SCENE
     // ----------------------------------------------- < main scene start
-    if (screenshotFile != "" || m_record)
+    if (screenshotFile != "" || m_record_sec || m_record_frame)
         if (!m_record_fbo.isAllocated())
             m_record_fbo.allocate(getWindowWidth(), getWindowHeight(), COLOR_TEXTURE_DEPTH_BUFFER);
 
@@ -1000,7 +1011,7 @@ void Sandbox::render() {
         _updateSceneBuffer(getWindowWidth(), getWindowHeight());
         m_scene_fbo.bind();
     }
-    else if (screenshotFile != "" || m_record )
+    else if (screenshotFile != "" || m_record_sec || m_record_frame )
         m_record_fbo.bind();
 
     // Clear the background
@@ -1125,7 +1136,7 @@ void Sandbox::render() {
     if (m_postprocessing) {
         m_scene_fbo.unbind();
 
-        if (screenshotFile != "" || m_record)
+        if (screenshotFile != "" || m_record_sec || m_record_frame)
             m_record_fbo.bind();
     
         m_postprocessing_shader.use();
@@ -1148,7 +1159,7 @@ void Sandbox::render() {
     else if (m_histogram) {
         m_scene_fbo.unbind();
 
-        if (screenshotFile != "" || m_record)
+        if (screenshotFile != "" || m_record_sec || m_record_frame)
             m_record_fbo.bind();
 
         if (!m_billboard_shader.isLoaded())
@@ -1163,7 +1174,7 @@ void Sandbox::render() {
         m_billboard_vbo->render( &m_billboard_shader );
     }
     
-    if (screenshotFile != "" || m_record) {
+    if (screenshotFile != "" || m_record_sec || m_record_frame) {
         m_record_fbo.unbind();
 
         if (!m_billboard_shader.isLoaded())
@@ -1362,14 +1373,19 @@ void Sandbox::renderUI() {
 
 void Sandbox::renderDone() {
     // RECORD
-    if (m_record) {
+    if (m_record_sec || m_record_frame) {
         onScreenshot(toString(m_record_counter, 0, 5, '0') + ".png");
-
-        m_record_head += m_record_fdelta;
         m_record_counter++;
 
-        if (m_record_head >= m_record_end) {
-            m_record = false;
+        if (m_record_sec) {
+            m_record_sec_head += m_record_fdelta;
+            if (m_record_sec_head >= m_record_sec_end)
+                m_record_sec = false;
+        }
+        else {
+            m_record_frame_head++;
+            if (m_record_frame_head >= m_record_frame_end)
+                m_record_frame = false;
         }
     }
     // SCREENSHOT 
@@ -1409,13 +1425,24 @@ void Sandbox::clear() {
         delete m_cross_vbo;
 }
 
-void Sandbox::record(float _start, float _end, float fps) {
+void Sandbox::recordSecs(float _start, float _end, float fps) {
     m_record_fdelta = 1.0/fps;
-    m_record_start = _start;
-    m_record_head = _start;
-    m_record_end = _end;
     m_record_counter = 0;
-    m_record = true;
+
+    m_record_sec_start = _start;
+    m_record_sec_head = _start;
+    m_record_sec_end = _end;
+    m_record_sec = true;
+}
+
+void Sandbox::recordFrames(int _start, int _end, float fps) {
+    m_record_fdelta = 1.0/fps;
+    m_record_counter = 0;
+
+    m_record_frame_start = _start;
+    m_record_frame_head = _start;
+    m_record_frame_end = _end;
+    m_record_frame = true;
 }
 
 void Sandbox::printDependencies(ShaderType _type) const {
@@ -1543,7 +1570,7 @@ void Sandbox::onViewportResize(int _newWidth, int _newHeight) {
     if (m_postprocessing || m_histogram)
         _updateSceneBuffer(_newWidth, _newHeight);
 
-    if (m_record || screenshotFile != "")
+    if (screenshotFile != "" || m_record_sec || m_record_frame)
         m_record_fbo.allocate(_newWidth, _newHeight, COLOR_TEXTURE_DEPTH_BUFFER);
 
     flagChange();
@@ -1623,7 +1650,7 @@ void Sandbox::onScreenshot(std::string _file) {
             }
         }
     
-        if (!m_record) {
+        if (!m_record_sec && !m_record_frame) {
             std::cout << "// Screenshot saved to " << _file << std::endl;
             std::cout << "// > ";
         }

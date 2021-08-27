@@ -33,7 +33,8 @@ public:
     
     bool                isReady();
 
-    void                record( float _start, float _end, float fps = 24.0 );
+    void                recordSecs( float _start, float _end, float fps = 24.0 );
+    void                recordFrames( int _start, int _end, float fps = 24.0 );
     int                 getRecordedPercentage();
 
     void                addDefine( const std::string &_define, const std::string &_value = "");
@@ -121,11 +122,17 @@ private:
     // Recording
     Fbo                 m_record_fbo;
     float               m_record_fdelta;
-    float               m_record_start;
-    float               m_record_head;
-    float               m_record_end;
     int                 m_record_counter;
-    bool                m_record;
+    
+    float               m_record_sec_start;
+    float               m_record_sec_head;
+    float               m_record_sec_end;
+    bool                m_record_sec;
+
+    int                 m_record_frame_start;
+    int                 m_record_frame_head;
+    int                 m_record_frame_end;
+    bool                m_record_frame;
 
     // Histogram
     Shader              m_histogram_shader;
