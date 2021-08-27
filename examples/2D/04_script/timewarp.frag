@@ -16,7 +16,6 @@ uniform vec2 u_tex3Resolution;
 
 uniform float u_A;
 uniform float u_B;
-uniform float u_cycle;
 
 #ifndef GAUSSIANBLUR2D_TYPE
 #define GAUSSIANBLUR2D_TYPE vec2
@@ -59,7 +58,7 @@ void main (void) {
     vec2 st = uv;
     
     float time = u_time;
-    float cycle = u_cycle;
+    float cycle = 1.0;
     float pct = fract(time/cycle);
 
     vec2 A_DIR = gaussianBlur2D(u_tex0, st, pixel * 3., 9);
@@ -77,7 +76,7 @@ void main (void) {
     color = mix(A_RGB, B_RGB, pct);
 
     // color = vec3((B_DIR * 10.0) * 0.5 + 0.5, 0.0);
-    // color += step(st.x, pct) * step(st.y, 0.005);
+    color += step(st.x, pct) * step(st.y, 0.005);
 
     gl_FragColor = vec4(color,1.0);
 }

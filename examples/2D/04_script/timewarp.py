@@ -87,7 +87,7 @@ def interpolate(A_flow, A_div, A,
                 B_flow, B_div, B, 
                 sec, target_folder, start_index, width, height):
     
-    cmd = f"glslViewer timewarp.frag --headless {A_flow} {A} {B_flow} {B} -w {width} -h {height} -e u_cycle,{sec} -e u_A,{A_div} -e u_B,{B_div} -E sequence,0,{sec}"
+    cmd = f"glslViewer timewarp.frag --headless {A_flow} {A} {B_flow} {B} -w {width} -h {height} -e u_A,{A_div} -e u_B,{B_div} -E sequence,0,{sec}"
     print(cmd)
     subprocess.call(cmd, shell=True) 
 
@@ -158,5 +158,5 @@ if __name__ == '__main__':
         print('Frame:', str(frame) + '/' + str(len(frames)))
         index = interpolate(A['flow'], A['div'], A['rgb'],  
                             B['flow'], B['div'], B['rgb'], 
-                            0.25, FOLDER_SUB_FRAMES, index, WIDTH, HEIGHT)
+                            1, FOLDER_SUB_FRAMES, index, WIDTH, HEIGHT)
         frame += 1
