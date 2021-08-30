@@ -624,9 +624,11 @@ TextureStreamMMAL::~TextureStreamMMAL() {
     clear();
 }
 
-bool TextureStreamMMAL::load(const std::string& _filepath, bool _vFlip) {
+bool TextureStreamMMAL::load(const std::string& _filepath, bool _vFlip, TextureFilter _filter, TextureWrap _wrap) {
     m_path = _filepath;
     m_vFlip = _vFlip;
+    m_filter = _filter;
+    m_wrap = _wrap;
 
     m_width = 1920;     //640;
     m_height = 1080;    //480;
@@ -866,10 +868,10 @@ bool TextureStreamMMAL::load(const std::string& _filepath, bool _vFlip) {
     glBindTexture(GL_TEXTURE_2D, m_id);
     // Allocate the texture
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_width, m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, getMinificationFilter(m_filter));
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, getMagnificationFilter(m_filter));
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, getWrap(m_wrap));
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, getWrap(m_wrap));
    
     // Bind Texture ID with the FBO
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_id, 0);

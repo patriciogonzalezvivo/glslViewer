@@ -156,8 +156,10 @@ void get_info(const char *filename, int* _width, int* _height) {
 #endif
 
 // Mostly from https://jan.newmarch.name/RPi/OpenMAX/EGL/
-bool TextureStreamOMX::load(const std::string& _filepath, bool _vFlip) {
-
+bool TextureStreamOMX::load(const std::string& _filepath, bool _vFlip, TextureFilter _filter, TextureWrap _wrap) {
+    m_filter = _filter;
+    m_wrap = _wrap;
+    
     // TODOs:
     //  - get video width and height
 
@@ -175,10 +177,10 @@ bool TextureStreamOMX::load(const std::string& _filepath, bool _vFlip) {
     glTexImage2D(   GL_TEXTURE_2D, 0, GL_RGBA, m_width, m_height, 0,
                     GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, getMinificationFilter(m_filter));
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, getMagnificationFilter(m_filter));
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, getWrap(m_wrap));
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, getWrap(m_wrap));
 
     /* Create EGL Image */
     m_eglImage = createImage( getEGLDisplay(), getEGLContext(), EGL_GL_TEXTURE_2D_KHR, (EGLClientBuffer)m_id, 0);

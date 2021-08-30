@@ -28,29 +28,31 @@ void setFps(int _fps);
 
 //	GET
 //----------------------------------------------
-glm::ivec2 getScreenSize();
-float getPixelDensity();
+glm::ivec2  getScreenSize();
+float       getPixelDensity();
 
-glm::ivec4 getViewport();
-glm::mat4 getOrthoMatrix();
-int getWindowWidth();
-int getWindowHeight();
+glm::ivec4  getViewport();
+glm::mat4   getOrthoMatrix();
+int         getWindowWidth();
+int         getWindowHeight();
 
-glm::vec4 getDate();
-double getTime();
-double getDelta();
-double getFps();
-float  getRestSec();
+glm::vec4   getDate();
+double      getTime();
+double      getDelta();
+double      getFps();
+float       getRestSec();
+int         getRestMs();
+int         getRestUs();
 
-float getMouseX();
-float getMouseY();
-glm::vec2 getMousePosition();
-float getMouseVelX();
-float getMouseVelY();
-glm::vec2 getMouseVelocity();
-int getMouseButton();
-glm::vec4 getMouse4();
-bool getMouseEntered();
+float       getMouseX();
+float       getMouseY();
+glm::vec2   getMousePosition();
+float       getMouseVelX();
+float       getMouseVelY();
+glm::vec2   getMouseVelocity();
+int         getMouseButton();
+glm::vec4   getMouse4();
+bool        getMouseEntered();
 
 // EVENTS
 //----------------------------------------------

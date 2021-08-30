@@ -12,7 +12,7 @@ public:
     virtual int     getTotalFrames() { return m_frames.size(); };
     virtual int     getCurrentFrame() { return m_currentFrame; };
 
-    virtual bool    load(const std::string& _filepath, bool _vFlip);
+    virtual bool    load(const std::string& _filepath, bool _vFlip, TextureFilter _filter = LINEAR, TextureWrap _wrap = REPEAT);
     virtual bool    update();
     virtual void    clear();
 

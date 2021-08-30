@@ -11,9 +11,11 @@ TextureStreamSequence::~TextureStreamSequence() {
     clear();
 }
 
-bool TextureStreamSequence::load(const std::string& _path, bool _vFlip) {
+bool TextureStreamSequence::load(const std::string& _path, bool _vFlip, TextureFilter _filter, TextureWrap _wrap) {
     m_path = _path;
     m_vFlip = _vFlip;
+    m_filter = _filter;
+    m_wrap = _wrap;
 
     std::vector<std::string> files = glob(_path);
     for (size_t i = 0; i < files.size(); i++) {
@@ -83,7 +85,7 @@ bool TextureStreamSequence::update() {
     if (m_frames.size() == 0)
         return false;
 
-    if ( Texture::load(m_width, m_height, 4, m_bits, m_frames[ m_currentFrame ]) ) {
+    if ( Texture::load(m_width, m_height, 4, m_bits, m_frames[ m_currentFrame ], m_filter, m_wrap) ) {
         m_currentFrame = (m_currentFrame + 1) % m_frames.size();
         return true;
     }

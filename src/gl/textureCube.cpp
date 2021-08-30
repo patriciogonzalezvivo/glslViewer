@@ -285,8 +285,10 @@ void splitFacesFromEquilateral(T *_data, unsigned int _width, unsigned int _heig
     }
 }
 
-bool TextureCube::load(const std::string &_path, bool _vFlip) {
+bool TextureCube::load(const std::string &_path, bool _vFlip, TextureFilter _filter, TextureWrap _wrap) {
     std::string ext = getExt(_path);
+    m_filter = _filter;
+    m_wrap = _wrap;
 
     if (m_id != 0) {
         // Init

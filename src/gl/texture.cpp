@@ -89,7 +89,7 @@ bool Texture::load(int _width, int _height, int _channels, int _bits, const void
     if (_width == m_width && _height == m_height &&
         _filter == m_filter && _wrap == m_wrap &&
         format == m_format && type == m_type)
-        return update(0,0,_width,_height, _data);
+        return updateData(0,0,_width,_height, _data);
 
     m_width = _width;
     m_height = _height;
@@ -146,7 +146,7 @@ bool Texture::load(int _width, int _height, int _channels, int _bits, const void
     return true;
 }
 
-bool Texture::update(int _x, int _y, int _width, int _height, const void* _data) {
+bool Texture::updateData(int _x, int _y, int _width, int _height, const void* _data) {
     // glActiveTexture(GL_TEXTURE0);
     glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, m_id);

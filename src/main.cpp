@@ -280,7 +280,7 @@ void declareCommands() {
                         filesMutex.lock();
                         fileChanged = i;
                         filesMutex.unlock();
-                        pal_sleep( getRestSec() * 10000000 );
+                        std::this_thread::sleep_for(std::chrono::milliseconds( getRestMs() ));
                 }
             }
             fullFps = false;
@@ -300,7 +300,7 @@ void declareCommands() {
                         filesMutex.lock();
                         fileChanged = i;
                         filesMutex.unlock();
-                        pal_sleep( getRestSec() * 10000000 );
+                        std::this_thread::sleep_for(std::chrono::milliseconds( getRestMs() ));
                 }
             }
             fullFps = false;
@@ -317,7 +317,7 @@ void declareCommands() {
                 filesMutex.lock();
                 fileChanged = i;
                 filesMutex.unlock();
-                pal_sleep( getRestSec() * 10000000 );
+                std::this_thread::sleep_for(std::chrono::milliseconds( getRestMs() ));
             }
             fullFps = false;
             return true;
@@ -449,11 +449,18 @@ void declareCommands() {
     commands.push_back(Command("wait", [&](const std::string& _line){ 
         std::vector<std::string> values = split(_line,',');
         if (values.size() == 2) {
-            pal_sleep( toFloat(values[1])*1000000 ); 
+            if (values[0] == "wait_sec")
+                std::this_thread::sleep_for(std::chrono::seconds( toInt(values[1])) );
+            else if (values[0] == "wait_ms")
+                std::this_thread::sleep_for(std::chrono::milliseconds( toInt(values[1])) );
+            else if (values[0] == "wait_us")
+                std::this_thread::sleep_for(std::chrono::microseconds( toInt(values[1])) );
+            else
+                std::this_thread::sleep_for(std::chrono::microseconds( (int)(toFloat(values[1]) * 1000000) ));
         }
         return false;
     },
-    "wait,<seconds>                 wait for X <seconds> before excecuting another command."));
+    "wait,<seconds>                 wait for X <seconds> before excecuting another command.", false));
 
     commands.push_back(Command("fullFps", [&](const std::string& _line){
         if (_line == "fullFps") {
@@ -544,7 +551,7 @@ void declareCommands() {
                     }
                 }
                 std::cout << " ] " << pct << "%" << std::endl;
-                pal_sleep( getRestSec() * 1000000 );
+                std::this_thread::sleep_for(std::chrono::milliseconds( getRestMs() ));
             }
             return true;
         }
@@ -593,7 +600,7 @@ void declareCommands() {
                     }
                 }
                 std::cout << " ] " << pct << "%" << std::endl;
-                pal_sleep( getRestSec() * 1000000 );
+                std::this_thread::sleep_for(std::chrono::milliseconds( getRestMs() ));
             }
             return true;
         }
@@ -642,7 +649,7 @@ void declareCommands() {
                     }
                 }
                 std::cout << " ] " << pct << "%" << std::endl;
-                pal_sleep( getRestSec() * 1000000 );
+                std::this_thread::sleep_for(std::chrono::milliseconds( getRestMs() ));
             }
             return true;
         }
@@ -1090,7 +1097,7 @@ int main(int argc, char **argv){
 
         // If nothing in the scene change skip the frame and try to keep it at 60fps
         if (!timeOut && !fullFps && !sandbox.haveChange()) {
-            pal_sleep( getRestSec() * 1000000 );
+            std::this_thread::sleep_for(std::chrono::milliseconds( getRestMs() ));
             continue;
         }
 
@@ -1197,7 +1204,7 @@ void fileWatcherThread() {
                 }
             }
         }
-        pal_sleep(500000);
+        std::this_thread::sleep_for(std::chrono::milliseconds( 500 ));
     }
 }
 
@@ -1238,6 +1245,7 @@ void runCmd(const std::string &_cmd, std::mutex &_mutex) {
 void cinWatcherThread() {
     while (!sandbox.isReady()) {
         pal_sleep( getRestSec() * 1000000 );
+        std::this_thread::sleep_for(std::chrono::milliseconds( getRestMs() ));
     }
 
     // Argument commands to execute comming from -e or -E

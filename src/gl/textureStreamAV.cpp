@@ -68,8 +68,10 @@ TextureStreamAV::~TextureStreamAV() {
     clear();
 }
 
-bool TextureStreamAV::load(const std::string& _path, bool _vFlip) {
+bool TextureStreamAV::load(const std::string& _path, bool _vFlip, TextureFilter _filter, TextureWrap _wrap) {
     m_vFlip = _vFlip;
+    m_filter = _filter;
+    m_wrap = _wrap;
 
     // https://github.com/bartjoyce/video-app/blob/master/src/video_reader.cpp#L35-L40
     // Open the file using libavformat
@@ -189,10 +191,10 @@ bool TextureStreamAV::load(const std::string& _path, bool _vFlip) {
     glBindTexture(GL_TEXTURE_2D, m_id);
 
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, getMinificationFilter(m_filter));
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, getMagnificationFilter(m_filter));
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, getWrap(m_wrap));
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, getWrap(m_wrap));
 
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, m_width, m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 
@@ -278,7 +280,7 @@ bool TextureStreamAV::update() {
         flipPixelsVertically(frame_data, av_codec_ctx->width, av_codec_ctx->height, 4);
     
     m_currentFrame++;
-    return Texture::load(av_codec_ctx->width, av_codec_ctx->height, 4, 8, frame_data);
+    return Texture::load(av_codec_ctx->width, av_codec_ctx->height, 4, 8, frame_data, m_filter, m_wrap);
 }
 
 double TextureStreamAV::getFPS() {

@@ -59,7 +59,7 @@ TextureAudio::~TextureAudio() {
     this->clear();
 }
 
-bool TextureAudio::load(const std::string &_device_id_str, bool /*_vFlip*/) {
+bool TextureAudio::load(const std::string &_device_id_str, bool _vFlip, TextureFilter _filter, TextureWrap _wrap) {
 
     ma_uint32 playbackDeviceCount = 0;
     ma_uint32 captureDeviceCount = 0;
@@ -148,6 +148,9 @@ bool TextureAudio::load(const std::string &_device_id_str, bool /*_vFlip*/) {
         return false;
     }
 
+    m_filter = _filter;
+    m_wrap = _wrap;
+
     return true;
 }
 
@@ -205,7 +208,7 @@ bool TextureAudio::update() {
             m_texture[i*4] = mag_uint8;
         }
     }
-    Texture::load(m_width, m_height, 4, 8, &m_texture[0]);
+    Texture::load(m_width, m_height, 4, 8, &m_texture[0], m_filter, m_wrap);
     return true;
 }
 

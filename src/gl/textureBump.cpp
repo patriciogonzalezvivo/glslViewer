@@ -9,7 +9,7 @@
 #include "../io/fs.h"
 #include "../io/pixels.h"
 
-bool TextureBump::load(const std::string& _path, bool _vFlip) {
+bool TextureBump::load(const std::string& _path, bool _vFlip, TextureFilter _filter, TextureWrap _wrap) {
     std::string ext = getExt(_path);
 
     // Generate an OpenGL texture ID for this texture
@@ -69,7 +69,7 @@ bool TextureBump::load(const std::string& _path, bool _vFlip) {
         }
         freePixels(pixels);
 
-        Texture::load(m_width, m_height, 4, 32, &result[0]);
+        Texture::load(m_width, m_height, 4, 32, &result[0], _filter, _wrap);
     }
 
     m_path = _path;

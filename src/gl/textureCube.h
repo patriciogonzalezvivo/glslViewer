@@ -10,7 +10,7 @@ public:
     TextureCube();
     virtual ~TextureCube();
 
-    virtual bool    load(const std::string &_fileName, bool _vFlip = true);
+    virtual bool    load(const std::string &_fileName, bool _vFlip = true, TextureFilter _filter = LINEAR, TextureWrap _wrap = REPEAT);
     virtual bool    generate(SkyBox* _skybox, int _width = 512 );
 
     virtual void    bind();

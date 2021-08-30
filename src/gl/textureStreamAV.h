@@ -24,7 +24,7 @@ public:
     virtual int     getCurrentFrame();
     virtual double  getFPS();
 
-    virtual bool    load(const std::string& _filepath, bool _vFlip);
+    virtual bool    load(const std::string& _filepath, bool _vFlip, TextureFilter _filter = LINEAR, TextureWrap _wrap = REPEAT);
     virtual bool    update();
     virtual void    clear();
 

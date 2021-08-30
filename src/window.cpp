@@ -889,8 +889,16 @@ double getFps() {
     return fFPS;
 }
 
-float  getRestSec() {
+float getRestSec() {
     return fRestSec;
+}
+
+int getRestMs() {
+    return fRestSec * 1000;
+}
+
+int getRestUs() {
+    return fRestSec * 1000000;
 }
 
 float getMouseX(){
