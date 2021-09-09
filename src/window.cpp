@@ -828,23 +828,12 @@ float getPixelDensity() {
     #endif
 }
 
-glm::ivec4 getViewport() {
-    return viewport;
-}
+glm::ivec4  getViewport() { return viewport; }
+int         getWindowWidth() { return viewport.z * fPixelDensity; }
+int         getWindowHeight() { return viewport.w * fPixelDensity; }
+glm::mat4   getOrthoMatrix() { return orthoMatrix; }
 
-int getWindowWidth() {
-    return viewport.z * fPixelDensity;
-}
-
-int getWindowHeight() {
-    return viewport.w * fPixelDensity;
-}
-
-glm::mat4 getOrthoMatrix() {
-    return orthoMatrix;
-}
-
-glm::vec4 getDate() {
+glm::vec4   getDate() {
 #ifdef _MSC_VER
     time_t tv = time(NULL);
 
@@ -873,66 +862,40 @@ glm::vec4 getDate() {
   
 }
 
-double getTime() {
-    return fTime;
+double  getTime() { return fTime; }
+double  getDelta() { return fDelta; }
+
+void    setFps(int _fps) { fRestSec = 1.0f/(float)_fps; }
+double  getFps() { return fFPS; }
+
+float   getRestSec() { return fRestSec; }
+int     getRestMs() { return fRestSec * 1000; }
+int     getRestUs() { return fRestSec * 1000000; }
+
+void    setMousePosition( float _x, float _y ) {
+    mouse.x = _x;
+    mouse.y = _y;
+    mouse.velX = 0.0f;
+    mouse.velY = 0.0f;
+    mouse.drag.x = _x;
+    mouse.drag.y = _y;
+    #if defined(DRIVER_GLFW)
+    float y = glm::clamp(_y, 0.0f, (float)getWindowHeight());
+    glfwSetCursorPos(window, _x, getWindowHeight() - y);
+    #endif
 }
 
-double getDelta() {
-    return fDelta;
-}
+void    setMousePosition( glm::vec2 _pos ) { setMousePosition(_pos.x, _pos.y); }
 
-void setFps(int _fps) {
-    fRestSec = 1.0f/(float)_fps;
-}
+float   getMouseX() { return mouse.x; }
+float   getMouseY() { return mouse.y; }
+glm::vec2 getMousePosition() { return glm::vec2(mouse.x, mouse.y); }
 
-double getFps() {
-    return fFPS;
-}
+float   getMouseVelX() { return mouse.velX; }
+float   getMouseVelY() { return mouse.velY; }
+glm::vec2 getMouseVelocity() { return glm::vec2(mouse.velX, mouse.velY); }
 
-float getRestSec() {
-    return fRestSec;
-}
+int     getMouseButton() { return mouse.button; }
+glm::vec4 getMouse4() { return mouse4; }
+bool    getMouseEntered() { return mouse.entered; }
 
-int getRestMs() {
-    return fRestSec * 1000;
-}
-
-int getRestUs() {
-    return fRestSec * 1000000;
-}
-
-float getMouseX(){
-    return mouse.x;
-}
-
-float getMouseY(){
-    return mouse.y;
-}
-
-glm::vec2 getMousePosition() {
-    return glm::vec2(mouse.x,mouse.y);
-}
-
-float getMouseVelX(){
-    return mouse.velX;
-}
-
-float getMouseVelY(){
-    return mouse.velY;
-}
-
-glm::vec2 getMouseVelocity() {
-    return glm::vec2(mouse.velX,mouse.velY);
-}
-
-int getMouseButton(){
-    return mouse.button;
-}
-
-glm::vec4 getMouse4() {
-    return mouse4;
-}
-
-bool getMouseEntered(){
-    return mouse.entered;
-}

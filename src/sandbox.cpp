@@ -1527,6 +1527,20 @@ void Sandbox::onScroll(float _yoffset) {
 }
 
 void Sandbox::onMouseDrag(float _x, float _y, int _button) {
+    float x = _x;
+    float y = _y;
+    std::cout << "mouse " << x << " " << y << std::endl;
+
+
+    if (x <= 0) x = getWindowWidth();
+    else if (x > getWindowWidth()) x = 0; 
+
+    if (y <= 0) y = getWindowHeight() - 2;
+    else if (y >= getWindowHeight()) y = 2;
+
+    if (x != _x || y != _y) setMousePosition(x, y);
+    // else {
+
     if (_button == 1) {
         // Left-button drag is used to pan u_view2d.
         m_view2d = glm::translate(m_view2d, -getMouseVelocity());
@@ -1552,6 +1566,8 @@ void Sandbox::onMouseDrag(float _x, float _y, int _button) {
             uniforms.getCamera().orbit(m_lat, m_lon, dist);
         }
     }
+    
+    // }
 }
 
 void Sandbox::onViewportResize(int _newWidth, int _newHeight) {

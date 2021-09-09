@@ -22,9 +22,12 @@ void closeGL();
 //	SET
 //----------------------------------------------
 void updateViewport();
+
+void setFps(int _fps);
 void setViewport(float _width, float _height);
 void setWindowSize(int _width, int _height);
-void setFps(int _fps);
+void setMousePosition(float _x, float _y);
+void setMousePosition(glm::vec2 _pos);
 
 //	GET
 //----------------------------------------------
