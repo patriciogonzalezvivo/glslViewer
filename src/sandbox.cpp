@@ -1529,8 +1529,6 @@ void Sandbox::onScroll(float _yoffset) {
 void Sandbox::onMouseDrag(float _x, float _y, int _button) {
     float x = _x;
     float y = _y;
-    std::cout << "mouse " << x << " " << y << std::endl;
-
 
     if (x <= 0) x = getWindowWidth();
     else if (x > getWindowWidth()) x = 0; 
