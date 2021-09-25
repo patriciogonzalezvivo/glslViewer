@@ -1,7 +1,0 @@
-GL_KHR_parallel_shader_compile
-http://www.opengl.org/registry/specs/KHR/parallel_shader_compile.txt
-GL_KHR_parallel_shader_compile
-
-	GL_MAX_SHADER_COMPILER_THREADS_KHR 0x91B0
-	GL_COMPLETION_STATUS_KHR 0x91B1
-	void glMaxShaderCompilerThreadsKHR (GLuint count)

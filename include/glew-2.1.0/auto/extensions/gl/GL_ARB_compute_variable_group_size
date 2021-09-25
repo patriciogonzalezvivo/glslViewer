@@ -1,9 +1,0 @@
-GL_ARB_compute_variable_group_size
-http://www.opengl.org/registry/specs/ARB/compute_variable_group_size.txt
-GL_ARB_compute_variable_group_size
-
-	GL_MAX_COMPUTE_FIXED_GROUP_INVOCATIONS_ARB 0x90EB
-	GL_MAX_COMPUTE_FIXED_GROUP_SIZE_ARB 0x91BF
-	GL_MAX_COMPUTE_VARIABLE_GROUP_INVOCATIONS_ARB 0x9344
-	GL_MAX_COMPUTE_VARIABLE_GROUP_SIZE_ARB 0x9345
-	void glDispatchComputeGroupSizeARB (GLuint num_groups_x, GLuint num_groups_y, GLuint num_groups_z, GLuint group_size_x, GLuint group_size_y, GLuint group_size_z)

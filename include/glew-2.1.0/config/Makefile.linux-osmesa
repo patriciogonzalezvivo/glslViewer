@@ -1,4 +1,0 @@
-include config/Makefile.linux
-
-LDFLAGS.GL = -lOSMesa
-CFLAGS.EXTRA += -DGLEW_OSMESA

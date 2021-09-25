@@ -1,5 +1,0 @@
-EGL_KHR_swap_buffers_with_damage
-https://www.khronos.org/registry/egl/specs/eglspec.1.5.pdf
-EGL_KHR_swap_buffers_with_damage
-
-	EGLBoolean  eglSwapBuffersWithDamageKHR (EGLDisplay  dpy, EGLSurface  surface, EGLint * rects, EGLint  n_rects)

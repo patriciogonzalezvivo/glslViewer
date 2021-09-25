@@ -1,6 +1,0 @@
-GL_ARB_multi_draw_indirect
-http://www.opengl.org/registry/specs/ARB/multi_draw_indirect.txt
-GL_ARB_multi_draw_indirect
-
-	void glMultiDrawArraysIndirect (GLenum mode, const void *indirect, GLsizei primcount, GLsizei stride)
-	void glMultiDrawElementsIndirect (GLenum mode, GLenum type, const void *indirect, GLsizei primcount, GLsizei stride)

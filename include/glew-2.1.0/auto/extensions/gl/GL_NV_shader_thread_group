@@ -1,7 +1,0 @@
-GL_NV_shader_thread_group
-http://www.opengl.org/registry/specs/NV/shader_thread_group.txt
-GL_NV_shader_thread_group
-
-	GL_WARP_SIZE_NV 0x9339
-	GL_WARPS_PER_SM_NV 0x933A
-	GL_SM_COUNT_NV 0x933B

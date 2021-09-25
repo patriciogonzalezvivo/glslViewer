@@ -1,7 +1,0 @@
-GL_EXT_external_buffer
-http://www.opengl.org/registry/specs/EXT/external_buffer.txt
-GL_EXT_external_buffer
-
-	void glBufferStorageExternalEXT (GLenum target, GLintptr offset, GLsizeiptr size, GLeglClientBufferEXT clientBuffer, GLbitfield flags)
-	void glNamedBufferStorageExternalEXT (GLuint buffer, GLintptr offset, GLsizeiptr size, GLeglClientBufferEXT clientBuffer, GLbitfield flags)
-	typedef void* GLeglClientBufferEXT

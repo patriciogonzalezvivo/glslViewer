@@ -1,13 +1,13 @@
 #pragma once
 
-#include "node.h"
-#include "../gl/fbo.h"
+#include "ada/scene/node.h"
+#include "ada/gl/fbo.h"
 
 enum LightType {
     LIGHT_DIRECTIONAL, LIGHT_POINT, LIGHT_SPOT
 };
 
-class Light : public Node {
+class Light : public ada::Node {
 public:
     Light();
     Light(glm::vec3 _dir);
@@ -19,7 +19,7 @@ public:
     glm::mat4           getMVPMatrix( const glm::mat4 &_model, float _area );
     glm::mat4           getBiasMVPMatrix();
 
-    const Fbo*          getShadowMap() const { return &m_shadowMap; }
+    const ada::Fbo*     getShadowMap() const { return &m_shadowMap; }
 
     void                bindShadowMap();
     void                unbindShadowMap();
@@ -34,7 +34,7 @@ protected:
     virtual void        onOrientationChanged() { bChange = true; };
     virtual void        onScaleChanged() { bChange = true; };
 
-    Fbo                 m_shadowMap;
+    ada::Fbo            m_shadowMap;
     glm::mat4           m_mvp_biased;
     glm::mat4           m_mvp;
 

@@ -1,6 +1,0 @@
-GL_EXT_memory_object_fd
-http://www.opengl.org/registry/specs/EXT/external_objects_fd.txt
-GL_EXT_memory_object_fd
-
-	GL_HANDLE_TYPE_OPAQUE_FD_EXT 0x9586
-	void glImportMemoryFdEXT (GLuint memory, GLuint64 size, GLenum handleType, GLint fd)

@@ -6,11 +6,12 @@
 
 #include "../io/command.h"
 
-#include "../gl/vbo.h"
-#include "../gl/shader.h"
-#include "../gl/textureCube.h"
+#include "ada/gl/vbo.h"
+#include "ada/gl/shader.h"
+#include "ada/gl/textureCube.h"
 
 #include "../scene/model.h"
+#include "../types/skybox.h"
 
 enum CullingMode {
     NONE = 0,
@@ -76,7 +77,7 @@ protected:
     std::vector<Model*>             m_models;
     std::map<std::string,Material>  m_materials;
 
-    Node                m_origin;
+    ada::Node           m_origin;
     glm::mat4           m_mvp;
     float               m_area;
 
@@ -86,32 +87,32 @@ protected:
     bool                m_depth_test;
     
     // Ligth
-    Vbo*                m_lightUI_vbo;
-    Shader              m_lightUI_shader;
+    ada::Vbo*           m_lightUI_vbo;
+    ada::Shader         m_lightUI_shader;
     bool                m_dynamicShadows;
 
     // Background
-    Shader              m_background_shader;
-    Vbo*                m_background_vbo;
+    ada::Shader         m_background_shader;
+    ada::Vbo*           m_background_vbo;
     bool                m_background;
 
     // CubeMap
-    Shader              m_cubemap_shader;
-    Vbo*                m_cubemap_vbo;
+    ada::Shader         m_cubemap_shader;
+    ada::Vbo*           m_cubemap_vbo;
     SkyBox*             m_cubemap_skybox;
 
     SkyBox              m_skybox;
 
-    Shader              m_floor_shader;
-    Vbo*                m_floor_vbo;
+    ada::Shader         m_floor_shader;
+    ada::Vbo*           m_floor_vbo;
     float               m_floor_height;
     int                 m_floor_subd_target;
     int                 m_floor_subd;
 
     // UI Grid
-    Vbo*                m_grid_vbo;
-    Vbo*                m_axis_vbo;
+    ada::Vbo*           m_grid_vbo;
+    ada::Vbo*           m_axis_vbo;
     
     // UI Bbox
-    Shader              m_wireframe3D_shader;
+    ada::Shader         m_wireframe3D_shader;
 };

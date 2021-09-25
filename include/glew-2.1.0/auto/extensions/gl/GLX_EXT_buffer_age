@@ -1,5 +1,0 @@
-GLX_EXT_buffer_age
-http://www.opengl.org/registry/specs/EXT/glx_buffer_age.txt
-GLX_EXT_buffer_age
-
-	GLX_BACK_BUFFER_AGE_EXT 0x20F4

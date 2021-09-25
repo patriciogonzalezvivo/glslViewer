@@ -1,6 +1,0 @@
-GL_ARB_texture_stencil8
-http://www.opengl.org/registry/specs/ARB/texture_stencil8.txt
-GL_ARB_texture_stencil8
-
-	GL_STENCIL_INDEX 0x1901
-	GL_STENCIL_INDEX8 0x8D48

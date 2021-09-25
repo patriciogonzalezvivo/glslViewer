@@ -1,8 +1,0 @@
-GL_NV_clip_space_w_scaling
-http://www.opengl.org/registry/specs/NV/clip_space_w_scaling.txt
-GL_NV_clip_space_w_scaling
-
-	GL_VIEWPORT_POSITION_W_SCALE_NV 0x937C
-	GL_VIEWPORT_POSITION_W_SCALE_X_COEFF_NV 0x937D
-	GL_VIEWPORT_POSITION_W_SCALE_Y_COEFF_NV 0x937E
-	void glViewportPositionWScaleNV (GLuint index, GLfloat xcoeff, GLfloat ycoeff)

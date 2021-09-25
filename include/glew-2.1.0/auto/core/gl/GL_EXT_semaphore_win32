@@ -1,6 +1,0 @@
-GL_EXT_semaphore_win32
-http://www.opengl.org/registry/specs/EXT/external_objects_win32.txt
-GL_EXT_semaphore_win32
-
-	void glImportSemaphoreWin32HandleEXT (GLuint semaphore, GLenum handleType, void *handle)
-	void glImportSemaphoreWin32NameEXT (GLuint semaphore, GLenum handleType, const void *name)

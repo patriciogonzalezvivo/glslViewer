@@ -1,5 +1,0 @@
-GL_ARB_map_buffer_alignment
-http://www.opengl.org/registry/specs/ARB/map_buffer_alignment.txt
-GL_ARB_map_buffer_alignment
-
-	GL_MIN_MAP_BUFFER_ALIGNMENT 0x90BC

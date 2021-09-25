@@ -1,7 +1,0 @@
-GL_SGIX_fragments_instrument
-http://www.opengl.org/registry/specs/SGIX/fragments_instrument.txt
-GL_SGIX_fragments_instrument
-
-	GL_FRAGMENTS_INSTRUMENT_SGIX 0x8313
-	GL_FRAGMENTS_INSTRUMENT_COUNTERS_SGIX 0x8314
-	GL_FRAGMENTS_INSTRUMENT_MAX_SGIX 0x8315

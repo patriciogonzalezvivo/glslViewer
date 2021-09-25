@@ -2,23 +2,23 @@
 
 #include <vector>
 
-#include "node.h"
+#include "ada/gl/vbo.h"
+#include "ada/gl/mesh.h"
+#include "ada/gl/shader.h"
+#include "ada/scene/node.h"
+
 #include "material.h"
 
-#include "gl/vbo.h"
-#include "gl/shader.h"
-
-#include "types/mesh.h"
 
 #include "../uniforms.h"
 
-class Model : public Node {
+class Model : public ada::Node {
 public:
     Model();
-    Model(const std::string& _name, Mesh& _mesh, const Material& _mat);
+    Model(const std::string& _name, ada::Mesh& _mesh, const Material& _mat);
     virtual ~Model();
 
-    bool        loadGeom(Mesh& _mesh);
+    bool        loadGeom(ada::Mesh& _mesh);
     bool        loadShader(const std::string& _fragStr, const std::string& _vertStr, bool verbose);
     bool        loadMaterial(const Material& _material);
 
@@ -38,14 +38,14 @@ public:
     glm::vec3   getMaxBoundingBox() const { return m_bbmax; }
     
     void        render(Uniforms& _uniforms, const glm::mat4& _viewProjectionMatrix );
-    void        render(Shader* _shader);
-    void        renderBbox(Shader* _shader);
+    void        render(ada::Shader* _shader);
+    void        renderBbox(ada::Shader* _shader);
 
 protected:
-    Shader      m_shader;
+    ada::Shader m_shader;
     
-    Vbo*        m_model_vbo;
-    Vbo*        m_bbox_vbo;
+    ada::Vbo*   m_model_vbo;
+    ada::Vbo*   m_bbox_vbo;
 
     glm::vec3   m_bbmin;
     glm::vec3   m_bbmax;

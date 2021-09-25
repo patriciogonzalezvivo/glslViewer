@@ -1,7 +1,0 @@
-GL_SGIX_depth_pass_instrument
-http://www.opengl.org/registry/specs/SGIX/depth_pass_instrument.txt
-GL_SGIX_depth_pass_instrument
-
-	GL_DEPTH_PASS_INSTRUMENT_SGIX 0x8310
-	GL_DEPTH_PASS_INSTRUMENT_COUNTERS_SGIX 0x8311
-	GL_DEPTH_PASS_INSTRUMENT_MAX_SGIX 0x8312

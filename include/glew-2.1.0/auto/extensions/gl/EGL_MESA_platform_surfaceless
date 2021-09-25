@@ -1,5 +1,0 @@
-EGL_MESA_platform_surfaceless
-https://www.khronos.org/registry/egl/specs/eglspec.1.5.pdf
-EGL_MESA_platform_surfaceless
-
-	EGL_PLATFORM_SURFACELESS_MESA 0x31DD

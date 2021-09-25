@@ -1,9 +1,0 @@
-EGL_ANDROID_native_fence_sync
-https://www.khronos.org/registry/egl/specs/eglspec.1.5.pdf
-EGL_ANDROID_native_fence_sync
-
-	EGL_NO_NATIVE_FENCE_FD_ANDROID -1
-	EGL_SYNC_NATIVE_FENCE_ANDROID 0x3144
-	EGL_SYNC_NATIVE_FENCE_FD_ANDROID 0x3145
-	EGL_SYNC_NATIVE_FENCE_SIGNALED_ANDROID 0x3146
-	EGLint  eglDupNativeFenceFDANDROID (EGLDisplay  dpy, EGLSyncKHR  sync)

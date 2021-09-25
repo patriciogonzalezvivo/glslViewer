@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../gl/vbo.h"
-#include "../gl/fbo.h"
-#include "../gl/shader.h"
+#include "ada/gl/vbo.h"
+#include "ada/gl/fbo.h"
+#include "ada/gl/shader.h"
 
 #include <functional>
 
@@ -20,16 +20,16 @@ public:
     virtual ~ConvolutionPyramid();
 
     void    allocate(int _width, int _height);
-    void    process(const Fbo *_fbo);
+    void    process(const ada::Fbo *_fbo);
 
     bool            isAllocated() const {return m_depth != 0; }
     unsigned int    getDepth() const { return m_depth; }
-    const Fbo*      getResult(unsigned int index = 0) const;
+    const ada::Fbo* getResult(unsigned int index = 0) const;
 
-    std::function<void(Fbo*,const Fbo*,const Fbo*, int)> pass;
+    std::function<void(ada::Fbo*,const ada::Fbo*,const ada::Fbo*, int)> pass;
 private:
-    Fbo     m_downs[CONVOLUTION_PYRAMID_MAX_LAYERS];
-    Fbo     m_ups[CONVOLUTION_PYRAMID_MAX_LAYERS];
+    ada::Fbo    m_downs[CONVOLUTION_PYRAMID_MAX_LAYERS];
+    ada::Fbo    m_ups[CONVOLUTION_PYRAMID_MAX_LAYERS];
 
     unsigned int m_depth;
 };

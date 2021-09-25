@@ -1,8 +1,0 @@
-GL_QCOM_framebuffer_foveated
-http://www.opengl.org/registry/specs/QCOM/framebuffer_foveated.txt
-GL_QCOM_framebuffer_foveated
-
-	GL_FOVEATION_ENABLE_BIT_QCOM 0x1
-	GL_FOVEATION_SCALED_BIN_METHOD_BIT_QCOM 0x2
-	void glFramebufferFoveationConfigQCOM (GLuint fbo, GLuint numLayers, GLuint focalPointsPerLayer, GLuint requestedFeatures, GLuint* providedFeatures)
-	void glFramebufferFoveationParametersQCOM (GLuint fbo, GLuint layer, GLuint focalPoint, GLfloat focalX, GLfloat focalY, GLfloat gainX, GLfloat gainY, GLfloat foveaArea)

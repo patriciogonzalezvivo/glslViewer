@@ -1,5 +1,0 @@
-GL_EXT_sRGB_write_control
-http://www.opengl.org/registry/specs/EXT/sRGB_write_control.txt
-GL_EXT_sRGB_write_control
-
-	GL_FRAMEBUFFER_SRGB_EXT 0x8DB9

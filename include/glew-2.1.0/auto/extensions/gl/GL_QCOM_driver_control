@@ -1,8 +1,0 @@
-GL_QCOM_driver_control
-http://www.opengl.org/registry/specs/QCOM/driver_control.txt
-GL_QCOM_driver_control
-
-	void glDisableDriverControlQCOM (GLuint driverControl)
-	void glEnableDriverControlQCOM (GLuint driverControl)
-	void glGetDriverControlStringQCOM (GLuint driverControl, GLsizei bufSize, GLsizei* length, GLchar *driverControlString)
-	void glGetDriverControlsQCOM (GLint* num, GLsizei size, GLuint *driverControls)

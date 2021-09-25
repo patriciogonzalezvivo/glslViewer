@@ -1,8 +1,0 @@
-GL_ARB_ES3_2_compatibility
-http://www.opengl.org/registry/specs/ARB/ES3_2_compatibility.txt
-GL_ARB_ES3_2_compatibility
-
-	GL_PRIMITIVE_BOUNDING_BOX_ARB 0x92BE
-	GL_MULTISAMPLE_LINE_WIDTH_RANGE_ARB 0x9381
-	GL_MULTISAMPLE_LINE_WIDTH_GRANULARITY_ARB 0x9382
-	void glPrimitiveBoundingBoxARB (GLfloat minX, GLfloat minY, GLfloat minZ, GLfloat minW, GLfloat maxX, GLfloat maxY, GLfloat maxZ, GLfloat maxW)

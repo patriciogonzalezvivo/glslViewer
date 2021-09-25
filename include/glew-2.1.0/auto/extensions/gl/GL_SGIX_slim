@@ -1,8 +1,0 @@
-GL_SGIX_slim
-http://www.opengl.org/registry/specs/SGIX/slim.txt
-GL_SGIX_slim
-
-	GL_PACK_MAX_COMPRESSED_SIZE_SGIX 0x831B
-	GL_SLIM8U_SGIX 0x831D
-	GL_SLIM10U_SGIX 0x831E
-	GL_SLIM12S_SGIX 0x831F

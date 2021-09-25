@@ -1,7 +1,0 @@
-EGL_NV_native_query
-https://www.khronos.org/registry/egl/specs/eglspec.1.5.pdf
-EGL_NV_native_query
-
-	EGLBoolean  eglQueryNativeDisplayNV (EGLDisplay  dpy, EGLNativeDisplayType * display_id)
-	EGLBoolean  eglQueryNativePixmapNV (EGLDisplay  dpy, EGLSurface  surf, EGLNativePixmapType * pixmap)
-	EGLBoolean  eglQueryNativeWindowNV (EGLDisplay  dpy, EGLSurface  surf, EGLNativeWindowType * window)

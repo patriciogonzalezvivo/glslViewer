@@ -1,9 +1,0 @@
-GL_VERSION_4_5
-https://www.opengl.org/registry/doc/glspec45.compatibility.pdf
-
-
-    GL_CONTEXT_FLAG_ROBUST_ACCESS_BIT 0x00000004
-    GLenum glGetGraphicsResetStatus (void)
-    void glGetnTexImage (GLenum tex, GLint level, GLenum format, GLenum type, GLsizei bufSize, GLvoid *pixels)
-    void glGetnCompressedTexImage (GLenum target, GLint lod, GLsizei bufSize, GLvoid *pixels)
-    void glGetnUniformdv (GLuint program, GLint location, GLsizei bufSize, GLdouble *params)

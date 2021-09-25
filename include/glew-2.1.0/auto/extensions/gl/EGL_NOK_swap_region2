@@ -1,5 +1,0 @@
-EGL_NOK_swap_region2
-https://www.khronos.org/registry/egl/specs/eglspec.1.5.pdf
-EGL_NOK_swap_region2
-
-	EGLBoolean  eglSwapBuffersRegion2NOK (EGLDisplay  dpy, EGLSurface  surface, EGLint  numRects, const EGLint * rects)

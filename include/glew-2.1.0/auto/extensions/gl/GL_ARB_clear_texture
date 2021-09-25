@@ -1,7 +1,0 @@
-GL_ARB_clear_texture
-http://www.opengl.org/registry/specs/ARB/clear_texture.txt
-GL_ARB_clear_texture
-
-	GL_CLEAR_TEXTURE 0x9365
-	void glClearTexImage (GLuint texture, GLint level, GLenum format, GLenum type, const void *data)
-	void glClearTexSubImage (GLuint texture, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type, const void *data)

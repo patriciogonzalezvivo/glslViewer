@@ -29,3 +29,5 @@ debian/glslviewer.substvars
 .vs/slnx.sqlite
 .vs/VSWorkspaceState.json
 premake5.exe
+
+build/

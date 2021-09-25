@@ -11,8 +11,9 @@
 #include <iostream>
 #include <fstream>
 
-#include "gl/gl.h"
-#include "window.h"
+#include "ada/window.h"
+#include "ada/gl/gl.h"
+
 #include "sandbox.h"
 #include "io/fs.h"
 #include "io/osc.h"
@@ -47,7 +48,7 @@ bool        execute_exit    = false;
 // Open Sound Control
 Osc osc_listener;
 
-std::string version = "1.7.0";
+std::string version = "2.0.0";
 std::string name = "GlslViewer";
 std::string header = name + " " + version + " by Patricio Gonzalez Vivo ( patriciogonzalezvivo.com )"; 
 
@@ -152,7 +153,7 @@ void declareCommands() {
 
     commands.push_back(Command("window_width", [&](const std::string& _line){ 
         if (_line == "window_width") {
-            std::cout << getWindowWidth() << std::endl;
+            std::cout << ada::getWindowWidth() << std::endl;
             return true;
         }
         return false;
@@ -161,7 +162,7 @@ void declareCommands() {
 
     commands.push_back(Command("window_height", [&](const std::string& _line){ 
         if (_line == "window_height") {
-            std::cout << getWindowHeight() << std::endl;
+            std::cout << ada::getWindowHeight() << std::endl;
             return true;
         }
         return false;
@@ -170,7 +171,7 @@ void declareCommands() {
 
     commands.push_back(Command("pixel_density", [&](const std::string& _line){ 
         if (_line == "pixel_density") {
-            std::cout << getPixelDensity() << std::endl;
+            std::cout << ada::getPixelDensity() << std::endl;
             return true;
         }
         return false;
@@ -179,7 +180,7 @@ void declareCommands() {
 
     commands.push_back(Command("screen_size", [&](const std::string& _line){ 
         if (_line == "screen_size") {
-            glm::ivec2 screen_size = getScreenSize();
+            glm::ivec2 screen_size = ada::getScreenSize();
             std::cout << screen_size.x << ',' << screen_size.y << std::endl;
             return true;
         }
@@ -189,7 +190,7 @@ void declareCommands() {
 
     commands.push_back(Command("viewport", [&](const std::string& _line){ 
         if (_line == "viewport") {
-            glm::ivec4 viewport = getViewport();
+            glm::ivec4 viewport = ada::getViewport();
             std::cout << viewport.x << ',' << viewport.y << ',' << viewport.z << ',' << viewport.w << std::endl;
             return true;
         }
@@ -199,7 +200,7 @@ void declareCommands() {
 
     commands.push_back(Command("mouse", [&](const std::string& _line){ 
         if (_line == "mouse") {
-            glm::vec2 pos = getMousePosition();
+            glm::vec2 pos = ada::getMousePosition();
             std::cout << pos.x << "," << pos.y << std::endl;
             return true;
         }
@@ -211,13 +212,13 @@ void declareCommands() {
         std::vector<std::string> values = split(_line,',');
         if (values.size() == 2) {
             consoleMutex.lock();
-            setFps(toInt(values[1]));
+            ada::setFps(toInt(values[1]));
             consoleMutex.unlock();
             return true;
         }
         else {
             // Force the output in floats
-            printf("%f\n", getFps());
+            printf("%f\n", ada::getFps());
             return true;
         }
         return false;
@@ -227,7 +228,7 @@ void declareCommands() {
     commands.push_back(Command("delta", [&](const std::string& _line){ 
         if (_line == "delta") {
             // Force the output in floats
-            printf("%f\n", getDelta());
+            printf("%f\n", ada::getDelta());
             return true;
         }
         return false;
@@ -237,7 +238,7 @@ void declareCommands() {
     commands.push_back(Command("date", [&](const std::string& _line){ 
         if (_line == "date") {
             // Force the output in floats
-            glm::vec4 date = getDate();
+            glm::vec4 date = ada::getDate();
             std::cout << date.x << ',' << date.y << ',' << date.z << ',' << date.w << std::endl;
             return true;
         }
@@ -704,7 +705,7 @@ int main(int argc, char **argv){
         windowPosAndSize.w = 512;
     #endif
 
-    WindowStyle windowStyle = REGULAR;
+    ada::WindowStyle windowStyle = ada::REGULAR;
     bool displayHelp = false;
     bool willLoadGeometry = false;
     bool willLoadTextures = false;
@@ -739,7 +740,7 @@ int main(int argc, char **argv){
         }
         else if (   std::string(argv[i]) == "--fps" ) {
             if(++i < argc)
-                setFps( toInt(std::string(argv[i])) );
+                ada::setFps( toInt(std::string(argv[i])) );
             else
                 std::cout << "Argument '" << argument << "' should be followed by a <pixels>. Skipping argument." << std::endl;
         }
@@ -747,14 +748,14 @@ int main(int argc, char **argv){
             displayHelp = true;
         }
         else if (   std::string(argv[i]) == "--headless" ) {
-            windowStyle = HEADLESS;
+            windowStyle = ada::HEADLESS;
         }
         else if (   std::string(argv[i]) == "-f" ||
                     std::string(argv[i]) == "--fullscreen" ) {
-            windowStyle = FULLSCREEN;
+            windowStyle = ada::FULLSCREEN;
         }
         else if (   std::string(argv[i]) == "--holoplay") {
-            windowStyle = HOLOPLAY;
+            windowStyle = ada::HOLOPLAY;
         }
         else if (   std::string(argv[i]) == "-l" ||
                     std::string(argv[i]) == "--life-coding" ){
@@ -762,12 +763,12 @@ int main(int argc, char **argv){
             windowPosAndSize.x = windowPosAndSize.z - 512;
             windowPosAndSize.z = windowPosAndSize.w = 512;
         #else
-            windowStyle = ALLWAYS_ON_TOP;
+            windowStyle = ada::ALLWAYS_ON_TOP;
         #endif
         }
         else if (   std::string(argv[i]) == "-ss" ||
                     std::string(argv[i]) == "--screensaver") {
-            windowStyle = FULLSCREEN;
+            windowStyle = ada::FULLSCREEN;
             screensaver = true;
         }
         else if ( ( haveExt(argument,"ply") || haveExt(argument,"PLY") ||
@@ -807,7 +808,7 @@ int main(int argc, char **argv){
     declareCommands();
 
     // Initialize openGL context
-    initGL (windowPosAndSize, windowStyle);
+    ada::initGL (windowPosAndSize, windowStyle);
 
     struct stat st;                         // for files to watch
     int         textureCounter  = 0;        // Number of textures to load
@@ -1081,9 +1082,9 @@ int main(int argc, char **argv){
         std::cout << "Starting Render Loop" << std::endl; 
     
     // Render Loop
-    while ( isGL() && bRun.load() ) {
+    while ( ada::isGL() && bRun.load() ) {
         // Update
-        updateGL();
+        ada::updateGL();
 
         glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
@@ -1114,11 +1115,11 @@ int main(int argc, char **argv){
             bRun.store(false);
         else
             // Swap the buffers
-            renderGL();
+            ada::renderGL();
     }
 
     // If is terminated by the windows manager, turn bRun off so the fileWatcher can stop
-    if ( !isGL() ) {
+    if ( !ada::isGL() ) {
         bRun.store(false);
     }
 
@@ -1183,7 +1184,7 @@ void onExit() {
     sandbox.clear();
 
     // close openGL instance
-    closeGL();
+    ada::closeGL();
 }
 
 

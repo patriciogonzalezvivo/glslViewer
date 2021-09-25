@@ -1,6 +1,0 @@
-GL_ARB_spirv_extensions
-http://www.opengl.org/registry/specs/ARB/spirv_extensions.txt
-GL_ARB_spirv_extensions
-
-	GL_SPIR_V_EXTENSIONS 0x9553
-	GL_NUM_SPIR_V_EXTENSIONS 0x9554

@@ -1,5 +1,0 @@
-GLX_NV_delay_before_swap
-http://www.opengl.org/registry/specs/NV/glx_delay_before_swap.txt
-GLX_NV_delay_before_swap
-
-	Bool glXDelayBeforeSwapNV (Display* dpy, GLXDrawable drawable, GLfloat seconds)

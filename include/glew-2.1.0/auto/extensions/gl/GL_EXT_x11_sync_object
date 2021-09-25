@@ -1,6 +1,0 @@
-GL_EXT_x11_sync_object
-http://www.opengl.org/registry/specs/EXT/x11_sync_object.txt
-GL_EXT_x11_sync_object
-
-	GL_SYNC_X11_FENCE_EXT 0x90E1
-	GLsync glImportSyncEXT (GLenum external_sync_type, GLintptr external_sync, GLbitfield flags)

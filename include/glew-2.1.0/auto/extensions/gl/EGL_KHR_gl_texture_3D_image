@@ -1,6 +1,0 @@
-EGL_KHR_gl_texture_3D_image
-https://www.khronos.org/registry/egl/specs/eglspec.1.5.pdf
-EGL_KHR_gl_texture_3D_image
-
-	EGL_GL_TEXTURE_3D_KHR 0x30B2
-	EGL_GL_TEXTURE_ZOFFSET_KHR 0x30BD

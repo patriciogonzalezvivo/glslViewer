@@ -1,8 +1,0 @@
-GL_EXT_texture_rg
-http://www.opengl.org/registry/specs/EXT/texture_rg.txt
-GL_EXT_texture_rg
-
-	GL_RED_EXT 0x1903
-	GL_RG_EXT 0x8227
-	GL_R8_EXT 0x8229
-	GL_RG8_EXT 0x822B

@@ -1,8 +1,0 @@
-WGL_ARB_create_context_robustness
-http://www.opengl.org/registry/specs/ARB/wgl_create_context_robustness.txt
-WGL_ARB_create_context_robustness
-
-	WGL_CONTEXT_ROBUST_ACCESS_BIT_ARB 0x00000004
-	WGL_LOSE_CONTEXT_ON_RESET_ARB 0x8252
-	WGL_CONTEXT_RESET_NOTIFICATION_STRATEGY_ARB 0x8256
-	WGL_NO_RESET_NOTIFICATION_ARB 0x8261

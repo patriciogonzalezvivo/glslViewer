@@ -1,5 +1,0 @@
-GL_KHR_no_error
-http://www.opengl.org/registry/specs/KHR/no_error.txt
-GL_KHR_no_error
-
-	GL_CONTEXT_FLAG_NO_ERROR_BIT_KHR 0x00000008

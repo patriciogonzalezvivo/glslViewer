@@ -1,6 +1,0 @@
-EGL_HI_clientpixmap
-https://www.khronos.org/registry/egl/specs/eglspec.1.5.pdf
-EGL_HI_clientpixmap
-
-	EGL_CLIENT_PIXMAP_POINTER_HI 0x8F74
-	EGLSurface  eglCreatePixmapSurfaceHI (EGLDisplay  dpy, EGLConfig  config, struct EGLClientPixmapHI * pixmap)

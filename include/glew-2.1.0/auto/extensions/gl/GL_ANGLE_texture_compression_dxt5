@@ -1,8 +1,0 @@
-GL_ANGLE_texture_compression_dxt5
-https://code.google.com/p/angleproject/source/browse/#git%2Fextensions
-GL_ANGLE_texture_compression_dxt5
-
-	GL_COMPRESSED_RGB_S3TC_DXT1_ANGLE 0x83F0
-	GL_COMPRESSED_RGBA_S3TC_DXT1_ANGLE 0x83F1
-	GL_COMPRESSED_RGBA_S3TC_DXT3_ANGLE 0x83F2
-	GL_COMPRESSED_RGBA_S3TC_DXT5_ANGLE 0x83F3

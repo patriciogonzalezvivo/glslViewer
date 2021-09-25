@@ -1,5 +1,0 @@
-GL_REGAL_proc_address
-https://github.com/p3/regal/tree/master/doc/extensions
-GL_REGAL_proc_address
-
-	void * glGetProcAddressREGAL (const GLchar *name)

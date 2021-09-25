@@ -1,7 +1,0 @@
-EGL_KHR_fence_sync
-https://www.khronos.org/registry/egl/specs/eglspec.1.5.pdf
-EGL_KHR_fence_sync
-
-	EGL_SYNC_PRIOR_COMMANDS_COMPLETE_KHR 0x30F0
-	EGL_SYNC_CONDITION_KHR 0x30F8
-	EGL_SYNC_FENCE_KHR 0x30F9

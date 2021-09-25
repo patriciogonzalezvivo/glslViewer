@@ -5,16 +5,16 @@
 #include <string>
 #include <functional>
 
-#include "gl/fbo.h"
-#include "gl/shader.h"
-#include "gl/texture.h"
-#include "gl/textureStream.h"
+#include "ada/gl/fbo.h"
+#include "ada/gl/shader.h"
+#include "ada/gl/texture.h"
+#include "ada/gl/textureStream.h"
 #include "gl/textureAudio.h"
 
 #include "types/convolutionPyramid.h"
 
 #include "scene/light.h"
-#include "scene/camera.h"
+#include "ada/scene/camera.h"
 
 #include "io/fs.h"
 
@@ -32,18 +32,18 @@ typedef std::map<std::string, UniformData> UniformDataList;
 struct UniformFunction {
     UniformFunction();
     UniformFunction(const std::string &_type);
-    UniformFunction(const std::string &_type, std::function<void(Shader&)> _assign);
-    UniformFunction(const std::string &_type, std::function<void(Shader&)> _assign, std::function<std::string()> _print);
+    UniformFunction(const std::string &_type, std::function<void(ada::Shader&)> _assign);
+    UniformFunction(const std::string &_type, std::function<void(ada::Shader&)> _assign, std::function<std::string()> _print);
 
-    std::function<void(Shader&)>    assign;
+    std::function<void(ada::Shader&)> assign;
     std::function<std::string()>    print;
     std::string                     type;
     bool                            present = false;
 };
 
 typedef std::map<std::string, UniformFunction> UniformFunctionsList;
-typedef std::map<std::string, Texture*> TextureList;
-typedef std::map<std::string, TextureStream*> StreamsList;
+typedef std::map<std::string, ada::Texture*> TextureList;
+typedef std::map<std::string, ada::TextureStream*> StreamsList;
 
 class Uniforms {
 public:
@@ -53,7 +53,7 @@ public:
     // Ingest new uniforms
     bool                    parseLine( const std::string &_line );
 
-    bool                    addTexture( const std::string& _name, Texture* _texture );
+    bool                    addTexture( const std::string& _name, ada::Texture* _texture );
     bool                    addTexture( const std::string& _name, const std::string& _path, WatchFileList& _files, bool _flip = true, bool _verbose = true );
     bool                    addBumpTexture( const std::string& _name, const std::string& _path, WatchFileList& _files, bool _flip = true, bool _verbose = true );
     bool                    addStreamingTexture( const std::string& _name, const std::string& _url, bool _flip = true, bool _device = false, bool _verbose = true );
@@ -65,7 +65,7 @@ public:
     void                    set( const std::string& _name, float _x, float _y, float _z);
     void                    set( const std::string& _name, float _x, float _y, float _z, float _w);
     
-    void                    setCubeMap( TextureCube* _cubemap );
+    void                    setCubeMap( ada::TextureCube* _cubemap );
     void                    setCubeMap( const std::string& _filename, WatchFileList& _files, bool _verbose = true);
 
     // Check presence of uniforms on shaders
@@ -73,9 +73,9 @@ public:
 
 
     // Feed uniforms to a specific shader
-    bool                    feedTo( Shader &_shader );
+    bool                    feedTo( ada::Shader &_shader );
 
-    Camera&                 getCamera() { return cameras[0]; }
+    ada::Camera&            getCamera() { return cameras[0]; }
 
     // Debug
     void                    print(bool _all);
@@ -100,13 +100,13 @@ public:
     TextureList             textures;
     StreamsList             streams;
 
-    TextureCube*            cubemap;
-    std::vector<Fbo>        buffers;
+    ada::TextureCube*            cubemap;
+    std::vector<ada::Fbo>   buffers;
     std::vector<ConvolutionPyramid> convolution_pyramids;
 
     // 3d Scene Uniforms 
-    std::vector<Camera>     cameras;
-    std::vector<Light>      lights;
+    std::vector<ada::Camera>    cameras;
+    std::vector<Light>          lights;
 
 protected:
     bool                    m_change;
