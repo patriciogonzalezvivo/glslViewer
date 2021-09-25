@@ -1,7 +1,8 @@
 #pragma once
 
-#include "scene/scene.h"
-#include "types/list.h"
+#include "files.h"
+#include "scene.h"
+#include "list.h"
 
 #include "thread_pool.hpp"
 

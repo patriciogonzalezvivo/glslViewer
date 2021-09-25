@@ -4,11 +4,11 @@
 #include <sstream>
 #include <sys/stat.h>
 
-#include "tools/text.h"
-
-#include "extract_depthmap.h"
+#include "files.h"
 #include "io/pixels.h"
+#include "extract_depthmap.h"
 
+#include "ada/tools/text.h"
 #include "ada/gl/textureBump.h"
 #include "ada/gl/textureStreamSequence.h"
 #ifdef SUPPORT_FOR_LIBAV 
@@ -27,7 +27,7 @@ std::string UniformData::getType() {
         return "float";
     }
     else {
-        return (bInt ? "ivec" : "vec") + toString(size); 
+        return (bInt ? "ivec" : "vec") + ada::toString(size); 
     }
 }
 
@@ -62,54 +62,54 @@ Uniforms::Uniforms(): cubemap(nullptr), m_change(false), m_is_audio_init(false) 
     functions["u_iblLuminance"] = UniformFunction("float", [this](ada::Shader& _shader) {
         _shader.setUniform("u_iblLuminance", 30000.0f * getCamera().getExposure());
     },
-    [this]() { return toString(30000.0f * getCamera().getExposure()); });
+    [this]() { return ada::toString(30000.0f * getCamera().getExposure()); });
     
     // CAMERA UNIFORMS
     //
     functions["u_camera"] = UniformFunction("vec3", [this](ada::Shader& _shader) {
         _shader.setUniform("u_camera", -getCamera().getPosition() );
     },
-    [this]() { return toString(-getCamera().getPosition(), ','); });
+    [this]() { return ada::toString(-getCamera().getPosition(), ','); });
 
     functions["u_cameraDistance"] = UniformFunction("float", [this](ada::Shader& _shader) {
         _shader.setUniform("u_cameraDistance", getCamera().getDistance());
     },
-    [this]() { return toString(getCamera().getDistance()); });
+    [this]() { return ada::toString(getCamera().getDistance()); });
 
     functions["u_cameraNearClip"] = UniformFunction("float", [this](ada::Shader& _shader) {
         _shader.setUniform("u_cameraNearClip", getCamera().getNearClip());
     },
-    [this]() { return toString(getCamera().getNearClip()); });
+    [this]() { return ada::toString(getCamera().getNearClip()); });
 
     functions["u_cameraFarClip"] = UniformFunction("float", [this](ada::Shader& _shader) {
         _shader.setUniform("u_cameraFarClip", getCamera().getFarClip());
     },
-    [this]() { return toString(getCamera().getFarClip()); });
+    [this]() { return ada::toString(getCamera().getFarClip()); });
 
     functions["u_cameraEv100"] = UniformFunction("float", [this](ada::Shader& _shader) {
         _shader.setUniform("u_cameraEv100", getCamera().getEv100());
     },
-    [this]() { return toString(getCamera().getEv100()); });
+    [this]() { return ada::toString(getCamera().getEv100()); });
 
     functions["u_cameraExposure"] = UniformFunction("float", [this](ada::Shader& _shader) {
         _shader.setUniform("u_cameraExposure", getCamera().getExposure());
     },
-    [this]() { return toString(getCamera().getExposure()); });
+    [this]() { return ada::toString(getCamera().getExposure()); });
 
     functions["u_cameraAperture"] = UniformFunction("float", [this](ada::Shader& _shader) {
         _shader.setUniform("u_cameraAperture", getCamera().getAperture());
     },
-    [this]() { return toString(getCamera().getAperture()); });
+    [this]() { return ada::toString(getCamera().getAperture()); });
 
     functions["u_cameraShutterSpeed"] = UniformFunction("float", [this](ada::Shader& _shader) {
         _shader.setUniform("u_cameraShutterSpeed", getCamera().getShutterSpeed());
     },
-    [this]() { return toString(getCamera().getShutterSpeed()); });
+    [this]() { return ada::toString(getCamera().getShutterSpeed()); });
 
     functions["u_cameraSensitivity"] = UniformFunction("float", [this](ada::Shader& _shader) {
         _shader.setUniform("u_cameraSensitivity", getCamera().getSensitivity());
     },
-    [this]() { return toString(getCamera().getSensitivity()); });
+    [this]() { return ada::toString(getCamera().getSensitivity()); });
     
     functions["u_normalMatrix"] = UniformFunction("mat3", [this](ada::Shader& _shader) {
         _shader.setUniform("u_normalMatrix", getCamera().getNormalMatrix());
@@ -156,8 +156,8 @@ bool parseUniformData(const std::string &_line, UniformDataList *_uniforms) {
         std::string item;
         while (getline(ss, item, ',')) {
             if (index != 0) {
-                (*_uniforms)[name].bInt = !isFloat(item);
-                (*_uniforms)[name].value[index-1] = toFloat(item);
+                (*_uniforms)[name].bInt = !ada::isFloat(item);
+                (*_uniforms)[name].value[index-1] = ada::toFloat(item);
                 (*_uniforms)[name].change = true;
             }
             index++;
@@ -221,7 +221,7 @@ bool Uniforms::addTexture(const std::string& _name, const std::string& _path, Wa
                     std::cout << "//    uniform vec2        " << _name  << "Resolution;"<< std::endl;
                 }
 
-                if (haveExt(_path,"jpeg")) {
+                if (ada::haveExt(_path,"jpeg")) {
                     const unsigned char *cv = NULL, *dm = NULL;
                     size_t cv_size = 0, dm_size = 0;
                     image_type_t dm_type = TYPE_NONE;
@@ -303,7 +303,7 @@ bool Uniforms::addStreamingTexture( const std::string& _name, const std::string&
     if (textures.find(_name) == textures.end()) {
 
         // Check if it's a PNG Sequence
-        if (check_for_pattern(_url)) {
+        if (ada::check_for_pattern(_url)) {
             ada::TextureStreamSequence *tex = new ada::TextureStreamSequence();
 
             if (tex->load(_url, _vflip)) {
@@ -516,7 +516,7 @@ void Uniforms::setCubeMap( const std::string& _filename, WatchFileList& _files, 
 void Uniforms::checkPresenceIn( const std::string &_vert_src, const std::string &_frag_src ) {
     // Check active native uniforms
     for (UniformFunctionsList::iterator it = functions.begin(); it != functions.end(); ++it) {
-        bool present = ( find_id(_vert_src, it->first.c_str()) != 0 || find_id(_frag_src, it->first.c_str()) != 0 );
+        bool present = ( ada::find_id(_vert_src, it->first.c_str()) != 0 || ada::find_id(_frag_src, it->first.c_str()) != 0 );
         if ( it->second.present != present) {
             it->second.present = present;
             m_change = true;
@@ -525,13 +525,17 @@ void Uniforms::checkPresenceIn( const std::string &_vert_src, const std::string 
 }
 
 bool Uniforms::feedTo(ada::Shader &_shader ) {
+    return feedTo(&_shader);
+}
+
+bool Uniforms::feedTo(ada::Shader *_shader ) {
     bool update = false;
 
     // Pass Native uniforms 
     for (UniformFunctionsList::iterator it=functions.begin(); it!=functions.end(); ++it)
         if (it->second.present)
             if (it->second.assign)
-                it->second.assign(_shader);
+                it->second.assign( *_shader );
 
 
     // Pass User defined uniforms
@@ -540,16 +544,16 @@ bool Uniforms::feedTo(ada::Shader &_shader ) {
             if (it->second.change) {
                 if (it->second.bInt) {
                     if (it->second.size == 1)
-                        _shader.setUniform(it->first, int(it->second.value[0]));
+                        _shader->setUniform(it->first, int(it->second.value[0]));
                     else if (it->second.size == 2)
-                        _shader.setUniform(it->first, int(it->second.value[0]), int(it->second.value[1]));
+                        _shader->setUniform(it->first, int(it->second.value[0]), int(it->second.value[1]));
                     else if (it->second.size == 3)
-                        _shader.setUniform(it->first, int(it->second.value[0]), int(it->second.value[1]), int(it->second.value[2]));
+                        _shader->setUniform(it->first, int(it->second.value[0]), int(it->second.value[1]), int(it->second.value[2]));
                     else if (it->second.size == 4)
-                        _shader.setUniform(it->first, int(it->second.value[0]), int(it->second.value[1]), int(it->second.value[2]), int(it->second.value[3]));
+                        _shader->setUniform(it->first, int(it->second.value[0]), int(it->second.value[1]), int(it->second.value[2]), int(it->second.value[3]));
                 }
                 else
-                    _shader.setUniform(it->first, it->second.value, it->second.size);
+                    _shader->setUniform(it->first, it->second.value, it->second.size);
                 update = true;
             }
         }
@@ -557,46 +561,46 @@ bool Uniforms::feedTo(ada::Shader &_shader ) {
 
     // Pass Textures Uniforms
     for (TextureList::iterator it = textures.begin(); it != textures.end(); ++it) {
-        _shader.setUniformTexture(it->first, it->second, _shader.textureIndex++ );
-        _shader.setUniform(it->first+"Resolution", float(it->second->getWidth()), float(it->second->getHeight()));
+        _shader->setUniformTexture(it->first, it->second, _shader->textureIndex++ );
+        _shader->setUniform(it->first+"Resolution", float(it->second->getWidth()), float(it->second->getHeight()));
     }
 
     for (StreamsList::iterator it = streams.begin(); it != streams.end(); ++it) {
-        _shader.setUniform(it->first+"CurrentFrame", float(it->second->getCurrentFrame()));
-        _shader.setUniform(it->first+"TotalFrames", float(it->second->getTotalFrames()));
+        _shader->setUniform(it->first+"CurrentFrame", float(it->second->getCurrentFrame()));
+        _shader->setUniform(it->first+"TotalFrames", float(it->second->getTotalFrames()));
     }
 
     // Pass Buffers Texture
     for (unsigned int i = 0; i < buffers.size(); i++)
-        _shader.setUniformTexture("u_buffer" + toString(i), &buffers[i], _shader.textureIndex++ );
+        _shader->setUniformTexture("u_buffer" + ada::toString(i), &buffers[i], _shader->textureIndex++ );
 
     // Pass Convolution Piramids resultant Texture
     for (unsigned int i = 0; i < convolution_pyramids.size(); i++)
-        _shader.setUniformTexture("u_convolutionPyramid" + toString(i), convolution_pyramids[i].getResult(), _shader.textureIndex++ );
+        _shader->setUniformTexture("u_convolutionPyramid" + ada::toString(i), convolution_pyramids[i].getResult(), _shader->textureIndex++ );
     
     // Pass Light Uniforms
     if (lights.size() == 1) {
-        if (lights[0].getType() != LIGHT_DIRECTIONAL)
-            _shader.setUniform("u_light", lights[0].getPosition());
-        _shader.setUniform("u_lightColor", lights[0].color);
-        if (lights[0].getType() == LIGHT_DIRECTIONAL || lights[0].getType() == LIGHT_SPOT)
-            _shader.setUniform("u_lightDirection", lights[0].direction);
-        _shader.setUniform("u_lightIntensity", lights[0].intensity);
+        if (lights[0].getType() != ada::LIGHT_DIRECTIONAL)
+            _shader->setUniform("u_light", lights[0].getPosition());
+        _shader->setUniform("u_lightColor", lights[0].color);
+        if (lights[0].getType() == ada::LIGHT_DIRECTIONAL || lights[0].getType() == ada::LIGHT_SPOT)
+            _shader->setUniform("u_lightDirection", lights[0].direction);
+        _shader->setUniform("u_lightIntensity", lights[0].intensity);
         if (lights[0].falloff > 0)
-            _shader.setUniform("u_lightFalloff", lights[0].falloff);
-        _shader.setUniform("u_lightMatrix", lights[0].getBiasMVPMatrix() );
+            _shader->setUniform("u_lightFalloff", lights[0].falloff);
+        _shader->setUniform("u_lightMatrix", lights[0].getBiasMVPMatrix() );
     }
     else {
         for (unsigned int i = 0; i < lights.size(); i++) {
-            if (lights[i].getType() != LIGHT_DIRECTIONAL)
-                _shader.setUniform("u_light", lights[i].getPosition());
-            _shader.setUniform("u_lightColor", lights[i].color);
-            if (lights[i].getType() == LIGHT_DIRECTIONAL || lights[i].getType() == LIGHT_SPOT)
-                _shader.setUniform("u_lightDirection", lights[i].direction);
-            _shader.setUniform("u_lightIntensity", lights[i].intensity);
+            if (lights[i].getType() != ada::LIGHT_DIRECTIONAL)
+                _shader->setUniform("u_light", lights[i].getPosition());
+            _shader->setUniform("u_lightColor", lights[i].color);
+            if (lights[i].getType() == ada::LIGHT_DIRECTIONAL || lights[i].getType() == ada::LIGHT_SPOT)
+                _shader->setUniform("u_lightDirection", lights[i].direction);
+            _shader->setUniform("u_lightIntensity", lights[i].intensity);
             if (lights[i].falloff > 0)
-                _shader.setUniform("u_lightFalloff", lights[i].falloff);
-            _shader.setUniform("u_lightMatrix", lights[i].getBiasMVPMatrix() );
+                _shader->setUniform("u_lightFalloff", lights[i].falloff);
+            _shader->setUniform("u_lightMatrix", lights[i].getBiasMVPMatrix() );
         }
     }
 
@@ -728,36 +732,36 @@ void Uniforms::printBuffers() {
 void Uniforms::printTextures(){
     for (TextureList::iterator it = textures.begin(); it != textures.end(); ++it) {
         std::cout << "sampler2D," << it->first << ',' << it->second->getFilePath() << std::endl;
-        std::cout << "vec2," << it->first << "Resolution," << toString(it->second->getWidth(), 1) << "," << toString(it->second->getHeight(), 1) << std::endl;
+        std::cout << "vec2," << it->first << "Resolution," << ada::toString(it->second->getWidth(), 1) << "," << ada::toString(it->second->getHeight(), 1) << std::endl;
     }
 
     for (StreamsList::iterator it = streams.begin(); it != streams.end(); ++it) {
-        std::cout << "float," << it->first+"CurrentFrame," << toString(it->second->getCurrentFrame(), 1) << std::endl;
-        std::cout << "float," << it->first+"TotalFrames," << toString(it->second->getTotalFrames(), 1) << std::endl;
+        std::cout << "float," << it->first+"CurrentFrame," << ada::toString(it->second->getCurrentFrame(), 1) << std::endl;
+        std::cout << "float," << it->first+"TotalFrames," << ada::toString(it->second->getTotalFrames(), 1) << std::endl;
     }
 }
 
 void Uniforms::printLights() {
     if (lights.size() == 1) {
-        if (lights[0].getType() != LIGHT_DIRECTIONAL)
-            std::cout << "vect3,u_light," << toString( lights[0].getPosition() ) << std::endl;
-        std::cout << "vect3,u_lightColor," << toString( lights[0].color )  << std::endl;
-        if (lights[0].getType() == LIGHT_DIRECTIONAL || lights[0].getType() == LIGHT_SPOT)
-            std::cout << "vect3,u_lightDirection," << toString( lights[0].direction ) << std::endl;
-        std::cout << "float,u_lightIntensity," << toString( lights[0].intensity, 3) << std::endl;
+        if (lights[0].getType() != ada::LIGHT_DIRECTIONAL)
+            std::cout << "vect3,u_light," << ada::toString( lights[0].getPosition() ) << std::endl;
+        std::cout << "vect3,u_lightColor," << ada::toString( lights[0].color )  << std::endl;
+        if (lights[0].getType() == ada::LIGHT_DIRECTIONAL || lights[0].getType() == ada::LIGHT_SPOT)
+            std::cout << "vect3,u_lightDirection," << ada::toString( lights[0].direction ) << std::endl;
+        std::cout << "float,u_lightIntensity," << ada::toString( lights[0].intensity, 3) << std::endl;
         if (lights[0].falloff > 0.0)
-            std::cout << "float,u_lightFalloff," << toString( lights[0].falloff, 3) << std::endl;
+            std::cout << "float,u_lightFalloff," << ada::toString( lights[0].falloff, 3) << std::endl;
     }
     else if (lights.size() > 1) {
         for (unsigned int i = 0; i < lights.size(); i++) {
-            if (lights[i].getType() != LIGHT_DIRECTIONAL)
-                std::cout << "vec3,u_light," << toString( lights[i].getPosition() ) << std::endl;
-            std::cout << "vec3,u_lightColor," << toString( lights[i].color )  << std::endl;
-            if (lights[i].getType() == LIGHT_DIRECTIONAL || lights[i].getType() == LIGHT_SPOT)
-                std::cout << "vec3,u_lightDirection," << toString( lights[i].direction ) << std::endl;
-            std::cout << "float,u_lightIntensity," << toString( lights[i].intensity, 3) << std::endl;
+            if (lights[i].getType() != ada::LIGHT_DIRECTIONAL)
+                std::cout << "vec3,u_light," << ada::toString( lights[i].getPosition() ) << std::endl;
+            std::cout << "vec3,u_lightColor," << ada::toString( lights[i].color )  << std::endl;
+            if (lights[i].getType() == ada::LIGHT_DIRECTIONAL || lights[i].getType() == ada::LIGHT_SPOT)
+                std::cout << "vec3,u_lightDirection," << ada::toString( lights[i].direction ) << std::endl;
+            std::cout << "float,u_lightIntensity," << ada::toString( lights[i].intensity, 3) << std::endl;
             if (lights[i].falloff > 0.0)
-                std::cout << "float,u_lightFalloff," << toString( lights[i].falloff, 3) << std::endl;
+                std::cout << "float,u_lightFalloff," << ada::toString( lights[i].falloff, 3) << std::endl;
         }
     }
 }

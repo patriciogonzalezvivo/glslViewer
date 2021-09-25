@@ -5,15 +5,14 @@
 #include <math.h>
 
 #include "ada/window.h"
-
-#include "io/pixels.h"
-#include "tools/text.h"
-#include "tools/geom.h"
+#include "ada/tools/text.h"
+#include "ada/tools/geom.h"
+#include "ada/shaders/defaultShaders.h"
 
 #include "glm/gtx/matrix_transform_2d.hpp"
 #include "glm/gtx/rotate_vector.hpp"
 
-#include "shaders/defaultShaders.h"
+#include "io/pixels.h"
 
 #include <memory>
 
@@ -73,36 +72,36 @@ Sandbox::Sandbox():
         if (m_record_sec) _shader.setUniform("u_frame", (int)(m_record_sec_start / m_record_fdelta) + m_record_counter);
         else if (m_record_frame) _shader.setUniform("u_frame", m_record_frame_head);
         _shader.setUniform("u_frame", (int)m_frame);
-    }, [this]() { return toString(m_frame); } );
+    }, [this]() { return ada::toString(m_frame); } );
 
     uniforms.functions["u_time"] = UniformFunction( "float", [this](ada::Shader& _shader) {
         if (m_record_sec) _shader.setUniform("u_time", m_record_sec_head);
         else if (m_record_frame) _shader.setUniform("u_time", m_record_frame_head * m_record_fdelta);
         else _shader.setUniform("u_time", float(ada::getTime()) - m_time_offset);
-    }, [this]() { return toString(ada::getTime() - m_time_offset); } );
+    }, [this]() { return ada::toString(ada::getTime() - m_time_offset); } );
 
     uniforms.functions["u_delta"] = UniformFunction("float", [this](ada::Shader& _shader) {
         if (m_record_sec || m_record_frame) _shader.setUniform("u_delta", float(m_record_fdelta));
         else _shader.setUniform("u_delta", float(ada::getDelta()));
     },
-    []() { return toString(ada::getDelta()); });
+    []() { return ada::toString(ada::getDelta()); });
 
     uniforms.functions["u_date"] = UniformFunction("vec4", [](ada::Shader& _shader) {
         _shader.setUniform("u_date", ada::getDate());
     },
-    []() { return toString(ada::getDate(), ','); });
+    []() { return ada::toString(ada::getDate(), ','); });
 
     // MOUSE
     uniforms.functions["u_mouse"] = UniformFunction("vec2", [](ada::Shader& _shader) {
         _shader.setUniform("u_mouse", float(ada::getMouseX()), float(ada::getMouseY()));
     },
-    []() { return toString(ada::getMouseX()) + "," + toString(ada::getMouseY()); } );
+    []() { return ada::toString(ada::getMouseX()) + "," + ada::toString(ada::getMouseY()); } );
 
     // VIEWPORT
     uniforms.functions["u_resolution"]= UniformFunction("vec2", [](ada::Shader& _shader) {
         _shader.setUniform("u_resolution", float(ada::getWindowWidth()), float(ada::getWindowHeight()));
     },
-    []() { return toString(ada::getWindowWidth()) + "," + toString(ada::getWindowHeight()); });
+    []() { return ada::toString(ada::getWindowWidth()) + "," + ada::toString(ada::getWindowHeight()); });
 
     // SCENE
     uniforms.functions["u_scene"] = UniformFunction("sampler2D", [this](ada::Shader& _shader) {
@@ -165,7 +164,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
             return true;
         }
         else {
-            std::vector<std::string> values = split(_line,',');
+            std::vector<std::string> values = ada::split(_line,',');
             if (values.size() == 2) {
                 m_showPasses = (values[1] == "on");
                 m_showTextures = (values[1] == "on");
@@ -209,7 +208,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     _commands.push_back(Command("glsl_version", [&](const std::string& _line){ 
         if (_line == "glsl_version") {
             // Force the output in floats
-            printf("%i\n", getVersion());
+            printf("%i\n", ada::getVersion());
             return true;
         }
         return false;
@@ -223,7 +222,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
             return true;
         }
         else {
-            std::vector<std::string> values = split(_line,',');
+            std::vector<std::string> values = ada::split(_line,',');
             if (values.size() == 2) {
                 m_histogram = (values[1] == "on");
             }
@@ -256,7 +255,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
             return true;
         }
         else {
-            std::vector<std::string> values = split(_line,',');
+            std::vector<std::string> values = ada::split(_line,',');
             if (values.size() == 2) {
                 m_showTextures = (values[1] == "on");
             }
@@ -281,7 +280,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
             return true;
         }
         else {
-            std::vector<std::string> values = split(_line,',');
+            std::vector<std::string> values = ada::split(_line,',');
             if (values.size() == 2) {
                 m_showPasses = (values[1] == "on");
             }
@@ -298,7 +297,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
             return true;
         }
         else {
-            std::vector<std::string> values = split(_line,',');
+            std::vector<std::string> values = ada::split(_line,',');
             if (values.size() == 2) {
                 m_error_screen = (values[1] == "on");
             }
@@ -318,16 +317,16 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     "lights                         get all light data."));
 
     _commands.push_back(Command("light_position", [&](const std::string& _line){ 
-        std::vector<std::string> values = split(_line,',');
+        std::vector<std::string> values = ada::split(_line,',');
         if (values.size() == 4) {
             if (uniforms.lights.size() > 0) 
-                uniforms.lights[0].setPosition(glm::vec3(toFloat(values[1]),toFloat(values[2]),toFloat(values[3])));
+                uniforms.lights[0].setPosition(glm::vec3(ada::toFloat(values[1]), ada::toFloat(values[2]), ada::toFloat(values[3])));
             return true;
         }
         else if (values.size() == 5) {
-            unsigned int i = toInt(values[1]);
+            unsigned int i = ada::toInt(values[1]);
             if (uniforms.lights.size() > i) 
-                uniforms.lights[i].setPosition(glm::vec3(toFloat(values[2]),toFloat(values[3]),toFloat(values[4])));
+                uniforms.lights[i].setPosition(glm::vec3(ada::toFloat(values[2]), ada::toFloat(values[3]), ada::toFloat(values[4])));
             return true;
         }
         else {
@@ -342,18 +341,18 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     "light_position[,<x>,<y>,<z>]   get or set the light position."));
 
     _commands.push_back(Command("light_color", [&](const std::string& _line){ 
-         std::vector<std::string> values = split(_line,',');
+         std::vector<std::string> values = ada::split(_line,',');
         if (values.size() == 4) {
             if (uniforms.lights.size() > 0) {
-                uniforms.lights[0].color = glm::vec3(toFloat(values[1]),toFloat(values[2]),toFloat(values[3]));
+                uniforms.lights[0].color = glm::vec3(ada::toFloat(values[1]), ada::toFloat(values[2]), ada::toFloat(values[3]));
                 uniforms.lights[0].bChange = true;
             }
             return true;
         }
         else if (values.size() == 5) {
-            unsigned int i = toInt(values[1]);
+            unsigned int i = ada::toInt(values[1]);
             if (uniforms.lights.size() > i) {
-                uniforms.lights[i].color = glm::vec3(toFloat(values[2]),toFloat(values[3]),toFloat(values[4]));
+                uniforms.lights[i].color = glm::vec3(ada::toFloat(values[2]), ada::toFloat(values[3]), ada::toFloat(values[4]));
                 uniforms.lights[i].bChange = true;
             }
             return true;
@@ -371,18 +370,18 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     "light_color[,<r>,<g>,<b>]      get or set the light color."));
 
     _commands.push_back(Command("light_falloff", [&](const std::string& _line){ 
-         std::vector<std::string> values = split(_line,',');
+         std::vector<std::string> values = ada::split(_line,',');
         if (values.size() == 2) {
             if (uniforms.lights.size() > 0) {
-                uniforms.lights[0].falloff = toFloat(values[1]);
+                uniforms.lights[0].falloff = ada::toFloat(values[1]);
                 uniforms.lights[0].bChange = true;
             }
             return true;
         }
         else if (values.size() == 5) {
-            unsigned int i = toInt(values[1]);
+            unsigned int i = ada::toInt(values[1]);
             if (uniforms.lights.size() > i) {
-                uniforms.lights[i].falloff = toFloat(values[2]);
+                uniforms.lights[i].falloff = ada::toFloat(values[2]);
                 uniforms.lights[i].bChange = true;
             }
             return true;
@@ -398,18 +397,18 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     "light_falloff[,<value>]        get or set the light falloff distance."));
 
     _commands.push_back(Command("light_intensity", [&](const std::string& _line){ 
-         std::vector<std::string> values = split(_line,',');
+         std::vector<std::string> values = ada::split(_line,',');
         if (values.size() == 2) {
             if (uniforms.lights.size() > 0) {
-                uniforms.lights[0].intensity = toFloat(values[1]);
+                uniforms.lights[0].intensity = ada::toFloat(values[1]);
                 uniforms.lights[0].bChange = true;
             }
             return true;
         }
         else if (values.size() == 5) {
-            unsigned int i = toInt(values[1]);
+            unsigned int i = ada::toInt(values[1]);
             if (uniforms.lights.size() > i) {
-                uniforms.lights[i].intensity = toFloat(values[2]);
+                uniforms.lights[i].intensity = ada::toFloat(values[2]);
                 uniforms.lights[i].bChange = true;
             }
             return true;
@@ -427,9 +426,9 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
 
     // CAMERA
     _commands.push_back(Command("camera_distance", [&](const std::string& _line){ 
-        std::vector<std::string> values = split(_line,',');
+        std::vector<std::string> values = ada::split(_line,',');
         if (values.size() == 2) {
-            uniforms.getCamera().setDistance(toFloat(values[1]));
+            uniforms.getCamera().setDistance(ada::toFloat(values[1]));
             return true;
         }
         else {
@@ -441,7 +440,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     "camera_distance[,<dist>]       get or set the camera distance to the target."));
 
     _commands.push_back(Command("camera_type", [&](const std::string& _line){ 
-        std::vector<std::string> values = split(_line,',');
+        std::vector<std::string> values = ada::split(_line,',');
         if (values.size() == 2) {
             if (values[1] == "ortho")
                 uniforms.getCamera().setType(ada::CameraType::ORTHO);
@@ -462,9 +461,9 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     "camera_type[,<ortho|perspective>] get or set the camera type"));
 
     _commands.push_back(Command("camera_fov", [&](const std::string& _line){ 
-        std::vector<std::string> values = split(_line,',');
+        std::vector<std::string> values = ada::split(_line,',');
         if (values.size() == 2) {
-            uniforms.getCamera().setFOV(toFloat(values[1]));
+            uniforms.getCamera().setFOV( ada::toFloat(values[1]) );
             return true;
         }
         else {
@@ -476,9 +475,9 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     "camera_fov[,<field_of_view>]   get or set the camera field of view."));
 
     _commands.push_back(Command("camera_position", [&](const std::string& _line){ 
-        std::vector<std::string> values = split(_line,',');
+        std::vector<std::string> values = ada::split(_line,',');
         if (values.size() == 4) {
-            uniforms.getCamera().setPosition(glm::vec3(toFloat(values[1]),toFloat(values[2]),toFloat(values[3])));
+            uniforms.getCamera().setPosition(glm::vec3(ada::toFloat(values[1]), ada::toFloat(values[2]), ada::toFloat(values[3])));
             uniforms.getCamera().lookAt(uniforms.getCamera().getTarget());
             return true;
         }
@@ -492,9 +491,9 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     "camera_position[,<x>,<y>,<z>]  get or set the camera position."));
 
     _commands.push_back(Command("camera_exposure", [&](const std::string& _line){ 
-        std::vector<std::string> values = split(_line,',');
+        std::vector<std::string> values = ada::split(_line,',');
         if (values.size() == 4) {
-            uniforms.getCamera().setExposure(toFloat(values[1]),toFloat(values[2]),toFloat(values[3]));
+            uniforms.getCamera().setExposure( ada::toFloat(values[1]), ada::toFloat(values[2]), ada::toFloat(values[3]));
             return true;
         }
         else {
@@ -506,7 +505,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     "camera_exposure[,<aper.>,<shutter>,<sensit.>]  get or set the camera exposure values."));
 
     _commands.push_back(Command("max_mem_in_queue", [&](const std::string & line) {
-        std::vector<std::string> values = split(line,',');
+        std::vector<std::string> values = ada::split(line,',');
         if (values.size() == 2) {
             m_max_mem_in_queue = std::stoll(values[1]);
         }
@@ -525,17 +524,17 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         m_frag_source = "";
         m_frag_dependencies.clear();
 
-        if ( !loadFromPath(_files[frag_index].path, &m_frag_source, include_folders, &m_frag_dependencies) )
+        if ( !ada::loadFromPath(_files[frag_index].path, &m_frag_source, include_folders, &m_frag_dependencies) )
             return;
 
-        setVersionFromCode(m_frag_source);
+        ada::setVersionFromCode(m_frag_source);
     }
     else {
         // If there is no use the default one
         if (geom_index == -1)
-            m_frag_source = getDefaultSrc(FRAG_DEFAULT);
+            m_frag_source = ada::getDefaultSrc(ada::FRAG_DEFAULT);
         else
-            m_frag_source = getDefaultSrc(FRAG_DEFAULT_SCENE);
+            m_frag_source = ada::getDefaultSrc(ada::FRAG_DEFAULT_SCENE);
     }
 
     if (vert_index != -1) {
@@ -543,18 +542,18 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         m_vert_source = "";
         m_vert_dependencies.clear();
 
-        loadFromPath(_files[vert_index].path, &m_vert_source, include_folders, &m_vert_dependencies);
+        ada::loadFromPath(_files[vert_index].path, &m_vert_source, include_folders, &m_vert_dependencies);
     }
     else {
         // If there is no use the default one
         if (geom_index == -1)
-            m_vert_source = getDefaultSrc(VERT_DEFAULT);
+            m_vert_source = ada::getDefaultSrc(ada::VERT_DEFAULT);
         else
-            m_vert_source = getDefaultSrc(VERT_DEFAULT_SCENE);
+            m_vert_source = ada::getDefaultSrc(ada::VERT_DEFAULT_SCENE);
     }
 
     // Init Scene elements
-    m_billboard_vbo = rect(0.0,0.0,1.0,1.0).getVbo();
+    m_billboard_vbo = ada::rect(0.0,0.0,1.0,1.0).getVbo();
 
     // LOAD GEOMETRY
     // -----------------------------------------------
@@ -574,7 +573,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     uniforms.getCamera().setViewport(ada::getWindowWidth(), ada::getWindowHeight());
 
     if (holoplay >= 0) {
-        addDefine("HOLOPLAY", toString(holoplay));
+        addDefine("HOLOPLAY", ada::toString(holoplay));
 
         uniforms.getCamera().setFOV(glm::radians(14.0f));
         uniforms.getCamera().setType(ada::CameraType::PERSPECTIVE_VIRTUAL_OFFSET);
@@ -807,28 +806,28 @@ bool Sandbox::reloadShaders( WatchFileList &_files ) {
     }
 
     // UPDATE Buffers
-    m_buffers_total = count_buffers(m_frag_source);
+    m_buffers_total = ada::count_buffers(m_frag_source);
     _updateBuffers();
 
     // Convolution Pyramids
-    m_convolution_pyramid_total = count_convolution_pyramid(getSource(FRAGMENT));
+    m_convolution_pyramid_total = ada::count_convolution_pyramid(getSource(FRAGMENT));
     _updateConvolutionPyramids();
     
     // UPDATE Postprocessing
-    bool havePostprocessing = check_for_postprocessing(getSource(FRAGMENT));
+    bool havePostprocessing = ada::check_for_postprocessing(getSource(FRAGMENT));
     if (havePostprocessing) {
         // Specific defines for this buffer
         m_postprocessing_shader.addDefine("POSTPROCESSING");
-        m_postprocessing_shader.load(m_frag_source, getDefaultSrc(VERT_BILLBOARD), false);
+        m_postprocessing_shader.load(m_frag_source, ada::getDefaultSrc(ada::VERT_BILLBOARD), false);
         m_postprocessing = havePostprocessing;
     }
     else if (holoplay >= 0) {
-        m_postprocessing_shader.load(getDefaultSrc(FRAG_HOLOPLAY), getDefaultSrc(VERT_BILLBOARD), false);
+        m_postprocessing_shader.load(ada::getDefaultSrc(ada::FRAG_HOLOPLAY), ada::getDefaultSrc(ada::VERT_BILLBOARD), false);
         uniforms.functions["u_scene"].present = true;
         m_postprocessing = true;
     }
     else if (fxaa) {
-        m_postprocessing_shader.load(getDefaultSrc(FRAG_FXAA), getDefaultSrc(VERT_BILLBOARD), false);
+        m_postprocessing_shader.load(ada::getDefaultSrc(ada::FRAG_FXAA), ada::getDefaultSrc(ada::VERT_BILLBOARD), false);
         uniforms.functions["u_scene"].present = true;
         m_postprocessing = true;
     }
@@ -858,16 +857,16 @@ void Sandbox::_updateBuffers() {
             
             // New Shader
             m_buffers_shaders.push_back( ada::Shader() );
-            m_buffers_shaders[i].addDefine("BUFFER_" + toString(i));
-            m_buffers_shaders[i].load(m_frag_source, getDefaultSrc(VERT_BILLBOARD), false);
+            m_buffers_shaders[i].addDefine("BUFFER_" + ada::toString(i));
+            m_buffers_shaders[i].load(m_frag_source, ada::getDefaultSrc(ada::VERT_BILLBOARD), false);
         }
     }
     else {
         for (unsigned int i = 0; i < m_buffers_shaders.size(); i++) {
 
             // Reload shader code
-            m_buffers_shaders[i].addDefine("BUFFER_" + toString(i));
-            m_buffers_shaders[i].load(m_frag_source, getDefaultSrc(VERT_BILLBOARD), false);
+            m_buffers_shaders[i].addDefine("BUFFER_" + ada::toString(i));
+            m_buffers_shaders[i].load(m_frag_source, ada::getDefaultSrc(ada::VERT_BILLBOARD), false);
         }
     }
 }
@@ -882,7 +881,7 @@ void Sandbox::_updateConvolutionPyramids() {
         m_convolution_pyramid_fbos.clear();
         m_convolution_pyramid_subshaders.clear();
         for (int i = 0; i < m_convolution_pyramid_total; i++) {
-            uniforms.convolution_pyramids.push_back( ConvolutionPyramid() );
+            uniforms.convolution_pyramids.push_back( ada::ConvolutionPyramid() );
             uniforms.convolution_pyramids[i].allocate(ada::getWindowWidth(), ada::getWindowHeight());
             uniforms.convolution_pyramids[i].pass = [this](ada::Fbo *_target, const ada::Fbo *_tex0, const ada::Fbo *_tex1, int _depth) {
                 _target->bind();
@@ -912,16 +911,16 @@ void Sandbox::_updateConvolutionPyramids() {
         }
     }
     
-    if (check_for_convolution_pyramid_algorithm(getSource(FRAGMENT))) {
+    if (ada::check_for_convolution_pyramid_algorithm(getSource(FRAGMENT))) {
         m_convolution_pyramid_shader.addDefine("CONVOLUTION_PYRAMID_ALGORITHM");
-        m_convolution_pyramid_shader.load(m_frag_source, getDefaultSrc(VERT_BILLBOARD), false);
+        m_convolution_pyramid_shader.load(m_frag_source, ada::getDefaultSrc(ada::VERT_BILLBOARD), false);
     }
     else
-        m_convolution_pyramid_shader.load(getDefaultSrc(FRAG_POISSON), getDefaultSrc(VERT_BILLBOARD), false);
+        m_convolution_pyramid_shader.load(ada::getDefaultSrc(ada::FRAG_POISSON), ada::getDefaultSrc(ada::VERT_BILLBOARD), false);
 
     for (unsigned int i = 0; i < m_convolution_pyramid_subshaders.size(); i++) {
-        m_convolution_pyramid_subshaders[i].addDefine("CONVOLUTION_PYRAMID_" + toString(i));
-        m_convolution_pyramid_subshaders[i].load(m_frag_source, getDefaultSrc(VERT_BILLBOARD), false);
+        m_convolution_pyramid_subshaders[i].addDefine("CONVOLUTION_PYRAMID_" + ada::toString(i));
+        m_convolution_pyramid_subshaders[i].load(m_frag_source, ada::getDefaultSrc(ada::VERT_BILLBOARD), false);
     }
 }
 
@@ -939,7 +938,7 @@ void Sandbox::_renderBuffers() {
         // Pass textures for the other buffers
         for (unsigned int j = 0; j < uniforms.buffers.size(); j++) {
             if (i != j) {
-                m_buffers_shaders[i].setUniformTexture("u_buffer" + toString(j), &uniforms.buffers[j] );
+                m_buffers_shaders[i].setUniformTexture("u_buffer" + ada::toString(j), &uniforms.buffers[j] );
             }
         }
 
@@ -1152,7 +1151,7 @@ void Sandbox::render() {
 
         // Pass textures of buffers
         for (unsigned int i = 0; i < uniforms.buffers.size(); i++)
-            m_postprocessing_shader.setUniformTexture("u_buffer" + toString(i), &uniforms.buffers[i]);
+            m_postprocessing_shader.setUniformTexture("u_buffer" + ada::toString(i), &uniforms.buffers[i]);
 
         m_billboard_vbo->render( &m_postprocessing_shader );
     }
@@ -1163,7 +1162,7 @@ void Sandbox::render() {
             m_record_fbo.bind();
 
         if (!m_billboard_shader.isLoaded())
-            m_billboard_shader.load(getDefaultSrc(FRAG_DYNAMIC_BILLBOARD), getDefaultSrc(VERT_DYNAMIC_BILLBOARD), false);
+            m_billboard_shader.load(ada::getDefaultSrc(ada::FRAG_DYNAMIC_BILLBOARD), ada::getDefaultSrc(ada::VERT_DYNAMIC_BILLBOARD), false);
 
         m_billboard_shader.use();
         m_billboard_shader.setUniform("u_depth", 0.0f);
@@ -1178,7 +1177,7 @@ void Sandbox::render() {
         m_record_fbo.unbind();
 
         if (!m_billboard_shader.isLoaded())
-            m_billboard_shader.load(getDefaultSrc(FRAG_DYNAMIC_BILLBOARD), getDefaultSrc(VERT_DYNAMIC_BILLBOARD), false);
+            m_billboard_shader.load(ada::getDefaultSrc(ada::FRAG_DYNAMIC_BILLBOARD), ada::getDefaultSrc(ada::VERT_DYNAMIC_BILLBOARD), false);
 
         m_billboard_shader.use();
         m_billboard_shader.setUniform("u_depth", 0.0f);
@@ -1207,7 +1206,7 @@ void Sandbox::renderUI() {
             float yOffset = h - yStep;
 
             if (!m_billboard_shader.isLoaded())
-                m_billboard_shader.load(getDefaultSrc(FRAG_DYNAMIC_BILLBOARD), getDefaultSrc(VERT_DYNAMIC_BILLBOARD), false);
+                m_billboard_shader.load(ada::getDefaultSrc(ada::FRAG_DYNAMIC_BILLBOARD), ada::getDefaultSrc(ada::VERT_DYNAMIC_BILLBOARD), false);
 
             m_billboard_shader.use();
 
@@ -1246,7 +1245,7 @@ void Sandbox::renderUI() {
             float yOffset = h - yStep;
 
             if (!m_billboard_shader.isLoaded())
-                m_billboard_shader.load(getDefaultSrc(FRAG_DYNAMIC_BILLBOARD), getDefaultSrc(VERT_DYNAMIC_BILLBOARD), false);
+                m_billboard_shader.load(ada::getDefaultSrc(ada::FRAG_DYNAMIC_BILLBOARD), ada::getDefaultSrc(ada::VERT_DYNAMIC_BILLBOARD), false);
 
             m_billboard_shader.use();
 
@@ -1340,7 +1339,7 @@ void Sandbox::renderUI() {
         float y = h;
 
         if (!m_histogram_shader.isLoaded())
-            m_histogram_shader.load(getDefaultSrc(FRAG_HISTOGRAM), getDefaultSrc(VERT_DYNAMIC_BILLBOARD), false);
+            m_histogram_shader.load(ada::getDefaultSrc(ada::FRAG_HISTOGRAM), ada::getDefaultSrc(ada::VERT_DYNAMIC_BILLBOARD), false);
 
         m_histogram_shader.use();
         for (std::map<std::string, ada::Texture*>::iterator it = uniforms.textures.begin(); it != uniforms.textures.end(); it++) {
@@ -1355,10 +1354,10 @@ void Sandbox::renderUI() {
 
     if (cursor && ada::getMouseEntered()) {
         if (m_cross_vbo == nullptr) 
-            m_cross_vbo = cross(glm::vec3(0.0, 0.0, 0.0), 10.).getVbo();
+            m_cross_vbo = ada::cross(glm::vec3(0.0, 0.0, 0.0), 10.).getVbo();
 
         if (!m_wireframe2D_shader.isLoaded())
-            m_wireframe2D_shader.load(getDefaultSrc(FRAG_WIREFRAME_2D), getDefaultSrc(VERT_WIREFRAME_2D), false);
+            m_wireframe2D_shader.load(ada::getDefaultSrc(ada::FRAG_WIREFRAME_2D), ada::getDefaultSrc(ada::VERT_WIREFRAME_2D), false);
 
         glLineWidth(2.0f);
         m_wireframe2D_shader.use();
@@ -1374,7 +1373,7 @@ void Sandbox::renderUI() {
 void Sandbox::renderDone() {
     // RECORD
     if (m_record_sec || m_record_frame) {
-        onScreenshot(toString(m_record_counter, 0, 5, '0') + ".png");
+        onScreenshot( ada::toString(m_record_counter, 0, 5, '0') + ".png");
         m_record_counter++;
 
         if (m_record_sec) {
@@ -1479,13 +1478,13 @@ void Sandbox::onFileChange(WatchFileList &_files, int index) {
     if (type == FRAG_SHADER) {
         m_frag_source = "";
         m_frag_dependencies.clear();
-        if ( loadFromPath(filename, &m_frag_source, include_folders, &m_frag_dependencies) )
+        if ( ada::loadFromPath(filename, &m_frag_source, include_folders, &m_frag_dependencies) )
             reloadShaders(_files);
     }
     else if (type == VERT_SHADER) {
         m_vert_source = "";
         m_vert_dependencies.clear();
-        if ( loadFromPath(filename, &m_vert_source, include_folders, &m_vert_dependencies) )
+        if ( ada::loadFromPath(filename, &m_vert_source, include_folders, &m_vert_dependencies) )
             reloadShaders(_files);
     }
     else if (type == GEOMETRY) {
@@ -1594,7 +1593,7 @@ void Sandbox::onScreenshot(std::string _file) {
     if (_file != "" && ada::isGL()) {
         glBindFramebuffer(GL_FRAMEBUFFER, m_record_fbo.getId());
 
-        if (getExt(_file) == "hdr") {
+        if (ada::getExt(_file) == "hdr") {
             float* pixels = new float[ada::getWindowWidth() * ada::getWindowHeight()*4];
             glReadPixels(0, 0, ada::getWindowWidth(), ada::getWindowHeight(), GL_RGBA, GL_FLOAT, pixels);
             savePixelsHDR(_file, pixels, ada::getWindowWidth(), ada::getWindowHeight());

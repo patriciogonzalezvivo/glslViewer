@@ -9,10 +9,15 @@ endif()
 # The compiled ADA 
 add_subdirectory(deps)
 
-file(GLOB ROOT_SOURCE "${PROJECT_SOURCE_DIR}/src/*.cpp")
-add_executable(glslViewer
-    ${ROOT_SOURCE}
+file(GLOB ROOT_SOURCE 
+    "${PROJECT_SOURCE_DIR}/src/*.cpp"
+    "${PROJECT_SOURCE_DIR}/src/gl/*.cpp"
+    "${PROJECT_SOURCE_DIR}/src/io/*.cpp"
+    "${PROJECT_SOURCE_DIR}/src/scene/*.cpp"
+    "${PROJECT_SOURCE_DIR}/src/types/*.cpp"
+    "${PROJECT_SOURCE_DIR}/src/shaders/*.cpp"
 )
+add_executable(glslViewer ${ROOT_SOURCE} )
 
 set_target_properties(glslViewer PROPERTIES
     CXX_STANDARD 11
@@ -22,9 +27,9 @@ set_target_properties(glslViewer PROPERTIES
 target_include_directories(glslViewer PUBLIC 
     "${PROJECT_SOURCE_DIR}/deps/phonedepth"
     "${PROJECT_SOURCE_DIR}/deps/thread_pool"
-    "${PROJECT_SOURCE_DIR}/deps/tineobjloader"
-    "${PROJECT_SOURCE_DIR}/deps/tinegltf"
-    "${PROJECT_SOURCE_DIR}/deps/tineply"
+    "${PROJECT_SOURCE_DIR}/deps/tinyobjloader"
+    "${PROJECT_SOURCE_DIR}/deps/tinygltf"
+    "${PROJECT_SOURCE_DIR}/deps/tinyply"
 )
 
 if (EMSCRIPTEN)    

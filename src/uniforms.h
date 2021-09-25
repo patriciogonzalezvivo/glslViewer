@@ -9,14 +9,13 @@
 #include "ada/gl/shader.h"
 #include "ada/gl/texture.h"
 #include "ada/gl/textureStream.h"
-#include "gl/textureAudio.h"
-
-#include "types/convolutionPyramid.h"
-
-#include "scene/light.h"
+#include "ada/gl/textureAudio.h"
+#include "ada/gl/convolutionPyramid.h"
 #include "ada/scene/camera.h"
+#include "ada/scene/light.h"
 
-#include "io/fs.h"
+#include "files.h"
+#include "ada/tools/fs.h"
 
 struct UniformData {
     std::string getType();
@@ -74,6 +73,7 @@ public:
 
     // Feed uniforms to a specific shader
     bool                    feedTo( ada::Shader &_shader );
+    bool                    feedTo( ada::Shader *_shader );
 
     ada::Camera&            getCamera() { return cameras[0]; }
 
@@ -100,13 +100,13 @@ public:
     TextureList             textures;
     StreamsList             streams;
 
-    ada::TextureCube*            cubemap;
+    ada::TextureCube*       cubemap;
     std::vector<ada::Fbo>   buffers;
-    std::vector<ConvolutionPyramid> convolution_pyramids;
+    std::vector<ada::ConvolutionPyramid> convolution_pyramids;
 
     // 3d Scene Uniforms 
     std::vector<ada::Camera>    cameras;
-    std::vector<Light>          lights;
+    std::vector<ada::Light>     lights;
 
 protected:
     bool                    m_change;

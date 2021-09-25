@@ -6,17 +6,17 @@
 #include <string>
 
 #define TINYPLY_IMPLEMENTATION
-#include "tinyply/tinyply.h"
+#include "tinyply.h"
 
-#include "../tools/geom.h"
-#include "../tools/text.h"
+#include "ada/tools/geom.h"
+#include "ada/tools/text.h"
 
-bool loadPLY(Uniforms& _uniforms, WatchFileList& _files, Materials& _materials, Models& _models, int _index, bool _verbose) {
+bool loadPLY(Uniforms& _uniforms, WatchFileList& _files, ada::Materials& _materials, ada::Models& _models, int _index, bool _verbose) {
     std::string filename = _files[_index].path;
 
     std::string name = filename.substr(0, filename.size()-4);
 
-    Material default_material;
+    ada::Material default_material;
     std::vector<glm::vec4> mesh_colors;
     std::vector<glm::vec3> mesh_vertices;
     std::vector<glm::vec3> mesh_normals;
@@ -191,7 +191,7 @@ bool loadPLY(Uniforms& _uniforms, WatchFileList& _files, Materials& _materials, 
     _materials[default_material.name] = default_material;
 
     if (face_indices.size() > 0) {
-        Mesh mesh;
+        ada::Mesh mesh;
         mesh.addColors(mesh_colors);
         mesh.addVertices(mesh_vertices);
         mesh.addTexCoords(mesh_texcoords);
@@ -204,11 +204,11 @@ bool loadPLY(Uniforms& _uniforms, WatchFileList& _files, Materials& _materials, 
 
         mesh.computeTangents();
 
-        _models.push_back( new Model(name, mesh, default_material) );
+        _models.push_back( new ada::Model(name, mesh, default_material) );
     }
 
     if (edge_indices.size() > 0) {
-        Mesh mesh;
+        ada::Mesh mesh;
         mesh.setDrawMode( GL_LINES );
         mesh.addColors(mesh_colors);
         mesh.addVertices(mesh_vertices);
@@ -218,19 +218,19 @@ bool loadPLY(Uniforms& _uniforms, WatchFileList& _files, Materials& _materials, 
 
         mesh.addIndices( edge_indices );
 
-        _models.push_back( new Model(name + "_edges", mesh, default_material) );
+        _models.push_back( new ada::Model(name + "_edges", mesh, default_material) );
 
     }
 
     if ( face_indices.size() == 0 && edge_indices.size() == 0) {
-        Mesh mesh;
+        ada::Mesh mesh;
         mesh.setDrawMode( GL_POINTS );
         mesh.addColors(mesh_colors);
         mesh.addVertices(mesh_vertices);
         mesh.addTexCoords(mesh_texcoords);
         mesh.addNormals( mesh_normals );
 
-        _models.push_back( new Model(name + "_points", mesh, default_material) );
+        _models.push_back( new ada::Model(name + "_points", mesh, default_material) );
     }
     
     return false;
@@ -496,7 +496,7 @@ bool loadPLY(Uniforms& _uniforms, WatchFileList& _files, Materials& _materials, 
 //             name = "lines";
 //         else
 //             name = "mesh";
-//         _models.push_back( new Model(name, mesh, default_material) );
+//         _models.push_back( new ada::Model(name, mesh, default_material) );
 
 //         return true;
 

@@ -1,17 +1,13 @@
 #pragma once
 
-#include "model.h"
 
-#include "../uniforms.h"
-
-#include "../io/command.h"
+#include "uniforms.h"
+#include "io/command.h"
 
 #include "ada/gl/vbo.h"
 #include "ada/gl/shader.h"
 #include "ada/gl/textureCube.h"
-
-#include "../scene/model.h"
-#include "../types/skybox.h"
+#include "ada/scene/model.h"
 
 enum CullingMode {
     NONE = 0,
@@ -51,7 +47,7 @@ public:
     void            setCulling(CullingMode _culling) { m_culling = _culling; }
     CullingMode     getCulling() { return m_culling; }
 
-    void            setCubeMap( SkyBox* _skybox );
+    void            setCubeMap(ada::SkyBox* _skybox );
 
     void            flagChange();
     void            unflagChange();
@@ -74,8 +70,8 @@ public:
 
 protected:
      // Geometry
-    std::vector<Model*>             m_models;
-    std::map<std::string,Material>  m_materials;
+    std::vector<ada::Model*>             m_models;
+    std::map<std::string,ada::Material>  m_materials;
 
     ada::Node           m_origin;
     glm::mat4           m_mvp;
@@ -99,9 +95,9 @@ protected:
     // CubeMap
     ada::Shader         m_cubemap_shader;
     ada::Vbo*           m_cubemap_vbo;
-    SkyBox*             m_cubemap_skybox;
+    ada::SkyBox*        m_cubemap_skybox;
 
-    SkyBox              m_skybox;
+    ada::SkyBox         m_skybox;
 
     ada::Shader         m_floor_shader;
     ada::Vbo*           m_floor_vbo;

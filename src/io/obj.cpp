@@ -4,13 +4,13 @@
 #include <fstream>
 #include <string>
 
-#include "../tools/geom.h"
-#include "../tools/text.h"
+#include "ada/tools/geom.h"
+#include "ada/tools/text.h"
 
 #define TINYOBJLOADER_IMPLEMENTATION
-#include "tinyobjloader/tiny_obj_loader.h"
+#include "tiny_obj_loader.h"
 
-void addModel (std::vector<Model*>& _models, const std::string& _name, Mesh& _mesh, Material& _mat, bool _verbose) {
+void addModel (std::vector<ada::Model*>& _models, const std::string& _name, ada::Mesh& _mesh, ada::Material& _mat, bool _verbose) {
     if (_verbose) {
         std::cout << "    vertices = " << _mesh.getVertices().size() << std::endl;
         std::cout << "    colors   = " << _mesh.getColors().size() << std::endl;
@@ -35,7 +35,7 @@ void addModel (std::vector<Model*>& _models, const std::string& _name, Mesh& _me
         if ( _verbose )
             std::cout << "    . Compute tangents" << std::endl;
 
-    _models.push_back( new Model(_name, _mesh, _mat) );
+    _models.push_back( new ada::Model(_name, _mesh, _mat) );
 }
 
 glm::vec3 getVertex(const tinyobj::attrib_t& _attrib, int _index) {
@@ -89,7 +89,7 @@ void computeSmoothingNormals(const tinyobj::attrib_t& _attrib, const tinyobj::sh
 
         // Compute the normal of the face
         glm::vec3 normal;
-        calcNormal(v[0], v[1], v[2], normal);
+        ada::calcNormal(v[0], v[1], v[2], normal);
 
         // Add the normal to the three vertexes
         for (size_t i = 0; i < 3; ++i) {
@@ -113,15 +113,15 @@ glm::vec2 getTexCoords(const tinyobj::attrib_t& _attrib, int _index) {
                         1.0f - _attrib.texcoords[2 * _index + 1]);
 }
 
-Material InitMaterial (const tinyobj::material_t& _material, Uniforms& _uniforms, WatchFileList& _files, const std::string& _folder ) {
-    Material mat;
-    mat.name = toLower( toUnderscore( purifyString( _material.name ) ) );
+ada::Material InitMaterial (const tinyobj::material_t& _material, Uniforms& _uniforms, WatchFileList& _files, const std::string& _folder ) {
+    ada::Material mat;
+    mat.name = ada::toLower( ada::toUnderscore( ada::purifyString( _material.name ) ) );
 
-    mat.addDefine("MATERIAL_NAME_" + toUpper(mat.name) );
+    mat.addDefine("MATERIAL_NAME_" + ada::toUpper(mat.name) );
 
     mat.addDefine("MATERIAL_BASECOLOR", glm::vec4(_material.diffuse[0], _material.diffuse[1], _material.diffuse[2], 1.0));
     if (!_material.diffuse_texname.empty()) {
-        std::string name = getUniformName(_material.diffuse_texname);
+        std::string name = ada::getUniformName(_material.diffuse_texname);
         _uniforms.addTexture(name, _folder + _material.diffuse_texname, _files);
         mat.addDefine("MATERIAL_BASECOLORMAP", name);
 
@@ -138,7 +138,7 @@ Material InitMaterial (const tinyobj::material_t& _material, Uniforms& _uniforms
 
     mat.addDefine("MATERIAL_SPECULAR", (float*)_material.specular, 3);
     if (!_material.specular_texname.empty()) {
-        std::string name = getUniformName(_material.specular_texname);
+        std::string name = ada::getUniformName(_material.specular_texname);
         _uniforms.addTexture(name, _folder + _material.specular_texname, _files);
         mat.addDefine("MATERIAL_SPECULARMAP", name);
 
@@ -155,7 +155,7 @@ Material InitMaterial (const tinyobj::material_t& _material, Uniforms& _uniforms
 
     mat.addDefine("MATERIAL_EMISSIVE", (float*)_material.emission, 3);
     if (!_material.emissive_texname.empty()) {
-        std::string name = getUniformName(_material.emissive_texname);
+        std::string name = ada::getUniformName(_material.emissive_texname);
         _uniforms.addTexture(name, _folder + _material.emissive_texname, _files);
         mat.addDefine("MATERIAL_EMISSIVEMAP", name);
 
@@ -172,7 +172,7 @@ Material InitMaterial (const tinyobj::material_t& _material, Uniforms& _uniforms
 
     mat.addDefine("MATERIAL_ROUGHNESS", _material.roughness);
     if (!_material.roughness_texname.empty()) {
-        std::string name = getUniformName(_material.roughness_texname);
+        std::string name = ada::getUniformName(_material.roughness_texname);
         _uniforms.addTexture(name, _folder + _material.roughness_texname, _files);
         mat.addDefine("MATERIAL_ROUGHNESSMAP", name);
 
@@ -189,7 +189,7 @@ Material InitMaterial (const tinyobj::material_t& _material, Uniforms& _uniforms
 
     mat.addDefine("MATERIAL_METALLIC", _material.metallic);
     if (!_material.metallic_texname.empty()) {
-        std::string name = getUniformName(_material.metallic_texname);
+        std::string name = ada::getUniformName(_material.metallic_texname);
         _uniforms.addTexture(name, _folder + _material.metallic_texname, _files);
         mat.addDefine("MATERIAL_METALLICMAP", name);
 
@@ -205,7 +205,7 @@ Material InitMaterial (const tinyobj::material_t& _material, Uniforms& _uniforms
     }
 
     if (!_material.normal_texname.empty()) {
-        std::string name = getUniformName(_material.normal_texname);
+        std::string name = ada::getUniformName(_material.normal_texname);
         _uniforms.addTexture(name, _folder + _material.normal_texname, _files);
         mat.addDefine("MATERIAL_NORMALMAP", name);
 
@@ -221,7 +221,7 @@ Material InitMaterial (const tinyobj::material_t& _material, Uniforms& _uniforms
     }
 
     if (!_material.bump_texname.empty()) {
-        std::string name = getUniformName(_material.bump_texname);
+        std::string name = ada::getUniformName(_material.bump_texname);
         _uniforms.addTexture(name, _folder + _material.bump_texname, _files);
         mat.addDefine("MATERIAL_BUMPMAP", name);
         _uniforms.addBumpTexture(name + "_normalmap", _folder + _material.bump_texname, _files);
@@ -240,7 +240,7 @@ Material InitMaterial (const tinyobj::material_t& _material, Uniforms& _uniforms
     }
 
     if (!_material.displacement_texname.empty()) {
-        std::string name = getUniformName(_material.displacement_texname);
+        std::string name = ada::getUniformName(_material.displacement_texname);
         _uniforms.addTexture(name, _folder + _material.displacement_texname, _files);
         mat.addDefine("MATERIAL_DISPLACEMENTMAP", name);
 
@@ -256,7 +256,7 @@ Material InitMaterial (const tinyobj::material_t& _material, Uniforms& _uniforms
     }
 
     if (!_material.alpha_texname.empty()) {
-        std::string name = getUniformName(_material.alpha_texname);
+        std::string name = ada::getUniformName(_material.alpha_texname);
         _uniforms.addTexture(name, _folder + _material.alpha_texname, _files);
         mat.addDefine("MATERIAL_ALPHAMAP", name);
 
@@ -274,7 +274,7 @@ Material InitMaterial (const tinyobj::material_t& _material, Uniforms& _uniforms
     // EXTRA 
      mat.addDefine("MATERIAL_SHEEN", _material.sheen);
     if (!_material.sheen_texname.empty()) {
-        std::string name = getUniformName(_material.sheen_texname);
+        std::string name = ada::getUniformName(_material.sheen_texname);
         _uniforms.addTexture(name, _folder + _material.sheen_texname, _files);
         mat.addDefine("MATERIAL_SHEENMAP", name);
 
@@ -309,7 +309,7 @@ Material InitMaterial (const tinyobj::material_t& _material, Uniforms& _uniforms
 
     // mat.addDefine("MATERIAL_AMBIENT", (float*)_material.ambient, 3);
     // if (!_material.ambient_texname.empty()) {
-    //     std::string name = getUniformName(_material.ambient_texname);
+    //     std::string name = ada::getUniformName(_material.ambient_texname);
     //     _uniforms.addTexture(name, _folder + _material.ambient_texname, _files);
     //     mat.addDefine("MATERIAL_AMBIENTMAP", name);
     // }
@@ -317,7 +317,7 @@ Material InitMaterial (const tinyobj::material_t& _material, Uniforms& _uniforms
     mat.addDefine("MATERIAL_DISSOLVE", _material.dissolve);
     mat.addDefine("MATERIAL_TRANSMITTANCE", (float*)_material.transmittance, 3);
     if (!_material.reflection_texname.empty()) {
-        std::string name = getUniformName(_material.reflection_texname);
+        std::string name = ada::getUniformName(_material.reflection_texname);
         _uniforms.addTexture(name, _folder + _material.reflection_texname, _files);
         mat.addDefine("MATERIAL_REFLECTIONMAP", name);
 
@@ -337,7 +337,7 @@ Material InitMaterial (const tinyobj::material_t& _material, Uniforms& _uniforms
     return mat;
 }
 
-bool loadOBJ(Uniforms& _uniforms, WatchFileList& _files, Materials& _materials, Models& _models, int _index, bool _verbose) {
+bool loadOBJ(Uniforms& _uniforms, WatchFileList& _files, ada::Materials& _materials, ada::Models& _models, int _index, bool _verbose) {
     std::string filename = _files[_index].path;
 
     tinyobj::attrib_t attrib;
@@ -346,7 +346,7 @@ bool loadOBJ(Uniforms& _uniforms, WatchFileList& _files, Materials& _materials, 
 
     std::string warn;
     std::string err;
-    std::string base_dir = getBaseDir(filename.c_str());
+    std::string base_dir = ada::getBaseDir(filename.c_str());
     bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, filename.c_str(), base_dir.c_str());
 
     if (!warn.empty()) {
@@ -380,7 +380,7 @@ bool loadOBJ(Uniforms& _uniforms, WatchFileList& _files, Materials& _materials, 
             if (_verbose)
                 std::cout << "Add Material " << materials[m].name << std::endl;
 
-            Material mat = InitMaterial( materials[m], _uniforms, _files, base_dir );
+            ada::Material mat = InitMaterial( materials[m], _uniforms, _files, base_dir );
             _materials[ materials[m].name ] = mat;
         }
     }
@@ -389,7 +389,7 @@ bool loadOBJ(Uniforms& _uniforms, WatchFileList& _files, Materials& _materials, 
 
         std::string name = shapes[s].name;
         if (name.empty())
-            name = toString(s);
+            name = ada::toString(s);
 
         if (_verbose)
             std::cerr << name << std::endl;
@@ -402,10 +402,10 @@ bool loadOBJ(Uniforms& _uniforms, WatchFileList& _files, Materials& _materials, 
             computeSmoothingNormals(attrib, shapes[s], smoothVertexNormals);
         }
 
-        Mesh mesh;
+        ada::Mesh mesh;
         mesh.setDrawMode(GL_TRIANGLES);
 
-        Material mat;
+        ada::Material mat;
         std::map<int, tinyobj::index_t> unique_indices;
         std::map<int, tinyobj::index_t>::iterator iter;
         
@@ -428,10 +428,10 @@ bool loadOBJ(Uniforms& _uniforms, WatchFileList& _files, Materials& _materials, 
                     // If there is a switch of material start a new mesh
                     if (mi != -1 && mesh.getVertices().size() > 0) {
 
-                        // std::cout << "Adding model " << name  << "_" << toString(mCounter, 3, '0') << " w new material " << mat.name << std::endl;
+                        // std::cout << "Adding model " << name  << "_" << ada::toString(mCounter, 3, '0') << " w new material " << mat.name << std::endl;
                         
                         // Add the model to the stack 
-                        addModel(_models, name + "_"+ toString(mCounter,3,'0'), mesh, mat, _verbose);
+                        addModel(_models, name + "_"+ ada::toString(mCounter,3,'0'), mesh, mat, _verbose);
                         mCounter++;
 
                         // Restart the mesh
@@ -486,7 +486,7 @@ bool loadOBJ(Uniforms& _uniforms, WatchFileList& _files, Materials& _materials, 
 
         std::string meshName = name;
         if (mCounter > 0)
-            meshName = name + "_" + toString(mCounter, 3, '0');
+            meshName = name + "_" + ada::toString(mCounter, 3, '0');
 
         // std::cout << "Adding model " << meshName << " w material " << mat.name << std::endl;
         addModel(_models, meshName, mesh, mat, _verbose);
