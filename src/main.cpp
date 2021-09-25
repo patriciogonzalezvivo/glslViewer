@@ -281,7 +281,7 @@ void declareCommands() {
                         filesMutex.lock();
                         fileChanged = i;
                         filesMutex.unlock();
-                        std::this_thread::sleep_for(std::chrono::milliseconds( getRestMs() ));
+                        std::this_thread::sleep_for(std::chrono::milliseconds( ada::getRestMs() ));
                 }
             }
             fullFps = false;
@@ -301,7 +301,7 @@ void declareCommands() {
                         filesMutex.lock();
                         fileChanged = i;
                         filesMutex.unlock();
-                        std::this_thread::sleep_for(std::chrono::milliseconds( getRestMs() ));
+                        std::this_thread::sleep_for(std::chrono::milliseconds( ada::getRestMs() ));
                 }
             }
             fullFps = false;
@@ -318,7 +318,7 @@ void declareCommands() {
                 filesMutex.lock();
                 fileChanged = i;
                 filesMutex.unlock();
-                std::this_thread::sleep_for(std::chrono::milliseconds( getRestMs() ));
+                std::this_thread::sleep_for(std::chrono::milliseconds( ada::getRestMs() ));
             }
             fullFps = false;
             return true;
@@ -552,7 +552,7 @@ void declareCommands() {
                     }
                 }
                 std::cout << " ] " << pct << "%" << std::endl;
-                std::this_thread::sleep_for(std::chrono::milliseconds( getRestMs() ));
+                std::this_thread::sleep_for(std::chrono::milliseconds( ada::getRestMs() ));
             }
             return true;
         }
@@ -601,7 +601,7 @@ void declareCommands() {
                     }
                 }
                 std::cout << " ] " << pct << "%" << std::endl;
-                std::this_thread::sleep_for(std::chrono::milliseconds( getRestMs() ));
+                std::this_thread::sleep_for(std::chrono::milliseconds( ada::getRestMs() ));
             }
             return true;
         }
@@ -650,7 +650,7 @@ void declareCommands() {
                     }
                 }
                 std::cout << " ] " << pct << "%" << std::endl;
-                std::this_thread::sleep_for(std::chrono::milliseconds( getRestMs() ));
+                std::this_thread::sleep_for(std::chrono::milliseconds( ada::getRestMs() ));
             }
             return true;
         }
@@ -1098,7 +1098,7 @@ int main(int argc, char **argv){
 
         // If nothing in the scene change skip the frame and try to keep it at 60fps
         if (!timeOut && !fullFps && !sandbox.haveChange()) {
-            std::this_thread::sleep_for(std::chrono::milliseconds( getRestMs() ));
+            std::this_thread::sleep_for(std::chrono::milliseconds( ada::getRestMs() ));
             continue;
         }
 
@@ -1245,8 +1245,8 @@ void runCmd(const std::string &_cmd, std::mutex &_mutex) {
 //============================================================================
 void cinWatcherThread() {
     while (!sandbox.isReady()) {
-        pal_sleep( getRestSec() * 1000000 );
-        std::this_thread::sleep_for(std::chrono::milliseconds( getRestMs() ));
+        pal_sleep( ada::getRestSec() * 1000000 );
+        std::this_thread::sleep_for(std::chrono::milliseconds( ada::getRestMs() ));
     }
 
     // Argument commands to execute comming from -e or -E

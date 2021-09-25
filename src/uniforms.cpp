@@ -9,8 +9,8 @@
 #include "phonedepth/extract_depthmap.h"
 #include "io/pixels.h"
 
-#include "gl/textureBump.h"
-#include "gl/textureStreamSequence.h"
+#include "ada/gl/textureBump.h"
+#include "ada/gl/textureStreamSequence.h"
 #ifdef SUPPORT_FOR_LIBAV 
 #include "gl/textureStreamAV.h"
 #endif
@@ -39,12 +39,12 @@ UniformFunction::UniformFunction(const std::string &_type) {
     type = _type;
 }
 
-UniformFunction::UniformFunction(const std::string &_type, std::function<void(Shader&)> _assign) {
+UniformFunction::UniformFunction(const std::string &_type, std::function<void(ada::Shader&)> _assign) {
     type = _type;
     assign = _assign;
 }
 
-UniformFunction::UniformFunction(const std::string &_type, std::function<void(Shader&)> _assign, std::function<std::string()> _print) {
+UniformFunction::UniformFunction(const std::string &_type, std::function<void(ada::Shader&)> _assign, std::function<std::string()> _print) {
     type = _type;
     assign = _assign;
     print = _print;
@@ -57,81 +57,81 @@ Uniforms::Uniforms(): cubemap(nullptr), m_change(false), m_is_audio_init(false) 
     // set the right distance to the camera
     // Set up camera
 
-    cameras.push_back( Camera() );
+    cameras.push_back( ada::Camera() );
 
-    functions["u_iblLuminance"] = UniformFunction("float", [this](Shader& _shader) {
+    functions["u_iblLuminance"] = UniformFunction("float", [this](ada::Shader& _shader) {
         _shader.setUniform("u_iblLuminance", 30000.0f * getCamera().getExposure());
     },
     [this]() { return toString(30000.0f * getCamera().getExposure()); });
     
     // CAMERA UNIFORMS
     //
-    functions["u_camera"] = UniformFunction("vec3", [this](Shader& _shader) {
+    functions["u_camera"] = UniformFunction("vec3", [this](ada::Shader& _shader) {
         _shader.setUniform("u_camera", -getCamera().getPosition() );
     },
     [this]() { return toString(-getCamera().getPosition(), ','); });
 
-    functions["u_cameraDistance"] = UniformFunction("float", [this](Shader& _shader) {
+    functions["u_cameraDistance"] = UniformFunction("float", [this](ada::Shader& _shader) {
         _shader.setUniform("u_cameraDistance", getCamera().getDistance());
     },
     [this]() { return toString(getCamera().getDistance()); });
 
-    functions["u_cameraNearClip"] = UniformFunction("float", [this](Shader& _shader) {
+    functions["u_cameraNearClip"] = UniformFunction("float", [this](ada::Shader& _shader) {
         _shader.setUniform("u_cameraNearClip", getCamera().getNearClip());
     },
     [this]() { return toString(getCamera().getNearClip()); });
 
-    functions["u_cameraFarClip"] = UniformFunction("float", [this](Shader& _shader) {
+    functions["u_cameraFarClip"] = UniformFunction("float", [this](ada::Shader& _shader) {
         _shader.setUniform("u_cameraFarClip", getCamera().getFarClip());
     },
     [this]() { return toString(getCamera().getFarClip()); });
 
-    functions["u_cameraEv100"] = UniformFunction("float", [this](Shader& _shader) {
+    functions["u_cameraEv100"] = UniformFunction("float", [this](ada::Shader& _shader) {
         _shader.setUniform("u_cameraEv100", getCamera().getEv100());
     },
     [this]() { return toString(getCamera().getEv100()); });
 
-    functions["u_cameraExposure"] = UniformFunction("float", [this](Shader& _shader) {
+    functions["u_cameraExposure"] = UniformFunction("float", [this](ada::Shader& _shader) {
         _shader.setUniform("u_cameraExposure", getCamera().getExposure());
     },
     [this]() { return toString(getCamera().getExposure()); });
 
-    functions["u_cameraAperture"] = UniformFunction("float", [this](Shader& _shader) {
+    functions["u_cameraAperture"] = UniformFunction("float", [this](ada::Shader& _shader) {
         _shader.setUniform("u_cameraAperture", getCamera().getAperture());
     },
     [this]() { return toString(getCamera().getAperture()); });
 
-    functions["u_cameraShutterSpeed"] = UniformFunction("float", [this](Shader& _shader) {
+    functions["u_cameraShutterSpeed"] = UniformFunction("float", [this](ada::Shader& _shader) {
         _shader.setUniform("u_cameraShutterSpeed", getCamera().getShutterSpeed());
     },
     [this]() { return toString(getCamera().getShutterSpeed()); });
 
-    functions["u_cameraSensitivity"] = UniformFunction("float", [this](Shader& _shader) {
+    functions["u_cameraSensitivity"] = UniformFunction("float", [this](ada::Shader& _shader) {
         _shader.setUniform("u_cameraSensitivity", getCamera().getSensitivity());
     },
     [this]() { return toString(getCamera().getSensitivity()); });
     
-    functions["u_normalMatrix"] = UniformFunction("mat3", [this](Shader& _shader) {
+    functions["u_normalMatrix"] = UniformFunction("mat3", [this](ada::Shader& _shader) {
         _shader.setUniform("u_normalMatrix", getCamera().getNormalMatrix());
     });
 
     // CAMERA MATRIX UNIFORMS
-    functions["u_viewMatrix"] = UniformFunction("mat4", [this](Shader& _shader) {
+    functions["u_viewMatrix"] = UniformFunction("mat4", [this](ada::Shader& _shader) {
         _shader.setUniform("u_viewMatrix", getCamera().getViewMatrix());
     });
 
-    functions["u_projectionMatrix"] = UniformFunction("mat4", [this](Shader& _shader) {
+    functions["u_projectionMatrix"] = UniformFunction("mat4", [this](ada::Shader& _shader) {
         _shader.setUniform("u_projectionMatrix", getCamera().getProjectionMatrix());
     });
 
     // IBL UNIFORM
-    functions["u_cubeMap"] = UniformFunction("samplerCube", [this](Shader& _shader) {
+    functions["u_cubeMap"] = UniformFunction("samplerCube", [this](ada::Shader& _shader) {
         if (cubemap) {
-            _shader.setUniformTextureCube("u_cubeMap", (TextureCube*)cubemap);
+            _shader.setUniformTextureCube("u_cubeMap", (ada::TextureCube*)cubemap);
         }
     });
 
-    functions["u_SH"] = UniformFunction("vec3", [this](Shader& _shader) {
+    functions["u_SH"] = UniformFunction("vec3", [this](ada::Shader& _shader) {
         if (cubemap) {
             _shader.setUniform("u_SH", cubemap->SH, 9);
         }
@@ -176,7 +176,7 @@ bool Uniforms::parseLine( const std::string &_line ) {
     return somethingChange;
 }
 
-bool Uniforms::addTexture( const std::string& _name, Texture* _texture) {
+bool Uniforms::addTexture( const std::string& _name, ada::Texture* _texture) {
     if (textures.find(_name) == textures.end()) {
         textures[ _name ] = _texture;
         return true;
@@ -200,7 +200,7 @@ bool Uniforms::addTexture(const std::string& _name, const std::string& _path, Wa
         // If we can lets proceed creating a texgure
         else {
 
-            Texture* tex = new Texture();
+            ada::Texture* tex = new ada::Texture();
             // load an image into the texture
             if (tex->load(_path, _flip)) {
 
@@ -235,7 +235,7 @@ bool Uniforms::addTexture(const std::string& _name, const std::string& _path, Wa
                             int width, height;
                             unsigned char* pixels = loadPixels(dm, dm_size, &width, &height, RGB, _flip);
 
-                            Texture* tex_dm = new Texture();
+                            ada::Texture* tex_dm = new ada::Texture();
                             if (tex_dm->load(width, height, 3, 8, pixels)) {
                                 textures[ _name + "Depth"] = tex_dm;
 
@@ -268,13 +268,13 @@ bool Uniforms::addBumpTexture(const std::string& _name, const std::string& _path
         
         // If we can lets proceed creating a texgure
         else {
-            TextureBump* tex = new TextureBump();
+            ada::TextureBump* tex = new ada::TextureBump();
 
             // load an image into the texture
             if (tex->load(_path, _flip)) {
 
                 // the image is loaded finish add the texture to the uniform list
-                textures[ _name ] = (Texture*)tex;
+                textures[ _name ] = (ada::Texture*)tex;
 
                 // and the file to the watch list
                 WatchFile file;
@@ -304,12 +304,12 @@ bool Uniforms::addStreamingTexture( const std::string& _name, const std::string&
 
         // Check if it's a PNG Sequence
         if (check_for_pattern(_url)) {
-            TextureStreamSequence *tex = new TextureStreamSequence();
+            ada::TextureStreamSequence *tex = new ada::TextureStreamSequence();
 
             if (tex->load(_url, _vflip)) {
                 // the image is loaded finish add the texture to the uniform list
-                textures[ _name ] = (Texture*)tex;
-                streams[ _name ] = (TextureStream*)tex;
+                textures[ _name ] = (ada::Texture*)tex;
+                streams[ _name ] = (ada::TextureStream*)tex;
 
                 if (_verbose) {
                     std::cout << "// " << _url << " sequence loaded as streaming texture: " << std::endl;
@@ -333,8 +333,8 @@ bool Uniforms::addStreamingTexture( const std::string& _name, const std::string&
             // load an image into the texture
             if (tex->load(_url, _vflip)) {
                 // the image is loaded finish add the texture to the uniform list
-                textures[ _name ] = (Texture*)tex;
-                streams[ _name ] = (TextureStream*)tex;
+                textures[ _name ] = (ada::Texture*)tex;
+                streams[ _name ] = (ada::TextureStream*)tex;
 
                 if (_verbose) {
                     std::cout << "// " << _url << " loaded as streaming texture: " << std::endl;
@@ -354,8 +354,8 @@ bool Uniforms::addStreamingTexture( const std::string& _name, const std::string&
             // load an image into the texture
             if (tex->load(_url, _vflip)) {
                 // the image is loaded finish add the texture to the uniform list
-                textures[ _name ] = (Texture*)tex;
-                streams[ _name ] = (TextureStream*)tex;
+                textures[ _name ] = (ada::Texture*)tex;
+                streams[ _name ] = (ada::TextureStream*)tex;
 
                 if (_verbose) {
                     std::cout << "// " << _url << " loaded as streaming texture: " << std::endl;
@@ -420,8 +420,8 @@ bool Uniforms::addAudioTexture(const std::string& _name, const std::string& devi
             std::cout << "//    uniform sampler2D   " << _name  << ";"<< std::endl;
             std::cout << "//    uniform vec2        " << _name  << "Resolution;"<< std::endl;
         }
-            textures[ _name ] = (Texture*)tex;
-            streams[ _name ] = (TextureStream*)tex;
+            textures[ _name ] = (ada::Texture*)tex;
+            streams[ _name ] = (ada::TextureStream*)tex;
             m_is_audio_init = true;
             return true;
     }
@@ -478,7 +478,7 @@ void Uniforms::set( const std::string& _name, float _x, float _y, float _z, floa
     m_change = true;
 }
 
-void Uniforms::setCubeMap( TextureCube* _cubemap ) {
+void Uniforms::setCubeMap( ada::TextureCube* _cubemap ) {
     if (cubemap)
         delete cubemap;
 
@@ -491,7 +491,7 @@ void Uniforms::setCubeMap( const std::string& _filename, WatchFileList& _files, 
         std::cerr << "Error watching for cubefile: " << _filename << std::endl;
     }
     else {
-        TextureCube* tex = new TextureCube();
+        ada::TextureCube* tex = new ada::TextureCube();
         if ( tex->load(_filename, true) ) {
 
             setCubeMap(tex);
@@ -524,7 +524,7 @@ void Uniforms::checkPresenceIn( const std::string &_vert_src, const std::string 
     }
 }
 
-bool Uniforms::feedTo( Shader &_shader ) {
+bool Uniforms::feedTo(ada::Shader &_shader ) {
     bool update = false;
 
     // Pass Native uniforms 
