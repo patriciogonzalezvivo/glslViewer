@@ -16,7 +16,7 @@
 #include <utility>
 #include <vector>
 
-#include "thread_pool/semaphore.hpp"
+#include "semaphore.hpp"
 
 namespace thread_pool {
 

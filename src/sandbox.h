@@ -3,7 +3,7 @@
 #include "scene/scene.h"
 #include "types/list.h"
 
-#include "thread_pool/thread_pool.hpp"
+#include "thread_pool.hpp"
 
 #include <atomic>
 

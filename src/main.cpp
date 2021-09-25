@@ -16,7 +16,6 @@
 
 #include "sandbox.h"
 #include "io/fs.h"
-#include "io/osc.h"
 #include "tools/text.h"
 #include "shaders/defaultShaders.h"
 
@@ -45,8 +44,8 @@ std::mutex  consoleMutex;
 std::vector<std::string> cmds_arguments;    // Execute commands
 bool        execute_exit    = false;
 
-// Open Sound Control
-Osc osc_listener;
+// // Open Sound Control
+// Osc osc_listener;
 
 std::string version = "2.0.0";
 std::string name = "GlslViewer";
@@ -838,12 +837,12 @@ int main(int argc, char **argv){
         else if ( argument == "--fxaa" ) {
             sandbox.fxaa = true;
         }
-        else if ( argument== "-p" || argument == "--port" ) {
-            if(++i < argc)
-                osc_listener.start(toInt(std::string(argv[i])), runCmd, sandbox.verbose);
-            else
-                std::cout << "Argument '" << argument << "' should be followed by an <osc_port>. Skipping argument." << std::endl;
-        }
+        // else if ( argument== "-p" || argument == "--port" ) {
+        //     if(++i < argc)
+        //         osc_listener.start(toInt(std::string(argv[i])), runCmd, sandbox.verbose);
+        //     else
+        //         std::cout << "Argument '" << argument << "' should be followed by an <osc_port>. Skipping argument." << std::endl;
+        // }
         else if ( argument == "-e" ) {
             if(++i < argc)         
                 cmds_arguments.push_back(std::string(argv[i]));

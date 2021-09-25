@@ -20,7 +20,11 @@ set_target_properties(glslViewer PROPERTIES
 )
 
 target_include_directories(glslViewer PUBLIC 
-    "${PROJECT_SOURCE_DIR}/deps/"
+    "${PROJECT_SOURCE_DIR}/deps/phonedepth"
+    "${PROJECT_SOURCE_DIR}/deps/thread_pool"
+    "${PROJECT_SOURCE_DIR}/deps/tineobjloader"
+    "${PROJECT_SOURCE_DIR}/deps/tinegltf"
+    "${PROJECT_SOURCE_DIR}/deps/tineply"
 )
 
 if (EMSCRIPTEN)    
@@ -36,5 +40,7 @@ else()
     target_link_libraries(glslViewer PRIVATE ada)
     target_link_libraries(glslViewer PRIVATE pthread)
 endif()
+
+target_link_libraries(glslViewer PUBLIC phonedepth)
 
 

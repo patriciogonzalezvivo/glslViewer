@@ -6,7 +6,7 @@
 
 #include "tools/text.h"
 
-#include "phonedepth/extract_depthmap.h"
+#include "extract_depthmap.h"
 #include "io/pixels.h"
 
 #include "ada/gl/textureBump.h"
