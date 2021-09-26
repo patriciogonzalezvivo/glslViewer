@@ -14,7 +14,7 @@
 #include "ada/scene/camera.h"
 #include "ada/scene/light.h"
 
-#include "files.h"
+#include "io/files.h"
 #include "ada/tools/fs.h"
 
 struct UniformData {

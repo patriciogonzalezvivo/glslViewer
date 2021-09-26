@@ -7,12 +7,12 @@
 #include "ada/window.h"
 #include "ada/tools/text.h"
 #include "ada/tools/geom.h"
+#include "ada/tools/pixels.h"
 #include "ada/shaders/defaultShaders.h"
 
 #include "glm/gtx/matrix_transform_2d.hpp"
 #include "glm/gtx/rotate_vector.hpp"
 
-#include "io/pixels.h"
 
 #include <memory>
 
@@ -1596,7 +1596,7 @@ void Sandbox::onScreenshot(std::string _file) {
         if (ada::getExt(_file) == "hdr") {
             float* pixels = new float[ada::getWindowWidth() * ada::getWindowHeight()*4];
             glReadPixels(0, 0, ada::getWindowWidth(), ada::getWindowHeight(), GL_RGBA, GL_FLOAT, pixels);
-            savePixelsHDR(_file, pixels, ada::getWindowWidth(), ada::getWindowHeight());
+            ada::savePixelsHDR(_file, pixels, ada::getWindowWidth(), ada::getWindowHeight());
         }
         else {
             int width = ada::getWindowWidth();
@@ -1618,7 +1618,7 @@ void Sandbox::onScreenshot(std::string _file) {
                 public:
                 void operator()() {
                     if (m_pixels) {
-                        savePixels(m_file_name, m_pixels.get(), m_width, m_height);
+                        ada::savePixels(m_file_name, m_pixels.get(), m_width, m_height);
                         m_pixels = nullptr;
                         (*m_task_count)--;
                         (*m_max_mem_in_queue) += mem_consumed_by_pixels();

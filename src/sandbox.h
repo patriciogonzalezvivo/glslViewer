@@ -1,12 +1,11 @@
 #pragma once
 
-#include "files.h"
-#include "scene.h"
-#include "list.h"
-
+#include <atomic>
 #include "thread_pool.hpp"
 
-#include <atomic>
+#include "scene.h"
+#include "list.h"
+#include "io/files.h"
 
 enum ShaderType {
     FRAGMENT = 0,

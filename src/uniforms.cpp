@@ -4,11 +4,11 @@
 #include <sstream>
 #include <sys/stat.h>
 
-#include "files.h"
-#include "io/pixels.h"
+#include "io/files.h"
 #include "extract_depthmap.h"
 
 #include "ada/tools/text.h"
+#include "ada/tools/pixels.h"
 #include "ada/gl/textureBump.h"
 #include "ada/gl/textureStreamSequence.h"
 #ifdef SUPPORT_FOR_LIBAV 
@@ -233,7 +233,7 @@ bool Uniforms::addTexture(const std::string& _name, const std::string& _path, Wa
 
                         if (dm_type == TYPE_JPEG) {
                             int width, height;
-                            unsigned char* pixels = loadPixels(dm, dm_size, &width, &height, RGB, _flip);
+                            unsigned char* pixels = ada::loadPixels(dm, dm_size, &width, &height, ada::RGB, _flip);
 
                             ada::Texture* tex_dm = new ada::Texture();
                             if (tex_dm->load(width, height, 3, 8, pixels)) {
@@ -244,7 +244,7 @@ bool Uniforms::addTexture(const std::string& _name, const std::string& _path, Wa
                                     std::cout << "//    uniform vec2        " << _name  << "DepthResolution;"<< std::endl;
                                 }
                             }   
-                            freePixels(pixels);
+                            ada::freePixels(pixels);
                         }
                     }
                 }

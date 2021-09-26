@@ -16,10 +16,10 @@
 #include "ada/tools/fs.h"
 #include "ada/tools/time.h"
 #include "ada/tools/text.h"
-#include "ada//shaders/defaultShaders.h"
+#include "ada/shaders/defaultShaders.h"
 
-#include "files.h"
 #include "sandbox.h"
+#include "io/files.h"
 
 
 // GLOBAL VARIABLES
@@ -1132,7 +1132,7 @@ int main(int argc, char **argv){
 
 // Events
 //============================================================================
-void onKeyPress (int _key) {
+void ada::onKeyPress (int _key) {
     if (screensaver) {
         bRun = false;
         bRun.store(false);
@@ -1145,7 +1145,7 @@ void onKeyPress (int _key) {
     }
 }
 
-void onMouseMove(float _x, float _y) {
+void ada::onMouseMove(float _x, float _y) {
     if (screensaver) {
         if (sandbox.isReady()) {
             bRun = false;
@@ -1154,18 +1154,18 @@ void onMouseMove(float _x, float _y) {
     }
 }
 
-void onMouseClick(float _x, float _y, int _button) {
+void ada::onMouseClick(float _x, float _y, int _button) {
 }
 
-void onScroll(float _yoffset) {
+void ada::onScroll(float _yoffset) {
     sandbox.onScroll(_yoffset);
 }
 
-void onMouseDrag(float _x, float _y, int _button) {
+void ada::onMouseDrag(float _x, float _y, int _button) {
     sandbox.onMouseDrag(_x, _y, _button);
 }
 
-void onViewportResize(int _newWidth, int _newHeight) {
+void ada::onViewportResize(int _newWidth, int _newHeight) {
     sandbox.onViewportResize(_newWidth, _newHeight);
 }
 
