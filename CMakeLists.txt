@@ -28,18 +28,20 @@ target_include_directories(glslViewer PUBLIC
     "${PROJECT_SOURCE_DIR}/deps/tinyply"
 )
 
-target_link_libraries(glslViewer PUBLIC ada phonedepth pthread)
 if (EMSCRIPTEN)    
     set_target_properties(glslViewer PROPERTIES SUFFIX ".html")
     set(LFLAGS "${LFLAGS} -s USE_GLFW=3")
+    set(LFLAGS "${LFLAGS} -s ALLOW_MEMORY_GROWTH=1")
     set(LFLAGS "${LFLAGS} -s NO_DYNAMIC_EXECUTION=1")
+
+    set(LFLAGS "${LFLAGS} --preload-file 008.frag")
+    set(LFLAGS "${LFLAGS} --preload-file dragon.obj")
     
     set_target_properties(glslViewer PROPERTIES LINK_FLAGS "${LFLAGS}")
-    target_link_libraries(glslViewer PRIVATE glfw)
-    
+    target_link_libraries(glslViewer PRIVATE ada glfw phonedepth)
 else()
 
-    target_link_libraries(glslViewer PRIVATE ada)
+    target_link_libraries(glslViewer PRIVATE ada phonedepth)
 endif()
 
 

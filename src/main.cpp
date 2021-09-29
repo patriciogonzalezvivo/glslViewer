@@ -1,3 +1,9 @@
+#ifdef __EMSCRIPTEN__
+#include <emscripten/emscripten.h>
+#include <emscripten/html5.h>
+#define GLFW_INCLUDE_ES3
+#endif
+
 #include <sys/stat.h>
 
 #ifndef PLATFORM_WINDOWS
@@ -21,44 +27,38 @@
 #include "sandbox.h"
 #include "io/files.h"
 
+std::string version = "2.0.0";
+std::string name    = "GlslViewer";
+std::string header  = name + " " + version + " by Patricio Gonzalez Vivo ( patriciogonzalezvivo.com )"; 
+bool fullFps        = false;
+bool timeOut        = false;
+bool screensaver    = false;
 
-// GLOBAL VARIABLES
-//============================================================================
-//
-std::atomic<bool> bRun(true);
+// Here is where all the magic happens
+Sandbox         sandbox;
+CommandList     commands;
 
 //  List of FILES to watch and the variable to communicate that between process
-WatchFileList files;
-std::mutex filesMutex;
-int fileChanged;
+WatchFileList   files;
+std::mutex      filesMutex;
+int             fileChanged;
 
-// Console elements
-CommandList commands;
-std::mutex  consoleMutex;
-std::vector<std::string> cmds_arguments;    // Execute commands
-bool        execute_exit    = false;
+std::mutex      consoleMutex;
+std::atomic<bool>           bRun(true);
+std::vector<std::string>    cmds_arguments;    // Execute commands
+bool                        execute_exit = false;
 
+
+#ifndef __EMSCRIPTEN__
 // // Open Sound Control
 // Osc osc_listener;
 
-std::string version = "2.0.0";
-std::string name = "GlslViewer";
-std::string header = name + " " + version + " by Patricio Gonzalez Vivo ( patriciogonzalezvivo.com )"; 
-
-bool fullFps = false;
-bool timeOut = false;
-bool screensaver = false;
-
-// Here is where all the magic happens
-Sandbox sandbox;
-
-//================================================================= Threads
 void runCmd(const std::string &_cmd, std::mutex &_mutex);
 void fileWatcherThread();
 void cinWatcherThread();
-
-//================================================================= Functions
 void onExit();
+#endif
+
 void printUsage(char * executableName) {
     std::cerr << "// " << header << std::endl;
     std::cerr << "// "<< std::endl;
@@ -681,24 +681,63 @@ void declareCommands() {
     "exit                           close glslViewer", false));
 }
 
+void loop() {
+    ada::updateGL();
+
+    glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+
+    #ifndef __EMSCRIPTEN__
+    // Something change??
+    if ( fileChanged != -1 ) {
+        filesMutex.lock();
+        sandbox.onFileChange( files, fileChanged );
+        fileChanged = -1;
+        filesMutex.unlock();
+    }
+
+    // If nothing in the scene change skip the frame and try to keep it at 60fps
+    if (!timeOut && !fullFps && !sandbox.haveChange()) {
+        std::this_thread::sleep_for(std::chrono::milliseconds( ada::getRestMs() ));
+        return;
+    }
+    #endif
+
+    // Draw Scene
+    sandbox.render();
+
+    // Draw Cursor and 2D Debug elements
+    sandbox.renderUI();
+
+    // Finish drawing
+    sandbox.renderDone();
+
+#ifndef __EMSCRIPTEN__
+    if ( timeOut && sandbox.screenshotFile == "" )
+        bRun.store(false);
+    else
+#endif
+        // Swap the buffers
+        ada::renderGL();
+}
+
+
 // Main program
 //============================================================================
-int main(int argc, char **argv){
+int main(int argc, char **argv) {
+    std::cout << "MAIN" << std::endl; 
 
     // Set the size
     glm::ivec4 windowPosAndSize = glm::ivec4(0);
-    #ifndef DRIVER_GLFW
-        // RASPBERRYPI default windows size (fullscreen)
-        glm::ivec2 screen = getScreenSize();
-        windowPosAndSize.z = screen.x;
-        windowPosAndSize.w = screen.y;
-    #else
-        // OSX/LINUX default windows size
-        windowPosAndSize.z = 512;
-        windowPosAndSize.w = 512;
+    windowPosAndSize.z = 512;
+    windowPosAndSize.w = 512;
+
+    #if defined(DRIVER_BROADCOM) || defined(DRIVER_GBM) 
+    glm::ivec2 screen = getScreenSize();
+    windowPosAndSize.z = screen.x;
+    windowPosAndSize.w = screen.y;
     #endif
 
-    ada::WindowStyle windowStyle = ada::REGULAR;
+    ada::WindowStyle window_style = ada::REGULAR;
     bool displayHelp = false;
     bool willLoadGeometry = false;
     bool willLoadTextures = false;
@@ -741,27 +780,27 @@ int main(int argc, char **argv){
             displayHelp = true;
         }
         else if (   std::string(argv[i]) == "--headless" ) {
-            windowStyle = ada::HEADLESS;
+            window_style = ada::HEADLESS;
         }
         else if (   std::string(argv[i]) == "-f" ||
                     std::string(argv[i]) == "--fullscreen" ) {
-            windowStyle = ada::FULLSCREEN;
+            window_style = ada::FULLSCREEN;
         }
         else if (   std::string(argv[i]) == "--holoplay") {
-            windowStyle = ada::HOLOPLAY;
+            window_style = ada::HOLOPLAY;
         }
         else if (   std::string(argv[i]) == "-l" ||
                     std::string(argv[i]) == "--life-coding" ){
-        #ifndef DRIVER_GLFW
-            windowPosAndSize.x = windowPosAndSize.z - 512;
-            windowPosAndSize.z = windowPosAndSize.w = 512;
-        #else
-            windowStyle = ada::ALLWAYS_ON_TOP;
-        #endif
+            #if defined(DRIVER_BROADCOM) || defined(DRIVER_GBM) 
+                window_viewport.x = window_viewport.z - 512;
+                window_viewport.z = window_viewport.w = 512;
+            #else
+                window_style = ada::ALLWAYS_ON_TOP;
+            #endif
         }
         else if (   std::string(argv[i]) == "-ss" ||
                     std::string(argv[i]) == "--screensaver") {
-            windowStyle = ada::FULLSCREEN;
+            window_style = ada::FULLSCREEN;
             screensaver = true;
         }
         else if ( ( ada::haveExt(argument,"ply") || ada::haveExt(argument,"PLY") ||
@@ -788,10 +827,10 @@ int main(int argc, char **argv){
                     argument.rfind("rtsp://", 0) == 0 ||
                     argument.rfind("rtmp://", 0) == 0 ) {
             willLoadTextures = true;
-        }
-        
+        }   
     }
 
+    #ifndef __EMSCRIPTEN__
     if (displayHelp) {
         printUsage( argv[0] );
         exit(0);
@@ -799,9 +838,11 @@ int main(int argc, char **argv){
 
     // Declare commands
     declareCommands();
+    #endif
 
     // Initialize openGL context
-    ada::initGL (windowPosAndSize, windowStyle);
+    std::cout << "initGL()" << std::endl;
+    ada::initGL (windowPosAndSize, window_style);
     ada::setWindowTitle("GlslViewer");
 
     struct stat st;                         // for files to watch
@@ -1056,79 +1097,51 @@ int main(int argc, char **argv){
     }
 
     // If no shader
+    #ifndef __EMSCRIPTEN__
     if ( sandbox.frag_index == -1 && sandbox.vert_index == -1 && sandbox.geom_index == -1 ) {
         printUsage(argv[0]);
         onExit();
         exit(EXIT_FAILURE);
     }
+    #endif
+
+    for ( size_t i = 0; i < files.size(); i++ )
+        std::cout << files[i].path << std::endl;
+
+    sandbox.setup(files, commands);
+
+#ifdef __EMSCRIPTEN__
+    emscripten_set_main_loop(loop, 0, true);
+
+#else
 
     // Start watchers
     fileChanged = -1;
     std::thread fileWatcher( &fileWatcherThread );
     std::thread cinWatcher( &cinWatcherThread );
-
-    // Start working on the GL context
-    filesMutex.lock();
-    sandbox.setup(files, commands);
-    filesMutex.unlock();
-
-    if (sandbox.verbose)
-        std::cout << "Starting Render Loop" << std::endl; 
     
     // Render Loop
-    while ( ada::isGL() && bRun.load() ) {
-        // Update
-        ada::updateGL();
-
-        glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-
-        // Something change??
-        if ( fileChanged != -1 ) {
-            filesMutex.lock();
-            sandbox.onFileChange( files, fileChanged );
-            fileChanged = -1;
-            filesMutex.unlock();
-        }
-
-        // If nothing in the scene change skip the frame and try to keep it at 60fps
-        if (!timeOut && !fullFps && !sandbox.haveChange()) {
-            std::this_thread::sleep_for(std::chrono::milliseconds( ada::getRestMs() ));
-            continue;
-        }
-
-        // Draw Scene
-        sandbox.render();
-
-        // Draw Cursor and 2D Debug elements
-        sandbox.renderUI();
-
-        // Finish drawing
-        sandbox.renderDone();
-
-        if ( timeOut && sandbox.screenshotFile == "" )
-            bRun.store(false);
-        else
-            // Swap the buffers
-            ada::renderGL();
-    }
-
+    while ( ada::isGL() && bRun.load() )
+        loop();
+    
     // If is terminated by the windows manager, turn bRun off so the fileWatcher can stop
-    if ( !ada::isGL() ) {
+    if ( !ada::isGL() )
         bRun.store(false);
-    }
 
     onExit();
     
     // Wait for watchers to end
     fileWatcher.join();
 
-
     // Force cinWatcher to finish (because is waiting for input)
-#ifndef PLATFORM_WINDOWS
+    #ifndef PLATFORM_WINDOWS
     pthread_t cinHandler = cinWatcher.native_handle();
     pthread_cancel( cinHandler );
-#endif//
+    #endif//
     exit(0);
+#endif
+
+    return 1;
 }
 
 // Events
@@ -1170,6 +1183,8 @@ void ada::onViewportResize(int _newWidth, int _newHeight) {
     sandbox.onViewportResize(_newWidth, _newHeight);
 }
 
+
+#ifndef __EMSCRIPTEN__
 void onExit() {
     // clear screen
     glClear( GL_COLOR_BUFFER_BIT );
@@ -1180,7 +1195,6 @@ void onExit() {
     // close openGL instance
     ada::closeGL();
 }
-
 
 //  Watching Thread
 //============================================================================
@@ -1211,19 +1225,17 @@ void runCmd(const std::string &_cmd, std::mutex &_mutex) {
         if (ada::beginsWith(_cmd, commands[i].begins_with)) {
 
             // Do require mutex the thread?
-            if (commands[i].mutex)
-                _mutex.lock();
+            if (commands[i].mutex) _mutex.lock();
 
             // Execute de command
             resolve = commands[i].exec(_cmd);
 
-            if (commands[i].mutex)
-                _mutex.unlock();
+            if (commands[i].mutex)  _mutex.unlock();
 
             // If got resolved stop searching
-            if (resolve) {
+            if (resolve)
                 break;
-            }
+
         }
     }
 
@@ -1265,3 +1277,4 @@ void cinWatcherThread() {
         std::cout << "// > ";
     }
 }
+#endif

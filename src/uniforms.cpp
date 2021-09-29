@@ -11,12 +11,14 @@
 #include "ada/tools/pixels.h"
 #include "ada/gl/textureBump.h"
 #include "ada/gl/textureStreamSequence.h"
+
 #ifdef SUPPORT_FOR_LIBAV 
-#include "gl/textureStreamAV.h"
+#include "ada/gl/textureStreamAV.h"
 #endif
+
 #ifdef PLATFORM_RPI
-#include "gl/textureStreamMMAL.h"
-#include "gl/textureStreamOMX.h"
+#include "ada/gl/textureStreamMMAL.h"
+#include "ada/gl/textureStreamOMX.h"
 #endif
 
 std::string UniformData::getType() {
@@ -371,15 +373,15 @@ bool Uniforms::addStreamingTexture( const std::string& _name, const std::string&
 #endif
 #endif
         else {
-#ifdef SUPPORT_FOR_LIBAV
-        TextureStreamAV* tex = new TextureStreamAV();
+#if defined(SUPPORT_FOR_LIBAV)
+        ada::TextureStreamAV* tex = new ada::TextureStreamAV();
         tex->device = _device;
 
         // load an image into the texture
         if (tex->load(_url, _vflip)) {
             // the image is loaded finish add the texture to the uniform list
-            textures[ _name ] = (Texture*)tex;
-            streams[ _name ] = (TextureStream*)tex;
+            textures[ _name ] = (ada::Texture*)tex;
+            streams[ _name ] = (ada::TextureStream*)tex;
 
             if (_verbose) {
                 std::cout << "// " << _url << " loaded as streaming texture: " << std::endl;
@@ -406,11 +408,11 @@ bool Uniforms::addStreamingTexture( const std::string& _name, const std::string&
 
 bool Uniforms::addAudioTexture(const std::string& _name, const std::string& device_id, bool _flip, bool _verbose) {
 
-#ifdef SUPPORT_FOR_LIBAV
+#if defined(SUPPORT_FOR_LIBAV) && defined(SUPPORT_FOR_MINIAUDIO)
     // already init
     if (m_is_audio_init) return false;
 
-    auto tex = new TextureAudio();
+    auto tex = new ada::TextureAudio();
 
     // TODO: add flipping mode for audio texture
     if (tex->load(device_id, _flip)) {

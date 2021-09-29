@@ -70,7 +70,6 @@ public:
     // Check presence of uniforms on shaders
     void                    checkPresenceIn( const std::string &_vert_src, const std::string &_frag_src );
 
-
     // Feed uniforms to a specific shader
     bool                    feedTo( ada::Shader &_shader );
     bool                    feedTo( ada::Shader *_shader );
