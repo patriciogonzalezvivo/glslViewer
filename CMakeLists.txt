@@ -12,8 +12,9 @@ add_subdirectory(deps)
 file(GLOB ROOT_SOURCE 
     "${PROJECT_SOURCE_DIR}/src/*.cpp"
     "${PROJECT_SOURCE_DIR}/src/io/*.cpp"
+    "deps/phonedepth/extract_depthmap.cpp"
 )
-add_executable(glslViewer ${ROOT_SOURCE} )
+add_executable(glslViewer ${ROOT_SOURCE})
 
 set_target_properties(glslViewer PROPERTIES
     CXX_STANDARD 11
@@ -29,19 +30,22 @@ target_include_directories(glslViewer PUBLIC
 )
 
 if (EMSCRIPTEN)    
+file(COPY   examples DESTINATION ${CMAKE_CURRENT_BINARY_DIR} )
+
     set_target_properties(glslViewer PROPERTIES SUFFIX ".html")
     set(LFLAGS "${LFLAGS} -s USE_GLFW=3")
     set(LFLAGS "${LFLAGS} -s ALLOW_MEMORY_GROWTH=1")
     set(LFLAGS "${LFLAGS} -s NO_DYNAMIC_EXECUTION=1")
 
-    set(LFLAGS "${LFLAGS} --preload-file 008.frag")
-    set(LFLAGS "${LFLAGS} --preload-file dragon.obj")
+    set(LFLAGS "${LFLAGS} --preload-file examples")
     
     set_target_properties(glslViewer PROPERTIES LINK_FLAGS "${LFLAGS}")
-    target_link_libraries(glslViewer PRIVATE ada glfw phonedepth)
+    target_link_libraries(glslViewer PRIVATE ada glfw pthread)
+    
 else()
+    target_link_libraries(glslViewer PRIVATE ada)
+    target_link_libraries(glslViewer PRIVATE lo_static pthread)
 
-    target_link_libraries(glslViewer PRIVATE ada phonedepth)
 endif()
 
 

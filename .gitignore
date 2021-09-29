@@ -31,3 +31,4 @@ debian/glslviewer.substvars
 premake5.exe
 
 build/
+build_wasm/
