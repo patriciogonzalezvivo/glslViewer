@@ -11,11 +11,11 @@
 #include "ada/gl/textureStream.h"
 #include "ada/gl/textureAudio.h"
 #include "ada/gl/convolutionPyramid.h"
+#include "ada/tools/fs.h"
 #include "ada/scene/camera.h"
 #include "ada/scene/light.h"
 
-#include "io/files.h"
-#include "ada/tools/fs.h"
+#include "types/files.h"
 
 struct UniformData {
     std::string getType();

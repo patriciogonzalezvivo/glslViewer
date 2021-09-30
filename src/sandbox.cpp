@@ -3,6 +3,7 @@
 #include <sys/stat.h>   // stat
 #include <algorithm>    // std::find
 #include <math.h>
+#include <memory>
 
 #include "ada/window.h"
 #include "ada/tools/text.h"
@@ -14,7 +15,6 @@
 #include "glm/gtx/rotate_vector.hpp"
 
 
-#include <memory>
 
 // This are hardcoded values for the Portrait HoloPlay by LGF.
 //  in order to render correctly make sure this values match your calibration file on your device
@@ -56,12 +56,15 @@ Sandbox::Sandbox():
     m_histogram_texture(nullptr), m_histogram(false),
     // Scene
     m_view2d(1.0), m_time_offset(0.0), m_lat(180.0), m_lon(0.0), m_frame(0), m_change(true), m_initialized(false), m_error_screen(true),
+    #ifdef MULTITHREAD_RECORDING 
+    m_task_count(0),
+    /** allow 500 MB to be used for the image save queue **/
+    m_max_mem_in_queue(500 * 1024 * 1024),
+    m_save_threads(std::max(1, static_cast<int>(std::thread::hardware_concurrency()) - 1)),
+    #endif
     // Debug
     m_showTextures(false), m_showPasses(false)
-    // m_task_count(0),
-    /** allow 500 MB to be used for the image save queue **/
-    // m_max_mem_in_queue(500 * 1024 * 1024),
-    // m_save_threads(std::max(1, static_cast<int>(std::thread::hardware_concurrency()) - 1))
+
 {
 
     // TIME UNIFORMS
@@ -108,7 +111,7 @@ Sandbox::Sandbox():
         }
     });
 
-    #if !defined(PLATFORM_RPI) && !defined(__EMSCRIPTEN__)
+    #if !defined(PLATFORM_RPI)
     uniforms.functions["u_sceneDepth"] = UniformFunction("sampler2D", [this](ada::Shader& _shader) {
         if (m_postprocessing && m_scene_fbo.getTextureId()) {
             _shader.setUniformDepthTexture("u_sceneDepth", &m_scene_fbo, _shader.textureIndex++ );
@@ -130,13 +133,15 @@ Sandbox::Sandbox():
 }
 
 Sandbox::~Sandbox() {
-    // /** make sure every frame is saved before exiting **/
-    // if (m_task_count > 0) {
-    //     std::cout << "saving remaining frames to disk, this might take a while ..." << std::endl;
-    // }
-    // while (m_task_count > 0) {
-    //     std::this_thread::sleep_for(std::chrono::milliseconds{10});
-    // }
+    #ifdef MULTITHREAD_RECORDING 
+    /** make sure every frame is saved before exiting **/
+    if (m_task_count > 0)
+        std::cout << "saving remaining frames to disk, this might take a while ..." << std::endl;
+    
+    while (m_task_count > 0)
+        std::this_thread::sleep_for(std::chrono::milliseconds{10});
+    
+    #endif
 }
 
 // ------------------------------------------------------------------------- SET
@@ -502,16 +507,18 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     },
     "camera_exposure[,<aper.>,<shutter>,<sensit.>]  get or set the camera exposure values."));
 
-    // _commands.push_back(Command("max_mem_in_queue", [&](const std::string & line) {
-    //     std::vector<std::string> values = ada::split(line,',');
-    //     if (values.size() == 2) {
-    //         m_max_mem_in_queue = std::stoll(values[1]);
-    //     }
-    //     else {
-    //         std::cout << m_max_mem_in_queue.load() << std::endl;
-    //     }
-    //     return false;
-    // }, "max_mem_in_queue[,<bytes>]     set the maximum amount of memory used by a queue to export images to disk"));
+    #ifdef MULTITHREAD_RECORDING 
+    _commands.push_back(Command("max_mem_in_queue", [&](const std::string & line) {
+        std::vector<std::string> values = ada::split(line,',');
+        if (values.size() == 2) {
+            m_max_mem_in_queue = std::stoll(values[1]);
+        }
+        else {
+            std::cout << m_max_mem_in_queue.load() << std::endl;
+        }
+        return false;
+    }, "max_mem_in_queue[,<bytes>]     set the maximum amount of memory used by a queue to export images to disk"));
+    #endif
 
     // LOAD SHACER 
     // -----------------------------------------------
@@ -1294,7 +1301,7 @@ void Sandbox::renderUI() {
                     yOffset -= yStep * 2.0;
                 }
 
-                #if !defined(PLATFORM_RPI) && !defined(__EMSCRIPTEN__)
+                #if !defined(PLATFORM_RPI)
                 if (uniforms.functions["u_sceneDepth"].present) {
                     m_billboard_shader.setUniform("u_scale", xStep, yStep);
                     m_billboard_shader.setUniform("u_translate", xOffset, yOffset);
@@ -1310,7 +1317,7 @@ void Sandbox::renderUI() {
                 #endif
             }
 
-        #if !defined(PLATFORM_RPI) && !defined(__EMSCRIPTEN__)
+        #if !defined(PLATFORM_RPI)
             if (uniforms.functions["u_lightShadowMap"].present) {
                 for (unsigned int i = 0; i < uniforms.lights.size(); i++) {
                     if ( uniforms.lights[i].getShadowMap()->getDepthTextureId() ) {
@@ -1588,86 +1595,89 @@ void Sandbox::onViewportResize(int _newWidth, int _newHeight) {
 }
 
 void Sandbox::onScreenshot(std::string _file) {
-    // if (_file != "" && ada::isGL()) {
-    //     glBindFramebuffer(GL_FRAMEBUFFER, m_record_fbo.getId());
 
-    //     if (ada::getExt(_file) == "hdr") {
-    //         float* pixels = new float[ada::getWindowWidth() * ada::getWindowHeight()*4];
-    //         glReadPixels(0, 0, ada::getWindowWidth(), ada::getWindowHeight(), GL_RGBA, GL_FLOAT, pixels);
-    //         ada::savePixelsHDR(_file, pixels, ada::getWindowWidth(), ada::getWindowHeight());
-    //     }
-    //     else {
-    //         int width = ada::getWindowWidth();
-    //         int height = ada::getWindowHeight();
-    //         auto pixels = std::unique_ptr<unsigned char[]>(new unsigned char [width * height * 4]);
-    //         glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixels.get());
+    #ifdef MULTITHREAD_RECORDING 
+    if (_file != "" && ada::isGL()) {
+        glBindFramebuffer(GL_FRAMEBUFFER, m_record_fbo.getId());
 
-    //         /** Just a small helper that captures all the relevant data to save an image **/
-    //         class Job {
-    //             std::string m_file_name;
-    //             int m_width;
-    //             int m_height;
-    //             std::unique_ptr<unsigned char[]> m_pixels;
-    //             std::atomic<int> * m_task_count;
-    //             std::atomic<long long> * m_max_mem_in_queue;
+        if (ada::getExt(_file) == "hdr") {
+            float* pixels = new float[ada::getWindowWidth() * ada::getWindowHeight()*4];
+            glReadPixels(0, 0, ada::getWindowWidth(), ada::getWindowHeight(), GL_RGBA, GL_FLOAT, pixels);
+            ada::savePixelsHDR(_file, pixels, ada::getWindowWidth(), ada::getWindowHeight());
+        }
+        else {
+            int width = ada::getWindowWidth();
+            int height = ada::getWindowHeight();
+            auto pixels = std::unique_ptr<unsigned char[]>(new unsigned char [width * height * 4]);
+            glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixels.get());
 
-    //             long mem_consumed_by_pixels() const { return m_width * m_height * 4; }
-    //             /** the function that is being invoked when the task is done **/
-    //             public:
-    //             void operator()() {
-    //                 if (m_pixels) {
-    //                     ada::savePixels(m_file_name, m_pixels.get(), m_width, m_height);
-    //                     m_pixels = nullptr;
-    //                     (*m_task_count)--;
-    //                     (*m_max_mem_in_queue) += mem_consumed_by_pixels();
-    //                 }
-    //             }
+            /** Just a small helper that captures all the relevant data to save an image **/
+            class Job {
+                std::string m_file_name;
+                int m_width;
+                int m_height;
+                std::unique_ptr<unsigned char[]> m_pixels;
+                std::atomic<int> * m_task_count;
+                std::atomic<long long> * m_max_mem_in_queue;
+
+                long mem_consumed_by_pixels() const { return m_width * m_height * 4; }
+                /** the function that is being invoked when the task is done **/
+                public:
+                void operator()() {
+                    if (m_pixels) {
+                        ada::savePixels(m_file_name, m_pixels.get(), m_width, m_height);
+                        m_pixels = nullptr;
+                        (*m_task_count)--;
+                        (*m_max_mem_in_queue) += mem_consumed_by_pixels();
+                    }
+                }
 
 
-    //             Job (const Job& ) = delete;
-    //             Job (Job && ) = default;
-    //             Job(std::string file_name, int width, int height, std::unique_ptr<unsigned char[]>&& pixels,
-    //                     std::atomic<int>& task_count, std::atomic<long long>& max_mem_in_queue):
-    //                 m_file_name(std::move(file_name)),
-    //                 m_width(width),
-    //                 m_height(height),
-    //                 m_pixels(std::move(pixels)),
-    //                 m_task_count(&task_count),
-    //                 m_max_mem_in_queue(&max_mem_in_queue) {
-    //                 if (m_pixels) {
-    //                     task_count++;
-    //                     max_mem_in_queue -= mem_consumed_by_pixels();
-    //                 }
-    //             }
-    //         };
+                Job (const Job& ) = delete;
+                Job (Job && ) = default;
+                Job(std::string file_name, int width, int height, std::unique_ptr<unsigned char[]>&& pixels,
+                        std::atomic<int>& task_count, std::atomic<long long>& max_mem_in_queue):
+                    m_file_name(std::move(file_name)),
+                    m_width(width),
+                    m_height(height),
+                    m_pixels(std::move(pixels)),
+                    m_task_count(&task_count),
+                    m_max_mem_in_queue(&max_mem_in_queue) {
+                    if (m_pixels) {
+                        task_count++;
+                        max_mem_in_queue -= mem_consumed_by_pixels();
+                    }
+                }
+            };
 
-    //         std::shared_ptr<Job> saverPtr = std::make_shared<Job>(std::move(_file), width, height, std::move(pixels), m_task_count, m_max_mem_in_queue);
-    //         /** In the case that we render faster than we can safe frames, more and more frames
-	// 		 * have to be stored temporary in the save queue. That means that more and more ram is used.
-	// 		 * If to much is memory is used, we save the current frame directly to prevent that the system
-	// 		 * is running out of memory. Otherwise we put the frame in to the thread queue, so that we can utilize
-	// 		 * multilple cpu cores */
-    //         if (m_max_mem_in_queue <= 0) {
-    //             Job& saver = *saverPtr;
-    //             saver();
-    //         }
-    //         else {
-    //             auto func = [saverPtr]()
-    //             {
-    //                 Job& saver = *saverPtr;
-    //                 saver();
-    //             };
-    //             m_save_threads.Submit(std::move(func));
-    //         }
-    //     }
+            std::shared_ptr<Job> saverPtr = std::make_shared<Job>(std::move(_file), width, height, std::move(pixels), m_task_count, m_max_mem_in_queue);
+            /** In the case that we render faster than we can safe frames, more and more frames
+             * have to be stored temporary in the save queue. That means that more and more ram is used.
+             * If to much is memory is used, we save the current frame directly to prevent that the system
+             * is running out of memory. Otherwise we put the frame in to the thread queue, so that we can utilize
+             * multilple cpu cores */
+            if (m_max_mem_in_queue <= 0) {
+                Job& saver = *saverPtr;
+                saver();
+            }
+            else {
+                auto func = [saverPtr]()
+                {
+                    Job& saver = *saverPtr;
+                    saver();
+                };
+                m_save_threads.Submit(std::move(func));
+            }
+        }
     
-    //     if (!m_record_sec && !m_record_frame) {
-    //         std::cout << "// Screenshot saved to " << _file << std::endl;
-    //         std::cout << "// > ";
-    //     }
+        if (!m_record_sec && !m_record_frame) {
+            std::cout << "// Screenshot saved to " << _file << std::endl;
+            std::cout << "// > ";
+        }
 
-    //     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    // }
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    }
+    #endif
 }
 
 void Sandbox::onHistogram() {

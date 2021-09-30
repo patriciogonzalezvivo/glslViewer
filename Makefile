@@ -105,7 +105,7 @@ LIBAV = true
 endif
 
 ifeq ($(LIBAV),true)
-CFLAGS += -DSUPPORT_FOR_LIBAV $(shell pkg-config --cflags libavcodec libavformat libavfilter libavdevice libavutil libswscale)
+CFLAGS += -DLIBAV $(shell pkg-config --cflags libavcodec libavformat libavfilter libavdevice libavutil libswscale)
 LDFLAGS += $(shell pkg-config --libs libavcodec libavformat libavfilter libavdevice libavutil libswscale)
 MINIAUDIO = include/miniaudio/miniaudio.h
 HEADERS += ${MINIAUDIO}

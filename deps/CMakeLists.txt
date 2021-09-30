@@ -5,7 +5,7 @@ if (NOT EMSCRIPTEN)
 add_subdirectory(liblo/cmake)
 endif()
 
-# add_subdirectory(phonedepth)
+add_subdirectory(phonedepth)
 # add_subdirectory(miniaudio)
 # add_subdirectory(thread_pool)
 # add_subdirectory(tinygltf)

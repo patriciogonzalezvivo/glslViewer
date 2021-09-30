@@ -4,15 +4,15 @@
 #include <sstream>
 #include <sys/stat.h>
 
-#include "io/files.h"
 #include "extract_depthmap.h"
+#include "types/files.h"
 
 #include "ada/tools/text.h"
 #include "ada/tools/pixels.h"
 #include "ada/gl/textureBump.h"
 #include "ada/gl/textureStreamSequence.h"
 
-#ifdef SUPPORT_FOR_LIBAV 
+#ifdef LIBAV 
 #include "ada/gl/textureStreamAV.h"
 #endif
 
@@ -205,7 +205,7 @@ bool Uniforms::addTexture(const std::string& _name, const std::string& _path, Wa
             ada::Texture* tex = new ada::Texture();
             // load an image into the texture
             if (tex->load(_path, _flip)) {
-
+                
                 // the image is loaded finish add the texture to the uniform list
                 textures[ _name ] = tex;
 
@@ -373,7 +373,7 @@ bool Uniforms::addStreamingTexture( const std::string& _name, const std::string&
 #endif
 #endif
         else {
-#if defined(SUPPORT_FOR_LIBAV)
+#if defined(LIBAV)
         ada::TextureStreamAV* tex = new ada::TextureStreamAV();
         tex->device = _device;
 
@@ -408,7 +408,7 @@ bool Uniforms::addStreamingTexture( const std::string& _name, const std::string&
 
 bool Uniforms::addAudioTexture(const std::string& _name, const std::string& device_id, bool _flip, bool _verbose) {
 
-#if defined(SUPPORT_FOR_LIBAV) && defined(SUPPORT_FOR_MINIAUDIO)
+#if defined(LIBAV) && defined(SUPPORT_FOR_MINIAUDIO)
     // already init
     if (m_is_audio_init) return false;
 

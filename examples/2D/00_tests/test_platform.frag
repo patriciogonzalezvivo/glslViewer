@@ -3,16 +3,20 @@ precision mediump float;
 #endif
 
 void main (void) {
-    gl_FragColor = vec4(1.0);
-    #ifdef PLATFORM_OSX
-        gl_FragColor = vec4(1.0,0.0,0.0,1.0);
-    #endif
+    vec3 color = vec3(0.0);
 
-    #ifdef PLATFORM_LINUX
-        gl_FragColor = vec4(0.0,1.0,0.0,1.0);
-    #endif
+#if defined(PLATFORM_OSX)
+    color = vec3(1.0, 0.0, 0.0);
 
-    #ifdef PLATFORM_RPI
-        gl_FragColor = vec4(0.0,0.0,1.0,1.0);
-    #endif
+#elif defined(PLATFORM_LINUX)
+    color = vec3(0.0, 1.0, 0.0);
+
+#elif defined(PLATFORM_RPI)
+    color = vec3(0.0, 0.0, 1.0);
+
+#elif defined(PLATFORM_EMSCRIPTEN)
+    color = vec3(1.0, 0.0, 1.0);
+#endif
+
+    gl_FragColor = vec4(color,1.0);
 }

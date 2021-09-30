@@ -2,7 +2,7 @@
 
 
 #include "uniforms.h"
-#include "io/command.h"
+#include "types/command.h"
 
 #include "ada/gl/vbo.h"
 #include "ada/gl/shader.h"

@@ -1,11 +1,13 @@
 #pragma once
 
+#ifdef MULTITHREAD_RECORDING 
 #include <atomic>
 #include "thread_pool.hpp"
+#endif
 
 #include "scene.h"
-#include "list.h"
-#include "io/files.h"
+#include "types/list.h"
+#include "types/files.h"
 
 enum ShaderType {
     FRAGMENT = 0,
@@ -149,11 +151,14 @@ private:
     bool                m_initialized;
     bool                m_error_screen;
 
+    #ifdef MULTITHREAD_RECORDING 
+    std::atomic<int>        m_task_count {0};
+    std::atomic<long long>  m_max_mem_in_queue {0};
+    thread_pool::ThreadPool m_save_threads;
+    #endif
+
     //  Debug
     bool                m_showTextures;
     bool                m_showPasses;
     
-    // std::atomic<int>        m_task_count {0};
-    // std::atomic<long long>  m_max_mem_in_queue {0};
-    // thread_pool::ThreadPool m_save_threads;
 };

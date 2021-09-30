@@ -5,7 +5,7 @@
 #include <string>
 #include <map>
 
-#include "files.h"
+#include "../types/files.h"
 
 #include "ada/gl/vbo.h"
 #include "ada/tools/fs.h"
