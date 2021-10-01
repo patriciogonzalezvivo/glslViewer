@@ -577,7 +577,7 @@ int main(int argc, char **argv) {
                     line += "," + ada::toString(argv[i]->f);
             }
 
-            std::cout << line << std::endl;
+            // std::cout << line << std::endl;
             commandsRun(line, oscMutex);
         });
         st.start();
