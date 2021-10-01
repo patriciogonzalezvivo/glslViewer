@@ -1,3 +1,6 @@
 [submodule "deps/ada"]
 	path = deps/ada
 	url = git@github.com:patriciogonzalezvivo/ada.git
+[submodule "deps/liblo"]
+	path = deps/liblo
+	url = git@github.com:radarsat1/liblo.git
