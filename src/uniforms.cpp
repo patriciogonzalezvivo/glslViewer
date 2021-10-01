@@ -4,7 +4,7 @@
 #include <sstream>
 #include <sys/stat.h>
 
-#include "extract_depthmap.h"
+#include "phonedepth/extract_depthmap.h"
 #include "types/files.h"
 
 #include "ada/tools/text.h"

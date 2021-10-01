@@ -6,7 +6,7 @@
 #include <string>
 
 #define TINYPLY_IMPLEMENTATION
-#include "tinyply.h"
+#include "tinyply/tinyply.h"
 
 #include "ada/tools/geom.h"
 #include "ada/tools/text.h"

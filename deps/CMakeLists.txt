@@ -2,13 +2,12 @@
 add_subdirectory(ada)
 
 if (NOT EMSCRIPTEN) 
-add_subdirectory(liblo/cmake)
+    set(WITH_TOOLS OFF)
+    set(WITH_TESTS OFF)
+    set(WITH_EXAMPLES OFF)
+    set(WITH_CPP_TESTS OFF)
+    option(WITH_STATIC OFF)
+    add_subdirectory(liblo/cmake)
 endif()
 
 add_subdirectory(phonedepth)
-# add_subdirectory(miniaudio)
-# add_subdirectory(thread_pool)
-# add_subdirectory(tinygltf)
-# add_subdirectory(tinyobjloader)
-# add_subdirectory(tinyply)
-

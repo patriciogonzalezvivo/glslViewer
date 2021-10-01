@@ -8,7 +8,7 @@
 #include "ada/tools/text.h"
 
 #define TINYOBJLOADER_IMPLEMENTATION
-#include "tiny_obj_loader.h"
+#include "tinyobjloader/tiny_obj_loader.h"
 
 void addModel (std::vector<ada::Model*>& _models, const std::string& _name, ada::Mesh& _mesh, ada::Material& _mat, bool _verbose) {
     if (_verbose) {

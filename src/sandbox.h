@@ -2,7 +2,7 @@
 
 #ifdef MULTITHREAD_RECORDING 
 #include <atomic>
-#include "thread_pool.hpp"
+#include "thread_pool/thread_pool.hpp"
 #endif
 
 #include "scene.h"

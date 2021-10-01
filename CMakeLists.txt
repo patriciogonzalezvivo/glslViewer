@@ -6,9 +6,6 @@ if (NO_X11 OR FORCE_GBM)
     add_compile_options(-std=c++14 -DGLM_FORCE_CXX14 -fpermissive -Wno-psabi -lpthread)
 endif()
 
-# The compiled ADA 
-add_subdirectory(deps)
-
 file(GLOB ROOT_SOURCE 
     "${PROJECT_SOURCE_DIR}/src/*.cpp"
     "${PROJECT_SOURCE_DIR}/src/io/*.cpp"
@@ -21,14 +18,10 @@ set_target_properties(glslViewer PROPERTIES
     CXX_STANDARD_REQUIRED ON
 )
 
-target_include_directories(glslViewer PUBLIC 
-    "${PROJECT_SOURCE_DIR}/deps/phonedepth"
-    "${PROJECT_SOURCE_DIR}/deps/thread_pool"
-    "${PROJECT_SOURCE_DIR}/deps/tinyobjloader"
-    "${PROJECT_SOURCE_DIR}/deps/tinygltf"
-    "${PROJECT_SOURCE_DIR}/deps/tinyply"
-)
+# The compiled ADA 
+add_subdirectory(deps)
 
+target_include_directories(glslViewer PUBLIC ${PROJECT_SOURCE_DIR}/deps )
 target_link_libraries(glslViewer PRIVATE ada phonedepth)
 
 if (EMSCRIPTEN)    
@@ -49,6 +42,7 @@ if (EMSCRIPTEN)
     target_link_libraries(glslViewer PRIVATE glfw)
     
 else()
+    target_compile_definitions(glslViewer PUBLIC MULTITHREAD_RECORDING)
     target_link_libraries(glslViewer PRIVATE lo_static pthread)
 
 endif()

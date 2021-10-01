@@ -28,7 +28,7 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 // #define TINYGLTF_NOEXCEPTION
 // #define JSON_NOEXCEPTION
-#include "tiny_gltf.h"
+#include "tinygltf/tiny_gltf.h"
 
 #define BUFFER_OFFSET(i) ((char *)NULL + (i))
 
