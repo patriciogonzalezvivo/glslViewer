@@ -11,6 +11,7 @@ file(GLOB ROOT_SOURCE
     "${PROJECT_SOURCE_DIR}/src/io/*.cpp"
     "${PROJECT_SOURCE_DIR}/src/types/*.cpp"
 )
+
 add_executable(glslViewer ${ROOT_SOURCE})
 
 set_target_properties(glslViewer PROPERTIES

@@ -6,7 +6,7 @@ if (NOT EMSCRIPTEN)
     set(WITH_TESTS OFF)
     set(WITH_EXAMPLES OFF)
     set(WITH_CPP_TESTS OFF)
-    option(WITH_STATIC OFF)
+    set(WITH_STATIC ON)
     add_subdirectory(liblo/cmake)
 endif()
 
