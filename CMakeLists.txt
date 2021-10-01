@@ -43,7 +43,10 @@ if (EMSCRIPTEN)
     target_link_libraries(glslViewer PRIVATE glfw)
     
 else()
-    target_compile_definitions(glslViewer PUBLIC MULTITHREAD_RECORDING)
+    target_compile_definitions(glslViewer PUBLIC 
+        MULTITHREAD_RECORDING 
+        SUPPORT_OSC
+    )
     target_link_libraries(glslViewer PRIVATE lo_static pthread)
 
 endif()

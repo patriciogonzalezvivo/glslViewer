@@ -54,14 +54,19 @@ void                        commandsRun(const std::string &_cmd);
 void                        commandsRun(const std::string &_cmd, std::mutex &_mutex);
 void                        commandsInit();
 
-#ifndef __EMSCRIPTEN__
+#if !defined(__EMSCRIPTEN__)
 void                        printUsage(char * executableName);
 void                        fileWatcherThread();
 void                        cinWatcherThread();
 void                        onExit();
 
-// // Open Sound Control
-// Osc osc_listener;
+#endif
+
+// Open Sound Control
+#if defined(SUPPORT_OSC)
+#include <lo/lo_cpp.h>
+std::mutex                  oscMutex;
+int                         oscPort = -1;
 #endif
 
 void loop() {
@@ -279,12 +284,14 @@ int main(int argc, char **argv) {
         else if ( argument == "--fxaa" ) {
             sandbox.fxaa = true;
         }
-        // else if ( argument== "-p" || argument == "--port" ) {
-        //     if(++i < argc)
-        //         osc_listener.start(toInt(std::string(argv[i])), commandsRun, sandbox.verbose);
-        //     else
-        //         std::cout << "Argument '" << argument << "' should be followed by an <osc_port>. Skipping argument." << std::endl;
-        // }
+        #if defined(SUPPORT_OSC)
+        else if ( argument== "-p" || argument == "--port" ) {
+            if(++i < argc)
+                oscPort = ada::toInt(std::string(argv[i]));
+            else
+                std::cout << "Argument '" << argument << "' should be followed by an <osc_port>. Skipping argument." << std::endl;
+        }
+        #endif
         else if ( argument == "-e" ) {
             if(++i < argc)         
                 commandsArgs.push_back(std::string(argv[i]));
@@ -546,6 +553,36 @@ int main(int argc, char **argv) {
     fileChanged = -1;
     std::thread fileWatcher( &fileWatcherThread );
     std::thread cinWatcher( &cinWatcherThread );
+
+    // OSC
+    #if defined(SUPPORT_OSC)
+    if (oscPort > 0) {
+        lo::ServerThread st(oscPort);
+        st.set_callbacks( [&st](){printf("// Listening for OSC commands on port: %i\n", oscPort);}, [](){});
+        st.add_method(0, 0, [](const char *path, lo::Message m) {
+            std::string line;
+            std::vector<std::string> address = ada::split(std::string(path), '/');
+            for (size_t i = 0; i < address.size(); i++)
+                line +=  ((i != 0) ? "," : "") + address[i];
+
+            std::string types = m.types();
+            lo_arg** argv = m.argv(); 
+            lo_message msg = m;
+            for (size_t i = 0; i < types.size(); i++) {
+                if ( types[i] == 's')
+                    line += "," + std::string( (const char*)argv[i] );
+                else if (types[i] == 'i')
+                    line += "," + ada::toString(argv[i]->i);
+                else
+                    line += "," + ada::toString(argv[i]->f);
+            }
+
+            std::cout << line << std::endl;
+            commandsRun(line, oscMutex);
+        });
+        st.start();
+    }
+    #endif
     
     // Render Loop
     while ( ada::isGL() && keepRunnig.load() )
@@ -595,20 +632,10 @@ void ada::onMouseMove(float _x, float _y) {
     }
 }
 
-void ada::onMouseClick(float _x, float _y, int _button) {
-}
-
-void ada::onScroll(float _yoffset) {
-    sandbox.onScroll(_yoffset);
-}
-
-void ada::onMouseDrag(float _x, float _y, int _button) {
-    sandbox.onMouseDrag(_x, _y, _button);
-}
-
-void ada::onViewportResize(int _newWidth, int _newHeight) {
-    sandbox.onViewportResize(_newWidth, _newHeight);
-}
+void ada::onMouseClick(float _x, float _y, int _button) { }
+void ada::onScroll(float _yoffset) { sandbox.onScroll(_yoffset); }
+void ada::onMouseDrag(float _x, float _y, int _button) { sandbox.onMouseDrag(_x, _y, _button); }
+void ada::onViewportResize(int _newWidth, int _newHeight) { sandbox.onViewportResize(_newWidth, _newHeight); }
 
 void commandsRun(const std::string &_cmd) { commandsRun(_cmd, commandsMutex); }
 void commandsRun(const std::string &_cmd, std::mutex &_mutex) {
@@ -638,10 +665,7 @@ void commandsRun(const std::string &_cmd, std::mutex &_mutex) {
     }
 }
 
-
-
 void commandsInit() {
-
     commands.push_back(Command("help", [&](const std::string& _line){
         if (_line == "help") {
             std::cout << "// " << header << std::endl;
