@@ -408,11 +408,11 @@ bool Uniforms::addStreamingTexture( const std::string& _name, const std::string&
 
 bool Uniforms::addAudioTexture(const std::string& _name, const std::string& device_id, bool _flip, bool _verbose) {
 
-#if defined(LIBAV) && defined(SUPPORT_FOR_MINIAUDIO)
+#if defined(LIBAV) && defined(SUPPORT_AUDIO)
     // already init
     if (m_is_audio_init) return false;
 
-    auto tex = new ada::TextureAudio();
+    TextureAudio *tex = new TextureAudio();
 
     // TODO: add flipping mode for audio texture
     if (tex->load(device_id, _flip)) {

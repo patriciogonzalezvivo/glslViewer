@@ -4,3 +4,6 @@
 [submodule "deps/liblo"]
 	path = deps/liblo
 	url = git@github.com:radarsat1/liblo.git
+[submodule "deps/miniaudio"]
+	path = deps/miniaudio
+	url = git@github.com:mackron/miniaudio.git

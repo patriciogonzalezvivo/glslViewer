@@ -9,12 +9,12 @@
 #include "ada/gl/shader.h"
 #include "ada/gl/texture.h"
 #include "ada/gl/textureStream.h"
-#include "ada/gl/textureAudio.h"
 #include "ada/gl/convolutionPyramid.h"
 #include "ada/tools/fs.h"
 #include "ada/scene/camera.h"
 #include "ada/scene/light.h"
 
+#include "gl/textureAudio.h"
 #include "types/files.h"
 
 struct UniformData {

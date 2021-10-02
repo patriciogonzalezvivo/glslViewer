@@ -1,7 +1,7 @@
 #ifdef __EMSCRIPTEN__
+#define GLFW_INCLUDE_ES3
 #include <emscripten/emscripten.h>
-// #include <emscripten/html5.h>
-// #define GLFW_INCLUDE_ES3
+#include <emscripten/html5.h>
 #endif
 
 #include <sys/stat.h>
@@ -69,7 +69,11 @@ std::mutex                  oscMutex;
 int                         oscPort = -1;
 #endif
 
+#if defined(__EMSCRIPTEN__)
+EM_BOOL loop (double time, void* userData) {
+#else
 void loop() {
+#endif
     ada::updateGL();
 
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
@@ -99,19 +103,18 @@ void loop() {
 
     // static auto firstFrame = true;
     // if (!firstFrame) {
-    //   static auto prevFocused = true;
-    //   bool focused = EM_ASM_INT({ return document.hasFocus() ? 1 : 0; });
-    //   if (focused != prevFocused) {
-    //     prevFocused = focused;
-    //     if (focused) {
-    //       emscripten_set_main_loop_timing(EM_TIMING_RAF, 0);
-    //     } else {
-    //       emscripten_set_main_loop_timing(EM_TIMING_SETTIMEOUT, 100);
+    //     static auto prevFocused = true;
+    //     bool focused = EM_ASM_INT({ return document.hasFocus() ? 1 : 0; });
+    //     if (focused != prevFocused) {
+    //         prevFocused = focused;
+    //         if (focused)
+    //             emscripten_set_main_loop_timing(EM_TIMING_RAF, 0);
+    //         else
+    //             emscripten_set_main_loop_timing(EM_TIMING_SETTIMEOUT, 100);
     //     }
-    //   }
-    //   if (!focused) {
-    //     return;
-    //   }
+
+    //     if (!focused)
+    //         return;
     // }
     // firstFrame = false;
 
@@ -132,6 +135,10 @@ void loop() {
     else
 #endif
         ada::renderGL();
+
+    #if defined(__EMSCRIPTEN__)
+    return true;
+    #endif
 }
 
 // Main program
@@ -577,10 +584,13 @@ int main(int argc, char **argv) {
     sandbox.setup(files, commands);
 
 #ifdef __EMSCRIPTEN__
-    emscripten_cancel_main_loop();
-    emscripten_set_main_loop(loop, 0, true);
+
+    // emscripten_set_main_loop(loop, 0, true);
+    emscripten_request_animation_frame_loop(loop, 0);
+    // ada::setWindowVSync(true);
 
 #else
+    ada::setWindowVSync(true);
 
     // Start watchers
     fileChanged = -1;

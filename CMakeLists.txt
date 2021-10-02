@@ -8,6 +8,7 @@ endif()
 
 file(GLOB ROOT_SOURCE 
     "${PROJECT_SOURCE_DIR}/src/*.cpp"
+    "${PROJECT_SOURCE_DIR}/src/gl/*.cpp"
     "${PROJECT_SOURCE_DIR}/src/io/*.cpp"
     "${PROJECT_SOURCE_DIR}/src/types/*.cpp"
 )
@@ -44,6 +45,8 @@ if (EMSCRIPTEN)
     set(LFLAGS "${LFLAGS} --preload-file examples/3D/01_lighting/01_shadows.frag")
     set(LFLAGS "${LFLAGS} --preload-file examples/3D/01_lighting/02_cubemap.frag")
     set(LFLAGS "${LFLAGS} --preload-file examples/3D/03_models/dragon.obj")
+    set(LFLAGS "${LFLAGS} --preload-file test.frag")
+    set(LFLAGS "${LFLAGS} --preload-file rgba.mp4")
     
     set_target_properties(glslViewer PROPERTIES LINK_FLAGS "${LFLAGS}")
     target_link_libraries(glslViewer PRIVATE glfw)
@@ -52,6 +55,7 @@ else()
     target_compile_definitions(glslViewer PUBLIC 
         MULTITHREAD_RECORDING 
         SUPPORT_OSC
+        SUPPORT_AUDIO
     )
     target_link_libraries(glslViewer PRIVATE lo_static pthread)
 
