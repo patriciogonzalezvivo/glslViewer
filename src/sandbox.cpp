@@ -56,7 +56,7 @@ Sandbox::Sandbox():
     m_histogram_texture(nullptr), m_histogram(false),
     // Scene
     m_view2d(1.0), m_time_offset(0.0), m_lat(180.0), m_lon(0.0), m_frame(0), m_change(true), m_initialized(false), m_error_screen(true),
-    #ifdef MULTITHREAD_RECORDING 
+    #ifdef SUPPORT_MULTITHREAD_RECORDING 
     m_task_count(0),
     /** allow 500 MB to be used for the image save queue **/
     m_max_mem_in_queue(500 * 1024 * 1024),
@@ -133,7 +133,7 @@ Sandbox::Sandbox():
 }
 
 Sandbox::~Sandbox() {
-    #ifdef MULTITHREAD_RECORDING 
+    #ifdef SUPPORT_MULTITHREAD_RECORDING 
     /** make sure every frame is saved before exiting **/
     if (m_task_count > 0)
         std::cout << "saving remaining frames to disk, this might take a while ..." << std::endl;
@@ -507,7 +507,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     },
     "camera_exposure[,<aper.>,<shutter>,<sensit.>]  get or set the camera exposure values."));
 
-    #ifdef MULTITHREAD_RECORDING 
+    #ifdef SUPPORT_MULTITHREAD_RECORDING 
     _commands.push_back(Command("max_mem_in_queue", [&](const std::string & line) {
         std::vector<std::string> values = ada::split(line,',');
         if (values.size() == 2) {
@@ -1596,7 +1596,6 @@ void Sandbox::onViewportResize(int _newWidth, int _newHeight) {
 
 void Sandbox::onScreenshot(std::string _file) {
 
-    #ifdef MULTITHREAD_RECORDING 
     if (_file != "" && ada::isGL()) {
         glBindFramebuffer(GL_FRAMEBUFFER, m_record_fbo.getId());
 
@@ -1606,6 +1605,7 @@ void Sandbox::onScreenshot(std::string _file) {
             ada::savePixelsHDR(_file, pixels, ada::getWindowWidth(), ada::getWindowHeight());
         }
         else {
+            #ifdef SUPPORT_MULTITHREAD_RECORDING 
             int width = ada::getWindowWidth();
             int height = ada::getWindowHeight();
             auto pixels = std::unique_ptr<unsigned char[]>(new unsigned char [width * height * 4]);
@@ -1669,6 +1669,14 @@ void Sandbox::onScreenshot(std::string _file) {
                 m_save_threads.Submit(std::move(func));
             }
         }
+        #else
+
+        unsigned char* pixels = new unsigned char[getWindowWidth() * getWindowHeight()*4];
+        glReadPixels(0, 0, getWindowWidth(), getWindowHeight(), GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+        savePixels(_file, pixels, getWindowWidth(), getWindowHeight());
+        delete[] pixels;
+
+        #endif
     
         if (!m_record_sec && !m_record_frame) {
             std::cout << "// Screenshot saved to " << _file << std::endl;
@@ -1677,7 +1685,7 @@ void Sandbox::onScreenshot(std::string _file) {
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
-    #endif
+    
 }
 
 void Sandbox::onHistogram() {

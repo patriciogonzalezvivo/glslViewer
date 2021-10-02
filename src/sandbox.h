@@ -1,6 +1,6 @@
 #pragma once
 
-#ifdef MULTITHREAD_RECORDING 
+#ifdef SUPPORT_MULTITHREAD_RECORDING 
 #include <atomic>
 #include "thread_pool/thread_pool.hpp"
 #endif
@@ -151,7 +151,7 @@ private:
     bool                m_initialized;
     bool                m_error_screen;
 
-    #ifdef MULTITHREAD_RECORDING 
+    #ifdef SUPPORT_MULTITHREAD_RECORDING 
     std::atomic<int>        m_task_count {0};
     std::atomic<long long>  m_max_mem_in_queue {0};
     thread_pool::ThreadPool m_save_threads;

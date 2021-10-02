@@ -79,14 +79,6 @@ void loop() {
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
     #ifndef __EMSCRIPTEN__
-    // Something change??
-    if ( fileChanged != -1 ) {
-        filesMutex.lock();
-        sandbox.onFileChange( files, fileChanged );
-        fileChanged = -1;
-        filesMutex.unlock();
-    }
-
     if (!terminate && !fullFps && !sandbox.haveChange()) {
     // If nothing in the scene change skip the frame and try to keep it at 60fps
         std::this_thread::sleep_for(std::chrono::milliseconds( ada::getRestMs() ));
@@ -628,8 +620,18 @@ int main(int argc, char **argv) {
     #endif
     
     // Render Loop
-    while ( ada::isGL() && keepRunnig.load() )
+    while ( ada::isGL() && keepRunnig.load() ){
+        // Something change??
+        if ( fileChanged != -1 ) {
+            filesMutex.lock();
+            sandbox.onFileChange( files, fileChanged );
+            fileChanged = -1;
+            filesMutex.unlock();
+        }
+
         loop();
+    }
+
     
     // If is terminated by the windows manager, turn keepRunnig off so the fileWatcher can stop
     if ( !ada::isGL() )

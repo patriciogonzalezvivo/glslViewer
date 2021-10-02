@@ -53,11 +53,12 @@ if (EMSCRIPTEN)
     
 else()
     target_compile_definitions(glslViewer PUBLIC 
-        MULTITHREAD_RECORDING 
+        SUPPORT_MULTITHREAD_RECORDING 
         SUPPORT_OSC
         SUPPORT_AUDIO
     )
     target_link_libraries(glslViewer PRIVATE lo_static pthread)
+    install(TARGETS glslViewer)
 
 endif()
 
