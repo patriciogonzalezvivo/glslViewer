@@ -1605,9 +1605,9 @@ void Sandbox::onScreenshot(std::string _file) {
             ada::savePixelsHDR(_file, pixels, ada::getWindowWidth(), ada::getWindowHeight());
         }
         else {
-            #ifdef SUPPORT_MULTITHREAD_RECORDING 
             int width = ada::getWindowWidth();
             int height = ada::getWindowHeight();
+            #ifdef SUPPORT_MULTITHREAD_RECORDING 
             auto pixels = std::unique_ptr<unsigned char[]>(new unsigned char [width * height * 4]);
             glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixels.get());
 
@@ -1668,15 +1668,15 @@ void Sandbox::onScreenshot(std::string _file) {
                 };
                 m_save_threads.Submit(std::move(func));
             }
+            #else
+
+            unsigned char* pixels = new unsigned char[width * height*4];
+            glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+            ada::savePixels(_file, pixels, width, height);
+            delete[] pixels;
+
+            #endif
         }
-        #else
-
-        unsigned char* pixels = new unsigned char[getWindowWidth() * getWindowHeight()*4];
-        glReadPixels(0, 0, getWindowWidth(), getWindowHeight(), GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-        savePixels(_file, pixels, getWindowWidth(), getWindowHeight());
-        delete[] pixels;
-
-        #endif
     
         if (!m_record_sec && !m_record_frame) {
             std::cout << "// Screenshot saved to " << _file << std::endl;
