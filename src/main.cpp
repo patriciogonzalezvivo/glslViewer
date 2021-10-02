@@ -138,17 +138,18 @@ void loop() {
 //============================================================================
 int main(int argc, char **argv) {
     // Set the size
-    glm::ivec4 windowPosAndSize = glm::ivec4(0);
-    windowPosAndSize.z = 512;
-    windowPosAndSize.w = 512;
+    glm::ivec4 window_viewport = glm::ivec4(0);
+    window_viewport.z = 512;
+    window_viewport.w = 512;
 
     #if defined(DRIVER_BROADCOM) || defined(DRIVER_GBM) 
     glm::ivec2 screen = getScreenSize();
-    windowPosAndSize.z = screen.x;
-    windowPosAndSize.w = screen.y;
+    window_viewport.z = screen.x;
+    window_viewport.w = screen.y;
     #endif
 
-    ada::WindowStyle window_style = ada::REGULAR;
+    ada::WindowProperties window_properties;
+
     bool displayHelp = false;
     bool willLoadGeometry = false;
     bool willLoadTextures = false;
@@ -157,27 +158,27 @@ int main(int argc, char **argv) {
 
         if (        std::string(argv[i]) == "-x" ) {
             if(++i < argc)
-                windowPosAndSize.x = ada::toInt(std::string(argv[i]));
+                window_viewport.x = ada::toInt(std::string(argv[i]));
             else
                 std::cout << "Argument '" << argument << "' should be followed by a <pixels>. Skipping argument." << std::endl;
         }
         else if (   std::string(argv[i]) == "-y" ) {
             if(++i < argc)
-                windowPosAndSize.y = ada::toInt(std::string(argv[i]));
+                window_viewport.y = ada::toInt(std::string(argv[i]));
             else
                 std::cout << "Argument '" << argument << "' should be followed by a <pixels>. Skipping argument." << std::endl;
         }
         else if (   std::string(argv[i]) == "-w" ||
                     std::string(argv[i]) == "--width" ) {
             if(++i < argc)
-                windowPosAndSize.z = ada::toInt(std::string(argv[i]));
+                window_viewport.z = ada::toInt(std::string(argv[i]));
             else
                 std::cout << "Argument '" << argument << "' should be followed by a <pixels>. Skipping argument." << std::endl;
         }
         else if (   std::string(argv[i]) == "-h" ||
                     std::string(argv[i]) == "--height" ) {
             if(++i < argc)
-                windowPosAndSize.w = ada::toInt(std::string(argv[i]));
+                window_viewport.w = ada::toInt(std::string(argv[i]));
             else
                 std::cout << "Argument '" << argument << "' should be followed by a <pixels>. Skipping argument." << std::endl;
         }
@@ -190,15 +191,31 @@ int main(int argc, char **argv) {
         else if (   std::string(argv[i]) == "--help" ) {
             displayHelp = true;
         }
+        #if defined(DRIVER_GBM) 
+        else if (   std::string(argv[i]) == "--display") {
+            if (++i < argc)
+                window_properties.display = std::string(argv[i]);
+            else
+                std::cout << "Argument '" << argument << "' should be followed by a the display address. Skipping argument." << std::endl;
+        }
+        #endif
+        #if !defined(DRIVER_GLFW)
+        else if (   std::string(argv[i]) == "--mouse") {
+            if (++i < argc)
+                window_properties.mouse = std::string(argv[i]);
+            else
+                std::cout << "Argument '" << argument << "' should be followed by a the mouse address. Skipping argument." << std::endl;
+        }
+        #endif
         else if (   std::string(argv[i]) == "--headless" ) {
-            window_style = ada::HEADLESS;
+            window_properties.style = ada::HEADLESS;
         }
         else if (   std::string(argv[i]) == "-f" ||
                     std::string(argv[i]) == "--fullscreen" ) {
-            window_style = ada::FULLSCREEN;
+            window_properties.style = ada::FULLSCREEN;
         }
         else if (   std::string(argv[i]) == "--holoplay") {
-            window_style = ada::HOLOPLAY;
+            window_properties.style = ada::HOLOPLAY;
         }
         else if (   std::string(argv[i]) == "-l" ||
                     std::string(argv[i]) == "--life-coding" ){
@@ -206,13 +223,28 @@ int main(int argc, char **argv) {
                 window_viewport.x = window_viewport.z - 512;
                 window_viewport.z = window_viewport.w = 512;
             #else
-                window_style = ada::ALLWAYS_ON_TOP;
+                window_properties.style = ada::ALLWAYS_ON_TOP;
             #endif
         }
         else if (   std::string(argv[i]) == "-ss" ||
                     std::string(argv[i]) == "--screensaver") {
-            window_style = ada::FULLSCREEN;
+            window_properties.style = ada::FULLSCREEN;
             screensaver = true;
+        }
+        else if (   std::string(argv[i]) == "--msaa") {
+            window_properties.msaa = 4;
+        }
+        else if (   std::string(argv[i]) == "--major") {
+            if (++i < argc)
+                window_properties.major = ada::toInt(std::string(argv[i]));
+            else
+                std::cout << "Argument '" << argument << "' should be followed by a the OPENGL MAJOR version. Skipping argument." << std::endl;
+        }
+        else if (   std::string(argv[i]) == "--minor") {
+            if (++i < argc)
+                window_properties.minor = ada::toInt(std::string(argv[i]));
+            else
+                std::cout << "Argument '" << argument << "' should be followed by a the OPENGL MINOR version. Skipping argument." << std::endl;
         }
         else if ( ( ada::haveExt(argument,"ply") || ada::haveExt(argument,"PLY") ||
                     ada::haveExt(argument,"obj") || ada::haveExt(argument,"OBJ") ||
@@ -252,7 +284,7 @@ int main(int argc, char **argv) {
     commandsInit();
 
     // Initialize openGL context
-    ada::initGL (windowPosAndSize, window_style);
+    ada::initGL (window_viewport, window_properties);
     ada::setWindowTitle("GlslViewer");
 
     struct stat st;                         // for files to watch
@@ -266,11 +298,12 @@ int main(int argc, char **argv) {
         if (    argument == "-x" || argument == "-y" ||
                 argument == "-w" || argument == "--width" ||
                 argument == "-h" || argument == "--height" ||
+                argument == "--mouse" || argument == "--display" ||
                 argument == "--fps" ) {
             i++;
         }
-        else if (   argument == "-l" ||
-                    argument == "--headless") {
+        else if (   argument == "-l" || argument == "--headless" ||
+                    argument == "--msaa" ) {
         }
         else if (   std::string(argv[i]) == "-f" ||
                     std::string(argv[i]) == "--fullscreen" ) {
