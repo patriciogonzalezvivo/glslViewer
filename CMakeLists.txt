@@ -48,9 +48,9 @@ if (EMSCRIPTEN)
     # set(LFLAGS "${LFLAGS} --preload-file examples/3D/01_lighting/02_cubemap.frag")
     # set(LFLAGS "${LFLAGS} --preload-file examples/3D/03_models/dragon.obj")
     set(LFLAGS "${LFLAGS} --preload-file lib")
-    # set(LFLAGS "${LFLAGS} --preload-file noise.vert")
-    # set(LFLAGS "${LFLAGS} --preload-file extrude.frag")
-    # set(LFLAGS "${LFLAGS} --preload-file globe_dots.ply")
+    set(LFLAGS "${LFLAGS} --preload-file noise.vert")
+    set(LFLAGS "${LFLAGS} --preload-file extrude.frag")
+    set(LFLAGS "${LFLAGS} --preload-file globe_dots.ply")
     set(LFLAGS "${LFLAGS} --preload-file explosion_00.vert")
     set(LFLAGS "${LFLAGS} --preload-file explosion_00.frag")
     set(LFLAGS "${LFLAGS} --preload-file icosphere.ply")
@@ -63,6 +63,7 @@ else()
         SUPPORT_MULTITHREAD_RECORDING 
         SUPPORT_OSC
         SUPPORT_AUDIO
+        SUPPORT_PLY_BINARY
     )
     target_link_libraries(glslViewer PRIVATE lo_static pthread dl atomic)
     install(TARGETS glslViewer)
