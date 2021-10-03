@@ -350,8 +350,8 @@ bool Uniforms::addStreamingTexture( const std::string& _name, const std::string&
                 delete tex;
         }
 #if defined(DRIVER_BROADCOM)
-        else if ( haveExt(_url,"h264") || haveExt(_url,"H264") ) {
-            TextureStreamOMX* tex = new TextureStreamOMX();
+        else if ( ada::haveExt(_url,"h264") || ada::haveExt(_url,"H264") ) {
+            ada::TextureStreamOMX* tex = new ada::TextureStreamOMX();
 
             // load an image into the texture
             if (tex->load(_url, _vflip)) {
