@@ -93,23 +93,6 @@ void loop() {
         commandsArgs.clear();
     }
 
-    // static auto firstFrame = true;
-    // if (!firstFrame) {
-    //     static auto prevFocused = true;
-    //     bool focused = EM_ASM_INT({ return document.hasFocus() ? 1 : 0; });
-    //     if (focused != prevFocused) {
-    //         prevFocused = focused;
-    //         if (focused)
-    //             emscripten_set_main_loop_timing(EM_TIMING_RAF, 0);
-    //         else
-    //             emscripten_set_main_loop_timing(EM_TIMING_SETTIMEOUT, 100);
-    //     }
-
-    //     if (!focused)
-    //         return;
-    // }
-    // firstFrame = false;
-
     #endif
 
     // Draw Scene
