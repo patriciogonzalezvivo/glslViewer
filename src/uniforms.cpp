@@ -12,11 +12,11 @@
 #include "ada/gl/textureBump.h"
 #include "ada/gl/textureStreamSequence.h"
 
-#ifdef LIBAV 
+#if defined(LIBAV) 
 #include "ada/gl/textureStreamAV.h"
 #endif
 
-#ifdef PLATFORM_RPI
+#if defined(PLATFORM_RPI)
 #include "ada/gl/textureStreamMMAL.h"
 #include "ada/gl/textureStreamOMX.h"
 #endif
@@ -327,7 +327,7 @@ bool Uniforms::addStreamingTexture( const std::string& _name, const std::string&
                 delete tex;
             
         }
-#ifdef PLATFORM_RPI
+#if defined(PLATFORM_RPI)
         // if the user is asking for a device on a RaspberryPI hardware
         else if (_device) {
             ada::TextureStreamMMAL* tex = new ada::TextureStreamMMAL();
@@ -349,7 +349,7 @@ bool Uniforms::addStreamingTexture( const std::string& _name, const std::string&
             else
                 delete tex;
         }
-#ifdef DRIVER_LEGACY
+#if defined(DRIVER_BROADCOM)
         else if ( haveExt(_url,"h264") || haveExt(_url,"H264") ) {
             TextureStreamOMX* tex = new TextureStreamOMX();
 
