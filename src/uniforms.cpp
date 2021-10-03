@@ -330,7 +330,7 @@ bool Uniforms::addStreamingTexture( const std::string& _name, const std::string&
 #ifdef PLATFORM_RPI
         // if the user is asking for a device on a RaspberryPI hardware
         else if (_device) {
-            TextureStreamMMAL* tex = new TextureStreamMMAL();
+            ada::TextureStreamMMAL* tex = new ada::TextureStreamMMAL();
 
             // load an image into the texture
             if (tex->load(_url, _vflip)) {

@@ -64,7 +64,7 @@ else()
         SUPPORT_OSC
         SUPPORT_AUDIO
     )
-    target_link_libraries(glslViewer PRIVATE lo_static pthread)
+    target_link_libraries(glslViewer PRIVATE lo_static pthread dl atomic)
     install(TARGETS glslViewer)
 
 endif()

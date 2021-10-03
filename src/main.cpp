@@ -142,7 +142,7 @@ int main(int argc, char **argv) {
     window_viewport.w = 512;
 
     #if defined(DRIVER_BROADCOM) || defined(DRIVER_GBM) 
-    glm::ivec2 screen = getScreenSize();
+    glm::ivec2 screen = ada::getScreenSize();
     window_viewport.z = screen.x;
     window_viewport.w = screen.y;
     #endif
