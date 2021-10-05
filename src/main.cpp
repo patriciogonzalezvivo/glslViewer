@@ -64,7 +64,7 @@ void                        onExit();
 
 // Open Sound Control
 #if defined(SUPPORT_OSC)
-#include <lo/lo_cpp.h>
+#include "lo/lo_cpp.h"
 std::mutex                  oscMutex;
 int                         oscPort = -1;
 #endif

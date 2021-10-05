@@ -65,7 +65,12 @@ else()
         SUPPORT_AUDIO
         SUPPORT_PLY_BINARY
     )
-    target_link_libraries(glslViewer PRIVATE lo_static pthread dl atomic)
+    target_link_libraries(glslViewer PRIVATE lo_static pthread dl)
+
+    if (NOT APPLE)
+        target_link_libraries(glslViewer PRIVATE atomic)
+    endif()
+
     install(TARGETS glslViewer)
 
 endif()
