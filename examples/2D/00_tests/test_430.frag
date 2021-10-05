@@ -19,7 +19,7 @@ void main (void) {
 #if defined(BUFFER_0)
     color = vec3(st.x, st.y, (1.0+sin(u_time))*0.5);
 #else 
-    color = texture2D(u_buffer0, st).rgb;
+    color = texture(u_buffer0, st).rgb;
 #endif
 
     fragColor = vec4(color,1.0);
