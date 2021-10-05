@@ -281,6 +281,7 @@ int main(int argc, char **argv) {
                 argument == "-w" || argument == "--width" ||
                 argument == "-h" || argument == "--height" ||
                 argument == "--mouse" || argument == "--display" ||
+                argument == "--major" || argument == "--minor" ||
                 argument == "--fps" ) {
             i++;
         }
