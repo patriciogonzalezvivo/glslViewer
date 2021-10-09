@@ -33,13 +33,18 @@ if (EMSCRIPTEN)
     
     set(LFLAGS "${LFLAGS} -s USE_GLFW=3")
     # set(LFLAGS "${LFLAGS} -s FULL_ES2=1")
-    set(LFLAGS "${LFLAGS} -s FULL_ES3=1")
-    set(LFLAGS "${LFLAGS} -s MAX_WEBGL_VERSION=2")
+    # set(LFLAGS "${LFLAGS} -s FULL_ES3=1")
+    # set(LFLAGS "${LFLAGS} -s MIN_WEBGL_VERSION=2")
+    # set(LFLAGS "${LFLAGS} -s MAX_WEBGL_VERSION=2")
+    # set(LFLAGS "${LFLAGS} -s WEBGL2_BACKWARDS_COMPATIBILITY_EMULATION=1")
+
+    set(LFLAGS "${LFLAGS} -s EXPORTED_FUNCTIONS='[ \"_command\", \"_setFrag\", \"_setVert\", \"_getFrag\", \"_getVert\", \"_main\" ]' ")
+    set(LFLAGS "${LFLAGS} -s EXPORTED_RUNTIME_METHODS='[\"ccall\",\"cwrap\"]' ")
+
     set(LFLAGS "${LFLAGS} -s ALLOW_MEMORY_GROWTH=1")
     set(LFLAGS "${LFLAGS} -s NO_DYNAMIC_EXECUTION=1")
-    # set(LFLAGS "${LFLAGS} -s NO_DISABLE_EXCEPTION_CATCHING")
 
-
+    set(LFLAGS "${LFLAGS} --preload-file examples")
     # set(LFLAGS "${LFLAGS} --preload-file examples/2D")
     # set(LFLAGS "${LFLAGS} --preload-file examples/3D/00_pipeline/00_background.frag")
     # set(LFLAGS "${LFLAGS} --preload-file examples/3D/00_pipeline/01_postprocessing.frag")
@@ -47,13 +52,14 @@ if (EMSCRIPTEN)
     # set(LFLAGS "${LFLAGS} --preload-file examples/3D/01_lighting/01_shadows.frag")
     # set(LFLAGS "${LFLAGS} --preload-file examples/3D/01_lighting/02_cubemap.frag")
     # set(LFLAGS "${LFLAGS} --preload-file examples/3D/03_models/dragon.obj")
-    set(LFLAGS "${LFLAGS} --preload-file lib")
-    set(LFLAGS "${LFLAGS} --preload-file noise.vert")
-    set(LFLAGS "${LFLAGS} --preload-file extrude.frag")
-    set(LFLAGS "${LFLAGS} --preload-file globe_dots.ply")
-    set(LFLAGS "${LFLAGS} --preload-file explosion_00.vert")
-    set(LFLAGS "${LFLAGS} --preload-file explosion_00.frag")
-    set(LFLAGS "${LFLAGS} --preload-file icosphere.ply")
+    # set(LFLAGS "${LFLAGS} --preload-file lib")
+    # set(LFLAGS "${LFLAGS} --preload-file noise.vert")
+    # set(LFLAGS "${LFLAGS} --preload-file extrude.frag")
+    # set(LFLAGS "${LFLAGS} --preload-file globe_dots.ply")
+    # set(LFLAGS "${LFLAGS} --preload-file globe_pcl.ply")
+    # set(LFLAGS "${LFLAGS} --preload-file explosion_00.vert")
+    # set(LFLAGS "${LFLAGS} --preload-file explosion_00.frag")
+    # set(LFLAGS "${LFLAGS} --preload-file icosphere.ply")
     
     set_target_properties(glslViewer PROPERTIES LINK_FLAGS "${LFLAGS}")
     target_link_libraries(glslViewer PRIVATE glfw)
@@ -63,7 +69,7 @@ else()
         SUPPORT_MULTITHREAD_RECORDING 
         SUPPORT_OSC
         SUPPORT_AUDIO
-        SUPPORT_PLY_BINARY
+        # SUPPORT_PLY_BINARY
     )
     target_link_libraries(glslViewer PRIVATE lo_static pthread dl atomic)
     install(TARGETS glslViewer)

@@ -757,6 +757,13 @@ void Sandbox::_updateSceneBuffer(int _width, int _height) {
         m_scene_fbo.allocate(_width, _height, type);
 }
 
+bool Sandbox::setSource(ShaderType _type, const std::string& _source) {
+    if (_type == FRAGMENT) m_frag_source = _source;
+    else  m_vert_source = _source;
+
+    return true;
+};
+
 bool Sandbox::reloadShaders( WatchFileList &_files ) {
     flagChange();
 
@@ -935,10 +942,8 @@ void Sandbox::_renderBuffers() {
 
     for (unsigned int i = 0; i < uniforms.buffers.size(); i++) {
         uniforms.buffers[i].bind();
-        m_buffers_shaders[i].use();
 
-        // Update uniforms and textures
-        uniforms.feedTo( m_buffers_shaders[i] );
+        m_buffers_shaders[i].use();
 
         // Pass textures for the other buffers
         for (unsigned int j = 0; j < uniforms.buffers.size(); j++) {
@@ -947,10 +952,18 @@ void Sandbox::_renderBuffers() {
             }
         }
 
+        // Update uniforms and textures
+        uniforms.feedTo( m_buffers_shaders[i] );
+
         m_billboard_vbo->render( &m_buffers_shaders[i] );
 
         uniforms.buffers[i].unbind();
     }
+
+    #if defined(__EMSCRIPTEN__)
+    if (ada::getWebGLVersionNumber() == 1)
+        glViewport(0.0f, 0.0f, ada::getViewport().z, ada::getViewport().w);
+    #endif
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

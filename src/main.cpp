@@ -60,6 +60,35 @@ void                        fileWatcherThread();
 void                        cinWatcherThread();
 void                        onExit();
 
+#else
+
+extern "C"  {
+    
+void command(char* c) {
+    commandsArgs.push_back( std::string(c) );
+}
+
+void setFrag(char* c) {
+    sandbox.setSource(FRAGMENT, std::string(c) );
+    sandbox.reloadShaders(files);
+}
+
+void setVert(char* c) {
+    sandbox.setSource(VERTEX, std::string(c) );
+    sandbox.reloadShaders(files);
+}
+
+char* getFrag() {
+    return (char*)sandbox.getSource(FRAGMENT).c_str();
+}
+
+char* getVert() {
+    return (char*)sandbox.getSource(VERTEX).c_str();
+}
+
+}
+
+
 #endif
 
 // Open Sound Control

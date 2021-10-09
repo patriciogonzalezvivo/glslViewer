@@ -21,6 +21,8 @@ public:
     
     // Main stages
     void                setup(WatchFileList &_files, CommandList &_commands);
+
+    bool                setSource(ShaderType _type, const std::string& _source);
     bool                reloadShaders(WatchFileList &_files);
 
     void                flagChange();
