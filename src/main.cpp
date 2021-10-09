@@ -93,7 +93,7 @@ char* getVert() {
 
 // Open Sound Control
 #if defined(SUPPORT_OSC)
-#include <lo/lo_cpp.h>
+#include "lo/lo_cpp.h"
 std::mutex                  oscMutex;
 int                         oscPort = -1;
 #endif
@@ -310,6 +310,7 @@ int main(int argc, char **argv) {
                 argument == "-w" || argument == "--width" ||
                 argument == "-h" || argument == "--height" ||
                 argument == "--mouse" || argument == "--display" ||
+                argument == "--major" || argument == "--minor" ||
                 argument == "--fps" ) {
             i++;
         }
