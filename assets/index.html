@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>GlslViewer</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta property="og:image" content="thumbnail.png" />
+    <meta property="og:title" content="GlslViewer" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        width: 100vw;
+        height: 100vh;
+        overflow: hidden;
+        background: black;
+        font-family: 'Lucida Console', Monaco, monospace;
+      }
+
+      .emscripten { padding-right: 0; margin-left: auto; margin-right: auto; display: block; }
+      div.emscripten { text-align: center; }     
+      canvas.emscripten {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%,-50%);
+        width:100%;
+        height:100%;
+      }
+      ​
+      * {
+        -webkit-box-sizing: border-box;
+        box-sizing: border-box;
+        -moz-osx-font-smoothing: grayscale;
+        -webkit-font-smoothing: antialiased;
+        -webkit-tap-highlight-color: transparent;
+        -webkit-touch-callout: none;
+      }
+
+      .spinner {
+        height: 30px;
+        width: 30px;
+        margin: 0;
+        margin-top: 20px;
+        margin-left: 20px;
+        display: inline-block;
+        vertical-align: top;
+
+        -webkit-animation: rotation .8s linear infinite;
+        -moz-animation: rotation .8s linear infinite;
+        -o-animation: rotation .8s linear infinite;
+        animation: rotation 0.8s linear infinite;
+
+        border-left: 5px solid rgb(235, 235, 235);
+        border-right: 5px solid rgb(235, 235, 235);
+        border-bottom: 5px solid rgb(235, 235, 235);
+        border-top: 5px solid rgb(120, 120, 120);
+        
+        border-radius: 100%;
+        background-color: rgb(0, 0, 0);
+      }
+
+      @-webkit-keyframes rotation {
+        from {-webkit-transform: rotate(0deg);}
+        to {-webkit-transform: rotate(360deg);}
+      }
+      @-moz-keyframes rotation {
+        from {-moz-transform: rotate(0deg);}
+        to {-moz-transform: rotate(360deg);}
+      }
+      @-o-keyframes rotation {
+        from {-o-transform: rotate(0deg);}
+        to {-o-transform: rotate(360deg);}
+      }
+      @keyframes rotation {
+        from {transform: rotate(0deg);}
+        to {transform: rotate(360deg);}
+      }
+
+      #status {
+        display: inline-block;
+        vertical-align: top;
+        margin-top: 30px;
+        margin-left: 20px;
+        font-weight: bold;
+        color: rgb(255, 255, 255);
+      }
+
+      #progress {
+        height: 20px;
+        width: 300px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="spinner" id='spinner'></div>
+    <div class="emscripten" id="status">Downloading...</div>
+    <div class="emscripten">
+      <progress value="0" max="100" id="progress" hidden=1></progress>
+    </div>
+    <canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()" tabindex=-1></canvas>
+  </body>
+
+  <script type='text/javascript'>
+    var statusElement = document.getElementById('status');
+    var progressElement = document.getElementById('progress');
+    var spinnerElement = document.getElementById('spinner');
+
+    var Module = {
+      preRun: [],
+      postRun: function() {
+        Module.command =  Module.cwrap('command', 'void', ['string']);
+        Module.setFrag =  Module.cwrap('setFrag', 'void', ['string']);
+        Module.setVert =  Module.cwrap('setVert', 'void', ['string']);
+        Module.getFrag =  Module.cwrap('getFrag', 'string', []);
+        Module.getVert =  Module.cwrap('getVert', 'string', []);
+      },
+      // arguments: ["examples/2D/00_tests/test.frag"],
+      // arguments: ["examples/2D/00_tests/test_300es.frag"],
+      // arguments: ["examples/2D/00_tests/test.frag", "examples/2D/00_tests/in.png"],
+      // arguments: ["examples/2D/00_tests/test_depth.frag", "examples/2D/00_tests/iphone_depth.jpeg", "-e", "textures,on"],
+      // arguments: ["examples/2D/00_tests/test_platform.frag"],
+      // arguments: ["examples/2D/00_tests/test_multibuffer.frag"],
+      // arguments: ["examples/2D/00_tests/test_multibuffer.frag","-e","buffers,on"],
+      // arguments: ["examples/2D/00_tests/test_multibuffer.frag", "examples/2D/00_tests/in.png"],
+      // arguments: ["examples/2D/02_pixelspiritdeck/00_elements/014-hope.frag"],
+      // arguments: ["examples/2D/03_buffers/00_ripples.frag"],
+      // arguments: ["examples/2D/03_buffers/01_grayscott.frag"],
+      // arguments: ["examples/2D/03_buffers/02_conway.frag"],
+      // arguments: ["examples/2D/03_buffers/03_cfd.frag"],
+      // arguments: ["examples/2D/07_raymarching/00_primitives.frag"],
+      // arguments: ["examples/2D/08_convolution_pyramids/poisson_fake_light.frag"],
+      // arguments: ["examples/2D/08_convolution_pyramids/poisson_fill.frag", "examples/2D/08_convolution_pyramids/flower.png"],
+      // arguments: ["examples/2D/08_convolution_pyramids/poisson_fill_visualize.frag", "examples/2D/08_convolution_pyramids/flower.png"],
+      // arguments: ["examples/2D/08_convolution_pyramids/laplacian_integrator.frag", "examples/2D/08_convolution_pyramids/chart.png"],
+      // arguments: ["examples/2D/08_convolution_pyramids/laplacian_remove.frag", "examples/2D/08_convolution_pyramids/house.jpg"],
+      // arguments: ["examples/2D/00_tests/test_depth.frag", "examples/3D/03_models/dragon.obj"],
+      // arguments: ["examples/3D/03_models/dragon.obj", "examples/3D/00_pipeline/01_postprocessing.frag", "-e", "buffers,on"],
+      // arguments: ["examples/3D/03_models/dragon.obj", "examples/3D/00_pipeline/01_postprocessing.frag", "-e", "buffers,on", "--msaa"],
+      // arguments: ["examples/3D/03_models/dragon.obj", "examples/3D/01_lighting/00_gooch.frag", "-e", "buffers,on"],
+      // arguments: ["examples/3D/03_models/dragon.obj", "examples/3D/01_lighting/01_shadows.frag", "-e", "buffers,on"],
+      // arguments: ["examples/3D/03_models/dragon.obj", "examples/3D/01_lighting/04_fresnel.vert", "examples/3D/01_lighting/04_fresnel.frag", "-C", "examples/3D/01_lighting/uffizi_cross.hdr"],
+      // arguments: ["examples/3D/03_models/bunny.obj"],
+      // arguments: ["examples/3D/03_models/dragon.obj", "-e", "buffers,on"],
+      // arguments: ["examples/3D/03_models/dragon.obj", "--fxaa", "-e", "buffers,on"],
+      // arguments: ["examples/3D/03_models/dragon.obj", "--msaa", "--fxaa", "-e", "buffers,on"],
+      // arguments: ["examples/3D/03_models/duck.glb"],
+      // arguments: ["examples/3D/03_models/head.obj", "-e", "textures,on", "-e", "buffers,on"],
+      // arguments: ["examples/3D/03_models/head.ply"],
+      // arguments: ["examples/3D/03_models/helmet.glb"],
+      // arguments: ["examples/3D/03_models/suzanne.obj"],
+      arguments: ["examples/3D/04_vertex/pcl.ply", "examples/3D/04_vertex/stars.vert", "examples/3D/04_vertex/pcl.frag"],
+    
+      print: (function() {
+        var element = document.getElementById('output');
+        if (element) element.value = ''; // clear browser cache
+        return function(text) {
+          if (arguments.length > 1) text = Array.prototype.slice.call(arguments).join(' ');
+          // These replacements are necessary if you render to raw HTML
+          console.log(text);
+          if (element) {
+            element.value += text + "\n";
+            element.scrollTop = element.scrollHeight; // focus on bottom
+          }
+        };
+      })(),
+      printErr: function(text) {
+        if (arguments.length > 1) text = Array.prototype.slice.call(arguments).join(' ');
+        console.error(text);
+      },
+      canvas: (function() {
+        var canvas = document.getElementById('canvas');
+
+        // As a default initial behavior, pop up an alert when webgl context is lost. To make your
+        // application robust, you may want to override this behavior before shipping!
+        // See http://www.khronos.org/registry/webgl/specs/latest/1.0/#5.15.2
+        canvas.addEventListener("webglcontextlost", function(e) { 
+          e.preventDefault(); 
+          // alert('WebGL context lost. You will need to reload the page.'); 
+          location.reload();
+        }, false);
+
+        return canvas;
+      })(),
+      setStatus: function(text) {
+          if (!Module.setStatus.last) Module.setStatus.last = { time: Date.now(), text: '' };
+          if (text === Module.setStatus.last.text) return;
+          var m = text.match(/([^(]+)\((\d+(\.\d+)?)\/(\d+)\)/);
+          var now = Date.now();
+          if (m && now - Module.setStatus.last.time < 30) return; // if this is a progress update, skip it if too soon
+          Module.setStatus.last.time = now;
+          Module.setStatus.last.text = text;
+          if (m) {
+            text = m[1];
+            progressElement.value = parseInt(m[2])*100;
+            progressElement.max = parseInt(m[4])*100;
+            progressElement.hidden = false;
+            spinnerElement.hidden = false;
+          } else {
+            progressElement.value = null;
+            progressElement.max = null;
+            progressElement.hidden = true;
+            if (!text) spinnerElement.style.display = 'none';
+          }
+          statusElement.innerHTML = text;
+        },
+        totalDependencies: 0,
+        monitorRunDependencies: function(left) {
+          this.totalDependencies = Math.max(this.totalDependencies, left);
+          Module.setStatus(left ? 'Preparing... (' + (this.totalDependencies-left) + '/' + this.totalDependencies + ')' : 'All downloads complete.');
+        }
+    };
+    Module.setStatus('Downloading...');
+    // var command =  Module.cwrap('command', 'void', ['string']);
+    window.onerror = function(event) {
+      // location.reload();
+    };
+
+  </script>
+  <script async type="text/javascript" src="glslViewer.js"></script>
+</html>
