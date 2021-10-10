@@ -1,5 +1,0 @@
-GL_APPLE_texture_max_level
-http://www.opengl.org/registry/specs/APPLE/texture_max_level.txt
-GL_APPLE_texture_max_level
-
-	GL_TEXTURE_MAX_LEVEL_APPLE 0x813D

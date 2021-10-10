@@ -1,6 +1,0 @@
-GL_AMD_compressed_3DC_texture
-http://www.opengl.org/registry/specs/AMD/compressed_3DC_texture.txt
-GL_AMD_compressed_3DC_texture
-
-	GL_3DC_X_AMD 0x87F9
-	GL_3DC_XY_AMD 0x87FA

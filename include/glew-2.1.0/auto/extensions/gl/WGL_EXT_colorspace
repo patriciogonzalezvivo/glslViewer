@@ -1,7 +1,0 @@
-WGL_EXT_colorspace
-http://www.opengl.org/registry/specs/EXT/wgl_colorspace.txt
-WGL_EXT_colorspace
-
-	WGL_COLORSPACE_SRGB_EXT 0x3089
-	WGL_COLORSPACE_LINEAR_EXT 0x308A
-	WGL_COLORSPACE_EXT 0x309D

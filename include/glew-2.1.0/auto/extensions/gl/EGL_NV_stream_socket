@@ -1,7 +1,0 @@
-EGL_NV_stream_socket
-https://www.khronos.org/registry/egl/specs/eglspec.1.5.pdf
-EGL_NV_stream_socket
-
-	EGL_STREAM_PROTOCOL_SOCKET_NV 0x324B
-	EGL_SOCKET_HANDLE_NV 0x324C
-	EGL_SOCKET_TYPE_NV 0x324D

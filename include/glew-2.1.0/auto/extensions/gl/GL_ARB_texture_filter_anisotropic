@@ -1,6 +1,0 @@
-GL_ARB_texture_filter_anisotropic
-http://www.opengl.org/registry/specs/ARB/texture_filter_anisotropic.txt
-GL_ARB_texture_filter_anisotropic
-
-	GL_TEXTURE_MAX_ANISOTROPY 0x84FE
-	GL_MAX_TEXTURE_MAX_ANISOTROPY 0x84FF

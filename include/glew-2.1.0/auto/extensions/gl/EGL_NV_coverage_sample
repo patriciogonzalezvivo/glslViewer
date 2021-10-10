@@ -1,6 +1,0 @@
-EGL_NV_coverage_sample
-https://www.khronos.org/registry/egl/specs/eglspec.1.5.pdf
-EGL_NV_coverage_sample
-
-	EGL_COVERAGE_BUFFERS_NV 0x30E0
-	EGL_COVERAGE_SAMPLES_NV 0x30E1

@@ -1,6 +1,0 @@
-GL_EXT_win32_keyed_mutex
-http://www.opengl.org/registry/specs/EXT/win32_keyed_mutex.txt
-GL_EXT_win32_keyed_mutex
-
-	GLboolean glAcquireKeyedMutexWin32EXT (GLuint memory, GLuint64 key, GLuint timeout)
-	GLboolean glReleaseKeyedMutexWin32EXT (GLuint memory, GLuint64 key)

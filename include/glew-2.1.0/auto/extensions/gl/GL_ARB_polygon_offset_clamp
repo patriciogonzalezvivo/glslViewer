@@ -1,6 +1,0 @@
-GL_ARB_polygon_offset_clamp
-http://www.opengl.org/registry/specs/ARB/polygon_offset_clamp.txt
-GL_ARB_polygon_offset_clamp
-
-	GL_POLYGON_OFFSET_CLAMP 0x8E1B
-	void glPolygonOffsetClamp (GLfloat factor, GLfloat units, GLfloat clamp)

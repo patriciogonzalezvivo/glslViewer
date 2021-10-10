@@ -1,6 +1,0 @@
-GL_NVX_conditional_render
-http://www.opengl.org/registry/specs/NVX/nvx_conditional_render.txt
-GL_NVX_conditional_render
-
-	void glBeginConditionalRenderNVX (GLuint id)
-	void glEndConditionalRenderNVX (void)

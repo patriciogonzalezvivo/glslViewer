@@ -1,7 +1,0 @@
-EGL_NV_depth_nonlinear
-https://www.khronos.org/registry/egl/specs/eglspec.1.5.pdf
-EGL_NV_depth_nonlinear
-
-	EGL_DEPTH_ENCODING_NONE_NV 0
-	EGL_DEPTH_ENCODING_NV 0x30E2
-	EGL_DEPTH_ENCODING_NONLINEAR_NV 0x30E3

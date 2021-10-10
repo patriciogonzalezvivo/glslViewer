@@ -1,6 +1,9 @@
-[submodule "include/glfw"]
-	path = include/glfw
-	url = https://github.com/glfw/glfw
-[submodule "include/miniaudio"]
-	path = include/miniaudio
-	url = https://github.com/mackron/miniaudio
+[submodule "deps/ada"]
+	path = deps/ada
+	url = https://github.com/patriciogonzalezvivo/ada.git
+[submodule "deps/liblo"]
+	path = deps/liblo
+	url = https://github.com/radarsat1/liblo.git
+[submodule "deps/miniaudio"]
+	path = deps/miniaudio
+	url = https://github.com/mackron/miniaudio.git

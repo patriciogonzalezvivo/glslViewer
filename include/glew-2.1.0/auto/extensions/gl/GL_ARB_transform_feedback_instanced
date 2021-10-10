@@ -1,6 +1,0 @@
-GL_ARB_transform_feedback_instanced
-http://www.opengl.org/registry/specs/ARB/transform_feedback_instanced.txt
-GL_ARB_transform_feedback_instanced
-
-	void glDrawTransformFeedbackInstanced (GLenum mode, GLuint id, GLsizei primcount)
-	void glDrawTransformFeedbackStreamInstanced (GLenum mode, GLuint id, GLuint stream, GLsizei primcount)

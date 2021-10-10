@@ -1,8 +1,0 @@
-GL_QCOM_extended_get2
-http://www.opengl.org/registry/specs/QCOM/extended_get2.txt
-GL_QCOM_extended_get2
-
-	void glExtGetProgramBinarySourceQCOM (GLuint program, GLenum shadertype, GLchar* source, GLint* length)
-	void glExtGetProgramsQCOM (GLuint* programs, GLint maxPrograms, GLint* numPrograms)
-	void glExtGetShadersQCOM (GLuint* shaders, GLint maxShaders, GLint* numShaders)
-	GLboolean glExtIsProgramBinaryQCOM (GLuint program)

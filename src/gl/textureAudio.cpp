@@ -1,10 +1,10 @@
 #include "textureAudio.h"
-#include "tools/text.h"
+#include "ada/tools/text.h"
 
 #include <iostream>
 #include <mutex>
 
-#ifdef SUPPORT_FOR_LIBAV
+#if defined(LIBAV) && defined(SUPPORT_AUDIO)
 
 #define MA_NO_DECODING 
 #define MA_NO_ENCODING 
@@ -59,7 +59,7 @@ TextureAudio::~TextureAudio() {
     this->clear();
 }
 
-bool TextureAudio::load(const std::string &_device_id_str, bool _vFlip, TextureFilter _filter, TextureWrap _wrap) {
+bool TextureAudio::load(const std::string &_device_id_str, bool _vFlip, ada::TextureFilter _filter, ada::TextureWrap _wrap) {
 
     ma_uint32 playbackDeviceCount = 0;
     ma_uint32 captureDeviceCount = 0;
@@ -67,12 +67,10 @@ bool TextureAudio::load(const std::string &_device_id_str, bool _vFlip, TextureF
     int device_id = 0;
     int _device_id_int = -1;
 
-    if (isInt(_device_id_str)) {
-        _device_id_int = toInt(_device_id_str);
-    }
-    else {
+    if (ada::isInt(_device_id_str))
+        _device_id_int = ada::toInt(_device_id_str);
+    else
         std::cout << "Device id " << _device_id_str << " is incorrect, default device will be used.\n";
-    }
 
     if (ma_context_init(NULL, 0, NULL, &context) != MA_SUCCESS) {
         std::cout <<  "Failed to initialize context.\n";
@@ -87,9 +85,9 @@ bool TextureAudio::load(const std::string &_device_id_str, bool _vFlip, TextureF
 
     std::cout << "Capture devices available\n";
     for (ma_uint32 iDevice = 0; iDevice < captureDeviceCount; ++iDevice) {
-        if (pCaptureDeviceInfos[iDevice].isDefault == true) {
+        if (pCaptureDeviceInfos[iDevice].isDefault == true)
             default_device_id = iDevice;
-        }
+        
         std::cout << "    " << iDevice << ": " << pCaptureDeviceInfos[iDevice].name << "\n";
     }
 
@@ -100,17 +98,15 @@ bool TextureAudio::load(const std::string &_device_id_str, bool _vFlip, TextureF
         return false;
     }
 
-    if (_device_id_int == -1) {
+    if (_device_id_int == -1)
         device_id = default_device_id;
-    }
     else if (_device_id_int < -1 || _device_id_int > int(captureDeviceCount - 1)) {
         // warning if non-default device id is incorrect
         std::cout << "Device id " << _device_id_int << " is incorrect, default device will be used.\n";
         device_id = default_device_id;
     }
-    else {
+    else
         device_id = _device_id_int;
-    }
 
     std::cout << "Loading capture device\n";
     std::cout << "    " << device_id << ": " << pCaptureDeviceInfos[device_id].name << "\n";
@@ -162,9 +158,8 @@ bool TextureAudio::update() {
     }
 
     // copy amplitude values to GREEN pixels
-    for (int i = 0; i < m_width; i++) {
+    for (int i = 0; i < m_width; i++)
         m_texture[1+i*4] = m_buffer_re.at(m_buf_len - m_width + i);
-    }
 
     // prerare samples for dtf
     for (int i = 0; i < m_buf_len; i++) {
@@ -201,14 +196,14 @@ bool TextureAudio::update() {
 
         // failing effect for decreasing value
         double decr_factor = 0.97;
-        if (prev_value > mag_uint8) {
+        if (prev_value > mag_uint8)
             m_texture[i*4] = prev_value * decr_factor;
-        }
-        else {
+        else
             m_texture[i*4] = mag_uint8;
-        }
     }
-    Texture::load(m_width, m_height, 4, 8, &m_texture[0], m_filter, m_wrap);
+    
+    ada::Texture::load(m_width, m_height, 4, 8, &m_texture[0], m_filter, m_wrap);
+
     return true;
 }
 
@@ -216,10 +211,12 @@ void TextureAudio::clear() {
     ma_device_uninit(&a_device);
     ma_context_uninit(&context);
 
-   if (ctx) {
+   if (ctx) 
         av_rdft_end(ctx); 
-    }
+
     av_free(m_dft_buffer);
+
+    ada::Texture::clear();
 }
 
 #endif

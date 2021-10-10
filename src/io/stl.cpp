@@ -5,19 +5,20 @@
 #include <fstream>
 #include <string>
 
-#include "../tools/geom.h"
-#include "../tools/text.h"
+#include "ada/tools/geom.h"
+#include "ada/tools/text.h"
+
 
 #ifndef LINE_MAX
 #define LINE_MAX 2048
 #endif
 
-bool loadSTL(WatchFileList& _files, Materials& _materials, Models& _models, int _index, bool _verbose) {
+bool loadSTL(WatchFileList& _files, ada::Materials& _materials, ada::Models& _models, int _index, bool _verbose) {
     std::string filename = _files[_index].path;
     std::string name = filename.substr(0, filename.size()-4);
 
-    Mesh mesh;
-    Material default_material;
+    ada::Mesh mesh;
+    ada::Material default_material;
     _materials[default_material.name] = default_material;
 
     FILE * stl_file = fopen(filename.c_str(),"rb");
@@ -195,7 +196,7 @@ bool loadSTL(WatchFileList& _files, Materials& _materials, Models& _models, int 
         return false;
     close_true:
         fclose(stl_file);
-        _models.push_back( new Model(name, mesh, default_material) );
+        _models.push_back( new ada::Model(name, mesh, default_material) );
         return true;
 
 }

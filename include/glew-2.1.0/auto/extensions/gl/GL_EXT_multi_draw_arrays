@@ -1,6 +1,0 @@
-GL_EXT_multi_draw_arrays
-http://www.opengl.org/registry/specs/EXT/multi_draw_arrays.txt
-GL_EXT_multi_draw_arrays
-
-	void glMultiDrawArraysEXT (GLenum mode, const GLint* first, const GLsizei *count, GLsizei primcount)
-	void glMultiDrawElementsEXT (GLenum mode, GLsizei* count, GLenum type, const void *const *indices, GLsizei primcount)

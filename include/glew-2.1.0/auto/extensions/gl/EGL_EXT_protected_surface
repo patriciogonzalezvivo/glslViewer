@@ -1,5 +1,0 @@
-EGL_EXT_protected_surface
-https://www.khronos.org/registry/egl/specs/eglspec.1.5.pdf
-EGL_EXT_protected_surface
-
-	EGL_PROTECTED_CONTENT_EXT 0x32C0

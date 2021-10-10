@@ -1,8 +1,0 @@
-GL_APPLE_texture_packed_float
-http://www.opengl.org/registry/specs/APPLE/texture_packed_float.txt
-GL_APPLE_texture_packed_float
-
-	GL_R11F_G11F_B10F_APPLE 0x8C3A
-	GL_UNSIGNED_INT_10F_11F_11F_REV_APPLE 0x8C3B
-	GL_RGB9_E5_APPLE 0x8C3D
-	GL_UNSIGNED_INT_5_9_9_9_REV_APPLE 0x8C3E

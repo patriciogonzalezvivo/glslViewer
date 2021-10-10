@@ -1,6 +1,0 @@
-GL_AMD_sample_positions
-http://www.opengl.org/registry/specs/AMD/sample_positions.txt
-GL_AMD_sample_positions
-
-	GL_SUBSAMPLE_DISTANCE_AMD 0x883F
-	void glSetMultisamplefvAMD (GLenum pname, GLuint index, const GLfloat* val)

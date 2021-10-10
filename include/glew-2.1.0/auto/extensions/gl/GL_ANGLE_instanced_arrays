@@ -1,8 +1,0 @@
-GL_ANGLE_instanced_arrays
-https://code.google.com/p/angleproject/source/browse/#git%2Fextensions
-GL_ANGLE_instanced_arrays
-
-	GL_VERTEX_ATTRIB_ARRAY_DIVISOR_ANGLE 0x88FE
-	void glDrawArraysInstancedANGLE (GLenum mode, GLint first, GLsizei count, GLsizei primcount)
-	void glDrawElementsInstancedANGLE (GLenum mode, GLsizei count, GLenum type, const void *indices, GLsizei primcount)
-	void glVertexAttribDivisorANGLE (GLuint index, GLuint divisor)

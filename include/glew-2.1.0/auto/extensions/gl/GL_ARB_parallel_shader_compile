@@ -1,7 +1,0 @@
-GL_ARB_parallel_shader_compile
-http://www.opengl.org/registry/specs/ARB/parallel_shader_compile.txt
-GL_ARB_parallel_shader_compile
-
-	GL_MAX_SHADER_COMPILER_THREADS_ARB 0x91B0
-	GL_COMPLETION_STATUS_ARB 0x91B1
-	void glMaxShaderCompilerThreadsARB (GLuint count)

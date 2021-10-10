@@ -1,11 +1,13 @@
 #pragma once
 
-#include "scene/scene.h"
-#include "types/list.h"
-
-#include "thread_pool/thread_pool.hpp"
-
+#ifdef SUPPORT_MULTITHREAD_RECORDING 
 #include <atomic>
+#include "thread_pool/thread_pool.hpp"
+#endif
+
+#include "scene.h"
+#include "types/list.h"
+#include "types/files.h"
 
 enum ShaderType {
     FRAGMENT = 0,
@@ -19,6 +21,8 @@ public:
     
     // Main stages
     void                setup(WatchFileList &_files, CommandList &_commands);
+
+    bool                setSource(ShaderType _type, const std::string& _source);
     bool                reloadShaders(WatchFileList &_files);
 
     void                flagChange();
@@ -91,36 +95,36 @@ private:
     List                m_frag_dependencies;
 
     // Buffers
-    std::vector<Shader> m_buffers_shaders;
-    int                 m_buffers_total;
+    std::vector<ada::Shader>    m_buffers_shaders;
+    int                         m_buffers_total;
 
     // A. CANVAS
-    Shader              m_canvas_shader;
+    ada::Shader         m_canvas_shader;
 
     // B. SCENE
     Scene               m_scene;
-    Fbo                 m_scene_fbo;
+    ada::Fbo            m_scene_fbo;
 
     // Pyramid Convolution
-    std::vector<Fbo>    m_convolution_pyramid_fbos;
-    std::vector<Shader> m_convolution_pyramid_subshaders;
-    Shader              m_convolution_pyramid_shader;
-    int                 m_convolution_pyramid_total;
+    std::vector<ada::Fbo>       m_convolution_pyramid_fbos;
+    std::vector<ada::Shader>    m_convolution_pyramid_subshaders;
+    ada::Shader                 m_convolution_pyramid_shader;
+    int                         m_convolution_pyramid_total;
 
     // Postprocessing
-    Shader              m_postprocessing_shader;
+    ada::Shader         m_postprocessing_shader;
     bool                m_postprocessing;
 
     // Billboard
-    Shader              m_billboard_shader;
-    Vbo*                m_billboard_vbo;
+    ada::Shader         m_billboard_shader;
+    ada::Vbo*           m_billboard_vbo;
     
     // Cursor
-    Shader              m_wireframe2D_shader;
-    Vbo*                m_cross_vbo;
+    ada::Shader         m_wireframe2D_shader;
+    ada::Vbo*           m_cross_vbo;
 
     // Recording
-    Fbo                 m_record_fbo;
+    ada::Fbo            m_record_fbo;
     float               m_record_fdelta;
     int                 m_record_counter;
     
@@ -135,8 +139,8 @@ private:
     bool                m_record_frame;
 
     // Histogram
-    Shader              m_histogram_shader;
-    Texture*            m_histogram_texture;
+    ada::Shader         m_histogram_shader;
+    ada::Texture*       m_histogram_texture;
     bool                m_histogram;
 
     // Other state properties
@@ -149,11 +153,14 @@ private:
     bool                m_initialized;
     bool                m_error_screen;
 
+    #ifdef SUPPORT_MULTITHREAD_RECORDING 
+    std::atomic<int>        m_task_count {0};
+    std::atomic<long long>  m_max_mem_in_queue {0};
+    thread_pool::ThreadPool m_save_threads;
+    #endif
+
     //  Debug
     bool                m_showTextures;
     bool                m_showPasses;
     
-    std::atomic<int>        m_task_count {0};
-    std::atomic<long long>  m_max_mem_in_queue {0};
-    thread_pool::ThreadPool m_save_threads;
 };

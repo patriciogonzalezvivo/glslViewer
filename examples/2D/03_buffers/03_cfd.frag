@@ -1,3 +1,7 @@
+#ifdef GL_ES
+precision mediump float;
+#endif
+
 // Pseudo fluids, Made by Keijiro Takahashi (@_kzr), and 
 // heavily based on Florian Berger's (@flockaroo) single-pass CFD
 // 

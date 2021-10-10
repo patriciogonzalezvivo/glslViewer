@@ -1,7 +1,0 @@
-GLX_EXT_stereo_tree
-http://www.opengl.org/registry/specs/EXT/glx_stereo_tree.txt
-GLX_EXT_stereo_tree
-
-	GLX_STEREO_NOTIFY_EXT 0x00000000
-	GLX_STEREO_NOTIFY_MASK_EXT 0x00000001
-	GLX_STEREO_TREE_EXT 0x20F5

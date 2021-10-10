@@ -1,6 +1,0 @@
-GL_NV_deep_texture3D
-http://www.opengl.org/registry/specs/NV/deep_texture3D.txt
-GL_NV_deep_texture3D
-
-	GL_MAX_DEEP_3D_TEXTURE_WIDTH_HEIGHT_NV 0x90D0
-	GL_MAX_DEEP_3D_TEXTURE_DEPTH_NV 0x90D1

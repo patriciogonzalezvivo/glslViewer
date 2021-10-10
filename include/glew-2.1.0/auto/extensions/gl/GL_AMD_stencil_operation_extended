@@ -1,9 +1,0 @@
-GL_AMD_stencil_operation_extended
-http://www.opengl.org/registry/specs/AMD/stencil_operation_extended.txt
-GL_AMD_stencil_operation_extended
-
-	GL_SET_AMD 0x874A
-	GL_REPLACE_VALUE_AMD 0x874B
-	GL_STENCIL_OP_VALUE_AMD 0x874C
-	GL_STENCIL_BACK_OP_VALUE_AMD 0x874D
-	void glStencilOpValueAMD (GLenum face, GLuint value)

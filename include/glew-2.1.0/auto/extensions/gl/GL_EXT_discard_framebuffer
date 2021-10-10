@@ -1,8 +1,0 @@
-GL_EXT_discard_framebuffer
-http://www.opengl.org/registry/specs/EXT/discard_framebuffer.txt
-GL_EXT_discard_framebuffer
-
-	GL_COLOR_EXT 0x1800
-	GL_DEPTH_EXT 0x1801
-	GL_STENCIL_EXT 0x1802
-	void glDiscardFramebufferEXT (GLenum target, GLsizei numAttachments, const GLenum* attachments)

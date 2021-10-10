@@ -5,12 +5,16 @@
 #include <string>
 #include <map>
 
-#include "fs.h"
-#include "pixels.h"
+#include "../types/files.h"
 
-#include "../gl/vbo.h"
-#include "../tools/geom.h"
-#include "../tools/text.h"
+#include "ada/gl/vbo.h"
+#include "ada/tools/fs.h"
+#include "ada/tools/geom.h"
+#include "ada/tools/text.h"
+#include "ada/tools/pixels.h"
+
+#include "stb_image.h"
+#include "stb_image_write.h"
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -32,7 +36,7 @@ bool loadModel(tinygltf::Model& _model, const std::string& _filename) {
     tinygltf::TinyGLTF loader;
     std::string err;
     std::string warn;
-    std::string ext = getExt(_filename);
+    std::string ext = ada::getExt(_filename);
 
     bool res = false;
 
@@ -71,7 +75,7 @@ GLenum extractMode(const tinygltf::Primitive& _primitive) {
     }
 }
 
-void extractIndices(const tinygltf::Model& _model, const tinygltf::Accessor& _indexAccessor, Mesh& _mesh) {
+void extractIndices(const tinygltf::Model& _model, const tinygltf::Accessor& _indexAccessor, ada::Mesh& _mesh) {
     const tinygltf::BufferView &buffer_view = _model.bufferViews[_indexAccessor.bufferView];
     const tinygltf::Buffer &buffer = _model.buffers[buffer_view.buffer];
     const uint8_t* base = &buffer.data.at(buffer_view.byteOffset + _indexAccessor.byteOffset);
@@ -127,25 +131,25 @@ void extractVertexData(uint32_t v_pos, const uint8_t *base, int accesor_componen
     }
 }
 
-Material extractMaterial(const tinygltf::Model& _model, const tinygltf::Material& _material, Uniforms& _uniforms, bool _verbose) {
+ada::Material extractMaterial(const tinygltf::Model& _model, const tinygltf::Material& _material, Uniforms& _uniforms, bool _verbose) {
     int texCounter = 0;
-    Material mat;
-    mat.name = toLower( toUnderscore( purifyString( _material.name ) ) );
+    ada::Material mat;
+    mat.name = ada::toLower( ada::toUnderscore( ada::purifyString( _material.name ) ) );
 
-    mat.addDefine("MATERIAL_NAME_" + toUpper(mat.name) );
+    mat.addDefine("MATERIAL_NAME_" + ada::toUpper(mat.name) );
     mat.addDefine("MATERIAL_BASECOLOR", (double*)_material.pbrMetallicRoughness.baseColorFactor.data(), 4);
     if (_material.pbrMetallicRoughness.baseColorTexture.index >= 0) {
         const tinygltf::Texture &tex = _model.textures[_material.pbrMetallicRoughness.baseColorTexture.index];
         const tinygltf::Image &image = _model.images[tex.source];
         std::string name = image.name + image.uri;
         if (name.empty())
-            name = "texture" + toString(texCounter++);
-        name = getUniformName(name);
+            name = "texture" + ada::toString(texCounter++);
+        name = ada::getUniformName(name);
 
         if (_verbose)
             std::cout << "Loading " << name << "for BASECOLORMAP as " << name << std::endl;
 
-        Texture* texture = new Texture();
+        ada::Texture* texture = new ada::Texture();
         texture->load(image.width, image.height, image.component, image.bits, &image.image.at(0));
         if (!_uniforms.addTexture(name, texture)) {
             delete texture;
@@ -158,13 +162,13 @@ Material extractMaterial(const tinygltf::Model& _model, const tinygltf::Material
         const tinygltf::Image &image = _model.images[_model.textures[_material.emissiveTexture.index].source];
         std::string name = image.name + image.uri;
         if (name.empty())
-            name = "texture" + toString(texCounter++);
-        name = getUniformName(name);
+            name = "texture" + ada::toString(texCounter++);
+        name = ada::getUniformName(name);
 
         if (_verbose)
             std::cout << "Loading " << name << "for EMISSIVEMAP as " << name << std::endl;
 
-        Texture* texture = new Texture();
+        ada::Texture* texture = new ada::Texture();
         texture->load(image.width, image.height, image.component, image.bits, &image.image.at(0));
         if (!_uniforms.addTexture(name, texture)) {
             delete texture;
@@ -180,13 +184,13 @@ Material extractMaterial(const tinygltf::Model& _model, const tinygltf::Material
         const tinygltf::Image &image = _model.images[tex.source];
         std::string name = image.name + image.uri;
         if (name.empty())
-            name = "texture" + toString(texCounter++);
-        name = getUniformName(name);
+            name = "texture" + ada::toString(texCounter++);
+        name = ada::getUniformName(name);
 
         if (_verbose)
             std::cout << "Loading " << name << "for METALLICROUGHNESSMAP as " << name << std::endl;
 
-        Texture* texture = new Texture();
+        ada::Texture* texture = new ada::Texture();
         texture->load(image.width, image.height, image.component, image.bits, &image.image.at(0));
         if (!_uniforms.addTexture(name, texture)) {
             delete texture;
@@ -212,13 +216,13 @@ Material extractMaterial(const tinygltf::Model& _model, const tinygltf::Material
         const tinygltf::Image &image = _model.images[_model.textures[_material.occlusionTexture.index].source];
         std::string name = image.name + image.uri;
         if (name.empty())
-            name = "texture" + toString(texCounter++);
-        name = getUniformName(name);
+            name = "texture" + ada::toString(texCounter++);
+        name = ada::getUniformName(name);
 
         if (_verbose)
             std::cout << "Loading " << name << "for OCCLUSIONMAP as " << name << std::endl;
 
-        Texture* texture = new Texture();
+        ada::Texture* texture = new ada::Texture();
         texture->load(image.width, image.height, image.component, image.bits, &image.image.at(0));
         if (!_uniforms.addTexture(name, texture)) {
             delete texture;
@@ -234,13 +238,13 @@ Material extractMaterial(const tinygltf::Model& _model, const tinygltf::Material
         const tinygltf::Image &image = _model.images[_model.textures[_material.normalTexture.index].source];
         std::string name = image.name + image.uri;
         if (name.empty())
-            name = "texture" + toString(texCounter++);
-        name = getUniformName(name);
+            name = "texture" + ada::toString(texCounter++);
+        name = ada::getUniformName(name);
 
         if (_verbose)
             std::cout << "Loading " << name << "for NORMALMAP as " << name << std::endl;
 
-        Texture* texture = new Texture();
+        ada::Texture* texture = new ada::Texture();
         texture->load(image.width, image.height, image.component, image.bits, &image.image.at(0));
         if (!_uniforms.addTexture(name, texture)) {
             delete texture;
@@ -254,7 +258,7 @@ Material extractMaterial(const tinygltf::Model& _model, const tinygltf::Material
     return mat;
 }
 
-void extractMesh(const tinygltf::Model& _model, const tinygltf::Mesh& _mesh, glm::mat4 _matrix, Uniforms& _uniforms, Models& _models, bool _verbose) {
+void extractMesh(const tinygltf::Model& _model, const tinygltf::Mesh& _mesh, glm::mat4 _matrix, Uniforms& _uniforms, ada::Models& _models, bool _verbose) {
     if (_verbose)
         std::cout << "  Parsing Mesh " << _mesh.name << std::endl;
 
@@ -266,7 +270,7 @@ void extractMesh(const tinygltf::Model& _model, const tinygltf::Mesh& _mesh, glm
 
         const tinygltf::Primitive &primitive = _mesh.primitives[i];
 
-        Mesh mesh;
+        ada::Mesh mesh;
         if (primitive.indices >= 0)
             extractIndices(_model, _model.accessors[primitive.indices], mesh);
         mesh.setDrawMode(extractMode(primitive));
@@ -356,14 +360,14 @@ void extractMesh(const tinygltf::Model& _model, const tinygltf::Mesh& _mesh, glm
             if ( _verbose )
                 std::cout << "    . Compute tangents" << std::endl;
 
-        Material mat = extractMaterial( _model, _model.materials[primitive.material], _uniforms, _verbose );
+        ada::Material mat = extractMaterial( _model, _model.materials[primitive.material], _uniforms, _verbose );
 
-        _models.push_back( new Model(_mesh.name, mesh, mat) );
+        _models.push_back( new ada::Model(_mesh.name, mesh, mat) );
     }
 };
 
 // bind models
-void extractNodes(const tinygltf::Model& _model, const tinygltf::Node& _node, glm::mat4 _matrix, Uniforms& _uniforms, Models& _models, bool _verbose) {
+void extractNodes(const tinygltf::Model& _model, const tinygltf::Node& _node, glm::mat4 _matrix, Uniforms& _uniforms, ada::Models& _models, bool _verbose) {
     if (_verbose)
         std::cout << "Entering node " << _node.name << std::endl;
 
@@ -402,7 +406,7 @@ void extractNodes(const tinygltf::Model& _model, const tinygltf::Node& _node, gl
     }
 };
 
-bool loadGLTF(Uniforms& _uniforms, WatchFileList& _files, Materials& _materials, Models& _models, int _index, bool _verbose) {
+bool loadGLTF(Uniforms& _uniforms, WatchFileList& _files, ada::Materials& _materials, ada::Models& _models, int _index, bool _verbose) {
     tinygltf::Model model;
     std::string filename = _files[_index].path;
 
@@ -417,114 +421,4 @@ bool loadGLTF(Uniforms& _uniforms, WatchFileList& _files, Materials& _materials,
     }
 
     return true;
-}
-
-unsigned char* loadPixels(unsigned char const *_data, int len, int *_width, int *_height, Channels _channels, bool _vFlip) {
-    int comp;
-    unsigned char* pixels = stbi_load_from_memory(_data, len, _width, _height, &comp, (_channels == RGB)? STBI_rgb : STBI_rgb_alpha);
-    return pixels;
-} 
-
-unsigned char* loadPixels(const std::string& _path, int *_width, int *_height, Channels _channels, bool _vFlip) {
-    stbi_set_flip_vertically_on_load(_vFlip);
-    int comp;
-    unsigned char* pixels = stbi_load(_path.c_str(), _width, _height, &comp, (_channels == RGB)? STBI_rgb : STBI_rgb_alpha);
-    return pixels;
-}
-
-uint16_t* loadPixels16(const std::string& _path, int *_width, int *_height, Channels _channels, bool _vFlip) {
-    stbi_set_flip_vertically_on_load(_vFlip);
-    int comp;
-    uint16_t *pixels = stbi_load_16(_path.c_str(), _width, _height, &comp, _channels);
-    return pixels;
-}
-
-float* loadPixelsHDR(const std::string& _path, int *_width, int *_height, bool _vFlip) {
-    stbi_set_flip_vertically_on_load(_vFlip);
-    int comp;
-    float* pixels = stbi_loadf(_path.c_str(), _width, _height, &comp, 0);
-    return pixels;
-}
-
-bool savePixels(const std::string& _path, unsigned char* _pixels, int _width, int _height) {
-    int saved = 0;
-    int channels = 4;
-    std::string ext = getExt(_path);
-
-    // Flip the image on Y
-    flipPixelsVertically<unsigned char>(_pixels, _width, _height, channels);
-
-    if ( ext == "png") 
-        saved = stbi_write_png(_path.c_str(), _width, _height, channels, _pixels, _width * channels);
-    else if ( ext == "jpg")
-        saved = stbi_write_jpg(_path.c_str(), _width, _height, channels, _pixels, 92);
-    else if ( ext == "bmp")
-        saved = stbi_write_bmp(_path.c_str(), _width, _height, channels, _pixels);
-    else if ( ext == "tga")
-        saved = stbi_write_tga(_path.c_str(), _width, _height, channels, _pixels);
-    else if ( ext == "hdr") {
-        size_t total = _width * _height * channels;
-        const float m = 1.f / 255.f;
-        float *float_pixels = new float[total];
-        for (size_t i = 0; i < total; i++)
-            float_pixels[i] = _pixels[i] * m;
-        saved = stbi_write_hdr(_path.c_str(), _width, _height, channels, float_pixels);
-        delete [] float_pixels;
-    }
-
-    if (0 == saved) {
-        std::cout << "Can't create file " << _path << std::endl;
-        return false;
-    }
-    return true;
-}
-
-bool savePixels16(const std::string& _path, unsigned short* _pixels, int _width, int _height) {
-    int saved = 0;
-    int channels = 4;
-    std::string ext = getExt(_path);
-
-    // Flip the image on Y
-    flipPixelsVertically<unsigned short>(_pixels, _width, _height, channels);
-
-    if ( ext == "png") 
-        saved = stbi_write_png(_path.c_str(), _width, _height, channels, _pixels, _width * channels);
-    else if ( ext == "jpg")
-        saved = stbi_write_jpg(_path.c_str(), _width, _height, channels, _pixels, 92);
-    else if ( ext == "bmp")
-        saved = stbi_write_bmp(_path.c_str(), _width, _height, channels, _pixels);
-    else if ( ext == "tga")
-        saved = stbi_write_tga(_path.c_str(), _width, _height, channels, _pixels);
-    else if ( ext == "hdr") {
-        size_t total = _width * _height * channels;
-        const float m = 1.f / 65535.f;
-        float *float_pixels = new float[total];
-        for (size_t i = 0; i < total; i++)
-            float_pixels[i] = _pixels[i] * m;
-        saved = stbi_write_hdr(_path.c_str(), _width, _height, channels, float_pixels);
-        delete [] float_pixels;
-    }
-
-    if (0 == saved) {
-        std::cout << "Can't create file " << _path << std::endl;
-        return false;
-    }
-    return true;
-}
-
-bool savePixelsHDR(const std::string& _path, float* _pixels, int _width, int _height) {
-    int channels = 4;
-
-    // Flip the image on Y
-    flipPixelsVertically<float>(_pixels, _width, _height, channels);
-    
-    if (0 == stbi_write_hdr(_path.c_str(), _width, _height, channels, _pixels)) {
-        std::cout << "Can't create file " << _path << std::endl;
-        return false;
-    }
-    return true;
-}
-
-void freePixels(void *pixels) {
-    stbi_image_free(pixels);
 }

@@ -1,7 +1,0 @@
-GL_ARB_sparse_buffer
-http://www.opengl.org/registry/specs/ARB/sparse_buffer.txt
-GL_ARB_sparse_buffer
-
-	GL_SPARSE_STORAGE_BIT_ARB 0x0400
-	GL_SPARSE_BUFFER_PAGE_SIZE_ARB 0x82F8
-	void glBufferPageCommitmentARB (GLenum target, GLintptr offset, GLsizeiptr size, GLboolean commit)

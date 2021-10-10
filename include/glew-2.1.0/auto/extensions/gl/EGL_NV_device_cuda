@@ -1,5 +1,0 @@
-EGL_NV_device_cuda
-https://www.khronos.org/registry/egl/specs/eglspec.1.5.pdf
-EGL_NV_device_cuda
-
-	EGL_CUDA_DEVICE_NV 0x323A

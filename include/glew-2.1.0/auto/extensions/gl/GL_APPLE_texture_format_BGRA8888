@@ -1,6 +1,0 @@
-GL_APPLE_texture_format_BGRA8888
-http://www.opengl.org/registry/specs/APPLE/texture_format_BGRA8888.txt
-GL_APPLE_texture_format_BGRA8888
-
-	GL_BGRA_EXT 0x80E1
-	GL_BGRA8_EXT 0x93A1

@@ -1,7 +1,0 @@
-EGL_EXT_output_drm
-https://www.khronos.org/registry/egl/specs/eglspec.1.5.pdf
-EGL_EXT_output_drm
-
-	EGL_DRM_CRTC_EXT 0x3234
-	EGL_DRM_PLANE_EXT 0x3235
-	EGL_DRM_CONNECTOR_EXT 0x3236

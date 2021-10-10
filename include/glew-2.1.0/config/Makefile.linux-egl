@@ -1,4 +1,0 @@
-include config/Makefile.linux
-
-LDFLAGS.GL = -lEGL -lGL
-CFLAGS.EXTRA += -DGLEW_EGL

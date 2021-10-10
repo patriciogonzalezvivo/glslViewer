@@ -1,5 +1,0 @@
-EGL_NV_stream_cross_process
-https://www.khronos.org/registry/egl/specs/eglspec.1.5.pdf
-EGL_NV_stream_cross_process
-
-	EGL_STREAM_CROSS_PROCESS_NV 0x3245

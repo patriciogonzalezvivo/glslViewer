@@ -1,6 +1,0 @@
-GL_SGIX_vector_ops
-http://www.opengl.org/registry/specs/SGIX/vector_ops.txt
-GL_SGIX_vector_ops
-
-	void glGetVectorOperationSGIX (GLenum operation)
-	void glVectorOperationSGIX (GLenum operation)

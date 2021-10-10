@@ -1,5 +1,0 @@
-GL_ARB_ES3_1_compatibility
-http://www.opengl.org/registry/specs/ARB/ES3_1_compatibility.txt
-GL_ARB_ES3_1_compatibility
-
-	void glMemoryBarrierByRegion (GLbitfield barriers)

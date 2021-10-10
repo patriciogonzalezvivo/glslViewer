@@ -1,5 +1,0 @@
-GL_ARB_texture_barrier
-http://www.opengl.org/registry/specs/ARB/texture_barrier.txt
-GL_ARB_texture_barrier
-
-	void glTextureBarrier (void)

@@ -1,7 +1,0 @@
-GL_SGIX_bali_r_instruments
-http://www.opengl.org/registry/specs/SGIX/bali_r_instruments.txt
-GL_SGIX_bali_r_instruments
-
-	GL_BALI_FRAGMENTS_GENERATED_INSTRUMENT 0x6090
-	GL_BALI_DEPTH_PASS_INSTRUMENT 0x6091
-	GL_BALI_R_CHIP_COUNT 0x6092

@@ -1,5 +1,0 @@
-EGL_EXT_gl_colorspace_scrgb_linear
-https://www.khronos.org/registry/egl/specs/eglspec.1.5.pdf
-EGL_EXT_gl_colorspace_scrgb_linear
-
-	EGL_GL_COLORSPACE_SCRGB_LINEAR_EXT 0x3350

@@ -1,7 +1,0 @@
-EGL_KHR_cl_event
-https://www.khronos.org/registry/egl/specs/eglspec.1.5.pdf
-EGL_KHR_cl_event
-
-	EGL_CL_EVENT_HANDLE_KHR 0x309C
-	EGL_SYNC_CL_EVENT_KHR 0x30FE
-	EGL_SYNC_CL_EVENT_COMPLETE_KHR 0x30FF

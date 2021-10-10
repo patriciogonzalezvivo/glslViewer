@@ -1,5 +1,0 @@
-include config/Makefile.msys
-
-POPT := -mtune=generic -O2
-CFLAGS.EXTRA  += -m64
-LDFLAGS.EXTRA += -m64

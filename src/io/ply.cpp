@@ -5,18 +5,21 @@
 #include <fstream>
 #include <string>
 
+#include "ada/tools/geom.h"
+#include "ada/tools/text.h"
+
+#if defined(SUPPORT_PLY_BINARY)
+
 #define TINYPLY_IMPLEMENTATION
 #include "tinyply/tinyply.h"
 
-#include "../tools/geom.h"
-#include "../tools/text.h"
 
-bool loadPLY(Uniforms& _uniforms, WatchFileList& _files, Materials& _materials, Models& _models, int _index, bool _verbose) {
+bool loadPLY(Uniforms& _uniforms, WatchFileList& _files, ada::Materials& _materials, ada::Models& _models, int _index, bool _verbose) {
     std::string filename = _files[_index].path;
 
     std::string name = filename.substr(0, filename.size()-4);
 
-    Material default_material;
+    ada::Material default_material;
     std::vector<glm::vec4> mesh_colors;
     std::vector<glm::vec3> mesh_vertices;
     std::vector<glm::vec3> mesh_normals;
@@ -191,7 +194,7 @@ bool loadPLY(Uniforms& _uniforms, WatchFileList& _files, Materials& _materials, 
     _materials[default_material.name] = default_material;
 
     if (face_indices.size() > 0) {
-        Mesh mesh;
+        ada::Mesh mesh;
         mesh.addColors(mesh_colors);
         mesh.addVertices(mesh_vertices);
         mesh.addTexCoords(mesh_texcoords);
@@ -204,11 +207,11 @@ bool loadPLY(Uniforms& _uniforms, WatchFileList& _files, Materials& _materials, 
 
         mesh.computeTangents();
 
-        _models.push_back( new Model(name, mesh, default_material) );
+        _models.push_back( new ada::Model(name, mesh, default_material) );
     }
 
     if (edge_indices.size() > 0) {
-        Mesh mesh;
+        ada::Mesh mesh;
         mesh.setDrawMode( GL_LINES );
         mesh.addColors(mesh_colors);
         mesh.addVertices(mesh_vertices);
@@ -218,296 +221,300 @@ bool loadPLY(Uniforms& _uniforms, WatchFileList& _files, Materials& _materials, 
 
         mesh.addIndices( edge_indices );
 
-        _models.push_back( new Model(name + "_edges", mesh, default_material) );
+        _models.push_back( new ada::Model(name + "_edges", mesh, default_material) );
 
     }
 
     if ( face_indices.size() == 0 && edge_indices.size() == 0) {
-        Mesh mesh;
+        ada::Mesh mesh;
         mesh.setDrawMode( GL_POINTS );
         mesh.addColors(mesh_colors);
         mesh.addVertices(mesh_vertices);
         mesh.addTexCoords(mesh_texcoords);
         mesh.addNormals( mesh_normals );
 
-        _models.push_back( new Model(name + "_points", mesh, default_material) );
+        _models.push_back( new ada::Model(name + "_points", mesh, default_material) );
     }
     
     return false;
 }
 
-// bool loadPLY(Uniforms& _uniforms, WatchFileList& _files, Materials& _materials, Models& _models, int _index, bool _verbose) {
-//     std::string filename = _files[_index].path;
-//     std::fstream is(filename.c_str(), std::ios::in);
-//     if (is.is_open()) {
+#else
 
-//         Material default_material;
-//         Mesh mesh;
+bool loadPLY(Uniforms& _uniforms, WatchFileList& _files, ada::Materials& _materials, ada::Models& _models, int _index, bool _verbose) {
+    std::string filename = _files[_index].path;
+    std::fstream is(filename.c_str(), std::ios::in);
+    if (is.is_open()) {
 
-//         std::string line;
-//         std::string error;
+        ada::Material default_material;
+        ada::Mesh mesh;
 
-//         int orderVertices=-1;
-//         int orderIndices=-1;
+        std::string line;
+        std::string error;
 
-//         int vertexCoordsFound=0;
-//         int colorCompsFound=0;
-//         int texCoordsFound=0;
-//         int normalsCoordsFound=0;
+        int orderVertices=-1;
+        int orderIndices=-1;
 
-//         int currentVertex = 0;
-//         int currentFace = 0;
+        int vertexCoordsFound=0;
+        int colorCompsFound=0;
+        int texCoordsFound=0;
+        int normalsCoordsFound=0;
 
-//         bool floatColor = false;
+        int currentVertex = 0;
+        int currentFace = 0;
 
-//         enum State{
-//             Header,
-//             VertexDef,
-//             FaceDef,
-//             Vertices,
-//             Normals,
-//             Faces
-//         };
+        bool floatColor = false;
 
-//         State state = Header;
+        enum State{
+            Header,
+            VertexDef,
+            FaceDef,
+            Vertices,
+            Normals,
+            Faces
+        };
 
-//         int lineNum = 0;
+        State state = Header;
 
-//         std::string name;
+        int lineNum = 0;
 
-//         std::vector<glm::vec4> colors;
-//         std::vector<glm::vec3> vertices;
-//         std::vector<glm::vec3> normals;
-//         std::vector<glm::vec2> texcoord;
-//         std::vector<INDEX_TYPE> indices;
+        std::string name;
 
-//         std::getline(is,line);
-//         lineNum++;
-//         if (line!="ply") {
-//             error = "wrong format, expecting 'ply'";
-//             goto clean;
-//         }
+        std::vector<glm::vec4> colors;
+        std::vector<glm::vec3> vertices;
+        std::vector<glm::vec3> normals;
+        std::vector<glm::vec2> texcoord;
+        std::vector<INDEX_TYPE> indices;
 
-//         std::getline(is,line);
-//         lineNum++;
-//         if (line!="format ascii 1.0") {
-//             error = "wrong format, expecting 'format ascii 1.0'";
-//             goto clean;
-//         }
+        std::getline(is,line);
+        lineNum++;
+        if (line!="ply") {
+            error = "wrong format, expecting 'ply'";
+            goto clean;
+        }
 
-//         while(std::getline(is,line)) {
-//             lineNum++;
-//             if (line.find("comment")==0) {
-//                 continue;
-//             }
+        std::getline(is,line);
+        lineNum++;
+        if (line!="format ascii 1.0") {
+            error = "wrong format, expecting 'format ascii 1.0'";
+            goto clean;
+        }
 
-//             if ((state==Header || state==FaceDef) && line.find("element vertex")==0) {
-//                 state = VertexDef;
-//                 orderVertices = MAX(orderIndices, 0)+1;
-//                 vertices.resize(toInt(line.substr(15)));
-//                 continue;
-//             }
+        while(std::getline(is,line)) {
+            lineNum++;
+            if (line.find("comment")==0) {
+                continue;
+            }
 
-//             if ((state==Header || state==VertexDef) && line.find("element face")==0) {
-//                 state = FaceDef;
-//                 orderIndices = MAX(orderVertices, 0)+1;
-//                 indices.resize(toInt(line.substr(13))*3);
-//                 continue;
-//             }
+            if ((state==Header || state==FaceDef) && line.find("element vertex")==0) {
+                state = VertexDef;
+                orderVertices = glm::max(orderIndices, 0)+1;
+                vertices.resize(ada::toInt(line.substr(15)));
+                continue;
+            }
 
-//             if (state==VertexDef && (line.find("property float x")==0 || line.find("property float y")==0 || line.find("property float z")==0)) {
-//                 vertexCoordsFound++;
-//                 continue;
-//             }
+            if ((state==Header || state==VertexDef) && line.find("element face")==0) {
+                state = FaceDef;
+                orderIndices = glm::max(orderVertices, 0)+1;
+                indices.resize(ada::toInt(line.substr(13))*3);
+                continue;
+            }
 
-//             if (state==VertexDef && (line.find("property float nx")==0 || line.find("property float ny")==0 || line.find("property float nz")==0)) {
-//                 normalsCoordsFound++;
-//                 if (normalsCoordsFound==3) normals.resize(vertices.size());
-//                 continue;
-//             }
+            if (state==VertexDef && (line.find("property float x")==0 || line.find("property float y")==0 || line.find("property float z")==0)) {
+                vertexCoordsFound++;
+                continue;
+            }
 
-//             if (state==VertexDef && (line.find("property float r")==0 || line.find("property float g")==0 || line.find("property float b")==0 || line.find("property float a")==0)) {
-//                 colorCompsFound++;
-//                 colors.resize(vertices.size());
-//                 floatColor = true;
-//                 continue;
-//             }
-//             else if (state==VertexDef && (line.find("property uchar red")==0 || line.find("property uchar green")==0 || line.find("property uchar blue")==0 || line.find("property uchar alpha")==0)) {
-//                 colorCompsFound++;
-//                 colors.resize(vertices.size());
-//                 floatColor = false;
-//                 continue;
-//             }
+            if (state==VertexDef && (line.find("property float nx")==0 || line.find("property float ny")==0 || line.find("property float nz")==0)) {
+                normalsCoordsFound++;
+                if (normalsCoordsFound==3) normals.resize(vertices.size());
+                continue;
+            }
 
-//             if (state==VertexDef && (line.find("property float u")==0 || line.find("property float v")==0)) {
-//                 texCoordsFound++;
-//                 texcoord.resize(vertices.size());
-//                 continue;
-//             }
-//             else if (state==VertexDef && (line.find("property float texture_u")==0 || line.find("property float texture_v")==0)) {
-//                 texCoordsFound++;
-//                 texcoord.resize(vertices.size());
-//                 continue;
-//             }
+            if (state==VertexDef && (line.find("property float r")==0 || line.find("property float g")==0 || line.find("property float b")==0 || line.find("property float a")==0)) {
+                colorCompsFound++;
+                colors.resize(vertices.size());
+                floatColor = true;
+                continue;
+            }
+            else if (state==VertexDef && (line.find("property uchar red")==0 || line.find("property uchar green")==0 || line.find("property uchar blue")==0 || line.find("property uchar alpha")==0)) {
+                colorCompsFound++;
+                colors.resize(vertices.size());
+                floatColor = false;
+                continue;
+            }
 
-//             if (state==FaceDef && line.find("property list")!=0 && line!="end_header") {
-//                 error = "wrong face definition";
-//                 goto clean;
-//             }
+            if (state==VertexDef && (line.find("property float u")==0 || line.find("property float v")==0)) {
+                texCoordsFound++;
+                texcoord.resize(vertices.size());
+                continue;
+            }
+            else if (state==VertexDef && (line.find("property float texture_u")==0 || line.find("property float texture_v")==0)) {
+                texCoordsFound++;
+                texcoord.resize(vertices.size());
+                continue;
+            }
 
-//             if (line=="end_header") {
-//                 if (colors.size() && colorCompsFound!=3 && colorCompsFound!=4) {
-//                     error =  "data has color coordiantes but not correct number of components. Found " + toString(colorCompsFound) + " expecting 3 or 4";
-//                     goto clean;
-//                 }
-//                 if (normals.size() && normalsCoordsFound!=3) {
-//                     error = "data has normal coordiantes but not correct number of components. Found " + toString(normalsCoordsFound) + " expecting 3";
-//                     goto clean;
-//                 }
-//                 if (!vertices.size()) {
-//                     std::cout << "ERROR glMesh, load(): mesh loaded from \"" << filename << "\" has no vertices" << std::endl;
-//                 }
-//                 if (orderVertices==-1) orderVertices=9999;
-//                 if (orderIndices==-1) orderIndices=9999;
+            if (state==FaceDef && line.find("property list")!=0 && line!="end_header") {
+                error = "wrong face definition";
+                goto clean;
+            }
 
-//                 if (orderVertices < orderIndices) {
-//                     state = Vertices;
-//                 }
-//                 else {
-//                     state = Faces;
-//                 }
-//                 continue;
-//             }
+            if (line=="end_header") {
+                if (colors.size() && colorCompsFound!=3 && colorCompsFound!=4) {
+                    error =  "data has color coordiantes but not correct number of components. Found " + ada::toString(colorCompsFound) + " expecting 3 or 4";
+                    goto clean;
+                }
+                if (normals.size() && normalsCoordsFound!=3) {
+                    error = "data has normal coordiantes but not correct number of components. Found " + ada::toString(normalsCoordsFound) + " expecting 3";
+                    goto clean;
+                }
+                if (!vertices.size()) {
+                    std::cout << "ERROR glMesh, load(): mesh loaded from \"" << filename << "\" has no vertices" << std::endl;
+                }
+                if (orderVertices==-1) orderVertices=9999;
+                if (orderIndices==-1) orderIndices=9999;
 
-//             if (state==Vertices) {
-//                 std::stringstream sline;
-//                 sline.str(line);
-//                 glm::vec3 v;
-//                 sline >> v.x;
-//                 sline >> v.y;
-//                 if ( vertexCoordsFound > 2) sline >> v.z;
-//                 vertices[currentVertex] = v;
+                if (orderVertices < orderIndices) {
+                    state = Vertices;
+                }
+                else {
+                    state = Faces;
+                }
+                continue;
+            }
 
-//                 if (normalsCoordsFound > 0) {
-//                     glm::vec3 n;
-//                     sline >> n.x;
-//                     sline >> n.y;
-//                     sline >> n.z;
-//                     normals[currentVertex] = n;
-//                 }
+            if (state==Vertices) {
+                std::stringstream sline;
+                sline.str(line);
+                glm::vec3 v;
+                sline >> v.x;
+                sline >> v.y;
+                if ( vertexCoordsFound > 2) sline >> v.z;
+                vertices[currentVertex] = v;
 
-//                 if (colorCompsFound > 0) {
-//                     if (floatColor) {
-//                         glm::vec4 c;
-//                         sline >> c.r;
-//                         sline >> c.g;
-//                         sline >> c.b;
-//                         if (colorCompsFound > 3) sline >> c.a;
-//                         colors[currentVertex] = c;
-//                     }
-//                     else {
-//                         float r, g, b, a = 255;
-//                         sline >> r;
-//                         sline >> g;
-//                         sline >> b;
-//                         if (colorCompsFound > 3) sline >> a;
-//                         colors[currentVertex] = glm::vec4(r/255.0, g/255.0, b/255.0, a/255.0);
-//                     }
-//                 }
+                if (normalsCoordsFound > 0) {
+                    glm::vec3 n;
+                    sline >> n.x;
+                    sline >> n.y;
+                    sline >> n.z;
+                    normals[currentVertex] = n;
+                }
 
-//                 if (texCoordsFound>0) {
-//                     glm::vec2 uv;
-//                     sline >> uv.x;
-//                     sline >> uv.y;
-//                     texcoord[currentVertex] = uv;
-//                 }
+                if (colorCompsFound > 0) {
+                    if (floatColor) {
+                        glm::vec4 c;
+                        sline >> c.r;
+                        sline >> c.g;
+                        sline >> c.b;
+                        if (colorCompsFound > 3) sline >> c.a;
+                        colors[currentVertex] = c;
+                    }
+                    else {
+                        float r, g, b, a = 255;
+                        sline >> r;
+                        sline >> g;
+                        sline >> b;
+                        if (colorCompsFound > 3) sline >> a;
+                        colors[currentVertex] = glm::vec4(r/255.0, g/255.0, b/255.0, a/255.0);
+                    }
+                }
 
-//                 currentVertex++;
-//                 if ((uint32_t)currentVertex==vertices.size()) {
-//                     if (orderVertices<orderIndices) {
-//                         state = Faces;
-//                     }
-//                     else{
-//                         state = Vertices;
-//                     }
-//                 }
-//                 continue;
-//             }
+                if (texCoordsFound>0) {
+                    glm::vec2 uv;
+                    sline >> uv.x;
+                    sline >> uv.y;
+                    texcoord[currentVertex] = uv;
+                }
 
-//             if (state==Faces && indices.size() > 0) {
-//                 std::stringstream sline;
-//                 sline.str(line);
-//                 int numV;
-//                 sline >> numV;
-//                 if (numV!=3) {
-//                     error = "face not a triangle";
-//                     goto clean;
-//                 }
-//                 int i;
-//                 sline >> i;
-//                 indices[currentFace*3] = i;
-//                 sline >> i;
-//                 indices[currentFace*3+1] = i;
-//                 sline >> i;
-//                 indices[currentFace*3+2] = i;
+                currentVertex++;
+                if ((uint32_t)currentVertex==vertices.size()) {
+                    if (orderVertices<orderIndices) {
+                        state = Faces;
+                    }
+                    else{
+                        state = Vertices;
+                    }
+                }
+                continue;
+            }
 
-//                 currentFace++;
-//                 if ((uint32_t)currentFace==indices.size()/3) {
-//                     if (orderVertices<orderIndices) {
-//                         state = Vertices;
-//                     }
-//                     else {
-//                         state = Faces;
-//                     }
-//                 }
-//                 continue;
-//             }
-//         }
-//         is.close();
+            if (state==Faces && indices.size() > 0) {
+                std::stringstream sline;
+                sline.str(line);
+                int numV;
+                sline >> numV;
+                if (numV!=3) {
+                    error = "face not a triangle";
+                    goto clean;
+                }
+                int i;
+                sline >> i;
+                indices[currentFace*3] = i;
+                sline >> i;
+                indices[currentFace*3+1] = i;
+                sline >> i;
+                indices[currentFace*3+2] = i;
 
-//         //  Succed loading the PLY data
-//         //  (proceed replacing the data on mesh)
-//         //
-//         mesh.addColors(colors);
-//         mesh.addVertices(vertices);
-//         mesh.addTexCoords(texcoord);
+                currentFace++;
+                if ((uint32_t)currentFace==indices.size()/3) {
+                    if (orderVertices<orderIndices) {
+                        state = Vertices;
+                    }
+                    else {
+                        state = Faces;
+                    }
+                }
+                continue;
+            }
+        }
+        is.close();
 
-//         if ( indices.size() > 0 ){
-//             mesh.addIndices( indices );
-//         }
-//         else {
-//             mesh.setDrawMode( GL_POINTS );
-//         }
+        //  Succed loading the PLY data
+        //  (proceed replacing the data on mesh)
+        //
+        mesh.addColors(colors);
+        mesh.addVertices(vertices);
+        mesh.addTexCoords(texcoord);
+
+        if ( indices.size() > 0 ){
+            mesh.addIndices( indices );
+        }
+        else {
+            mesh.setDrawMode( GL_POINTS );
+        }
         
-//         if ( normals.size() > 0 ) {
-//             mesh.addNormals( normals );
-//         }
-//         else {
-//             mesh.computeNormals();
-//         }
+        if ( normals.size() > 0 ) {
+            mesh.addNormals( normals );
+        }
+        else {
+            mesh.computeNormals();
+        }
 
-//         mesh.computeTangents();
+        mesh.computeTangents();
 
-//         _materials[default_material.name] = default_material;
+        _materials[default_material.name] = default_material;
 
-//         if (mesh.getDrawMode() == GL_POINTS)
-//             name = "points";
-//         else if (mesh.getDrawMode() == GL_LINES)
-//             name = "lines";
-//         else
-//             name = "mesh";
-//         _models.push_back( new Model(name, mesh, default_material) );
+        if (mesh.getDrawMode() == GL_POINTS)
+            name = "points";
+        else if (mesh.getDrawMode() == GL_LINES)
+            name = "lines";
+        else
+            name = "mesh";
+        _models.push_back( new ada::Model(name, mesh, default_material) );
 
-//         return true;
+        return true;
 
-//     clean:
-//         std::cout << "ERROR glMesh, load(): " << lineNum << ":" << error << std::endl;
-//         std::cout << "ERROR glMesh, load(): \"" << line << "\"" << std::endl;
+    clean:
+        std::cout << "ERROR glMesh, load(): " << lineNum << ":" << error << std::endl;
+        std::cout << "ERROR glMesh, load(): \"" << line << "\"" << std::endl;
 
-//     }
+    }
 
-//     is.close();
-//     std::cout << "ERROR glMesh, can not load  " << filename << std::endl;
+    is.close();
+    std::cout << "ERROR glMesh, can not load  " << filename << std::endl;
 
-//     return false;
-// }
+    return false;
+}
+
+#endif

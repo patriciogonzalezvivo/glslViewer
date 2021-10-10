@@ -1,7 +1,0 @@
-GL_NV_copy_buffer
-http://www.opengl.org/registry/specs/NV/copy_buffer.txt
-GL_NV_copy_buffer
-
-	GL_COPY_READ_BUFFER_NV 0x8F36
-	GL_COPY_WRITE_BUFFER_NV 0x8F37
-	void glCopyBufferSubDataNV (GLenum readtarget, GLenum writetarget, GLintptr readoffset, GLintptr writeoffset, GLsizeiptr size)

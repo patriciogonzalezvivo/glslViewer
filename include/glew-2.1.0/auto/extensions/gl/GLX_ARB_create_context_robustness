@@ -1,8 +1,0 @@
-GLX_ARB_create_context_robustness
-http://www.opengl.org/registry/specs/ARB/glx_create_context_robustness.txt
-GLX_ARB_create_context_robustness
-
-	GLX_CONTEXT_ROBUST_ACCESS_BIT_ARB 0x00000004
-	GLX_LOSE_CONTEXT_ON_RESET_ARB 0x8252
-	GLX_CONTEXT_RESET_NOTIFICATION_STRATEGY_ARB 0x8256
-	GLX_NO_RESET_NOTIFICATION_ARB 0x8261

@@ -1,6 +1,0 @@
-GLX_NV_multisample_coverage
-http://www.opengl.org/registry/specs/NV/multisample_coverage.txt
-GLX_NV_multisample_coverage
-
-	GLX_COLOR_SAMPLES_NV 0x20B3
-	GLX_COVERAGE_SAMPLES_NV 100001

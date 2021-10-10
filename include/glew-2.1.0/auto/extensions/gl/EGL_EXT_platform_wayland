@@ -1,5 +1,0 @@
-EGL_EXT_platform_wayland
-https://www.khronos.org/registry/egl/specs/eglspec.1.5.pdf
-EGL_EXT_platform_wayland
-
-	EGL_PLATFORM_WAYLAND_EXT 0x31D8

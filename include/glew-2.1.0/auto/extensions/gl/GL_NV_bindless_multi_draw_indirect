@@ -1,6 +1,0 @@
-GL_NV_bindless_multi_draw_indirect
-http://www.opengl.org/registry/specs/NV/bindless_multi_draw_indirect.txt
-GL_NV_bindless_multi_draw_indirect
-
-	void glMultiDrawArraysIndirectBindlessNV (GLenum mode, const void *indirect, GLsizei drawCount, GLsizei stride, GLint vertexBufferCount)
-	void glMultiDrawElementsIndirectBindlessNV (GLenum mode, GLenum type, const void *indirect, GLsizei drawCount, GLsizei stride, GLint vertexBufferCount)

@@ -29,3 +29,16 @@ debian/glslviewer.substvars
 .vs/slnx.sqlite
 .vs/VSWorkspaceState.json
 premake5.exe
+
+build/
+build_wasm/
+
+
+CMakeFiles
+cmake_install.cmake
+CMakeCache.txt
+CMakeFiles
+
+
+Debug/
+Release/

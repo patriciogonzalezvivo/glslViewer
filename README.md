@@ -12,7 +12,7 @@ Joing [#GlslViewer channel on shader.zone discord](https://shader.zone/) to lear
 
 GlslViewer gives support to:
 
-* fragment and vertex shaders on GLSL 120
+* fragment and vertex shaders on GLSL 
 * resolve #include dependencies
 * adding/deleting #define keys through console IN commands and OSC
 * automatically generated set of defines based on the platform, buffer, render pass, geometry attributes and materials properties.
@@ -31,6 +31,7 @@ GlslViewer gives support to:
 * HoloPlay rendering on LookingGlass Display
 * image export
 * PNG sequence export
+* WASM crosscompiling
 
 ![](.github/images/01.gif)
 
@@ -66,7 +67,7 @@ GlslViewer gives support to:
 
 Thanks to:
 
-* [Mihai Sebea](https://twitter.com/mihai_sebea) for making the Windows compile happen
+* [Mihai Sebea](https://twitter.com/mihai_sebea) and [Bertrand Carré](https://twitter.com/bertrandcarre) for making the Windows compile happen
 
 * [Karim Naaki](http://karim.naaji.fr/) lot of concept and code was inspired by this two projects: [fragTool](https://github.com/karimnaaji/fragtool) and [hdreffects](https://github.com/karimnaaji/hdreffects)
 
@@ -83,8 +84,6 @@ Thanks to:
 * [Morgan McGuire](https://casual-effects.com)'s for the OBJ models on [Computer Graphics Archive](https://casual-effects.com/data)
 
 * [Philip Rideout](http://prideout.net/) and [Romain Guy](http://www.curious-creature.com/) general generosity to share their code and experience
-
-* [Mihai Sebea](https://codepatcher.wordpress.com) for porting it to windows(TM) 
 
 * [Sergei B](https://github.com/bespsm) for adding support for Audio textures
 

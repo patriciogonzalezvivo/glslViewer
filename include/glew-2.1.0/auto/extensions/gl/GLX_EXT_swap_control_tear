@@ -1,5 +1,0 @@
-GLX_EXT_swap_control_tear
-http://www.opengl.org/registry/specs/EXT/glx_swap_control_tear.txt
-GLX_EXT_swap_control_tear
-
-	GLX_LATE_SWAPS_TEAR_EXT 0x20F3

@@ -1,6 +1,0 @@
-GL_EXT_polygon_offset_clamp
-http://www.opengl.org/registry/specs/EXT/polygon_offset_clamp.txt
-GL_EXT_polygon_offset_clamp
-
-	GL_POLYGON_OFFSET_CLAMP_EXT 0x8E1B
-	void glPolygonOffsetClampEXT (GLfloat factor, GLfloat units, GLfloat clamp)
