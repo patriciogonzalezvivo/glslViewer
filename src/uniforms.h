@@ -71,8 +71,8 @@ public:
     void                    checkPresenceIn( const std::string &_vert_src, const std::string &_frag_src );
 
     // Feed uniforms to a specific shader
-    bool                    feedTo( ada::Shader &_shader );
-    bool                    feedTo( ada::Shader *_shader );
+    bool                    feedTo( ada::Shader &_shader, bool _lights = true );
+    bool                    feedTo( ada::Shader *_shader, bool _lights = true );
 
     ada::Camera&            getCamera() { return cameras[0]; }
 

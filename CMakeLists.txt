@@ -2,6 +2,10 @@ cmake_minimum_required(VERSION 3.2)
 
 project(glslViewer)
 
+if(MSVC)
+	add_definitions( -DPLATFORM_WINDOWS )
+endif()
+
 if (NO_X11 OR FORCE_GBM)
     add_compile_options(-std=c++14 -DGLM_FORCE_CXX14 -fpermissive -Wno-psabi -lpthread)
 endif()
@@ -27,15 +31,12 @@ target_include_directories(glslViewer PUBLIC ${PROJECT_SOURCE_DIR}/deps )
 target_link_libraries(glslViewer PRIVATE ada phonedepth)
 
 if (EMSCRIPTEN)    
-    file(COPY   examples DESTINATION ${CMAKE_CURRENT_BINARY_DIR} )
-
-    # set_target_properties(glslViewer PROPERTIES SUFFIX ".html")
     
     set(LFLAGS "${LFLAGS} -s USE_GLFW=3")
     # set(LFLAGS "${LFLAGS} -s FULL_ES2=1")
     # set(LFLAGS "${LFLAGS} -s FULL_ES3=1")
     # set(LFLAGS "${LFLAGS} -s MIN_WEBGL_VERSION=2")
-    # set(LFLAGS "${LFLAGS} -s MAX_WEBGL_VERSION=2")
+    set(LFLAGS "${LFLAGS} -s MAX_WEBGL_VERSION=2")
     # set(LFLAGS "${LFLAGS} -s WEBGL2_BACKWARDS_COMPATIBILITY_EMULATION=1")
 
     set(LFLAGS "${LFLAGS} -s EXPORTED_FUNCTIONS='[ \"_command\", \"_setFrag\", \"_setVert\", \"_getFrag\", \"_getVert\", \"_main\" ]' ")
@@ -44,22 +45,22 @@ if (EMSCRIPTEN)
     set(LFLAGS "${LFLAGS} -s ALLOW_MEMORY_GROWTH=1")
     set(LFLAGS "${LFLAGS} -s NO_DYNAMIC_EXECUTION=1")
 
-    set(LFLAGS "${LFLAGS} --preload-file examples")
-    # set(LFLAGS "${LFLAGS} --preload-file examples/2D")
-    # set(LFLAGS "${LFLAGS} --preload-file examples/3D/00_pipeline/00_background.frag")
-    # set(LFLAGS "${LFLAGS} --preload-file examples/3D/00_pipeline/01_postprocessing.frag")
-    # set(LFLAGS "${LFLAGS} --preload-file examples/3D/01_lighting/00_gooch.frag")
-    # set(LFLAGS "${LFLAGS} --preload-file examples/3D/01_lighting/01_shadows.frag")
-    # set(LFLAGS "${LFLAGS} --preload-file examples/3D/01_lighting/02_cubemap.frag")
-    # set(LFLAGS "${LFLAGS} --preload-file examples/3D/03_models/dragon.obj")
-    # set(LFLAGS "${LFLAGS} --preload-file lib")
-    # set(LFLAGS "${LFLAGS} --preload-file noise.vert")
-    # set(LFLAGS "${LFLAGS} --preload-file extrude.frag")
-    # set(LFLAGS "${LFLAGS} --preload-file globe_dots.ply")
-    # set(LFLAGS "${LFLAGS} --preload-file globe_pcl.ply")
-    # set(LFLAGS "${LFLAGS} --preload-file explosion_00.vert")
-    # set(LFLAGS "${LFLAGS} --preload-file explosion_00.frag")
-    # set(LFLAGS "${LFLAGS} --preload-file icosphere.ply")
+    # # Create a new HTML
+    # set_target_properties(glslViewer PROPERTIES SUFFIX ".html")
+    
+    # # Copy the default index.html 
+    # file(COPY   assets/index.html DESTINATION ${CMAKE_CURRENT_BINARY_DIR} )
+
+    # Add examples
+    file(COPY   examples DESTINATION ${CMAKE_CURRENT_BINARY_DIR} )
+    set(LFLAGS "${LFLAGS} --preload-file examples/2D")
+    set(LFLAGS "${LFLAGS} --preload-file examples/3D/00_pipeline/00_background.frag")
+    set(LFLAGS "${LFLAGS} --preload-file examples/3D/00_pipeline/01_postprocessing.frag")
+    set(LFLAGS "${LFLAGS} --preload-file examples/3D/01_lighting/00_gooch.frag")
+    set(LFLAGS "${LFLAGS} --preload-file examples/3D/01_lighting/01_shadows.frag")
+    set(LFLAGS "${LFLAGS} --preload-file examples/3D/01_lighting/02_cubemap.frag")
+    set(LFLAGS "${LFLAGS} --preload-file examples/3D/03_models/dragon.obj")
+    set(LFLAGS "${LFLAGS} --preload-file examples/3D/04_vertex")
     
     set_target_properties(glslViewer PROPERTIES LINK_FLAGS "${LFLAGS}")
     target_link_libraries(glslViewer PRIVATE glfw)
@@ -71,9 +72,13 @@ else()
         SUPPORT_AUDIO
         # SUPPORT_PLY_BINARY
     )
-    target_link_libraries(glslViewer PRIVATE lo_static pthread dl)
+    if(MSVC)
+	    target_link_libraries(glslViewer PRIVATE lo_static Ws2_32.lib Iphlpapi.lib)
+    else()
+    	target_link_libraries(glslViewer PRIVATE lo_static pthread dl)
+    endif()
 
-    if (NOT APPLE)
+    if (NOT APPLE AND NOT MSVC)
         target_link_libraries(glslViewer PRIVATE atomic)
     endif()
 

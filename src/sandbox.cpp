@@ -117,12 +117,6 @@ Sandbox::Sandbox():
             _shader.setUniformDepthTexture("u_sceneDepth", &m_scene_fbo, _shader.textureIndex++ );
         }
     });
-
-    uniforms.functions["u_lightShadowMap"] = UniformFunction("sampler2D", [this](ada::Shader& _shader) {
-        if (uniforms.lights.size() > 0) {
-            _shader.setUniformDepthTexture("u_lightShadowMap", uniforms.lights[0].getShadowMap(), _shader.textureIndex++ );
-        }
-    });
     #endif
 
     uniforms.functions["u_view2d"] = UniformFunction("mat3", [this](ada::Shader& _shader) {
@@ -1007,8 +1001,7 @@ void Sandbox::render() {
     // RENDER SHADOW MAP
     // -----------------------------------------------
     if (geom_index != -1)
-        if (uniforms.functions["u_lightShadowMap"].present)
-            m_scene.renderShadowMap(uniforms);
+        m_scene.renderShadowMap(uniforms);
     
     // BUFFERS
     // -----------------------------------------------
@@ -1252,7 +1245,7 @@ void Sandbox::renderUI() {
             nTotal += uniforms.functions["u_scene"].present;
             nTotal += uniforms.functions["u_sceneDepth"].present;
         }
-        nTotal += uniforms.functions["u_lightShadowMap"].present;
+        nTotal += (geom_index != -1);
         if (nTotal > 0) {
             float w = (float)(ada::getWindowWidth());
             float h = (float)(ada::getWindowHeight());
@@ -1331,7 +1324,7 @@ void Sandbox::renderUI() {
             }
 
         #if !defined(PLATFORM_RPI)
-            if (uniforms.functions["u_lightShadowMap"].present) {
+            if (geom_index != -1) {
                 for (unsigned int i = 0; i < uniforms.lights.size(); i++) {
                     if ( uniforms.lights[i].getShadowMap()->getDepthTextureId() ) {
                         m_billboard_shader.setUniform("u_scale", xStep, yStep);

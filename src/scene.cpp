@@ -637,7 +637,7 @@ void Scene::renderShadowMap(Uniforms& _uniforms) {
                     m_models[i]->getShader()->use();
 
                     // Update Uniforms and textures variables to the shader
-                    _uniforms.feedTo( m_models[i]->getShader() );
+                    _uniforms.feedTo( m_models[i]->getShader(), false );
 
                     // Pass special uniforms
                     m_models[i]->getShader()->setUniform( "u_modelViewProjectionMatrix", mvp);

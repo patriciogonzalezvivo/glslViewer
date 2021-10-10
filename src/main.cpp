@@ -47,7 +47,7 @@ bool                        commandsExit = false;
 
 std::atomic<bool>           keepRunnig(true);
 bool                        screensaver = false;
-bool                        terminate = false;
+bool                        bTerminate = false;
 bool                        fullFps = false;
 
 void                        commandsRun(const std::string &_cmd);
@@ -108,7 +108,7 @@ void loop() {
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
     #ifndef __EMSCRIPTEN__
-    if (!terminate && !fullFps && !sandbox.haveChange()) {
+    if (!bTerminate && !fullFps && !sandbox.haveChange()) {
     // If nothing in the scene change skip the frame and try to keep it at 60fps
         std::this_thread::sleep_for(std::chrono::milliseconds( ada::getRestMs() ));
         return;
@@ -134,7 +134,7 @@ void loop() {
     sandbox.renderDone();
 
 #ifndef __EMSCRIPTEN__
-    if ( terminate && sandbox.screenshotFile == "" )
+    if ( bTerminate && sandbox.screenshotFile == "" )
         keepRunnig.store(false);
     else
 #endif
@@ -1274,7 +1274,7 @@ void commandsInit() {
 
     commands.push_back(Command("quit", [&](const std::string& _line){ 
         if (_line == "quit") {
-            terminate = true;
+            bTerminate = true;
             // keepRunnig.store(false);
             return true;
         }
@@ -1284,7 +1284,7 @@ void commandsInit() {
 
     commands.push_back(Command("exit", [&](const std::string& _line){ 
         if (_line == "exit") {
-            terminate = true;
+            bTerminate = true;
             // keepRunnig.store(false);
             return true;
         }
@@ -1396,7 +1396,7 @@ void cinWatcherThread() {
 
         // If it's using -E exit after executing all commands
         if (commandsExit) {
-            terminate = true;
+            bTerminate = true;
             // keepRunnig.store(false);
         }
     }

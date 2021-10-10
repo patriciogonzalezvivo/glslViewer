@@ -526,11 +526,11 @@ void Uniforms::checkPresenceIn( const std::string &_vert_src, const std::string 
     }
 }
 
-bool Uniforms::feedTo(ada::Shader &_shader ) {
-    return feedTo(&_shader);
+bool Uniforms::feedTo(ada::Shader &_shader, bool _lights ) {
+    return feedTo(&_shader, _lights);
 }
 
-bool Uniforms::feedTo(ada::Shader *_shader ) {
+bool Uniforms::feedTo(ada::Shader *_shader, bool _lights ) {
     bool update = false;
 
     // Pass Native uniforms 
@@ -580,29 +580,33 @@ bool Uniforms::feedTo(ada::Shader *_shader ) {
     for (unsigned int i = 0; i < convolution_pyramids.size(); i++)
         _shader->setUniformTexture("u_convolutionPyramid" + ada::toString(i), convolution_pyramids[i].getResult(), _shader->textureIndex++ );
     
-    // Pass Light Uniforms
-    if (lights.size() == 1) {
-        if (lights[0].getType() != ada::LIGHT_DIRECTIONAL)
-            _shader->setUniform("u_light", lights[0].getPosition());
-        _shader->setUniform("u_lightColor", lights[0].color);
-        if (lights[0].getType() == ada::LIGHT_DIRECTIONAL || lights[0].getType() == ada::LIGHT_SPOT)
-            _shader->setUniform("u_lightDirection", lights[0].direction);
-        _shader->setUniform("u_lightIntensity", lights[0].intensity);
-        if (lights[0].falloff > 0)
-            _shader->setUniform("u_lightFalloff", lights[0].falloff);
-        _shader->setUniform("u_lightMatrix", lights[0].getBiasMVPMatrix() );
-    }
-    else {
-        for (unsigned int i = 0; i < lights.size(); i++) {
-            if (lights[i].getType() != ada::LIGHT_DIRECTIONAL)
-                _shader->setUniform("u_light", lights[i].getPosition());
-            _shader->setUniform("u_lightColor", lights[i].color);
-            if (lights[i].getType() == ada::LIGHT_DIRECTIONAL || lights[i].getType() == ada::LIGHT_SPOT)
-                _shader->setUniform("u_lightDirection", lights[i].direction);
-            _shader->setUniform("u_lightIntensity", lights[i].intensity);
-            if (lights[i].falloff > 0)
-                _shader->setUniform("u_lightFalloff", lights[i].falloff);
-            _shader->setUniform("u_lightMatrix", lights[i].getBiasMVPMatrix() );
+    if (_lights) {
+        // Pass Light Uniforms
+        if (lights.size() == 1) {
+            if (lights[0].getType() != ada::LIGHT_DIRECTIONAL)
+                _shader->setUniform("u_light", lights[0].getPosition());
+            _shader->setUniform("u_lightColor", lights[0].color);
+            if (lights[0].getType() == ada::LIGHT_DIRECTIONAL || lights[0].getType() == ada::LIGHT_SPOT)
+                _shader->setUniform("u_lightDirection", lights[0].direction);
+            _shader->setUniform("u_lightIntensity", lights[0].intensity);
+            if (lights[0].falloff > 0)
+                _shader->setUniform("u_lightFalloff", lights[0].falloff);
+            _shader->setUniform("u_lightMatrix", lights[0].getBiasMVPMatrix() );
+            _shader->setUniformDepthTexture("u_lightShadowMap", lights[0].getShadowMap(), _shader->textureIndex++ );
+        }
+        else {
+            for (unsigned int i = 0; i < lights.size(); i++) {
+                if (lights[i].getType() != ada::LIGHT_DIRECTIONAL)
+                    _shader->setUniform("u_light", lights[i].getPosition());
+                _shader->setUniform("u_lightColor", lights[i].color);
+                if (lights[i].getType() == ada::LIGHT_DIRECTIONAL || lights[i].getType() == ada::LIGHT_SPOT)
+                    _shader->setUniform("u_lightDirection", lights[i].direction);
+                _shader->setUniform("u_lightIntensity", lights[i].intensity);
+                if (lights[i].falloff > 0)
+                    _shader->setUniform("u_lightFalloff", lights[i].falloff);
+                _shader->setUniform("u_lightMatrix", lights[i].getBiasMVPMatrix() );
+                _shader->setUniformDepthTexture("u_lightShadowMap", lights[i].getShadowMap(), _shader->textureIndex++ );
+            }
         }
     }
 
