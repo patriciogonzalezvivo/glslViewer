@@ -1,8 +1,9 @@
 cmake_minimum_required(VERSION 3.2)
 
-set(VERSION 0.4)
-project(glslViewer VERSION ${VERSION}
-                  LANGUAGES CXX)
+set(VERSION 2.0)
+project(glslViewer 
+            VERSION ${VERSION}
+            LANGUAGES CXX )
 
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -77,7 +78,7 @@ if (EMSCRIPTEN)
 else()
 
     target_compile_definitions(glslViewer PUBLIC 
-    SUPPORT_MULTITHREAD_RECORDING 
+        SUPPORT_MULTITHREAD_RECORDING 
         SUPPORT_OSC
         SUPPORT_AUDIO
         # SUPPORT_PLY_BINARY
@@ -87,7 +88,6 @@ else()
 	    target_link_libraries(glslViewer PRIVATE lo Ws2_32.lib Iphlpapi.lib)
         
     else()
-
         if (NOT APPLE)
             target_link_libraries(glslViewer PRIVATE atomic)
         endif()
