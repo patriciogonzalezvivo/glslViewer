@@ -93,7 +93,7 @@ char* getVert() {
 
 // Open Sound Control
 #if defined(SUPPORT_OSC)
-#include "liblo/lo/lo_cpp.h"
+#include "lo/lo_cpp.h"
 std::mutex                  oscMutex;
 int                         oscPort = -1;
 #endif

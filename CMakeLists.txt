@@ -33,7 +33,11 @@ set_target_properties(glslViewer PROPERTIES
 # The compiled ADA 
 add_subdirectory(deps)
 
-target_include_directories(glslViewer PUBLIC ${PROJECT_SOURCE_DIR}/deps )
+target_include_directories(glslViewer PUBLIC 
+    ${LO_INCLUDE_DIRS} 
+    ${PROJECT_SOURCE_DIR}/deps 
+)
+
 target_link_libraries(glslViewer PRIVATE ada phonedepth)
 
 if (EMSCRIPTEN)    
