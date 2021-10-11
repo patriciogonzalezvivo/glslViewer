@@ -92,7 +92,7 @@ else()
             target_link_libraries(glslViewer PRIVATE atomic)
         endif()
 
-    	target_link_libraries(glslViewer PRIVATE lo_static pthread dl)
+    	target_link_libraries(glslViewer PRIVATE lo pthread dl)
 
         install(TARGETS glslViewer RUNTIME DESTINATION /usr/local/bin )
     endif()
