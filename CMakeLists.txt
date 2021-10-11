@@ -1,6 +1,12 @@
 cmake_minimum_required(VERSION 3.2)
 
-project(glslViewer)
+set(VERSION 0.4)
+project(glslViewer VERSION ${VERSION}
+                  LANGUAGES CXX)
+
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 if(MSVC)
 	add_definitions( -DPLATFORM_WINDOWS )
@@ -82,7 +88,7 @@ else()
         target_link_libraries(glslViewer PRIVATE atomic)
     endif()
 
-    if (NOT WIN32)
+    if (NOT MSVC)
         install(TARGETS glslViewer RUNTIME DESTINATION /usr/local/bin )
     endif()
 
