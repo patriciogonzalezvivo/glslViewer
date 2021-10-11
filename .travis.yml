@@ -29,15 +29,14 @@ matrix:
                         - libpng-dev 
                         - libtiff-dev
 
-        -   os: osx
-            name: "MacOS 10.8"
-            env:
-                - MACOSX_DEPLOYMENT_TARGET=10.8
+        # -   os: osx
+        #     name: "MacOS 10.8"
+        #     env:
+        #         - MACOSX_DEPLOYMENT_TARGET=10.8
 
-install:
-- if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew update; fi
-# - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew install homebrew/versions/glfw3; fi
-- if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew install liblo ffmpeg; fi
+# install:
+# - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew update; fi
+# - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew install liblo ffmpeg; fi
 
 script:
   - mkdir build

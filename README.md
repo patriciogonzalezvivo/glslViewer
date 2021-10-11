@@ -1,4 +1,4 @@
-# glslViewer [![Build Status](https://app.travis-ci.com/patriciogonzalezvivo/glslViewer.svg?branch=main)](https://travis-ci.com/patriciogonzalezvivo/glslViewer)
+# glslViewer [![Build Status](https://app.travis-ci.com/patriciogonzalezvivo/glslViewer.svg?branch=main)](https://app.travis-ci.com/github/patriciogonzalezvivo/glslViewer)
 
 ![](.github/images/00.gif)
 
