@@ -16,11 +16,9 @@ matrix:
                     packages:
                         - xorg-dev 
                         - libglu1-mesa-dev
-                        - libglfw3-dev
+                        - liblo-dev
                         - libavcodec-dev 
-                        - libavcodec-extra 
-                        - libavfilter-dev 
-                        - libavfilter-extra 
+                        - libavfilter-dev  
                         - libavdevice-dev 
                         - libavformat-dev 
                         - libavutil-dev 

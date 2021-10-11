@@ -34,7 +34,6 @@ set_target_properties(glslViewer PROPERTIES
 add_subdirectory(deps)
 
 target_include_directories(glslViewer PUBLIC 
-    ${LO_INCLUDE_DIRS} 
     ${PROJECT_SOURCE_DIR}/deps 
 )
 
@@ -58,8 +57,8 @@ if (EMSCRIPTEN)
     # # Create a new HTML
     # set_target_properties(glslViewer PROPERTIES SUFFIX ".html")
     
-    # # Copy the default index.html 
-    # file(COPY   assets/index.html DESTINATION ${CMAKE_CURRENT_BINARY_DIR} )
+    # Copy the default index.html 
+    file(COPY   assets/index.html DESTINATION ${CMAKE_CURRENT_BINARY_DIR} )
 
     # Add examples
     file(COPY   examples DESTINATION ${CMAKE_CURRENT_BINARY_DIR} )
@@ -70,29 +69,31 @@ if (EMSCRIPTEN)
     set(LFLAGS "${LFLAGS} --preload-file examples/3D/01_lighting/01_shadows.frag")
     set(LFLAGS "${LFLAGS} --preload-file examples/3D/01_lighting/02_cubemap.frag")
     set(LFLAGS "${LFLAGS} --preload-file examples/3D/03_models/dragon.obj")
-    set(LFLAGS "${LFLAGS} --preload-file examples/3D/04_vertex")
+    # set(LFLAGS "${LFLAGS} --preload-file examples/3D/04_vertex")
     
     set_target_properties(glslViewer PROPERTIES LINK_FLAGS "${LFLAGS}")
     target_link_libraries(glslViewer PRIVATE glfw)
     
 else()
+
     target_compile_definitions(glslViewer PUBLIC 
-        SUPPORT_MULTITHREAD_RECORDING 
+    SUPPORT_MULTITHREAD_RECORDING 
         SUPPORT_OSC
         SUPPORT_AUDIO
         # SUPPORT_PLY_BINARY
     )
-    if(MSVC)
-	    target_link_libraries(glslViewer PRIVATE lo_static Ws2_32.lib Iphlpapi.lib)
+
+    if (MSVC)
+	    target_link_libraries(glslViewer PRIVATE lo Ws2_32.lib Iphlpapi.lib)
+        
     else()
-    	target_link_libraries(glslViewer PRIVATE lo_static pthread dl)
-    endif()
 
-    if (NOT APPLE AND NOT MSVC)
-        target_link_libraries(glslViewer PRIVATE atomic)
-    endif()
+        if (NOT APPLE)
+            target_link_libraries(glslViewer PRIVATE atomic)
+        endif()
 
-    if (NOT MSVC)
+    	target_link_libraries(glslViewer PRIVATE lo pthread dl)
+
         install(TARGETS glslViewer RUNTIME DESTINATION /usr/local/bin )
     endif()
 

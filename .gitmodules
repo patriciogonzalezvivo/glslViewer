@@ -1,9 +1,7 @@
 [submodule "deps/ada"]
 	path = deps/ada
 	url = https://github.com/patriciogonzalezvivo/ada.git
-[submodule "deps/liblo"]
-	path = deps/liblo
-	url = https://github.com/radarsat1/liblo.git
+	
 [submodule "deps/miniaudio"]
 	path = deps/miniaudio
 	url = https://github.com/mackron/miniaudio.git
