@@ -82,7 +82,9 @@ else()
         target_link_libraries(glslViewer PRIVATE atomic)
     endif()
 
-    install(TARGETS glslViewer)
+    if (NOT WIN32)
+        install(TARGETS glslViewer RUNTIME DESTINATION /usr/local/bin )
+    endif()
 
 endif()
 
