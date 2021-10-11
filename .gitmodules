@@ -5,3 +5,6 @@
 [submodule "deps/miniaudio"]
 	path = deps/miniaudio
 	url = https://github.com/mackron/miniaudio.git
+[submodule "deps/liblo"]
+	path = deps/liblo
+	url = https://github.com/radarsat1/liblo.git

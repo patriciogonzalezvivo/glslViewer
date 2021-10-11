@@ -85,14 +85,14 @@ else()
     )
 
     if (MSVC)
-	    target_link_libraries(glslViewer PRIVATE lo Ws2_32.lib Iphlpapi.lib)
+	    target_link_libraries(glslViewer PRIVATE lo_static Ws2_32.lib Iphlpapi.lib)
         
     else()
         if (NOT APPLE)
             target_link_libraries(glslViewer PRIVATE atomic)
         endif()
 
-    	target_link_libraries(glslViewer PRIVATE lo pthread dl)
+    	target_link_libraries(glslViewer PRIVATE lo_static pthread dl)
 
         install(TARGETS glslViewer RUNTIME DESTINATION /usr/local/bin )
     endif()
