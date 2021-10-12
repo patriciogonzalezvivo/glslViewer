@@ -6,8 +6,8 @@
 #endif
 
 #include "scene.h"
-#include "types/list.h"
 #include "types/files.h"
+#include "ada/tools/list.h"
 
 enum ShaderType {
     FRAGMENT = 0,
@@ -60,7 +60,7 @@ public:
     void                onHistogram();
    
     // Include folders
-    List                include_folders;
+    ada::List           include_folders;
 
     // Uniforms
     Uniforms            uniforms;
@@ -91,8 +91,8 @@ private:
     std::string         m_vert_source;
 
     // Dependencies
-    List                m_vert_dependencies;
-    List                m_frag_dependencies;
+    ada::List           m_vert_dependencies;
+    ada::List           m_frag_dependencies;
 
     // Buffers
     std::vector<ada::Shader>    m_buffers_shaders;
