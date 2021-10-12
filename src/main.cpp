@@ -95,7 +95,7 @@ char* getVert() {
 #if defined(SUPPORT_OSC)
 #include <lo/lo_cpp.h>
 std::mutex                  oscMutex;
-int                         oscPort = -1;
+int                         oscPort = 0;
 #endif
 
 #if defined(__EMSCRIPTEN__)
@@ -604,31 +604,34 @@ int main(int argc, char **argv) {
 
     // OSC
     #if defined(SUPPORT_OSC)
+    lo::ServerThread oscServer(oscPort);
+    oscServer.set_callbacks( [&st](){printf("// Listening for OSC commands on port: %i\n", oscPort);}, [](){});
+    oscServer.add_method(0, 0, [](const char *path, lo::Message m) {
+        std::string line;
+        std::vector<std::string> address = ada::split(std::string(path), '/');
+        for (size_t i = 0; i < address.size(); i++)
+            line +=  ((i != 0) ? "," : "") + address[i];
+
+        std::string types = m.types();
+        lo_arg** argv = m.argv(); 
+        lo_message msg = m;
+        for (size_t i = 0; i < types.size(); i++) {
+            if ( types[i] == 's')
+                line += "," + std::string( (const char*)argv[i] );
+            else if (types[i] == 'i')
+                line += "," + ada::toString(argv[i]->i);
+            else
+                line += "," + ada::toString(argv[i]->f);
+        }
+
+        if (sandbox.verbose)
+            std::cout << line << std::endl;
+            
+        commandsRun(line, oscMutex);
+    });
+
     if (oscPort > 0) {
-        lo::ServerThread st(oscPort);
-        st.set_callbacks( [&st](){printf("// Listening for OSC commands on port: %i\n", oscPort);}, [](){});
-        st.add_method(0, 0, [](const char *path, lo::Message m) {
-            std::string line;
-            std::vector<std::string> address = ada::split(std::string(path), '/');
-            for (size_t i = 0; i < address.size(); i++)
-                line +=  ((i != 0) ? "," : "") + address[i];
-
-            std::string types = m.types();
-            lo_arg** argv = m.argv(); 
-            lo_message msg = m;
-            for (size_t i = 0; i < types.size(); i++) {
-                if ( types[i] == 's')
-                    line += "," + std::string( (const char*)argv[i] );
-                else if (types[i] == 'i')
-                    line += "," + ada::toString(argv[i]->i);
-                else
-                    line += "," + ada::toString(argv[i]->f);
-            }
-
-            // std::cout << line << std::endl;
-            commandsRun(line, oscMutex);
-        });
-        st.start();
+        oscServer.start();
     }
     #endif
     
