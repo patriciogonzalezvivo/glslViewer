@@ -1,0 +1,498 @@
+
+--------------------------------------------
+2019-03-03: Release 0.30
+--------------------------------------------
+
+We are pleased to present stable release 0.30 of LibLo, the
+lightweight, easy to use implementation of the Open Sound Control
+protocol.
+
+Open Sound Control (OSC) is a protocol for communication among
+computers, sound synthesizers, and other multimedia devices that is
+designed for use over modern network transports.
+
+Changes of note since the 0.29 release include:
+
+- Functions to wait and receive on multiple servers (lo_servers_wait
+  and lo_servers_recv_noblock)
+- Improvements to the CMake build system.
+- Remove premake4 files and rely on CMake for building on Windows.
+- Fix memory leak in lo_server_recv_raw_stream.
+- C++ wrapper: Fix memory leak on string allocation.
+- oscdump: Disable line buffering in Windows to support MSYS2 output.
+
+--------------------------------------------
+2017-08-11: Release 0.29
+--------------------------------------------
+
+We are pleased to present stable release 0.29 of LibLo, the
+lightweight, easy to use implementation of the Open Sound Control
+protocol.
+
+Open Sound Control (OSC) is a protocol for communication among
+computers, sound synthesizers, and other multimedia devices that is
+designed for use over modern network transports.
+
+Changes of note since the 0.28 release include:
+
+- Several fixes for C++ headers
+- Addition of function to remove methods by lo_method identifier
+  (lo_server_del_lo_method)
+- Several fixes for Windows
+- Use of Win32 threads on Windows instead of pthreads
+- Addition of a secondary CMake-based build system
+- Fix a bug in SLIP decoder
+- Support run-time specification of maximum message size
+- Remove limit on outgoing TCP message size
+- Make oscdump use unbuffered output by default
+- Add timetags to oscdump output
+- Add a utility to play back oscdump output
+
+--------------------------------------------
+2014-01-27: Release 0.28
+--------------------------------------------
+
+We are pleased to present stable release 0.28 of LibLo, the
+lightweight, easy to use implementation of the Open Sound Control
+protocol.
+
+Open Sound Control (OSC) is a protocol for communication among
+computers, sound synthesizers, and other multimedia devices that is
+designed for use over modern network transports.
+
+Changes since the 0.28rc release candidate include:
+
+- Fixed build for Windows (MingW, MSVC) and Android platforms
+- Fixed an implicit cast issue in C++ bindings for lo::ServerThread
+- Documentation, small fixes
+- Added a function to get library version information (lo_version)
+
+--------------------------------------------
+2013-11-24: Release candidate 0.28rc
+--------------------------------------------
+
+This is a release candidate 0.28rc of LibLo, the lightweight, easy to
+use implementation of the Open Sound Control protocol.
+
+Open Sound Control (OSC) is a protocol for communication among
+computers, sound synthesizers, and other multimedia devices that is
+designed for use over modern network transports.
+
+This is mainly a bugfix release due to some deal breakers that
+unfortunately made it through to the 0.27 release.  Additionally, this
+is the first release to include a modern C++11 object-oriented wrapper
+for the LibLo API.  Please test!
+
+Important bug fixes:
+
+- Fixed checking of vararg markers on 64-bit systems
+- Fixed hang in TCP blocking test
+- Several potential bugs prevented through static analysis
+
+Additional changes:
+
+- Add function lo_bundle_get_timestamp()
+- Add C++11 wrapper, `lo_cpp.h', and test program
+- Support for a few more build tools: clang/clang++, ccache
+
+--------------------------------------------
+2013-05-22: Release 0.27
+--------------------------------------------
+
+We are pleased to present stable release 0.27 of LibLo, the
+lightweight, easy to use implementation of the Open Sound Control
+protocol.
+
+Open Sound Control (OSC) is a protocol for communication among
+computers, sound synthesizers, and other multimedia devices that is
+designed for use over modern network transports.
+
+This is the first release in quite some time, and includes several
+major features and improvements since the 0.26 release, particularly
+related to bundles, multicast, and TCP support.  Features include:
+
+- Support for sending and receiving nested bundles, including
+  ref-counted memory handling for bundled messages.
+- Support for multicast in oscdump and oscsend tools.
+- Callbacks for bundle handling.
+- Select desired network interface for multicast.
+- Fix blocking semantics of lo_server_wait() / lo_server_recv().
+- Make inclusion of threading-related code optional.
+- Basic compilation script for Android.
+- Allow to optionally disable server dispatch queueing at runtime.
+  (In this case messages are dispatched immediately even if they are
+  timestamped for later.)
+- Support bidirectional use of TCP ports using lo_send_from().
+- Add SLIP protocol support for packetization when sending and
+  receiving with TCP.
+- Allow to enable the TCP_NODELAY flag on TCP sockets.
+- Support for specifying server parameters via URL string, and also
+  support for URL strings in the oscsend and oscdump tools.
+- As a result of the above, support for TCP and Unix sockets in the
+  oscsend and oscdump tools.
+
+Bug fixes include:
+
+- Fixed timestamp serialization.
+- Fixed blob padding and char-type padding.
+- Close sockets properly under Windows.
+- Fix multicast under Windows.
+- Fix TCP reception blocking behaviour, such that a message can span
+  multiple calls to recv().
+- Correct printing of blob bytes.
+- Only call getnameinfo() when requested.
+
+This release contains contributions by:
+
+- Camille Troillard
+- Hanspeter Portner
+- Jamie Bullock
+- Joseph Malloch
+- Pete Goodeve
+- rjvbertin
+- Mok Keith
+- David Robillard
+- John McFerran
+- Artem Baguinski
+- William Light
+
+Please download it at SourceForge:
+http://downloads.sourceforge.net/liblo/liblo-0.27.tar.gz
+
+Or read the online documentation:
+http://liblo.sourceforge.net
+
+The git repository can be found at the following mirrors:
+- git://liblo.git.sourceforge.net/gitroot/liblo/liblo
+- git://gitorious.org/liblo/mainline.git
+- https://github.com/radarsat1/liblo.git
+
+Stephen Sinclair
+  LibLo maintainer
+
+--------------------------------------------
+2009-03-07: Release 0.26
+--------------------------------------------
+
+We are pleased to present stable release 0.26 of LibLo, the
+lightweight, easy to use implementation of the Open Sound Control
+protocol.
+
+Open Sound Control (OSC) is a protocol for communication among
+computers, sound synthesizers, and other multimedia devices that is
+designed for use over modern network transports.
+
+This release marks the first release of LibLo under the LGPL license
+version 2.1 or later, allowing the use of LibLo in non-GPL
+applications as long as it is dynamically linked such that the LibLo
+portion of the application can remain freely modifiable.  We hope that
+this will allow compatibility with a wider variety of audio
+applications and encourage the use of open protocols even in
+commercial software.  (This change was motivated by receiving a number
+of requests for special permission for the use of LibLo in non-GPL
+software.)
+
+This release also introduces some new features, such as the ability to
+use custom transports, proper TCP multi-session support, access to
+bundle timestamp information, and wider C compiler compatibility.
+
+Details:
+- Change license to LGPL 2.1 or later.
+- Add return codes to all functions that may fail.
+- Fix memory leaks in lo_address_new_from_url(), dispatch_method(),
+  lo_url_get_path()
+- Move lo_arg_size(), lo_get_path(), lo_arg_host/network_endian() back
+  to lo_lowlevel.h.
+- Expose the lo_server_dispatch_data() function as public, making it
+  possible to react to messages contained in an arbitrary block of
+  memory.  (i.e., allows use with custom transport protocols)
+- Get protocol by ID number.
+- Keep TCP sessions open, and automatically track multiple open
+  sessions in a data structure.
+- Allow access to bundle timestamp information.
+- Fix bug in lo_timetag_diff().
+- Change the value of LO_TT_IMMEDIATE to correspond with the OSC
+  specification.
+- Enable SO_REUSEPORT when initializing a multicast server.
+- Update the "soname" describing API/ABI compatibility.
+- Update documentation and various bug fixes.
+- Compiles under MSVC, avoiding the use of gcc-isms when not using
+  gcc.
+
+
+Contributions by:
+- Mike Wozniewski
+- Dominic Sacré
+- Alex McLean
+- Steve Harris
+- Kentaro Fukuchi
+- Koichiro Ozaki
+- Stephen Sinclair
+
+Please feel free to download it at SourceForge:
+http://downloads.sourceforge.net/liblo/liblo-0.26.tar.gz
+
+Or read the online documentation:
+http://liblo.sourceforge.net
+
+Stephen Sinclair
+  LibLo maintainer
+
+
+--------------------------------------------
+2008-07-18: Release 0.25
+--------------------------------------------
+
+We are pleased to present stable release 0.25 of LibLo, the
+lightweight, easy to use implementation of the Open Sound Control
+protocol.
+
+Open Sound Control (OSC) is a protocol for communication among
+computers, sound synthesizers, and other multimedia devices that is
+optimized for modern networking technology.
+
+This release brings several new features, including support for
+broadcast messages, multicast UDP groups, message deserialisation, and
+input validation.
+
+Details:
+- Check for buffer overflows
+- Added oscsend and oscdump command-line tools
+- Added lo_message_add_varargs() for variable-argument C functions.
+- Added lo_bundle_free_messages()
+- Bug fix for pattern matching. (curly braces)
+- Broadcast support
+- Added lo_message_deserialise()
+- Multicast support
+- Fixes for compiling on OS X
+- General bug fixes
+
+Contributions by:
+- Camille Troillard
+- Chris Hixon
+- Kentaro Fukuchi
+- Dave Robillard
+- Nicolas Humfrey
+- Stephen Sinclair
+
+Please feel free to download it at SourceForge:
+http://downloads.sourceforge.net/liblo/liblo-0.25.tar.gz
+
+Or read the online documentation:
+http://liblo.sourceforge.net
+
+Stephen Sinclair
+  LibLo maintainer
+
+
+--------------------------------------------
+2007-03-21: Release 0.24
+--------------------------------------------
+
+About:
+LibLO is a lightweight library for handling the sending and receiving of
+messages according to the Open Sound Control (OSC) protocol on POSIX
+systems. 
+
+Changes:
+lo_server_get_protocol() and lo_address_get_protocol() were added. Tests
+for lo_address_get_* were added to the test tool. Several compiler
+warnings were fixed. The address for package bug reports was changed.
+lo_blob_new() was changed to take const void*. The getnameinfo() method of
+getting hostname is disabled when IPv6 is disabled. A Unix server socket is
+now unlinked when it is closed. The size of a Unix socket path is checked
+properly.  
+
+
+--------------------------------------------
+2006-01-27: Release 0.23
+--------------------------------------------
+
+Liblo, the Lite OSC library, is an implementation of the Open Sound
+Control protocol for POSIX systems*. It is written in ANSI C99 and
+released under the GNU General Public Licence. It is designed to make
+developing OSC applictions as easy as possible.
+
+http://liblo.sourceforge.net/
+
+
+nick.
+
+
+Changes:
+  * New Maintainer (me!)
+  * Fixed pthread resource leak, when stopping server
+  * IPv6 is now disabled by default
+  * Fixed bug where sockets weren't closed when replying to messages
+  * Split off resolve_address into seperate create_socket function
+  * Only creates new sockets when needed
+  * Added lo_send_from, lo_send_message_from and lo_send_bundle_from
+
+
+--------------------------------------------
+2005-09-09: Release 0.22
+--------------------------------------------
+
+Liblo, the Lite OSC library, is an implementation of the Open Sound
+Control protocol for POSIX systems*. It is written in ANSI C99 and
+released under the GNU General Public Licence. It is designed to make
+developing OSC applictions as easy as possible.
+
+http://plugin.org.uk/liblo/
+
+- Steve
+
+Changes:
+        Fixes for socket leaking from Martin Habets, Dave Robillard and
+                Jesse Chappell
+
+        Fix for IPV6 numerical address parsing from Dave Robillard
+
+        Fix for char handling on bigendian machines from Martin Habets
+                (and others)
+
+        New lo_server(thread)_del_method() from Martin Habets
+
+        Endianess and arithmetic fixes for bundle timestamps from Topher
+                Cyll - bundle delivery is still not accurate though
+
+        Patch to optioanlly disable IPV6 support from Lorenz Schori
+
+* and MS Windows, under some environment or other
+
+
+--------------------------------------------
+2005-03-03: Release 0.18
+--------------------------------------------
+
+http://www.plugin.org.uk/liblo/releases/liblo-0.18.tar.gz
+
+This is bugfix release and fixes a critical bug in 0.17 that bites when
+trying to connect multiple clients to one server. All users of 0.17 should
+upgrade as soon as possible.
+
+Liblo is an implementation of the Open Sound Control protocol for POSIX
+systems. It is released under the GNU General Public Licence.
+
+http://www.plugin.org.uk/liblo/
+http://www.cnmat.berkeley.edu/OpenSoundControl/
+
+- Steve
+
+
+--------------------------------------------
+2005-02-24: Release 0.17
+--------------------------------------------
+
+Liblo, the Lite OSC library, is an implementation of the Open Sound
+Control [1] protocol for POSIX systems. It is written in ANSI C99 and
+released under the GNU General Public Licence. It is designed to make
+developing OSC applictions as easy as possible.
+
+http://plugin.org.uk/liblo/
+
+Changes:
+        Patch from Jesse Chappell to fix memory leak
+        Ability to directly reply to the sender of a UDP message
+        Preliminary support for the OSC method enumeration scheme
+
+- Steve
+
+[1] http://www.cnmat.berkeley.edu/OpenSoundControl/
+
+
+--------------------------------------------
+2005-01-26: Release 0.16
+--------------------------------------------
+
+Liblo, the Lite OSC library, is an implementation of the Open Sound
+Control [1] protocol for POSIX systems. It is written in ANSI C and
+released under the GNU General Public Licence. It is designed to make
+developing OSC applictions as easy as possible.
+
+http://plugin.org.uk/liblo/
+
+Changes:
+        Patch from Dave Robillard that fixes bundles of more than 4 messages.
+        Some const char * for C++ compatibility.
+        Added a source field to messages that represents the source from
+                which a message was received. Useful in method handlers to
+                determine which client sent the message.
+        Added patch from Walco van Loon and Pix that fixes a bug in the
+                hostname detection fallback code
+
+- Steve
+
+[1] http://www.cnmat.berkeley.edu/OpenSoundControl/
+
+
+--------------------------------------------
+2004-10-19: Release 0.13
+--------------------------------------------
+
+liblo is an implementation of the Open Sound Control[1] protocol for POSIX
+systems. It is written in ANSI C and released under the GNU General Public
+Licence. It is designed to make developing OSC applictions as easy as
+possible.
+
+http://plugin.org.uk/liblo/
+
+This release adds Mac OSX compatibility fixes from Taybin Rutkin, a
+memory leak fix from Jesse Chappell and methods and examples to allow
+server polling from exisitng threads from Sean Bolton. Some legacy
+compatobility code has been removed, but this should not affect anyone.
+
+Documentation has been updated to reflect the changes.
+[1] http://www.cnmat.berkeley.edu/OpenSoundControl/ [website is currently
+                                                     down]
+
+--------------------------------------------
+2004-08-19: Release 0.9
+--------------------------------------------
+
+liblo is an implementation of the Open Sound Control[1] protocol for POSIX
+systems. It is released under the GPL. It is written in ANSI C.
+
+http://plugin.org.uk/liblo/
+
+This release adds: (over the last stable release, 0.5)
+* Nonblocking mesage dispatcher (useful for single GUI-thread
+applications, eg Qt, GTK+)
+* bugfixes to URL handling (0.6 - 0.8 broke DSSI)
+* UNIX domain (FIFO) socket server/client support
+* TCP domain socket server/client support
+* A method to stop server threads
+* Better regression tests (testlo)
+* Fixed memory leaks
+* More documentation
+* Dynamic library building fixes
+
+- Steve
+
+[1] http://www.cnmat.berkeley.edu/OpenSoundControl/
+
+
+--------------------------------------------
+2004-03-29: Release 0.5
+--------------------------------------------
+
+liblo is a easy to use OSC (Open Sound Control) implementation written in C.
+
+http://plugin.org.uk/liblo/
+
+See the website for docs and example code.
+
+Changes since last release:
+        bugfixes
+        OSC URL handling
+        better IPV6 support
+        real documentation
+        better example code
+        support for all the types listed in the specification
+        automatic port number selection for servers
+        lo_target type has been deprecated, use lo_address now
+        some buffer overrun checks in lo_send()
+
+This version is not binary compatible with the previous release.
+
+- Steve

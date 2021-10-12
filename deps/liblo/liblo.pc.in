@@ -1,0 +1,10 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+
+Name: liblo
+Version: @PACKAGE_VERSION@
+Description: A lightweight OSC server/client library
+Libs: -L${libdir} -llo @LIBPTHREAD@ @extralibs@
+Cflags: -I${includedir}
