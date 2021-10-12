@@ -9,6 +9,9 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+# The compiled ADA 
+add_subdirectory(deps)
+
 if(MSVC)
 	add_definitions( -DPLATFORM_WINDOWS )
 endif()
@@ -26,19 +29,13 @@ file(GLOB ROOT_SOURCE
 
 add_executable(glslViewer ${ROOT_SOURCE})
 
-set_target_properties(glslViewer PROPERTIES
-    CXX_STANDARD 11
-    CXX_STANDARD_REQUIRED ON
-)
+# set_target_properties(glslViewer PROPERTIES
+#     CXX_STANDARD 11
+#     CXX_STANDARD_REQUIRED ON
+# )
 
-# The compiled ADA 
-add_subdirectory(deps)
-
-target_include_directories(glslViewer PUBLIC 
-    ${PROJECT_SOURCE_DIR}/deps 
-)
-
-target_link_libraries(glslViewer PRIVATE ada phonedepth)
+include_directories(deps/liblo)
+target_include_directories(glslViewer PRIVATE deps)
 
 if (EMSCRIPTEN)    
     
@@ -73,7 +70,11 @@ if (EMSCRIPTEN)
     # set(LFLAGS "${LFLAGS} --preload-file examples/3D/04_vertex")
     
     set_target_properties(glslViewer PROPERTIES LINK_FLAGS "${LFLAGS}")
-    target_link_libraries(glslViewer PRIVATE glfw)
+    target_link_libraries(glslViewer PRIVATE 
+        ada 
+        phonedepth 
+        glfw
+    )
     
 else()
 
@@ -85,14 +86,33 @@ else()
     )
 
     if (MSVC)
-	    target_link_libraries(glslViewer PRIVATE lo_static Ws2_32.lib Iphlpapi.lib)
+	    target_link_libraries(glslViewer PRIVATE 
+            ada 
+            phonedepth 
+            lo_static 
+            Ws2_32.lib 
+            Iphlpapi.lib
+        )
         
     else()
         if (APPLE)
-            target_link_libraries(glslViewer PRIVATE lo_static pthread dl)
+            target_link_libraries(glslViewer PRIVATE 
+                ada 
+                phonedepth 
+                pthread 
+                dl
+                lo_static 
+            )
 
         else()
-            target_link_libraries(glslViewer PRIVATE lo atomic pthread dl)
+            target_link_libraries(glslViewer PRIVATE 
+                ada 
+                phonedepth 
+                atomic 
+                pthread 
+                dl
+                lo_static 
+            )
 
         endif()
 
