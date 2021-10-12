@@ -17,7 +17,6 @@ matrix:
                     packages:
                         - xorg-dev 
                         - libglu1-mesa-dev
-                        - liblo-dev
                         - libavcodec-dev 
                         - libavfilter-dev  
                         - libavdevice-dev 
@@ -36,7 +35,7 @@ matrix:
 
 # install:
 # - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew update; fi
-# - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew install liblo ffmpeg; fi
+# - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew install ffmpeg; fi
 
 script:
   - mkdir build
