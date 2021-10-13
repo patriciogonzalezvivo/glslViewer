@@ -1,9 +1,0 @@
-#!/usr/bin/make -f
-
-%:
-	dh $@ --with autotools-dev
-
-override_dh_auto_install:
-	install -D -m 0755 build/glslViewer $$(pwd)/debian/glslviewer/usr/bin/glslViewer
-	install -D -m 0644 assets/glslViewer.png $$(pwd)/debian/glslviewer/usr/share/pixmaps/glslViewer.png
-	install -D -m 0644 assets/glslViewer.desktop $$(pwd)/debian/glslviewer/usr/share/applications/glslViewer.desktop

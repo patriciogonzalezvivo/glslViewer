@@ -1,3 +1,13 @@
+glslviewer (2.0.0) focal; urgency=medium
+
+  * Major rearch. Splitting framework into ADA library. Which internally compiles GLFW and other GL dependencies
+  * Change to use CMake for consistency across platforms
+  * Cross compilation to WASM using emscripten
+  * Binnary PLYs, OSC, Audio Textures and Video are now optative features
+  * Using Liblo for OSC to have 6 digits precision after the floating point 
+
+ -- Patricio Gonzalez Vivo <patriciogonzalezvivo@gmail.com>  Wed, 13 Oct 2021 05:41:37 -0400
+
 glslviewer (1.7.0) focal; urgency=medium
 
   * Adding support for Video and Audio textures

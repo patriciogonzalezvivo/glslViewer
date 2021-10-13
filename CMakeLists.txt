@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 3.2)
 
-set(VERSION 2.0)
+set(VERSION_MAJOR 2)
+set(VERSION_MINOR 0)
+set(VERSION_PATCH 0)
+set(VERSION "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}")
+
 project(glslViewer 
             VERSION ${VERSION}
             LANGUAGES CXX )
@@ -36,6 +40,7 @@ add_executable(glslViewer ${ROOT_SOURCE})
 
 include_directories(deps/liblo)
 target_include_directories(glslViewer PRIVATE deps)
+target_link_libraries(glslViewer PRIVATE ada phonedepth)
 
 if (EMSCRIPTEN)    
     
@@ -70,11 +75,7 @@ if (EMSCRIPTEN)
     # set(LFLAGS "${LFLAGS} --preload-file examples/3D/04_vertex")
     
     set_target_properties(glslViewer PROPERTIES LINK_FLAGS "${LFLAGS}")
-    target_link_libraries(glslViewer PRIVATE 
-        ada 
-        phonedepth 
-        glfw
-    )
+    target_link_libraries(glslViewer PRIVATE glfw)
     
 else()
 
@@ -85,38 +86,93 @@ else()
         # SUPPORT_PLY_BINARY
     )
 
+    include(InstallRequiredSystemLibraries)
+    set(CPACK_PACKAGE_NAME "glslViewer")
+    set(CPACK_PACKAGE_CONTACT "Patricio Gonzalez Vivo <patriciogonzalezvivo@gmail.com>")
+    set(CPACK_PACKAGE_VENDOR http://patriciogonzalezvivo.com)
+    set(CPACK_PACKAGE_HOMEPAGE_URL https://github.com/patriciogonzalezvivo/glslViewer)
+    set(CPACK_PACKAGE_VERSION_MAJOR "${VERSION_MAJOR}")
+    set(CPACK_PACKAGE_VERSION_MINOR "${VERSION_MINOR}")
+    set(CPACK_PACKAGE_VERSION_PATCH "${VERSION_PATCH}")
+    set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "GlslViewer is a flexible console-base OpenGL Sandbox to display 2D/3D GLSL shaders.")
+    set(CPACK_PACKAGE_DESCRIPTION_FILE "${PROJECT_SOURCE_DIR}/DESCRIPTION")
+    set(CPACK_RESOURCE_FILE_LICENSE "${PROJECT_SOURCE_DIR}/LICENSE")
+    set(CPACK_RESOURCE_FILE_README "${PROJECT_SOURCE_DIR}/README.md")
+    set(CPACK_PACKAGE_ICON "${PROJECT_SOURCE_DIR}/assets/glslViewer.png")
+
+    # resolve architecture. The reason i "change" i686 to i386 is that debian packages
+    # require i386 so this is for the future
+    if("${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "i686")
+        set(SYSTEM_ARCH "i386")
+    else()
+        set(SYSTEM_ARCH ${CMAKE_SYSTEM_PROCESSOR})
+    endif()
+
+    # set a default system name - use CMake setting (Linux|Windows|...)
+    set(SYSTEM_NAME ${CMAKE_SYSTEM_NAME})
+
+    # for msvc the SYSTEM_NAME is set win32/64 instead of "Windows"
+    if(MSVC)
+        if(CMAKE_CL_64)
+            set(SYSTEM_NAME "win64")
+        else()
+            set(SYSTEM_NAME "win32")
+        endif()
+    endif()
+    set(CPACK_PACKAGE_FILE_NAME "${CMAKE_PROJECT_NAME}-${VERSION}-${SYSTEM_NAME}-${SYSTEM_ARCH}")
+
     if (MSVC)
 	    target_link_libraries(glslViewer PRIVATE 
-            ada 
-            phonedepth 
             lo_static 
             Ws2_32.lib 
             Iphlpapi.lib
         )
         
     else()
-        if (APPLE)
-            target_link_libraries(glslViewer PRIVATE 
-                ada 
-                phonedepth 
-                pthread 
-                dl
-                lo_static 
-            )
+        target_link_libraries(glslViewer PRIVATE pthread dl lo_static)
+        install(TARGETS glslViewer DESTINATION bin)
 
-        else()
-            target_link_libraries(glslViewer PRIVATE 
-                ada 
-                phonedepth 
-                atomic 
-                pthread 
-                dl
-                lo_static 
-            )
+        if (NOT APPLE)
+            target_link_libraries(glslViewer PRIVATE atomic)
+            install(FILES "${PROJECT_SOURCE_DIR}/assets/glslViewer.png" DESTINATION share/pixmaps)
+            install(FILES "${PROJECT_SOURCE_DIR}/assets/glslViewer.desktop" DESTINATION share/applications)
 
+            # set(CPACK_GENERATOR "DEB")
+            set(DEBSRC_BUILD_DEPENDS debhelper git cmake xorg-dev libgbm-dev libglu1-mesa-dev libavcodec-dev libavfilter-dev  libavdevice-dev libavformat-dev libavutil-dev libswscale-dev libv4l-dev libjpeg-dev libpng-dev libtiff-dev)
+            set(DEBSRC_PACKAGE_DEPENDS git cmake ffmpeg libavcodec-extra libavfilter-extra)
+
+            set(CPACK_DEBIAN_PACKAGE_DEPENDS)
+            foreach(DEP ${DEBSRC_PACKAGE_DEPENDS})
+            set(CPACK_DEBIAN_PACKAGE_DEPEND "${CPACK_DEBIAN_PACKAGE_DEPENDS}, ${DEP}")
+            endforeach(DEP ${DEBSRC_PACKAGE_DEPENDS})  
+
+            set(CPACK_DEBIAN_BUILD_DEPENDS)
+            foreach(DEP ${DEBSRC_BUILD_DEPENDS})
+            set(CPACK_DEBIAN_BUILD_DEPENDS "${CPACK_DEBIAN_BUILD_DEPENDS}, ${DEP}")
+            endforeach(DEP ${DEBSRC_BUILD_DEPENDS})
+
+            # find out and set DEB_ARCHITECTURE
+            execute_process(
+                COMMAND dpkg --print-architecture
+                OUTPUT_VARIABLE DEB_ARCHITECTURE
+                OUTPUT_STRIP_TRAILING_WHITESPACE            
+            )
+            message(STATUS "package_details.cmake: your architecture is ${DEB_ARCHITECTURE}")
+
+            set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE ${DEB_ARCHITECTURE})
+            set(CPACK_DEBIAN_PACKAGE_SECTION graphics)
+            set(CPACK_DEBIAN_PACKAGE_PRIORITY extra )
+            set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Patricio Gonzalez Vivo <patriciogonzalezvivo@gmail.com>")
+            set(CPACK_DEBIAN_DISTRIBUTION_NAME ubuntu )
+            set(CPACK_DEBIAN_DISTRIBUTION_RELEASES bionic focal ) 
+            set(CPACK_DEBIAN_CHANGELOG "  * Latest development version.")
+            # set(CPACK_DEBIAN_RESOURCE_FILE_CHANGELOG ${PROJECT_SOURCE_DIR}/changelog)
+            # set(CPACK_DEBIAN_UPDATE_CHANGELOG ON)
+            set(CPACK_PACKAGE_FILE_NAME "${CMAKE_PROJECT_NAME}-${VERSION}-${DEB_ARCHITECTURE}")
         endif()
+        
+        include(CPack)
 
-        install(TARGETS glslViewer RUNTIME DESTINATION /usr/local/bin )
     endif()
 
 endif()

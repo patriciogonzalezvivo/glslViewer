@@ -371,17 +371,17 @@ configure_file(
     @ONLY)
 add_definitions(-DHAVE_CONFIG_H)
 
-install(
-    TARGETS ${LIBRARY_STATIC} ${LIBRARY_SHARED} ${OSCDUMP} ${OSCSEND}
-    LIBRARY DESTINATION lib
-    ARCHIVE DESTINATION lib
-    RUNTIME DESTINATION bin)
-install(
-    FILES ${LIBRARY_HEADERS}
-    DESTINATION include/lo)
-install(
-    FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT}Config.cmake
-    DESTINATION lib/cmake/${PROJECT})
-install(
-    FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT}.pc
-    DESTINATION lib/pkgconfig)
+# install(
+#     TARGETS ${LIBRARY_STATIC} ${LIBRARY_SHARED} ${OSCDUMP} ${OSCSEND}
+#     LIBRARY DESTINATION lib
+#     ARCHIVE DESTINATION lib
+#     RUNTIME DESTINATION bin)
+# install(
+#     FILES ${LIBRARY_HEADERS}
+#     DESTINATION include/lo)
+# install(
+#     FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT}Config.cmake
+#     DESTINATION lib/cmake/${PROJECT})
+# install(
+#     FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT}.pc
+#     DESTINATION lib/pkgconfig)
