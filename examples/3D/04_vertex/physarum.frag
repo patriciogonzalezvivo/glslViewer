@@ -1,7 +1,7 @@
-#version 120
+//#version 120
 
 #ifdef GL_ES
-precision mediump float;
+precision highp float;
 #endif
 
 // Author Patricio Gonzalez Vivo  @patriciogv 

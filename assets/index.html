@@ -116,7 +116,7 @@
         Module.getFrag =  Module.cwrap('getFrag', 'string', []);
         Module.getVert =  Module.cwrap('getVert', 'string', []);
       },
-      // arguments: ["examples/2D/00_tests/test.frag"],
+      arguments: ["examples/2D/00_tests/test.frag"],
       // arguments: ["examples/2D/00_tests/test_300es.frag"],
       // arguments: ["examples/2D/00_tests/test.frag", "examples/2D/00_tests/in.png"],
       // arguments: ["examples/2D/00_tests/test_depth.frag", "examples/2D/00_tests/iphone_depth.jpeg", "-e", "textures,on"],
@@ -135,22 +135,19 @@
       // arguments: ["examples/2D/08_convolution_pyramids/poisson_fill_visualize.frag", "examples/2D/08_convolution_pyramids/flower.png"],
       // arguments: ["examples/2D/08_convolution_pyramids/laplacian_integrator.frag", "examples/2D/08_convolution_pyramids/chart.png"],
       // arguments: ["examples/2D/08_convolution_pyramids/laplacian_remove.frag", "examples/2D/08_convolution_pyramids/house.jpg"],
-      // arguments: ["examples/2D/00_tests/test_depth.frag", "examples/3D/03_models/dragon.obj"],
+      // arguments: ["examples/2D/08_convolution_pyramids/poisson_blend.frag", "--u_target", "examples/2D/08_convolution_pyramids/target.png", "--u_source" ,"examples/2D/08_convolution_pyramids/source.jpg", "--u_source_mask", "examples/2D/08_convolution_pyramids/source_mask.png" ],
+      // arguments: ["examples/2D/08_convolution_pyramids/poisson_clone.frag", "--u_target", "examples/2D/08_convolution_pyramids/target.png", "--u_source" ,"examples/2D/08_convolution_pyramids/source.jpg", "--u_source_mask", "examples/2D/08_convolution_pyramids/source_mask.png" ],
+      // arguments: ["examples/3D/03_models/dragon.obj", "examples/3D/00_pipeline/00_background.frag", "-e", "buffers,on"],
       // arguments: ["examples/3D/03_models/dragon.obj", "examples/3D/00_pipeline/01_postprocessing.frag", "-e", "buffers,on"],
-      // arguments: ["examples/3D/03_models/dragon.obj", "examples/3D/00_pipeline/01_postprocessing.frag", "-e", "buffers,on", "--msaa"],
       // arguments: ["examples/3D/03_models/dragon.obj", "examples/3D/01_lighting/00_gooch.frag", "-e", "buffers,on"],
       // arguments: ["examples/3D/03_models/dragon.obj", "examples/3D/01_lighting/01_shadows.frag", "-e", "buffers,on"],
       // arguments: ["examples/3D/03_models/dragon.obj", "examples/3D/01_lighting/04_fresnel.vert", "examples/3D/01_lighting/04_fresnel.frag", "-C", "examples/3D/01_lighting/uffizi_cross.hdr"],
-      // arguments: ["examples/3D/03_models/bunny.obj"],
       // arguments: ["examples/3D/03_models/dragon.obj", "-e", "buffers,on"],
       // arguments: ["examples/3D/03_models/dragon.obj", "--fxaa", "-e", "buffers,on"],
       // arguments: ["examples/3D/03_models/dragon.obj", "--msaa", "--fxaa", "-e", "buffers,on"],
-      // arguments: ["examples/3D/03_models/duck.glb"],
-      // arguments: ["examples/3D/03_models/head.obj", "-e", "textures,on", "-e", "buffers,on"],
-      // arguments: ["examples/3D/03_models/head.ply"],
-      // arguments: ["examples/3D/03_models/helmet.glb"],
-      // arguments: ["examples/3D/03_models/suzanne.obj"],
-      arguments: ["examples/3D/04_vertex/pcl.ply", "examples/3D/04_vertex/stars.vert", "examples/3D/04_vertex/pcl.frag"],
+      // arguments: ["examples/3D/04_vertex/pcl.ply", "examples/3D/04_vertex/stars.vert", "examples/3D/04_vertex/pcl.frag"],
+      // arguments: ["examples/3D/04_vertex/pcl.ply", "examples/3D/04_vertex/stars.vert", "examples/3D/04_vertex/pcl_trail.frag"],
+      // arguments: ["examples/3D/04_vertex/pcl.ply", "examples/3D/04_vertex/physarum.vert", "examples/3D/04_vertex/physarum.frag"],
     
       print: (function() {
         var element = document.getElementById('output');

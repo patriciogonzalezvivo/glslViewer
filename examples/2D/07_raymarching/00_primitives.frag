@@ -13,7 +13,7 @@
 // and http://iquilezles.org/www/articles/distfunctions/distfunctions.htm
 
 #ifdef GL_ES
-precision mediump float;
+precision highp float;
 #endif
 
 uniform vec3        u_camera;
@@ -316,7 +316,8 @@ vec2 opU( vec2 d1, vec2 d2 )
 
 //------------------------------------------------------------------
 
-#define ZERO int(min(u_frame,0.0))
+#define ZERO 0 
+// #define ZERO int(min(u_frame,0.0))
 
 //------------------------------------------------------------------
 
@@ -387,8 +388,7 @@ vec2 iBox( in vec3 ro, in vec3 rd, in vec3 rad )
 	             min( min( t2.x, t2.y ), t2.z ) );
 }
 
-vec2 raycast( in vec3 ro, in vec3 rd )
-{
+vec2 raycast( in vec3 ro, in vec3 rd ) {
     vec2 res = vec2(-1.0,-1.0);
 
     float tmin = 1.0;
@@ -405,15 +405,15 @@ vec2 raycast( in vec3 ro, in vec3 rd )
     
     // raymarch primitives   
     vec2 tb = iBox( ro-vec3(0.0,0.4,-0.5), rd, vec3(2.5,0.41,3.0) );
-    if( tb.x<tb.y && tb.y>0.0 && tb.x<tmax)
-    {
+    if( tb.x<tb.y && tb.y>0.0 && tb.x<tmax) {
         //return vec2(tb.x,2.0);
         tmin = max(tb.x,tmin);
         tmax = min(tb.y,tmax);
 
         float t = tmin;
-        for( int i=0; i<70 && t<tmax; i++ )
-        {
+        for( int i=0; i<70; i++ ) {
+            if (t>tmax)
+                break;
             vec2 h = map( ro+rd*t );
             if( abs(h.x)<(0.0001*t) )
             { 
@@ -428,15 +428,13 @@ vec2 raycast( in vec3 ro, in vec3 rd )
 }
 
 // http://iquilezles.org/www/articles/rmshadows/rmshadows.htm
-float calcSoftshadow( in vec3 ro, in vec3 rd, in float mint, in float tmax )
-{
+float calcSoftshadow( in vec3 ro, in vec3 rd, in float mint, in float tmax ) {
     // bounding volume
     float tp = (0.8-ro.y)/rd.y; if( tp>0.0 ) tmax = min( tmax, tp );
 
     float res = 1.0;
     float t = mint;
-    for( int i=ZERO; i<24; i++ )
-    {
+    for( int i=ZERO; i<24; i++ ) {
 		float h = map( ro + rd*t ).x;
         float s = clamp(8.0*h/t,0.0,1.0);
         res = min( res, s*s*(3.0-2.0*s) );
@@ -447,8 +445,7 @@ float calcSoftshadow( in vec3 ro, in vec3 rd, in float mint, in float tmax )
 }
 
 // http://iquilezles.org/www/articles/normalsSDF/normalsSDF.htm
-vec3 calcNormal( in vec3 pos )
-{
+vec3 calcNormal( in vec3 pos ) {
     vec2 e = vec2(1.0,-1.0)*0.5773*0.0005;
     return normalize( e.xyy*map( pos + e.xyy ).x + 
 					  e.yyx*map( pos + e.yyx ).x + 
@@ -460,8 +457,7 @@ float calcAO( in vec3 pos, in vec3 nor )
 {
 	float occ = 0.0;
     float sca = 1.0;
-    for( int i=ZERO; i<5; i++ )
-    {
+    for( int i=ZERO; i<5; i++ ) {
         float h = 0.01 + 0.12*float(i)/4.0;
         float d = map( pos + h*nor ).x;
         occ += (h-d)*sca;
