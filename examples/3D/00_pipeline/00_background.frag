@@ -1,3 +1,15 @@
+// Copyright Patricio Gonzalez Vivo, 2016 - http://patriciogonzalezvivo.com/
+// I am the sole copyright owner of this Work.
+//
+// You cannot host, display, distribute or share this Work in any form,
+// including physical and digital. You cannot use this Work in any
+// commercial or non-commercial product, website or project. You cannot
+// sell this Work and you cannot mint an NFTs of it.
+// I share this Work for educational purposes, and you can link to it,
+// through an URL, proper attribution and unmodified screenshot, as part
+// of your educational material. If these conditions are too restrictive
+// please contact me and we'll definitely work it out.
+
 #ifdef GL_ES
 precision mediump float;
 #endif
@@ -22,8 +34,16 @@ varying vec4    v_color;
 varying vec3    v_normal;
 #endif
 
-#include "../../2D/02_pixelspiritdeck/lib/ratio.glsl"
-#include "../../2D/02_pixelspiritdeck/lib/stroke.glsl"
+vec2 ratio(in vec2 st, in vec2 s) {
+    return mix( vec2((st.x*s.x/s.y)-(s.x*.5-s.y*.5)/s.y,st.y),
+                vec2(st.x,st.y*(s.y/s.x)-(s.y*.5-s.x*.5)/s.x),
+                step(s.x,s.y));
+}
+
+float stroke(float x, float size, float w) {
+    float d = step(size, x + w * 0.5) - step(size, x - w * 0.5);
+    return clamp(d, 0.0, 1.0);
+}
 
 void main(void) {
    vec3 color = vec3(1.0);

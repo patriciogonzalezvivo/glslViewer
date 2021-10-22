@@ -1,3 +1,16 @@
+
+// Copyright Patricio Gonzalez Vivo, 2016 - http://patriciogonzalezvivo.com/
+// I am the sole copyright owner of this Work.
+//
+// You cannot host, display, distribute or share this Work in any form,
+// including physical and digital. You cannot use this Work in any
+// commercial or non-commercial product, website or project. You cannot
+// sell this Work and you cannot mint an NFTs of it.
+// I share this Work for educational purposes, and you can link to it,
+// through an URL, proper attribution and unmodified screenshot, as part
+// of your educational material. If these conditions are too restrictive
+// please contact me and we'll definitely work it out.
+
 #ifdef GL_ES
 precision highp float;
 #endif
@@ -17,8 +30,14 @@ float random (vec2 st) {
     return fract(sin(dot(st.xy, vec2(12.9898,78.233)))*43758.5453123);
 }
 
-#include "../02_pixelspiritdeck/lib/stroke.glsl"
-#include "../02_pixelspiritdeck/lib/circleSDF.glsl"
+float circleSDF(in vec2 st, in vec2 center) {
+    return length(st - center) * 2.;
+}
+
+float stroke(float x, float size, float w) {
+    float d = step(size, x + w * 0.5) - step(size, x - w * 0.5);
+    return clamp(d, 0.0, 1.0);
+}
 
 void main() {
     vec3 color = vec3(0.0);
