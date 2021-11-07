@@ -296,7 +296,9 @@ int main(int argc, char **argv) {
 
     // Initialize openGL context
     ada::initGL (window_viewport, window_properties);
+    #ifndef __EMSCRIPTEN__
     ada::setWindowTitle("GlslViewer");
+    #endif
 
     struct stat st;                         // for files to watch
     int         textureCounter  = 0;        // Number of textures to load
