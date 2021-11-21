@@ -851,7 +851,7 @@ void Sandbox::_updateBuffers() {
     if ( m_buffers_total != int(uniforms.buffers.size()) ) {
 
         if (verbose)
-            std::cout << " Creating/Removing " << uniforms.buffers.size() << " buffers to " << m_buffers_total << std::endl;
+            std::cout << "// Creating/Removing " << uniforms.buffers.size() << " buffers to " << m_buffers_total << std::endl;
 
         uniforms.buffers.clear();
         m_buffers_shaders.clear();
@@ -859,7 +859,13 @@ void Sandbox::_updateBuffers() {
         for (int i = 0; i < m_buffers_total; i++) {
             // New FBO
             uniforms.buffers.push_back( ada::Fbo() );
-            uniforms.buffers[i].allocate(ada::getWindowWidth(), ada::getWindowHeight(), ada::COLOR_TEXTURE);
+
+            glm::vec2 size = glm::vec2(ada::getWindowWidth(), ada::getWindowHeight());
+            uniforms.buffers[i].fixed = ada::get_buffer_size(m_frag_source, i, size);
+            uniforms.buffers[i].allocate(size.x, size.y, ada::COLOR_TEXTURE);
+
+            if (verbose && uniforms.buffers[i].fixed)
+                std::cout << "//  u_buffer" << i << ": " << size.x << "x" << size.y << std::endl;
             
             // New Shader
             m_buffers_shaders.push_back( ada::Shader() );
@@ -934,31 +940,33 @@ void Sandbox::_updateConvolutionPyramids() {
 void Sandbox::_renderBuffers() {
     glDisable(GL_BLEND);
 
+    bool reset_viewport = false;
     for (unsigned int i = 0; i < uniforms.buffers.size(); i++) {
+        reset_viewport += uniforms.buffers[i].fixed;
+
         uniforms.buffers[i].bind();
 
         m_buffers_shaders[i].use();
 
         // Pass textures for the other buffers
-        for (unsigned int j = 0; j < uniforms.buffers.size(); j++) {
-            if (i != j) {
+        for (unsigned int j = 0; j < uniforms.buffers.size(); j++)
+            if (i != j)
                 m_buffers_shaders[i].setUniformTexture("u_buffer" + ada::toString(j), &uniforms.buffers[j] );
-            }
-        }
 
         // Update uniforms and textures
         uniforms.feedTo( m_buffers_shaders[i] );
-
         m_billboard_vbo->render( &m_buffers_shaders[i] );
-
         uniforms.buffers[i].unbind();
     }
 
     #if defined(__EMSCRIPTEN__)
     if (ada::getWebGLVersionNumber() == 1)
-        glViewport(0.0f, 0.0f, ada::getViewport().z, ada::getViewport().w);
+        reset_viewport = true;
     #endif
 
+    if (reset_viewport)
+        glViewport(0.0f, 0.0f, ada::getViewport().z, ada::getViewport().w);
+    
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
@@ -1574,15 +1582,14 @@ void Sandbox::onMouseDrag(float _x, float _y, int _button) {
             uniforms.getCamera().orbit(m_lat, m_lon, dist);
         }
     }
-    
-    // }
 }
 
 void Sandbox::onViewportResize(int _newWidth, int _newHeight) {
     uniforms.getCamera().setViewport(_newWidth, _newHeight);
     
     for (unsigned int i = 0; i < uniforms.buffers.size(); i++) 
-        uniforms.buffers[i].allocate(_newWidth, _newHeight, ada::COLOR_TEXTURE);
+        if (!uniforms.buffers[i].fixed)
+            uniforms.buffers[i].allocate(_newWidth, _newHeight, ada::COLOR_TEXTURE);
 
     if (m_convolution_pyramid_fbos.size() > 0) {
         for (unsigned int i = 0; i < uniforms.convolution_pyramids.size(); i++) {

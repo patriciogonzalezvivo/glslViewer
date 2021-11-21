@@ -534,25 +534,17 @@ int main(int argc, char **argv) {
     }
 
     if (sandbox.verbose) {
-       // query strings
-        char *vendor = (char *)glGetString(GL_VENDOR);
-        char *renderer = (char *)glGetString(GL_RENDERER);
-        char *version = (char *)glGetString(GL_VERSION);
-        char *glsl_version = (char *)glGetString(GL_SHADING_LANGUAGE_VERSION);
-    
-        printf("OpenGL ES\n");
-        printf("  Vendor: %s\n", vendor);
-        printf("  Renderer: %s\n", renderer);
-        printf("  Version: %s\n", version);
-        printf("  GLSL version: %s\n", glsl_version);
+        printf("//Specs: \n");
+        printf("//  - Vendor: %s\n", ada::getVendor().c_str() );
+        printf("//  - Renderer: %s\n", ada::getRenderer().c_str() );
+        printf("//  - Version: %s\n", ada::getGLVersion().c_str() );
+        printf("//  - GLSL version: %s\n", ada::getGLSLVersion().c_str() );
+        printf("//  - Extensions: %s\n", ada::getExtensions().c_str() );
 
-        // char *exts = (char *)glGetString(GL_EXTENSIONS);
-        // printf("  Extensions: %s\n", exts);
-        // printf("  Implementation limits:\n");
-
+        printf("//  - Implementation limits:\n");
         int param;
         glGetIntegerv(GL_MAX_TEXTURE_SIZE, &param);
-        std::cout << "  GL_MAX_TEXTURE_SIZE = " << param << std::endl;
+        std::cout << "//      + GL_MAX_TEXTURE_SIZE = " << param << std::endl;
 
     }
 
@@ -565,38 +557,12 @@ int main(int argc, char **argv) {
     }
     #endif
 
-    if (sandbox.verbose) {
-       // query strings
-        char *vendor = (char *)glGetString(GL_VENDOR);
-        char *renderer = (char *)glGetString(GL_RENDERER);
-        char *version = (char *)glGetString(GL_VERSION);
-        char *glsl_version = (char *)glGetString(GL_SHADING_LANGUAGE_VERSION);
-    
-        printf("OpenGL ES\n");
-        printf("  Vendor: %s\n", vendor);
-        printf("  Renderer: %s\n", renderer);
-        printf("  Version: %s\n", version);
-        printf("  GLSL version: %s\n", glsl_version);
-
-        // char *exts = (char *)glGetString(GL_EXTENSIONS);
-        // printf("  Extensions: %s\n", exts);
-        // printf("  Implementation limits:\n");
-
-        int param;
-        glGetIntegerv(GL_MAX_TEXTURE_SIZE, &param);
-        std::cout << "  GL_MAX_TEXTURE_SIZE = " << param << std::endl;
-
-    }
-
     sandbox.setup(files, commands);
 
 #ifdef __EMSCRIPTEN__
-
-    // emscripten_set_main_loop(loop, 0, true);
     emscripten_request_animation_frame_loop(loop, 0);
-    // ada::setWindowVSync(true);
-
 #else
+
     ada::setWindowVSync(true);
 
     // Start watchers

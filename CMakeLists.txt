@@ -57,14 +57,14 @@ if (EMSCRIPTEN)
     set(LFLAGS "${LFLAGS} -s ALLOW_MEMORY_GROWTH=1")
     set(LFLAGS "${LFLAGS} -s NO_DYNAMIC_EXECUTION=1")
 
-    # # Create a new HTML
-    # set_target_properties(glslViewer PROPERTIES SUFFIX ".html")
+    # Create a new HTML
+    set_target_properties(glslViewer PROPERTIES SUFFIX ".html")
     
-    # # Copy the default index.html 
-    # file(COPY   assets/index.html DESTINATION ${CMAKE_CURRENT_BINARY_DIR} )
+    # Copy the default index.html 
+    file(COPY   assets/index.html DESTINATION ${CMAKE_CURRENT_BINARY_DIR} )
 
     # Add examples
-    # file(COPY   examples DESTINATION ${CMAKE_CURRENT_BINARY_DIR} )
+    file(COPY   examples DESTINATION ${CMAKE_CURRENT_BINARY_DIR} )
     set(LFLAGS "${LFLAGS} --preload-file examples/2D/00_tests")
     set(LFLAGS "${LFLAGS} --preload-file examples/2D/02_pixelspiritdeck")
     set(LFLAGS "${LFLAGS} --preload-file examples/2D/03_buffers")
@@ -88,9 +88,6 @@ if (EMSCRIPTEN)
     set(LFLAGS "${LFLAGS} --preload-file examples/3D/04_vertex/physarum.vert")
     set(LFLAGS "${LFLAGS} --preload-file examples/3D/04_vertex/spin.vert")
     set(LFLAGS "${LFLAGS} --preload-file examples/3D/04_vertex/stars.vert")
-    set(LFLAGS "${LFLAGS} --preload-file pcl.ply")
-    set(LFLAGS "${LFLAGS} --preload-file shader.vert")
-    set(LFLAGS "${LFLAGS} --preload-file shader.frag")
     
     set_target_properties(glslViewer PROPERTIES LINK_FLAGS "${LFLAGS}")
     target_link_libraries(glslViewer PRIVATE glfw)
