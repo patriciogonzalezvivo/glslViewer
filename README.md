@@ -47,7 +47,7 @@ GlslViewer gives support to:
     * [Loading Textures](https://github.com/patriciogonzalezvivo/glslViewer/wiki/Using-GlslViewer#3-loading-textures)
     * [Audio and video Textures](https://github.com/patriciogonzalezvivo/glslViewer/wiki/Audio-and-Video-Textures)
     * [Other arguments](https://github.com/patriciogonzalezvivo/glslViewer/wiki/Using-GlslViewer#4-other-arguments)
-    * [Console IN commands](https://github.com/patriciogonzalezvivo/glslViewer/wiki/Using-GlslViewer#console-in-commands)
+    * [Console IN commands](https://github.com/patriciogonzalezvivo/glslViewer/wiki/Interacting-with-GlslViewer)
 
 * Convention: 
     * [Defines](https://github.com/patriciogonzalezvivo/glslViewer/wiki/GlslViewer-DEFINES)
