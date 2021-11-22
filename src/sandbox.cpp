@@ -721,7 +721,7 @@ bool Sandbox::haveChange() {
             uniforms.haveChange();
 }
 
-std::string Sandbox::getSource(ShaderType _type) const {
+const std::string& Sandbox::getSource(ShaderType _type) const {
     return (_type == FRAGMENT)? m_frag_source : m_vert_source;
 }
 
@@ -863,9 +863,6 @@ void Sandbox::_updateBuffers() {
             glm::vec2 size = glm::vec2(ada::getWindowWidth(), ada::getWindowHeight());
             uniforms.buffers[i].fixed = ada::get_buffer_size(m_frag_source, i, size);
             uniforms.buffers[i].allocate(size.x, size.y, ada::COLOR_TEXTURE);
-
-            if (verbose && uniforms.buffers[i].fixed)
-                std::cout << "//  u_buffer" << i << ": " << size.x << "x" << size.y << std::endl;
             
             // New Shader
             m_buffers_shaders.push_back( ada::Shader() );
@@ -954,8 +951,10 @@ void Sandbox::_renderBuffers() {
                 m_buffers_shaders[i].setUniformTexture("u_buffer" + ada::toString(j), &uniforms.buffers[j] );
 
         // Update uniforms and textures
-        uniforms.feedTo( m_buffers_shaders[i] );
+        uniforms.feedTo( m_buffers_shaders[i], true, false);
+
         m_billboard_vbo->render( &m_buffers_shaders[i] );
+        
         uniforms.buffers[i].unbind();
     }
 

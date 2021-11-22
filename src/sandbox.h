@@ -45,7 +45,7 @@ public:
     void                delDefine( const std::string &_define );
 
     // Getting some data out of Sandbox
-    std::string         getSource( ShaderType _type ) const;
+    const std::string&  getSource( ShaderType _type ) const;
     Scene&              getScene() { return m_scene; }
 
     void                printDependencies( ShaderType _type ) const;

@@ -526,11 +526,11 @@ void Uniforms::checkPresenceIn( const std::string &_vert_src, const std::string 
     }
 }
 
-bool Uniforms::feedTo(ada::Shader &_shader, bool _lights ) {
-    return feedTo(&_shader, _lights);
+bool Uniforms::feedTo(ada::Shader &_shader, bool _lights, bool _buffers ) {
+    return feedTo(&_shader, _lights, _buffers);
 }
 
-bool Uniforms::feedTo(ada::Shader *_shader, bool _lights ) {
+bool Uniforms::feedTo(ada::Shader *_shader, bool _lights, bool _buffers ) {
     bool update = false;
 
     // Pass Native uniforms 
@@ -538,7 +538,6 @@ bool Uniforms::feedTo(ada::Shader *_shader, bool _lights ) {
         if (it->second.present)
             if (it->second.assign)
                 it->second.assign( *_shader );
-
 
     // Pass User defined uniforms
     if (m_change) {
@@ -572,13 +571,14 @@ bool Uniforms::feedTo(ada::Shader *_shader, bool _lights ) {
         _shader->setUniform(it->first+"TotalFrames", float(it->second->getTotalFrames()));
     }
 
-    // Pass Buffers Texture
-    for (unsigned int i = 0; i < buffers.size(); i++)
-        _shader->setUniformTexture("u_buffer" + ada::toString(i), &buffers[i], _shader->textureIndex++ );
-
     // Pass Convolution Piramids resultant Texture
     for (unsigned int i = 0; i < convolution_pyramids.size(); i++)
         _shader->setUniformTexture("u_convolutionPyramid" + ada::toString(i), convolution_pyramids[i].getResult(), _shader->textureIndex++ );
+
+    // Pass Buffers Texture
+    if (_buffers)
+        for (unsigned int i = 0; i < buffers.size(); i++)
+            _shader->setUniformTexture("u_buffer" + ada::toString(i), &buffers[i], _shader->textureIndex++ );
     
     if (_lights) {
         // Pass Light Uniforms
