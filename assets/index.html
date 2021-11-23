@@ -11,6 +11,9 @@
       body {
         margin: 0;
         padding: 0;
+      }
+      
+      body {
         width: 100vw;
         height: 100vh;
         overflow: hidden;
@@ -18,17 +21,6 @@
         font-family: 'Lucida Console', Monaco, monospace;
       }
 
-      .emscripten { padding-right: 0; margin-left: auto; margin-right: auto; display: block; }
-      div.emscripten { text-align: center; }     
-      canvas.emscripten {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%,-50%);
-        width:100%;
-        height:100%;
-      }
-      ​
       * {
         -webkit-box-sizing: border-box;
         box-sizing: border-box;
@@ -38,12 +30,37 @@
         -webkit-touch-callout: none;
       }
 
-      .spinner {
-        height: 30px;
-        width: 30px;
+      .emscripten { padding-right: 0; margin-left: auto; margin-right: auto; display: block; }
+      div.emscripten { text-align: center; }
+      canvas.emscripten {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%,-50%);
+        width:100%;
+        height:100%;
+      }​
+
+      #emscripten_loader {
+        width: 100%;
+        height: 100%;
+      }
+
+      .emscripten_loader {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%,-50%);
+        width: 100%;
+        height: 100%;
+      }
+
+      #spinner {
+        height: 100px;
+        width: 100px;
         margin: 0;
-        margin-top: 20px;
-        margin-left: 20px;
+        margin-top: -50px;
+        margin-left: -50px;
         display: inline-block;
         vertical-align: top;
 
@@ -52,10 +69,10 @@
         -o-animation: rotation .8s linear infinite;
         animation: rotation 0.8s linear infinite;
 
-        border-left: 5px solid rgb(235, 235, 235);
-        border-right: 5px solid rgb(235, 235, 235);
-        border-bottom: 5px solid rgb(235, 235, 235);
-        border-top: 5px solid rgb(120, 120, 120);
+        border-left: 5px solid rgb(200, 200, 200);
+        border-right: 5px solid rgb(200, 200, 200);
+        border-bottom: 5px solid rgb(200, 200, 200);
+        border-top: 5px solid rgb(0, 0, 0);
         
         border-radius: 100%;
         background-color: rgb(0, 0, 0);
@@ -83,25 +100,27 @@
         vertical-align: top;
         margin-top: 30px;
         margin-left: 20px;
-        font-weight: bold;
-        color: rgb(255, 255, 255);
+        /* font-weight: bold; */
+        color: rgb(200, 200, 200);
+        font-family: monospace;
       }
 
       #progress {
         height: 20px;
         width: 300px;
+        margin-top: 90px;
       }
     </style>
   </head>
   <body>
-    <div class="spinner" id='spinner'></div>
-    <div class="emscripten" id="status">Downloading...</div>
-    <div class="emscripten">
-      <progress value="0" max="100" id="progress" hidden=1></progress>
+    <div class="emscripten_loader" id="emscripten_loader">
+      <div class="emscripten_loader" id='spinner'></div>
+      <div class="emscripten_loader" id="status">Downloading...</div>
+      <progress class="emscripten_loader" value="0" max="100" id="progress" hidden=1></progress>
     </div>
     <canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()" tabindex=-1></canvas>
   </body>
-
+  
   <script type='text/javascript'>
     var statusElement = document.getElementById('status');
     var progressElement = document.getElementById('progress');

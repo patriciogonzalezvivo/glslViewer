@@ -561,6 +561,11 @@ int main(int argc, char **argv) {
 
 #ifdef __EMSCRIPTEN__
     emscripten_request_animation_frame_loop(loop, 0);
+
+    double width,  height;
+    emscripten_get_element_css_size("#canvas", &width, &height);
+    ada::setWindowSize(width, height);
+
 #else
 
     ada::setWindowVSync(true);
