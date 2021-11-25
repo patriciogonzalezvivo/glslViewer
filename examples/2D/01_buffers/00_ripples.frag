@@ -53,7 +53,7 @@ void main() {
     color = texture2D(u_buffer1, st).rgb;
 
     float d = 0.0;
-    d = 1.75 * stroke(circleSDF(st - u_mouse/u_resolution + 0.5), 0.05, 0.01) * random(st + u_time);
+    d = 1.75 * stroke(circleSDF(st, u_mouse/u_resolution), 0.05, 0.01) * random(st + u_time);
 
     //  Grab the information arround the active pixel
     //
