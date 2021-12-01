@@ -4,8 +4,12 @@
     <meta charset="utf-8" />
     <title>GlslViewer</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta property="og:image" content="thumbnail.png" />
     <meta property="og:title" content="GlslViewer" />
+    <meta property="og:image" content="glslViewer.png" />
+    <meta property='og:description' content=''/>
+    <meta property='og:image:width' content='512'/>
+    <meta property='og:image:height' content='512'/>
+    <meta property='og:site_name' content='GlslViewer by Patricio Gonzalez Vivo'/>
     <style>
       html,
       body {
@@ -71,11 +75,11 @@
 
         border-left: 5px solid rgb(200, 200, 200);
         border-right: 5px solid rgb(200, 200, 200);
-        border-bottom: 5px solid rgb(200, 200, 200);
-        border-top: 5px solid rgb(0, 0, 0);
+        border-bottom: 5px solid rgba(0, 0, 0, 0);
+        border-top: 5px solid rgba(0, 0, 0, 0);
         
         border-radius: 100%;
-        background-color: rgb(0, 0, 0);
+        background-color: rgba(0, 0, 0, 0);
       }
 
       @-webkit-keyframes rotation {
@@ -100,25 +104,41 @@
         vertical-align: top;
         margin-top: 30px;
         margin-left: 20px;
-        /* font-weight: bold; */
         color: rgb(200, 200, 200);
         font-family: monospace;
       }
 
       #progress {
-        height: 20px;
-        width: 300px;
+        height: 10px;
+        width: 200px;
         margin-top: 90px;
       }
+
+      #emscripten_background {
+        width: 100%;
+        position:absolute; 
+        top:50%; 
+        transform: translateY(-50%);
+        z-index: -100;
+        opacity: 0.25;
+        filter: blur(8px);
+        -webkit-filter: blur(8px);
+        height: 100%;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: cover;
+      }
+
     </style>
   </head>
   <body>
-    <div class="emscripten_loader" id="emscripten_loader">
-      <div class="emscripten_loader" id='spinner'></div>
-      <div class="emscripten_loader" id="status">Downloading...</div>
-      <progress class="emscripten_loader" value="0" max="100" id="progress" hidden=1></progress>
+    <div class='emscripten_loader' id='emscripten_loader'>
+      <div class='emscripten_loader' id='spinner'></div>
+      <div class='emscripten_loader' id='status'>Downloading...</div>
+      <progress class='emscripten_loader' value='50' max='100' id='progress' ></progress>
+      <!-- <img src='thumbnail.gif' loop='infinite' id='emscripten_background'/> -->
     </div>
-    <canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()" tabindex=-1></canvas>
+    <canvas class='emscripten' id='canvas' oncontextmenu='event.preventDefault()' tabindex=-1></canvas>
   </body>
   
   <script type='text/javascript'>
@@ -228,10 +248,9 @@
         }
     };
     Module.setStatus('Downloading...');
-    // var command =  Module.cwrap('command', 'void', ['string']);
-    window.onerror = function(event) {
+    // window.onerror = function(event) {
       // location.reload();
-    };
+    // };
 
   </script>
   <script async type="text/javascript" src="glslViewer.js"></script>
