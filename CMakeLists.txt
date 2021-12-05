@@ -58,7 +58,7 @@ if (EMSCRIPTEN)
     set(LFLAGS "${LFLAGS} -s NO_DYNAMIC_EXECUTION=1")
 
     # # Create a new HTML
-    set_target_properties(glslViewer PROPERTIES SUFFIX ".html")
+    # set_target_properties(glslViewer PROPERTIES SUFFIX ".html")
     
     # # Copy the default index.html 
     file(COPY   assets/index.html DESTINATION ${CMAKE_CURRENT_BINARY_DIR} )
