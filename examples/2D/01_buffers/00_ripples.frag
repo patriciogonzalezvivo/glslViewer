@@ -30,8 +30,8 @@ float random (vec2 st) {
     return fract(sin(dot(st.xy, vec2(12.9898,78.233)))*43758.5453123);
 }
 
-float circleSDF(in vec2 st, in vec2 center) {
-    return length(st - center) * 2.;
+float circleSDF(in vec2 st) {
+    return length(st - 0.5) * 2.;
 }
 
 float stroke(float x, float size, float w) {
