@@ -155,6 +155,7 @@
         Module.getFrag =  Module.cwrap('getFrag', 'string', []);
         Module.getVert =  Module.cwrap('getVert', 'string', []);
       },
+      // Here you add the arguments just like you load them on the console but as an array of strings. One per word argument.
       arguments: ["examples/2D/00_tests/test.frag"],
       // arguments: ["examples/2D/00_tests/test_300es.frag"],
       // arguments: ["examples/2D/00_tests/test.frag", "examples/2D/00_tests/in.png"],
