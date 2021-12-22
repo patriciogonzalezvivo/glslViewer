@@ -38,7 +38,10 @@ GlslViewer gives support to:
 ## Wiki themes
 
 * [Installing](https://github.com/patriciogonzalezvivo/glslViewer/wiki/Installing)
-    * [Compiling from Source](https://github.com/patriciogonzalezvivo/glslViewer/wiki/Compiling)
+    * [Compile on Linux](https://github.com/patriciogonzalezvivo/glslViewer/wiki/Compile-on-linux)
+    * [Compile on MacOS](https://github.com/patriciogonzalezvivo/glslViewer/wiki/Compile-on-MacOS)
+    * [Compile on Windows](https://github.com/patriciogonzalezvivo/glslViewer/wiki/Compile-on-Windows)
+    * [Compile as WebAssembly](https://github.com/patriciogonzalezvivo/glslViewer/wiki/Compile-as-Emscripten-WebAssembly)
 
 * [Using GlslViewer](https://github.com/patriciogonzalezvivo/glslViewer/wiki/Using-GlslViewer)
     * [Loading a single Fragment shader](https://github.com/patriciogonzalezvivo/glslViewer/wiki/Using-GlslViewer#1-loading-a-single-fragment-shader)
