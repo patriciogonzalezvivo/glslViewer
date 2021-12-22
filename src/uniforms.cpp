@@ -12,12 +12,15 @@
 #include "ada/gl/textureBump.h"
 #include "ada/gl/textureStreamSequence.h"
 
-#if defined(LIBAV) 
+#if defined(SUPPORT_LIBAV) 
 #include "ada/gl/textureStreamAV.h"
 #endif
 
-#if defined(PLATFORM_RPI)
+#if defined(DRIVER_BROADCOM) && defined(SUPPORT_MMAL)
 #include "ada/gl/textureStreamMMAL.h"
+#endif
+
+#if defined(DRIVER_BROADCOM) && defined(SUPPORT_OMAX)
 #include "ada/gl/textureStreamOMX.h"
 #endif
 
@@ -327,7 +330,7 @@ bool Uniforms::addStreamingTexture( const std::string& _name, const std::string&
                 delete tex;
             
         }
-#if defined(PLATFORM_RPI)
+#if defined(DRIVER_BROADCOM) && defined(SUPPORT_MMAL)
         // if the user is asking for a device on a RaspberryPI hardware
         else if (_device) {
             ada::TextureStreamMMAL* tex = new ada::TextureStreamMMAL();
@@ -349,7 +352,8 @@ bool Uniforms::addStreamingTexture( const std::string& _name, const std::string&
             else
                 delete tex;
         }
-#if defined(DRIVER_BROADCOM)
+#endif
+#if defined(DRIVER_BROADCOM) && defined(SUPPORT_OMAX)
         else if ( ada::haveExt(_url,"h264") || ada::haveExt(_url,"H264") ) {
             ada::TextureStreamOMX* tex = new ada::TextureStreamOMX();
 
@@ -371,9 +375,8 @@ bool Uniforms::addStreamingTexture( const std::string& _name, const std::string&
                 delete tex;
         }
 #endif
-#endif
         else {
-#if defined(LIBAV)
+#if defined(SUPPORT_LIBAV)
         ada::TextureStreamAV* tex = new ada::TextureStreamAV();
         tex->device = _device;
 
@@ -408,7 +411,7 @@ bool Uniforms::addStreamingTexture( const std::string& _name, const std::string&
 
 bool Uniforms::addAudioTexture(const std::string& _name, const std::string& device_id, bool _flip, bool _verbose) {
 
-#if defined(LIBAV) && defined(SUPPORT_AUDIO)
+#if defined(SUPPORT_LIBAV) && defined(SUPPORT_AUDIO)
     // already init
     if (m_is_audio_init) return false;
 

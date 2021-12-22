@@ -1,6 +1,6 @@
 #pragma once
 
-#if defined(LIBAV) && defined(SUPPORT_AUDIO)
+#if defined(SUPPORT_LIBAV) && defined(SUPPORT_AUDIO)
 
 #include "ada/gl/textureStream.h"
 #include <vector>

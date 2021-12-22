@@ -4,7 +4,7 @@
 #include <iostream>
 #include <mutex>
 
-#if defined(LIBAV) && defined(SUPPORT_AUDIO)
+#if defined(SUPPORT_LIBAV) && defined(SUPPORT_AUDIO)
 
 #define MA_NO_DECODING 
 #define MA_NO_ENCODING 

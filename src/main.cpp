@@ -203,7 +203,7 @@ int main(int argc, char **argv) {
             displayHelp = true;
         }
         #if defined(DRIVER_GBM) 
-        else if (   std::string(argv[i]) == "--display") {
+        else if (   std::string(argv[i]) == "-d" || std::string(argv[i]) == "--display") {
             if (++i < argc)
                 window_properties.display = std::string(argv[i]);
             else
@@ -1307,6 +1307,7 @@ void printUsage(char * executableName) {
     std::cerr << "// [-w <pixels>] - set the width of the window" << std::endl;
     std::cerr << "// [-h <pixels>] - set the height of the billboard" << std::endl;
     std::cerr << "// [--fps] <fps> - fix the max FPS" << std::endl;
+    std::cerr << "// [-d|--display] - open specific display port. Default: /dev/card0" << std::endl;
     std::cerr << "// [-f|--fullscreen] - load the window in fullscreen" << std::endl;
     std::cerr << "// [-l|--life-coding] - live code mode, where the billboard is allways visible" << std::endl;
     std::cerr << "// [-ss|--screensaver] - screensaver mode, any pressed key will exit" << std::endl;
