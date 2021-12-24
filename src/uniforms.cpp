@@ -12,12 +12,12 @@
 #include "ada/gl/textureBump.h"
 #include "ada/gl/textureStreamSequence.h"
 
-#if defined(SUPPORT_LIBAV) 
-#include "ada/gl/textureStreamAV.h"
+#if defined(SUPPORT_MMAL)
+#include "ada/gl/textureStreamMMAL.h"
 #endif
 
-#if defined(DRIVER_BROADCOM) && defined(SUPPORT_MMAL)
-#include "ada/gl/textureStreamMMAL.h"
+#if defined(SUPPORT_LIBAV) 
+#include "ada/gl/textureStreamAV.h"
 #endif
 
 #if defined(DRIVER_BROADCOM) && defined(SUPPORT_OMAX)
@@ -330,7 +330,7 @@ bool Uniforms::addStreamingTexture( const std::string& _name, const std::string&
                 delete tex;
             
         }
-#if defined(DRIVER_BROADCOM) && defined(SUPPORT_MMAL)
+#if defined(SUPPORT_MMAL)
         // if the user is asking for a device on a RaspberryPI hardware
         else if (_device) {
             ada::TextureStreamMMAL* tex = new ada::TextureStreamMMAL();

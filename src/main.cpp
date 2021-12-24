@@ -148,25 +148,36 @@ void loop() {
 // Main program
 //============================================================================
 int main(int argc, char **argv) {
+
+    ada::WindowProperties window_properties;
+
+    #if defined(DRIVER_GBM) 
+    for (int i = 1; i < argc ; i++) {
+        std::string argument = std::string(argv[i]);
+        if ( std::string(argv[i]) == "-d" || std::string(argv[i]) == "--display") {
+            if (++i < argc)
+                window_properties.display = std::string(argv[i]);
+            else
+                std::cout << "Argument '" << argument << "' should be followed by a the display address. Skipping argument." << std::endl;
+        }
+    }
+    #endif
+
     // Set the size
     glm::ivec4 window_viewport = glm::ivec4(0);
     window_viewport.z = 512;
     window_viewport.w = 512;
-
     #if defined(DRIVER_BROADCOM) || defined(DRIVER_GBM) 
     glm::ivec2 screen = ada::getScreenSize();
     window_viewport.z = screen.x;
     window_viewport.w = screen.y;
     #endif
 
-    ada::WindowProperties window_properties;
-
     bool displayHelp = false;
     bool willLoadGeometry = false;
     bool willLoadTextures = false;
     for (int i = 1; i < argc ; i++) {
         std::string argument = std::string(argv[i]);
-
         if (        std::string(argv[i]) == "-x" ) {
             if(++i < argc)
                 window_viewport.x = ada::toInt(std::string(argv[i]));
@@ -202,14 +213,6 @@ int main(int argc, char **argv) {
         else if (   std::string(argv[i]) == "--help" ) {
             displayHelp = true;
         }
-        #if defined(DRIVER_GBM) 
-        else if (   std::string(argv[i]) == "-d" || std::string(argv[i]) == "--display") {
-            if (++i < argc)
-                window_properties.display = std::string(argv[i]);
-            else
-                std::cout << "Argument '" << argument << "' should be followed by a the display address. Skipping argument." << std::endl;
-        }
-        #endif
         #if !defined(DRIVER_GLFW)
         else if (   std::string(argv[i]) == "--mouse") {
             if (++i < argc)
@@ -311,9 +314,9 @@ int main(int argc, char **argv) {
         if (    argument == "-x" || argument == "-y" ||
                 argument == "-w" || argument == "--width" ||
                 argument == "-h" || argument == "--height" ||
-                argument == "--mouse" || argument == "--display" ||
+                argument == "-d" || argument == "--display" ||
                 argument == "--major" || argument == "--minor" ||
-                argument == "--fps" ) {
+                argument == "--mouse" || argument == "--fps" ) {
             i++;
         }
         else if (   argument == "-l" || argument == "--headless" ||
@@ -1307,7 +1310,7 @@ void printUsage(char * executableName) {
     std::cerr << "// [-w <pixels>] - set the width of the window" << std::endl;
     std::cerr << "// [-h <pixels>] - set the height of the billboard" << std::endl;
     std::cerr << "// [--fps] <fps> - fix the max FPS" << std::endl;
-    std::cerr << "// [-d|--display] - open specific display port. Default: /dev/card0" << std::endl;
+    std::cerr << "// [-d|--display <display>] - open specific display port. Ex: -d /dev/dri/card1" << std::endl;
     std::cerr << "// [-f|--fullscreen] - load the window in fullscreen" << std::endl;
     std::cerr << "// [-l|--life-coding] - live code mode, where the billboard is allways visible" << std::endl;
     std::cerr << "// [-ss|--screensaver] - screensaver mode, any pressed key will exit" << std::endl;
