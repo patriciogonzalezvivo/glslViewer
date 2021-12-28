@@ -609,10 +609,6 @@ void Scene::render(Uniforms& _uniforms) {
 }
 
 void Scene::renderShadowMap(Uniforms& _uniforms) {
-#if defined(PLATFORM_RPI)
-    return;
-#else
-
     bool changeOnLights = false;
     for (unsigned int i = 0; i < _uniforms.lights.size(); i++) {
         if (_uniforms.lights[i].bChange) {
@@ -648,7 +644,6 @@ void Scene::renderShadowMap(Uniforms& _uniforms) {
             _uniforms.lights[i].unbindShadowMap();
         }
     }
-#endif
 }
 
 void Scene::renderBackground(Uniforms& _uniforms) {

@@ -111,13 +111,11 @@ Sandbox::Sandbox():
         }
     });
 
-    #if !defined(PLATFORM_RPI)
     uniforms.functions["u_sceneDepth"] = UniformFunction("sampler2D", [this](ada::Shader& _shader) {
         if (m_postprocessing && m_scene_fbo.getTextureId()) {
             _shader.setUniformDepthTexture("u_sceneDepth", &m_scene_fbo, _shader.textureIndex++ );
         }
     });
-    #endif
 
     uniforms.functions["u_view2d"] = UniformFunction("mat3", [this](ada::Shader& _shader) {
         _shader.setUniform("u_view2d", m_view2d);
@@ -1314,7 +1312,6 @@ void Sandbox::renderUI() {
                     yOffset -= yStep * 2.0;
                 }
 
-                #if !defined(PLATFORM_RPI)
                 if (uniforms.functions["u_sceneDepth"].present) {
                     m_billboard_shader.setUniform("u_scale", xStep, yStep);
                     m_billboard_shader.setUniform("u_translate", xOffset, yOffset);
@@ -1327,10 +1324,8 @@ void Sandbox::renderUI() {
                     m_billboard_vbo->render(&m_billboard_shader);
                     yOffset -= yStep * 2.0;
                 }
-                #endif
             }
 
-        #if !defined(PLATFORM_RPI)
             if (geom_index != -1) {
                 for (unsigned int i = 0; i < uniforms.lights.size(); i++) {
                     if ( uniforms.lights[i].getShadowMap()->getDepthTextureId() ) {
@@ -1344,7 +1339,6 @@ void Sandbox::renderUI() {
                     }
                 }
             }
-        #endif
         }
     }
 
