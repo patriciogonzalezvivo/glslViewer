@@ -521,7 +521,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         m_frag_source = "";
         m_frag_dependencies.clear();
 
-        if ( !ada::loadFromPath(_files[frag_index].path, &m_frag_source, include_folders, &m_frag_dependencies) )
+        if ( !ada::loadSrcFrom(_files[frag_index].path, &m_frag_source, include_folders, &m_frag_dependencies) )
             return;
 
         ada::setVersionFromCode(m_frag_source);
@@ -539,7 +539,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         m_vert_source = "";
         m_vert_dependencies.clear();
 
-        ada::loadFromPath(_files[vert_index].path, &m_vert_source, include_folders, &m_vert_dependencies);
+        ada::loadSrcFrom(_files[vert_index].path, &m_vert_source, include_folders, &m_vert_dependencies);
     }
     else {
         // If there is no use the default one
@@ -1490,13 +1490,13 @@ void Sandbox::onFileChange(WatchFileList &_files, int index) {
     if (type == FRAG_SHADER) {
         m_frag_source = "";
         m_frag_dependencies.clear();
-        if ( ada::loadFromPath(filename, &m_frag_source, include_folders, &m_frag_dependencies) )
+        if ( ada::loadSrcFrom(filename, &m_frag_source, include_folders, &m_frag_dependencies) )
             reloadShaders(_files);
     }
     else if (type == VERT_SHADER) {
         m_vert_source = "";
         m_vert_dependencies.clear();
-        if ( ada::loadFromPath(filename, &m_vert_source, include_folders, &m_vert_dependencies) )
+        if ( ada::loadSrcFrom(filename, &m_vert_source, include_folders, &m_vert_dependencies) )
             reloadShaders(_files);
     }
     else if (type == GEOMETRY) {
