@@ -962,7 +962,7 @@ void Sandbox::_renderBuffers() {
     #endif
 
     if (reset_viewport)
-        glViewport(0.0f, 0.0f, ada::getViewport().z, ada::getViewport().w);
+        glViewport(0.0f, 0.0f, ada::getWindowWidth(), ada::getWindowHeight());
     
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
