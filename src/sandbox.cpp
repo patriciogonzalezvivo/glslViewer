@@ -9,29 +9,11 @@
 #include "ada/tools/text.h"
 #include "ada/tools/geom.h"
 #include "ada/tools/pixels.h"
+#include "ada/tools/holoplay.h"
 #include "ada/shaders/defaultShaders.h"
 
 #include "glm/gtx/matrix_transform_2d.hpp"
 #include "glm/gtx/rotate_vector.hpp"
-
-
-
-// This are hardcoded values for the Portrait HoloPlay by LGF.
-//  in order to render correctly make sure this values match your calibration file on your device
-// 
-const float holoplay_dpi    = 324.0;
-const float holoplay_pitch  = 52.58737671470091;
-const float holoplay_slope  = -7.196136200157333;
-const float holoplay_center = 0.4321881363063158;
-const int   holoplay_ri = 0;
-const int   holoplay_bi = 2;
-
-// This values will change based on the resolution
-int holoplay_width = 2048;
-int holoplay_height = 2048;
-int holoplay_columns = 4;
-int holoplay_rows = 8;
-int holoplay_totalViews = 32;
 
 // ------------------------------------------------------------------------- CONTRUCTOR
 Sandbox::Sandbox(): 
@@ -570,71 +552,14 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     uniforms.getCamera().setViewport(ada::getWindowWidth(), ada::getWindowHeight());
 
     if (holoplay >= 0) {
+        ada::setHoloplayResolution(holoplay);
         addDefine("HOLOPLAY", ada::toString(holoplay));
-
         uniforms.getCamera().setFOV(glm::radians(14.0f));
         uniforms.getCamera().setType(ada::CameraType::PERSPECTIVE_VIRTUAL_OFFSET);
         // uniforms.getCamera().setClipping(0.01, 100.0);
 
         if (geom_index != -1)
             uniforms.getCamera().orbit(m_lat, m_lon, m_scene.getArea() * 8.5);
-
-        if (holoplay == 0) {
-            holoplay_width = 2048;
-            holoplay_height = 2048;
-            holoplay_columns = 4;
-            holoplay_rows = 8;
-            holoplay_totalViews = 32;
-        }
-        else if (holoplay == 1) {
-            holoplay_width = 4096;
-            holoplay_height = 4096;
-            holoplay_columns = 5;
-            holoplay_rows = 9;
-            holoplay_totalViews = 45;
-        }
-        else if (holoplay == 2) {
-            holoplay_width = 4096 * 2;
-            holoplay_height = 4096 * 2;
-            holoplay_columns = 5;
-            holoplay_rows = 9;
-            holoplay_totalViews = 45;
-        }
-        else if (holoplay == 3) {
-            holoplay_width = 3360;
-            holoplay_height = 3360;
-            holoplay_columns = 8;
-            holoplay_rows = 6;
-            holoplay_totalViews = 48;
-        }
-        else if (holoplay == 4) {
-            holoplay_width = 4026;
-            holoplay_height = 4096;
-            holoplay_columns = 11;
-            holoplay_rows = 8;
-            holoplay_totalViews = 88;
-        }
-        else if (holoplay == 5) {
-            holoplay_width = 4225;
-            holoplay_height = 4095;
-            holoplay_columns = 13;
-            holoplay_rows = 7;
-            holoplay_totalViews = 91;
-        }
-        else if (holoplay == 6) {
-            holoplay_width = 4224;
-            holoplay_height = 4096;
-            holoplay_columns = 12;
-            holoplay_rows = 8;
-            holoplay_totalViews = 96;
-        }
-        else if (holoplay == 7) {
-            holoplay_width = 4224;
-            holoplay_height = 4230;
-            holoplay_columns = 12;
-            holoplay_rows = 9;
-            holoplay_totalViews = 108;
-        }
     } 
 
     // Prepare viewport
@@ -738,8 +663,8 @@ void Sandbox::_updateSceneBuffer(int _width, int _height) {
     ada::FboType type = uniforms.functions["u_sceneDepth"].present ? ada::COLOR_DEPTH_TEXTURES : ada::COLOR_TEXTURE_DEPTH_BUFFER;
 
     if (holoplay >= 0) {
-        _width = holoplay_width;
-        _height= holoplay_height;
+        _width = ada::getHoloplayWidth();
+        _height= ada::getHoloplayHeight();
     }
 
     if (!m_scene_fbo.isAllocated() ||
@@ -1034,37 +959,16 @@ void Sandbox::render() {
 
     // RENDER CONTENT
     if (geom_index == -1) {
+        // Load main shader
+        m_canvas_shader.use();
 
-         if (holoplay >= 0) {
-            // save the viewport for the total quilt
-            GLint viewport[4];
-            glGetIntegerv(GL_VIEWPORT, viewport);
-
-            // get quilt view dimensions
-            int qs_viewWidth = int(float(holoplay_width) / float(holoplay_columns));
-            int qs_viewHeight = int(float(holoplay_height) / float(holoplay_rows));
-
-            // Load main shader
-            m_canvas_shader.use();
-
-            // render views and copy each view to the quilt
-            for (int viewIndex = 0; viewIndex < holoplay_totalViews; viewIndex++) {
-                // get the x and y origin for this view
-                int x = (viewIndex % holoplay_columns) * qs_viewWidth;
-                int y = int(float(viewIndex) / float(holoplay_columns)) * qs_viewHeight;
-
-                // get the x and y origin for this view
-                // set the viewport to the view to control the projection extent
-                glViewport(x, y, qs_viewWidth, qs_viewHeight);
-
-                // // set the scissor to the view to restrict calls like glClear from making modifications
-                glEnable(GL_SCISSOR_TEST);
-                glScissor(x, y, qs_viewWidth, qs_viewHeight);
+        if (holoplay >= 0) {
+            ada::holoplayQuilt([&](const ada::HoloplayProperties& holoplay, glm::vec4& viewport, int &viewIndex){
 
                 // set up the camera rotation and position for current view
-                uniforms.getCamera().setVirtualOffset(5.0, viewIndex, holoplay_totalViews);
-                uniforms.set("u_holoPlayTile", float(holoplay_columns), float(holoplay_rows), float(holoplay_totalViews));
-                uniforms.set("u_holoPlayViewport", float(x), float(y), float(qs_viewWidth), float(qs_viewHeight));
+                uniforms.getCamera().setVirtualOffset(5.0, viewIndex, holoplay.totalViews);
+                uniforms.set("u_holoPlayTile", float(holoplay.columns), float(holoplay.rows), float(holoplay.totalViews));
+                uniforms.set("u_holoPlayViewport", float(viewport.x), float(viewport.y), float(viewport.z), float(viewport.w));
 
                 // Update Uniforms and textures variables
                 uniforms.feedTo( m_canvas_shader );
@@ -1072,19 +976,10 @@ void Sandbox::render() {
                 // Pass special uniforms
                 m_canvas_shader.setUniform("u_modelViewProjectionMatrix", glm::mat4(1.));
                 m_billboard_vbo->render( &m_canvas_shader );
-
-                // reset viewport
-                glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
-
-                // // restore scissor
-                glDisable(GL_SCISSOR_TEST);
-                glScissor(viewport[0], viewport[1], viewport[2], viewport[3]);
-            }
+            });
         }
-        else {
-            // Load main shader
-            m_canvas_shader.use();
 
+        else {
             // Update Uniforms and textures variables
             uniforms.feedTo( m_canvas_shader );
 
@@ -1093,56 +988,29 @@ void Sandbox::render() {
             m_billboard_vbo->render( &m_canvas_shader );
         }
     }
+
     else {
 
         if (holoplay >= 0) {
-            // save the viewport for the total quilt
-            GLint viewport[4];
-            glGetIntegerv(GL_VIEWPORT, viewport);
-
-            // get quilt view dimensions
-            int qs_viewWidth = int(float(holoplay_width) / float(holoplay_columns));
-            int qs_viewHeight = int(float(holoplay_height) / float(holoplay_rows));
-
-
-            // render views and copy each view to the quilt
-            for (int viewIndex = 0; viewIndex < holoplay_totalViews; viewIndex++) {
-                // get the x and y origin for this view
-                int x = (viewIndex % holoplay_columns) * qs_viewWidth;
-                int y = int(float(viewIndex) / float(holoplay_columns)) * qs_viewHeight;
-
-                // get the x and y origin for this view
-                // set the viewport to the view to control the projection extent
-                glViewport(x, y, qs_viewWidth, qs_viewHeight);
-
-                // set the scissor to the view to restrict calls like glClear from making modifications
-                glEnable(GL_SCISSOR_TEST);
-                glScissor(x, y, qs_viewWidth, qs_viewHeight);
+            ada::holoplayQuilt([&](const ada::HoloplayProperties& holoplay, glm::vec4& viewport, int &viewIndex){
 
                 // set up the camera rotation and position for current view
-                uniforms.getCamera().setVirtualOffset(m_scene.getArea(), viewIndex, holoplay_totalViews);
-                uniforms.set("u_holoPlayTile", float(holoplay_columns), float(holoplay_rows), float(holoplay_totalViews));
-                uniforms.set("u_holoPlayViewport", float(x), float(y), float(qs_viewWidth), float(qs_viewHeight));
+                uniforms.getCamera().setVirtualOffset(m_scene.getArea(), viewIndex, holoplay.totalViews);
+                uniforms.set("u_holoPlayTile", float(holoplay.columns), float(holoplay.rows), float(holoplay.totalViews));
+                uniforms.set("u_holoPlayViewport", float(viewport.x), float(viewport.y), float(viewport.z), float(viewport.w));
 
                 m_scene.render(uniforms);
 
                 if (m_scene.showGrid || m_scene.showAxis || m_scene.showBBoxes)
                     m_scene.renderDebug(uniforms);
-
-                // reset viewport
-                glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
-
-                // restore scissor
-                glDisable(GL_SCISSOR_TEST);
-                glScissor(viewport[0], viewport[1], viewport[2], viewport[3]);
-            }
+            });
         }
+
         else {
             m_scene.render(uniforms);
             if (m_scene.showGrid || m_scene.showAxis || m_scene.showBBoxes)
                 m_scene.renderDebug(uniforms);
         }
-
     }
     
     // ----------------------------------------------- < main scene end
@@ -1159,11 +1027,8 @@ void Sandbox::render() {
         // Update uniforms and textures
         uniforms.feedTo( m_postprocessing_shader );
 
-        if (holoplay >= 0) {
-            m_postprocessing_shader.setUniform("u_holoPlayTile", float(holoplay_columns), float(holoplay_rows), float(holoplay_totalViews));
-            m_postprocessing_shader.setUniform("u_holoPlayCalibration", holoplay_dpi, holoplay_pitch, holoplay_slope, holoplay_center);
-            m_postprocessing_shader.setUniform("u_holoPlayRB", float(holoplay_ri), float(holoplay_bi));
-        }
+        if (holoplay >= 0)
+            holoplayFeedUniforms(m_postprocessing_shader);
 
         // Pass textures of buffers
         for (unsigned int i = 0; i < uniforms.buffers.size(); i++)
@@ -1538,17 +1403,22 @@ void Sandbox::onScroll(float _yoffset) {
 }
 
 void Sandbox::onMouseDrag(float _x, float _y, int _button) {
-    float x = _x;
-    float y = _y;
 
-    if (x <= 0) x = ada::getWindowWidth();
-    else if (x > ada::getWindowWidth()) x = 0; 
+    if (holoplay < 0) {
+        // If it's not playing on the HOLOPLAY
+        // produce continue draging like blender
+        //
+        float x = _x;
+        float y = _y;
 
-    if (y <= 0) y = ada::getWindowHeight() - 2;
-    else if (y >= ada::getWindowHeight()) y = 2;
+        if (x <= 0) x = ada::getWindowWidth();
+        else if (x > ada::getWindowWidth()) x = 0; 
 
-    if (x != _x || y != _y) ada::setMousePosition(x, y);
-    // else {
+        if (y <= 0) y = ada::getWindowHeight() - 2;
+        else if (y >= ada::getWindowHeight()) y = 2;
+
+        if (x != _x || y != _y) ada::setMousePosition(x, y);
+    }
 
     if (_button == 1) {
         // Left-button drag is used to pan u_view2d.
