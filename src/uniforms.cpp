@@ -513,6 +513,7 @@ void Uniforms::setCubeMap( const std::string& _filename, WatchFileList& _files, 
             std::cout << "// " << _filename << " loaded as: " << std::endl;
             std::cout << "//    uniform samplerCube u_cubeMap;"<< std::endl;
             std::cout << "//    uniform vec3        u_SH[9];"<< std::endl;
+
         }
         else {
             delete tex;
