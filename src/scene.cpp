@@ -417,7 +417,7 @@ void Scene::delDefine(const std::string& _define) {
     }
 }
 
-void Scene::setCubeMap(ada::SkyBox* _skybox ) { 
+void Scene::setCubeMap(ada::SkyData* _skybox ) { 
     if (m_cubemap_skybox)
         if (m_cubemap_skybox != _skybox)
             delete m_cubemap_skybox;
@@ -655,7 +655,7 @@ void Scene::renderBackground(Uniforms& _uniforms) {
             if (!_uniforms.cubemap) {
                 _uniforms.cubemap = new ada::TextureCube();
             }
-            _uniforms.cubemap->generate(m_cubemap_skybox);
+            _uniforms.cubemap->load(m_cubemap_skybox);
             m_cubemap_skybox->change = false;
         }
     }

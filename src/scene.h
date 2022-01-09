@@ -47,7 +47,7 @@ public:
     void            setCulling(CullingMode _culling) { m_culling = _culling; }
     CullingMode     getCulling() { return m_culling; }
 
-    void            setCubeMap(ada::SkyBox* _skybox );
+    void            setCubeMap(ada::SkyData* _skybox );
 
     void            flagChange();
     void            unflagChange();
@@ -95,9 +95,9 @@ protected:
     // CubeMap
     ada::Shader         m_cubemap_shader;
     ada::Vbo*           m_cubemap_vbo;
-    ada::SkyBox*        m_cubemap_skybox;
+    ada::SkyData*       m_cubemap_skybox;
 
-    ada::SkyBox         m_skybox;
+    ada::SkyData        m_skybox;
 
     ada::Shader         m_floor_shader;
     ada::Vbo*           m_floor_vbo;
