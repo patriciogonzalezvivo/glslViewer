@@ -5,6 +5,8 @@
 #include <math.h>
 #include <memory>
 
+#include "tools/text.h"
+
 #include "ada/window.h"
 #include "ada/tools/text.h"
 #include "ada/tools/geom.h"
@@ -735,15 +737,15 @@ bool Sandbox::reloadShaders( WatchFileList &_files ) {
     }
 
     // UPDATE Buffers
-    m_buffers_total = ada::count_buffers(m_frag_source);
+    m_buffers_total = countBuffers(m_frag_source);
     _updateBuffers();
 
     // Convolution Pyramids
-    m_convolution_pyramid_total = ada::count_convolution_pyramid(getSource(FRAGMENT));
+    m_convolution_pyramid_total = countConvolutionPyramid( getSource(FRAGMENT) );
     _updateConvolutionPyramids();
     
     // UPDATE Postprocessing
-    bool havePostprocessing = ada::check_for_postprocessing(getSource(FRAGMENT));
+    bool havePostprocessing = checkPostprocessing( getSource(FRAGMENT) );
     if (havePostprocessing) {
         // Specific defines for this buffer
         m_postprocessing_shader.addDefine("POSTPROCESSING");
@@ -751,7 +753,7 @@ bool Sandbox::reloadShaders( WatchFileList &_files ) {
         m_postprocessing = havePostprocessing;
     }
     else if (holoplay >= 0) {
-        m_postprocessing_shader.load(ada::getDefaultSrc(ada::FRAG_HOLOPLAY), ada::getDefaultSrc(ada::VERT_BILLBOARD), false);
+        m_postprocessing_shader.load(ada::getHoloplayFragShader(ada::getVersion()), ada::getDefaultSrc(ada::VERT_BILLBOARD), false);
         uniforms.functions["u_scene"].present = true;
         m_postprocessing = true;
     }
@@ -784,7 +786,7 @@ void Sandbox::_updateBuffers() {
             uniforms.buffers.push_back( ada::Fbo() );
 
             glm::vec2 size = glm::vec2(ada::getWindowWidth(), ada::getWindowHeight());
-            uniforms.buffers[i].fixed = ada::get_buffer_size(m_frag_source, i, size);
+            uniforms.buffers[i].fixed = getBufferSize(m_frag_source, i, size);
             uniforms.buffers[i].allocate(size.x, size.y, ada::COLOR_FLOAT_TEXTURE);
             
             // New Shader
@@ -843,7 +845,7 @@ void Sandbox::_updateConvolutionPyramids() {
         }
     }
     
-    if (ada::check_for_convolution_pyramid_algorithm(getSource(FRAGMENT))) {
+    if ( checkConvolutionPyramid( getSource(FRAGMENT) ) ) {
         m_convolution_pyramid_shader.addDefine("CONVOLUTION_PYRAMID_ALGORITHM");
         m_convolution_pyramid_shader.load(m_frag_source, ada::getDefaultSrc(ada::VERT_BILLBOARD), false);
     }

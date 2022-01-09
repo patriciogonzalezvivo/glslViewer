@@ -25,6 +25,7 @@
 #include "ada/shaders/defaultShaders.h"
 
 #include "sandbox.h"
+#include "tools/text.h"
 #include "types/files.h"
 
 std::string                 version = "2.0.0";
@@ -429,7 +430,7 @@ int main(int argc, char **argv) {
                     ada::haveExt(argument,"jpg") || ada::haveExt(argument,"JPG") ||
                     ada::haveExt(argument,"jpeg") || ada::haveExt(argument,"JPEG")) {
 
-            if (ada::check_for_pattern(argument)) {
+            if ( checkPattern(argument) ) {
                 if ( sandbox.uniforms.addStreamingTexture("u_tex" + ada::toString(textureCounter), argument, vFlip, false) )
                     textureCounter++;
             }
@@ -524,7 +525,7 @@ int main(int argc, char **argv) {
                     argument.rfind("https://", 0) == 0 ||
                     argument.rfind("rtsp://", 0) == 0 ||
                     argument.rfind("rtmp://", 0) == 0 ||
-                    ada::check_for_pattern(argument) ) {
+                    checkPattern(argument) ) {
                     sandbox.uniforms.addStreamingTexture(parameterPair, argument, vFlip, false);
                 }
                 // Else load it as a single texture

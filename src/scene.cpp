@@ -18,6 +18,8 @@
 #include "io/gltf.h"
 #include "io/stl.h"
 
+#include "tools/text.h"
+
 Scene::Scene(): 
     // Debug State
     showGrid(false), showAxis(false), showBBoxes(false), showCubebox(false), 
@@ -493,14 +495,14 @@ bool Scene::loadShaders(const std::string& _fragmentShader, const std::string& _
             rta = false;
 
 
-    m_background = ada::check_for_background(_fragmentShader);
+    m_background = checkBackground(_fragmentShader);
     if (m_background) {
         // Specific defines for this buffer
         m_background_shader.addDefine("BACKGROUND");
         m_background_shader.load(_fragmentShader, ada::getDefaultSrc(ada::VERT_BILLBOARD), false);
     }
 
-    bool thereIsFloorDefine = ada::check_for_floor(_fragmentShader) || ada::check_for_floor(_vertexShader);
+    bool thereIsFloorDefine = checkFloor(_fragmentShader) || checkFloor(_vertexShader);
     if (thereIsFloorDefine) {
         m_floor_shader.load(_fragmentShader, _vertexShader, false);
         if (m_floor_subd == -1)

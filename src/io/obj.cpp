@@ -4,6 +4,8 @@
 #include <fstream>
 #include <string>
 
+#include "../tools/text.h"
+
 #include "ada/tools/geom.h"
 #include "ada/tools/text.h"
 
@@ -121,7 +123,7 @@ ada::Material InitMaterial (const tinyobj::material_t& _material, Uniforms& _uni
 
     mat.addDefine("MATERIAL_BASECOLOR", glm::vec4(_material.diffuse[0], _material.diffuse[1], _material.diffuse[2], 1.0));
     if (!_material.diffuse_texname.empty()) {
-        std::string name = ada::getUniformName(_material.diffuse_texname);
+        std::string name = getUniformName(_material.diffuse_texname);
         _uniforms.addTexture(name, _folder + _material.diffuse_texname, _files);
         mat.addDefine("MATERIAL_BASECOLORMAP", name);
 
@@ -138,7 +140,7 @@ ada::Material InitMaterial (const tinyobj::material_t& _material, Uniforms& _uni
 
     mat.addDefine("MATERIAL_SPECULAR", (float*)_material.specular, 3);
     if (!_material.specular_texname.empty()) {
-        std::string name = ada::getUniformName(_material.specular_texname);
+        std::string name = getUniformName(_material.specular_texname);
         _uniforms.addTexture(name, _folder + _material.specular_texname, _files);
         mat.addDefine("MATERIAL_SPECULARMAP", name);
 
@@ -155,7 +157,7 @@ ada::Material InitMaterial (const tinyobj::material_t& _material, Uniforms& _uni
 
     mat.addDefine("MATERIAL_EMISSIVE", (float*)_material.emission, 3);
     if (!_material.emissive_texname.empty()) {
-        std::string name = ada::getUniformName(_material.emissive_texname);
+        std::string name = getUniformName(_material.emissive_texname);
         _uniforms.addTexture(name, _folder + _material.emissive_texname, _files);
         mat.addDefine("MATERIAL_EMISSIVEMAP", name);
 
@@ -172,7 +174,7 @@ ada::Material InitMaterial (const tinyobj::material_t& _material, Uniforms& _uni
 
     mat.addDefine("MATERIAL_ROUGHNESS", _material.roughness);
     if (!_material.roughness_texname.empty()) {
-        std::string name = ada::getUniformName(_material.roughness_texname);
+        std::string name = getUniformName(_material.roughness_texname);
         _uniforms.addTexture(name, _folder + _material.roughness_texname, _files);
         mat.addDefine("MATERIAL_ROUGHNESSMAP", name);
 
@@ -189,7 +191,7 @@ ada::Material InitMaterial (const tinyobj::material_t& _material, Uniforms& _uni
 
     mat.addDefine("MATERIAL_METALLIC", _material.metallic);
     if (!_material.metallic_texname.empty()) {
-        std::string name = ada::getUniformName(_material.metallic_texname);
+        std::string name = getUniformName(_material.metallic_texname);
         _uniforms.addTexture(name, _folder + _material.metallic_texname, _files);
         mat.addDefine("MATERIAL_METALLICMAP", name);
 
@@ -205,7 +207,7 @@ ada::Material InitMaterial (const tinyobj::material_t& _material, Uniforms& _uni
     }
 
     if (!_material.normal_texname.empty()) {
-        std::string name = ada::getUniformName(_material.normal_texname);
+        std::string name = getUniformName(_material.normal_texname);
         _uniforms.addTexture(name, _folder + _material.normal_texname, _files);
         mat.addDefine("MATERIAL_NORMALMAP", name);
 
@@ -221,7 +223,7 @@ ada::Material InitMaterial (const tinyobj::material_t& _material, Uniforms& _uni
     }
 
     if (!_material.bump_texname.empty()) {
-        std::string name = ada::getUniformName(_material.bump_texname);
+        std::string name = getUniformName(_material.bump_texname);
         _uniforms.addTexture(name, _folder + _material.bump_texname, _files);
         mat.addDefine("MATERIAL_BUMPMAP", name);
         _uniforms.addBumpTexture(name + "_normalmap", _folder + _material.bump_texname, _files);
@@ -240,7 +242,7 @@ ada::Material InitMaterial (const tinyobj::material_t& _material, Uniforms& _uni
     }
 
     if (!_material.displacement_texname.empty()) {
-        std::string name = ada::getUniformName(_material.displacement_texname);
+        std::string name = getUniformName(_material.displacement_texname);
         _uniforms.addTexture(name, _folder + _material.displacement_texname, _files);
         mat.addDefine("MATERIAL_DISPLACEMENTMAP", name);
 
@@ -256,7 +258,7 @@ ada::Material InitMaterial (const tinyobj::material_t& _material, Uniforms& _uni
     }
 
     if (!_material.alpha_texname.empty()) {
-        std::string name = ada::getUniformName(_material.alpha_texname);
+        std::string name = getUniformName(_material.alpha_texname);
         _uniforms.addTexture(name, _folder + _material.alpha_texname, _files);
         mat.addDefine("MATERIAL_ALPHAMAP", name);
 
@@ -274,7 +276,7 @@ ada::Material InitMaterial (const tinyobj::material_t& _material, Uniforms& _uni
     // EXTRA 
      mat.addDefine("MATERIAL_SHEEN", _material.sheen);
     if (!_material.sheen_texname.empty()) {
-        std::string name = ada::getUniformName(_material.sheen_texname);
+        std::string name = getUniformName(_material.sheen_texname);
         _uniforms.addTexture(name, _folder + _material.sheen_texname, _files);
         mat.addDefine("MATERIAL_SHEENMAP", name);
 
@@ -309,7 +311,7 @@ ada::Material InitMaterial (const tinyobj::material_t& _material, Uniforms& _uni
 
     // mat.addDefine("MATERIAL_AMBIENT", (float*)_material.ambient, 3);
     // if (!_material.ambient_texname.empty()) {
-    //     std::string name = ada::getUniformName(_material.ambient_texname);
+    //     std::string name = getUniformName(_material.ambient_texname);
     //     _uniforms.addTexture(name, _folder + _material.ambient_texname, _files);
     //     mat.addDefine("MATERIAL_AMBIENTMAP", name);
     // }
@@ -317,7 +319,7 @@ ada::Material InitMaterial (const tinyobj::material_t& _material, Uniforms& _uni
     mat.addDefine("MATERIAL_DISSOLVE", _material.dissolve);
     mat.addDefine("MATERIAL_TRANSMITTANCE", (float*)_material.transmittance, 3);
     if (!_material.reflection_texname.empty()) {
-        std::string name = ada::getUniformName(_material.reflection_texname);
+        std::string name = getUniformName(_material.reflection_texname);
         _uniforms.addTexture(name, _folder + _material.reflection_texname, _files);
         mat.addDefine("MATERIAL_REFLECTIONMAP", name);
 

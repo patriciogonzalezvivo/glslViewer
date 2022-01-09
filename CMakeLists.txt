@@ -29,6 +29,7 @@ file(GLOB ROOT_SOURCE
     "${PROJECT_SOURCE_DIR}/src/gl/*.cpp"
     "${PROJECT_SOURCE_DIR}/src/io/*.cpp"
     "${PROJECT_SOURCE_DIR}/src/types/*.cpp"
+    "${PROJECT_SOURCE_DIR}/src/tools/*.cpp"
 )
 
 add_executable(glslViewer ${ROOT_SOURCE})

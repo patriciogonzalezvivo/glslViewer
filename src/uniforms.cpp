@@ -5,6 +5,8 @@
 #include <sys/stat.h>
 
 #include "phonedepth/extract_depthmap.h"
+
+#include "tools/text.h"
 #include "types/files.h"
 
 #include "ada/tools/text.h"
@@ -308,7 +310,7 @@ bool Uniforms::addStreamingTexture( const std::string& _name, const std::string&
     if (textures.find(_name) == textures.end()) {
 
         // Check if it's a PNG Sequence
-        if (ada::check_for_pattern(_url)) {
+        if ( checkPattern(_url) ) {
             ada::TextureStreamSequence *tex = new ada::TextureStreamSequence();
 
             if (tex->load(_url, _vflip)) {
@@ -521,7 +523,7 @@ void Uniforms::setCubeMap( const std::string& _filename, WatchFileList& _files, 
 void Uniforms::checkPresenceIn( const std::string &_vert_src, const std::string &_frag_src ) {
     // Check active native uniforms
     for (UniformFunctionsList::iterator it = functions.begin(); it != functions.end(); ++it) {
-        bool present = ( ada::find_id(_vert_src, it->first.c_str()) != 0 || ada::find_id(_frag_src, it->first.c_str()) != 0 );
+        bool present = ( findId(_vert_src, it->first.c_str()) != 0 || findId(_frag_src, it->first.c_str()) != 0 );
         if ( it->second.present != present) {
             it->second.present = present;
             m_change = true;

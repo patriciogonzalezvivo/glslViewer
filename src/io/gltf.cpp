@@ -5,6 +5,7 @@
 #include <string>
 #include <map>
 
+#include "../tools/text.h"
 #include "../types/files.h"
 
 #include "ada/gl/vbo.h"
@@ -144,7 +145,7 @@ ada::Material extractMaterial(const tinygltf::Model& _model, const tinygltf::Mat
         std::string name = image.name + image.uri;
         if (name.empty())
             name = "texture" + ada::toString(texCounter++);
-        name = ada::getUniformName(name);
+        name = getUniformName(name);
 
         if (_verbose)
             std::cout << "Loading " << name << "for BASECOLORMAP as " << name << std::endl;
@@ -163,7 +164,7 @@ ada::Material extractMaterial(const tinygltf::Model& _model, const tinygltf::Mat
         std::string name = image.name + image.uri;
         if (name.empty())
             name = "texture" + ada::toString(texCounter++);
-        name = ada::getUniformName(name);
+        name = getUniformName(name);
 
         if (_verbose)
             std::cout << "Loading " << name << "for EMISSIVEMAP as " << name << std::endl;
@@ -185,7 +186,7 @@ ada::Material extractMaterial(const tinygltf::Model& _model, const tinygltf::Mat
         std::string name = image.name + image.uri;
         if (name.empty())
             name = "texture" + ada::toString(texCounter++);
-        name = ada::getUniformName(name);
+        name = getUniformName(name);
 
         if (_verbose)
             std::cout << "Loading " << name << "for METALLICROUGHNESSMAP as " << name << std::endl;
@@ -217,7 +218,7 @@ ada::Material extractMaterial(const tinygltf::Model& _model, const tinygltf::Mat
         std::string name = image.name + image.uri;
         if (name.empty())
             name = "texture" + ada::toString(texCounter++);
-        name = ada::getUniformName(name);
+        name = getUniformName(name);
 
         if (_verbose)
             std::cout << "Loading " << name << "for OCCLUSIONMAP as " << name << std::endl;
@@ -239,7 +240,7 @@ ada::Material extractMaterial(const tinygltf::Model& _model, const tinygltf::Mat
         std::string name = image.name + image.uri;
         if (name.empty())
             name = "texture" + ada::toString(texCounter++);
-        name = ada::getUniformName(name);
+        name = getUniformName(name);
 
         if (_verbose)
             std::cout << "Loading " << name << "for NORMALMAP as " << name << std::endl;
