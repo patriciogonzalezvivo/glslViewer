@@ -229,6 +229,9 @@ int main(int argc, char **argv) {
                 std::cout << "Argument '" << argument << "' should be followed by a the mouse address. Skipping argument." << std::endl;
         }
         #endif
+        else if (   std::string(argv[i]) == "--nocursor" ) {
+            commandsArgs.push_back("cursor,off");
+        }
         else if (   std::string(argv[i]) == "--headless" ) {
             window_properties.style = ada::HEADLESS;
         }

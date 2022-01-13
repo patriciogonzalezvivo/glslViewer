@@ -211,6 +211,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
                 else if (   values[1] == "samples" && 
                             ada::haveExt(values[2],"csv") ) {
                     std::ofstream out(values[2]);
+                    out << "track,timeStampMs,durationMs";
                     out << uniforms.tracker.logSamples();
                     out.close();
                 }
