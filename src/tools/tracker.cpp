@@ -14,10 +14,13 @@ void Tracker::begin(const std::string& _track) {
     if (!m_running)
         return;
 
-    if ( m_data.find(_track) == m_data.end() )
-        m_tracks.push_back(_track);
+    m_stack.push_back(_track);
+    std::string stack = getStack();
 
-    m_data[_track].start = std::chrono::high_resolution_clock::now();
+    if ( m_data.find(stack) == m_data.end() )
+        m_tracks.push_back(stack);
+
+    m_data[stack].start = std::chrono::high_resolution_clock::now();
 }
 
 void Tracker::end(const std::string& _track) {
@@ -26,10 +29,14 @@ void Tracker::end(const std::string& _track) {
 
     auto sample_end = std::chrono::high_resolution_clock::now();
 
-    if ( m_data.find(_track) == m_data.end() )
-        m_tracks.push_back(_track);
+    std::string stack = getStack();
+    m_stack.pop_back();
 
-    auto start = std::chrono::time_point_cast<std::chrono::microseconds>(m_data[_track].start).time_since_epoch();
+    if ( m_data.find(stack) == m_data.end() )
+        m_tracks.push_back(stack);
+
+
+    auto start = std::chrono::time_point_cast<std::chrono::microseconds>(m_data[stack].start).time_since_epoch();
     auto end = std::chrono::time_point_cast<std::chrono::microseconds>(sample_end).time_since_epoch();
     
     StatSample stat;
@@ -37,7 +44,7 @@ void Tracker::end(const std::string& _track) {
     stat.endMs = end.count() * 0.001 - m_trackerStart;
     stat.durationMs = stat.endMs - stat.startMs;
 
-    m_data[_track].samples.push_back( stat );
+    m_data[stack].samples.push_back( stat );
 }
 
 void Tracker::stop() {
@@ -60,8 +67,20 @@ double  Tracker::getFramerate() {
     return ( frm / (double)count );
 }
 
+std::string Tracker::getStack() const {
+    std::string stack = "";
+
+    for (size_t i = 0; i < m_stack.size(); i++) {
+        if (i > 0)
+            stack += ":";
+        stack += m_stack[i];
+    }
+
+    return stack;
+}
+
 std::string Tracker::logFramerate() {
-    return  "framerate," + ada::toString(getFramerate()) + "\n";// +
+    return  "framerate," + ada::toString(getFramerate()) + ",100.0%\n";// +
             // "fps," + ada::toString( (1./getFramerate()) * 1000.0 ) ;
 }
 
@@ -97,8 +116,6 @@ std::string Tracker::logAverage() {
     for (size_t t = 0; t < m_tracks.size(); t++)
         log += logAverage(m_tracks[t]);
 
-    log += logFramerate();
-
     return log;
 }
 
@@ -123,7 +140,7 @@ std::string Tracker::logAverage(const std::string& _track) {
     delta /= (double)it->second.samples.size() - 1.0;
     it->second.durationAverage = average;
     
-    log += track_name + "," + ada::toString(average) + "," + ada::toString( (average/delta) * 100.0) + "%\n";
+    log += track_name + "," + ada::toString(average) + "," + ada::toString( (average/delta) * 100.0) + "%," + ada::toString(delta) +  "\n";
 
     return log;
 }

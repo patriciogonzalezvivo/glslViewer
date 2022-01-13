@@ -186,13 +186,13 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
                     uniforms.tracker.stop();
                     
                 else if (values[1] == "average") 
-                    std::cout << uniforms.tracker.logAverage() << std::endl;
+                    std::cout << uniforms.tracker.logAverage();
 
                 else if (values[1] == "samples")
-                    std::cout << uniforms.tracker.logSamples() << std::endl;
+                    std::cout << uniforms.tracker.logSamples();
 
                 else if (values[1] == "framerate")
-                    std::cout << uniforms.tracker.logFramerate() << std::endl;
+                    std::cout << uniforms.tracker.logFramerate();
 
             }
 
@@ -206,7 +206,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
                 }
 
                 else if (values[1] == "average")
-                    std::cout << uniforms.tracker.logAverage( values[2] ) << std::endl;
+                    std::cout << uniforms.tracker.logAverage( values[2] );
 
                 else if (   values[1] == "samples" && 
                             ada::haveExt(values[2],"csv") ) {
@@ -216,7 +216,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
                 }
 
                 else if (values[1] == "samples")
-                    std::cout << uniforms.tracker.logSamples(values[2]) << std::endl;
+                    std::cout << uniforms.tracker.logSamples(values[2]);
                     
             }
             else if (values.size() == 4) {
@@ -1009,6 +1009,7 @@ void Sandbox::_renderConvolutionPyramids() {
 }
 
 void Sandbox::render() {
+    TRACK_BEGIN("render")
 
     // UPDATE STREAMING TEXTURES
     // -----------------------------------------------
@@ -1027,6 +1028,7 @@ void Sandbox::render() {
 
     if (m_convolution_pyramid_total > 0)
         _renderConvolutionPyramids();
+
     
     // MAIN SCENE
     // ----------------------------------------------- < main scene start
@@ -1081,6 +1083,7 @@ void Sandbox::render() {
     }
 
     else {
+        TRACK_BEGIN("scene")
         if (holoplay >= 0) {
             ada::holoplayQuilt([&](const ada::HoloplayProperties& holoplay, glm::vec4& viewport, int &viewIndex){
 
@@ -1101,6 +1104,7 @@ void Sandbox::render() {
             if (m_scene.showGrid || m_scene.showAxis || m_scene.showBBoxes)
                 m_scene.renderDebug(uniforms);
         }
+        TRACK_END("scene")
     }
     
     // ----------------------------------------------- < main scene end
@@ -1162,16 +1166,20 @@ void Sandbox::render() {
         m_billboard_shader.setUniformTexture("u_tex0", &m_record_fbo, 0);
         m_billboard_vbo->render( &m_billboard_shader );
     }
+
+    TRACK_END("render")
 }
 
 
 void Sandbox::renderUI() {
+    TRACK_BEGIN("renderUI")
+
     // IN PUT TEXTURES
     if (m_showTextures) {        
-        glDisable(GL_DEPTH_TEST);
-
         int nTotal = uniforms.textures.size();
         if (nTotal > 0) {
+            glDisable(GL_DEPTH_TEST);
+            TRACK_BEGIN("textures")
             float w = (float)(ada::getWindowWidth());
             float h = (float)(ada::getWindowHeight());
             float scale = fmin(1.0f / (float)(nTotal), 0.25) * 0.5;
@@ -1194,12 +1202,15 @@ void Sandbox::renderUI() {
                 m_billboard_vbo->render(&m_billboard_shader);
                 yOffset -= yStep * 2.0;
             }
+            TRACK_END("textures")
         }
     }
 
     // RESULTING BUFFERS
     if (m_showPasses) {        
+
         glDisable(GL_DEPTH_TEST);
+        TRACK_BEGIN("buffers")
 
         // DEBUG BUFFERS
         int nTotal = uniforms.buffers.size();
@@ -1299,10 +1310,13 @@ void Sandbox::renderUI() {
                 }
             }
         }
+        TRACK_END("buffers")
     }
 
     if (m_histogram && m_histogram_texture) {
+        
         glDisable(GL_DEPTH_TEST);
+        TRACK_BEGIN("histogram")
 
         float w = 100;
         float h = 50;
@@ -1321,9 +1335,14 @@ void Sandbox::renderUI() {
             m_histogram_shader.setUniformTexture("u_sceneHistogram", m_histogram_texture, 0);
             m_billboard_vbo->render(&m_histogram_shader);
         }
+
+        TRACK_END("histogram")
     }
 
     if (cursor && ada::getMouseEntered()) {
+
+        TRACK_BEGIN("cursor")
+
         if (m_cross_vbo == nullptr) 
             m_cross_vbo = ada::cross(glm::vec3(0.0, 0.0, 0.0), 10.).getVbo();
 
@@ -1338,10 +1357,17 @@ void Sandbox::renderUI() {
         m_wireframe2D_shader.setUniform("u_modelViewProjectionMatrix", ada::getOrthoMatrix());
         m_cross_vbo->render(&m_wireframe2D_shader);
         glLineWidth(1.0f);
+
+        TRACK_END("cursor")
     }
+
+    TRACK_END("renderUI")
 }
 
 void Sandbox::renderDone() {
+
+    // TRACK_BEGIN("update")
+
     // RECORD
     if (m_record_sec || m_record_frame) {
         onScreenshot( ada::toString(m_record_counter, 0, 5, '0') + ".png");
@@ -1367,9 +1393,8 @@ void Sandbox::renderDone() {
     if (m_histogram)
         onHistogram();
 
-
     unflagChange();
-
+// 
     if (!m_initialized) {
         m_initialized = true;
         ada::updateViewport();
@@ -1378,6 +1403,8 @@ void Sandbox::renderDone() {
     else {
         m_frame++;
     }
+
+    // TRACK_END("update")
 }
 
 // ------------------------------------------------------------------------- ACTIONS
@@ -1567,6 +1594,8 @@ void Sandbox::onViewportResize(int _newWidth, int _newHeight) {
 void Sandbox::onScreenshot(std::string _file) {
 
     if (_file != "" && ada::isGL()) {
+        // TRACK_BEGIN("screenshot")
+
         glBindFramebuffer(GL_FRAMEBUFFER, m_record_fbo.getId());
 
         if (ada::getExt(_file) == "hdr") {
@@ -1654,12 +1683,16 @@ void Sandbox::onScreenshot(std::string _file) {
         }
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+        // TRACK_END("screenshot")
     }
     
 }
 
 void Sandbox::onHistogram() {
     if ( ada::isGL() && haveChange() ) {
+
+        // TRACK_BEGIN("histogram")
 
         // Extract pixels
         glBindFramebuffer(GL_FRAMEBUFFER, m_scene_fbo.getId());
@@ -1705,6 +1738,8 @@ void Sandbox::onHistogram() {
         m_histogram_texture->load(256, 1, 4, 32, &freqs[0]);
 
         uniforms.textures["u_sceneHistogram"] = m_histogram_texture;
+
+        // TRACK_END("histogram")
     }
 }
 

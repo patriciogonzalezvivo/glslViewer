@@ -632,6 +632,7 @@ void Scene::renderShadowMap(Uniforms& _uniforms) {
     }
 
     if ( m_dynamicShadows || changeOnLights || m_origin.bChange ) {
+        TRACK_BEGIN("shadowmap")
         for (unsigned int i = 0; i < _uniforms.lights.size(); i++) {
             // Temporally move the MVP matrix from the view of the light 
             glm::mat4 mvp = _uniforms.lights[i].getMVPMatrix( m_origin.getTransformMatrix(), m_area );
@@ -657,6 +658,7 @@ void Scene::renderShadowMap(Uniforms& _uniforms) {
 
             _uniforms.lights[i].unbindShadowMap();
         }
+        TRACK_END("shadowmap")
     }
 }
 

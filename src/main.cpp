@@ -28,6 +28,9 @@
 #include "tools/text.h"
 #include "types/files.h"
 
+#define TRACK_BEGIN(A)      if (sandbox.uniforms.tracker.isRunning()) sandbox.uniforms.tracker.begin(A); 
+#define TRACK_END(A)        if (sandbox.uniforms.tracker.isRunning()) sandbox.uniforms.tracker.end(A); 
+
 std::string                 version = "2.0.0";
 std::string                 name    = "GlslViewer";
 std::string                 header  = name + " " + version + " by Patricio Gonzalez Vivo ( patriciogonzalezvivo.com )"; 
@@ -104,6 +107,7 @@ EM_BOOL loop (double time, void* userData) {
 #else
 void loop() {
 #endif
+    
     ada::updateGL();
 
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
@@ -139,7 +143,10 @@ void loop() {
         keepRunnig.store(false);
     else
 #endif
-        ada::renderGL();
+    
+    // TRACK_BEGIN("renderSwap")
+    ada::renderGL();
+    // TRACK_END("renderSwap")
 
     #if defined(__EMSCRIPTEN__)
     return true;
