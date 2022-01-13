@@ -26,6 +26,10 @@
 #include "ada/gl/textureStreamOMX.h"
 #endif
 
+#define TRACK_BEGIN(A) if (tracker.isRunning()) tracker.begin(A); 
+#define TRACK_END(A) if (tracker.isRunning()) tracker.end(A); 
+
+
 std::string UniformData::getType() {
     if (size == 1 && bInt) {
         return "int";
@@ -438,11 +442,9 @@ bool Uniforms::addAudioTexture(const std::string& _name, const std::string& devi
 }
 
 void Uniforms::updateStreammingTextures() {
-    for (StreamsList::iterator i = streams.begin(); i != streams.end(); ++i) {
-        if(i->second->update()) {
+    for (StreamsList::iterator i = streams.begin(); i != streams.end(); ++i)
+        if (i->second->update())
             m_change = true;
-        }
-    }
 }
 
 void Uniforms::set( const std::string& _name, float _value) {

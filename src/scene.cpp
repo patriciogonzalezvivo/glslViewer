@@ -20,6 +20,9 @@
 
 #include "tools/text.h"
 
+#define TRACK_BEGIN(A) if (_uniforms.tracker.isRunning()) _uniforms.tracker.begin(A); 
+#define TRACK_END(A) if (_uniforms.tracker.isRunning()) _uniforms.tracker.end(A); 
+
 Scene::Scene(): 
     // Debug State
     showGrid(false), showAxis(false), showBBoxes(false), showCubebox(false), 
@@ -564,8 +567,13 @@ void Scene::render(Uniforms& _uniforms) {
 
     if (_uniforms.getCamera().bChange || m_origin.bChange)
         m_mvp = _uniforms.getCamera().getProjectionViewMatrix() * m_origin.getTransformMatrix(); 
-    
+
+
+    TRACK_BEGIN("floor")
+
     renderFloor(_uniforms, m_mvp);
+
+    TRACK_END("floor")
 
     if (m_culling != 0) {
         glEnable(GL_CULL_FACE);
@@ -585,6 +593,8 @@ void Scene::render(Uniforms& _uniforms) {
         // m_models[i]->render(_uniforms, m_mvp);
         if (m_models[i]->getShader()->isLoaded() ) {
 
+            TRACK_BEGIN(m_models[i]->getName() )
+
             // bind the shader
             m_models[i]->getShader()->use();
 
@@ -594,6 +604,8 @@ void Scene::render(Uniforms& _uniforms) {
             // Pass special uniforms
             m_models[i]->getShader()->setUniform( "u_modelViewProjectionMatrix", m_mvp);
             m_models[i]->render();
+
+            TRACK_END(m_models[i]->getName() )
         }
     }
 
@@ -661,6 +673,8 @@ void Scene::renderBackground(Uniforms& _uniforms) {
     }
 
     if (m_background) {
+        TRACK_BEGIN("background")
+
         m_background_shader.use();
 
         // Update Uniforms and textures
@@ -669,9 +683,12 @@ void Scene::renderBackground(Uniforms& _uniforms) {
         if (!m_background_vbo)
             m_background_vbo = ada::rect(0.0,0.0,1.0,1.0).getVbo();
         m_background_vbo->render( &m_background_shader );
+
+        TRACK_END("background")
     }
 
     else if (_uniforms.cubemap && showCubebox) {
+
         if (!m_cubemap_vbo) {
             m_cubemap_vbo = ada::cube(1.0f).getVbo();
             m_cubemap_shader.load(ada::getDefaultSrc(ada::FRAG_CUBEMAP), ada::getDefaultSrc(ada::VERT_CUBEMAP), false);
@@ -683,10 +700,12 @@ void Scene::renderBackground(Uniforms& _uniforms) {
         m_cubemap_shader.setUniformTextureCube( "u_cubeMap", _uniforms.cubemap, 0 );
 
         m_cubemap_vbo->render( &m_cubemap_shader );
+
     }
 }
 
 void Scene::renderFloor(Uniforms& _uniforms, const glm::mat4& _mvp) {
+
     if (m_floor_subd_target >= 0) {
 
         //  Floor
@@ -719,10 +738,12 @@ void Scene::renderFloor(Uniforms& _uniforms, const glm::mat4& _mvp) {
         }
 
         if (m_floor_vbo) {
+            
             m_floor_shader.use();
             _uniforms.feedTo( m_floor_shader );
             m_floor_shader.setUniform("u_modelViewProjectionMatrix", _mvp );
             m_floor_vbo->render( &m_floor_shader );
+
         }
     }
 }

@@ -16,6 +16,7 @@
 
 #include "gl/textureAudio.h"
 #include "types/files.h"
+#include "tools/tracker.h"
 
 struct UniformData {
     std::string getType();
@@ -106,6 +107,9 @@ public:
     // 3d Scene Uniforms 
     std::vector<ada::Camera>    cameras;
     std::vector<ada::Light>     lights;
+
+    // Tracker
+    Tracker                 tracker;
 
 protected:
     bool                    m_change;

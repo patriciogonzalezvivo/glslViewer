@@ -2,6 +2,7 @@
 
 #include <sys/stat.h>   // stat
 #include <algorithm>    // std::find
+#include <fstream>
 #include <math.h>
 #include <memory>
 
@@ -16,6 +17,9 @@
 
 #include "glm/gtx/matrix_transform_2d.hpp"
 #include "glm/gtx/rotate_vector.hpp"
+
+#define TRACK_BEGIN(A) if (uniforms.tracker.isRunning()) uniforms.tracker.begin(A); 
+#define TRACK_END(A) if (uniforms.tracker.isRunning()) uniforms.tracker.end(A); 
 
 // ------------------------------------------------------------------------- CONTRUCTOR
 Sandbox::Sandbox(): 
@@ -164,6 +168,79 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         return false;
     },
     "debug[,on|off]                 show/hide passes and textures elements", false));
+
+    _commands.push_back(Command("track", [&](const std::string& _line){
+        if (_line == "track") {
+            std::cout << "track," << (uniforms.tracker.isRunning() ? "on" : "off") << std::endl; 
+            return true;
+        }
+        else {
+            std::vector<std::string> values = ada::split(_line,',');
+            if (values.size() == 2) {
+
+                if ((values[1] == "on" || values[1] == "start" | values[1] == "begin") &&
+                    !uniforms.tracker.isRunning() ) 
+                    uniforms.tracker.start();
+                else if (   (values[1] == "off" || values[1] == "stop" | values[1] == "end") &&
+                            uniforms.tracker.isRunning() ) 
+                    uniforms.tracker.stop();
+                    
+                else if (values[1] == "average") 
+                    std::cout << uniforms.tracker.logAverage() << std::endl;
+
+                else if (values[1] == "samples")
+                    std::cout << uniforms.tracker.logSamples() << std::endl;
+
+                else if (values[1] == "framerate")
+                    std::cout << uniforms.tracker.logFramerate() << std::endl;
+
+            }
+
+            else if (values.size() == 3) {
+
+                if (values[1] == "average" && 
+                    ada::haveExt(values[2],"csv") ) {
+                    std::ofstream out(values[2]);
+                    out << uniforms.tracker.logAverage();
+                    out.close();
+                }
+
+                else if (values[1] == "average")
+                    std::cout << uniforms.tracker.logAverage( values[2] ) << std::endl;
+
+                else if (   values[1] == "samples" && 
+                            ada::haveExt(values[2],"csv") ) {
+                    std::ofstream out(values[2]);
+                    out << uniforms.tracker.logSamples();
+                    out.close();
+                }
+
+                else if (values[1] == "samples")
+                    std::cout << uniforms.tracker.logSamples(values[2]) << std::endl;
+                    
+            }
+            else if (values.size() == 4) {
+
+                if (values[1] == "average" && 
+                    ada::haveExt(values[3],"csv") ) {
+                    std::ofstream out( values[3] );
+                    out << uniforms.tracker.logAverage( values[2] );
+                    out.close();
+                }
+
+                else if (   values[1] == "samples" && 
+                            ada::haveExt(values[3],"csv") ) {
+                    std::ofstream out( values[3] );
+                    out << uniforms.tracker.logSamples( values[2] );
+                    out.close();
+                }
+
+            }
+
+        }
+        return false;
+    },
+    "track[,on|off|average|samples] start/stop tracking rendering time", false));
 
     _commands.push_back(Command("reset", [&](const std::string& _line){
         if (_line == "reset") {
@@ -864,6 +941,8 @@ void Sandbox::_renderBuffers() {
 
     bool reset_viewport = false;
     for (unsigned int i = 0; i < uniforms.buffers.size(); i++) {
+        TRACK_BEGIN("buffer" + ada::toString(i))
+
         reset_viewport += uniforms.buffers[i].fixed;
 
         uniforms.buffers[i].bind();
@@ -881,6 +960,8 @@ void Sandbox::_renderBuffers() {
         m_billboard_vbo->render( &m_buffers_shaders[i] );
         
         uniforms.buffers[i].unbind();
+
+        TRACK_END("buffer" + ada::toString(i))
     }
 
     #if defined(__EMSCRIPTEN__)
@@ -901,6 +982,8 @@ void Sandbox::_renderConvolutionPyramids() {
     // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     for (unsigned int i = 0; i < m_convolution_pyramid_subshaders.size(); i++) {
+        TRACK_BEGIN("convolution_pyramid" + ada::toString(i))
+
         glDisable(GL_BLEND);
 
         m_convolution_pyramid_fbos[i].bind();
@@ -919,6 +1002,8 @@ void Sandbox::_renderConvolutionPyramids() {
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         uniforms.convolution_pyramids[i].process(&m_convolution_pyramid_fbos[i]);
+
+        TRACK_END("convolution_pyramid" + ada::toString(i))
     }
 
 }
@@ -961,6 +1046,8 @@ void Sandbox::render() {
 
     // RENDER CONTENT
     if (geom_index == -1) {
+        TRACK_BEGIN("billboard")
+
         // Load main shader
         m_canvas_shader.use();
 
@@ -989,10 +1076,11 @@ void Sandbox::render() {
             m_canvas_shader.setUniform("u_modelViewProjectionMatrix", glm::mat4(1.));
             m_billboard_vbo->render( &m_canvas_shader );
         }
+
+        TRACK_END("billboard")
     }
 
     else {
-
         if (holoplay >= 0) {
             ada::holoplayQuilt([&](const ada::HoloplayProperties& holoplay, glm::vec4& viewport, int &viewIndex){
 
@@ -1019,6 +1107,8 @@ void Sandbox::render() {
 
     // POST PROCESSING
     if (m_postprocessing) {
+        TRACK_BEGIN("postprocessing")
+
         m_scene_fbo.unbind();
 
         if (screenshotFile != "" || m_record_sec || m_record_frame)
@@ -1037,6 +1127,8 @@ void Sandbox::render() {
             m_postprocessing_shader.setUniformTexture("u_buffer" + ada::toString(i), &uniforms.buffers[i]);
 
         m_billboard_vbo->render( &m_postprocessing_shader );
+
+        TRACK_END("postprocessing")
     }
     else if (m_histogram) {
         m_scene_fbo.unbind();
