@@ -23,6 +23,8 @@ struct StatTrack {
 
 class Tracker {
 public:
+    Tracker();
+    virtual ~Tracker();
 
     void    start();
     void    stop();
@@ -31,7 +33,6 @@ public:
     void    end(const std::string& _track);
 
     double  getFramerate();
-    std::string getStack() const;
 
     std::string logSamples();
     std::string logSamples(const std::string& _track);
@@ -45,7 +46,6 @@ protected:
 
     double                  m_trackerStart;
 
-    std::vector<std::string>            m_stack;
     std::vector<std::string>            m_tracks;
     std::map<std::string, StatTrack>    m_data;
 

@@ -2,6 +2,14 @@
 
 #include "ada/tools/text.h"
 
+Tracker::Tracker() {
+
+}
+
+virtual ~Tracker() {
+
+}
+
 void Tracker::start() {
     m_data.clear();
 
@@ -58,18 +66,6 @@ double  Tracker::getFramerate() {
     }
 
     return ( frm / (double)count );
-}
-
-std::string Tracker::getStack() const {
-    std::string stack = "";
-
-    for (size_t i = 0; i < m_stack.size(); i++) {
-        if (i > 0)
-            stack += ":";
-        stack += m_stack[i];
-    }
-
-    return stack;
 }
 
 std::string Tracker::logFramerate() {
@@ -133,7 +129,7 @@ std::string Tracker::logAverage(const std::string& _track) {
     delta /= (double)it->second.samples.size() - 1.0;
     it->second.durationAverage = average;
     
-    log += track_name + "," + ada::toString(average) + "," + ada::toString( (average/delta) * 100.0) + "%," + ada::toString(delta) +  "\n";
+    log += track_name + "," + ada::toString(average) + "," + ada::toString( (average/delta) * 100.0) + "," + ada::toString(delta) +  "\n";
 
     return log;
 }
