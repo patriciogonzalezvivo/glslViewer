@@ -29,7 +29,7 @@ void Tracker::end(const std::string& _track) {
     if ( m_data.find(_track) == m_data.end() )
         m_tracks.push_back(_track);
 
-    auto start = std::chrono::time_point_cast<std::chrono::microseconds>(m_data[stack].start).time_since_epoch();
+    auto start = std::chrono::time_point_cast<std::chrono::microseconds>(m_data[_track].start).time_since_epoch();
     auto end = std::chrono::time_point_cast<std::chrono::microseconds>(sample_end).time_since_epoch();
     
     StatSample stat;
@@ -37,7 +37,7 @@ void Tracker::end(const std::string& _track) {
     stat.endMs = end.count() * 0.001 - m_trackerStart;
     stat.durationMs = stat.endMs - stat.startMs;
 
-    m_data[stack].samples.push_back( stat );
+    m_data[_track].samples.push_back( stat );
 }
 
 void Tracker::stop() {
