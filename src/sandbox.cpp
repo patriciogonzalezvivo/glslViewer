@@ -942,7 +942,7 @@ void Sandbox::_renderBuffers() {
 
     bool reset_viewport = false;
     for (unsigned int i = 0; i < uniforms.buffers.size(); i++) {
-        TRACK_BEGIN("buffer" + ada::toString(i))
+        TRACK_BEGIN("render:buffer" + ada::toString(i))
 
         reset_viewport += uniforms.buffers[i].fixed;
 
@@ -962,7 +962,7 @@ void Sandbox::_renderBuffers() {
         
         uniforms.buffers[i].unbind();
 
-        TRACK_END("buffer" + ada::toString(i))
+        TRACK_END("render:buffer" + ada::toString(i))
     }
 
     #if defined(__EMSCRIPTEN__)
@@ -983,7 +983,7 @@ void Sandbox::_renderConvolutionPyramids() {
     // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     for (unsigned int i = 0; i < m_convolution_pyramid_subshaders.size(); i++) {
-        TRACK_BEGIN("convolution_pyramid" + ada::toString(i))
+        TRACK_BEGIN("render:convolution_pyramid" + ada::toString(i))
 
         glDisable(GL_BLEND);
 
@@ -1004,7 +1004,7 @@ void Sandbox::_renderConvolutionPyramids() {
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         uniforms.convolution_pyramids[i].process(&m_convolution_pyramid_fbos[i]);
 
-        TRACK_END("convolution_pyramid" + ada::toString(i))
+        TRACK_END("render:convolution_pyramid" + ada::toString(i))
     }
 
 }
@@ -1049,7 +1049,7 @@ void Sandbox::render() {
 
     // RENDER CONTENT
     if (geom_index == -1) {
-        TRACK_BEGIN("billboard")
+        TRACK_BEGIN("render:billboard")
 
         // Load main shader
         m_canvas_shader.use();
@@ -1080,11 +1080,11 @@ void Sandbox::render() {
             m_billboard_vbo->render( &m_canvas_shader );
         }
 
-        TRACK_END("billboard")
+        TRACK_END("render:billboard")
     }
 
     else {
-        TRACK_BEGIN("scene")
+        TRACK_BEGIN("render:scene")
         if (holoplay >= 0) {
             ada::holoplayQuilt([&](const ada::HoloplayProperties& holoplay, glm::vec4& viewport, int &viewIndex){
 
@@ -1105,14 +1105,14 @@ void Sandbox::render() {
             if (m_scene.showGrid || m_scene.showAxis || m_scene.showBBoxes)
                 m_scene.renderDebug(uniforms);
         }
-        TRACK_END("scene")
+        TRACK_END("render:scene")
     }
     
     // ----------------------------------------------- < main scene end
 
     // POST PROCESSING
     if (m_postprocessing) {
-        TRACK_BEGIN("postprocessing")
+        TRACK_BEGIN("render:postprocessing")
 
         m_scene_fbo.unbind();
 
@@ -1133,7 +1133,7 @@ void Sandbox::render() {
 
         m_billboard_vbo->render( &m_postprocessing_shader );
 
-        TRACK_END("postprocessing")
+        TRACK_END("render:postprocessing")
     }
     else if (m_histogram) {
         m_scene_fbo.unbind();
@@ -1173,14 +1173,14 @@ void Sandbox::render() {
 
 
 void Sandbox::renderUI() {
-    TRACK_BEGIN("renderUI")
+    // TRACK_BEGIN("renderUI")
 
     // IN PUT TEXTURES
     if (m_showTextures) {        
         int nTotal = uniforms.textures.size();
         if (nTotal > 0) {
             glDisable(GL_DEPTH_TEST);
-            TRACK_BEGIN("textures")
+            // TRACK_BEGIN("textures")
             float w = (float)(ada::getWindowWidth());
             float h = (float)(ada::getWindowHeight());
             float scale = fmin(1.0f / (float)(nTotal), 0.25) * 0.5;
@@ -1203,7 +1203,7 @@ void Sandbox::renderUI() {
                 m_billboard_vbo->render(&m_billboard_shader);
                 yOffset -= yStep * 2.0;
             }
-            TRACK_END("textures")
+            // TRACK_END("textures")
         }
     }
 
@@ -1211,7 +1211,7 @@ void Sandbox::renderUI() {
     if (m_showPasses) {        
 
         glDisable(GL_DEPTH_TEST);
-        TRACK_BEGIN("buffers")
+        // TRACK_BEGIN("buffers")
 
         // DEBUG BUFFERS
         int nTotal = uniforms.buffers.size();
@@ -1311,7 +1311,7 @@ void Sandbox::renderUI() {
                 }
             }
         }
-        TRACK_END("buffers")
+        // TRACK_END("buffers")
     }
 
     if (m_histogram && m_histogram_texture) {
@@ -1337,12 +1337,12 @@ void Sandbox::renderUI() {
             m_billboard_vbo->render(&m_histogram_shader);
         }
 
-        TRACK_END("histogram")
+        // TRACK_END("histogram")
     }
 
     if (cursor && ada::getMouseEntered()) {
 
-        TRACK_BEGIN("cursor")
+        // TRACK_BEGIN("cursor")
 
         if (m_cross_vbo == nullptr) 
             m_cross_vbo = ada::cross(glm::vec3(0.0, 0.0, 0.0), 10.).getVbo();
@@ -1359,10 +1359,10 @@ void Sandbox::renderUI() {
         m_cross_vbo->render(&m_wireframe2D_shader);
         glLineWidth(1.0f);
 
-        TRACK_END("cursor")
+        // TRACK_END("cursor")
     }
 
-    TRACK_END("renderUI")
+    // TRACK_END("renderUI")
 }
 
 void Sandbox::renderDone() {

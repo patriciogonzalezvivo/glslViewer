@@ -14,13 +14,10 @@ void Tracker::begin(const std::string& _track) {
     if (!m_running)
         return;
 
-    m_stack.push_back(_track);
-    std::string stack = getStack();
+    if ( m_data.find(_track) == m_data.end() )
+        m_tracks.push_back(_track);
 
-    if ( m_data.find(stack) == m_data.end() )
-        m_tracks.push_back(stack);
-
-    m_data[stack].start = std::chrono::high_resolution_clock::now();
+    m_data[_track].start = std::chrono::high_resolution_clock::now();
 }
 
 void Tracker::end(const std::string& _track) {
@@ -29,12 +26,8 @@ void Tracker::end(const std::string& _track) {
 
     auto sample_end = std::chrono::high_resolution_clock::now();
 
-    std::string stack = getStack();
-    m_stack.pop_back();
-
-    if ( m_data.find(stack) == m_data.end() )
-        m_tracks.push_back(stack);
-
+    if ( m_data.find(_track) == m_data.end() )
+        m_tracks.push_back(_track);
 
     auto start = std::chrono::time_point_cast<std::chrono::microseconds>(m_data[stack].start).time_since_epoch();
     auto end = std::chrono::time_point_cast<std::chrono::microseconds>(sample_end).time_since_epoch();
