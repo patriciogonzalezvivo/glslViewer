@@ -6,7 +6,7 @@ Tracker::Tracker() {
 
 }
 
-virtual ~Tracker() {
+Tracker::~Tracker() {
 
 }
 
