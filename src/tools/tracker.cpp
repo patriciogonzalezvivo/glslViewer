@@ -45,7 +45,8 @@ void Tracker::end(const std::string& _track) {
     stat.endMs = end.count() * 0.001 - m_trackerStart;
     stat.durationMs = stat.endMs - stat.startMs;
 
-    m_data[_track].samples.push_back( stat );
+    if (stat.startMs > 0)
+        m_data[_track].samples.push_back( stat );
 }
 
 void Tracker::stop() {
