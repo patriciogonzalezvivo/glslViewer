@@ -569,11 +569,11 @@ void Scene::render(Uniforms& _uniforms) {
         m_mvp = _uniforms.getCamera().getProjectionViewMatrix() * m_origin.getTransformMatrix(); 
 
 
-    TRACK_BEGIN("floor")
+    TRACK_BEGIN("render:scene:floor")
 
     renderFloor(_uniforms, m_mvp);
 
-    TRACK_END("floor")
+    TRACK_END("render:scene:floor")
 
     if (m_culling != 0) {
         glEnable(GL_CULL_FACE);
@@ -593,7 +593,7 @@ void Scene::render(Uniforms& _uniforms) {
         // m_models[i]->render(_uniforms, m_mvp);
         if (m_models[i]->getShader()->isLoaded() ) {
 
-            TRACK_BEGIN(m_models[i]->getName() )
+            TRACK_BEGIN("render:scene:" + m_models[i]->getName() )
 
             // bind the shader
             m_models[i]->getShader()->use();
@@ -605,7 +605,7 @@ void Scene::render(Uniforms& _uniforms) {
             m_models[i]->getShader()->setUniform( "u_modelViewProjectionMatrix", m_mvp);
             m_models[i]->render();
 
-            TRACK_END(m_models[i]->getName() )
+            TRACK_END("render:scene:" + m_models[i]->getName() )
         }
     }
 
@@ -632,7 +632,7 @@ void Scene::renderShadowMap(Uniforms& _uniforms) {
     }
 
     if ( m_dynamicShadows || changeOnLights || m_origin.bChange ) {
-        TRACK_BEGIN("shadowmap")
+        // TRACK_BEGIN("shadowmap")
         for (unsigned int i = 0; i < _uniforms.lights.size(); i++) {
             // Temporally move the MVP matrix from the view of the light 
             glm::mat4 mvp = _uniforms.lights[i].getMVPMatrix( m_origin.getTransformMatrix(), m_area );
@@ -658,7 +658,7 @@ void Scene::renderShadowMap(Uniforms& _uniforms) {
 
             _uniforms.lights[i].unbindShadowMap();
         }
-        TRACK_END("shadowmap")
+        // TRACK_END("shadowmap")
     }
 }
 
@@ -675,7 +675,7 @@ void Scene::renderBackground(Uniforms& _uniforms) {
     }
 
     if (m_background) {
-        TRACK_BEGIN("background")
+        TRACK_BEGIN("render:scene:background")
 
         m_background_shader.use();
 
@@ -686,7 +686,7 @@ void Scene::renderBackground(Uniforms& _uniforms) {
             m_background_vbo = ada::rect(0.0,0.0,1.0,1.0).getVbo();
         m_background_vbo->render( &m_background_shader );
 
-        TRACK_END("background")
+        TRACK_END("render:scene:background")
     }
 
     else if (_uniforms.cubemap && showCubebox) {

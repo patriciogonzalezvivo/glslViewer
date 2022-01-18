@@ -31,7 +31,7 @@
 #define TRACK_BEGIN(A)      if (sandbox.uniforms.tracker.isRunning()) sandbox.uniforms.tracker.begin(A); 
 #define TRACK_END(A)        if (sandbox.uniforms.tracker.isRunning()) sandbox.uniforms.tracker.end(A); 
 
-std::string                 version = "2.0.0";
+std::string                 version = "2.0.2";
 std::string                 name    = "GlslViewer";
 std::string                 header  = name + " " + version + " by Patricio Gonzalez Vivo ( patriciogonzalezvivo.com )"; 
 
@@ -369,6 +369,7 @@ int main(int argc, char **argv) {
         }
         else if (argument == "--fullFps" ) {
             fullFps = true;
+            ada::setFps(0);
         }
         else if ( sandbox.frag_index == -1 && (ada::haveExt(argument,"frag") || ada::haveExt(argument,"fs") ) ) {
             if ( stat(argument.c_str(), &st) != 0 ) {
@@ -1073,6 +1074,7 @@ void commandsInit() {
             if (values.size() == 2) {
                 commandsMutex.lock();
                 fullFps = (values[1] == "on");
+                ada::setFps(0);
                 commandsMutex.unlock();
             }
         }
