@@ -80,7 +80,7 @@ std::string Tracker::getStack() const {
 }
 
 std::string Tracker::logFramerate() {
-    return  "framerate," + ada::toString(getFramerate()) + ",100.0%\n";// +
+    return  "framerate," + ada::toString(getFramerate()) + "\n";// +
             // "fps," + ada::toString( (1./getFramerate()) * 1000.0 ) ;
 }
 
