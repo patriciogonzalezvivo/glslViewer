@@ -1565,6 +1565,7 @@ void Sandbox::onMouseDrag(float _x, float _y, int _button) {
         dist += (-.008f * ada::getMouseVelY());
         if (dist > 0.0f) {
             uniforms.getCamera().orbit(m_lat, m_lon, dist);
+            uniforms.getCamera().lookAt(glm::vec3(0.0));
         }
     }
 }
