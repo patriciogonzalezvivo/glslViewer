@@ -118,6 +118,11 @@ Uniforms::Uniforms(): cubemap(nullptr), m_change(false), m_is_audio_init(false) 
         _shader.setUniform("u_cameraSensitivity", getCamera().getSensitivity());
     },
     [this]() { return ada::toString(getCamera().getSensitivity()); });
+
+    functions["u_cameraChange"] = UniformFunction("bool", [this](ada::Shader& _shader) {
+        _shader.setUniform("u_cameraChange", getCamera().bChange);
+    },
+    [this]() { return ada::toString(getCamera().getSensitivity()); });
     
     functions["u_normalMatrix"] = UniformFunction("mat3", [this](ada::Shader& _shader) {
         _shader.setUniform("u_normalMatrix", getCamera().getNormalMatrix());
