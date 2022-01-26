@@ -5,11 +5,14 @@
 #include <string>
 #include <functional>
 
-#include "ada/gl/fbo.h"
 #include "ada/gl/shader.h"
 #include "ada/gl/texture.h"
 #include "ada/gl/textureStream.h"
+
+#include "ada/gl/fbo.h"
+#include "ada/gl/pingpong.h"
 #include "ada/gl/convolutionPyramid.h"
+
 #include "ada/tools/fs.h"
 #include "ada/scene/camera.h"
 #include "ada/scene/light.h"
@@ -101,8 +104,9 @@ public:
     StreamsList             streams;
 
     ada::TextureCube*       cubemap;
-    std::vector<ada::Fbo>   buffers;
-    std::vector<ada::ConvolutionPyramid> convolution_pyramids;
+    std::vector<ada::Fbo>                   buffers;
+    std::vector<ada::PingPong>              doubleBuffers;
+    std::vector<ada::ConvolutionPyramid>    convolution_pyramids;
 
     // 3d Scene Uniforms 
     std::vector<ada::Camera>    cameras;

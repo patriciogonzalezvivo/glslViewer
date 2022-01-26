@@ -586,9 +586,15 @@ bool Uniforms::feedTo(ada::Shader *_shader, bool _lights, bool _buffers ) {
         _shader->setUniformTexture("u_convolutionPyramid" + ada::toString(i), convolution_pyramids[i].getResult(), _shader->textureIndex++ );
 
     // Pass Buffers Texture
-    if (_buffers)
-        for (unsigned int i = 0; i < buffers.size(); i++)
+    if (_buffers) {
+        for (size_t i = 0; i < buffers.size(); i++)
             _shader->setUniformTexture("u_buffer" + ada::toString(i), &buffers[i], _shader->textureIndex++ );
+
+        for (size_t i = 0; i < doubleBuffers.size(); i++)
+            _shader->setUniformTexture("u_doubleBuffer" + ada::toString(i), doubleBuffers[i].src, _shader->textureIndex++ );
+    }
+
+    
     
     if (_lights) {
         // Pass Light Uniforms
@@ -734,6 +740,9 @@ void Uniforms::print(bool _all) {
 void Uniforms::printBuffers() {
     for (size_t i = 0; i < buffers.size(); i++)
         std::cout << "sampler2D,u_buffer" << i << std::endl;
+
+    for (size_t i = 0; i < doubleBuffers.size(); i++)
+        std::cout << "sampler2D,u_doubleBuffer" << i << std::endl;
 
     for (size_t i = 0; i < convolution_pyramids.size(); i++)
         std::cout << "sampler2D,u_convolutionPyramid" << i << std::endl;

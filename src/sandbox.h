@@ -98,6 +98,10 @@ private:
     std::vector<ada::Shader>    m_buffers_shaders;
     int                         m_buffers_total;
 
+    // Buffers
+    std::vector<ada::Shader>    m_doubleBuffers_shaders;
+    int                         m_doubleBuffers_total;
+
     // A. CANVAS
     ada::Shader         m_canvas_shader;
 
