@@ -1290,10 +1290,8 @@ void Sandbox::renderUI() {
             nTotal += uniforms.doubleBuffers.size();
         if (m_convolution_pyramid_total > 0)
             nTotal += uniforms.convolution_pyramids.size();
-        if (m_postprocessing) {
-            nTotal += uniforms.functions["u_scene"].present;
-            nTotal += uniforms.functions["u_sceneDepth"].present;
-        }
+        nTotal += uniforms.functions["u_scene"].present;
+        nTotal += uniforms.functions["u_sceneDepth"].present;
         nTotal += (geom_index != -1);
         if (nTotal > 0) {
             float w = (float)(ada::getWindowWidth());

@@ -86,6 +86,7 @@ protected:
     ada::Vbo*           m_lightUI_vbo;
     ada::Shader         m_lightUI_shader;
     bool                m_dynamicShadows;
+    bool                m_shadows;
 
     // Background
     ada::Shader         m_background_shader;

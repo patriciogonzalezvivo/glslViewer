@@ -528,7 +528,8 @@ void Uniforms::setCubeMap( const std::string& _filename, WatchFileList& _files, 
 void Uniforms::checkPresenceIn( const std::string &_vert_src, const std::string &_frag_src ) {
     // Check active native uniforms
     for (UniformFunctionsList::iterator it = functions.begin(); it != functions.end(); ++it) {
-        bool present = ( findId(_vert_src, it->first.c_str()) != 0 || findId(_frag_src, it->first.c_str()) != 0 );
+        std::string name = it->first + ";";
+        bool present = ( findId(_vert_src, name.c_str()) || findId(_frag_src, name.c_str()) );
         if ( it->second.present != present) {
             it->second.present = present;
             m_change = true;

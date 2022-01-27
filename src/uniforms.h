@@ -38,15 +38,15 @@ struct UniformFunction {
     UniformFunction(const std::string &_type, std::function<void(ada::Shader&)> _assign);
     UniformFunction(const std::string &_type, std::function<void(ada::Shader&)> _assign, std::function<std::string()> _print);
 
-    std::function<void(ada::Shader&)> assign;
-    std::function<std::string()>    print;
-    std::string                     type;
-    bool                            present = false;
+    std::function<void(ada::Shader&)>   assign;
+    std::function<std::string()>        print;
+    std::string                         type;
+    bool                                present = false;
 };
 
-typedef std::map<std::string, UniformFunction> UniformFunctionsList;
-typedef std::map<std::string, ada::Texture*> TextureList;
-typedef std::map<std::string, ada::TextureStream*> StreamsList;
+typedef std::map<std::string, UniformFunction>      UniformFunctionsList;
+typedef std::map<std::string, ada::Texture*>        TextureList;
+typedef std::map<std::string, ada::TextureStream*>  StreamsList;
 
 class Uniforms {
 public:
@@ -102,8 +102,9 @@ public:
     // Common 
     TextureList             textures;
     StreamsList             streams;
-
     ada::TextureCube*       cubemap;
+
+    // Buffers
     std::vector<ada::Fbo>                   buffers;
     std::vector<ada::PingPong>              doubleBuffers;
     std::vector<ada::ConvolutionPyramid>    convolution_pyramids;

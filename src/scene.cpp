@@ -31,7 +31,7 @@ Scene::Scene():
     m_culling(NONE),
     m_depth_test(true),
     // Light
-    m_lightUI_vbo(nullptr), m_dynamicShadows(false),
+    m_lightUI_vbo(nullptr), m_dynamicShadows(false), m_shadows(false),
     // Background
     m_background_vbo(nullptr), m_background(false), 
     // CubeMap
@@ -512,6 +512,8 @@ bool Scene::loadShaders(const std::string& _fragmentShader, const std::string& _
             m_floor_subd_target = 0;
     }
 
+    m_shadows = findId(_fragmentShader, "u_lightShadowMap;");
+
     return rta;
 }
 
@@ -623,6 +625,9 @@ void Scene::render(Uniforms& _uniforms) {
 }
 
 void Scene::renderShadowMap(Uniforms& _uniforms) {
+    if (!m_shadows)
+        return;
+
     bool changeOnLights = false;
     for (unsigned int i = 0; i < _uniforms.lights.size(); i++) {
         if (_uniforms.lights[i].bChange) {
