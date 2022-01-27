@@ -14,8 +14,8 @@ precision mediump float;
 // of your educational material. If these conditions are too restrictive
 // please contact me and we'll definitely work it out.
 
-uniform sampler2D   u_buffer0;  // pos
-uniform sampler2D   u_buffer2;  // vel 
+uniform sampler2D   u_doubleBuffer0;  // pos
+uniform sampler2D   u_doubleBuffer1;  // vel 
 
 uniform mat4        u_modelMatrix;
 uniform mat4        u_viewMatrix;
@@ -34,24 +34,20 @@ varying vec2        v_texcoord;
 #define decimation(value, presicion) (floor(value * presicion)/presicion)
 
 void main(void) {
-    v_position = a_position;
-    v_texcoord = a_position.xy;
-    vec2 pixel = 1.0/u_resolution;
-
-    float scale = 10.0;
-    // scale = 5.0+mix(5.0, 100., cos(u_time * 0.1) * 0.5 + 0.5);
-
-    vec2 uv = v_texcoord;
-    uv = decimation(uv, u_resolution) + 0.5 * pixel;
-
-    v_position.xyz = texture2D(u_buffer0, uv).xyz * 2.0 - 1.0;
-    v_color.rgb =  texture2D(u_buffer2, uv).xyz * 2.0 - 1.0;
-    v_color.rgb =  normalize(v_color.xyz) * 0.5 + 0.5;
-    v_position.xyz *= scale;
-
-    float brightness = 1.0- max( 0.0, distance(u_camera, v_position.xyz)/ (scale * 2.0));
-    // v_color.a = pow(brightness, 1.0);
-    gl_PointSize = 10.0 * pow(brightness, 10.0);
     
+    vec2 uv         = a_position.xy;
+    vec2 buffRes    = vec2(512.0);
+    vec2 pixel      = 1.0/buffRes;
+    uv              = decimation(uv, buffRes) + 0.5 * pixel;
+    v_texcoord      = uv;
+
+    v_position      = a_position;    
+    v_position.xyz  = texture2D(u_doubleBuffer0, uv).xyz * 2.0 - 1.0;
+    v_position.xyz  *= 10.0;
+
+    v_color.rgb     = texture2D(u_doubleBuffer1, uv).xyz * 2.0 - 1.0;
+    v_color.rgb     = normalize(v_color.xyz) * 0.5 + 0.5;
+    v_color.a       = 1.0;
+        
     gl_Position = u_projectionMatrix * u_viewMatrix * v_position;
 }

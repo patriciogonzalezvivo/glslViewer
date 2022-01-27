@@ -19,15 +19,11 @@ precision mediump float;
 //  Polygon Shredder https://www.clicktorelease.com/code/polygon-shredder/
 //
 
-uniform sampler2D   u_scene;
-
 // position
-uniform sampler2D   u_buffer0;
-uniform sampler2D   u_buffer1;
+uniform sampler2D   u_doubleBuffer0; // 512z512
 
 // velocity
-uniform sampler2D   u_buffer2;
-uniform sampler2D   u_buffer3;
+uniform sampler2D   u_doubleBuffer1; // 512x512
 
 uniform vec2        u_resolution;
 uniform float       u_time;
@@ -49,60 +45,48 @@ void main(void) {
     vec4 color = vec4(0.0);
     vec2 pixel = 1.0/ u_resolution;
     vec2 st = gl_FragCoord.xy * pixel;
-    st = decimation(st, u_resolution) + 0.5 * pixel;
+    vec2 uv = v_texcoord;
 
-    vec3 pos = texture2D(u_buffer1, st).xyz * 2.0 - 1.0;
-    vec3 vel = texture2D(u_buffer3, st).xyz * 2.0 - 1.0;
-    float life = texture2D(u_buffer1, st).a * 100.0;
-    float speed = 1.;
-    
-    float s = st.x * life * 0.01;
-    if ( s > .95 ) speed = .75;
-    else if( s > .9 ) speed = .85;
-    else speed = 1.;
-
-    speed *= 0.5;
+    vec4  buff0 = texture2D(u_doubleBuffer0, uv);
+    vec4  buff1 = texture2D(u_doubleBuffer1, uv);
+    vec3  pos = buff0.xyz * 2.0 - 1.0;
+    vec3  vel = buff1.xyz * 2.0 - 1.0;
+    float life = buff0.a * 100.0;
 
     pos = u_frame < 1 ? random3(st) * 0.01 : pos;
     vel = u_frame < 1 ? curlNoise(vec3(st,0.5)) : vel;
-    life = u_frame < 1 ? random(st) : life;
+    life = u_frame < 1 ? uv.x  * 10. + uv.y * 90. : life;
 
-#if defined(BUFFER_0)
+#if defined(DOUBLE_BUFFER_0)
     pos += vel;
     life -= 0.003;
 
-    if( length( pos ) > .75 )
+    if ( length( pos ) > .75 )
         pos = random3(pos + vec3(st, u_time));
 
     if (life <= 0.0) {
-        pos = ( rotationMatrix( vec3( 1., 0., 0. ), u_time * 0.5 ) * vec4(pos * 0.1, 0.0) ).xyz;
-        life = 100.0 * random(pos.xz);
+        pos = pos * 0.1;
+        life = 100.0;
     }
 
     pos = pos * 0.5 + 0.5;
     color.rgb = pos;
     color.a = life * 0.01;
 
-#elif defined(BUFFER_1)
-    color = texture2D(u_buffer0, st);
-
-#elif defined(BUFFER_2)
+#elif defined(DOUBLE_BUFFER_1)
     vel *= 0.5;
-    vel += speed * curlNoise( pos + u_time * 0.01) * 0.5;
+    vel += curlNoise( pos + u_time * 0.01) * 0.25;
 
     float dist = length( pos );
 
     // Repulsion from the very center of the space
-    vel += normalize(pos) * speed * (1.0 - dist) * step(dist, 0.01);
+    vel += normalize(pos) * 0.5 * (1.0 - dist) * step(dist, 0.01);
 
     // Atraction to the center of the space conform the leave
-    vel += -normalize(pos) * speed * pow(dist, 2.0);
+    vel += -normalize(pos) * 0.5 * pow(dist, 2.0);
     
     color.rgb = clamp(vel * u_delta, -0.99, 0.99) * 0.5 + 0.5;
     color.a = 1.0;
-
-#elif defined(BUFFER_3)
-    color = texture2D(u_buffer2, st);
 
 #else
     color = v_color;

@@ -13,10 +13,7 @@ uniform sampler2D   u_tex0;
 uniform vec2        u_resolution;
 uniform float       u_time;
 
-#ifndef TAU
 #define TAU 6.2831853071795864769252867665590
-#endif
-
 #define ANGLES 5
 
 vec2 cos_sin(float x) { return vec2(cos(x), sin(x)); }
