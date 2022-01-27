@@ -16,7 +16,7 @@ precision highp float;
 // please contact me and we'll definitely work it out.
 
 
-uniform sampler2D   u_buffer0;  // pos
+uniform sampler2D   u_doubleBuffer0;  // pos
 
 uniform mat4        u_modelMatrix;
 uniform mat4        u_viewMatrix;
@@ -43,15 +43,13 @@ void main(void) {
     vec2 uv = v_texcoord;
     uv = decimation(uv, u_resolution) + 0.5 * pixel;
 
-    vec4 data = texture2D(u_buffer0, uv);
-
+    vec4 data = texture2D(u_doubleBuffer0, uv);
     v_position.xy = data.xy * 2.0 - 1.0;
 
     float visible = step(a_position.z, population);
-    vec2 dir = data.zw * 2.0 - 1.0;
-    v_color = vec4(visible, dir.x, dir.y, 1.0 );
-
-    gl_PointSize = visible;
+    v_color = vec4(visible, data.z, data.w, 1.0);
+    // gl_PointSize = visible;
+    
     
     gl_Position = v_position;
 }

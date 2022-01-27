@@ -22,12 +22,10 @@ precision highp float;
 uniform sampler2D   u_scene;
 
 // position / direction PING-PONG
-uniform sampler2D   u_buffer0;
-uniform sampler2D   u_buffer1;
+uniform sampler2D   u_doubleBuffer0; // 512x512
 
 // density PING-PONG
-uniform sampler2D   u_buffer2;
-uniform sampler2D   u_buffer3;
+uniform sampler2D   u_doubleBuffer1; // 512x512
 
 uniform vec2        u_resolution;
 uniform float       u_time;
@@ -38,10 +36,9 @@ varying vec4        v_color;
 varying vec2        v_texcoord;
 
 #define TAU 6.2831853071795864769252867665590
-float   maxSpeed = 0.5;
-float   sensorAngle = radians(20.0);
+float   maxSpeed = 0.8;
+float   sensorAngle = radians(15.0);
 float   sensorDistance = 20.5;
-float   seekDeflectionRate = radians(20.0);
 float   decayRate = 0.875;
 
 vec2    rotate(vec2 v, float a);
@@ -55,13 +52,13 @@ void main(void) {
     vec4 color = vec4(vec3(0.0), 1.0);
     vec2 st = gl_FragCoord.xy / u_resolution;
 
-    vec2 pixel = 1.0/u_resolution;
+    vec2 buffRes = vec2(512.0);
+    vec2 pixel = 1.0/buffRes;
+    vec2 data_uv = decimation(st, buffRes) + 0.5 * pixel;
+    vec4 data = texture2D(u_doubleBuffer0, data_uv);
 
-    vec2 data_uv = decimation(st, u_resolution) + 0.5 * pixel;
-    vec4 data = texture2D(u_buffer1, data_uv);
-
-// PARTICLES PING
-#if defined(BUFFER_0)
+// PARTICLES PINGPONG
+#if defined(DOUBLE_BUFFER_0)
 
     // Initial parameters
     vec2 pos = data.xy * 2.0 - 1.0;
@@ -87,39 +84,29 @@ void main(void) {
         newDir = lDir;
         highestValue = lTrailValue;
     }
-    else if (rTrailValue > highestValue) {
+    else if (rTrailValue > highestValue)
         newDir = rDir;
-    }
-    else if (rTrailValue == lTrailValue) {
+
+    else if (rTrailValue == lTrailValue)
         newDir = (random(st + u_time) < 0.5) ? lDir : rDir;
-    }
 
     pos += speed * newDir * u_delta;
 
-    if ( abs(pos.x) >= 0.999 || abs(pos.y) >= 0.999 ) {
+    if ( abs(pos.x) >= 0.999 || abs(pos.y) >= 0.999 )
         pos = random2(st + pos) * 2.0 - 1.0;
-    }
 
     color = vec4( fract(pos * 0.5 + 0.5), newDir * 0.5 + 0.5);
 
-// PARTICLES PONG
-#elif defined(BUFFER_1)
-    color = texture2D(u_buffer0, st);
-
-// TRAIL PING
-#elif defined(BUFFER_2)
+// TRAIL PINGPONG
+#elif defined(DOUBLE_BUFFER_1)
     vec4 particles = texture2D(u_scene, st);
 
     color.rgb += particles.r;
     color.rgb += getDiffuseTrailValue(st, pixel) * decayRate;
 
-// TRAIL PONG
-#elif defined(BUFFER_3)
-    color = texture2D(u_buffer2, st);
-
 #elif defined(POSTPROCESSING)
-    color.rb = texture2D(u_scene, st).yz;
-    color += texture2D(u_buffer3, st).r * 0.5;
+    color.rgb = texture2D(u_scene, st).rgb * 0.5;
+    color.rgb *= 0.5 + texture2D(u_doubleBuffer1, st).r;
 
 #else
     color = v_color;
@@ -140,7 +127,7 @@ vec2 random2(vec2 p) {
 }
 
 float getTrailValue(vec2 uv) {
-    return texture2D(u_buffer3, clamp(uv, 0.0, 1.0) ).r;
+    return texture2D(u_doubleBuffer1, clamp(uv, 0.0, 1.0) ).r;
 }
 
 float getDiffuseTrailValue(vec2 st, vec2 pixel) {
