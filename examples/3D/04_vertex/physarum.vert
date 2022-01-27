@@ -38,10 +38,14 @@ float population = 0.01; // 0 = none / 1 = 100%
 void main(void) {
     v_position = a_position;
     v_texcoord = a_position.xy;
-    vec2 pixel = 1.0/u_resolution;
+
 
     vec2 uv = v_texcoord;
-    uv = decimation(uv, u_resolution) + 0.5 * pixel;
+
+    vec2 buffRes = vec2(512.0);
+    vec2 buffPixel = 1.0/buffRes;
+    uv = decimation(uv, buffRes) + 0.5 * buffPixel;
+    v_texcoord = uv;
 
     vec4 data = texture2D(u_doubleBuffer0, uv);
     v_position.xy = data.xy * 2.0 - 1.0;

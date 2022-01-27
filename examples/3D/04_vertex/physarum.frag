@@ -25,7 +25,7 @@ uniform sampler2D   u_scene;
 uniform sampler2D   u_doubleBuffer0; // 512x512
 
 // density PING-PONG
-uniform sampler2D   u_doubleBuffer1; // 512x512
+uniform sampler2D   u_doubleBuffer1;
 
 uniform vec2        u_resolution;
 uniform float       u_time;
@@ -36,7 +36,7 @@ varying vec4        v_color;
 varying vec2        v_texcoord;
 
 #define TAU 6.2831853071795864769252867665590
-float   maxSpeed = 0.8;
+float   maxSpeed = 0.5;
 float   sensorAngle = radians(15.0);
 float   sensorDistance = 20.5;
 float   decayRate = 0.875;
@@ -50,11 +50,13 @@ float   getDiffuseTrailValue(vec2 pos, vec2 pixel);
 
 void main(void) {
     vec4 color = vec4(vec3(0.0), 1.0);
-    vec2 st = gl_FragCoord.xy / u_resolution;
+    vec2 pixel = 1.0/u_resolution;
+    vec2 st = gl_FragCoord.xy * pixel;
+    vec2 uv = v_texcoord;
 
-    vec2 buffRes = vec2(512.0);
-    vec2 pixel = 1.0/buffRes;
-    vec2 data_uv = decimation(st, buffRes) + 0.5 * pixel;
+    vec2 buffRes = vec2(512.0) * 2.0;
+    vec2 buffPixel = 1.0/buffRes;
+    vec2 data_uv = uv;//decimation(st, buffRes) + 0.5 * pixel;
     vec4 data = texture2D(u_doubleBuffer0, data_uv);
 
 // PARTICLES PINGPONG
@@ -73,9 +75,9 @@ void main(void) {
     vec2 lDir = normalize(  rotate(dir, +sensorAngle)  );
     vec2 cDir = normalize(  dir  );
     vec2 rDir = normalize(  rotate(dir, -sensorAngle)  );
-    float lTrailValue = getTrailValue( pos_uv + pixel * sensorDistance * lDir);
-    float cTrailValue = getTrailValue( pos_uv + pixel * sensorDistance * cDir);
-    float rTrailValue = getTrailValue( pos_uv + pixel * sensorDistance * rDir);
+    float lTrailValue = getTrailValue( pos_uv + buffPixel * sensorDistance * lDir);
+    float cTrailValue = getTrailValue( pos_uv + buffPixel * sensorDistance * cDir);
+    float rTrailValue = getTrailValue( pos_uv + buffPixel * sensorDistance * rDir);
 
     float highestValue = cTrailValue;
     vec2 newDir = cDir;
@@ -99,9 +101,7 @@ void main(void) {
 
 // TRAIL PINGPONG
 #elif defined(DOUBLE_BUFFER_1)
-    vec4 particles = texture2D(u_scene, st);
-
-    color.rgb += particles.r;
+    color.rgb += texture2D(u_scene, st).r;
     color.rgb += getDiffuseTrailValue(st, pixel) * decayRate;
 
 #elif defined(POSTPROCESSING)
