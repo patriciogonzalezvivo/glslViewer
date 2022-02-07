@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.2)
+cmake_minimum_required(VERSION 3.21)
 
 set(VERSION_MAJOR 2)
 set(VERSION_MINOR 0)
@@ -138,7 +138,11 @@ else()
             Ws2_32.lib 
             Iphlpapi.lib
         )
-        
+
+        install(TARGETS glslViewer)
+
+        set(CPACK_GENERATOR "ZIP")
+
     else()
         target_link_libraries(glslViewer PRIVATE pthread dl lo_static)
         install(TARGETS glslViewer DESTINATION bin)
@@ -182,9 +186,9 @@ else()
             set(CPACK_PACKAGE_FILE_NAME "${CMAKE_PROJECT_NAME}-${VERSION}-${DEB_ARCHITECTURE}")
         endif()
         
-        include(CPack)
-
     endif()
+
+    include(CPack)
 
 endif()
 
