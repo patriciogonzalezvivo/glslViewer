@@ -156,6 +156,8 @@ else()
             set(DEBSRC_BUILD_DEPENDS debhelper git cmake xorg-dev libgbm-dev libglu1-mesa-dev libavcodec-dev libavfilter-dev  libavdevice-dev libavformat-dev libavutil-dev libswscale-dev libv4l-dev libjpeg-dev libpng-dev libtiff-dev)
             set(DEBSRC_PACKAGE_DEPENDS git cmake ffmpeg libavcodec-extra libavfilter-extra)
 
+            set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
+
             set(CPACK_DEBIAN_PACKAGE_DEPENDS)
             foreach(DEP ${DEBSRC_PACKAGE_DEPENDS})
             set(CPACK_DEBIAN_PACKAGE_DEPEND "${CPACK_DEBIAN_PACKAGE_DEPENDS}, ${DEP}")
