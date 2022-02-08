@@ -1,4 +1,4 @@
-name: Build
+name: Build and Release
 on:
   pull_request:
   push:
@@ -75,3 +75,25 @@ jobs:
           name: glslViewer-${{ matrix.os }}-build
           path: build/${{ matrix.build_artifact }}
           retention-days: 7
+
+  release:
+    if: github.event_name == 'push' && github.ref_type == 'tag'
+    needs: build
+    name: Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v2
+
+      - name: Create release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: GlslViewer ${{ github.ref_name }}
+          files: |
+            glslViewer-ubuntu-latest-build/*
+            glslViewer-windows-latest-build/*
+          generate_release_notes: true
+          body: |
+            To use the Windows build, please download [FFmpeg 4.4][ffmpeg] and copy `bin\*.dll` alongside `glslViewer.exe`.
+
+            [ffmpeg]: https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-n4.4-latest-win64-gpl-shared-4.4.zip
