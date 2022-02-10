@@ -1,0 +1,99 @@
+name: Build and Release
+on:
+  pull_request:
+  push:
+env:
+  CMAKE_BUILD_TYPE: Release
+jobs:
+  build:
+    name: Build
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            build_command: |
+              mkdir build
+              cd build
+              cmake -DCPACK_GENERATOR=DEB ..
+              cmake --build .
+              cpack -C CPackConfig.cmake -V
+              ls -l
+            build_artifact: glslViewer-*-amd64.deb
+          - os: windows-latest
+            build_command: |
+              mkdir build
+              cd build
+              cmake -DCPACK_GENERATOR=ZIP -G "NMake Makefiles" ..
+              cmake --build .
+              cpack -C CPackConfig.cmake -V
+              dir
+            build_artifact: glslViewer-*-win64-AMD64.zip
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+
+      - name: Install dependencies (Ubuntu)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            cmake xorg-dev libglu1-mesa-dev libavcodec-dev libavfilter-dev \
+            libavdevice-dev libavformat-dev libavutil-dev libswscale-dev \
+            libv4l-dev libjpeg-dev libpng-dev libtiff-dev
+
+      - name: Set up MSVC environment (Windows)
+        if: matrix.os == 'windows-latest'
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Install dependencies (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          $FfmpegUri = 'https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-n4.4-latest-win64-lgpl-shared-4.4.zip'
+          $FfmpegZipPath = "$Env:GITHUB_WORKSPACE\ffmpeg.zip"
+          $ZlibUri = 'https://sourceforge.net/projects/gnuwin32/files/zlib/1.2.3/zlib-1.2.3-lib.zip/download'
+          $ZlibZipPath = "$Env:GITHUB_WORKSPACE\zlib.zip"
+
+          $FfmpegPath = "$Env:GITHUB_WORKSPACE\ffmpeg"
+
+          Start-BitsTransfer -Source "$FfmpegUri","$ZlibUri" -Destination "$FfmpegZipPath","$ZlibZipPath"
+
+          Expand-Archive -Path "$FfmpegZipPath" -DestinationPath "$FfmpegPath"
+          Move-Item -Path "$FfmpegPath\ffmpeg-*\*" -Destination "$FfmpegPath"
+
+          Expand-Archive -Path "$ZlibZipPath" -DestinationPath "$FfmpegPath"
+
+          echo "CMAKE_PREFIX_PATH=$FfmpegPath" >>$Env:GITHUB_ENV
+
+      - name: Build
+        run: ${{ matrix.build_command }}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: glslViewer-${{ matrix.os }}-build
+          path: build/${{ matrix.build_artifact }}
+          retention-days: 7
+
+  release:
+    if: github.event_name == 'push' && github.ref_type == 'tag'
+    needs: build
+    name: Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v2
+
+      - name: Create release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: GlslViewer ${{ github.ref_name }}
+          files: |
+            glslViewer-ubuntu-latest-build/*
+            glslViewer-windows-latest-build/*
+          generate_release_notes: true
+          body: |
+            To use the Windows build, please download [FFmpeg 4.4][ffmpeg] and copy `bin\*.dll` alongside `glslViewer.exe`.
+
+            [ffmpeg]: https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-n4.4-latest-win64-gpl-shared-4.4.zip

@@ -138,7 +138,11 @@ else()
             Ws2_32.lib 
             Iphlpapi.lib
         )
-        
+
+        install(TARGETS glslViewer)
+
+        set(CPACK_GENERATOR "ZIP")
+
     else()
         target_link_libraries(glslViewer PRIVATE pthread dl lo_static)
         install(TARGETS glslViewer DESTINATION bin)
@@ -151,6 +155,8 @@ else()
             # set(CPACK_GENERATOR "DEB")
             set(DEBSRC_BUILD_DEPENDS debhelper git cmake xorg-dev libgbm-dev libglu1-mesa-dev libavcodec-dev libavfilter-dev  libavdevice-dev libavformat-dev libavutil-dev libswscale-dev libv4l-dev libjpeg-dev libpng-dev libtiff-dev)
             set(DEBSRC_PACKAGE_DEPENDS git cmake ffmpeg libavcodec-extra libavfilter-extra)
+
+            set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
 
             set(CPACK_DEBIAN_PACKAGE_DEPENDS)
             foreach(DEP ${DEBSRC_PACKAGE_DEPENDS})
@@ -182,9 +188,9 @@ else()
             set(CPACK_PACKAGE_FILE_NAME "${CMAKE_PROJECT_NAME}-${VERSION}-${DEB_ARCHITECTURE}")
         endif()
         
-        include(CPack)
-
     endif()
+
+    include(CPack)
 
 endif()
 
