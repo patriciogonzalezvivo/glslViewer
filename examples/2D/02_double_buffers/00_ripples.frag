@@ -20,6 +20,7 @@ uniform sampler2D   u_doubleBuffer0;
 uniform vec2        u_resolution;
 uniform vec2        u_mouse;
 uniform float       u_time;
+uniform int         u_frame;
 
 float random (in float x) {
     return fract(sin(x)*43758.5453123);
@@ -60,7 +61,7 @@ void main() {
     d += -(s0 - .5) * 2. + (s1 + s2 + s3 + s4 - 2.);
 
     d *= 0.99;
-    d *= smoothstep(0.0, 1.0, step(0.5, u_time)); // Clean buffer at startup
+    d *= (u_frame <= 1)? 0.0 : 1.0; // Clean buffer at startup
     d = clamp(d * 0.5 + 0.5, 0.0, 1.0);
 
     color = vec3(d, color.x, 0.0);

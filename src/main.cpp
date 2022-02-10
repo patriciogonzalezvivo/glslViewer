@@ -469,6 +469,9 @@ int main(int argc, char **argv) {
             if ( sandbox.uniforms.addStreamingTexture("u_tex" + ada::toString(textureCounter), argument, vFlip, false) )
                 textureCounter++;
         }
+        else if ( ada::haveExt(argument,"csv") || ada::haveExt(argument,"CSV") ) {
+            sandbox.uniforms.addCameraTrack(argument);
+        }
         else if ( argument == "--audio" || argument == "-a" ) {
             std::string device_id = "-1"; //default device id
             // device_id is optional argument, not iterate yet

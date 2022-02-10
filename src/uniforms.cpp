@@ -1,8 +1,12 @@
 #include "uniforms.h"
 
 #include <regex>
+#include <fstream>
 #include <sstream>
 #include <sys/stat.h>
+
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 #include "phonedepth/extract_depthmap.h"
 
@@ -443,10 +447,76 @@ bool Uniforms::addAudioTexture(const std::string& _name, const std::string& devi
         return false;
 }
 
-void Uniforms::updateStreammingTextures() {
+bool Uniforms::addCameraTrack( const std::string& _name ) {
+    std::fstream is( _name.c_str(), std::ios::in);
+    if (is.is_open()) {
+
+        glm::vec3 position;
+        cameraTrack.clear();
+
+        std::string line;
+        glm::mat4 rot = glm::mat4(
+                1.0f,   0.0f,   0.0f,   0.0f,
+                0.0f,  1.0f,    0.0f,   0.0f,
+                0.0f,   0.0f,   -1.0f,   0.0f,
+                0.0f,   0.0f,   0.0f,   1.0f
+            );
+        while (std::getline(is,line)) {
+            // If line not commented 
+            if (line[0] == '#')
+                continue;
+            // parse through row spliting into commas
+            std::vector<std::string> data = ada::split(line, ',', true);
+
+            CameraData frame;
+            float fL = ada::toFloat(data[0]);
+            float cx = ada::toFloat(data[1]);
+            float cy = ada::toFloat(data[2]);
+
+            float near = cameras[0].getNearClip();
+            float far = cameras[0].getFarClip();
+            float delta = far-near;
+
+            frame.intrinsics = glm::mat4(
+                fL/cx,      0.0f,   0.0f,                   0.0f,
+                0.0f,       fL/cy,  0.0f,                   0.0f,
+                0.0f,       0.0f,   -(far+near)/delta,      -1.0,
+                0.0f,       0.0f,   -2.0*far*near/delta,    0.0f
+            ) * rot;
+
+            frame.rotation[0] = glm::vec3( ada::toFloat(data[3]),  ada::toFloat(data[ 4]), ada::toFloat(data[ 5]) );
+            frame.rotation[1] = glm::vec3( ada::toFloat(data[6]),  ada::toFloat(data[ 7]), ada::toFloat(data[ 8]) );
+            frame.rotation[2] = glm::vec3( ada::toFloat(data[9]),  ada::toFloat(data[10]), ada::toFloat(data[11]) );
+
+            frame.translation = glm::vec3(ada::toFloat(data[12]), ada::toFloat(data[13]), ada::toFloat(data[14]));
+
+            position += frame.translation;
+            cameraTrack.push_back(frame);
+        }
+
+        std::cout << "// Added " << cameraTrack.size() << " camera frames" << std::endl;
+
+
+        position = position / float(cameraTrack.size());
+        return true;
+    }
+
+    return false;
+}
+
+void Uniforms::updateStreams(size_t _frame) {
     for (StreamsList::iterator i = streams.begin(); i != streams.end(); ++i)
         if (i->second->update())
             m_change = true;
+
+    if (cameraTrack.size() != 0) {
+        size_t index = _frame % cameraTrack.size();
+
+
+        cameras[0].setIntrinsics(cameraTrack[index].intrinsics ); 
+        cameras[0].setPosition( cameraTrack[index].translation );
+        cameras[0].setOrientation( cameraTrack[index].rotation );
+    } 
 }
 
 void Uniforms::set( const std::string& _name, float _value) {

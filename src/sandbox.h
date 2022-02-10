@@ -152,7 +152,7 @@ private:
     float               m_time_offset;
     float               m_lat;
     float               m_lon;
-    unsigned int        m_frame;
+    size_t              m_frame;
     bool                m_change;
     bool                m_initialized;
     bool                m_error_screen;

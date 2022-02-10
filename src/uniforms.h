@@ -48,6 +48,12 @@ typedef std::map<std::string, UniformFunction>      UniformFunctionsList;
 typedef std::map<std::string, ada::Texture*>        TextureList;
 typedef std::map<std::string, ada::TextureStream*>  StreamsList;
 
+struct CameraData {
+    glm::mat4   intrinsics;
+    glm::mat3   rotation;
+    glm::vec3   translation;
+};
+
 class Uniforms {
 public:
     Uniforms();
@@ -61,7 +67,9 @@ public:
     bool                    addBumpTexture( const std::string& _name, const std::string& _path, WatchFileList& _files, bool _flip = true, bool _verbose = true );
     bool                    addStreamingTexture( const std::string& _name, const std::string& _url, bool _flip = true, bool _device = false, bool _verbose = true );
     bool                    addAudioTexture( const std::string& _name, const std::string& device_id, bool _flip = false, bool _verbose = true );
-    void                    updateStreammingTextures();
+    bool                    addCameraTrack( const std::string& _name );
+
+    void                    updateStreams(size_t _frame);
 
     void                    set( const std::string& _name, float _value);
     void                    set( const std::string& _name, float _x, float _y);
@@ -109,12 +117,14 @@ public:
     std::vector<ada::PingPong>              doubleBuffers;
     std::vector<ada::ConvolutionPyramid>    convolution_pyramids;
 
-    // 3d Scene Uniforms 
+    // 3D Scene Uniforms 
     std::vector<ada::Camera>    cameras;
+    std::vector<CameraData>     cameraTrack;
+
     std::vector<ada::Light>     lights;
 
     // Tracker
-    Tracker                 tracker;
+    Tracker                     tracker;
 
 protected:
     bool                    m_change;
