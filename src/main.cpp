@@ -92,7 +92,6 @@ char* getVert() {
 
 }
 
-
 #endif
 
 // Open Sound Control
