@@ -500,14 +500,14 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         std::vector<std::string> values = ada::split(_line,',');
         if (values.size() == 2) {
             if (values[1] == "ortho")
-                uniforms.getCamera().setType(ada::CameraType::ORTHO);
+                uniforms.getCamera().setProjection(ada::Projection::ORTHO);
             else if (values[1] == "perspective")
-                uniforms.getCamera().setType(ada::CameraType::PERSPECTIVE);
+                uniforms.getCamera().setProjection(ada::Projection::PERSPECTIVE);
             return true;
         }
         else {
-            ada::CameraType type = uniforms.getCamera().getType();
-            if (type == ada::CameraType::ORTHO)
+            ada::Projection type = uniforms.getCamera().getType();
+            if (type == ada::Projection::ORTHO)
                 std::cout << "ortho" << std::endl;
             else
                 std::cout << "perspective" << std::endl;
@@ -635,7 +635,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         ada::setHoloplayResolution(holoplay);
         addDefine("HOLOPLAY", ada::toString(holoplay));
         uniforms.getCamera().setFOV(glm::radians(14.0f));
-        uniforms.getCamera().setType(ada::CameraType::PERSPECTIVE_VIRTUAL_OFFSET);
+        uniforms.getCamera().setProjection(ada::Projection::PERSPECTIVE_VIRTUAL_OFFSET);
         // uniforms.getCamera().setClipping(0.01, 100.0);
 
         if (geom_index != -1)

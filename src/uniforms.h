@@ -49,9 +49,10 @@ typedef std::map<std::string, ada::Texture*>        TextureList;
 typedef std::map<std::string, ada::TextureStream*>  StreamsList;
 
 struct CameraData {
-    glm::mat4   intrinsics;
-    glm::mat3   rotation;
-    glm::vec3   translation;
+    glm::mat4   projection;
+    glm::mat4   transform;
+    // glm::mat3   rotation;
+    // glm::vec3   translation;
 };
 
 class Uniforms {

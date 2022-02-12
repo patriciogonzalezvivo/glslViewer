@@ -156,7 +156,6 @@ Uniforms::Uniforms(): cubemap(nullptr), m_change(false), m_is_audio_init(false) 
 }
 
 Uniforms::~Uniforms(){
-
 }
 
 bool parseUniformData(const std::string &_line, UniformDataList *_uniforms) {
@@ -455,12 +454,14 @@ bool Uniforms::addCameraTrack( const std::string& _name ) {
         cameraTrack.clear();
 
         std::string line;
-        glm::mat4 rot = glm::mat4(
-                1.0f,   0.0f,   0.0f,   0.0f,
-                0.0f,  1.0f,    0.0f,   0.0f,
-                0.0f,   0.0f,   -1.0f,   0.0f,
-                0.0f,   0.0f,   0.0f,   1.0f
-            );
+        // glm::mat4 rot = glm::mat4(
+        //         1.0f,   0.0f,   0.0f,   0.0f,
+        //         0.0f,  1.0f,    0.0f,   0.0f,
+        //         0.0f,   0.0f,   -1.0f,   0.0f,
+        //         0.0f,   0.0f,   0.0f,   1.0f
+        //     );
+
+
         while (std::getline(is,line)) {
             // If line not commented 
             if (line[0] == '#')
@@ -477,20 +478,41 @@ bool Uniforms::addCameraTrack( const std::string& _name ) {
             float far = cameras[0].getFarClip();
             float delta = far-near;
 
-            frame.intrinsics = glm::mat4(
-                fL/cx,      0.0f,   0.0f,                   0.0f,
-                0.0f,       fL/cy,  0.0f,                   0.0f,
-                0.0f,       0.0f,   -(far+near)/delta,      -1.0,
-                0.0f,       0.0f,   -2.0*far*near/delta,    0.0f
-            ) * rot;
+            float w = cx*2.0;
+            float h = cy*2.0;
 
-            frame.rotation[0] = glm::vec3( ada::toFloat(data[3]),  ada::toFloat(data[ 4]), ada::toFloat(data[ 5]) );
-            frame.rotation[1] = glm::vec3( ada::toFloat(data[6]),  ada::toFloat(data[ 7]), ada::toFloat(data[ 8]) );
-            frame.rotation[2] = glm::vec3( ada::toFloat(data[9]),  ada::toFloat(data[10]), ada::toFloat(data[11]) );
+            // glm::mat4 projection = glm::ortho(0.0f, w, h, 0.0f, near, far);
+            // glm::mat4 ndc = glm::mat4(
+            //     fL,     0.0f,   0.0f,   0.0f,
+            //     0.0f,   fL,     0.0f,   0.0f, 
+            //     cx,     cy,     1.0f,   0.0f,
+            //     0.0f,   0.0f,   0.0f,   1.0f  
+            // );
+            // frame.projection = projection * ndc;
 
-            frame.translation = glm::vec3(ada::toFloat(data[12]), ada::toFloat(data[13]), ada::toFloat(data[14]));
+            frame.projection = glm::mat4(
+                2.0f*fL/w,          0.0f,               0.0f,                       0.0f,
+                0.0f,               -2.0f*fL/h,         0.0f,                       0.0f,
+                (w - 2.0f*cx)/w,    (h-2.0f*cy)/h,      (-far-near)/delta,         -1.0f,
+                0.0f,               0.0f,               -2.0f*far*near/delta,       0.0f
+            );
+            
 
-            position += frame.translation;
+            // frame.projection = glm::mat4(
+            //     fL/cx,      0.0f,   0.0f,                   0.0f,
+            //     0.0f,       fL/cy,  0.0f,                   0.0f,
+            //     0.0f,       0.0f,   -(far+near)/delta,      -1.0,
+            //     0.0f,       0.0f,   -2.0*far*near/delta,    0.0f
+            // );
+
+            frame.transform = glm::mat4(
+                glm::vec4( ada::toFloat(data[3]), ada::toFloat(data[ 4]), ada::toFloat(data[ 5]), 0.0),
+                glm::vec4( ada::toFloat(data[6]), -ada::toFloat(data[ 7]), ada::toFloat(data[ 8]), 0.0),
+                glm::vec4( ada::toFloat(data[9]), ada::toFloat(data[10]), ada::toFloat(data[11]), 0.0),
+                glm::vec4( ada::toFloat(data[12]), ada::toFloat(data[13]), -ada::toFloat(data[14]), 1.0)
+            );
+
+            // position += frame.translation;
             cameraTrack.push_back(frame);
         }
 
@@ -511,11 +533,8 @@ void Uniforms::updateStreams(size_t _frame) {
 
     if (cameraTrack.size() != 0) {
         size_t index = _frame % cameraTrack.size();
-
-
-        cameras[0].setIntrinsics(cameraTrack[index].intrinsics ); 
-        cameras[0].setPosition( cameraTrack[index].translation );
-        cameras[0].setOrientation( cameraTrack[index].rotation );
+        cameras[0].setProjection( cameraTrack[index].projection ); 
+        cameras[0].setTransformMatrix( cameraTrack[index].transform );
     } 
 }
 
@@ -664,8 +683,6 @@ bool Uniforms::feedTo(ada::Shader *_shader, bool _lights, bool _buffers ) {
         for (size_t i = 0; i < doubleBuffers.size(); i++)
             _shader->setUniformTexture("u_doubleBuffer" + ada::toString(i), doubleBuffers[i].src, _shader->textureIndex++ );
     }
-
-    
     
     if (_lights) {
         // Pass Light Uniforms
