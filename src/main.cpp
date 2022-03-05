@@ -22,6 +22,7 @@
 #include "ada/tools/fs.h"
 #include "ada/tools/time.h"
 #include "ada/tools/text.h"
+#include "ada/tools/holoplay.h"
 #include "ada/shaders/defaultShaders.h"
 
 #include "sandbox.h"
@@ -238,8 +239,8 @@ int main(int argc, char **argv) {
                     std::string(argv[i]) == "--fullscreen" ) {
             window_properties.style = ada::FULLSCREEN;
         }
-        else if (   std::string(argv[i]) == "--holoplay") {
-            window_properties.style = ada::HOLOPLAY;
+        else if (   std::string(argv[i]) == "--lenticular") {
+            window_properties.style = ada::LENTICULAR;
         }
         else if (   std::string(argv[i]) == "-l" ||
                     std::string(argv[i]) == "--life-coding" ){
@@ -484,10 +485,18 @@ int main(int argc, char **argv) {
             if ( sandbox.uniforms.addAudioTexture("u_tex" + ada::toString(textureCounter), device_id, vFlip, true) )
                 textureCounter++;
         }
-        else if ( argument == "--holoplay" ) {
-            if (++i < argc) {
-                sandbox.holoplay = ada::toInt(argv[i]);
-            }
+        else if ( argument == "--quilt" ) {
+            if (++i < argc)
+                sandbox.quilt = ada::toInt(argv[i]);
+        }
+        else if ( argument == "--lenticular" ) {
+            if (++i < argc)
+                sandbox.lenticular = std::string( argv[i] );
+            else 
+                sandbox.lenticular = "default";
+
+            if (sandbox.quilt == -1) 
+                sandbox.quilt = 0;
         }
         else if ( argument == "-c" || argument == "-sh" ) {
             if(++i < argc) {
@@ -1336,7 +1345,8 @@ void printUsage(char * executableName) {
     std::cerr << "// [--headless] - headless rendering. Very useful for making images or benchmarking." << std::endl;
     std::cerr << "// [--nocursor] - hide cursor" << std::endl;
     std::cerr << "// [--fxaa] - set FXAA as postprocess filter" << std::endl;
-    std::cerr << "// [--holoplay <[0..7]>] - HoloPlay volumetric postprocess (Looking Glass Model)" << std::endl;
+    std::cerr << "// [--quilt <0-7>] - quilt render (HoloPlay)" << std::endl;
+    std::cerr << "// [--lenticular [visual.json]] - lenticular calubration file, Looking Glass Model (HoloPlay)" << std::endl;
     std::cerr << "// [-I<include_folder>] - add an include folder to default for #include files" << std::endl;
     std::cerr << "// [-D<define>] - add system #defines directly from the console argument" << std::endl;
     std::cerr << "// [-p <osc_port>] - open OSC listening port" << std::endl;

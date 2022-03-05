@@ -23,7 +23,8 @@
 
 // ------------------------------------------------------------------------- CONTRUCTOR
 Sandbox::Sandbox(): 
-    frag_index(-1), vert_index(-1), geom_index(-1), holoplay(-1),
+    frag_index(-1), vert_index(-1), geom_index(-1), 
+    lenticular(""), quilt(-1), 
     verbose(false), cursor(true), fxaa(false),
     // Main Vert/Frag/Geom
     m_frag_source(""), m_vert_source(""),
@@ -325,8 +326,8 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         if (_line == "buffers") {
             uniforms.printBuffers();
             if (m_postprocessing) {
-                if (holoplay >= 0)
-                    std::cout << "HOLO";
+                if (lenticular.size() > 0)
+                    std::cout << "LENTICULAR";
                 else if (fxaa)
                     std::cout << "FXAA";
                 else
@@ -631,16 +632,28 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     // -------------------------------------------------
     uniforms.getCamera().setViewport(ada::getWindowWidth(), ada::getWindowHeight());
 
-    if (holoplay >= 0) {
-        ada::setHoloplayResolution(holoplay);
-        addDefine("HOLOPLAY", ada::toString(holoplay));
+    if (lenticular.size() > 0)
+        ada::setLenticularProperties(lenticular);
+
+    if (quilt >= 0) {
+        ada::setQuiltProperties(quilt);
+        addDefine("QUILT", ada::toString(quilt));
+        addDefine("QUILT_WIDTH", ada::toString( ada::getQuiltWidth() ));
+        addDefine("QUILT_HEIGHT", ada::toString( ada::getQuiltHeight() ));
+        addDefine("QUILT_COLUMNS", ada::toString( ada::getQuiltColumns() ));
+        addDefine("QUILT_ROWS", ada::toString( ada::getQuiltRows() ));
+        addDefine("QUILT_TOTALVIEWS", ada::toString( ada::getQuiltTotalViews() ));
+
         uniforms.getCamera().setFOV(glm::radians(14.0f));
         uniforms.getCamera().setProjection(ada::Projection::PERSPECTIVE_VIRTUAL_OFFSET);
         // uniforms.getCamera().setClipping(0.01, 100.0);
 
         if (geom_index != -1)
             uniforms.getCamera().orbit(m_lat, m_lon, m_scene.getArea() * 8.5);
-    } 
+
+        if (lenticular.size() == 0)
+            ada::setWindowSize(ada::getQuiltWidth(), ada::getQuiltHeight());
+    }
 
     // Prepare viewport
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
@@ -743,9 +756,9 @@ int Sandbox::getRecordedPercentage() {
 void Sandbox::_updateSceneBuffer(int _width, int _height) {
     ada::FboType type = uniforms.functions["u_sceneDepth"].present ? ada::COLOR_DEPTH_TEXTURES : ada::COLOR_TEXTURE_DEPTH_BUFFER;
 
-    if (holoplay >= 0) {
-        _width = ada::getHoloplayWidth();
-        _height= ada::getHoloplayHeight();
+    if (quilt >= 0) {
+        _width = ada::getQuiltWidth();
+        _height= ada::getQuiltHeight();
     }
 
     if (!m_scene_fbo.isAllocated() ||
@@ -832,8 +845,8 @@ bool Sandbox::reloadShaders( WatchFileList &_files ) {
         m_postprocessing_shader.load(m_frag_source, ada::getDefaultSrc(ada::VERT_BILLBOARD), false);
         m_postprocessing = havePostprocessing;
     }
-    else if (holoplay >= 0) {
-        m_postprocessing_shader.load(ada::getHoloplayFragShader(ada::getVersion()), ada::getDefaultSrc(ada::VERT_BILLBOARD), false);
+    else if (lenticular.size() > 0) {
+        m_postprocessing_shader.load(ada::getLenticularFragShader(ada::getVersion()), ada::getDefaultSrc(ada::VERT_BILLBOARD), false);
         uniforms.functions["u_scene"].present = true;
         m_postprocessing = true;
     }
@@ -1121,13 +1134,13 @@ void Sandbox::render() {
         // Load main shader
         m_canvas_shader.use();
 
-        if (holoplay >= 0) {
-            ada::holoplayQuilt([&](const ada::HoloplayProperties& holoplay, glm::vec4& viewport, int &viewIndex){
+        if (quilt >= 0) {
+            ada::renderQuilt([&](const ada::QuiltProperties& quilt, glm::vec4& viewport, int &viewIndex) {
 
                 // set up the camera rotation and position for current view
-                uniforms.getCamera().setVirtualOffset(5.0, viewIndex, holoplay.totalViews);
-                uniforms.set("u_holoPlayTile", float(holoplay.columns), float(holoplay.rows), float(holoplay.totalViews));
-                uniforms.set("u_holoPlayViewport", float(viewport.x), float(viewport.y), float(viewport.z), float(viewport.w));
+                uniforms.getCamera().setVirtualOffset(5.0, viewIndex, quilt.totalViews);
+                uniforms.set("u_tile", float(quilt.columns), float(quilt.rows), float(quilt.totalViews));
+                uniforms.set("u_viewport", float(viewport.x), float(viewport.y), float(viewport.z), float(viewport.w));
 
                 // Update Uniforms and textures variables
                 uniforms.feedTo( m_canvas_shader );
@@ -1152,13 +1165,13 @@ void Sandbox::render() {
 
     else {
         TRACK_BEGIN("render:scene")
-        if (holoplay >= 0) {
-            ada::holoplayQuilt([&](const ada::HoloplayProperties& holoplay, glm::vec4& viewport, int &viewIndex){
+        if (quilt >= 0) {
+            ada::renderQuilt([&](const ada::QuiltProperties& quilt, glm::vec4& viewport, int &viewIndex){
 
                 // set up the camera rotation and position for current view
-                uniforms.getCamera().setVirtualOffset(m_scene.getArea(), viewIndex, holoplay.totalViews);
-                uniforms.set("u_holoPlayTile", float(holoplay.columns), float(holoplay.rows), float(holoplay.totalViews));
-                uniforms.set("u_holoPlayViewport", float(viewport.x), float(viewport.y), float(viewport.z), float(viewport.w));
+                uniforms.getCamera().setVirtualOffset(m_scene.getArea(), viewIndex, quilt.totalViews);
+                uniforms.set("u_tile", float(quilt.columns), float(quilt.rows), float(quilt.totalViews));
+                uniforms.set("u_viewport", float(viewport.x), float(viewport.y), float(viewport.z), float(viewport.w));
 
                 m_scene.render(uniforms);
 
@@ -1191,8 +1204,8 @@ void Sandbox::render() {
         // Update uniforms and textures
         uniforms.feedTo( m_postprocessing_shader );
 
-        if (holoplay >= 0)
-            holoplayFeedUniforms(m_postprocessing_shader);
+        if (lenticular.size() > 0)
+            feedLenticularUniforms(m_postprocessing_shader);
 
         // // Pass textures of buffers
         // for (size_t i = 0; i < uniforms.buffers.size(); i++)
@@ -1607,7 +1620,7 @@ void Sandbox::onScroll(float _yoffset) {
 
 void Sandbox::onMouseDrag(float _x, float _y, int _button) {
 
-    if (holoplay < 0) {
+    if (quilt < 0) {
         // If it's not playing on the HOLOPLAY
         // produce continue draging like blender
         //

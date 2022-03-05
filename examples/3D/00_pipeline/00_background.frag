@@ -18,8 +18,8 @@ uniform vec3    u_light;
 uniform vec2    u_resolution;
 
 #ifdef HOLOPLAY
-uniform vec4    u_holoPlayViewport;
-#define RESOLUTION u_holoPlayViewport.zw
+uniform vec4    u_viewport;
+#define RESOLUTION u_viewport.zw
 #else
 #define RESOLUTION u_resolution
 #endif

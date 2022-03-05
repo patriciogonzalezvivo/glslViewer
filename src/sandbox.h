@@ -73,7 +73,8 @@ public:
     int                 vert_index;
     int                 geom_index;
 
-    int                 holoplay;
+    std::string         lenticular;
+    int                 quilt;
     
     bool                verbose;
     bool                cursor;
