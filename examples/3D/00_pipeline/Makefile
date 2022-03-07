@@ -1,7 +1,10 @@
 00_background:
 	glslViewer 00_background.frag head.ply -l
 
-00_background_holoplay:
+00_background_quilt:
+	glslViewer 00_background.frag head.ply --quilt 0
+
+00_background_lenticular:
 	glslViewer 00_background.frag head.ply --lenticular
 	
 01_postprocessing:
