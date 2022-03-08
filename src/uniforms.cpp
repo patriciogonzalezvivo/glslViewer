@@ -330,6 +330,7 @@ bool Uniforms::addStreamingTexture( const std::string& _name, const std::string&
                 if (_verbose) {
                     std::cout << "// " << _url << " sequence loaded as streaming texture: " << std::endl;
                     std::cout << "//    uniform sampler2D   " << _name  << ";"<< std::endl;
+                    std::cout << "//    uniform sampler2D   " << _name  << "Prev;"<< std::endl;
                     std::cout << "//    uniform vec2        " << _name  << "Resolution;"<< std::endl;
                     std::cout << "//    uniform float       " << _name  << "Time;" << std::endl;
                     std::cout << "//    uniform float       " << _name  << "Duration;" << std::endl;
@@ -675,6 +676,7 @@ bool Uniforms::feedTo(ada::Shader *_shader, bool _lights, bool _buffers ) {
     }
 
     for (StreamsList::iterator it = streams.begin(); it != streams.end(); ++it) {
+        _shader->setUniformTexture(it->first+"Prev", it->second->getPrevTextureId(), _shader->textureIndex++ );
         _shader->setUniform(it->first+"CurrentFrame", float(it->second->getCurrentFrame()));
         _shader->setUniform(it->first+"TotalFrames", float(it->second->getTotalFrames()));
         _shader->setUniform(it->first+"Time", float(it->second->getTime()));
@@ -859,6 +861,7 @@ void Uniforms::printTextures(){
     }
 
     for (StreamsList::iterator it = streams.begin(); it != streams.end(); ++it) {
+        std::cout << "sampler2D," << it->first << "Prev," << it->second->getFilePath() << std::endl;
         std::cout << "float," << it->first+"CurrentFrame," << ada::toString(it->second->getCurrentFrame(), 1) << std::endl;
         std::cout << "float," << it->first+"TotalFrames," << ada::toString(it->second->getTotalFrames(), 1) << std::endl;
         std::cout << "float," << it->first+"Time," << ada::toString(it->second->getTime(), 1) << std::endl;
