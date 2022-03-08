@@ -333,8 +333,8 @@ bool Uniforms::addStreamingTexture( const std::string& _name, const std::string&
                     std::cout << "//    uniform vec2        " << _name  << "Resolution;"<< std::endl;
                     std::cout << "//    uniform float       " << _name  << "CurrentSecond;" << std::endl;
                     std::cout << "//    uniform float       " << _name  << "TotalSeconds;" << std::endl;
-                    std::cout << "//    uniform int         " << _name  << "CurrentFrame;"<< std::endl;
-                    std::cout << "//    uniform int         " << _name  << "TotalFrames;"<< std::endl;
+                    std::cout << "//    uniform float       " << _name  << "CurrentFrame;"<< std::endl;
+                    std::cout << "//    uniform float       " << _name  << "TotalFrames;"<< std::endl;
                 }
 
                 return true;
@@ -406,8 +406,8 @@ bool Uniforms::addStreamingTexture( const std::string& _name, const std::string&
                 if (!_device) {
                     std::cout << "//    uniform float       " << _name  << "CurrentSecond;" << std::endl;
                     std::cout << "//    uniform float       " << _name  << "TotalSeconds;" << std::endl;
-                    std::cout << "//    uniform int         " << _name  << "CurrentFrame;" << std::endl;
-                    std::cout << "//    uniform int         " << _name  << "TotalFrames;" << std::endl;
+                    std::cout << "//    uniform float       " << _name  << "CurrentFrame;" << std::endl;
+                    std::cout << "//    uniform float       " << _name  << "TotalFrames;" << std::endl;
                 }
             }
 
@@ -675,8 +675,8 @@ bool Uniforms::feedTo(ada::Shader *_shader, bool _lights, bool _buffers ) {
     }
 
     for (StreamsList::iterator it = streams.begin(); it != streams.end(); ++it) {
-        _shader->setUniform(it->first+"CurrentFrame", it->second->getCurrentFrame());
-        _shader->setUniform(it->first+"TotalFrames", it->second->getTotalFrames());
+        _shader->setUniform(it->first+"CurrentFrame", float(it->second->getCurrentFrame()));
+        _shader->setUniform(it->first+"TotalFrames", float(it->second->getTotalFrames()));
         _shader->setUniform(it->first+"CurrentSecond", float(it->second->getCurrentSecond()));
         _shader->setUniform(it->first+"TotalSeconds", float(it->second->getTotalSeconds()));
     }
@@ -859,8 +859,8 @@ void Uniforms::printTextures(){
     }
 
     for (StreamsList::iterator it = streams.begin(); it != streams.end(); ++it) {
-        std::cout << "int," << it->first+"CurrentFrame," << ada::toString(it->second->getCurrentFrame()) << std::endl;
-        std::cout << "int," << it->first+"TotalFrames," << ada::toString(it->second->getTotalFrames()) << std::endl;
+        std::cout << "float," << it->first+"CurrentFrame," << ada::toString(it->second->getCurrentFrame(), 1) << std::endl;
+        std::cout << "float," << it->first+"TotalFrames," << ada::toString(it->second->getTotalFrames(), 1) << std::endl;
         std::cout << "float," << it->first+"CurrentSecond," << ada::toString(it->second->getCurrentSecond(), 1) << std::endl;
         std::cout << "float," << it->first+"TotalSeconds," << ada::toString(it->second->getTotalSeconds(), 1) << std::endl;
     }
