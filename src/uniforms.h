@@ -70,8 +70,6 @@ public:
     bool                    addAudioTexture( const std::string& _name, const std::string& device_id, bool _flip = false, bool _verbose = true );
     bool                    addCameraTrack( const std::string& _name );
 
-    void                    updateStreams(size_t _frame);
-
     void                    set( const std::string& _name, float _value);
     void                    set( const std::string& _name, float _x, float _y);
     void                    set( const std::string& _name, float _x, float _y, float _z);
@@ -79,6 +77,10 @@ public:
     
     void                    setCubeMap( ada::TextureCube* _cubemap );
     void                    setCubeMap( const std::string& _filename, WatchFileList& _files, bool _verbose = true);
+
+    void                    setStreamsSpeed( float _speed );
+
+    void                    updateStreams(size_t _frame);
 
     // Check presence of uniforms on shaders
     void                    checkPresenceIn( const std::string &_vert_src, const std::string &_frag_src );

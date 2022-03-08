@@ -562,6 +562,18 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     },
     "camera_exposure[,<aper.>,<shutter>,<sensit.>]  get or set the camera exposure values."));
 
+    _commands.push_back(Command("streams", [&](const std::string& _line){ 
+        std::vector<std::string> values = ada::split(_line,',');
+
+        if (values.size() > 2 && values[1] == "speed") {
+            uniforms.setStreamsSpeed( ada::toFloat(values[2]) );
+            return true;
+        }
+
+        return false;
+    },
+    "streams[,speed,<value>]  get or set streams properties."));
+
     #ifdef SUPPORT_MULTITHREAD_RECORDING 
     _commands.push_back(Command("max_mem_in_queue", [&](const std::string & line) {
         std::vector<std::string> values = ada::split(line,',');
