@@ -1683,6 +1683,13 @@ void Sandbox::onViewportResize(int _newWidth, int _newHeight) {
         if (!uniforms.buffers[i].fixed)
             uniforms.buffers[i].allocate(_newWidth, _newHeight, ada::COLOR_TEXTURE);
 
+    for (size_t i = 0; i < uniforms.doubleBuffers.size(); i++) {
+        if (!uniforms.doubleBuffers[i][0].fixed)
+            uniforms.doubleBuffers[i][0].allocate(_newWidth, _newHeight, ada::COLOR_TEXTURE);
+        if (!uniforms.doubleBuffers[i][1].fixed)
+            uniforms.doubleBuffers[i][1].allocate(_newWidth, _newHeight, ada::COLOR_TEXTURE);
+    }
+
     if (m_convolution_pyramid_fbos.size() > 0) {
         for (size_t i = 0; i < uniforms.convolution_pyramids.size(); i++) {
             m_convolution_pyramid_fbos[i].allocate(_newWidth, _newHeight, ada::COLOR_TEXTURE);

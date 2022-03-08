@@ -331,8 +331,8 @@ bool Uniforms::addStreamingTexture( const std::string& _name, const std::string&
                     std::cout << "// " << _url << " sequence loaded as streaming texture: " << std::endl;
                     std::cout << "//    uniform sampler2D   " << _name  << ";"<< std::endl;
                     std::cout << "//    uniform vec2        " << _name  << "Resolution;"<< std::endl;
-                    std::cout << "//    uniform float       " << _name  << "CurrentSecond;" << std::endl;
-                    std::cout << "//    uniform float       " << _name  << "TotalSeconds;" << std::endl;
+                    std::cout << "//    uniform float       " << _name  << "Time;" << std::endl;
+                    std::cout << "//    uniform float       " << _name  << "Duration;" << std::endl;
                     std::cout << "//    uniform float       " << _name  << "CurrentFrame;"<< std::endl;
                     std::cout << "//    uniform float       " << _name  << "TotalFrames;"<< std::endl;
                 }
@@ -404,8 +404,8 @@ bool Uniforms::addStreamingTexture( const std::string& _name, const std::string&
                 std::cout << "//    uniform vec2        " << _name  << "Resolution;"<< std::endl;
 
                 if (!_device) {
-                    std::cout << "//    uniform float       " << _name  << "CurrentSecond;" << std::endl;
-                    std::cout << "//    uniform float       " << _name  << "TotalSeconds;" << std::endl;
+                    std::cout << "//    uniform float       " << _name  << "Time;" << std::endl;
+                    std::cout << "//    uniform float       " << _name  << "Duration;" << std::endl;
                     std::cout << "//    uniform float       " << _name  << "CurrentFrame;" << std::endl;
                     std::cout << "//    uniform float       " << _name  << "TotalFrames;" << std::endl;
                 }
@@ -677,8 +677,8 @@ bool Uniforms::feedTo(ada::Shader *_shader, bool _lights, bool _buffers ) {
     for (StreamsList::iterator it = streams.begin(); it != streams.end(); ++it) {
         _shader->setUniform(it->first+"CurrentFrame", float(it->second->getCurrentFrame()));
         _shader->setUniform(it->first+"TotalFrames", float(it->second->getTotalFrames()));
-        _shader->setUniform(it->first+"CurrentSecond", float(it->second->getCurrentSecond()));
-        _shader->setUniform(it->first+"TotalSeconds", float(it->second->getTotalSeconds()));
+        _shader->setUniform(it->first+"Time", float(it->second->getTime()));
+        _shader->setUniform(it->first+"Duration", float(it->second->getDuration()));
     }
 
     // Pass Convolution Piramids resultant Texture
@@ -861,8 +861,8 @@ void Uniforms::printTextures(){
     for (StreamsList::iterator it = streams.begin(); it != streams.end(); ++it) {
         std::cout << "float," << it->first+"CurrentFrame," << ada::toString(it->second->getCurrentFrame(), 1) << std::endl;
         std::cout << "float," << it->first+"TotalFrames," << ada::toString(it->second->getTotalFrames(), 1) << std::endl;
-        std::cout << "float," << it->first+"CurrentSecond," << ada::toString(it->second->getCurrentSecond(), 1) << std::endl;
-        std::cout << "float," << it->first+"TotalSeconds," << ada::toString(it->second->getTotalSeconds(), 1) << std::endl;
+        std::cout << "float," << it->first+"Time," << ada::toString(it->second->getTime(), 1) << std::endl;
+        std::cout << "float," << it->first+"Duration," << ada::toString(it->second->getDuration(), 1) << std::endl;
     }
 }
 
