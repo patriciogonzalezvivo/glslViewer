@@ -64,7 +64,7 @@ UniformFunction::UniformFunction(const std::string &_type, std::function<void(ad
 
 // UNIFORMS
 
-Uniforms::Uniforms(): cubemap(nullptr), m_change(false), m_is_audio_init(false) {
+Uniforms::Uniforms(): cubemap(nullptr), m_streamsPrevs(0), m_streamsPrevsChange(false), m_change(false), m_is_audio_init(false) {
 
     // set the right distance to the camera
     // Set up camera
@@ -330,7 +330,7 @@ bool Uniforms::addStreamingTexture( const std::string& _name, const std::string&
                 if (_verbose) {
                     std::cout << "// " << _url << " sequence loaded as streaming texture: " << std::endl;
                     std::cout << "//    uniform sampler2D   " << _name  << ";"<< std::endl;
-                    std::cout << "//    uniform sampler2D   " << _name  << "Prev;"<< std::endl;
+                    std::cout << "//    uniform sampler2D   " << _name  << "Prev[STREAMS_PREVS];"<< std::endl;
                     std::cout << "//    uniform vec2        " << _name  << "Resolution;"<< std::endl;
                     std::cout << "//    uniform float       " << _name  << "Time;" << std::endl;
                     std::cout << "//    uniform float       " << _name  << "Duration;" << std::endl;
@@ -402,6 +402,7 @@ bool Uniforms::addStreamingTexture( const std::string& _name, const std::string&
             if (_verbose) {
                 std::cout << "// " << _url << " loaded as streaming texture: " << std::endl;
                 std::cout << "//    uniform sampler2D   " << _name  << ";"<< std::endl;
+                std::cout << "//    uniform sampler2D   " << _name  << "Prev[STREAMS_PREVS];"<< std::endl;
                 std::cout << "//    uniform vec2        " << _name  << "Resolution;"<< std::endl;
 
                 if (!_device) {
@@ -535,7 +536,19 @@ void Uniforms::setStreamsSpeed( float _speed ) {
         i->second->setSpeed(_speed);
 }
 
+void Uniforms::setStreamsPrevs( size_t _total ) {
+    m_streamsPrevs = _total;
+    m_streamsPrevsChange = true;
+}
+
 void Uniforms::updateStreams(size_t _frame) {
+
+    if (m_streamsPrevsChange) {
+        m_streamsPrevsChange = false;
+        for (StreamsList::iterator i = streams.begin(); i != streams.end(); i++)
+            i->second->setPrevTextures(m_streamsPrevs);
+    }
+
     for (StreamsList::iterator i = streams.begin(); i != streams.end(); ++i)
         if (i->second->update())
             m_change = true;
@@ -676,7 +689,9 @@ bool Uniforms::feedTo(ada::Shader *_shader, bool _lights, bool _buffers ) {
     }
 
     for (StreamsList::iterator it = streams.begin(); it != streams.end(); ++it) {
-        _shader->setUniformTexture(it->first+"Prev", it->second->getPrevTextureId(), _shader->textureIndex++ );
+        for (size_t i = 0; i < it->second->getPrevTexturesTotal(); i++)
+            _shader->setUniformTexture(it->first+"Prev["+ada::toString(i)+"]", it->second->getPrevTextureId(i), _shader->textureIndex++);
+
         _shader->setUniform(it->first+"CurrentFrame", float(it->second->getCurrentFrame()));
         _shader->setUniform(it->first+"TotalFrames", float(it->second->getTotalFrames()));
         _shader->setUniform(it->first+"Time", float(it->second->getTime()));

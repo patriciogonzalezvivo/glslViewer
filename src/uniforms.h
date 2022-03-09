@@ -79,6 +79,7 @@ public:
     void                    setCubeMap( const std::string& _filename, WatchFileList& _files, bool _verbose = true);
 
     void                    setStreamsSpeed( float _speed );
+    void                    setStreamsPrevs( size_t _total );
 
     void                    updateStreams(size_t _frame);
 
@@ -130,6 +131,8 @@ public:
     Tracker                     tracker;
 
 protected:
+    size_t                  m_streamsPrevs;
+    bool                    m_streamsPrevsChange;
     bool                    m_change;
     bool                    m_is_audio_init;
 };

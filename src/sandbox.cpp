@@ -565,9 +565,17 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     _commands.push_back(Command("streams", [&](const std::string& _line){ 
         std::vector<std::string> values = ada::split(_line,',');
 
-        if (values.size() > 2 && values[1] == "speed") {
-            uniforms.setStreamsSpeed( ada::toFloat(values[2]) );
-            return true;
+        if (values.size() > 2) {
+
+            if ( values[1] == "speed") {
+                uniforms.setStreamsSpeed( ada::toFloat(values[2]) );
+                return true;
+            }
+            else if ( values[1] == "prevs") {
+                uniforms.setStreamsPrevs( ada::toInt(values[2]) );
+                addDefine("STREAMS_PREVS", values[2]);
+                return true;
+            }
         }
 
         return false;
