@@ -96,6 +96,7 @@ public:
     void                    print(bool _all);
     void                    printBuffers();
     void                    printTextures();
+    void                    printStreams();
     void                    printLights();
 
     // Change state

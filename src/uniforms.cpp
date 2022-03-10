@@ -336,6 +336,7 @@ bool Uniforms::addStreamingTexture( const std::string& _name, const std::string&
                     std::cout << "//    uniform float       " << _name  << "Duration;" << std::endl;
                     std::cout << "//    uniform float       " << _name  << "CurrentFrame;"<< std::endl;
                     std::cout << "//    uniform float       " << _name  << "TotalFrames;"<< std::endl;
+                    std::cout << "//    uniform float       " << _name  << "Fps;"<< std::endl;
                 }
 
                 return true;
@@ -410,6 +411,7 @@ bool Uniforms::addStreamingTexture( const std::string& _name, const std::string&
                     std::cout << "//    uniform float       " << _name  << "Duration;" << std::endl;
                     std::cout << "//    uniform float       " << _name  << "CurrentFrame;" << std::endl;
                     std::cout << "//    uniform float       " << _name  << "TotalFrames;" << std::endl;
+                    std::cout << "//    uniform float       " << _name  << "Fps;" << std::endl;
                 }
             }
 
@@ -692,10 +694,11 @@ bool Uniforms::feedTo(ada::Shader *_shader, bool _lights, bool _buffers ) {
         for (size_t i = 0; i < it->second->getPrevTexturesTotal(); i++)
             _shader->setUniformTexture(it->first+"Prev["+ada::toString(i)+"]", it->second->getPrevTextureId(i), _shader->textureIndex++);
 
+        _shader->setUniform(it->first+"Time", float(it->second->getTime()));
+        _shader->setUniform(it->first+"Fps", float(it->second->getFps()));
+        _shader->setUniform(it->first+"Duration", float(it->second->getDuration()));
         _shader->setUniform(it->first+"CurrentFrame", float(it->second->getCurrentFrame()));
         _shader->setUniform(it->first+"TotalFrames", float(it->second->getTotalFrames()));
-        _shader->setUniform(it->first+"Time", float(it->second->getTime()));
-        _shader->setUniform(it->first+"Duration", float(it->second->getDuration()));
     }
 
     // Pass Convolution Piramids resultant Texture
@@ -849,6 +852,7 @@ void Uniforms::print(bool _all) {
 
     printBuffers();
     printTextures();
+    printStreams();
     printLights();
 }
 
@@ -869,18 +873,21 @@ void Uniforms::printBuffers() {
         std::cout << "sampler2D,u_sceneDepth" << std::endl;
 }
 
-void Uniforms::printTextures(){
+void Uniforms::printTextures() {
     for (TextureList::iterator it = textures.begin(); it != textures.end(); ++it) {
         std::cout << "sampler2D," << it->first << ',' << it->second->getFilePath() << std::endl;
         std::cout << "vec2," << it->first << "Resolution," << ada::toString(it->second->getWidth(), 1) << "," << ada::toString(it->second->getHeight(), 1) << std::endl;
     }
+}
 
+void Uniforms::printStreams() {
     for (StreamsList::iterator it = streams.begin(); it != streams.end(); ++it) {
         std::cout << "sampler2D," << it->first << "Prev," << it->second->getFilePath() << std::endl;
         std::cout << "float," << it->first+"CurrentFrame," << ada::toString(it->second->getCurrentFrame(), 1) << std::endl;
         std::cout << "float," << it->first+"TotalFrames," << ada::toString(it->second->getTotalFrames(), 1) << std::endl;
         std::cout << "float," << it->first+"Time," << ada::toString(it->second->getTime(), 1) << std::endl;
         std::cout << "float," << it->first+"Duration," << ada::toString(it->second->getDuration(), 1) << std::endl;
+        std::cout << "float," << it->first+"Fps," << ada::toString(it->second->getFps(), 1) << std::endl;
     }
 }
 

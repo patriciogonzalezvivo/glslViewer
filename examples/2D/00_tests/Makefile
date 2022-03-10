@@ -14,10 +14,10 @@ test_in_psd:
 	glslViewer test.frag in.psd
 
 test_in_mp4:
-	glslViewer test.frag in.mp4
+	glslViewer test.frag -w 960 -h 540 in.mp4
 
 test_in_depth:
-	glslViewer test_depth.frag iphone_depth.jpeg -w 576 -h 768 -l -e textures,on
+	glslViewer test_depth.frag iphone_depth.jpeg -w 576 -h 768 -e textures,on
 
 test_out_png:
 	glslViewer test.frag in.png -E screenshot,out.png
@@ -33,3 +33,9 @@ test_out_hdr:
 
 test_audio:
 	glslViewer test_audio.frag --audio
+
+test_video:
+	glslViewer test_video.frag in.mp4 -w 960 -h 540
+
+test_video_prevs:
+	glslViewer test_video.frag in.mp4 -w 960 -h 540 -e streams,prevs,10 -e streams,speed,0.5

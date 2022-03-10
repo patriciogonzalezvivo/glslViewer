@@ -310,6 +310,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     _commands.push_back(Command("textures", [&](const std::string& _line){ 
         if (_line == "textures") {
             uniforms.printTextures();
+            uniforms.printStreams();
             return true;
         }
         else {
@@ -565,15 +566,24 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     _commands.push_back(Command("streams", [&](const std::string& _line){ 
         std::vector<std::string> values = ada::split(_line,',');
 
-        if (values.size() > 2) {
-
+        if (_line == "streams")
+            uniforms.printStreams();
+        else if (values.size() > 2) {
             if ( values[1] == "speed") {
                 uniforms.setStreamsSpeed( ada::toFloat(values[2]) );
                 return true;
             }
             else if ( values[1] == "prevs") {
-                uniforms.setStreamsPrevs( ada::toInt(values[2]) );
-                addDefine("STREAMS_PREVS", values[2]);
+                int prevs = ada::toInt(values[2]);
+
+                if (prevs == 0) {
+                    uniforms.setStreamsPrevs(0);
+                    delDefine("STREAMS_PREVS");
+                }
+                else {
+                    uniforms.setStreamsPrevs( ada::toInt(values[2]) );
+                    addDefine("STREAMS_PREVS", values[2]);
+                }
                 return true;
             }
         }
@@ -706,6 +716,9 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
 void Sandbox::addDefine(const std::string &_define, const std::string &_value) {
     for (int i = 0; i < m_buffers_total; i++)
         m_buffers_shaders[i].addDefine(_define, _value);
+
+    for (int i = 0; i < m_doubleBuffers_total; i++)
+        m_doubleBuffers_shaders[i].addDefine(_define, _value);
 
     if (geom_index == -1)
         m_canvas_shader.addDefine(_define, _value);
