@@ -461,12 +461,15 @@ int main(int argc, char **argv) {
                     ada::haveExt(argument,"mpg") || ada::haveExt(argument,"MPG") ||
                     ada::haveExt(argument,"mpeg") || ada::haveExt(argument,"MPEG") ||
                     ada::haveExt(argument,"h264") ||
-                    argument.rfind("/dev/", 0) == 0 ||
                     argument.rfind("http://", 0) == 0 ||
                     argument.rfind("https://", 0) == 0 ||
                     argument.rfind("rtsp://", 0) == 0 ||
                     argument.rfind("rtmp://", 0) == 0) {
             if ( sandbox.uniforms.addStreamingTexture("u_tex" + ada::toString(textureCounter), argument, vFlip, false) )
+                textureCounter++;
+        }
+        else if (   argument.rfind("/dev/", 0) == 0) {
+            if ( sandbox.uniforms.addStreamingTexture("u_tex" + ada::toString(textureCounter), argument, vFlip, true) )
                 textureCounter++;
         }
         else if ( ada::haveExt(argument,"csv") || ada::haveExt(argument,"CSV") ) {

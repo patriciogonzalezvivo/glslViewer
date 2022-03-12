@@ -1,3 +1,4 @@
+#version 120
 
 #ifdef GL_ES
 precision mediump float;
@@ -12,6 +13,7 @@ uniform float       u_tex0Time;
 uniform float       u_tex0Duration;
 uniform float       u_tex0CurrentFrame;
 uniform float       u_tex0TotalFrames;
+uniform float       u_tex0Fps;
 
 uniform vec2        u_resolution;
 
