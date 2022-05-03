@@ -140,19 +140,6 @@ Uniforms::Uniforms(): cubemap(nullptr), m_streamsPrevs(0), m_streamsPrevsChange(
     functions["u_projectionMatrix"] = UniformFunction("mat4", [this](ada::Shader& _shader) {
         _shader.setUniform("u_projectionMatrix", getCamera().getProjectionMatrix());
     });
-
-    // IBL UNIFORM
-    functions["u_cubeMap"] = UniformFunction("samplerCube", [this](ada::Shader& _shader) {
-        if (cubemap) {
-            _shader.setUniformTextureCube("u_cubeMap", (ada::TextureCube*)cubemap);
-        }
-    });
-
-    functions["u_SH"] = UniformFunction("vec3", [this](ada::Shader& _shader) {
-        if (cubemap) {
-            _shader.setUniform("u_SH", cubemap->SH, 9);
-        }
-    });
 }
 
 Uniforms::~Uniforms(){
@@ -742,6 +729,11 @@ bool Uniforms::feedTo(ada::Shader *_shader, bool _lights, bool _buffers ) {
                 _shader->setUniformDepthTexture("u_lightShadowMap", lights[i].getShadowMap(), _shader->textureIndex++ );
             }
         }
+    }
+
+    if (cubemap) {
+        _shader->setUniformTextureCube("u_cubeMap", (ada::TextureCube*)cubemap);
+        _shader->setUniform("u_SH", cubemap->SH, 9);
     }
 
     return update;
