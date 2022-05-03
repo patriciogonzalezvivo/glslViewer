@@ -520,9 +520,44 @@ bool Uniforms::addCameraTrack( const std::string& _name ) {
     return false;
 }
 
+
+void Uniforms::setStreamPlay( const std::string& _name) {
+    if (streams.find(_name) != streams.end())
+        streams[_name]->play();
+}
+
+void Uniforms::setStreamStop( const std::string& _name) {
+    if (streams.find(_name) != streams.end())
+        streams[_name]->stop();
+}
+void Uniforms::setStreamTime( const std::string& _name, float _time ) {
+    if (streams.find(_name) != streams.end())
+        streams[_name]->setTime(_time);
+}
+
+void Uniforms::setStreamSpeed( const std::string& _name, float _speed ) {
+    if (streams.find(_name) != streams.end())
+        streams[_name]->setSpeed(_speed);
+}
+
+void Uniforms::setStreamsPlay() {
+    for (StreamsList::iterator i = streams.begin(); i != streams.end(); ++i)
+        i->second->play();
+}
+
+void Uniforms::setStreamsStop() {
+for (StreamsList::iterator i = streams.begin(); i != streams.end(); ++i)
+        i->second->stop();
+}
+
 void Uniforms::setStreamsSpeed( float _speed ) {
     for (StreamsList::iterator i = streams.begin(); i != streams.end(); ++i)
         i->second->setSpeed(_speed);
+}
+
+void Uniforms::setStreamsTime( float _time ) {
+    for (StreamsList::iterator i = streams.begin(); i != streams.end(); ++i)
+        i->second->setTime(_time);
 }
 
 void Uniforms::setStreamsPrevs( size_t _total ) {
@@ -874,7 +909,11 @@ void Uniforms::printTextures() {
 
 void Uniforms::printStreams() {
     for (StreamsList::iterator it = streams.begin(); it != streams.end(); ++it) {
-        std::cout << "sampler2D," << it->first << "Prev," << it->second->getFilePath() << std::endl;
+        std::cout << "sampler2D," << it->first << "," << it->second->getFilePath() << std::endl;
+
+        if (m_streamsPrevs > 0)
+            std::cout << "sampler2D," << it->first << "Prev," << it->second->getFilePath() << std::endl;
+
         std::cout << "float," << it->first+"CurrentFrame," << ada::toString(it->second->getCurrentFrame(), 1) << std::endl;
         std::cout << "float," << it->first+"TotalFrames," << ada::toString(it->second->getTotalFrames(), 1) << std::endl;
         std::cout << "float," << it->first+"Time," << ada::toString(it->second->getTime(), 1) << std::endl;

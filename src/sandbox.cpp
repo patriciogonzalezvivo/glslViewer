@@ -563,21 +563,36 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     },
     "camera_exposure[,<aper.>,<shutter>,<sensit.>]  get or set the camera exposure values."));
 
-    _commands.push_back(Command("streams", [&](const std::string& _line){ 
+    _commands.push_back(Command("stream", [&](const std::string& _line){ 
         std::vector<std::string> values = ada::split(_line,',');
 
         if (_line == "streams")
             uniforms.printStreams();
-        else if (values.size() > 2) {
+
+        else if (values.size() == 2) {
+            if ( values[1] == "stop") {
+                uniforms.setStreamsStop();
+                return true;
+            }
+            else if ( values[1] == "play") {
+                uniforms.setStreamsPlay();
+                return true;
+            }
+        }
+        else if (values.size() == 3) {
             if ( values[1] == "speed") {
                 uniforms.setStreamsSpeed( ada::toFloat(values[2]) );
+                return true;
+            }
+            else if ( values[1] == "time") {
+                uniforms.setStreamsTime( ada::toFloat(values[2]) );
                 return true;
             }
             else if ( values[1] == "prevs") {
                 int prevs = ada::toInt(values[2]);
 
                 if (prevs == 0) {
-                    uniforms.setStreamsPrevs(0);
+                    uniforms.setStreamsPrevs( 0 );
                     delDefine("STREAMS_PREVS");
                 }
                 else {
@@ -586,11 +601,31 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
                 }
                 return true;
             }
+            else if ( values[1] == "play") {
+                uniforms.setStreamPlay( values[2] );
+                return true;
+            }
+            else if ( values[1] == "stop") {
+                uniforms.setStreamStop( values[2] );
+                return true;
+            }
+        }
+        else if (values.size() == 4) {
+            if ( values[1] == "speed") {
+                uniforms.setStreamSpeed( values[2], ada::toFloat(values[3]) );
+                return true;
+            }
+            else if ( values[1] == "time") {
+                uniforms.setStreamTime( values[2], ada::toFloat(values[3]) );
+                return true;
+            }
         }
 
         return false;
     },
-    "streams[,speed,<value>]  get or set streams properties."));
+    "streams                     print all streams.\n\
+streams,speed[,<value>]     get or set streams speed.\n\
+streams,prevs[,<value>]     get or set total previous textures."));
 
     #ifdef SUPPORT_MULTITHREAD_RECORDING 
     _commands.push_back(Command("max_mem_in_queue", [&](const std::string & line) {

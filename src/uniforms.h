@@ -78,8 +78,18 @@ public:
     void                    setCubeMap( ada::TextureCube* _cubemap );
     void                    setCubeMap( const std::string& _filename, WatchFileList& _files, bool _verbose = true);
 
+    void                    setStreamPlay( const std::string& _name);
+    void                    setStreamStop( const std::string& _name);
+    void                    setStreamTime( const std::string& _name, float _time );
+    void                    setStreamSpeed( const std::string& _name, float _speed );
+
+    void                    setStreamsPlay();
+    void                    setStreamsStop();
+    void                    setStreamsTime( float _time );
     void                    setStreamsSpeed( float _speed );
     void                    setStreamsPrevs( size_t _total );
+
+
 
     void                    updateStreams(size_t _frame);
 
