@@ -29,6 +29,16 @@
 #include "tools/text.h"
 #include "types/files.h"
 
+#ifdef SUPPORT_NCURSES
+#include <ncurses.h>
+#include <signal.h>
+
+WINDOW* win_cmd;
+WINDOW* win_out;
+void handle_winch(int sig);
+#endif
+
+
 #define TRACK_BEGIN(A)      if (sandbox.uniforms.tracker.isRunning()) sandbox.uniforms.tracker.begin(A); 
 #define TRACK_END(A)        if (sandbox.uniforms.tracker.isRunning()) sandbox.uniforms.tracker.end(A); 
 
@@ -668,7 +678,12 @@ int main(int argc, char **argv) {
     #ifndef PLATFORM_WINDOWS
     pthread_t cinHandler = cinWatcher.native_handle();
     pthread_cancel( cinHandler );
-    #endif//
+    #endif
+
+    #if defined(SUPPORT_NCURSES)
+    endwin();
+    #endif
+
     exit(0);
 #endif
 
@@ -1394,6 +1409,7 @@ void fileWatcherThread() {
 //  Command line Thread
 //============================================================================
 void cinWatcherThread() {
+
     while (!sandbox.isReady()) {
         ada::sleep_ms( ada::getRestSec() * 1000000 );
         std::this_thread::sleep_for(std::chrono::milliseconds( ada::getRestMs() ));
@@ -1413,13 +1429,124 @@ void cinWatcherThread() {
         }
     }
 
+    std::string cmd;
+
+    #if defined(SUPPORT_NCURSES)
+
+    // Capture all COUT
+    std::stringstream buffer;
+    std::streambuf * old = std::cout.rdbuf(buffer.rdbuf());
+
+    initscr();
+    raw();
+    // start_color();
+    cbreak();
+
+    win_out = newwin(LINES-3, COLS, 0, 0);
+    win_cmd = newwin(3, COLS, LINES - 3, 0);
+    signal(SIGWINCH, handle_winch);
+
+    keypad(stdscr, true);
+    scrollok(win_out, true);
+    noecho();
+
+    mvwprintw(win_cmd, 1, 0, "> ");
+    wrefresh(win_cmd);
+
+    refresh();
+
+    int ch;
+    size_t offset_cursor = 0;
+    size_t offset_buffer = 0;
+    size_t offset_cout = 0;
+    std::vector<std::string> cmd_buffer;
+    while ( keepRunnig.load()) {
+        werase(win_out);
+        mvwprintw(win_out, 0, 0, "%s", buffer.str().c_str() );
+        wrefresh(win_out);
+
+        mvwprintw(win_cmd, 1, 1, "> %s", cmd.c_str() );
+        box(win_cmd, 0, 0);
+        wrefresh(win_cmd);
+
+        wmove(win_cmd, 1, 3 + cmd.size() - offset_cursor);
+        
+        ch = getch();
+
+        werase(win_cmd);
+        if ( ch == '\n' || ch == KEY_ENTER || ch == KEY_EOL) {
+            commandsRun(cmd, commandsMutex);
+            cmd_buffer.push_back( cmd );
+            offset_cursor = 0;
+            offset_buffer = 0;
+            cmd = "";
+        }
+        else if ( ch == KEY_BACKSPACE ) {
+            if (cmd.size() > offset_cursor)
+                cmd.erase(cmd.end()-offset_cursor-1, cmd.end()-offset_cursor);
+        }
+        else if ( ch == KEY_LEFT) {
+            if (offset_cursor < cmd.size())
+                offset_cursor++;
+        }
+        else if ( ch == KEY_RIGHT)
+            offset_cursor--;
+        else if ( ch == KEY_DOWN ) {
+            if (cmd_buffer.size() > 0 && offset_buffer > 0) {
+                offset_buffer--;
+                offset_cursor = 0;
+
+                if (offset_buffer == 0)
+                    cmd = "";
+                else
+                    cmd = cmd_buffer[ cmd_buffer.size() - offset_buffer ];
+            }
+        }
+        else if ( ch == KEY_UP ) {
+            if (offset_buffer < cmd_buffer.size() - 1)
+                offset_buffer++;
+            offset_cursor = 0;
+            if (offset_buffer < cmd_buffer.size() )
+                cmd = cmd_buffer[ cmd_buffer.size() - 1 - offset_buffer ];
+        }
+        
+
+        else if ( ch == KEY_END || ch == KEY_EXIT || ch == 27 ) {
+            keepRunnig = false;
+            keepRunnig.store(false);
+            break;
+        }
+        else
+            cmd.insert(cmd.end() - offset_cursor, 1, (char)ch );    
+
+    }
+
+    endwin();
+
+    #else
     // Commands comming from the console IN
-    std::string console_line;
+    
     std::cout << "// > ";
-    while (std::getline(std::cin, console_line)) {
-        commandsRun(console_line, commandsMutex);
+    while (std::getline(std::cin, cmd)) {
+        commandsRun(cmd, commandsMutex);
         std::cout << "// > ";
     }
+    #endif
+
 }
+
+#if defined(SUPPORT_NCURSES)
+void handle_winch(int sig) {
+    endwin();
+    refresh();
+    wresize(win_cmd, 3, COLS);
+    mvwin(win_cmd, LINES - 3, 0);
+
+    wresize(win_out, LINES - 3, COLS);
+
+    wrefresh(win_cmd);
+    wrefresh(win_out);
+}
+#endif
 
 #endif

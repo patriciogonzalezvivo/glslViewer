@@ -27,8 +27,8 @@ Scene::Scene():
     // Debug State
     showGrid(false), showAxis(false), showBBoxes(false), showCubebox(false), 
     // Camera.
-    m_blend(ALPHA),
-    m_culling(NONE),
+    m_blend(BLEND_ALPHA),
+    m_culling(CULL_NONE),
     m_depth_test(true),
     // Light
     m_lightUI_vbo(nullptr), m_dynamicShadows(false), m_shadows(false),
@@ -125,20 +125,20 @@ void Scene::setup(CommandList& _commands, Uniforms& _uniforms) {
     _commands.push_back(Command("blend", [&](const std::string& _line){ 
         std::vector<std::string> values = ada::split(_line,',');
         if (values.size() == 1) {
-            if (getBlend() == ALPHA) std::cout << "alpha" << std::endl;
-            else if (getBlend() == ADD) std::cout << "add" << std::endl;
-            else if (getBlend() == MULTIPLY) std::cout << "multiply" << std::endl;
-            else if (getBlend() == SCREEN) std::cout << "screen" << std::endl;
-            else if (getBlend() == SUBSTRACT) std::cout << "substract" << std::endl;
+            if (getBlend() == BLEND_ALPHA) std::cout << "alpha" << std::endl;
+            else if (getBlend() == BLEND_ADD) std::cout << "add" << std::endl;
+            else if (getBlend() == BLEND_MULTIPLY) std::cout << "multiply" << std::endl;
+            else if (getBlend() == BLEND_SCREEN) std::cout << "screen" << std::endl;
+            else if (getBlend() == BLEND_SUBSTRACT) std::cout << "substract" << std::endl;
             
             return true;
         }
         else if (values.size() == 2) {
-            if (values[1] == "alpha") setBlend(ALPHA);
-            else if (values[1] == "add") setBlend(ADD);
-            else if (values[1] == "multiply") setBlend(MULTIPLY);
-            else if (values[1] == "screen") setBlend(SCREEN);
-            else if (values[1] == "substract") setBlend(SUBSTRACT);
+            if (values[1] == "alpha") setBlend(BLEND_ALPHA);
+            else if (values[1] == "add") setBlend(BLEND_ADD);
+            else if (values[1] == "multiply") setBlend(BLEND_MULTIPLY);
+            else if (values[1] == "screen") setBlend(BLEND_SCREEN);
+            else if (values[1] == "substract") setBlend(BLEND_SUBSTRACT);
 
             return true;
         }
@@ -167,18 +167,18 @@ void Scene::setup(CommandList& _commands, Uniforms& _uniforms) {
     _commands.push_back(Command("culling", [&](const std::string& _line){ 
         std::vector<std::string> values = ada::split(_line,',');
         if (values.size() == 1) {
-            if (getCulling() == NONE) std::cout << "none" << std::endl;
-            else if (getCulling() == FRONT) std::cout << "front" << std::endl;
-            else if (getCulling() == BACK) std::cout << "back" << std::endl;
-            else if (getCulling() == BOTH) std::cout << "both" << std::endl;
+            if (getCulling() == CULL_NONE) std::cout << "none" << std::endl;
+            else if (getCulling() == CULL_FRONT) std::cout << "front" << std::endl;
+            else if (getCulling() == CULL_BACK) std::cout << "back" << std::endl;
+            else if (getCulling() == CULL_BOTH) std::cout << "both" << std::endl;
 
             return true;
         }
         else if (values.size() == 2) {
-            if (values[1] == "none") setCulling(NONE);
-            else if (values[1] == "front") setCulling(FRONT);
-            else if (values[1] == "back") setCulling(BACK);
-            else if (values[1] == "both") setCulling(BOTH);
+            if (values[1] == "none") setCulling(CULL_NONE);
+            else if (values[1] == "front") setCulling(CULL_FRONT);
+            else if (values[1] == "back") setCulling(CULL_BACK);
+            else if (values[1] == "both") setCulling(CULL_BOTH);
 
             return true;
         }

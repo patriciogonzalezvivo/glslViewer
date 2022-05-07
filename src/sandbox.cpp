@@ -624,8 +624,8 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         return false;
     },
     "streams                     print all streams.\n\
-streams,speed[,<value>]     get or set streams speed.\n\
-streams,prevs[,<value>]     get or set total previous textures."));
+// streams,speed[,<value>]     get or set streams speed.\n\
+// streams,prevs[,<value>]     get or set total previous textures."));
 
     #ifdef SUPPORT_MULTITHREAD_RECORDING 
     _commands.push_back(Command("max_mem_in_queue", [&](const std::string & line) {

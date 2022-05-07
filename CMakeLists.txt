@@ -17,7 +17,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 add_subdirectory(deps)
 
 if(MSVC)
-	add_definitions( -DPLATFORM_WINDOWS )
+    add_definitions( -DPLATFORM_WINDOWS )
 endif()
 
 if (NO_X11 OR FORCE_GBM)
@@ -90,6 +90,12 @@ if (EMSCRIPTEN)
     target_link_libraries(glslViewer PRIVATE glfw)
     
 else()
+    find_package(Curses)
+    if (CURSES_FOUND)
+        target_compile_definitions(glslViewer PUBLIC SUPPORT_NCURSES)
+        include_directories(${CURSES_INCLUDE_DIR})
+        target_link_libraries(glslViewer PRIVATE ${CURSES_LIBRARY})
+    endif()
 
     target_compile_definitions(glslViewer PUBLIC 
         SUPPORT_MULTITHREAD_RECORDING 

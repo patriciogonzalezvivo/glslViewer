@@ -10,18 +10,18 @@
 #include "ada/scene/model.h"
 
 enum CullingMode {
-    NONE = 0,
-    FRONT = 1,
-    BACK = 2,
-    BOTH = 3
+    CULL_NONE = 0,
+    CULL_FRONT = 1,
+    CULL_BACK = 2,
+    CULL_BOTH = 3
 };
 
 enum BlendMode {
-    ALPHA = 0,       // Alpha is the default
-    ADD = 1,
-    MULTIPLY = 2,
-    SCREEN = 3,
-    SUBSTRACT = 4,
+    BLEND_ALPHA = 0,       // Alpha is the default
+    BLEND_ADD = 1,
+    BLEND_MULTIPLY = 2,
+    BLEND_SCREEN = 3,
+    BLEND_SUBSTRACT = 4,
 };
 
 class Scene {
