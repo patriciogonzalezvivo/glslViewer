@@ -35,9 +35,10 @@
 
 WINDOW* win_cmd;
 WINDOW* win_out;
+std::string cmd;
+size_t offset_cursor = 0;
 void handle_winch(int sig);
 #endif
-
 
 #define TRACK_BEGIN(A)      if (sandbox.uniforms.tracker.isRunning()) sandbox.uniforms.tracker.begin(A); 
 #define TRACK_END(A)        if (sandbox.uniforms.tracker.isRunning()) sandbox.uniforms.tracker.end(A); 
@@ -1429,7 +1430,7 @@ void cinWatcherThread() {
         }
     }
 
-    std::string cmd;
+    
 
     #if defined(SUPPORT_NCURSES)
 
@@ -1455,10 +1456,9 @@ void cinWatcherThread() {
 
     refresh();
 
-    int ch;
-    size_t offset_cursor = 0;
     size_t offset_buffer = 0;
     size_t offset_cout = 0;
+    int ch;
     std::vector<std::string> cmd_buffer;
     while ( keepRunnig.load()) {
         werase(win_out);
@@ -1468,7 +1468,6 @@ void cinWatcherThread() {
         mvwprintw(win_cmd, 1, 1, "> %s", cmd.c_str() );
         box(win_cmd, 0, 0);
         wrefresh(win_cmd);
-
         wmove(win_cmd, 1, 3 + cmd.size() - offset_cursor);
         
         ch = getch();
@@ -1539,13 +1538,17 @@ void cinWatcherThread() {
 void handle_winch(int sig) {
     endwin();
     refresh();
+
+    wresize(win_out, LINES - 3, COLS);
+    wrefresh(win_out);
+
     wresize(win_cmd, 3, COLS);
     mvwin(win_cmd, LINES - 3, 0);
 
-    wresize(win_out, LINES - 3, COLS);
-
+    mvwprintw(win_cmd, 1, 1, "> %s", cmd.c_str() );
+    box(win_cmd, 0, 0);
     wrefresh(win_cmd);
-    wrefresh(win_out);
+    wmove(win_cmd, 1, 3 + cmd.size() - offset_cursor);
 }
 #endif
 
