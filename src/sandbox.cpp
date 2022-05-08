@@ -563,7 +563,43 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     },
     "camera_exposure[,<aper.>,<shutter>,<sensit.>]", "get or set the camera exposure values."));
 
-    _commands.push_back(Command("stream", [&](const std::string& _line){ 
+     _commands.push_back(Command("stream", [&](const std::string& _line){ 
+        std::vector<std::string> values = ada::split(_line,',');
+
+        if (values.size() == 3) {
+            if ( values[2] == "play") {
+                uniforms.setStreamPlay( values[1] );
+                return true;
+            }
+            else if ( values[2] == "stop") {
+                uniforms.setStreamStop( values[1] );
+                return true;
+            }
+            else if ( values[2] == "speed") {
+                uniforms.setStreamStop( values[1] );
+                return true;
+            }
+            else if ( values[2] == "time") {
+                uniforms.setStreamStop( values[1] );
+                return true;
+            }
+        }
+        else if (values.size() == 4) {
+            if ( values[2] == "speed") {
+                uniforms.setStreamSpeed( values[1], ada::toFloat(values[3]) );
+                return true;
+            }
+            else if ( values[2] == "time") {
+                uniforms.setStreamTime( values[1], ada::toFloat(values[3]) );
+                return true;
+            }
+        }
+
+        return false;
+    },
+    "stream,<uniform_name>,stop|play|speed|time[,<value>]", "play/stop or change speed or time of a specific stream"));
+
+    _commands.push_back(Command("streams", [&](const std::string& _line){ 
         std::vector<std::string> values = ada::split(_line,',');
 
         if (_line == "streams")
@@ -599,24 +635,6 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
                     uniforms.setStreamsPrevs( ada::toInt(values[2]) );
                     addDefine("STREAMS_PREVS", values[2]);
                 }
-                return true;
-            }
-            else if ( values[1] == "play") {
-                uniforms.setStreamPlay( values[2] );
-                return true;
-            }
-            else if ( values[1] == "stop") {
-                uniforms.setStreamStop( values[2] );
-                return true;
-            }
-        }
-        else if (values.size() == 4) {
-            if ( values[1] == "speed") {
-                uniforms.setStreamSpeed( values[2], ada::toFloat(values[3]) );
-                return true;
-            }
-            else if ( values[1] == "time") {
-                uniforms.setStreamTime( values[2], ada::toFloat(values[3]) );
                 return true;
             }
         }

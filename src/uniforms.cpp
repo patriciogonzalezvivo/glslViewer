@@ -529,6 +529,19 @@ void Uniforms::setStreamStop( const std::string& _name) {
     if (streams.find(_name) != streams.end())
         streams[_name]->stop();
 }
+
+float Uniforms::getStreamTime( const std::string& _name) {
+    if (streams.find(_name) != streams.end())
+        return streams[_name]->getTime();
+    return 0.0f;
+}
+
+float Uniforms::getStreamSpeed( const std::string& _name) {
+    if (streams.find(_name) != streams.end())
+        return streams[_name]->getSpeed();
+    return 0.0f;
+}
+    
 void Uniforms::setStreamTime( const std::string& _name, float _time ) {
     if (streams.find(_name) != streams.end())
         streams[_name]->setTime(_time);

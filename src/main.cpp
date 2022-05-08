@@ -42,7 +42,7 @@ void winch_handler(int signal) { resize_handler(signal); }
 
 std::string                 version = "2.0.5";
 std::string                 name    = "GlslViewer";
-std::string                 header  = name + " " + version + " by Patricio Gonzalez Vivo ( patriciogonzalezvivo.com )"; 
+std::string                 header  = name + " " + version + " by Patricio Gonzalez Vivo ( http://patriciogonzalezvivo.com )"; 
 
 // Here is where all the magic happens
 Sandbox                     sandbox;
@@ -748,12 +748,12 @@ void commandsRun(const std::string &_cmd, std::mutex &_mutex) {
 void commandsInit() {
     commands.push_back(Command("help", [&](const std::string& _line){
         if (_line == "help") {
-            std::cout << "Use:\n    help,<command>\n" << std::endl;
-            std::cout << "Available commands:" << std::endl;
+            std::cout << "Use:\n        help,<one_of_the_following_commands>" << std::endl;
             for (size_t i = 0; i < commands.size(); i++) {
                 if (i%4 == 0)
                     std::cout << std::endl;
-                std::cout << std::left << std::setw(16) << commands[i].trigger << " ";
+                if (commands[i].trigger != "help")
+                    std::cout << std::left << std::setw(16) << commands[i].trigger << " ";
             } 
             std::cout << std::endl;
             return true;
@@ -780,7 +780,16 @@ void commandsInit() {
         }
         return false;
     },
-    "version", "return glslViewer version.", false));
+    "version", "return glslViewer version", false));
+
+    commands.push_back(Command("about", [&](const std::string& _line){ 
+        if (_line == "about") {
+            std::cout << header << std::endl;
+            return true;
+        }
+        return false;
+    },
+    "about", "about glslViewer", false));
 
     commands.push_back(Command("window_width", [&](const std::string& _line){ 
         if (_line == "window_width") {
@@ -789,7 +798,7 @@ void commandsInit() {
         }
         return false;
     },
-    "window_width", "return the width of the windows.", false));
+    "window_width", "return the width of the windows", false));
 
     commands.push_back(Command("window_height", [&](const std::string& _line){ 
         if (_line == "window_height") {
@@ -798,7 +807,7 @@ void commandsInit() {
         }
         return false;
     },
-    "window_height", "return the height of the windows.", false));
+    "window_height", "return the height of the windows", false));
 
     commands.push_back(Command("pixel_density", [&](const std::string& _line){ 
         if (_line == "pixel_density") {
@@ -807,7 +816,7 @@ void commandsInit() {
         }
         return false;
     },
-    "pixel_density", "return the pixel density.", false));
+    "pixel_density", "return the pixel density", false));
 
     commands.push_back(Command("screen_size", [&](const std::string& _line){ 
         if (_line == "screen_size") {
@@ -817,7 +826,7 @@ void commandsInit() {
         }
         return false;
     },
-    "screen_size", "return the screen size.", false));
+    "screen_size", "return the screen size", false));
 
     commands.push_back(Command("viewport", [&](const std::string& _line){ 
         if (_line == "viewport") {
@@ -827,7 +836,7 @@ void commandsInit() {
         }
         return false;
     },
-    "viewport", "return the viewport size.", false));
+    "viewport", "return the viewport size", false));
 
     commands.push_back(Command("mouse", [&](const std::string& _line){ 
         if (_line == "mouse") {
@@ -837,7 +846,7 @@ void commandsInit() {
         }
         return false;
     },
-    "mouse", "return the mouse position.", false));
+    "mouse", "return the mouse position", false));
     
     commands.push_back(Command("fps", [&](const std::string& _line){
         std::vector<std::string> values = ada::split(_line,',');
@@ -854,7 +863,7 @@ void commandsInit() {
         }
         return false;
     },
-    "fps", "return or set the amount of frames per second.", false));
+    "fps", "return or set the amount of frames per second", false));
 
     commands.push_back(Command("delta", [&](const std::string& _line){ 
         if (_line == "delta") {
@@ -864,7 +873,7 @@ void commandsInit() {
         }
         return false;
     },
-    "delta", "return u_delta, the secs between frames.", false));
+    "delta", "return u_delta, the secs between frames", false));
 
     commands.push_back(Command("date", [&](const std::string& _line){ 
         if (_line == "date") {
@@ -875,7 +884,7 @@ void commandsInit() {
         }
         return false;
     },
-    "date", "return u_date as YYYY, M, D and Secs.", false));
+    "date", "return u_date as YYYY, M, D and Secs", false));
 
     commands.push_back(Command("files", [&](const std::string& _line){ 
         if (_line == "files") {
@@ -886,7 +895,7 @@ void commandsInit() {
         }
         return false;
     },
-    "files", "return a list of files.", false));
+    "files", "return a list of files", false));
 
     commands.push_back( Command("define", [&](const std::string& _line){ 
         std::vector<std::string> values = ada::split(_line,',');
@@ -1008,7 +1017,7 @@ void commandsInit() {
         }
         return false;
     },
-    "frag[,<filename>]", "returns or save the fragment shader source code.", false));
+    "frag[,<filename>]", "returns or save the fragment shader source code", false));
 
     commands.push_back(Command("vert", [&](const std::string& _line){ 
         if (_line == "vert") {
@@ -1047,7 +1056,7 @@ void commandsInit() {
         }
         return false;
     },
-    "vert[,<filename>]", "returns or save the vertex shader source code.", false));
+    "vert[,<filename>]", "returns or save the vertex shader source code", false));
 
     commands.push_back( Command("dependencies", [&](const std::string& _line){ 
         if (_line == "dependencies") {
@@ -1068,7 +1077,7 @@ void commandsInit() {
         }
         return false;
     },
-    "dependencies[,<vert|frag>]", "returns all the dependencies of the vertex o fragment shader or both.", false));
+    "dependencies[,<vert|frag>]", "returns all the dependencies of the vertex o fragment shader or both", false));
 
     commands.push_back(Command("update", [&](const std::string& _line){ 
         if (_line == "update") {
@@ -1092,7 +1101,7 @@ void commandsInit() {
         }
         return false;
     },
-    "wait,<seconds>", "wait for X <seconds> before excecuting another command.", false));
+    "wait,<seconds>", "wait for X <seconds> before excecuting another command", false));
 
     commands.push_back(Command("fullFps", [&](const std::string& _line){
         if (_line == "fullFps") {
@@ -1141,7 +1150,7 @@ void commandsInit() {
         }
         return false;
     },
-    "screenshot[,<filename>]", "saves a screenshot to a filename.", false));
+    "screenshot[,<filename>]", "saves a screenshot to a filename", false));
 
     commands.push_back(Command("sequence", [&](const std::string& _line){ 
         std::vector<std::string> values = ada::split(_line,',');
@@ -1323,7 +1332,7 @@ void commandsInit() {
         }
         return false;
     },
-    "frames,<A>,<B>[,<fps>]","saves a sequence of images from frame <A> to <B> at <fps> (default: 24).", false));
+    "frames,<A>,<B>[,<fps>]","saves a sequence of images from frame <A> to <B> at <fps> (default: 24)", false));
 
     commands.push_back(Command("q", [&](const std::string& _line){ 
         if (_line == "q") {
@@ -1477,12 +1486,12 @@ void cinWatcherThread() {
     cbreak();
 
     // Create windows
-    WINDOW* win_out = newwin(LINES-3, COLS, 0, 0);
-    win_cmd = newwin(3, COLS, LINES - 3, 0);
+    // WINDOW* win_out = newwin(LINES-3, COLS, 0, 0);
+    win_cmd = newwin(3, COLS, 0, 0);
 
     // Capture Keys
     keypad(stdscr, true);
-    scrollok(win_out, true);
+    scrollok(stdscr, true);
     noecho();
 
     // Capture all COUT
@@ -1509,13 +1518,14 @@ void cinWatcherThread() {
 
     resize_handler = [&](int sig) {
         endwin();
+        erase();
         refresh();
 
-        wresize(win_out, LINES - 3, COLS);
-        wrefresh(win_out);
+        // wresize(win_out, LINES - 3, COLS);
+        // wrefresh(win_out);
 
         wresize(win_cmd, 3, COLS);
-        mvwin(win_cmd, LINES - 3, 0);
+        // mvwin(win_cmd, LINES - 3, 0);
 
         tab_counter = 0;
 
@@ -1528,9 +1538,14 @@ void cinWatcherThread() {
     int ch;
     std::vector<std::string> cmd_buffer;
     while ( keepRunnig.load()) {
-        werase(win_out);
-        mvwprintw(win_out, 0, 0, "%s", buffer.str().c_str() );
-        wrefresh(win_out);
+        // werase(win_out);
+        // mvwprintw(win_out, 0, 0, "%s", buffer.str().c_str() );
+        // wrefresh(win_out);
+
+        // Refresh console out
+        erase();
+        mvprintw(4, 0, "%s", buffer.str().c_str() );
+        refresh();
 
         win_cmd_refresh();
         
@@ -1592,11 +1607,11 @@ void cinWatcherThread() {
                     }
                 }
                 else {
-                    std::cout << "Use:\n" << std::endl;
+                    std::cout << "Use:" << std::endl;
 
                     for (size_t i = 0; i < commands.size(); i++)
                         if ( ada::beginsWith(cmd, commands[i].trigger) )
-                            std::cout << std::left << std::setw(16) << commands[i].formula << "   " << commands[i].description << std::endl;
+                            std::cout << "      " << std::left << std::setw(16) << commands[i].formula << "   " << commands[i].description << std::endl;
 
                     for (UniformDataList::iterator it = sandbox.uniforms.data.begin(); it != sandbox.uniforms.data.end(); ++it) {
                         if ( ada::beginsWith(cmd, it->first) ) {
@@ -1608,6 +1623,11 @@ void cinWatcherThread() {
                             std::cout << std::endl;
                         }
                     }
+
+                    std::cout << "\nNotes::" << std::endl;
+                    std::cout << "      - <values> between <...> brakets need to be change for and actual value" << std::endl;
+                    std::cout << "      - when words are separated by | you must choose one of the options, like: A|B|C" << std::endl;
+                    std::cout << "      * everything betwee [...] is optative" << std::endl;
                 }
             }
         }
