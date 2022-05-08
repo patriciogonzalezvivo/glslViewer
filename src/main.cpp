@@ -1064,7 +1064,7 @@ void commandsInit() {
         }
         return false;
     },
-    "dependencies[,vert|frag]       returns all the dependencies of the vertex o fragment shader or both.", false));
+    "dependencies[,<vert|frag>]     returns all the dependencies of the vertex o fragment shader or both.", false));
 
     commands.push_back(Command("update", [&](const std::string& _line){ 
         if (_line == "update") {
@@ -1246,7 +1246,7 @@ void commandsInit() {
         }
         return false;
     },
-    "secs,<A_sec>,<B_sec>[,fps] saves a sequence of images from A to B second.", false));
+    "secs,<A_sec>,<B_sec>[,fps]     saves a sequence of images from A to B second.", false));
 
     commands.push_back(Command("frames", [&](const std::string& _line){ 
         std::vector<std::string> values = ada::split(_line,',');

@@ -168,7 +168,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         }
         return false;
     },
-    "debug[,on|off]                 show/hide passes and textures elements", false));
+    "debug[,<on|off>]               show/hide passes and textures elements", false));
 
     _commands.push_back(Command("track", [&](const std::string& _line){
         if (_line == "track") {
@@ -321,7 +321,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         }
         return false;
     },
-    "textures[,on|off]              return a list of textures as their uniform name and path. Or show/hide textures on viewport.", false));
+    "textures[,<on|off>]               return a list of textures as their uniform name and path. Or show/hide textures on viewport.", false));
 
     _commands.push_back(Command("buffers", [&](const std::string& _line){ 
         if (_line == "buffers") {
@@ -346,7 +346,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         }
         return false;
     },
-    "buffers[,on|off]                return a list of buffers as their uniform name. Or show/hide buffer on viewport.", false));
+    "buffers[,<on|off>]                 return a list of buffers as their uniform name. Or show/hide buffer on viewport.", false));
 
     _commands.push_back(Command("error_screen", [&](const std::string& _line){ 
         if (_line == "error_screen") {
@@ -363,7 +363,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         }
         return false;
     },
-    "error_screen                   display magenta screen on errors", false));
+    "error_screen                       display magenta screen on errors", false));
 
     // LIGTH
     _commands.push_back(Command("lights", [&](const std::string& _line){ 
@@ -623,9 +623,9 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
 
         return false;
     },
-    "streams                     print all streams.\n\
-   streams,speed[,<value>]     get or set streams speed.\n\
-   streams,prevs[,<value>]     get or set total previous textures."));
+    "streams                        print all streams.\n\
+   streams,speed[,<value>]        get or set streams speed.\n\
+   streams,prevs[,<value>]        get or set total previous textures."));
 
     #ifdef SUPPORT_MULTITHREAD_RECORDING 
     _commands.push_back(Command("max_mem_in_queue", [&](const std::string & line) {
