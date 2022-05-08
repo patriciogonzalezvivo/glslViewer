@@ -7,6 +7,7 @@
 #include <memory>
 
 #include "tools/text.h"
+#include "tools/console.h"
 
 #include "ada/window.h"
 #include "ada/tools/text.h"
@@ -945,6 +946,8 @@ bool Sandbox::reloadShaders( WatchFileList &_files ) {
     if (m_postprocessing || m_histogram)
         _updateSceneBuffer(ada::getWindowWidth(), ada::getWindowHeight());
 
+    console_refresh();
+
     return true;
 }
 
@@ -1637,6 +1640,8 @@ void Sandbox::printDependencies(ShaderType _type) const {
 // ------------------------------------------------------------------------- EVENTS
 
 void Sandbox::onFileChange(WatchFileList &_files, int index) {
+    console_clear();
+    
     FileType type = _files[index].type;
     std::string filename = _files[index].path;
 

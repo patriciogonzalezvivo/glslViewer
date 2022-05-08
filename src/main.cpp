@@ -26,15 +26,13 @@
 #include "ada/shaders/defaultShaders.h"
 
 #include "sandbox.h"
-#include "tools/text.h"
 #include "types/files.h"
+#include "tools/text.h"
+#include "tools/console.h"
 
 #ifdef SUPPORT_NCURSES
 #include <ncurses.h>
 #include <signal.h>
-WINDOW* win_cmd;
-std::function<void(int)> resize_handler;
-void winch_handler(int signal) { resize_handler(signal); }
 #endif
 
 #define TRACK_BEGIN(A)      if (sandbox.uniforms.tracker.isRunning()) sandbox.uniforms.tracker.begin(A); 
@@ -1176,30 +1174,7 @@ void commandsInit() {
                 pct = sandbox.getRecordedPercentage();
                 commandsMutex.unlock();
 
-                #if defined(SUPPORT_NCURSES)
-                size_t lines, cols;
-                getmaxyx(win_cmd, lines, cols);
-
-                werase(win_cmd);
-                box(win_cmd,0, 0);
-
-                size_t l = (cols-4) * pct;
-                for (size_t i = 0; i < cols-4; i++)
-                    mvwprintw(win_cmd, 1, 2 + i, "%s", (i < l )? "#" : ".");
-
-                wrefresh(win_cmd);
-                #else
-
-                // Delete previous line
-                const std::string deleteLine = "\e[2K\r\e[1A";
-                std::cout << deleteLine;
-                
-                int l = 50 * pct;
-                std::cout << "// [ ";
-                for (int i = 0; i < 50; i++)
-                    std::cout << ((i < l ) ? "#" : ".");
-                std::cout << " ] " << pct << "%" << std::endl;
-                #endif 
+                console_draw_pct(pct);
 
                 std::this_thread::sleep_for(std::chrono::milliseconds( ada::getRestMs() ));
             }
@@ -1234,34 +1209,7 @@ void commandsInit() {
                 pct = sandbox.getRecordedPercentage();
                 commandsMutex.unlock();
 
-                #if defined(SUPPORT_NCURSES)
-                size_t lines, cols;
-                getmaxyx(win_cmd, lines, cols);
-
-                werase(win_cmd);
-                box(win_cmd,0, 0);
-
-                size_t l = (cols-4) * pct;
-                for (size_t i = 0; i < cols-4; i++)
-                    mvwprintw(win_cmd, 1, 2 + i, "%s", (i < l )? "#" : ".");
-
-                wrefresh(win_cmd);
-                #else
-                // Delete previous line
-                const std::string deleteLine = "\e[2K\r\e[1A";
-                std::cout << deleteLine;
-                
-                std::cout << "// [ ";
-                for (int i = 0; i < 50; i++) {
-                    if (i < pct/2) {
-                        std::cout << "#";
-                    }
-                    else {
-                        std::cout << ".";
-                    }
-                }
-                std::cout << " ] " << pct << "%" << std::endl;
-                #endif
+                console_draw_pct(pct);
 
                 std::this_thread::sleep_for(std::chrono::milliseconds( ada::getRestMs() ));
             }
@@ -1295,35 +1243,8 @@ void commandsInit() {
                 commandsMutex.lock();
                 pct = sandbox.getRecordedPercentage();
                 commandsMutex.unlock();
-
-                #if defined(SUPPORT_NCURSES)
-                size_t lines, cols;
-                getmaxyx(win_cmd, lines, cols);
-
-                werase(win_cmd);
-                box(win_cmd,0, 0);
-
-                size_t l = (cols-4) * pct;
-                for (size_t i = 0; i < cols-4; i++)
-                    mvwprintw(win_cmd, 1, 2 + i, "%s", (i < l )? "#" : ".");
-
-                wrefresh(win_cmd);
-                #else
                 
-                // Delete previous line
-                const std::string deleteLine = "\e[2K\r\e[1A";
-                std::cout << deleteLine;
-                std::cout << "// [ ";
-                for (int i = 0; i < 50; i++) {
-                    if (i < pct/2) {
-                        std::cout << "#";
-                    }
-                    else {
-                        std::cout << ".";
-                    }
-                }
-                std::cout << " ] " << pct << "%" << std::endl;
-                #endif
+                console_draw_pct(pct);
 
                 std::this_thread::sleep_for(std::chrono::milliseconds( ada::getRestMs() ));
             }
@@ -1460,202 +1381,16 @@ void cinWatcherThread() {
         }
     }
 
-    
-
     #if defined(SUPPORT_NCURSES)
-
-    // Start NCurses
-    initscr();
-    raw();
-    // start_color();
-    cbreak();
-
-    // Create windows
-    // WINDOW* win_out = newwin(LINES-3, COLS, 0, 0);
-    win_cmd = newwin(3, COLS, 0, 0);
-
-    // Capture Keys
-    keypad(stdscr, true);
-    scrollok(stdscr, true);
-    noecho();
-
-    // Capture all COUT
-    std::stringstream buffer;
-    std::streambuf * old = std::cout.rdbuf(buffer.rdbuf());
-
-    // Capture terminal resize
-    signal(SIGWINCH, winch_handler);
-
-    // currenct command state
-    std::string cmd;
-    size_t offset_cursor = 0;
-    size_t offset_buffer = 0;
-    size_t offset_cout = 0;
-    size_t tab_counter = 0;
-
-    std::function<void()> win_cmd_refresh = [&](){
-        werase(win_cmd);
-        mvwprintw(win_cmd, 1, 1, "> %s", cmd.c_str() );
-        box(win_cmd, 0, 0);
-        wrefresh(win_cmd);
-        wmove(win_cmd, 1, 3 + cmd.size() - offset_cursor);
-    };
-
-    resize_handler = [&](int sig) {
-        endwin();
-        erase();
-        refresh();
-
-        // wresize(win_out, LINES - 3, COLS);
-        // wrefresh(win_out);
-
-        wresize(win_cmd, 3, COLS);
-        // mvwin(win_cmd, LINES - 3, 0);
-
-        tab_counter = 0;
-
-        win_cmd_refresh();
-    };
-
-    win_cmd_refresh();
-    refresh();
-
-    int ch;
-    std::vector<std::string> cmd_buffer;
-    while ( keepRunnig.load()) {
-        // werase(win_out);
-        // mvwprintw(win_out, 0, 0, "%s", buffer.str().c_str() );
-        // wrefresh(win_out);
-
-        // Refresh console out
-        erase();
-        mvprintw(4, 0, "%s", buffer.str().c_str() );
-        refresh();
-
-        win_cmd_refresh();
-        
-        ch = getch();
-
-        if (ch == KEY_STAB || ch == '\t') 
-            tab_counter++;
-        else
-            tab_counter = 0;
-
-        if ( ch == '\n' || ch == KEY_ENTER || ch == KEY_EOL) {
-            buffer.str("");
-            commandsRun(cmd, commandsMutex);
-            cmd_buffer.push_back( cmd );
-            offset_cursor = 0;
-            offset_buffer = 0;
-            
-            cmd = "";
-        }
-        else if ( ch == KEY_BACKSPACE || ch == KEY_DC || ch == 127 ) {
-            if (cmd.size() > offset_cursor)
-                cmd.erase(cmd.end()-offset_cursor-1, cmd.end()-offset_cursor);
-        }
-        else if ( ch == KEY_STAB || ch == '\t') {
-            buffer.str("");
-            if (cmd.size() > 0) {
-                if (cmd.find(',') == std::string::npos) {
-                    std::cout << "Suggestions:\n" << std::endl;
-
-                    std::string shorter_suggestion;
-
-                    for (size_t i = 0; i < commands.size(); i++)
-                        if ( commands[i].trigger.rfind(cmd, 0) == 0) {
-                            if (shorter_suggestion.size() == 0 || 
-                                shorter_suggestion.size() > commands[i].trigger.size())
-                                shorter_suggestion = commands[i].trigger;
-
-                            std::cout << std::left << std::setw(27) << commands[i].formula << " " << commands[i].description << std::endl;
-                        }
-
-                    for (UniformDataList::iterator it = sandbox.uniforms.data.begin(); it != sandbox.uniforms.data.end(); ++it) {
-                        if (it->first.rfind(cmd, 0) == 0) {
-                            if (shorter_suggestion.size() == 0 || 
-                                shorter_suggestion.size() > it->first.size())
-                                shorter_suggestion = it->first;
-
-                            std::cout << it->first;
-
-                            for (size_t i = 0; it->second.size; i++)
-                                std::cout << ",<value>";
-                            
-                            std::cout << std::endl;
-                        }
-                    }
-
-                    if (tab_counter > 1 && shorter_suggestion.size() > 0) {
-                        cmd = shorter_suggestion;
-                        tab_counter = 0;
-                    }
-                }
-                else {
-                    std::cout << "Use:" << std::endl;
-
-                    for (size_t i = 0; i < commands.size(); i++)
-                        if ( ada::beginsWith(cmd, commands[i].trigger) )
-                            std::cout << "      " << std::left << std::setw(16) << commands[i].formula << "   " << commands[i].description << std::endl;
-
-                    for (UniformDataList::iterator it = sandbox.uniforms.data.begin(); it != sandbox.uniforms.data.end(); ++it) {
-                        if ( ada::beginsWith(cmd, it->first) ) {
-                            std::cout << it->first;
-
-                            for (size_t i = 0; it->second.size; i++)
-                                std::cout << ",<value>";
-                            
-                            std::cout << std::endl;
-                        }
-                    }
-
-                    std::cout << "\nNotes::" << std::endl;
-                    std::cout << "      - <values> between <...> brakets need to be change for and actual value" << std::endl;
-                    std::cout << "      - when words are separated by | you must choose one of the options, like: A|B|C" << std::endl;
-                    std::cout << "      * everything betwee [...] is optative" << std::endl;
-                }
-            }
-        }
-        else if ( ch == KEY_BREAK || ch == ' ') {
-            cmd += ",";
-        }
-        else if ( ch == KEY_LEFT) {
-            if (offset_cursor < cmd.size())
-                offset_cursor++;
-        }
-        else if ( ch == KEY_RIGHT)
-            offset_cursor--;
-        else if ( ch == KEY_DOWN ) {
-            if (cmd_buffer.size() > 0 && offset_buffer > 0) {
-                offset_buffer--;
-                offset_cursor = 0;
-
-                if (offset_buffer == 0)
-                    cmd = "";
-                else
-                    cmd = cmd_buffer[ cmd_buffer.size() - offset_buffer ];
-            }
-        }
-        else if ( ch == KEY_UP ) {
-            if (offset_buffer < cmd_buffer.size() - 1)
-                offset_buffer++;
-            offset_cursor = 0;
-            if (offset_buffer < cmd_buffer.size() )
-                cmd = cmd_buffer[ cmd_buffer.size() - 1 - offset_buffer ];
-        }
-        
-        else if ( ch == KEY_END || ch == KEY_EXIT || ch == 27 || ch == EOF) {
-            keepRunnig = false;
-            keepRunnig.store(false);
-            break;
-        }
-        else
-            cmd.insert(cmd.end() - offset_cursor, 1, (char)ch );    
-
+    console_init();
+    signal(SIGWINCH, console_sigwinch_handler);
+    while ( keepRunnig.load() ) {
+        std::string cmd;
+        if (console_getline(cmd, commands, sandbox))
+            if (cmd.size())
+                commandsRun(cmd, commandsMutex);
     }
-
-    endwin();
-
+    console_end();
     #else
     // Commands coming from the console IN
     std::string cmd;
