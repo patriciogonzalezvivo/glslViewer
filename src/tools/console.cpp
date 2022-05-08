@@ -43,6 +43,37 @@ void refresh_cmd_win() {
     wrefresh(win_cmd);
     wmove(win_cmd, 1, 3 + cmd.size() - offset_cursor);
 };
+
+std::string suggest(std::string _cmd, std::string& _suggestion, CommandList& _commands, Sandbox& _sandbox) {
+    _suggestion = "";
+    std::stringstream rta; 
+
+    for (size_t i = 0; i < _commands.size(); i++)
+        if ( _commands[i].trigger.rfind(_cmd, 0) == 0) {
+            if (_suggestion.size() == 0 || 
+                _suggestion.size() > _commands[i].trigger.size())
+                _suggestion = _commands[i].trigger;
+
+            rta << std::left << std::setw(27) << _commands[i].formula << " " << _commands[i].description << std::endl;
+        }
+
+    for (UniformDataList::iterator it = _sandbox.uniforms.data.begin(); it != _sandbox.uniforms.data.end(); ++it) {
+        if (it->first.rfind(_cmd, 0) == 0) {
+            if (_suggestion.size() == 0 || 
+                _suggestion.size() > it->first.size())
+                _suggestion = it->first;
+
+            rta << it->first;
+
+            for (size_t i = 0; it->second.size; i++)
+                rta << ",<value>";
+            
+            rta << std::endl;
+        }
+    }
+
+    return rta.str();
+}
 #endif
 
 void console_sigwinch_handler(int signal) {
@@ -126,37 +157,6 @@ void console_refresh() {
     refresh();
     refresh_cmd_win();
     #endif
-}
-
-std::string suggest(std::string _cmd, std::string& _suggestion, CommandList& _commands, Sandbox& _sandbox) {
-    _suggestion = "";
-    std::stringstream rta; 
-
-    for (size_t i = 0; i < _commands.size(); i++)
-        if ( _commands[i].trigger.rfind(_cmd, 0) == 0) {
-            if (_suggestion.size() == 0 || 
-                _suggestion.size() > _commands[i].trigger.size())
-                _suggestion = _commands[i].trigger;
-
-            rta << std::left << std::setw(27) << _commands[i].formula << " " << _commands[i].description << std::endl;
-        }
-
-    for (UniformDataList::iterator it = _sandbox.uniforms.data.begin(); it != _sandbox.uniforms.data.end(); ++it) {
-        if (it->first.rfind(_cmd, 0) == 0) {
-            if (_suggestion.size() == 0 || 
-                _suggestion.size() > it->first.size())
-                _suggestion = it->first;
-
-            rta << it->first;
-
-            for (size_t i = 0; it->second.size; i++)
-                rta << ",<value>";
-            
-            rta << std::endl;
-        }
-    }
-
-    return rta.str();
 }
 
 bool console_getline(std::string& _cmd, CommandList& _commands, Sandbox& _sandbox) {
