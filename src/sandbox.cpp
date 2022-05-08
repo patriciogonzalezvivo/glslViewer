@@ -168,7 +168,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         }
         return false;
     },
-    "debug[,<on|off>]               show/hide passes and textures elements", false));
+    "debug[,on|off]", "show/hide debug elements or return the status of them", false));
 
     _commands.push_back(Command("track", [&](const std::string& _line){
         if (_line == "track") {
@@ -242,7 +242,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         }
         return false;
     },
-    "track[,on|off|average|samples] start/stop tracking rendering time", false));
+    "track[,on|off|average|samples]", "start/stop tracking rendering time", false));
 
     _commands.push_back(Command("reset", [&](const std::string& _line){
         if (_line == "reset") {
@@ -251,7 +251,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         }
         return false;
     },
-    "reset                          reset timestamp back to zero", false));
+    "reset", "reset timestamp back to zero", false));
 
     _commands.push_back(Command("time", [&](const std::string& _line){ 
         if (_line == "time") {
@@ -261,7 +261,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         }
         return false;
     },
-    "time                           return u_time, the elapsed time.", false));
+    "time", "return u_time, the elapsed time.", false));
 
     _commands.push_back(Command("glsl_version", [&](const std::string& _line){ 
         if (_line == "glsl_version") {
@@ -271,7 +271,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         }
         return false;
     },
-    "glsl_version                    return GLSL Version", false));
+    "glsl_version", "return GLSL Version", false));
 
     _commands.push_back(Command("histogram", [&](const std::string& _line){
         if (_line == "histogram") {
@@ -287,7 +287,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         }
         return false;
     },
-    "histogram[,on|off]             show/hide histogram", false));
+    "histogram[,on|off]", "show/hide histogram", false));
 
     _commands.push_back(Command("defines", [&](const std::string& _line){ 
         if (_line == "defines") {
@@ -299,13 +299,13 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         }
         return false;
     },
-    "defines                        return a list of active defines", false));
+    "defines", "return a list of active defines", false));
     
     _commands.push_back(Command("uniforms", [&](const std::string& _line){ 
         uniforms.print(_line == "uniforms,all");
         return true;
     },
-    "uniforms[,all|active]          return a list of all or active uniforms and their values.", false));
+    "uniforms[,all|active]", "return a list of all or active uniforms and their values.", false));
 
     _commands.push_back(Command("textures", [&](const std::string& _line){ 
         if (_line == "textures") {
@@ -321,7 +321,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         }
         return false;
     },
-    "textures[,<on|off>]               return a list of textures as their uniform name and path. Or show/hide textures on viewport.", false));
+    "textures[,on|off]", "return a list of textures as their uniform name and path. Or show/hide textures on viewport.", false));
 
     _commands.push_back(Command("buffers", [&](const std::string& _line){ 
         if (_line == "buffers") {
@@ -346,7 +346,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         }
         return false;
     },
-    "buffers[,<on|off>]                 return a list of buffers as their uniform name. Or show/hide buffer on viewport.", false));
+    "buffers[,on|off]", "return a list of buffers as their uniform name. Or show/hide buffer on viewport.", false));
 
     _commands.push_back(Command("error_screen", [&](const std::string& _line){ 
         if (_line == "error_screen") {
@@ -363,7 +363,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         }
         return false;
     },
-    "error_screen                       display magenta screen on errors", false));
+    "error_screen,on|off", "enable/disable magenta screen on errors", false));
 
     // LIGTH
     _commands.push_back(Command("lights", [&](const std::string& _line){ 
@@ -373,7 +373,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         }
         return false;
     },
-    "lights                         get all light data."));
+    "lights", "print all light related uniforms"));
 
     _commands.push_back(Command("light_position", [&](const std::string& _line){ 
         std::vector<std::string> values = ada::split(_line,',');
@@ -397,7 +397,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         }
         return false;
     },
-    "light_position[,<x>,<y>,<z>]   get or set the light position."));
+    "light_position[,<x>,<y>,<z>]", "get or set the light position"));
 
     _commands.push_back(Command("light_color", [&](const std::string& _line){ 
          std::vector<std::string> values = ada::split(_line,',');
@@ -426,7 +426,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         }
         return false;
     },
-    "light_color[,<r>,<g>,<b>]      get or set the light color."));
+    "light_color[,<r>,<g>,<b>]", "get or set the light color"));
 
     _commands.push_back(Command("light_falloff", [&](const std::string& _line){ 
          std::vector<std::string> values = ada::split(_line,',');
@@ -453,7 +453,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         }
         return false;
     },
-    "light_falloff[,<value>]        get or set the light falloff distance."));
+    "light_falloff[,<value>]", "get or set the light falloff distance"));
 
     _commands.push_back(Command("light_intensity", [&](const std::string& _line){ 
          std::vector<std::string> values = ada::split(_line,',');
@@ -481,7 +481,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         }
         return false;
     },
-    "light_intensity[,<value>]      get or set the light intensity."));
+    "light_intensity[,<value>]", "get or set the light intensity"));
 
     // CAMERA
     _commands.push_back(Command("camera_distance", [&](const std::string& _line){ 
@@ -496,7 +496,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         }
         return false;
     },
-    "camera_distance[,<dist>]       get or set the camera distance to the target."));
+    "camera_distance[,<dist>]", "get or set the camera distance to the target"));
 
     _commands.push_back(Command("camera_type", [&](const std::string& _line){ 
         std::vector<std::string> values = ada::split(_line,',');
@@ -517,7 +517,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         }
         return false;
     },
-    "camera_type[,<ortho|perspective>] get or set the camera type"));
+    "camera_type[,<ortho|perspective>]", "get or set the camera type"));
 
     _commands.push_back(Command("camera_fov", [&](const std::string& _line){ 
         std::vector<std::string> values = ada::split(_line,',');
@@ -531,7 +531,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         }
         return false;
     },
-    "camera_fov[,<field_of_view>]   get or set the camera field of view."));
+    "camera_fov[,<field_of_view>]", "get or set the camera field of view."));
 
     _commands.push_back(Command("camera_position", [&](const std::string& _line){ 
         std::vector<std::string> values = ada::split(_line,',');
@@ -547,7 +547,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         }
         return false;
     },
-    "camera_position[,<x>,<y>,<z>]  get or set the camera position."));
+    "camera_position[,<x>,<y>,<z>]", "get or set the camera position."));
 
     _commands.push_back(Command("camera_exposure", [&](const std::string& _line){ 
         std::vector<std::string> values = ada::split(_line,',');
@@ -561,7 +561,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         }
         return false;
     },
-    "camera_exposure[,<aper.>,<shutter>,<sensit.>]  get or set the camera exposure values."));
+    "camera_exposure[,<aper.>,<shutter>,<sensit.>]", "get or set the camera exposure values."));
 
     _commands.push_back(Command("stream", [&](const std::string& _line){ 
         std::vector<std::string> values = ada::split(_line,',');
@@ -623,9 +623,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
 
         return false;
     },
-    "streams                        print all streams.\n\
-   streams,speed[,<value>]        get or set streams speed.\n\
-   streams,prevs[,<value>]        get or set total previous textures."));
+    "streams[,stop|play|speed|prevs[,<value>]]", "print all streams or get/set streams speed and previous frames"));
 
     #ifdef SUPPORT_MULTITHREAD_RECORDING 
     _commands.push_back(Command("max_mem_in_queue", [&](const std::string & line) {
@@ -637,7 +635,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
             std::cout << m_max_mem_in_queue.load() << std::endl;
         }
         return false;
-    }, "max_mem_in_queue[,<bytes>]     set the maximum amount of memory used by a queue to export images to disk"));
+    }, "max_mem_in_queue[,<bytes>]", "set the maximum amount of memory used by a queue to export images to disk"));
     #endif
 
     // LOAD SHACER 

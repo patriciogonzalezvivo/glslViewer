@@ -723,7 +723,7 @@ void commandsRun(const std::string &_cmd, std::mutex &_mutex) {
 
     // Check if _cmd is present in the list of commands
     for (size_t i = 0; i < commands.size(); i++) {
-        if (ada::beginsWith(_cmd, commands[i].begins_with)) {
+        if (ada::beginsWith(_cmd, commands[i].trigger)) {
             // Do require mutex the thread?
             if (commands[i].mutex) _mutex.lock();
 
@@ -748,26 +748,30 @@ void commandsRun(const std::string &_cmd, std::mutex &_mutex) {
 void commandsInit() {
     commands.push_back(Command("help", [&](const std::string& _line){
         if (_line == "help") {
-            std::cout << "// " << header << std::endl;
-            std::cout << "// " << std::endl;
+            std::cout << "Use:\n    help,<command>\n" << std::endl;
+            std::cout << "Available commands:" << std::endl;
             for (size_t i = 0; i < commands.size(); i++) {
-                std::cout << "// " << commands[i].description << std::endl;
-            }
+                if (i%4 == 0)
+                    std::cout << std::endl;
+                std::cout << std::left << std::setw(16) << commands[i].trigger << " ";
+            } 
+            std::cout << std::endl;
             return true;
         }
         else {
             std::vector<std::string> values = ada::split(_line,',');
             if (values.size() == 2) {
                 for (size_t i = 0; i < commands.size(); i++) {
-                    if (commands[i].begins_with == values[1]) {
-                        std::cout << "// " << commands[i].description << std::endl;
+                    if (commands[i].trigger == values[1]) {
+                        std::cout << commands[i].trigger << std::left << std::setw(16) << "   " << commands[i].description << std::endl;
                     }
                 }
+                return true;
             }
         }
         return false;
     },
-    "help[,<command>]               print help for one or all command", false));
+    "help,<command>", "print help for one or all command", false));
 
     commands.push_back(Command("version", [&](const std::string& _line){ 
         if (_line == "version") {
@@ -776,7 +780,7 @@ void commandsInit() {
         }
         return false;
     },
-    "version                        return glslViewer version.", false));
+    "version", "return glslViewer version.", false));
 
     commands.push_back(Command("window_width", [&](const std::string& _line){ 
         if (_line == "window_width") {
@@ -785,7 +789,7 @@ void commandsInit() {
         }
         return false;
     },
-    "window_width                   return the width of the windows.", false));
+    "window_width", "return the width of the windows.", false));
 
     commands.push_back(Command("window_height", [&](const std::string& _line){ 
         if (_line == "window_height") {
@@ -794,7 +798,7 @@ void commandsInit() {
         }
         return false;
     },
-    "window_height                  return the height of the windows.", false));
+    "window_height", "return the height of the windows.", false));
 
     commands.push_back(Command("pixel_density", [&](const std::string& _line){ 
         if (_line == "pixel_density") {
@@ -803,7 +807,7 @@ void commandsInit() {
         }
         return false;
     },
-    "pixel_density                  return the pixel density.", false));
+    "pixel_density", "return the pixel density.", false));
 
     commands.push_back(Command("screen_size", [&](const std::string& _line){ 
         if (_line == "screen_size") {
@@ -813,7 +817,7 @@ void commandsInit() {
         }
         return false;
     },
-    "screen_size                    return the screen size.", false));
+    "screen_size", "return the screen size.", false));
 
     commands.push_back(Command("viewport", [&](const std::string& _line){ 
         if (_line == "viewport") {
@@ -823,7 +827,7 @@ void commandsInit() {
         }
         return false;
     },
-    "viewport                       return the viewport size.", false));
+    "viewport", "return the viewport size.", false));
 
     commands.push_back(Command("mouse", [&](const std::string& _line){ 
         if (_line == "mouse") {
@@ -833,7 +837,7 @@ void commandsInit() {
         }
         return false;
     },
-    "mouse                          return the mouse position.", false));
+    "mouse", "return the mouse position.", false));
     
     commands.push_back(Command("fps", [&](const std::string& _line){
         std::vector<std::string> values = ada::split(_line,',');
@@ -850,7 +854,7 @@ void commandsInit() {
         }
         return false;
     },
-    "fps                            return or set the amount of frames per second.", false));
+    "fps", "return or set the amount of frames per second.", false));
 
     commands.push_back(Command("delta", [&](const std::string& _line){ 
         if (_line == "delta") {
@@ -860,7 +864,7 @@ void commandsInit() {
         }
         return false;
     },
-    "delta                          return u_delta, the secs between frames.", false));
+    "delta", "return u_delta, the secs between frames.", false));
 
     commands.push_back(Command("date", [&](const std::string& _line){ 
         if (_line == "date") {
@@ -871,7 +875,7 @@ void commandsInit() {
         }
         return false;
     },
-    "date                           return u_date as YYYY, M, D and Secs.", false));
+    "date", "return u_date as YYYY, M, D and Secs.", false));
 
     commands.push_back(Command("files", [&](const std::string& _line){ 
         if (_line == "files") {
@@ -882,9 +886,9 @@ void commandsInit() {
         }
         return false;
     },
-    "files                          return a list of files.", false));
+    "files", "return a list of files.", false));
 
-    commands.push_back( Command("define,", [&](const std::string& _line){ 
+    commands.push_back( Command("define", [&](const std::string& _line){ 
         std::vector<std::string> values = ada::split(_line,',');
         bool change = false;
         if (values.size() == 2) {
@@ -915,9 +919,9 @@ void commandsInit() {
         }
         return change;
     },
-    "define,<KEYWORD>[,<VALUE>]     add a define to the shader", false));
+    "define,<KEYWORD>[,<VALUE>]", "add a define to the shader", false));
 
-    commands.push_back( Command("undefine,", [&](const std::string& _line){ 
+    commands.push_back( Command("undefine", [&](const std::string& _line){ 
         std::vector<std::string> values = ada::split(_line,',');
         if (values.size() == 2) {
             sandbox.delDefine( values[1] );
@@ -936,7 +940,7 @@ void commandsInit() {
         }
         return false;
     },
-    "undefine,<KEYWORD>             remove a define on the shader", false));
+    "undefine,<KEYWORD>", "remove a define on the shader", false));
 
     commands.push_back(Command("reload", [&](const std::string& _line){ 
         if (_line == "reload" || _line == "reload,all") {
@@ -965,7 +969,7 @@ void commandsInit() {
         }
         return false;
     },
-    "reload[,<filename>]            reload one or all files", false));
+    "reload[,<filename>]", "reload one or all files", false));
 
     commands.push_back(Command("frag", [&](const std::string& _line){ 
         if (_line == "frag") {
@@ -1004,7 +1008,7 @@ void commandsInit() {
         }
         return false;
     },
-    "frag[,<filename>]              returns or save the fragment shader source code.", false));
+    "frag[,<filename>]", "returns or save the fragment shader source code.", false));
 
     commands.push_back(Command("vert", [&](const std::string& _line){ 
         if (_line == "vert") {
@@ -1043,7 +1047,7 @@ void commandsInit() {
         }
         return false;
     },
-    "vert[,<filename>]              returns or save the vertex shader source code.", false));
+    "vert[,<filename>]", "returns or save the vertex shader source code.", false));
 
     commands.push_back( Command("dependencies", [&](const std::string& _line){ 
         if (_line == "dependencies") {
@@ -1064,7 +1068,7 @@ void commandsInit() {
         }
         return false;
     },
-    "dependencies[,<vert|frag>]     returns all the dependencies of the vertex o fragment shader or both.", false));
+    "dependencies[,<vert|frag>]", "returns all the dependencies of the vertex o fragment shader or both.", false));
 
     commands.push_back(Command("update", [&](const std::string& _line){ 
         if (_line == "update") {
@@ -1072,7 +1076,7 @@ void commandsInit() {
         }
         return false;
     },
-    "update                         force all uniforms to be updated", false));
+    "update", "force all uniforms to be updated", false));
 
     commands.push_back(Command("wait", [&](const std::string& _line){ 
         std::vector<std::string> values = ada::split(_line,',');
@@ -1088,7 +1092,7 @@ void commandsInit() {
         }
         return false;
     },
-    "wait,<seconds>                 wait for X <seconds> before excecuting another command.", false));
+    "wait,<seconds>", "wait for X <seconds> before excecuting another command.", false));
 
     commands.push_back(Command("fullFps", [&](const std::string& _line){
         if (_line == "fullFps") {
@@ -1107,7 +1111,7 @@ void commandsInit() {
         }
         return false;
     },
-    "fullFps[,on|off]               go to full FPS or not", false));
+    "fullFps[,on|off]", "go to full FPS or not", false));
 
     commands.push_back(Command("cursor", [&](const std::string& _line){
         if (_line == "cursor") {
@@ -1125,7 +1129,7 @@ void commandsInit() {
         }
         return false;
     },
-    "cursor[,on|off]                show/hide cursor", false));
+    "cursor[,on|off]", "show/hide cursor", false));
 
     commands.push_back(Command("screenshot", [&](const std::string& _line){ 
         std::vector<std::string> values = ada::split(_line,',');
@@ -1137,7 +1141,7 @@ void commandsInit() {
         }
         return false;
     },
-    "screenshot[,<filename>]        saves a screenshot to a filename.", false));
+    "screenshot[,<filename>]", "saves a screenshot to a filename.", false));
 
     commands.push_back(Command("sequence", [&](const std::string& _line){ 
         std::vector<std::string> values = ada::split(_line,',');
@@ -1157,11 +1161,9 @@ void commandsInit() {
             sandbox.recordSecs(from, to, fps);
             commandsMutex.unlock();
 
-            std::cout << "// " << std::endl;
-
-            float pct = 0;
-            while (pct < 1.0) {
-                // Check progres.
+            float pct = 0.0f;
+            while (pct < 1.0f) {
+                // get progres.
                 commandsMutex.lock();
                 pct = sandbox.getRecordedPercentage();
                 commandsMutex.unlock();
@@ -1197,7 +1199,7 @@ void commandsInit() {
         }
         return false;
     },
-    "", false));
+    "sequence,<from_sec>,<to_sec>[,<fps>]","save a PNG sequence <from_sec> <to_sec> at <fps> (default: 24)",false));
 
     commands.push_back(Command("secs", [&](const std::string& _line){ 
         std::vector<std::string> values = ada::split(_line,',');
@@ -1217,18 +1219,29 @@ void commandsInit() {
             sandbox.recordSecs(from, to, fps);
             commandsMutex.unlock();
 
-            std::cout << "// " << std::endl;
-
-            int pct = 0;
-            while (pct < 100) {
-                // Delete previous line
-                const std::string deleteLine = "\e[2K\r\e[1A";
-                std::cout << deleteLine;
-
-                // Check progres.
+            float pct = 0.0f;
+            while (pct < 1.0f) {
+                // get progres.
                 commandsMutex.lock();
                 pct = sandbox.getRecordedPercentage();
                 commandsMutex.unlock();
+
+                #if defined(SUPPORT_NCURSES)
+                size_t lines, cols;
+                getmaxyx(win_cmd, lines, cols);
+
+                werase(win_cmd);
+                box(win_cmd,0, 0);
+
+                size_t l = (cols-4) * pct;
+                for (size_t i = 0; i < cols-4; i++)
+                    mvwprintw(win_cmd, 1, 2 + i, "%s", (i < l )? "#" : ".");
+
+                wrefresh(win_cmd);
+                #else
+                // Delete previous line
+                const std::string deleteLine = "\e[2K\r\e[1A";
+                std::cout << deleteLine;
                 
                 std::cout << "// [ ";
                 for (int i = 0; i < 50; i++) {
@@ -1240,13 +1253,15 @@ void commandsInit() {
                     }
                 }
                 std::cout << " ] " << pct << "%" << std::endl;
+                #endif
+
                 std::this_thread::sleep_for(std::chrono::milliseconds( ada::getRestMs() ));
             }
             return true;
         }
         return false;
     },
-    "secs,<A_sec>,<B_sec>[,fps]     saves a sequence of images from A to B second.", false));
+    "secs,<A>,<B>[,<fps>]","saves a sequence of images from second A to second B at <fps> (default: 24)", false));
 
     commands.push_back(Command("frames", [&](const std::string& _line){ 
         std::vector<std::string> values = ada::split(_line,',');
@@ -1258,27 +1273,38 @@ void commandsInit() {
             if (values.size() == 4)
                 fps = ada::toFloat(values[3]);
 
-            if (from >= to) {
+            if (from >= to)
                 from = 0.0;
-            }
 
             commandsMutex.lock();
             sandbox.recordFrames(from, to, fps);
             commandsMutex.unlock();
 
-            std::cout << "// " << std::endl;
-
-            int pct = 0;
-            while (pct < 100) {
-                // Delete previous line
-                const std::string deleteLine = "\e[2K\r\e[1A";
-                std::cout << deleteLine;
+            float pct = 0.0f;
+            while (pct < 1.0f) {
 
                 // Check progres.
                 commandsMutex.lock();
                 pct = sandbox.getRecordedPercentage();
                 commandsMutex.unlock();
+
+                #if defined(SUPPORT_NCURSES)
+                size_t lines, cols;
+                getmaxyx(win_cmd, lines, cols);
+
+                werase(win_cmd);
+                box(win_cmd,0, 0);
+
+                size_t l = (cols-4) * pct;
+                for (size_t i = 0; i < cols-4; i++)
+                    mvwprintw(win_cmd, 1, 2 + i, "%s", (i < l )? "#" : ".");
+
+                wrefresh(win_cmd);
+                #else
                 
+                // Delete previous line
+                const std::string deleteLine = "\e[2K\r\e[1A";
+                std::cout << deleteLine;
                 std::cout << "// [ ";
                 for (int i = 0; i < 50; i++) {
                     if (i < pct/2) {
@@ -1289,13 +1315,15 @@ void commandsInit() {
                     }
                 }
                 std::cout << " ] " << pct << "%" << std::endl;
+                #endif
+
                 std::this_thread::sleep_for(std::chrono::milliseconds( ada::getRestMs() ));
             }
             return true;
         }
         return false;
     },
-    "frames,<A_sec>,<B_sec>[,fps] saves a sequence of images from frame A to B.", false));
+    "frames,<A>,<B>[,<fps>]","saves a sequence of images from frame <A> to <B> at <fps> (default: 24).", false));
 
     commands.push_back(Command("q", [&](const std::string& _line){ 
         if (_line == "q") {
@@ -1304,7 +1332,7 @@ void commandsInit() {
         }
         return false;
     },
-    "q                              close glslViewer", false));
+    "q", "close glslViewer", false));
 
     commands.push_back(Command("quit", [&](const std::string& _line){ 
         if (_line == "quit") {
@@ -1314,7 +1342,7 @@ void commandsInit() {
         }
         return false;
     },
-    "quit                           close glslViewer", false));
+    "quit", "close glslViewer", false));
 
     commands.push_back(Command("exit", [&](const std::string& _line){ 
         if (_line == "exit") {
@@ -1324,7 +1352,7 @@ void commandsInit() {
         }
         return false;
     },
-    "exit                           close glslViewer", false));
+    "exit", "close glslViewer", false));
 }
 
 #ifndef __EMSCRIPTEN__
@@ -1469,6 +1497,7 @@ void cinWatcherThread() {
     size_t offset_cursor = 0;
     size_t offset_buffer = 0;
     size_t offset_cout = 0;
+    size_t tab_counter = 0;
 
     std::function<void()> win_cmd_refresh = [&](){
         werase(win_cmd);
@@ -1488,6 +1517,8 @@ void cinWatcherThread() {
         wresize(win_cmd, 3, COLS);
         mvwin(win_cmd, LINES - 3, 0);
 
+        tab_counter = 0;
+
         win_cmd_refresh();
     };
 
@@ -1504,12 +1535,19 @@ void cinWatcherThread() {
         win_cmd_refresh();
         
         ch = getch();
+
+        if (ch == KEY_STAB || ch == '\t') 
+            tab_counter++;
+        else
+            tab_counter = 0;
+
         if ( ch == '\n' || ch == KEY_ENTER || ch == KEY_EOL) {
             buffer.str("");
             commandsRun(cmd, commandsMutex);
             cmd_buffer.push_back( cmd );
             offset_cursor = 0;
             offset_buffer = 0;
+            
             cmd = "";
         }
         else if ( ch == KEY_BACKSPACE || ch == KEY_DC || ch == 127 ) {
@@ -1519,23 +1557,58 @@ void cinWatcherThread() {
         else if ( ch == KEY_STAB || ch == '\t') {
             buffer.str("");
             if (cmd.size() > 0) {
-                std::cout << "Suggestions: " << std::endl;
+                if (cmd.find(',') == std::string::npos) {
+                    std::cout << "Suggestions:\n" << std::endl;
 
-                for (size_t i = 0; i < commands.size(); i++)
-                    if ( commands[i].begins_with.rfind(cmd, 0) == 0)
-                        std::cout << "   " << commands[i].description << std::endl;
+                    std::string shorter_suggestion;
 
-                for (UniformDataList::iterator it = sandbox.uniforms.data.begin(); it != sandbox.uniforms.data.end(); ++it) {
-                    if (it->first.rfind(cmd, 0) == 0) {
-                        std::cout << it->first;
+                    for (size_t i = 0; i < commands.size(); i++)
+                        if ( commands[i].trigger.rfind(cmd, 0) == 0) {
+                            if (shorter_suggestion.size() == 0 || 
+                                shorter_suggestion.size() > commands[i].trigger.size())
+                                shorter_suggestion = commands[i].trigger;
 
-                        for (size_t i = 0; it->second.size; i++)
-                            std::cout << ",<value>";
-                        
-                        std::cout << std::endl;
+                            std::cout << std::left << std::setw(27) << commands[i].formula << " " << commands[i].description << std::endl;
+                        }
+
+                    for (UniformDataList::iterator it = sandbox.uniforms.data.begin(); it != sandbox.uniforms.data.end(); ++it) {
+                        if (it->first.rfind(cmd, 0) == 0) {
+                            if (shorter_suggestion.size() == 0 || 
+                                shorter_suggestion.size() > it->first.size())
+                                shorter_suggestion = it->first;
+
+                            std::cout << it->first;
+
+                            for (size_t i = 0; it->second.size; i++)
+                                std::cout << ",<value>";
+                            
+                            std::cout << std::endl;
+                        }
+                    }
+
+                    if (tab_counter > 1 && shorter_suggestion.size() > 0) {
+                        cmd = shorter_suggestion;
+                        tab_counter = 0;
                     }
                 }
-                
+                else {
+                    std::cout << "Use:\n" << std::endl;
+
+                    for (size_t i = 0; i < commands.size(); i++)
+                        if ( ada::beginsWith(cmd, commands[i].trigger) )
+                            std::cout << std::left << std::setw(16) << commands[i].formula << "   " << commands[i].description << std::endl;
+
+                    for (UniformDataList::iterator it = sandbox.uniforms.data.begin(); it != sandbox.uniforms.data.end(); ++it) {
+                        if ( ada::beginsWith(cmd, it->first) ) {
+                            std::cout << it->first;
+
+                            for (size_t i = 0; it->second.size; i++)
+                                std::cout << ",<value>";
+                            
+                            std::cout << std::endl;
+                        }
+                    }
+                }
             }
         }
         else if ( ch == KEY_BREAK || ch == ' ') {
