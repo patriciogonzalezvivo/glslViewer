@@ -41,8 +41,7 @@ void winch_handler(int signal) { resize_handler(signal); }
 #define TRACK_END(A)        if (sandbox.uniforms.tracker.isRunning()) sandbox.uniforms.tracker.end(A); 
 
 std::string                 version = "2.0.5";
-std::string                 name    = "GlslViewer";
-std::string                 header  = name + " " + version + " by Patricio Gonzalez Vivo ( http://patriciogonzalezvivo.com )"; 
+std::string                 about   = "GlslViewer " + version + " by Patricio Gonzalez Vivo ( http://patriciogonzalezvivo.com )"; 
 
 // Here is where all the magic happens
 Sandbox                     sandbox;
@@ -784,7 +783,7 @@ void commandsInit() {
 
     commands.push_back(Command("about", [&](const std::string& _line){ 
         if (_line == "about") {
-            std::cout << header << std::endl;
+            std::cout << about << std::endl;
             return true;
         }
         return false;
@@ -1367,57 +1366,43 @@ void commandsInit() {
 #ifndef __EMSCRIPTEN__
 
 void printUsage(char * executableName) {
-    std::cerr << "// " << header << std::endl;
-    std::cerr << "// "<< std::endl;
-    std::cerr << "// Swiss army knife of GLSL Shaders. Loads frag/vertex shaders, images, " << std::endl;
-    std::cerr << "// videos, audio, geometries and much more. Your assets will reload  "<< std::endl;
-    std::cerr << "// automatically on changes. It have support for multiple buffers,  "<< std::endl;
-    std::cerr << "// background and postprocessing passes. It can render headlessly into"<< std::endl;
-    std::cerr << "// a file, a PNG sequence, or fullscreen, as a screensaver, live mode (allways "<< std::endl;
-    std::cerr << "// on top) or to volumetric displays. "<< std::endl;
-    std::cerr << "// Use POSIX STANDARD CONSOLE IN/OUT to comunicate (uniforms, camera "<< std::endl;
-    std::cerr << "// properties, lights and other scene properties) to and with other "<< std::endl;
-    std::cerr << "// programs. Compatible with Linux, MacOS and Windows, runs from "<< std::endl;
-    std::cerr << "// command line with or outside X11 environment on RaspberryPi devices. "<< std::endl;
-    std::cerr << "// "<< std::endl;
-    std::cerr << "// For more information refer to repository:"<< std::endl;
-    std::cerr << "// https://github.com/patriciogonzalezvivo/glslViewer"<< std::endl;
-    std::cerr << "// or joing the #glslViewer channel in https://shader.zone/"<< std::endl;
-    std::cerr << "// "<< std::endl;
-    std::cerr << "// Usage: " << executableName << " [Arguments]"<< std::endl;
-    std::cerr << "// "<< std::endl;
-    std::cerr << "// Arguments:" << std::endl;
-    std::cerr << "// <shader>.frag [<shader>.vert] - load shaders" << std::endl;
-    std::cerr << "// [<mesh>.(obj/ply/stl/glb/gltf)] - load obj/ply/stl/glb/gltf file" << std::endl;
-    std::cerr << "// [<texture>.(png/tga/jpg/bmp/psd/gif/hdr/mov/mp4/rtsp/rtmp/etc)] - load and assign texture to uniform order" << std::endl;
-    std::cerr << "// [-vFlip] - all textures after will be flipped vertically" << std::endl;
-    std::cerr << "// [--video <video_device_number>] - open video device allocated wit that particular id" << std::endl;
-    std::cerr << "// [--audio <capture_device_id>] - open audio capture device allocated as sampler2D texture. If id is not selected, default will be used" << std::endl;
-    std::cerr << "// [-<uniformName> <texture>.(png/tga/jpg/bmp/psd/gif/hdr)] - add textures associated with different uniform sampler2D names" << std::endl;
-    std::cerr << "// [-C <enviromental_map>.(png/tga/jpg/bmp/psd/gif/hdr)] - load a environmental map as cubemap" << std::endl;
-    std::cerr << "// [-c <enviromental_map>.(png/tga/jpg/bmp/psd/gif/hdr)] - load a environmental map as cubemap but hided" << std::endl;
-    std::cerr << "// [-sh <enviromental_map>.(png/tga/jpg/bmp/psd/gif/hdr)] - load a environmental map as spherical harmonics array" << std::endl;
-    std::cerr << "// [-x <pixels>] - set the X position of the billboard on the screen" << std::endl;
-    std::cerr << "// [-y <pixels>] - set the Y position of the billboard on the screen" << std::endl;
-    std::cerr << "// [-w <pixels>] - set the width of the window" << std::endl;
-    std::cerr << "// [-h <pixels>] - set the height of the billboard" << std::endl;
-    std::cerr << "// [--fps] <fps> - fix the max FPS" << std::endl;
-    std::cerr << "// [-d|--display <display>] - open specific display port. Ex: -d /dev/dri/card1" << std::endl;
-    std::cerr << "// [-f|--fullscreen] - load the window in fullscreen" << std::endl;
-    std::cerr << "// [-l|--life-coding] - live code mode, where the billboard is allways visible" << std::endl;
-    std::cerr << "// [-ss|--screensaver] - screensaver mode, any pressed key will exit" << std::endl;
-    std::cerr << "// [--headless] - headless rendering. Very useful for making images or benchmarking." << std::endl;
-    std::cerr << "// [--nocursor] - hide cursor" << std::endl;
-    std::cerr << "// [--fxaa] - set FXAA as postprocess filter" << std::endl;
-    std::cerr << "// [--quilt <0-7>] - quilt render (HoloPlay)" << std::endl;
-    std::cerr << "// [--lenticular [visual.json]] - lenticular calubration file, Looking Glass Model (HoloPlay)" << std::endl;
-    std::cerr << "// [-I<include_folder>] - add an include folder to default for #include files" << std::endl;
-    std::cerr << "// [-D<define>] - add system #defines directly from the console argument" << std::endl;
-    std::cerr << "// [-p <osc_port>] - open OSC listening port" << std::endl;
-    std::cerr << "// [-e/-E <command>] - execute command when start. Multiple -e flags can be chained" << std::endl;
-    std::cerr << "// [-v/--version] - return glslViewer version" << std::endl;
-    std::cerr << "// [--verbose] - turn verbose outputs on" << std::endl;
-    std::cerr << "// [--help] - print help for one or all command" << std::endl;
+    std::cerr << about << "\n" << std::endl;
+    std::cerr << "This is a flexible console-base OpenGL Sandbox to display 2D/3D GLSL shaders without the need of an UI. You can definitely make your own IDE or UI that communicates back/forth with glslViewer thought the standard POSIX console In/Out or OSC.\n" << std::endl;
+    std::cerr << "For more information:"<< std::endl;
+    std::cerr << "  - refer to repository wiki https://github.com/patriciogonzalezvivo/glslViewer/wiki"<< std::endl;
+    std::cerr << "  - joing the #glslViewer channel in https://shader.zone/\n"<< std::endl;
+    std::cerr << "Usage:"<< std::endl;
+    std::cerr << "          " << executableName << " <frag_shader>.frag [<vert_shader>.vert <geometry>.obj|ply|stl|glb|gltf]\n" << std::endl;
+    std::cerr << "Optional arguments:\n"<< std::endl;
+    std::cerr << "      <texture>.(png/tga/jpg/bmp/psd/gif/hdr/mov/mp4/rtsp/rtmp/etc)   # load and assign texture to uniform u_tex<N>" << std::endl;
+    std::cerr << "      -<uniform_name> <texture>.(png/tga/jpg/bmp/psd/gif/hdr)         # load a textures with a custom name" << std::endl;
+    std::cerr << "      --video <video_device_number>   # open video device allocated wit that particular id" << std::endl;
+    std::cerr << "      --audio [<capture_device_id>]   # open audio capture device as sampler2D texture " << std::endl;
+    std::cerr << "      -C <enviromental_map>.(png/tga/jpg/bmp/psd/gif/hdr)     # load a env. map as cubemap" << std::endl;
+    std::cerr << "      -c <enviromental_map>.(png/tga/jpg/bmp/psd/gif/hdr)     # load a env. map as cubemap but hided" << std::endl;
+    std::cerr << "      -sh <enviromental_map>.(png/tga/jpg/bmp/psd/gif/hdr)    # load a env. map as spherical harmonics array" << std::endl;
+    std::cerr << "      -vFlip                      # all textures after will be flipped vertically" << std::endl;
+    std::cerr << "      -x <pixels>                 # set the X position of the billboard on the screen" << std::endl;
+    std::cerr << "      -y <pixels>                 # set the Y position of the billboard on the screen" << std::endl;
+    std::cerr << "      -w <pixels>                 # set the width of the window" << std::endl;
+    std::cerr << "      -h <pixels>                 # set the height of the billboard" << std::endl;
+    std::cerr << "      -d  or --display <display>  # open specific display port. Ex: -d /dev/dri/card1" << std::endl;
+    std::cerr << "      -f  or --fullscreen         # load the window in fullscreen" << std::endl;
+    std::cerr << "      -l  or --life-coding        # live code mode, where the billboard is allways visible" << std::endl;
+    std::cerr << "      -ss or --screensaver        # screensaver mode, any pressed key will exit" << std::endl;
+    std::cerr << "      --headless                  # headless rendering" << std::endl;
+    std::cerr << "      --nocursor                  # hide cursor" << std::endl;
+    std::cerr << "      --fps <fps>                 # fix the max FPS" << std::endl;
+    std::cerr << "      --fxaa                      # set FXAA as postprocess filter" << std::endl;
+    std::cerr << "      --quilt <0-7>               # quilt render (HoloPlay)" << std::endl;
+    std::cerr << "      --lenticular [visual.json]  # lenticular calubration file, Looking Glass Model (HoloPlay)" << std::endl;
+    std::cerr << "      -I<include_folder>          # add an include folder to default for #include files" << std::endl;
+    std::cerr << "      -D<define>                  # add system #defines directly from the console argument" << std::endl;
+    std::cerr << "      -p <OSC_port>               # open OSC listening port" << std::endl;
+    std::cerr << "      -e  or -E <command>         # execute command when start. Multiple -e commands can be stack" << std::endl;
+    std::cerr << "      -v  or --version            # return glslViewer version" << std::endl;
+    std::cerr << "      --verbose                   # turn verbose outputs on" << std::endl;
+    std::cerr << "      --help                      # print help for one or all command" << std::endl;
 }
 
 void onExit() {
