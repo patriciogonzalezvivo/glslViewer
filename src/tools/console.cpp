@@ -290,7 +290,8 @@ void console_draw_pct(float _pct) {
     // Delete previous line
     const std::string deleteLine = "\e[2K\r\e[1A";
     std::cout << deleteLine;
-    
+
+    int pct = 100 * _pct;
     std::cout << "// [ ";
     for (int i = 0; i < 50; i++) {
         if (i < pct/2) {
