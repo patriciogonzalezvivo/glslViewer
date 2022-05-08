@@ -1579,8 +1579,8 @@ void cinWatcherThread() {
     endwin();
 
     #else
-    // Commands comming from the console IN
-    
+    // Commands coming from the console IN
+    std::string cmd;
     std::cout << "// > ";
     while (std::getline(std::cin, cmd)) {
         commandsRun(cmd, commandsMutex);
