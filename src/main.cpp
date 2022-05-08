@@ -571,21 +571,6 @@ int main(int argc, char **argv) {
         }
     }
 
-    if (sandbox.verbose) {
-        printf("//Specs: \n");
-        printf("//  - Vendor: %s\n", ada::getVendor().c_str() );
-        printf("//  - Renderer: %s\n", ada::getRenderer().c_str() );
-        printf("//  - Version: %s\n", ada::getGLVersion().c_str() );
-        printf("//  - GLSL version: %s\n", ada::getGLSLVersion().c_str() );
-        printf("//  - Extensions: %s\n", ada::getExtensions().c_str() );
-
-        printf("//  - Implementation limits:\n");
-        int param;
-        glGetIntegerv(GL_MAX_TEXTURE_SIZE, &param);
-        std::cout << "//      + GL_MAX_TEXTURE_SIZE = " << param << std::endl;
-
-    }
-
     // If no shader
     #ifndef __EMSCRIPTEN__
     if ( sandbox.frag_index == -1 && sandbox.vert_index == -1 && sandbox.geom_index == -1 ) {
@@ -645,6 +630,20 @@ int main(int argc, char **argv) {
         oscServer.start();
     }
     #endif
+
+    if (sandbox.verbose) {
+        std::cout << "\nRunning on:\n" << std::endl;
+        std::cout << "  - Vendor:       " << ada::getVendor() << std::endl;
+        std::cout << "  - Version:      " << ada::getGLVersion() << std::endl;
+        std::cout << "  - Renderer:     " << ada::getRenderer() << std::endl;
+        std::cout << "  - GLSL version: " << ada::getGLSLVersion() << std::endl;
+        std::cout << "  - Extensions:   " << ada::getExtensions() << std::endl;
+
+        std::cout << "\nImplementation limits:\n" << std::endl;
+        int param;
+        glGetIntegerv(GL_MAX_TEXTURE_SIZE, &param);
+        std::cout << "  - GL_MAX_TEXTURE_SIZE = " << param << std::endl;
+    }
     
     // Render Loop
     while ( ada::isGL() && keepRunnig.load() ){
@@ -786,7 +785,7 @@ void commandsInit() {
         }
         return false;
     },
-    "about", "about glslViewer", false));
+    "about", "about glslViewer", true));
 
     commands.push_back(Command("window_width", [&](const std::string& _line){ 
         if (_line == "window_width") {

@@ -867,7 +867,7 @@ bool Sandbox::reloadShaders( WatchFileList &_files ) {
     if (geom_index == -1) {
 
         if (verbose)
-            std::cout << "// Reload 2D shaders" << std::endl;
+            std::cout << "Reload 2D shaders" << std::endl;
 
         // Reload the shader
         m_canvas_shader.detach(GL_FRAGMENT_SHADER | GL_VERTEX_SHADER);
@@ -875,7 +875,7 @@ bool Sandbox::reloadShaders( WatchFileList &_files ) {
     }
     else {
         if (verbose)
-            std::cout << "// Reload 3D scene shaders" << std::endl;
+            std::cout << "Reload 3D scene shaders" << std::endl;
 
         m_scene.loadShaders(m_frag_source, m_vert_source, verbose);
     }
@@ -956,7 +956,7 @@ void Sandbox::_updateBuffers() {
     if ( m_buffers_total != int(uniforms.buffers.size()) ) {
 
         if (verbose)
-            std::cout << "// Creating/Removing " << uniforms.buffers.size() << " buffers to " << m_buffers_total << std::endl;
+            std::cout << "Creating/Removing " << uniforms.buffers.size() << " buffers to " << m_buffers_total << std::endl;
 
         uniforms.buffers.clear();
         m_buffers_shaders.clear();
@@ -987,7 +987,7 @@ void Sandbox::_updateBuffers() {
     if ( m_doubleBuffers_total != int(uniforms.doubleBuffers.size()) ) {
 
         if (verbose)
-            std::cout << "// Creating/Removing " << uniforms.doubleBuffers.size() << " double buffers to " << m_doubleBuffers_total << std::endl;
+            std::cout << "Creating/Removing " << uniforms.doubleBuffers.size() << " double buffers to " << m_doubleBuffers_total << std::endl;
 
         uniforms.doubleBuffers.clear();
         m_doubleBuffers_shaders.clear();
@@ -1869,10 +1869,8 @@ void Sandbox::onScreenshot(std::string _file) {
             #endif
         }
     
-        if (!m_record_sec && !m_record_frame) {
-            std::cout << "// Screenshot saved to " << _file << std::endl;
-            std::cout << "// > ";
-        }
+        if (!m_record_sec && !m_record_frame)
+            std::cout << "Screenshot saved to " << _file << std::endl;
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 

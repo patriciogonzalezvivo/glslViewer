@@ -27,6 +27,8 @@ size_t offset_buffer = 0;
 size_t offset_cout = 0;
 size_t tab_counter = 0;
 
+bool have_colors = false;
+
 void refresh_cmd_win() {
     werase(win_cmd);
     mvwprintw(win_cmd, 1, 1, "> %s", cmd.c_str() );
@@ -54,7 +56,16 @@ void console_init() {
 
     initscr();
     raw();
-    // start_color();
+    if (has_colors()) {
+        start_color();
+
+        init_color(COLOR_BLACK, 0, 0, 0);
+        init_pair(1, COLOR_CYAN, COLOR_BLACK);
+        init_pair(2, COLOR_WHITE, COLOR_BLACK);
+        init_pair(3, COLOR_RED, COLOR_BLACK);
+
+        have_colors = true;
+    }
     cbreak();
 
     // Create windows
@@ -90,11 +101,17 @@ void console_refresh() {
     #ifdef SUPPORT_NCURSES
     erase();
 
-    if (buffer_cerr.str().size() > 0)
+    if (buffer_cerr.str().size() > 0) {
+        attron(COLOR_PAIR(3));
         mvprintw(4, 0, "%s", buffer_cerr.str().c_str() );
-    else 
+        attroff(COLOR_PAIR(3));
+    }
+    else {
+        // attron(COLOR_PAIR(3));
         mvprintw(4, 0, "%s", buffer_cout.str().c_str() );
-        
+        // attroff(COLOR_PAIR(3));
+    } 
+
     refresh();
     refresh_cmd_win();
     #endif
