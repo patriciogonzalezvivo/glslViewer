@@ -321,7 +321,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         }
         return false;
     },
-    "textures                       return a list of textures as their uniform name and path.", false));
+    "textures[,on|off]              return a list of textures as their uniform name and path. Or show/hide textures on viewport.", false));
 
     _commands.push_back(Command("buffers", [&](const std::string& _line){ 
         if (_line == "buffers") {
@@ -346,7 +346,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         }
         return false;
     },
-    "buffers                        return a list of buffers as their uniform name.", false));
+    "buffers[,on|off]                return a list of buffers as their uniform name. Or show/hide buffer on viewport.", false));
 
     _commands.push_back(Command("error_screen", [&](const std::string& _line){ 
         if (_line == "error_screen") {
@@ -624,8 +624,8 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         return false;
     },
     "streams                     print all streams.\n\
-// streams,speed[,<value>]     get or set streams speed.\n\
-// streams,prevs[,<value>]     get or set total previous textures."));
+   streams,speed[,<value>]     get or set streams speed.\n\
+   streams,prevs[,<value>]     get or set total previous textures."));
 
     #ifdef SUPPORT_MULTITHREAD_RECORDING 
     _commands.push_back(Command("max_mem_in_queue", [&](const std::string & line) {
@@ -810,13 +810,13 @@ const std::string& Sandbox::getSource(ShaderType _type) const {
     return (_type == FRAGMENT)? m_frag_source : m_vert_source;
 }
 
-int Sandbox::getRecordedPercentage() {
+float Sandbox::getRecordedPercentage() {
     if (m_record_sec)
-        return ((m_record_sec_head - m_record_sec_start) / (m_record_sec_end - m_record_sec_start)) * 100;
+        return ((m_record_sec_head - m_record_sec_start) / (m_record_sec_end - m_record_sec_start));
     else if (m_record_frame)
-        return ( (float)(m_record_frame_head - m_record_frame_start) / (float)(m_record_frame_end - m_record_frame_start)) * 100;
+        return ( (float)(m_record_frame_head - m_record_frame_start) / (float)(m_record_frame_end - m_record_frame_start));
     else 
-        return 100;
+        return 1.0;
 }
 
 // ------------------------------------------------------------------------- RELOAD SHADER

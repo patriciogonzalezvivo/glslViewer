@@ -520,7 +520,6 @@ bool Uniforms::addCameraTrack( const std::string& _name ) {
     return false;
 }
 
-
 void Uniforms::setStreamPlay( const std::string& _name) {
     if (streams.find(_name) != streams.end())
         streams[_name]->play();

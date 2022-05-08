@@ -32,12 +32,9 @@
 #ifdef SUPPORT_NCURSES
 #include <ncurses.h>
 #include <signal.h>
-
 WINDOW* win_cmd;
-WINDOW* win_out;
-std::string cmd;
-size_t offset_cursor = 0;
-void handle_winch(int sig);
+std::function<void(int)> resize_handler;
+void winch_handler(int signal) { resize_handler(signal); }
 #endif
 
 #define TRACK_BEGIN(A)      if (sandbox.uniforms.tracker.isRunning()) sandbox.uniforms.tracker.begin(A); 
@@ -918,7 +915,7 @@ void commandsInit() {
         }
         return change;
     },
-    "define,<KEYWORD>               add a define to the shader", false));
+    "define,<KEYWORD>[,<VALUE>]     add a define to the shader", false));
 
     commands.push_back( Command("undefine,", [&](const std::string& _line){ 
         std::vector<std::string> values = ada::split(_line,',');
@@ -1162,27 +1159,38 @@ void commandsInit() {
 
             std::cout << "// " << std::endl;
 
-            int pct = 0;
-            while (pct < 100) {
-                // Delete previous line
-                const std::string deleteLine = "\e[2K\r\e[1A";
-                std::cout << deleteLine;
-
+            float pct = 0;
+            while (pct < 1.0) {
                 // Check progres.
                 commandsMutex.lock();
                 pct = sandbox.getRecordedPercentage();
                 commandsMutex.unlock();
+
+                #if defined(SUPPORT_NCURSES)
+                size_t lines, cols;
+                getmaxyx(win_cmd, lines, cols);
+
+                werase(win_cmd);
+                box(win_cmd,0, 0);
+
+                size_t l = (cols-4) * pct;
+                for (size_t i = 0; i < cols-4; i++)
+                    mvwprintw(win_cmd, 1, 2 + i, "%s", (i < l )? "#" : ".");
+
+                wrefresh(win_cmd);
+                #else
+
+                // Delete previous line
+                const std::string deleteLine = "\e[2K\r\e[1A";
+                std::cout << deleteLine;
                 
+                int l = 50 * pct;
                 std::cout << "// [ ";
-                for (int i = 0; i < 50; i++) {
-                    if (i < pct/2) {
-                        std::cout << "#";
-                    }
-                    else {
-                        std::cout << ".";
-                    }
-                }
+                for (int i = 0; i < 50; i++)
+                    std::cout << ((i < l ) ? "#" : ".");
                 std::cout << " ] " << pct << "%" << std::endl;
+                #endif 
+
                 std::this_thread::sleep_for(std::chrono::milliseconds( ada::getRestMs() ));
             }
             return true;
@@ -1434,30 +1442,58 @@ void cinWatcherThread() {
 
     #if defined(SUPPORT_NCURSES)
 
-    // Capture all COUT
-    std::stringstream buffer;
-    std::streambuf * old = std::cout.rdbuf(buffer.rdbuf());
-
+    // Start NCurses
     initscr();
     raw();
     // start_color();
     cbreak();
 
-    win_out = newwin(LINES-3, COLS, 0, 0);
+    // Create windows
+    WINDOW* win_out = newwin(LINES-3, COLS, 0, 0);
     win_cmd = newwin(3, COLS, LINES - 3, 0);
-    signal(SIGWINCH, handle_winch);
 
+    // Capture Keys
     keypad(stdscr, true);
     scrollok(win_out, true);
     noecho();
 
-    mvwprintw(win_cmd, 1, 0, "> ");
-    wrefresh(win_cmd);
+    // Capture all COUT
+    std::stringstream buffer;
+    std::streambuf * old = std::cout.rdbuf(buffer.rdbuf());
 
-    refresh();
+    // Capture terminal resize
+    signal(SIGWINCH, winch_handler);
 
+    // currenct command state
+    std::string cmd;
+    size_t offset_cursor = 0;
     size_t offset_buffer = 0;
     size_t offset_cout = 0;
+
+    std::function<void()> win_cmd_refresh = [&](){
+        werase(win_cmd);
+        mvwprintw(win_cmd, 1, 1, "> %s", cmd.c_str() );
+        box(win_cmd, 0, 0);
+        wrefresh(win_cmd);
+        wmove(win_cmd, 1, 3 + cmd.size() - offset_cursor);
+    };
+
+    resize_handler = [&](int sig) {
+        endwin();
+        refresh();
+
+        wresize(win_out, LINES - 3, COLS);
+        wrefresh(win_out);
+
+        wresize(win_cmd, 3, COLS);
+        mvwin(win_cmd, LINES - 3, 0);
+
+        win_cmd_refresh();
+    };
+
+    win_cmd_refresh();
+    refresh();
+
     int ch;
     std::vector<std::string> cmd_buffer;
     while ( keepRunnig.load()) {
@@ -1465,24 +1501,45 @@ void cinWatcherThread() {
         mvwprintw(win_out, 0, 0, "%s", buffer.str().c_str() );
         wrefresh(win_out);
 
-        mvwprintw(win_cmd, 1, 1, "> %s", cmd.c_str() );
-        box(win_cmd, 0, 0);
-        wrefresh(win_cmd);
-        wmove(win_cmd, 1, 3 + cmd.size() - offset_cursor);
+        win_cmd_refresh();
         
         ch = getch();
-
-        werase(win_cmd);
         if ( ch == '\n' || ch == KEY_ENTER || ch == KEY_EOL) {
+            buffer.str("");
             commandsRun(cmd, commandsMutex);
             cmd_buffer.push_back( cmd );
             offset_cursor = 0;
             offset_buffer = 0;
             cmd = "";
         }
-        else if ( ch == KEY_BACKSPACE ) {
+        else if ( ch == KEY_BACKSPACE || ch == KEY_DC || ch == 127 ) {
             if (cmd.size() > offset_cursor)
                 cmd.erase(cmd.end()-offset_cursor-1, cmd.end()-offset_cursor);
+        }
+        else if ( ch == KEY_STAB || ch == '\t') {
+            buffer.str("");
+            if (cmd.size() > 0) {
+                std::cout << "Suggestions: " << std::endl;
+
+                for (size_t i = 0; i < commands.size(); i++)
+                    if ( commands[i].begins_with.rfind(cmd, 0) == 0)
+                        std::cout << "   " << commands[i].description << std::endl;
+
+                for (UniformDataList::iterator it = sandbox.uniforms.data.begin(); it != sandbox.uniforms.data.end(); ++it) {
+                    if (it->first.rfind(cmd, 0) == 0) {
+                        std::cout << it->first;
+
+                        for (size_t i = 0; it->second.size; i++)
+                            std::cout << ",<value>";
+                        
+                        std::cout << std::endl;
+                    }
+                }
+                
+            }
+        }
+        else if ( ch == KEY_BREAK || ch == ' ') {
+            cmd += ",";
         }
         else if ( ch == KEY_LEFT) {
             if (offset_cursor < cmd.size())
@@ -1509,8 +1566,7 @@ void cinWatcherThread() {
                 cmd = cmd_buffer[ cmd_buffer.size() - 1 - offset_buffer ];
         }
         
-
-        else if ( ch == KEY_END || ch == KEY_EXIT || ch == 27 ) {
+        else if ( ch == KEY_END || ch == KEY_EXIT || ch == 27 || ch == EOF) {
             keepRunnig = false;
             keepRunnig.store(false);
             break;
@@ -1533,23 +1589,5 @@ void cinWatcherThread() {
     #endif
 
 }
-
-#if defined(SUPPORT_NCURSES)
-void handle_winch(int sig) {
-    endwin();
-    refresh();
-
-    wresize(win_out, LINES - 3, COLS);
-    wrefresh(win_out);
-
-    wresize(win_cmd, 3, COLS);
-    mvwin(win_cmd, LINES - 3, 0);
-
-    mvwprintw(win_cmd, 1, 1, "> %s", cmd.c_str() );
-    box(win_cmd, 0, 0);
-    wrefresh(win_cmd);
-    wmove(win_cmd, 1, 3 + cmd.size() - offset_cursor);
-}
-#endif
 
 #endif

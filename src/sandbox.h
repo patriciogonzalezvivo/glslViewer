@@ -39,7 +39,7 @@ public:
 
     void                recordSecs( float _start, float _end, float fps = 24.0 );
     void                recordFrames( int _start, int _end, float fps = 24.0 );
-    int                 getRecordedPercentage();
+    float               getRecordedPercentage();
 
     void                addDefine( const std::string &_define, const std::string &_value = "");
     void                delDefine( const std::string &_define );

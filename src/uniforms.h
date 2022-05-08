@@ -89,8 +89,6 @@ public:
     void                    setStreamsSpeed( float _speed );
     void                    setStreamsPrevs( size_t _total );
 
-
-
     void                    updateStreams(size_t _frame);
 
     // Check presence of uniforms on shaders
