@@ -21,6 +21,7 @@ std::vector<std::string> buffer_cmd;
 
 // currenct command state
 std::string cmd;
+std::string cmd_suggested;
 
 size_t offset_cursor = 0;
 size_t offset_buffer = 0;
@@ -31,8 +32,14 @@ bool have_colors = false;
 
 void refresh_cmd_win() {
     werase(win_cmd);
-    mvwprintw(win_cmd, 1, 1, "> %s", cmd.c_str() );
     box(win_cmd, 0, 0);
+    
+    wattron(win_cmd, COLOR_PAIR(4));
+    mvwprintw(win_cmd, 1, 3, "%s", cmd_suggested.c_str() );
+    wattroff(win_cmd, COLOR_PAIR(4));
+
+    mvwprintw(win_cmd, 1, 1, "> %s", cmd.c_str() );
+
     wrefresh(win_cmd);
     wmove(win_cmd, 1, 3 + cmd.size() - offset_cursor);
 };
@@ -59,10 +66,13 @@ void console_init() {
     if (has_colors()) {
         start_color();
 
-        init_color(COLOR_BLACK, 0, 0, 0);
-        init_pair(1, COLOR_CYAN, COLOR_BLACK);
-        init_pair(2, COLOR_WHITE, COLOR_BLACK);
+        // init_color(COLOR_BLACK, 0, 0, 0);
+        init_color(COLOR_CYAN, 700, 700, 700);
+        init_color(COLOR_BLUE, 100, 100, 100);
+        init_pair(1, COLOR_WHITE, COLOR_BLACK);
+        init_pair(2, COLOR_CYAN, COLOR_BLACK);
         init_pair(3, COLOR_RED, COLOR_BLACK);
+        init_pair(4, COLOR_BLUE, COLOR_BLACK);
 
         have_colors = true;
     }
@@ -87,6 +97,7 @@ void console_init() {
 void console_clear() {
     #ifdef SUPPORT_NCURSES
     cmd = "";
+    cmd_suggested = "";
     buffer_cout.str("");
     buffer_cerr.str("");
 
@@ -107,14 +118,45 @@ void console_refresh() {
         attroff(COLOR_PAIR(3));
     }
     else {
-        // attron(COLOR_PAIR(3));
+        attron(COLOR_PAIR(2));
         mvprintw(4, 0, "%s", buffer_cout.str().c_str() );
-        // attroff(COLOR_PAIR(3));
+        attroff(COLOR_PAIR(2));
     } 
 
     refresh();
     refresh_cmd_win();
     #endif
+}
+
+std::string suggest(std::string _cmd, std::string& _suggestion, CommandList& _commands, Sandbox& _sandbox) {
+    _suggestion = "";
+    std::stringstream rta; 
+
+    for (size_t i = 0; i < _commands.size(); i++)
+        if ( _commands[i].trigger.rfind(_cmd, 0) == 0) {
+            if (_suggestion.size() == 0 || 
+                _suggestion.size() > _commands[i].trigger.size())
+                _suggestion = _commands[i].trigger;
+
+            rta << std::left << std::setw(27) << _commands[i].formula << " " << _commands[i].description << std::endl;
+        }
+
+    for (UniformDataList::iterator it = _sandbox.uniforms.data.begin(); it != _sandbox.uniforms.data.end(); ++it) {
+        if (it->first.rfind(_cmd, 0) == 0) {
+            if (_suggestion.size() == 0 || 
+                _suggestion.size() > it->first.size())
+                _suggestion = it->first;
+
+            rta << it->first;
+
+            for (size_t i = 0; it->second.size; i++)
+                rta << ",<value>";
+            
+            rta << std::endl;
+        }
+    }
+
+    return rta.str();
 }
 
 bool console_getline(std::string& _cmd, CommandList& _commands, Sandbox& _sandbox) {
@@ -150,37 +192,15 @@ bool console_getline(std::string& _cmd, CommandList& _commands, Sandbox& _sandbo
         if (cmd.size() > 0) {
             if (cmd.find(',') == std::string::npos) {
                 std::cout << "Suggestions:\n" << std::endl;
+                // cmd_suggested = "";
+                std::cout << suggest(cmd, cmd_suggested, _commands, _sandbox);
 
-                std::string shorter_suggestion;
-
-                for (size_t i = 0; i < _commands.size(); i++)
-                    if ( _commands[i].trigger.rfind(cmd, 0) == 0) {
-                        if (shorter_suggestion.size() == 0 || 
-                            shorter_suggestion.size() > _commands[i].trigger.size())
-                            shorter_suggestion = _commands[i].trigger;
-
-                        std::cout << std::left << std::setw(27) << _commands[i].formula << " " << _commands[i].description << std::endl;
-                    }
-
-                for (UniformDataList::iterator it = _sandbox.uniforms.data.begin(); it != _sandbox.uniforms.data.end(); ++it) {
-                    if (it->first.rfind(cmd, 0) == 0) {
-                        if (shorter_suggestion.size() == 0 || 
-                            shorter_suggestion.size() > it->first.size())
-                            shorter_suggestion = it->first;
-
-                        std::cout << it->first;
-
-                        for (size_t i = 0; it->second.size; i++)
-                            std::cout << ",<value>";
-                        
-                        std::cout << std::endl;
-                    }
-                }
-
-                if (tab_counter > 1 && shorter_suggestion.size() > 0) {
-                    cmd = shorter_suggestion;
+                if (tab_counter > 1 && cmd_suggested.size() > 0) {
+                    cmd = cmd_suggested;
                     tab_counter = 0;
                 }
+                else
+                    cmd_suggested = cmd_suggested;
             }
             else {
                 std::cout << "Use:" << std::endl;
@@ -200,7 +220,7 @@ bool console_getline(std::string& _cmd, CommandList& _commands, Sandbox& _sandbo
                     }
                 }
 
-                std::cout << "\nNotes::" << std::endl;
+                std::cout << "\nNotes:" << std::endl;
                 std::cout << "      - <values> between <...> brakets need to be change for and actual value" << std::endl;
                 std::cout << "      - when words are separated by | you must choose one of the options, like: A|B|C" << std::endl;
                 std::cout << "      * everything betwee [...] is optative" << std::endl;
@@ -241,7 +261,10 @@ bool console_getline(std::string& _cmd, CommandList& _commands, Sandbox& _sandbo
     //     break;
     // }
     else
-        cmd.insert(cmd.end() - offset_cursor, 1, (char)ch );    
+        cmd.insert(cmd.end() - offset_cursor, 1, (char)ch );  
+      
+    // cmd_suggested = "";
+    suggest(cmd, cmd_suggested, _commands, _sandbox);
     #endif
 
     return false;
@@ -256,8 +279,10 @@ void console_draw_pct(float _pct) {
     box(win_cmd,0, 0);
 
     size_t l = (cols-4) * _pct;
+    wattron(win_cmd, COLOR_PAIR(3));
     for (size_t i = 0; i < cols-4; i++)
         mvwprintw(win_cmd, 1, 2 + i, "%s", (i < l )? "#" : ".");
+    wattroff(win_cmd, COLOR_PAIR(3));
 
     wrefresh(win_cmd);
     #else
