@@ -37,23 +37,25 @@ Sandbox::Sandbox():
     m_postprocessing(false),
     // Geometry helpers
     m_billboard_vbo(nullptr), m_cross_vbo(nullptr),
+    // Plot helpers
+    m_plot_texture(nullptr), 
+
     // Record
     m_record_fdelta(0.04166666667), m_record_counter(0), 
     m_record_sec_start(0.0f), m_record_sec_head(0.0f), m_record_sec_end(0.0f), m_record_sec(false),
     m_record_frame_start(0), m_record_frame_head(0), m_record_frame_end(0), m_record_frame(false),
-
-    // Histogram
-    m_histogram_texture(nullptr), m_histogram(false),
-    // Scene
-    m_view2d(1.0), m_time_offset(0.0), m_lat(180.0), m_lon(0.0), m_frame(0), m_change(true), m_initialized(false), m_error_screen(true),
     #ifdef SUPPORT_MULTITHREAD_RECORDING 
     m_task_count(0),
     /** allow 500 MB to be used for the image save queue **/
     m_max_mem_in_queue(500 * 1024 * 1024),
     m_save_threads(std::max(1, static_cast<int>(std::thread::hardware_concurrency()) - 1)),
     #endif
+
+    // Scene
+    m_view2d(1.0), m_time_offset(0.0), m_lat(180.0), m_lon(0.0), m_frame(0), m_change(true), m_initialized(false), m_error_screen(true),
+
     // Debug
-    m_showTextures(false), m_showPasses(false)
+    m_showTextures(false), m_showPasses(false), m_histogram(false), m_fps(false)
 
 {
 
@@ -257,7 +259,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     _commands.push_back(Command("time", [&](const std::string& _line){ 
         if (_line == "time") {
             // Force the output in floats
-            printf("%f\n", ada::getTime() - m_time_offset);
+            std::cout << std::setprecision(6) << (ada::getTime() - m_time_offset) << std::endl;
             return true;
         }
         return false;
@@ -267,7 +269,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     _commands.push_back(Command("glsl_version", [&](const std::string& _line){ 
         if (_line == "glsl_version") {
             // Force the output in floats
-            printf("%i\n", ada::getVersion());
+            std::cout << ada::getVersion() << std::endl;
             return true;
         }
         return false;
@@ -282,8 +284,9 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         }
         else {
             std::vector<std::string> values = ada::split(_line,',');
-            if (values.size() == 2) {
+            if (values[0] == "histogram" && values.size() == 2) {
                 m_histogram = (values[1] == "on");
+                return true;
             }
         }
         return false;
@@ -1360,8 +1363,10 @@ void Sandbox::renderUI() {
             float xOffset = xStep;
             float yOffset = h - yStep;
 
-            if (!m_billboard_shader.isLoaded())
+            if (!m_billboard_shader.isLoaded()) {
+
                 m_billboard_shader.load(ada::getDefaultSrc(ada::FRAG_DYNAMIC_BILLBOARD), ada::getDefaultSrc(ada::VERT_DYNAMIC_BILLBOARD), false);
+            }
 
             m_billboard_shader.use();
 
@@ -1495,30 +1500,30 @@ void Sandbox::renderUI() {
         // TRACK_END("buffers")
     }
 
-    if (m_histogram && m_histogram_texture) {
+    if (m_plot_texture && (m_histogram)) {
         
         glDisable(GL_DEPTH_TEST);
-        TRACK_BEGIN("histogram")
+        //TRACK_BEGIN("plot_data")
 
         float w = 100;
         float h = 50;
         float x = (float)(ada::getWindowWidth()) * 0.5;
         float y = h;
 
-        if (!m_histogram_shader.isLoaded())
-            m_histogram_shader.load(ada::getDefaultSrc(ada::FRAG_HISTOGRAM), ada::getDefaultSrc(ada::VERT_DYNAMIC_BILLBOARD), false);
+        if (!m_plot_shader.isLoaded())
+            m_plot_shader.load(ada::getDefaultSrc(ada::FRAG_PLOT), ada::getDefaultSrc(ada::VERT_DYNAMIC_BILLBOARD), false);
 
-        m_histogram_shader.use();
+        m_plot_shader.use();
         for (std::map<std::string, ada::Texture*>::iterator it = uniforms.textures.begin(); it != uniforms.textures.end(); it++) {
-            m_histogram_shader.setUniform("u_scale", w, h);
-            m_histogram_shader.setUniform("u_translate", x, y);
-            m_histogram_shader.setUniform("u_resolution", (float)ada::getWindowWidth(), (float)ada::getWindowHeight());
-            m_histogram_shader.setUniform("u_modelViewProjectionMatrix", ada::getOrthoMatrix());
-            m_histogram_shader.setUniformTexture("u_sceneHistogram", m_histogram_texture, 0);
-            m_billboard_vbo->render(&m_histogram_shader);
+            m_plot_shader.setUniform("u_scale", w, h);
+            m_plot_shader.setUniform("u_translate", x, y);
+            m_plot_shader.setUniform("u_resolution", (float)ada::getWindowWidth(), (float)ada::getWindowHeight());
+            m_plot_shader.setUniform("u_modelViewProjectionMatrix", ada::getOrthoMatrix());
+            m_plot_shader.setUniformTexture("u_plotData", m_plot_texture, 0);
+            m_billboard_vbo->render(&m_plot_shader);
         }
 
-        // TRACK_END("histogram")
+        // TRACK_END("plot_data")
     }
 
     if (cursor && ada::getMouseEntered()) {
@@ -1922,12 +1927,12 @@ void Sandbox::onHistogram() {
         for (int i = 0; i < 255; i ++)
             freqs[i] = freqs[i] / glm::vec4(max_rgb_freq, max_rgb_freq, max_rgb_freq, max_luma_freq);
 
-        if (m_histogram_texture == nullptr)
-            m_histogram_texture = new ada::Texture();
+        if (m_plot_texture == nullptr)
+            m_plot_texture = new ada::Texture();
 
-        m_histogram_texture->load(256, 1, 4, 32, &freqs[0]);
+        m_plot_texture->load(256, 1, 4, 32, &freqs[0]);
 
-        uniforms.textures["u_sceneHistogram"] = m_histogram_texture;
+        uniforms.textures["u_sceneHistogram"] = m_plot_texture;
 
         // TRACK_END("histogram")
     }

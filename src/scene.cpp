@@ -767,7 +767,7 @@ void Scene::renderDebug(Uniforms& _uniforms) {
     if (showBBoxes) {
         glLineWidth(3.0f);
         m_wireframe3D_shader.use();
-        m_wireframe3D_shader.setUniform("u_color", glm::vec4(1.0,1.0,0.0,1.0));
+        m_wireframe3D_shader.setUniform("u_color", glm::vec4(1.0,0.0,0.0,1.0));
         m_wireframe3D_shader.setUniform("u_modelViewProjectionMatrix", m_mvp );
         for (unsigned int i = 0; i < m_models.size(); i++) {
             m_models[i]->renderBbox( &m_wireframe3D_shader );

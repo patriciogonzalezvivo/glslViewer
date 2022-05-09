@@ -128,25 +128,27 @@ private:
     ada::Shader         m_wireframe2D_shader;
     ada::Vbo*           m_cross_vbo;
 
+    // debug plot texture and shader for histogram or fps plots
+    ada::Shader         m_plot_shader;
+    ada::Texture*       m_plot_texture;
+
     // Recording
     ada::Fbo            m_record_fbo;
     float               m_record_fdelta;
     int                 m_record_counter;
-    
     float               m_record_sec_start;
     float               m_record_sec_head;
     float               m_record_sec_end;
     bool                m_record_sec;
-
     int                 m_record_frame_start;
     int                 m_record_frame_head;
     int                 m_record_frame_end;
     bool                m_record_frame;
-
-    // Histogram
-    ada::Shader         m_histogram_shader;
-    ada::Texture*       m_histogram_texture;
-    bool                m_histogram;
+    #ifdef SUPPORT_MULTITHREAD_RECORDING 
+    std::atomic<int>        m_task_count {0};
+    std::atomic<long long>  m_max_mem_in_queue {0};
+    thread_pool::ThreadPool m_save_threads;
+    #endif
 
     // Other state properties
     glm::mat3           m_view2d;
@@ -158,14 +160,10 @@ private:
     bool                m_initialized;
     bool                m_error_screen;
 
-    #ifdef SUPPORT_MULTITHREAD_RECORDING 
-    std::atomic<int>        m_task_count {0};
-    std::atomic<long long>  m_max_mem_in_queue {0};
-    thread_pool::ThreadPool m_save_threads;
-    #endif
-
     //  Debug
     bool                m_showTextures;
     bool                m_showPasses;
+    bool                m_histogram;
+    bool                m_fps;
     
 };

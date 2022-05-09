@@ -601,7 +601,9 @@ int main(int argc, char **argv) {
     // OSC
     #if defined(SUPPORT_OSC)
     lo::ServerThread oscServer(oscPort);
-    oscServer.set_callbacks( [&st](){printf("// Listening for OSC commands on port: %i\n", oscPort);}, [](){});
+    oscServer.set_callbacks( [&st](){
+        std::cout << "// Listening for OSC commands on port:" << oscPort << std::endl;
+    }, [](){});
     oscServer.add_method(0, 0, [](const char *path, lo::Message m) {
         std::string line;
         std::vector<std::string> address = ada::split(std::string(path), '/');
@@ -854,7 +856,7 @@ void commandsInit() {
         }
         else {
             // Force the output in floats
-            printf("%f\n", ada::getFps());
+            std::cout << std::setprecision(6) << ada::getFps() << std::endl;
             return true;
         }
         return false;
@@ -864,7 +866,7 @@ void commandsInit() {
     commands.push_back(Command("delta", [&](const std::string& _line){ 
         if (_line == "delta") {
             // Force the output in floats
-            printf("%f\n", ada::getDelta());
+            std::cout << std::setprecision(6) << ada::getDelta() << std::endl;
             return true;
         }
         return false;

@@ -114,7 +114,7 @@ void console_init() {
 
     // Capture Keys
     keypad(stdscr, true);
-    scrollok(stdscr, true);
+    // scrollok(stdscr, true);
     noecho();
 
     // Capture all standard console OUT and ERR
