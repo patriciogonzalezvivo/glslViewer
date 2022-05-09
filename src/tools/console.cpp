@@ -96,13 +96,14 @@ void console_init() {
     raw();
     if (has_colors()) {
         start_color();
+        use_default_colors();
 
         // init_color(COLOR_BLACK, 0, 0, 0);
         init_color(COLOR_CYAN, 700, 700, 700);
         init_color(COLOR_BLUE, 100, 100, 100);
-        init_pair(1, COLOR_WHITE, COLOR_BLACK);
-        init_pair(2, COLOR_CYAN, COLOR_BLACK);
-        init_pair(3, COLOR_RED, COLOR_BLACK);
+        init_pair(1, COLOR_WHITE, -1);
+        init_pair(2, COLOR_CYAN, -1);
+        init_pair(3, COLOR_RED, -1);
         init_pair(4, COLOR_BLUE, COLOR_BLACK);
 
         have_colors = true;
@@ -114,7 +115,7 @@ void console_init() {
 
     // Capture Keys
     keypad(stdscr, true);
-    // scrollok(stdscr, true);
+    scrollok(stdscr, true);
     noecho();
 
     // Capture all standard console OUT and ERR

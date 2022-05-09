@@ -317,6 +317,7 @@ int main(int argc, char **argv) {
     ada::initGL (window_viewport, window_properties);
     #ifndef __EMSCRIPTEN__
     ada::setWindowTitle("GlslViewer");
+    std::thread cinWatcher( &cinWatcherThread );
     #endif
 
     struct stat st;                         // for files to watch
@@ -571,6 +572,20 @@ int main(int argc, char **argv) {
         }
     }
 
+    if (sandbox.verbose) {
+        std::cout << "Specs:\n" << std::endl;
+        std::cout << "  - Vendor: " <<  ada::getVendor() << std::endl;
+        std::cout << "  - Renderer: " <<  ada::getRenderer() << std::endl;
+        std::cout << "  - Version: " <<  ada::getGLVersion() << std::endl;
+        std::cout << "  - GLSL version: " <<  ada::getGLSLVersion() << std::endl;
+        std::cout << "  - Extensions: " <<  ada::getExtensions() << std::endl;
+
+        std::cout << "  - Implementation limits: " << std::endl;
+        int param;
+        glGetIntegerv(GL_MAX_TEXTURE_SIZE, &param);
+        std::cout << "      + GL_MAX_TEXTURE_SIZE = " << param << std::endl;
+    }
+
     // If no shader
     #ifndef __EMSCRIPTEN__
     if ( sandbox.frag_index == -1 && sandbox.vert_index == -1 && sandbox.geom_index == -1 ) {
@@ -596,7 +611,6 @@ int main(int argc, char **argv) {
     // Start watchers
     fileChanged = -1;
     std::thread fileWatcher( &fileWatcherThread );
-    std::thread cinWatcher( &cinWatcherThread );
 
     // OSC
     #if defined(SUPPORT_OSC)
@@ -1363,6 +1377,12 @@ void fileWatcherThread() {
 //============================================================================
 void cinWatcherThread() {
 
+    #if defined(SUPPORT_NCURSES)
+    console_init();
+    signal(SIGWINCH, console_sigwinch_handler);
+    console_refresh();
+    #endif
+
     while (!sandbox.isReady()) {
         ada::sleep_ms( ada::getRestSec() * 1000000 );
         std::this_thread::sleep_for(std::chrono::milliseconds( ada::getRestMs() ));
@@ -1372,6 +1392,9 @@ void cinWatcherThread() {
     if (commandsArgs.size() > 0) {
         for (size_t i = 0; i < commandsArgs.size(); i++) {
             commandsRun(commandsArgs[i], commandsMutex);
+            #if defined(SUPPORT_NCURSES)
+            console_refresh();
+            #endif
         }
         commandsArgs.clear();
 
@@ -1383,8 +1406,6 @@ void cinWatcherThread() {
     }
 
     #if defined(SUPPORT_NCURSES)
-    console_init();
-    signal(SIGWINCH, console_sigwinch_handler);
     while ( keepRunnig.load() ) {
         std::string cmd;
         if (console_getline(cmd, commands, sandbox))
