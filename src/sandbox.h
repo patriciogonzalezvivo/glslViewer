@@ -57,8 +57,7 @@ public:
     void                onViewportResize( int _newWidth, int _newHeight );
     void                onFileChange( WatchFileList &_files, int _index );
     void                onScreenshot( std::string _file );
-    void                onHistogram();
-    void                onFPS();
+    void                onPlot();
    
     // Include folders
     ada::List           include_folders;

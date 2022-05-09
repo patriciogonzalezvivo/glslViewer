@@ -24,7 +24,8 @@
 #define PLOT_OFF 0
 #define PLOT_HISTOGRAM 1
 #define PLOT_FPS 2
-const std::string plot_options[] = { "off", "histogram", "fps" };
+#define PLOT_MS 3
+const std::string plot_options[] = { "off", "histogram", "fps", "ms" };
 
 // ------------------------------------------------------------------------- CONTRUCTOR
 Sandbox::Sandbox(): 
@@ -292,10 +293,19 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
                 // TODO:
                 //  - use plot_options to sort this out
                 //
-                if (values[1] == "off")             m_plot = 0;
-                else if (values[1] == "histogram")  m_plot = 1;
-                else if (values[1] == "fps")        m_plot = 2;
-
+                m_plot_shader.delDefine("PLOT_VALUE");
+                if (values[1] == "off") 
+                    m_plot = 0;
+                else if (values[1] == "histogram") 
+                    m_plot = 1;
+                else if (values[1] == "fps") {
+                    m_plot = 2;
+                    m_plot_shader.addDefine("PLOT_VALUE", "color.rgb += digits(uv * 0.1 + vec2(0.0, -0.01), value.r * 60.0, 1.0);");
+                }
+                else if (values[1] == "ms") {
+                    m_plot = 3;
+                    m_plot_shader.addDefine("PLOT_VALUE", "color.rgb += digits(uv * 0.1 + vec2(0.105, -0.01), value.r * 60.0, 1.0);");
+                }
                 return true;
             }
         }
@@ -1510,7 +1520,7 @@ void Sandbox::renderUI() {
         // TRACK_END("buffers")
     }
 
-    if (m_plot > PLOT_OFF && m_plot_texture ) {
+    if (m_plot != PLOT_OFF && m_plot_texture ) {
         
         glDisable(GL_DEPTH_TEST);
         //TRACK_BEGIN("plot_data")
@@ -1528,6 +1538,7 @@ void Sandbox::renderUI() {
             m_plot_shader.setUniform("u_scale", w, h);
             m_plot_shader.setUniform("u_translate", x, y);
             m_plot_shader.setUniform("u_resolution", (float)ada::getWindowWidth(), (float)ada::getWindowHeight());
+            m_plot_shader.setUniform("u_viewport", w, h);
             m_plot_shader.setUniform("u_modelViewProjectionMatrix", ada::getOrthoMatrix());
             m_plot_shader.setUniformTexture("u_plotData", m_plot_texture, 0);
             m_billboard_vbo->render(&m_plot_shader);
@@ -1587,10 +1598,8 @@ void Sandbox::renderDone() {
         screenshotFile = "";
     }
 
-    if (m_plot == PLOT_HISTOGRAM)
-        onHistogram();
-    else if (m_plot == PLOT_FPS)
-        onFPS();
+    if (m_plot != PLOT_OFF)
+        onPlot();
 
     unflagChange();
 // 
@@ -1896,8 +1905,11 @@ void Sandbox::onScreenshot(std::string _file) {
     
 }
 
-void Sandbox::onHistogram() {
-    if ( ada::isGL() && haveChange() ) {
+void Sandbox::onPlot() {
+    if ( !ada::isGL() )
+        return;
+
+    if ( m_plot == PLOT_HISTOGRAM && haveChange() ) {
 
         // TRACK_BEGIN("plot::histogram")
 
@@ -1948,11 +1960,8 @@ void Sandbox::onHistogram() {
 
         // TRACK_END("plot::histogram")
     }
-}
 
- void Sandbox::onFPS() {
-    if ( ada::isGL() ) {
-
+    else if (m_plot == PLOT_FPS ) {
         // Push back values one position
         for (int i = 0; i < 255; i ++)
             m_plot_values[i] = m_plot_values[i+1];
@@ -1968,5 +1977,23 @@ void Sandbox::onHistogram() {
         uniforms.textures["u_sceneFPS"] = m_plot_texture;
 
         // TRACK_END("plot::fps")
+    }
+
+    else if (m_plot == PLOT_MS ) {
+        // Push back values one position
+        for (int i = 0; i < 255; i ++)
+            m_plot_values[i] = m_plot_values[i+1];
+        m_plot_values[255] = glm::vec4( ada::getDelta(), 0.0f, 0.0f, 1.0f);
+
+        // TRACK_BEGIN("plot::ms")
+
+        if (m_plot_texture == nullptr)
+            m_plot_texture = new ada::Texture();
+
+        m_plot_texture->load(256, 1, 4, 32, &m_plot_values[0], ada::NEAREST, ada::CLAMP);
+
+        uniforms.textures["u_sceneFPS"] = m_plot_texture;
+
+        // TRACK_END("plot::ms")
     }
 }
