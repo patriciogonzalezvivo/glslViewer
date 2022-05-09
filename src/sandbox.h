@@ -58,6 +58,7 @@ public:
     void                onFileChange( WatchFileList &_files, int _index );
     void                onScreenshot( std::string _file );
     void                onHistogram();
+    void                onFPS();
    
     // Include folders
     ada::List           include_folders;
@@ -131,6 +132,7 @@ private:
     // debug plot texture and shader for histogram or fps plots
     ada::Shader         m_plot_shader;
     ada::Texture*       m_plot_texture;
+    glm::vec4           m_plot_values[256];
 
     // Recording
     ada::Fbo            m_record_fbo;
@@ -161,9 +163,8 @@ private:
     bool                m_error_screen;
 
     //  Debug
+    size_t              m_plot;
     bool                m_showTextures;
     bool                m_showPasses;
-    bool                m_histogram;
-    bool                m_fps;
     
 };

@@ -21,6 +21,10 @@
 
 #define TRACK_BEGIN(A) if (uniforms.tracker.isRunning()) uniforms.tracker.begin(A); 
 #define TRACK_END(A) if (uniforms.tracker.isRunning()) uniforms.tracker.end(A); 
+#define PLOT_OFF 0
+#define PLOT_HISTOGRAM 1
+#define PLOT_FPS 2
+const std::string plot_options[] = { "off", "histogram", "fps" };
 
 // ------------------------------------------------------------------------- CONTRUCTOR
 Sandbox::Sandbox(): 
@@ -55,7 +59,7 @@ Sandbox::Sandbox():
     m_view2d(1.0), m_time_offset(0.0), m_lat(180.0), m_lon(0.0), m_frame(0), m_change(true), m_initialized(false), m_error_screen(true),
 
     // Debug
-    m_showTextures(false), m_showPasses(false), m_histogram(false), m_fps(false)
+    m_plot(0), m_showTextures(false), m_showPasses(false)
 
 {
 
@@ -155,7 +159,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
             if (values.size() == 2) {
                 m_showPasses = (values[1] == "on");
                 m_showTextures = (values[1] == "on");
-                // m_histogram = (values[1] == "on");
+                // m_plot = (values[1] == "on")? 1 : 0;
                 if (geom_index != -1) {
                     m_scene.showGrid = (values[1] == "on");
                     m_scene.showAxis = (values[1] == "on");
@@ -234,7 +238,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
                 }
 
                 else if (   values[1] == "samples" && 
-                            ada::haveExt(values[3],"csv") ) {
+                    ada::haveExt(values[3],"csv") ) {
                     std::ofstream out( values[3] );
                     out << uniforms.tracker.logSamples( values[2] );
                     out.close();
@@ -276,22 +280,28 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     },
     "glsl_version", "return GLSL Version", false));
 
-    _commands.push_back(Command("histogram", [&](const std::string& _line){
-        if (_line == "histogram") {
-            std::string rta = m_histogram ? "on" : "off";
-            std::cout << "histogram," << rta << std::endl; 
+    _commands.push_back(Command("plot", [&](const std::string& _line){
+        if (_line == "plot") {
+            std::cout << "plot," << plot_options[m_plot] << std::endl; 
             return true;
         }
         else {
             std::vector<std::string> values = ada::split(_line,',');
-            if (values[0] == "histogram" && values.size() == 2) {
-                m_histogram = (values[1] == "on");
+            if (values[0] == "plot" && values.size() == 2) {
+
+                // TODO:
+                //  - use plot_options to sort this out
+                //
+                if (values[1] == "off")             m_plot = 0;
+                else if (values[1] == "histogram")  m_plot = 1;
+                else if (values[1] == "fps")        m_plot = 2;
+
                 return true;
             }
         }
         return false;
     },
-    "histogram[,on|off]", "show/hide histogram", false));
+    "plot[,off|histogram|fps]", "show/hide a histogram or FPS plot on screen", false));
 
     _commands.push_back(Command("defines", [&](const std::string& _line){ 
         if (_line == "defines") {
@@ -946,7 +956,7 @@ bool Sandbox::reloadShaders( WatchFileList &_files ) {
     else 
         m_postprocessing = false;
 
-    if (m_postprocessing || m_histogram)
+    if (m_postprocessing || m_plot == PLOT_HISTOGRAM)
         _updateSceneBuffer(ada::getWindowWidth(), ada::getWindowHeight());
 
     console_refresh();
@@ -1207,7 +1217,7 @@ void Sandbox::render() {
         if (!m_record_fbo.isAllocated())
             m_record_fbo.allocate(ada::getWindowWidth(), ada::getWindowHeight(), ada::COLOR_TEXTURE_DEPTH_BUFFER);
 
-    if (m_postprocessing || m_histogram ) {
+    if (m_postprocessing || m_plot == PLOT_HISTOGRAM ) {
         _updateSceneBuffer(ada::getWindowWidth(), ada::getWindowHeight());
         m_scene_fbo.bind();
     }
@@ -1309,7 +1319,7 @@ void Sandbox::render() {
 
         TRACK_END("render:postprocessing")
     }
-    else if (m_histogram) {
+    else if (m_plot == PLOT_HISTOGRAM) {
         m_scene_fbo.unbind();
 
         if (screenshotFile != "" || m_record_sec || m_record_frame)
@@ -1500,15 +1510,15 @@ void Sandbox::renderUI() {
         // TRACK_END("buffers")
     }
 
-    if (m_plot_texture && (m_histogram)) {
+    if (m_plot > PLOT_OFF && m_plot_texture ) {
         
         glDisable(GL_DEPTH_TEST);
         //TRACK_BEGIN("plot_data")
 
         float w = 100;
-        float h = 50;
+        float h = 30;
         float x = (float)(ada::getWindowWidth()) * 0.5;
-        float y = h;
+        float y = h + 10;
 
         if (!m_plot_shader.isLoaded())
             m_plot_shader.load(ada::getDefaultSrc(ada::FRAG_PLOT), ada::getDefaultSrc(ada::VERT_DYNAMIC_BILLBOARD), false);
@@ -1577,8 +1587,10 @@ void Sandbox::renderDone() {
         screenshotFile = "";
     }
 
-    if (m_histogram)
+    if (m_plot == PLOT_HISTOGRAM)
         onHistogram();
+    else if (m_plot == PLOT_FPS)
+        onFPS();
 
     unflagChange();
 // 
@@ -1779,7 +1791,7 @@ void Sandbox::onViewportResize(int _newWidth, int _newHeight) {
         }
     }
 
-    if (m_postprocessing || m_histogram)
+    if (m_postprocessing || m_plot == PLOT_HISTOGRAM)
         _updateSceneBuffer(_newWidth, _newHeight);
 
     if (screenshotFile != "" || m_record_sec || m_record_frame)
@@ -1887,7 +1899,7 @@ void Sandbox::onScreenshot(std::string _file) {
 void Sandbox::onHistogram() {
     if ( ada::isGL() && haveChange() ) {
 
-        // TRACK_BEGIN("histogram")
+        // TRACK_BEGIN("plot::histogram")
 
         // Extract pixels
         glBindFramebuffer(GL_FRAMEBUFFER, m_scene_fbo.getId());
@@ -1904,37 +1916,57 @@ void Sandbox::onHistogram() {
         float max_luma_freq = 0;
         glm::vec4 freqs[256];
         for (int i = 0; i < total; i += c) {
-            freqs[pixels[i]].r++;
-            if (freqs[pixels[i]].r > max_rgb_freq)
-                max_rgb_freq = freqs[pixels[i]].r;
+            m_plot_values[pixels[i]].r++;
+            if (m_plot_values[pixels[i]].r > max_rgb_freq)
+                max_rgb_freq = m_plot_values[pixels[i]].r;
 
-            freqs[pixels[i+1]].g++;
-            if (freqs[pixels[i+1]].g > max_rgb_freq)
-                max_rgb_freq = freqs[pixels[i+1]].g;
+            m_plot_values[pixels[i+1]].g++;
+            if (m_plot_values[pixels[i+1]].g > max_rgb_freq)
+                max_rgb_freq = m_plot_values[pixels[i+1]].g;
 
-            freqs[pixels[i+2]].b++;
-            if (freqs[pixels[i+2]].b > max_rgb_freq)
-                max_rgb_freq = freqs[pixels[i+2]].b;
+            m_plot_values[pixels[i+2]].b++;
+            if (m_plot_values[pixels[i+2]].b > max_rgb_freq)
+                max_rgb_freq = m_plot_values[pixels[i+2]].b;
 
             int luma = 0.299 * pixels[i] + 0.587 * pixels[i+1] + 0.114 * pixels[i+2];
-            freqs[luma].a++;
-            if (freqs[luma].a > max_luma_freq)
-                max_luma_freq = freqs[luma].a;
+            m_plot_values[luma].a++;
+            if (m_plot_values[luma].a > max_luma_freq)
+                max_luma_freq = m_plot_values[luma].a;
         }
         delete[] pixels;
 
         // Normalize frequencies
-        for (int i = 0; i < 255; i ++)
-            freqs[i] = freqs[i] / glm::vec4(max_rgb_freq, max_rgb_freq, max_rgb_freq, max_luma_freq);
+        for (int i = 0; i < 256; i ++)
+            m_plot_values[i] = m_plot_values[i] / glm::vec4(max_rgb_freq, max_rgb_freq, max_rgb_freq, max_luma_freq);
 
         if (m_plot_texture == nullptr)
             m_plot_texture = new ada::Texture();
 
-        m_plot_texture->load(256, 1, 4, 32, &freqs[0]);
+        m_plot_texture->load(256, 1, 4, 32, &m_plot_values[0], ada::NEAREST, ada::CLAMP);
 
         uniforms.textures["u_sceneHistogram"] = m_plot_texture;
 
-        // TRACK_END("histogram")
+        // TRACK_END("plot::histogram")
     }
 }
 
+ void Sandbox::onFPS() {
+    if ( ada::isGL() ) {
+
+        // Push back values one position
+        for (int i = 0; i < 255; i ++)
+            m_plot_values[i] = m_plot_values[i+1];
+        m_plot_values[255] = glm::vec4( ada::getFps()/60.0f, 0.0f, 0.0f, 1.0f);
+
+        // TRACK_BEGIN("plot::fps")
+
+        if (m_plot_texture == nullptr)
+            m_plot_texture = new ada::Texture();
+
+        m_plot_texture->load(256, 1, 4, 32, &m_plot_values[0], ada::NEAREST, ada::CLAMP);
+
+        uniforms.textures["u_sceneFPS"] = m_plot_texture;
+
+        // TRACK_END("plot::fps")
+    }
+}
