@@ -87,7 +87,7 @@ Sandbox::Sandbox():
     uniforms.functions["u_date"] = UniformFunction("vec4", [](ada::Shader& _shader) {
         _shader.setUniform("u_date", ada::getDate());
     },
-    []() { return ada::toString(ada::getDate(), ','); });
+    []() { return ada::toString(ada::getDate().x, 0) + "," + ada::toString(ada::getDate().y, 0) + "," + ada::toString(ada::getDate().z, 0) + "," + ada::toString(ada::getDate().w, 2); });
 
     // MOUSE
     uniforms.functions["u_mouse"] = UniformFunction("vec2", [](ada::Shader& _shader) {
@@ -160,6 +160,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
             if (values.size() == 2) {
                 m_showPasses = (values[1] == "on");
                 m_showTextures = (values[1] == "on");
+                console_uniforms( values[1] == "on" );
                 // m_plot = (values[1] == "on")? 1 : 0;
                 if (geom_index != -1) {
                     m_scene.showGrid = (values[1] == "on");
@@ -171,6 +172,14 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
                     else {
                         m_scene.delDefine("DEBUG");
                     }
+                }
+                if (values[1] == "on") {
+                    m_plot = 3;
+                    m_plot_shader.addDefine("PLOT_VALUE", "color.rgb += digits(uv * 0.1 + vec2(0.105, -0.01), value.r * 60.0, 1.0);");
+                }
+                else {
+                    m_plot = 0;
+                    m_plot_shader.delDefine("PLOT_VALUE");
                 }
             }
         }
