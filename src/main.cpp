@@ -26,15 +26,20 @@
 #include "ada/shaders/defaultShaders.h"
 
 #include "sandbox.h"
-#include "tools/text.h"
 #include "types/files.h"
+#include "tools/text.h"
+#include "tools/console.h"
+
+#ifdef SUPPORT_NCURSES
+#include <ncurses.h>
+#include <signal.h>
+#endif
 
 #define TRACK_BEGIN(A)      if (sandbox.uniforms.tracker.isRunning()) sandbox.uniforms.tracker.begin(A); 
 #define TRACK_END(A)        if (sandbox.uniforms.tracker.isRunning()) sandbox.uniforms.tracker.end(A); 
 
 std::string                 version = "2.0.5";
-std::string                 name    = "GlslViewer";
-std::string                 header  = name + " " + version + " by Patricio Gonzalez Vivo ( patriciogonzalezvivo.com )"; 
+std::string                 about   = "GlslViewer " + version + " by Patricio Gonzalez Vivo ( http://patriciogonzalezvivo.com )"; 
 
 // Here is where all the magic happens
 Sandbox                     sandbox;
@@ -99,8 +104,8 @@ char* getVert() {
 #if defined(SUPPORT_OSC)
 #include <lo/lo_cpp.h>
 std::mutex                  oscMutex;
-int                         oscPort = 0;
 #endif
+int                         oscPort = 0;
 
 #if defined(__EMSCRIPTEN__)
 EM_BOOL loop (double time, void* userData) {
@@ -121,9 +126,9 @@ void loop() {
     #else
 
     if (sandbox.isReady() && commandsArgs.size() > 0) {
-        for (size_t i = 0; i < commandsArgs.size(); i++) {
+        for (size_t i = 0; i < commandsArgs.size(); i++)
             commandsRun(commandsArgs[i]);
-        }
+        
         commandsArgs.clear();
     }
 
@@ -295,7 +300,17 @@ int main(int argc, char **argv) {
                     argument.rfind("rtsp://", 0) == 0 ||
                     argument.rfind("rtmp://", 0) == 0 ) {
             willLoadTextures = true;
-        }   
+        }
+        else if ( argument == "-p" || argument == "--port" ) {
+            if(++i < argc)
+                oscPort = ada::toInt(std::string(argv[i]));
+            else
+        #if defined(SUPPORT_OSC)
+                std::cout << "Argument '" << argument << "' should be followed by an <osc_port>. Skipping argument." << std::endl;
+        #else
+                std::cout << "This version of GlslViewer wasn't compiled with OSC support" << std::endl;
+        #endif
+        }
     }
 
     #ifndef __EMSCRIPTEN__
@@ -312,6 +327,7 @@ int main(int argc, char **argv) {
     ada::initGL (window_viewport, window_properties);
     #ifndef __EMSCRIPTEN__
     ada::setWindowTitle("GlslViewer");
+    std::thread cinWatcher( &cinWatcherThread );
     #endif
 
     struct stat st;                         // for files to watch
@@ -327,7 +343,8 @@ int main(int argc, char **argv) {
                 argument == "-h" || argument == "--height" ||
                 argument == "-d" || argument == "--display" ||
                 argument == "--major" || argument == "--minor" ||
-                argument == "--mouse" || argument == "--fps" ) {
+                argument == "--mouse" || argument == "--fps" ||
+                argument == "-p" || argument == "--port" ) {
             i++;
         }
         else if (   argument == "-l" || argument == "--headless" ||
@@ -345,14 +362,7 @@ int main(int argc, char **argv) {
         else if ( argument == "--fxaa" ) {
             sandbox.fxaa = true;
         }
-        #if defined(SUPPORT_OSC)
-        else if ( argument== "-p" || argument == "--port" ) {
-            if(++i < argc)
-                oscPort = ada::toInt(std::string(argv[i]));
-            else
-                std::cout << "Argument '" << argument << "' should be followed by an <osc_port>. Skipping argument." << std::endl;
-        }
-        #endif
+        
         else if ( argument == "-e" ) {
             if(++i < argc)         
                 commandsArgs.push_back(std::string(argv[i]));
@@ -567,18 +577,17 @@ int main(int argc, char **argv) {
     }
 
     if (sandbox.verbose) {
-        printf("//Specs: \n");
-        printf("//  - Vendor: %s\n", ada::getVendor().c_str() );
-        printf("//  - Renderer: %s\n", ada::getRenderer().c_str() );
-        printf("//  - Version: %s\n", ada::getGLVersion().c_str() );
-        printf("//  - GLSL version: %s\n", ada::getGLSLVersion().c_str() );
-        printf("//  - Extensions: %s\n", ada::getExtensions().c_str() );
+        std::cout << "Specs:\n" << std::endl;
+        std::cout << "  - Vendor: " <<  ada::getVendor() << std::endl;
+        std::cout << "  - Renderer: " <<  ada::getRenderer() << std::endl;
+        std::cout << "  - Version: " <<  ada::getGLVersion() << std::endl;
+        std::cout << "  - GLSL version: " <<  ada::getGLSLVersion() << std::endl;
+        std::cout << "  - Extensions: " <<  ada::getExtensions() << std::endl;
 
-        printf("//  - Implementation limits:\n");
+        std::cout << "  - Implementation limits: " << std::endl;
         int param;
         glGetIntegerv(GL_MAX_TEXTURE_SIZE, &param);
-        std::cout << "//      + GL_MAX_TEXTURE_SIZE = " << param << std::endl;
-
+        std::cout << "      + GL_MAX_TEXTURE_SIZE = " << param << std::endl;
     }
 
     // If no shader
@@ -606,12 +615,13 @@ int main(int argc, char **argv) {
     // Start watchers
     fileChanged = -1;
     std::thread fileWatcher( &fileWatcherThread );
-    std::thread cinWatcher( &cinWatcherThread );
 
     // OSC
     #if defined(SUPPORT_OSC)
     lo::ServerThread oscServer(oscPort);
-    oscServer.set_callbacks( [&st](){printf("// Listening for OSC commands on port: %i\n", oscPort);}, [](){});
+    oscServer.set_callbacks( [&st](){
+        std::cout << "// Listening for OSC commands on port:" << oscPort << std::endl;
+    }, [](){});
     oscServer.add_method(0, 0, [](const char *path, lo::Message m) {
         std::string line;
         std::vector<std::string> address = ada::split(std::string(path), '/');
@@ -640,6 +650,20 @@ int main(int argc, char **argv) {
         oscServer.start();
     }
     #endif
+
+    if (sandbox.verbose) {
+        std::cout << "\nRunning on:\n" << std::endl;
+        std::cout << "  - Vendor:       " << ada::getVendor() << std::endl;
+        std::cout << "  - Version:      " << ada::getGLVersion() << std::endl;
+        std::cout << "  - Renderer:     " << ada::getRenderer() << std::endl;
+        std::cout << "  - GLSL version: " << ada::getGLSLVersion() << std::endl;
+        std::cout << "  - Extensions:   " << ada::getExtensions() << std::endl;
+
+        std::cout << "\nImplementation limits:\n" << std::endl;
+        int param;
+        glGetIntegerv(GL_MAX_TEXTURE_SIZE, &param);
+        std::cout << "  - GL_MAX_TEXTURE_SIZE = " << param << std::endl;
+    }
     
     // Render Loop
     while ( ada::isGL() && keepRunnig.load() ){
@@ -668,7 +692,12 @@ int main(int argc, char **argv) {
     #ifndef PLATFORM_WINDOWS
     pthread_t cinHandler = cinWatcher.native_handle();
     pthread_cancel( cinHandler );
-    #endif//
+    #endif
+
+    #if defined(SUPPORT_NCURSES)
+    endwin();
+    #endif
+
     exit(0);
 #endif
 
@@ -710,7 +739,7 @@ void commandsRun(const std::string &_cmd, std::mutex &_mutex) {
 
     // Check if _cmd is present in the list of commands
     for (size_t i = 0; i < commands.size(); i++) {
-        if (ada::beginsWith(_cmd, commands[i].begins_with)) {
+        if (ada::beginsWith(_cmd, commands[i].trigger)) {
             // Do require mutex the thread?
             if (commands[i].mutex) _mutex.lock();
 
@@ -735,26 +764,30 @@ void commandsRun(const std::string &_cmd, std::mutex &_mutex) {
 void commandsInit() {
     commands.push_back(Command("help", [&](const std::string& _line){
         if (_line == "help") {
-            std::cout << "// " << header << std::endl;
-            std::cout << "// " << std::endl;
+            std::cout << "Use:\n        help,<one_of_the_following_commands>" << std::endl;
             for (size_t i = 0; i < commands.size(); i++) {
-                std::cout << "// " << commands[i].description << std::endl;
-            }
+                if (i%4 == 0)
+                    std::cout << std::endl;
+                if (commands[i].trigger != "help")
+                    std::cout << std::left << std::setw(16) << commands[i].trigger << " ";
+            } 
+            std::cout << std::endl;
             return true;
         }
         else {
             std::vector<std::string> values = ada::split(_line,',');
             if (values.size() == 2) {
                 for (size_t i = 0; i < commands.size(); i++) {
-                    if (commands[i].begins_with == values[1]) {
-                        std::cout << "// " << commands[i].description << std::endl;
+                    if (commands[i].trigger == values[1]) {
+                        std::cout << commands[i].trigger << std::left << std::setw(16) << "   " << commands[i].description << std::endl;
                     }
                 }
+                return true;
             }
         }
         return false;
     },
-    "help[,<command>]               print help for one or all command", false));
+    "help,<command>", "print help for one or all command", false));
 
     commands.push_back(Command("version", [&](const std::string& _line){ 
         if (_line == "version") {
@@ -763,7 +796,16 @@ void commandsInit() {
         }
         return false;
     },
-    "version                        return glslViewer version.", false));
+    "version", "return glslViewer version", false));
+
+    commands.push_back(Command("about", [&](const std::string& _line){ 
+        if (_line == "about") {
+            std::cout << about << std::endl;
+            return true;
+        }
+        return false;
+    },
+    "about", "about glslViewer", true));
 
     commands.push_back(Command("window_width", [&](const std::string& _line){ 
         if (_line == "window_width") {
@@ -772,7 +814,7 @@ void commandsInit() {
         }
         return false;
     },
-    "window_width                   return the width of the windows.", false));
+    "window_width", "return the width of the windows", false));
 
     commands.push_back(Command("window_height", [&](const std::string& _line){ 
         if (_line == "window_height") {
@@ -781,7 +823,7 @@ void commandsInit() {
         }
         return false;
     },
-    "window_height                  return the height of the windows.", false));
+    "window_height", "return the height of the windows", false));
 
     commands.push_back(Command("pixel_density", [&](const std::string& _line){ 
         if (_line == "pixel_density") {
@@ -790,7 +832,7 @@ void commandsInit() {
         }
         return false;
     },
-    "pixel_density                  return the pixel density.", false));
+    "pixel_density", "return the pixel density", false));
 
     commands.push_back(Command("screen_size", [&](const std::string& _line){ 
         if (_line == "screen_size") {
@@ -800,7 +842,7 @@ void commandsInit() {
         }
         return false;
     },
-    "screen_size                    return the screen size.", false));
+    "screen_size", "return the screen size", false));
 
     commands.push_back(Command("viewport", [&](const std::string& _line){ 
         if (_line == "viewport") {
@@ -810,7 +852,7 @@ void commandsInit() {
         }
         return false;
     },
-    "viewport                       return the viewport size.", false));
+    "viewport", "return the viewport size", false));
 
     commands.push_back(Command("mouse", [&](const std::string& _line){ 
         if (_line == "mouse") {
@@ -820,7 +862,7 @@ void commandsInit() {
         }
         return false;
     },
-    "mouse                          return the mouse position.", false));
+    "mouse", "return the mouse position", false));
     
     commands.push_back(Command("fps", [&](const std::string& _line){
         std::vector<std::string> values = ada::split(_line,',');
@@ -832,22 +874,22 @@ void commandsInit() {
         }
         else {
             // Force the output in floats
-            printf("%f\n", ada::getFps());
+            std::cout << std::setprecision(6) << ada::getFps() << std::endl;
             return true;
         }
         return false;
     },
-    "fps                            return or set the amount of frames per second.", false));
+    "fps", "return or set the amount of frames per second", false));
 
     commands.push_back(Command("delta", [&](const std::string& _line){ 
         if (_line == "delta") {
             // Force the output in floats
-            printf("%f\n", ada::getDelta());
+            std::cout << std::setprecision(6) << ada::getDelta() << std::endl;
             return true;
         }
         return false;
     },
-    "delta                          return u_delta, the secs between frames.", false));
+    "delta", "return u_delta, the secs between frames", false));
 
     commands.push_back(Command("date", [&](const std::string& _line){ 
         if (_line == "date") {
@@ -858,7 +900,7 @@ void commandsInit() {
         }
         return false;
     },
-    "date                           return u_date as YYYY, M, D and Secs.", false));
+    "date", "return u_date as YYYY, M, D and Secs", false));
 
     commands.push_back(Command("files", [&](const std::string& _line){ 
         if (_line == "files") {
@@ -869,9 +911,9 @@ void commandsInit() {
         }
         return false;
     },
-    "files                          return a list of files.", false));
+    "files", "return a list of files", false));
 
-    commands.push_back( Command("define,", [&](const std::string& _line){ 
+    commands.push_back( Command("define", [&](const std::string& _line){ 
         std::vector<std::string> values = ada::split(_line,',');
         bool change = false;
         if (values.size() == 2) {
@@ -902,9 +944,9 @@ void commandsInit() {
         }
         return change;
     },
-    "define,<KEYWORD>               add a define to the shader", false));
+    "define,<KEYWORD>[,<VALUE>]", "add a define to the shader", false));
 
-    commands.push_back( Command("undefine,", [&](const std::string& _line){ 
+    commands.push_back( Command("undefine", [&](const std::string& _line){ 
         std::vector<std::string> values = ada::split(_line,',');
         if (values.size() == 2) {
             sandbox.delDefine( values[1] );
@@ -923,7 +965,7 @@ void commandsInit() {
         }
         return false;
     },
-    "undefine,<KEYWORD>             remove a define on the shader", false));
+    "undefine,<KEYWORD>", "remove a define on the shader", false));
 
     commands.push_back(Command("reload", [&](const std::string& _line){ 
         if (_line == "reload" || _line == "reload,all") {
@@ -952,7 +994,7 @@ void commandsInit() {
         }
         return false;
     },
-    "reload[,<filename>]            reload one or all files", false));
+    "reload[,<filename>]", "reload one or all files", false));
 
     commands.push_back(Command("frag", [&](const std::string& _line){ 
         if (_line == "frag") {
@@ -991,7 +1033,7 @@ void commandsInit() {
         }
         return false;
     },
-    "frag[,<filename>]              returns or save the fragment shader source code.", false));
+    "frag[,<filename>]", "returns or save the fragment shader source code", false));
 
     commands.push_back(Command("vert", [&](const std::string& _line){ 
         if (_line == "vert") {
@@ -1030,7 +1072,7 @@ void commandsInit() {
         }
         return false;
     },
-    "vert[,<filename>]              returns or save the vertex shader source code.", false));
+    "vert[,<filename>]", "returns or save the vertex shader source code", false));
 
     commands.push_back( Command("dependencies", [&](const std::string& _line){ 
         if (_line == "dependencies") {
@@ -1051,7 +1093,7 @@ void commandsInit() {
         }
         return false;
     },
-    "dependencies[,vert|frag]       returns all the dependencies of the vertex o fragment shader or both.", false));
+    "dependencies[,<vert|frag>]", "returns all the dependencies of the vertex o fragment shader or both", false));
 
     commands.push_back(Command("update", [&](const std::string& _line){ 
         if (_line == "update") {
@@ -1059,7 +1101,7 @@ void commandsInit() {
         }
         return false;
     },
-    "update                         force all uniforms to be updated", false));
+    "update", "force all uniforms to be updated", false));
 
     commands.push_back(Command("wait", [&](const std::string& _line){ 
         std::vector<std::string> values = ada::split(_line,',');
@@ -1075,7 +1117,7 @@ void commandsInit() {
         }
         return false;
     },
-    "wait,<seconds>                 wait for X <seconds> before excecuting another command.", false));
+    "wait,<seconds>", "wait for X <seconds> before excecuting another command", false));
 
     commands.push_back(Command("fullFps", [&](const std::string& _line){
         if (_line == "fullFps") {
@@ -1094,7 +1136,7 @@ void commandsInit() {
         }
         return false;
     },
-    "fullFps[,on|off]               go to full FPS or not", false));
+    "fullFps[,on|off]", "go to full FPS or not", false));
 
     commands.push_back(Command("cursor", [&](const std::string& _line){
         if (_line == "cursor") {
@@ -1112,7 +1154,7 @@ void commandsInit() {
         }
         return false;
     },
-    "cursor[,on|off]                show/hide cursor", false));
+    "cursor[,on|off]", "show/hide cursor", false));
 
     commands.push_back(Command("screenshot", [&](const std::string& _line){ 
         std::vector<std::string> values = ada::split(_line,',');
@@ -1124,7 +1166,7 @@ void commandsInit() {
         }
         return false;
     },
-    "screenshot[,<filename>]        saves a screenshot to a filename.", false));
+    "screenshot[,<filename>]", "saves a screenshot to a filename", false));
 
     commands.push_back(Command("sequence", [&](const std::string& _line){ 
         std::vector<std::string> values = ada::split(_line,',');
@@ -1144,36 +1186,22 @@ void commandsInit() {
             sandbox.recordSecs(from, to, fps);
             commandsMutex.unlock();
 
-            std::cout << "// " << std::endl;
-
-            int pct = 0;
-            while (pct < 100) {
-                // Delete previous line
-                const std::string deleteLine = "\e[2K\r\e[1A";
-                std::cout << deleteLine;
-
-                // Check progres.
+            float pct = 0.0f;
+            while (pct < 1.0f) {
+                // get progres.
                 commandsMutex.lock();
                 pct = sandbox.getRecordedPercentage();
                 commandsMutex.unlock();
-                
-                std::cout << "// [ ";
-                for (int i = 0; i < 50; i++) {
-                    if (i < pct/2) {
-                        std::cout << "#";
-                    }
-                    else {
-                        std::cout << ".";
-                    }
-                }
-                std::cout << " ] " << pct << "%" << std::endl;
+
+                console_draw_pct(pct);
+
                 std::this_thread::sleep_for(std::chrono::milliseconds( ada::getRestMs() ));
             }
             return true;
         }
         return false;
     },
-    "", false));
+    "sequence,<from_sec>,<to_sec>[,<fps>]","save a PNG sequence <from_sec> <to_sec> at <fps> (default: 24)",false));
 
     commands.push_back(Command("secs", [&](const std::string& _line){ 
         std::vector<std::string> values = ada::split(_line,',');
@@ -1193,36 +1221,22 @@ void commandsInit() {
             sandbox.recordSecs(from, to, fps);
             commandsMutex.unlock();
 
-            std::cout << "// " << std::endl;
-
-            int pct = 0;
-            while (pct < 100) {
-                // Delete previous line
-                const std::string deleteLine = "\e[2K\r\e[1A";
-                std::cout << deleteLine;
-
-                // Check progres.
+            float pct = 0.0f;
+            while (pct < 1.0f) {
+                // get progres.
                 commandsMutex.lock();
                 pct = sandbox.getRecordedPercentage();
                 commandsMutex.unlock();
-                
-                std::cout << "// [ ";
-                for (int i = 0; i < 50; i++) {
-                    if (i < pct/2) {
-                        std::cout << "#";
-                    }
-                    else {
-                        std::cout << ".";
-                    }
-                }
-                std::cout << " ] " << pct << "%" << std::endl;
+
+                console_draw_pct(pct);
+
                 std::this_thread::sleep_for(std::chrono::milliseconds( ada::getRestMs() ));
             }
             return true;
         }
         return false;
     },
-    "secs,<A_sec>,<B_sec>[,fps] saves a sequence of images from A to B second.", false));
+    "secs,<A>,<B>[,<fps>]","saves a sequence of images from second A to second B at <fps> (default: 24)", false));
 
     commands.push_back(Command("frames", [&](const std::string& _line){ 
         std::vector<std::string> values = ada::split(_line,',');
@@ -1234,44 +1248,30 @@ void commandsInit() {
             if (values.size() == 4)
                 fps = ada::toFloat(values[3]);
 
-            if (from >= to) {
+            if (from >= to)
                 from = 0.0;
-            }
 
             commandsMutex.lock();
             sandbox.recordFrames(from, to, fps);
             commandsMutex.unlock();
 
-            std::cout << "// " << std::endl;
-
-            int pct = 0;
-            while (pct < 100) {
-                // Delete previous line
-                const std::string deleteLine = "\e[2K\r\e[1A";
-                std::cout << deleteLine;
+            float pct = 0.0f;
+            while (pct < 1.0f) {
 
                 // Check progres.
                 commandsMutex.lock();
                 pct = sandbox.getRecordedPercentage();
                 commandsMutex.unlock();
                 
-                std::cout << "// [ ";
-                for (int i = 0; i < 50; i++) {
-                    if (i < pct/2) {
-                        std::cout << "#";
-                    }
-                    else {
-                        std::cout << ".";
-                    }
-                }
-                std::cout << " ] " << pct << "%" << std::endl;
+                console_draw_pct(pct);
+
                 std::this_thread::sleep_for(std::chrono::milliseconds( ada::getRestMs() ));
             }
             return true;
         }
         return false;
     },
-    "frames,<A_sec>,<B_sec>[,fps] saves a sequence of images from frame A to B.", false));
+    "frames,<A>,<B>[,<fps>]","saves a sequence of images from frame <A> to <B> at <fps> (default: 24)", false));
 
     commands.push_back(Command("q", [&](const std::string& _line){ 
         if (_line == "q") {
@@ -1280,7 +1280,7 @@ void commandsInit() {
         }
         return false;
     },
-    "q                              close glslViewer", false));
+    "q", "close glslViewer", false));
 
     commands.push_back(Command("quit", [&](const std::string& _line){ 
         if (_line == "quit") {
@@ -1290,7 +1290,7 @@ void commandsInit() {
         }
         return false;
     },
-    "quit                           close glslViewer", false));
+    "quit", "close glslViewer", false));
 
     commands.push_back(Command("exit", [&](const std::string& _line){ 
         if (_line == "exit") {
@@ -1300,63 +1300,49 @@ void commandsInit() {
         }
         return false;
     },
-    "exit                           close glslViewer", false));
+    "exit", "close glslViewer", false));
 }
 
 #ifndef __EMSCRIPTEN__
 
 void printUsage(char * executableName) {
-    std::cerr << "// " << header << std::endl;
-    std::cerr << "// "<< std::endl;
-    std::cerr << "// Swiss army knife of GLSL Shaders. Loads frag/vertex shaders, images, " << std::endl;
-    std::cerr << "// videos, audio, geometries and much more. Your assets will reload  "<< std::endl;
-    std::cerr << "// automatically on changes. It have support for multiple buffers,  "<< std::endl;
-    std::cerr << "// background and postprocessing passes. It can render headlessly into"<< std::endl;
-    std::cerr << "// a file, a PNG sequence, or fullscreen, as a screensaver, live mode (allways "<< std::endl;
-    std::cerr << "// on top) or to volumetric displays. "<< std::endl;
-    std::cerr << "// Use POSIX STANDARD CONSOLE IN/OUT to comunicate (uniforms, camera "<< std::endl;
-    std::cerr << "// properties, lights and other scene properties) to and with other "<< std::endl;
-    std::cerr << "// programs. Compatible with Linux, MacOS and Windows, runs from "<< std::endl;
-    std::cerr << "// command line with or outside X11 environment on RaspberryPi devices. "<< std::endl;
-    std::cerr << "// "<< std::endl;
-    std::cerr << "// For more information refer to repository:"<< std::endl;
-    std::cerr << "// https://github.com/patriciogonzalezvivo/glslViewer"<< std::endl;
-    std::cerr << "// or joing the #glslViewer channel in https://shader.zone/"<< std::endl;
-    std::cerr << "// "<< std::endl;
-    std::cerr << "// Usage: " << executableName << " [Arguments]"<< std::endl;
-    std::cerr << "// "<< std::endl;
-    std::cerr << "// Arguments:" << std::endl;
-    std::cerr << "// <shader>.frag [<shader>.vert] - load shaders" << std::endl;
-    std::cerr << "// [<mesh>.(obj/ply/stl/glb/gltf)] - load obj/ply/stl/glb/gltf file" << std::endl;
-    std::cerr << "// [<texture>.(png/tga/jpg/bmp/psd/gif/hdr/mov/mp4/rtsp/rtmp/etc)] - load and assign texture to uniform order" << std::endl;
-    std::cerr << "// [-vFlip] - all textures after will be flipped vertically" << std::endl;
-    std::cerr << "// [--video <video_device_number>] - open video device allocated wit that particular id" << std::endl;
-    std::cerr << "// [--audio <capture_device_id>] - open audio capture device allocated as sampler2D texture. If id is not selected, default will be used" << std::endl;
-    std::cerr << "// [-<uniformName> <texture>.(png/tga/jpg/bmp/psd/gif/hdr)] - add textures associated with different uniform sampler2D names" << std::endl;
-    std::cerr << "// [-C <enviromental_map>.(png/tga/jpg/bmp/psd/gif/hdr)] - load a environmental map as cubemap" << std::endl;
-    std::cerr << "// [-c <enviromental_map>.(png/tga/jpg/bmp/psd/gif/hdr)] - load a environmental map as cubemap but hided" << std::endl;
-    std::cerr << "// [-sh <enviromental_map>.(png/tga/jpg/bmp/psd/gif/hdr)] - load a environmental map as spherical harmonics array" << std::endl;
-    std::cerr << "// [-x <pixels>] - set the X position of the billboard on the screen" << std::endl;
-    std::cerr << "// [-y <pixels>] - set the Y position of the billboard on the screen" << std::endl;
-    std::cerr << "// [-w <pixels>] - set the width of the window" << std::endl;
-    std::cerr << "// [-h <pixels>] - set the height of the billboard" << std::endl;
-    std::cerr << "// [--fps] <fps> - fix the max FPS" << std::endl;
-    std::cerr << "// [-d|--display <display>] - open specific display port. Ex: -d /dev/dri/card1" << std::endl;
-    std::cerr << "// [-f|--fullscreen] - load the window in fullscreen" << std::endl;
-    std::cerr << "// [-l|--life-coding] - live code mode, where the billboard is allways visible" << std::endl;
-    std::cerr << "// [-ss|--screensaver] - screensaver mode, any pressed key will exit" << std::endl;
-    std::cerr << "// [--headless] - headless rendering. Very useful for making images or benchmarking." << std::endl;
-    std::cerr << "// [--nocursor] - hide cursor" << std::endl;
-    std::cerr << "// [--fxaa] - set FXAA as postprocess filter" << std::endl;
-    std::cerr << "// [--quilt <0-7>] - quilt render (HoloPlay)" << std::endl;
-    std::cerr << "// [--lenticular [visual.json]] - lenticular calubration file, Looking Glass Model (HoloPlay)" << std::endl;
-    std::cerr << "// [-I<include_folder>] - add an include folder to default for #include files" << std::endl;
-    std::cerr << "// [-D<define>] - add system #defines directly from the console argument" << std::endl;
-    std::cerr << "// [-p <osc_port>] - open OSC listening port" << std::endl;
-    std::cerr << "// [-e/-E <command>] - execute command when start. Multiple -e flags can be chained" << std::endl;
-    std::cerr << "// [-v/--version] - return glslViewer version" << std::endl;
-    std::cerr << "// [--verbose] - turn verbose outputs on" << std::endl;
-    std::cerr << "// [--help] - print help for one or all command" << std::endl;
+    std::cerr << about << "\n" << std::endl;
+    std::cerr << "This is a flexible console-base OpenGL Sandbox to display 2D/3D GLSL shaders without the need of an UI. You can definitely make your own IDE or UI that communicates back/forth with glslViewer thought the standard POSIX console In/Out or OSC.\n" << std::endl;
+    std::cerr << "For more information:"<< std::endl;
+    std::cerr << "  - refer to repository wiki https://github.com/patriciogonzalezvivo/glslViewer/wiki"<< std::endl;
+    std::cerr << "  - joing the #glslViewer channel in https://shader.zone/\n"<< std::endl;
+    std::cerr << "Usage:"<< std::endl;
+    std::cerr << "          " << executableName << " <frag_shader>.frag [<vert_shader>.vert <geometry>.obj|ply|stl|glb|gltf]\n" << std::endl;
+    std::cerr << "Optional arguments:\n"<< std::endl;
+    std::cerr << "      <texture>.(png/tga/jpg/bmp/psd/gif/hdr/mov/mp4/rtsp/rtmp/etc)   # load and assign texture to uniform u_tex<N>" << std::endl;
+    std::cerr << "      -<uniform_name> <texture>.(png/tga/jpg/bmp/psd/gif/hdr)         # load a textures with a custom name" << std::endl;
+    std::cerr << "      --video <video_device_number>   # open video device allocated wit that particular id" << std::endl;
+    std::cerr << "      --audio [<capture_device_id>]   # open audio capture device as sampler2D texture " << std::endl;
+    std::cerr << "      -C <enviromental_map>.(png/tga/jpg/bmp/psd/gif/hdr)     # load a env. map as cubemap" << std::endl;
+    std::cerr << "      -c <enviromental_map>.(png/tga/jpg/bmp/psd/gif/hdr)     # load a env. map as cubemap but hided" << std::endl;
+    std::cerr << "      -sh <enviromental_map>.(png/tga/jpg/bmp/psd/gif/hdr)    # load a env. map as spherical harmonics array" << std::endl;
+    std::cerr << "      -vFlip                      # all textures after will be flipped vertically" << std::endl;
+    std::cerr << "      -x <pixels>                 # set the X position of the billboard on the screen" << std::endl;
+    std::cerr << "      -y <pixels>                 # set the Y position of the billboard on the screen" << std::endl;
+    std::cerr << "      -w <pixels>                 # set the width of the window" << std::endl;
+    std::cerr << "      -h <pixels>                 # set the height of the billboard" << std::endl;
+    std::cerr << "      -d  or --display <display>  # open specific display port. Ex: -d /dev/dri/card1" << std::endl;
+    std::cerr << "      -f  or --fullscreen         # load the window in fullscreen" << std::endl;
+    std::cerr << "      -l  or --life-coding        # live code mode, where the billboard is allways visible" << std::endl;
+    std::cerr << "      -ss or --screensaver        # screensaver mode, any pressed key will exit" << std::endl;
+    std::cerr << "      --headless                  # headless rendering" << std::endl;
+    std::cerr << "      --nocursor                  # hide cursor" << std::endl;
+    std::cerr << "      --fps <fps>                 # fix the max FPS" << std::endl;
+    std::cerr << "      --fxaa                      # set FXAA as postprocess filter" << std::endl;
+    std::cerr << "      --quilt <0-7>               # quilt render (HoloPlay)" << std::endl;
+    std::cerr << "      --lenticular [visual.json]  # lenticular calubration file, Looking Glass Model (HoloPlay)" << std::endl;
+    std::cerr << "      -I<include_folder>          # add an include folder to default for #include files" << std::endl;
+    std::cerr << "      -D<define>                  # add system #defines directly from the console argument" << std::endl;
+    std::cerr << "      -p <OSC_port>               # open OSC listening port" << std::endl;
+    std::cerr << "      -e  or -E <command>         # execute command when start. Multiple -e commands can be stack" << std::endl;
+    std::cerr << "      -v  or --version            # return glslViewer version" << std::endl;
+    std::cerr << "      --verbose                   # turn verbose outputs on" << std::endl;
+    std::cerr << "      --help                      # print help for one or all command" << std::endl;
 }
 
 void onExit() {
@@ -1394,6 +1380,13 @@ void fileWatcherThread() {
 //  Command line Thread
 //============================================================================
 void cinWatcherThread() {
+
+    #if defined(SUPPORT_NCURSES)
+    console_init(oscPort);
+    signal(SIGWINCH, console_sigwinch_handler);
+    console_refresh();
+    #endif
+
     while (!sandbox.isReady()) {
         ada::sleep_ms( ada::getRestSec() * 1000000 );
         std::this_thread::sleep_for(std::chrono::milliseconds( ada::getRestMs() ));
@@ -1402,7 +1395,10 @@ void cinWatcherThread() {
     // Argument commands to execute comming from -e or -E
     if (commandsArgs.size() > 0) {
         for (size_t i = 0; i < commandsArgs.size(); i++) {
-            commandsRun(commandsArgs[i], commandsMutex);
+            commandsRun(commandsArgs[i]);
+            #if defined(SUPPORT_NCURSES)
+            console_refresh();
+            #endif
         }
         commandsArgs.clear();
 
@@ -1413,13 +1409,24 @@ void cinWatcherThread() {
         }
     }
 
-    // Commands comming from the console IN
-    std::string console_line;
+    #if defined(SUPPORT_NCURSES)
+    while ( keepRunnig.load() ) {
+        std::string cmd;
+        if (console_getline(cmd, commands, sandbox))
+            if (cmd.size() > 0)
+                commandsRun(cmd);
+    }
+    console_end();
+    #else
+    // Commands coming from the console IN
+    std::string cmd;
     std::cout << "// > ";
-    while (std::getline(std::cin, console_line)) {
-        commandsRun(console_line, commandsMutex);
+    while (std::getline(std::cin, cmd)) {
+        commandsRun(cmd);
         std::cout << "// > ";
     }
+    #endif
+
 }
 
 #endif

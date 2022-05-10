@@ -80,7 +80,9 @@ public:
 
     void                    setStreamPlay( const std::string& _name);
     void                    setStreamStop( const std::string& _name);
+    float                   getStreamTime( const std::string& _name);
     void                    setStreamTime( const std::string& _name, float _time );
+    float                   getStreamSpeed( const std::string& _name);
     void                    setStreamSpeed( const std::string& _name, float _speed );
 
     void                    setStreamsPlay();
@@ -88,8 +90,6 @@ public:
     void                    setStreamsTime( float _time );
     void                    setStreamsSpeed( float _speed );
     void                    setStreamsPrevs( size_t _total );
-
-
 
     void                    updateStreams(size_t _frame);
 
@@ -103,7 +103,8 @@ public:
     ada::Camera&            getCamera() { return cameras[0]; }
 
     // Debug
-    void                    print(bool _all);
+    void                    printAvailableUniforms(bool _non_active);
+    void                    printDefinedUniforms(bool _csv = false);
     void                    printBuffers();
     void                    printTextures();
     void                    printStreams();

@@ -147,29 +147,43 @@ Uniforms::~Uniforms(){
 
 bool parseUniformData(const std::string &_line, UniformDataList *_uniforms) {
     bool rta = false;
-    std::regex re("^(\\w+)\\,");
-    std::smatch match;
-    if (std::regex_search(_line, match, re)) {
-        // Extract uniform name
-        std::string name = std::ssub_match(match[1]).str();
+    std::vector<std::string> value = ada::split(_line,',');
+    if (value.size() > 1) {
+        std::string name = value[0];
 
-        // Extract values
-        int index = 0;
-        std::stringstream ss(_line);
-        std::string item;
-        while (getline(ss, item, ',')) {
-            if (index != 0) {
-                (*_uniforms)[name].bInt = !ada::isFloat(item);
-                (*_uniforms)[name].value[index-1] = ada::toFloat(item);
-                (*_uniforms)[name].change = true;
-            }
-            index++;
+        for (size_t i = 1; i < value.size(); i++) {
+            (*_uniforms)[name].bInt = !ada::isFloat(value[i]);
+            (*_uniforms)[name].value[i-1] = ada::toFloat(value[i]);
+            (*_uniforms)[name].change = true;
         }
 
-        // Set total amount of values
-        (*_uniforms)[name].size = index-1;
+        (*_uniforms)[name].size = value.size()-1;
         rta = true;
     }
+
+    // std::regex re("^(\\w+)\\,");
+    // std::smatch match;
+    // if (std::regex_search(_line, match, re)) {
+    //     // Extract uniform name
+    //     std::string name = std::ssub_match(match[1]).str();
+
+    //     Extract values
+    //     int index = 0;
+    //     std::stringstream ss(_line);
+    //     std::string item;
+    //     while (getline(ss, item, ',')) {
+    //         if (index != 0) {
+    //             (*_uniforms)[name].bInt = !ada::isFloat(item);
+    //             (*_uniforms)[name].value[index-1] = ada::toFloat(item);
+    //             (*_uniforms)[name].change = true;
+    //         }
+    //         index++;
+    //     }
+
+    //     // Set total amount of values
+    //     (*_uniforms)[name].size = index-1;
+    //     rta = true;
+    // }
     return rta;
 }
 
@@ -520,7 +534,6 @@ bool Uniforms::addCameraTrack( const std::string& _name ) {
     return false;
 }
 
-
 void Uniforms::setStreamPlay( const std::string& _name) {
     if (streams.find(_name) != streams.end())
         streams[_name]->play();
@@ -530,6 +543,19 @@ void Uniforms::setStreamStop( const std::string& _name) {
     if (streams.find(_name) != streams.end())
         streams[_name]->stop();
 }
+
+float Uniforms::getStreamTime( const std::string& _name) {
+    if (streams.find(_name) != streams.end())
+        return streams[_name]->getTime();
+    return 0.0f;
+}
+
+float Uniforms::getStreamSpeed( const std::string& _name) {
+    if (streams.find(_name) != streams.end())
+        return streams[_name]->getSpeed();
+    return 0.0f;
+}
+    
 void Uniforms::setStreamTime( const std::string& _name, float _time ) {
     if (streams.find(_name) != streams.end())
         streams[_name]->setTime(_time);
@@ -807,13 +833,6 @@ bool Uniforms::haveChange() {
         }
     }
 
-    // std::cout << "  change " << m_change << std::endl;
-    // std::cout << "  lights " << lightChange << std::endl;
-    // std::cout << "  u_time " << functions["u_time"].present << std::endl;
-    // std::cout << "  u_delta " << functions["u_delta"].present << std::endl;
-    // std::cout << "  u_mouse " << functions["u_mouse"].present << std::endl;
-    // std::cout << "  u_camera " << getCamera().bChange << std::endl;
-
     return  m_change || 
             streams.size() > 0 ||
             functions["u_time"].present || 
@@ -844,14 +863,13 @@ void Uniforms::clear() {
 
 }
 
-void Uniforms::print(bool _all) {
-    if (_all) {
+void Uniforms::printAvailableUniforms(bool _non_active) {
+    if (_non_active) {
         // Print all Native Uniforms (they carry functions)
         for (UniformFunctionsList::iterator it= functions.begin(); it != functions.end(); ++it) {                
-            std::cout << it->second.type << ',' << it->first;
-            if (it->second.print) {
-                std::cout << "," << it->second.print();
-            }
+            std::cout << "uniform " << it->second.type << ' ' << it->first << ";";
+            if (it->second.print) 
+                std::cout << " // " << it->second.print();
             std::cout << std::endl;
         }
     }
@@ -859,90 +877,98 @@ void Uniforms::print(bool _all) {
         // Print Native Uniforms (they carry functions) that are present on the shader
         for (UniformFunctionsList::iterator it= functions.begin(); it != functions.end(); ++it) {                
             if (it->second.present) {
-                std::cout << it->second.type << ',' << it->first;
-                if (it->second.print) {
-                    std::cout << "," << it->second.print();
-                }
+                std::cout<< "uniform " << it->second.type << ' ' << it->first << ";";
+                if (it->second.print)
+                    std::cout << " // " << it->second.print();
                 std::cout << std::endl;
             }
         }
     }
-    
-    // Print user defined uniform data
-    for (UniformDataList::iterator it= data.begin(); it != data.end(); ++it) {
-        std::cout << it->second.getType() << "," << it->first;
-        for (int i = 0; i < it->second.size; i++) {
-            std::cout << ',' << it->second.value[i];
-        }
-        std::cout << std::endl;
-    }
+}
 
-    printBuffers();
-    printTextures();
-    printStreams();
-    printLights();
+void Uniforms::printDefinedUniforms(bool _csv){
+    // Print user defined uniform data
+    if (_csv) {
+        for (UniformDataList::iterator it= data.begin(); it != data.end(); ++it) {
+            std::cout << it->first;
+            for (int i = 0; i < it->second.size; i++) {
+                std::cout << ',' << it->second.value[i];
+            }
+            std::cout << std::endl;
+        }
+    }
+    else {
+        for (UniformDataList::iterator it= data.begin(); it != data.end(); ++it) {
+            std::cout << "uniform " << it->second.getType() << "  " << it->first << ";";
+            for (int i = 0; i < it->second.size; i++)
+                std::cout << ((i == 0)? " // " : "," ) << it->second.value[i];
+            
+            std::cout << std::endl;
+        }
+    }
+    
 }
 
 void Uniforms::printBuffers() {
     for (size_t i = 0; i < buffers.size(); i++)
-        std::cout << "sampler2D,u_buffer" << i << std::endl;
+        std::cout << "uniform sampler2D u_buffer" << i << ";" << std::endl;
 
     for (size_t i = 0; i < doubleBuffers.size(); i++)
-        std::cout << "sampler2D,u_doubleBuffer" << i << std::endl;
+        std::cout << "uniform sampler2D u_doubleBuffer" << i << ";" << std::endl;
 
     for (size_t i = 0; i < convolution_pyramids.size(); i++)
-        std::cout << "sampler2D,u_convolutionPyramid" << i << std::endl;
+        std::cout << "uniform sampler2D u_convolutionPyramid" << i << ";" << std::endl;
     
     if (functions["u_scene"].present)
-        std::cout << "sampler2D,u_scene" << std::endl;
+        std::cout << "uniform sampler2D u_scene;" << std::endl;
 
     if (functions["u_sceneDepth"].present)
-        std::cout << "sampler2D,u_sceneDepth" << std::endl;
+        std::cout << "uniform sampler2D u_sceneDepth;" << std::endl;
 }
 
 void Uniforms::printTextures() {
     for (TextureList::iterator it = textures.begin(); it != textures.end(); ++it) {
-        std::cout << "sampler2D," << it->first << ',' << it->second->getFilePath() << std::endl;
-        std::cout << "vec2," << it->first << "Resolution," << ada::toString(it->second->getWidth(), 1) << "," << ada::toString(it->second->getHeight(), 1) << std::endl;
+        std::cout << "uniform sampler2D " << it->first << "; // " << it->second->getFilePath() << std::endl;
+        std::cout << "uniform vec2 " << it->first << "Resolution; // " << ada::toString(it->second->getWidth(), 1) << "," << ada::toString(it->second->getHeight(), 1) << std::endl;
     }
 }
 
 void Uniforms::printStreams() {
     for (StreamsList::iterator it = streams.begin(); it != streams.end(); ++it) {
-        std::cout << "sampler2D," << it->first << "," << it->second->getFilePath() << std::endl;
+        std::cout << "uniform sampler2D " << it->first << "; // " << it->second->getFilePath() << std::endl;
 
         if (m_streamsPrevs > 0)
-            std::cout << "sampler2D," << it->first << "Prev," << it->second->getFilePath() << std::endl;
+            std::cout << "uniform sampler2D " << it->first << "Prev;" << std::endl;
 
-        std::cout << "float," << it->first+"CurrentFrame," << ada::toString(it->second->getCurrentFrame(), 1) << std::endl;
-        std::cout << "float," << it->first+"TotalFrames," << ada::toString(it->second->getTotalFrames(), 1) << std::endl;
-        std::cout << "float," << it->first+"Time," << ada::toString(it->second->getTime(), 1) << std::endl;
-        std::cout << "float," << it->first+"Duration," << ada::toString(it->second->getDuration(), 1) << std::endl;
-        std::cout << "float," << it->first+"Fps," << ada::toString(it->second->getFps(), 1) << std::endl;
+        std::cout << "uniform float " << it->first+"CurrentFrame; //" << ada::toString(it->second->getCurrentFrame(), 1) << std::endl;
+        std::cout << "uniform float " << it->first+"TotalFrames;  //" << ada::toString(it->second->getTotalFrames(), 1) << std::endl;
+        std::cout << "uniform float " << it->first+"Time;         // " << ada::toString(it->second->getTime(), 1) << std::endl;
+        std::cout << "uniform float " << it->first+"Duration;     // " << ada::toString(it->second->getDuration(), 1) << std::endl;
+        std::cout << "uniform float " << it->first+"Fps;          // " << ada::toString(it->second->getFps(), 1) << std::endl;
     }
 }
 
 void Uniforms::printLights() {
     if (lights.size() == 1) {
         if (lights[0].getType() != ada::LIGHT_DIRECTIONAL)
-            std::cout << "vect3,u_light," << ada::toString( lights[0].getPosition() ) << std::endl;
-        std::cout << "vect3,u_lightColor," << ada::toString( lights[0].color )  << std::endl;
+            std::cout << "unifrom vect3 u_light; // " << ada::toString( lights[0].getPosition() ) << std::endl;
+        std::cout << "unifrom vect3 u_lightColor; // " << ada::toString( lights[0].color )  << std::endl;
         if (lights[0].getType() == ada::LIGHT_DIRECTIONAL || lights[0].getType() == ada::LIGHT_SPOT)
-            std::cout << "vect3,u_lightDirection," << ada::toString( lights[0].direction ) << std::endl;
-        std::cout << "float,u_lightIntensity," << ada::toString( lights[0].intensity, 3) << std::endl;
+            std::cout << "unifrom vect3 u_lightDirection; // " << ada::toString( lights[0].direction ) << std::endl;
+        std::cout << "unifrom float u_lightIntensity; // " << ada::toString( lights[0].intensity, 3) << std::endl;
         if (lights[0].falloff > 0.0)
-            std::cout << "float,u_lightFalloff," << ada::toString( lights[0].falloff, 3) << std::endl;
+            std::cout << "unifrom float u_lightFalloff; // " << ada::toString( lights[0].falloff, 3) << std::endl;
     }
     else if (lights.size() > 1) {
         for (unsigned int i = 0; i < lights.size(); i++) {
             if (lights[i].getType() != ada::LIGHT_DIRECTIONAL)
-                std::cout << "vec3,u_light," << ada::toString( lights[i].getPosition() ) << std::endl;
-            std::cout << "vec3,u_lightColor," << ada::toString( lights[i].color )  << std::endl;
+                std::cout << "uniform vec3 u_light; // " << ada::toString( lights[i].getPosition() ) << std::endl;
+            std::cout << "uniform vec3 u_lightColor; // " << ada::toString( lights[i].color )  << std::endl;
             if (lights[i].getType() == ada::LIGHT_DIRECTIONAL || lights[i].getType() == ada::LIGHT_SPOT)
-                std::cout << "vec3,u_lightDirection," << ada::toString( lights[i].direction ) << std::endl;
-            std::cout << "float,u_lightIntensity," << ada::toString( lights[i].intensity, 3) << std::endl;
+                std::cout << "uniform vec3 u_lightDirection; // " << ada::toString( lights[i].direction ) << std::endl;
+            std::cout << "uniform float u_lightIntensity; // " << ada::toString( lights[i].intensity, 3) << std::endl;
             if (lights[i].falloff > 0.0)
-                std::cout << "float,u_lightFalloff," << ada::toString( lights[i].falloff, 3) << std::endl;
+                std::cout << "uniform float u_lightFalloff; // " << ada::toString( lights[i].falloff, 3) << std::endl;
         }
     }
 }

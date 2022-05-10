@@ -27,8 +27,8 @@ Scene::Scene():
     // Debug State
     showGrid(false), showAxis(false), showBBoxes(false), showCubebox(false), 
     // Camera.
-    m_blend(ALPHA),
-    m_culling(NONE),
+    m_blend(BLEND_ALPHA),
+    m_culling(CULL_NONE),
     m_depth_test(true),
     // Light
     m_lightUI_vbo(nullptr), m_dynamicShadows(false), m_shadows(false),
@@ -97,7 +97,7 @@ void Scene::setup(CommandList& _commands, Uniforms& _uniforms) {
 
         return false;
     },
-    "models                             print all the names of the models"));
+    "models", "print all the names of the models"));
 
     _commands.push_back(Command("material", [&](const std::string& _line){ 
         if (_line == "materials") {
@@ -120,32 +120,32 @@ void Scene::setup(CommandList& _commands, Uniforms& _uniforms) {
 
         return false;
     },
-    "materials                           print all the materials names"));
+    "materials", "print all the materials names"));
 
     _commands.push_back(Command("blend", [&](const std::string& _line){ 
         std::vector<std::string> values = ada::split(_line,',');
         if (values.size() == 1) {
-            if (getBlend() == ALPHA) std::cout << "alpha" << std::endl;
-            else if (getBlend() == ADD) std::cout << "add" << std::endl;
-            else if (getBlend() == MULTIPLY) std::cout << "multiply" << std::endl;
-            else if (getBlend() == SCREEN) std::cout << "screen" << std::endl;
-            else if (getBlend() == SUBSTRACT) std::cout << "substract" << std::endl;
+            if (getBlend() == BLEND_ALPHA) std::cout << "alpha" << std::endl;
+            else if (getBlend() == BLEND_ADD) std::cout << "add" << std::endl;
+            else if (getBlend() == BLEND_MULTIPLY) std::cout << "multiply" << std::endl;
+            else if (getBlend() == BLEND_SCREEN) std::cout << "screen" << std::endl;
+            else if (getBlend() == BLEND_SUBSTRACT) std::cout << "substract" << std::endl;
             
             return true;
         }
         else if (values.size() == 2) {
-            if (values[1] == "alpha") setBlend(ALPHA);
-            else if (values[1] == "add") setBlend(ADD);
-            else if (values[1] == "multiply") setBlend(MULTIPLY);
-            else if (values[1] == "screen") setBlend(SCREEN);
-            else if (values[1] == "substract") setBlend(SUBSTRACT);
+            if (values[1] == "alpha") setBlend(BLEND_ALPHA);
+            else if (values[1] == "add") setBlend(BLEND_ADD);
+            else if (values[1] == "multiply") setBlend(BLEND_MULTIPLY);
+            else if (values[1] == "screen") setBlend(BLEND_SCREEN);
+            else if (values[1] == "substract") setBlend(BLEND_SUBSTRACT);
 
             return true;
         }
 
         return false;
     },
-    "blend[,<alpha|add|multiply|screen|substract>]   get or set the blending modes"));
+    "blend[,alpha|add|multiply|screen|substract]", "get or set the blending modes"));
 
     _commands.push_back(Command("depth_test", [&](const std::string& _line){ 
         if (_line == "depth_test") {
@@ -162,30 +162,30 @@ void Scene::setup(CommandList& _commands, Uniforms& _uniforms) {
         }
         return false;
     },
-    "depth_test[,<on|off]   turn on/off depth test"));
+    "depth_test[,on|off]", "turn on/off depth test"));
 
     _commands.push_back(Command("culling", [&](const std::string& _line){ 
         std::vector<std::string> values = ada::split(_line,',');
         if (values.size() == 1) {
-            if (getCulling() == NONE) std::cout << "none" << std::endl;
-            else if (getCulling() == FRONT) std::cout << "front" << std::endl;
-            else if (getCulling() == BACK) std::cout << "back" << std::endl;
-            else if (getCulling() == BOTH) std::cout << "both" << std::endl;
+            if (getCulling() == CULL_NONE) std::cout << "none" << std::endl;
+            else if (getCulling() == CULL_FRONT) std::cout << "front" << std::endl;
+            else if (getCulling() == CULL_BACK) std::cout << "back" << std::endl;
+            else if (getCulling() == CULL_BOTH) std::cout << "both" << std::endl;
 
             return true;
         }
         else if (values.size() == 2) {
-            if (values[1] == "none") setCulling(NONE);
-            else if (values[1] == "front") setCulling(FRONT);
-            else if (values[1] == "back") setCulling(BACK);
-            else if (values[1] == "both") setCulling(BOTH);
+            if (values[1] == "none") setCulling(CULL_NONE);
+            else if (values[1] == "front") setCulling(CULL_FRONT);
+            else if (values[1] == "back") setCulling(CULL_BACK);
+            else if (values[1] == "both") setCulling(CULL_BOTH);
 
             return true;
         }
 
         return false;
     },
-    "culling[,<none|front|back|both>]   get or set the culling modes"));
+    "culling[,none|front|back|both]", "get or set the culling modes"));
     
     _commands.push_back(Command("dynamic_shadows", [&](const std::string& _line){ 
         if (_line == "dynamic_shadows") {
@@ -202,7 +202,7 @@ void Scene::setup(CommandList& _commands, Uniforms& _uniforms) {
         }
         return false;
     },
-    "dynamic_shadows[,on|off]            get or set dynamic shadows"));
+    "dynamic_shadows[,on|off]", "get or set dynamic shadows"));
 
     _commands.push_back(Command("skybox_ground", [&](const std::string& _line){ 
         std::vector<std::string> values = ada::split(_line,',');
@@ -217,7 +217,7 @@ void Scene::setup(CommandList& _commands, Uniforms& _uniforms) {
         }
         return false;
     },
-    "skybox_ground[,<r>,<g>,<b>]        get or set the ground color of the skybox."));
+    "skybox_ground[,<r>,<g>,<b>]", "get or set the ground color of the skybox."));
 
     _commands.push_back(Command("skybox_elevation", [&](const std::string& _line){ 
         std::vector<std::string> values = ada::split(_line,',');
@@ -232,7 +232,7 @@ void Scene::setup(CommandList& _commands, Uniforms& _uniforms) {
         }
         return false;
     },
-    "skybox_elevation[,<sun_elevation>]  get or set the sun elevation (in rads) of the skybox."));
+    "skybox_elevation[,<sun_elevation>]", "get or set the sun elevation (in rads) of the skybox."));
 
     _commands.push_back(Command("skybox_azimuth", [&](const std::string& _line){ 
         std::vector<std::string> values = ada::split(_line,',');
@@ -247,7 +247,7 @@ void Scene::setup(CommandList& _commands, Uniforms& _uniforms) {
         }
         return false;
     },
-    "skybox_azimuth[,<sun_azimuth>]     get or set the sun azimuth (in rads) of the skybox."));
+    "skybox_azimuth[,<sun_azimuth>]", "get or set the sun azimuth (in rads) of the skybox."));
 
     _commands.push_back(Command("skybox_turbidity", [&](const std::string& _line){ 
         std::vector<std::string> values = ada::split(_line,',');
@@ -262,7 +262,7 @@ void Scene::setup(CommandList& _commands, Uniforms& _uniforms) {
         }
         return false;
     },
-    "skybox_turbidity[,<sky_turbidty>]  get or set the sky turbidity of the m_skybox."));
+    "skybox_turbidity[,<sky_turbidty>]", "get or set the sky turbidity of the m_skybox."));
 
     _commands.push_back(Command("skybox", [&](const std::string& _line){
         if (_line == "skybox") {
@@ -281,7 +281,7 @@ void Scene::setup(CommandList& _commands, Uniforms& _uniforms) {
         }
         return false;
     },
-    "skybox[,on|off]                    show/hide skybox"));
+    "skybox[,on|off]", "show/hide skybox"));
 
     _commands.push_back(Command("cubemap", [&](const std::string& _line){
         if (_line == "cubemap") {
@@ -298,7 +298,7 @@ void Scene::setup(CommandList& _commands, Uniforms& _uniforms) {
         }
         return false;
     },
-    "cubemap[,on|off]                   show/hide cubemap"));
+    "cubemap[,on|off]", "show/hide cubemap"));
     
     _commands.push_back(Command("model_position", [&](const std::string& _line){ 
         std::vector<std::string> values = ada::split(_line,',');
@@ -313,7 +313,7 @@ void Scene::setup(CommandList& _commands, Uniforms& _uniforms) {
         }
         return false;
     },
-    "model_position[,<x>,<y>,<z>]       get or set the model position."));
+    "model_position[,<x>,<y>,<z>]", "get or set the model position."));
 
     _commands.push_back(Command("floor", [&](const std::string& _line) {
         std::vector<std::string> values = ada::split(_line,',');
@@ -340,7 +340,7 @@ void Scene::setup(CommandList& _commands, Uniforms& _uniforms) {
         }
         return false;
     },
-    "floor[,on|off|subD_level]          show/hide floor or presice the subdivision level"));
+    "floor[,on|off|<subD_level>]", "show/hide floor or presice the subdivision level"));
 
     _commands.push_back(Command("grid", [&](const std::string& _line){
         if (_line == "grid") {
@@ -357,7 +357,7 @@ void Scene::setup(CommandList& _commands, Uniforms& _uniforms) {
         }
         return false;
     },
-    "grid[,on|off]                      show/hide grid"));
+    "grid[,on|off]", "show/hide grid"));
 
     _commands.push_back(Command("axis", [&](const std::string& _line){
         if (_line == "grid") {
@@ -374,7 +374,7 @@ void Scene::setup(CommandList& _commands, Uniforms& _uniforms) {
         }
         return false;
     },
-    "axis[,on|off]                      show/hide axis"));
+    "axis[,on|off]", "show/hide axis"));
 
     _commands.push_back(Command("bboxes", [&](const std::string& _line){
         if (_line == "bboxes") {
@@ -391,7 +391,7 @@ void Scene::setup(CommandList& _commands, Uniforms& _uniforms) {
         }
         return false;
     },
-    "bboxes[,on|off]                    show/hide models bounding boxes"));
+    "bboxes[,on|off]", "show/hide models bounding boxes"));
     
     _uniforms.functions["u_model"] = UniformFunction("vec3", [this](ada::Shader& _shader) {
         _shader.setUniform("u_model", m_origin.getPosition());
@@ -767,7 +767,7 @@ void Scene::renderDebug(Uniforms& _uniforms) {
     if (showBBoxes) {
         glLineWidth(3.0f);
         m_wireframe3D_shader.use();
-        m_wireframe3D_shader.setUniform("u_color", glm::vec4(1.0,1.0,0.0,1.0));
+        m_wireframe3D_shader.setUniform("u_color", glm::vec4(1.0,0.0,0.0,1.0));
         m_wireframe3D_shader.setUniform("u_modelViewProjectionMatrix", m_mvp );
         for (unsigned int i = 0; i < m_models.size(); i++) {
             m_models[i]->renderBbox( &m_wireframe3D_shader );
