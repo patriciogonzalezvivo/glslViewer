@@ -181,6 +181,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
                     m_plot = 0;
                     m_plot_shader.delDefine("PLOT_VALUE");
                 }
+                return true;
             }
         }
         return false;
@@ -211,7 +212,6 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
 
                 else if (values[1] == "framerate")
                     std::cout << uniforms.tracker.logFramerate();
-
             }
 
             else if (values.size() == 3) {
@@ -396,6 +396,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
             std::vector<std::string> values = ada::split(_line,',');
             if (values.size() == 2) {
                 m_showTextures = (values[1] == "on");
+                return true;
             }
         }
         return false;
@@ -413,9 +414,10 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
                 else
                     std::cout << "Custom";
                 std::cout << " postProcessing pass" << std::endl;
+                return true;
             }
             
-            return true;
+            return false;
         }
         else {
             std::vector<std::string> values = ada::split(_line,',');
