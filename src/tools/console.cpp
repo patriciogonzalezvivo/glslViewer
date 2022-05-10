@@ -20,7 +20,8 @@ bool have_colors = false;
 // Status
 WINDOW* stt_win                 = nullptr;
 Uniforms* uniforms              = nullptr;
-float   stt_win_width_pct       = 0.3f; 
+int     stt_win_width           = 50;
+int     stt_win_height          = 0;
 bool    stt_visible             = false;
 
 
@@ -48,14 +49,14 @@ void refresh_cmd_win() {
 
     if (osc_port > 0) {
         prompt = "osc://localhost:" + ada::toString(osc_port) + " ";
-        if (have_colors) wattron(cmd_win, COLOR_PAIR(4));
+        if (have_colors) wattron(cmd_win, COLOR_PAIR(5));
         mvwprintw(cmd_win, 1, 1, "%s", prompt.c_str() );
-        if (have_colors)wattroff(cmd_win, COLOR_PAIR(4));
+        if (have_colors)wattroff(cmd_win, COLOR_PAIR(5));
     }
 
-    if (have_colors) wattron(cmd_win, COLOR_PAIR(4));
+    if (have_colors) wattron(cmd_win, COLOR_PAIR(5));
     mvwprintw(cmd_win, 1, 1 + prompt.size() + 2, "%s", cmd_suggested.c_str() );
-    if (have_colors) wattroff(cmd_win, COLOR_PAIR(4));
+    if (have_colors) wattroff(cmd_win, COLOR_PAIR(5));
 
     mvwprintw(cmd_win, 1, 1 + prompt.size(), "> %s", cmd.c_str() );
 
@@ -72,35 +73,41 @@ void refresh_stt_win() {
     size_t x = 1;
     size_t y = 0;
 
-    if (have_colors) wattron(stt_win, COLOR_PAIR(2));
+    if (have_colors) wattron(stt_win, COLOR_PAIR(4));
     // Print Native Uniforms (they carry functions) that are present on the shader
     for (UniformFunctionsList::iterator it= uniforms->functions.begin(); it != uniforms->functions.end(); ++it)
         if (it->second.present && it->second.print)
             mvwprintw(stt_win, y++, x, "%23s  %s", it->first.c_str(), it->second.print().c_str() );
 
     for (TextureList::iterator it = uniforms->textures.begin(); it != uniforms->textures.end(); ++it)
-        mvwprintw(stt_win, y++, x, "%23s  %f,%f", (it->first + "Resolution").c_str(), it->second->getWidth(), it->second->getHeight());
+        mvwprintw(stt_win, y++, x, "%23s  %.0f,%.0f", (it->first + "Resolution").c_str(), it->second->getWidth(), it->second->getHeight());
 
     for (StreamsList::iterator it = uniforms->streams.begin(); it != uniforms->streams.end(); ++it) {
-        mvwprintw(stt_win, y++, x, "%23s  %f", (it->first+"CurrentFrame").c_str(), it->second->getCurrentFrame() );
-        mvwprintw(stt_win, y++, x, "%23s  %f", (it->first+"TotalFrames").c_str(), it->second->getTotalFrames() );
-        mvwprintw(stt_win, y++, x, "%23s  %f", (it->first+"Time").c_str(), it->second->getTime() );
-        mvwprintw(stt_win, y++, x, "%23s  %f", (it->first+"Duration").c_str(), it->second->getDuration() );
-        mvwprintw(stt_win, y++, x, "%23s  %f", (it->first+"Fps").c_str(), it->second->getFps() );
+        mvwprintw(stt_win, y++, x, "%23s  %.3f", (it->first+"CurrentFrame").c_str(), it->second->getCurrentFrame() );
+        mvwprintw(stt_win, y++, x, "%23s  %.3f", (it->first+"TotalFrames").c_str(), it->second->getTotalFrames() );
+        mvwprintw(stt_win, y++, x, "%23s  %.3f", (it->first+"Time").c_str(), it->second->getTime() );
+        mvwprintw(stt_win, y++, x, "%23s  %.3f", (it->first+"Duration").c_str(), it->second->getDuration() );
+        mvwprintw(stt_win, y++, x, "%23s  %.3f", (it->first+"Fps").c_str(), it->second->getFps() );
     }
-    if (have_colors) wattroff(stt_win, COLOR_PAIR(2));
+    if (have_colors) wattroff(stt_win, COLOR_PAIR(4));
 
-    y++;
-
+    if (have_colors) wattron(stt_win, COLOR_PAIR(2));
     for (UniformDataList::iterator it= uniforms->data.begin(); it != uniforms->data.end(); ++it) {
         if (it->second.size == 1)
-            mvwprintw(stt_win, y++, x, "%23s  %f", it->first.c_str(), it->second.value[0]);
+            mvwprintw(stt_win, y++, x, "%23s  %.3f", it->first.c_str(), it->second.value[0]);
         else if (it->second.size == 2)
-            mvwprintw(stt_win, y++, x, "%23s  %f,%f", it->first.c_str(), it->second.value[0], it->second.value[1]);
+            mvwprintw(stt_win, y++, x, "%23s  %.3f,%.3f", it->first.c_str(), it->second.value[0], it->second.value[1]);
         else if (it->second.size == 3)
-            mvwprintw(stt_win, y++, x, "%23s  %f,%f,%f", it->first.c_str(), it->second.value[0], it->second.value[1], it->second.value[2]);
+            mvwprintw(stt_win, y++, x, "%23s  %.3f,%.3f,%.3f", it->first.c_str(), it->second.value[0], it->second.value[1], it->second.value[2]);
         else if (it->second.size == 4)
-            mvwprintw(stt_win, y++, x, "%23s  %f,%f,%f,%f", it->first.c_str(), it->second.value[0], it->second.value[1], it->second.value[2], it->second.value[3]);
+            mvwprintw(stt_win, y++, x, "%23s  %.3f,%.3f,%.3f,%.3f", it->first.c_str(), it->second.value[0], it->second.value[1], it->second.value[2], it->second.value[3]);
+    }
+    if (have_colors) wattron(stt_win, COLOR_PAIR(2));
+
+    if (y > stt_win_height) {
+        stt_win_height = y;
+        wresize(stt_win, stt_win_height, stt_win_width );
+        mvwin(stt_win, 0, COLS - stt_win_width );
     }
 
     wrefresh(stt_win);
@@ -152,10 +159,10 @@ void console_sigwinch_handler(int signal) {
     refresh();
 
     if (stt_visible) {
-        wresize(cmd_win, 3, COLS * (1.0-stt_win_width_pct) );
+        wresize(cmd_win, 3, COLS - stt_win_width );
 
-        wresize(stt_win, LINES, COLS * stt_win_width_pct );
-        mvwin(stt_win, 0, COLS * (1.0-stt_win_width_pct));
+        wresize(stt_win, stt_win_height, stt_win_width );
+        mvwin(stt_win, 0, COLS - stt_win_width );
     }
     else
         wresize(cmd_win, 3, COLS);
@@ -178,12 +185,14 @@ void console_init(int _osc_port) {
         use_default_colors();
 
         // init_color(COLOR_BLACK, 0, 0, 0);
-        init_color(COLOR_CYAN, 700, 700, 700);
+        init_color(COLOR_YELLOW, 600, 600, 600);
+        init_color(COLOR_CYAN, 300, 300, 300);
         init_color(COLOR_BLUE, 100, 100, 100);
         init_pair(1, COLOR_WHITE, -1);
-        init_pair(2, COLOR_CYAN, -1);
+        init_pair(2, COLOR_YELLOW, -1);
         init_pair(3, COLOR_RED, -1);
-        init_pair(4, COLOR_BLUE, COLOR_BLACK);
+        init_pair(4, COLOR_CYAN, -1);
+        init_pair(5, COLOR_BLUE, COLOR_BLACK);
 
         have_colors = true;
     }
@@ -191,7 +200,7 @@ void console_init(int _osc_port) {
 
     // Create windows
     cmd_win = newwin(3, COLS, 0, 0);
-    stt_win = newwin(LINES, COLS * stt_win_width_pct, 0, COLS * (1.0 - stt_win_width_pct));
+    stt_win = newwin(LINES, stt_win_width, 0, COLS - stt_win_width);
 
     // Capture Keys
     keypad(stdscr, true);

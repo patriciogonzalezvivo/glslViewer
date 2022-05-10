@@ -70,7 +70,7 @@ Sandbox::Sandbox():
         if (m_record_sec) _shader.setUniform("u_frame", (int)(m_record_sec_start / m_record_fdelta) + m_record_counter);
         else if (m_record_frame) _shader.setUniform("u_frame", m_record_frame_head);
         _shader.setUniform("u_frame", (int)m_frame);
-    }, [this]() { return ada::toString(m_frame); } );
+    }, [this]() { return ada::toString(m_frame, 1); } );
 
     uniforms.functions["u_time"] = UniformFunction( "float", [this](ada::Shader& _shader) {
         if (m_record_sec) _shader.setUniform("u_time", m_record_sec_head);
@@ -93,13 +93,13 @@ Sandbox::Sandbox():
     uniforms.functions["u_mouse"] = UniformFunction("vec2", [](ada::Shader& _shader) {
         _shader.setUniform("u_mouse", float(ada::getMouseX()), float(ada::getMouseY()));
     },
-    []() { return ada::toString(ada::getMouseX()) + "," + ada::toString(ada::getMouseY()); } );
+    []() { return ada::toString(ada::getMouseX(),1) + "," + ada::toString(ada::getMouseY(),1); } );
 
     // VIEWPORT
     uniforms.functions["u_resolution"]= UniformFunction("vec2", [](ada::Shader& _shader) {
         _shader.setUniform("u_resolution", float(ada::getWindowWidth()), float(ada::getWindowHeight()));
     },
-    []() { return ada::toString(ada::getWindowWidth()) + "," + ada::toString(ada::getWindowHeight()); });
+    []() { return ada::toString((float)ada::getWindowWidth(),1) + "," + ada::toString((float)ada::getWindowHeight(),1); });
 
     // SCENE
     uniforms.functions["u_scene"] = UniformFunction("sampler2D", [this](ada::Shader& _shader) {
@@ -2002,8 +2002,7 @@ void Sandbox::onPlot() {
 
         m_plot_texture->load(256, 1, 4, 32, &m_plot_values[0], ada::NEAREST, ada::CLAMP);
 
-        uniforms.textures["u_sceneHistogram"] = m_plot_texture;
-
+        uniforms.textures["u_histogram"] = m_plot_texture;
         // TRACK_END("plot::histogram")
     }
 
@@ -2019,7 +2018,6 @@ void Sandbox::onPlot() {
             m_plot_texture = new ada::Texture();
 
         m_plot_texture->load(256, 1, 4, 32, &m_plot_values[0], ada::NEAREST, ada::CLAMP);
-
         // uniforms.textures["u_sceneFps"] = m_plot_texture;
 
         // TRACK_END("plot::fps")

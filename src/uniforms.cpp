@@ -833,13 +833,6 @@ bool Uniforms::haveChange() {
         }
     }
 
-    // std::cout << "  change " << m_change << std::endl;
-    // std::cout << "  lights " << lightChange << std::endl;
-    // std::cout << "  u_time " << functions["u_time"].present << std::endl;
-    // std::cout << "  u_delta " << functions["u_delta"].present << std::endl;
-    // std::cout << "  u_mouse " << functions["u_mouse"].present << std::endl;
-    // std::cout << "  u_camera " << getCamera().bChange << std::endl;
-
     return  m_change || 
             streams.size() > 0 ||
             functions["u_time"].present || 
