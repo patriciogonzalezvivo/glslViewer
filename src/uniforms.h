@@ -103,7 +103,8 @@ public:
     ada::Camera&            getCamera() { return cameras[0]; }
 
     // Debug
-    void                    print(bool _all);
+    void                    printAvailableUniforms(bool _non_active);
+    void                    printDefinedUniforms(bool _csv = false);
     void                    printBuffers();
     void                    printTextures();
     void                    printStreams();

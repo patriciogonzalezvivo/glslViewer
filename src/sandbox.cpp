@@ -326,10 +326,56 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     "defines", "return a list of active defines", false));
     
     _commands.push_back(Command("uniforms", [&](const std::string& _line){ 
-        uniforms.print(_line == "uniforms,all");
-        return true;
+        std::vector<std::string> values = ada::split(_line,',');
+
+        if (values[0] != "uniforms")
+            return false;
+
+        if (values.size() == 1) {
+            uniforms.printAvailableUniforms(false);
+            uniforms.printDefinedUniforms();
+            return true;
+        }
+        else if (values[1] == "all") {
+            uniforms.printAvailableUniforms(true);
+            uniforms.printDefinedUniforms();
+            uniforms.printBuffers();
+            uniforms.printTextures();
+            uniforms.printStreams();
+            uniforms.printLights();
+            return true;
+        }
+        else if (values[1] == "active") {
+            uniforms.printAvailableUniforms(false);
+            uniforms.printDefinedUniforms();
+            return true;
+        }
+        else if (values[1] == "defined") {
+            uniforms.printDefinedUniforms(true);
+            return true;
+        }
+        else if (values[1] == "textures") {
+            uniforms.printTextures();
+            uniforms.printBuffers();
+            uniforms.printStreams();
+            return true;
+        }
+        else if (values[1] == "buffers") {
+            uniforms.printBuffers();
+            return true;
+        }
+        else if (values[1] == "streams") {
+            uniforms.printStreams();
+            return true;
+        }
+        else if (values[1] == "on" || values[1] == "off") { 
+            console_uniforms( values[1] == "on" );
+            return true; 
+        }
+
+        return false;
     },
-    "uniforms[,all|active]", "return a list of all or active uniforms and their values.", false));
+    "uniforms[,all|active|defined|textures|buffers|on|off]", "return a list of uniforms", false));
 
     _commands.push_back(Command("textures", [&](const std::string& _line){ 
         if (_line == "textures") {
@@ -424,7 +470,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     "light_position[,<x>,<y>,<z>]", "get or set the light position"));
 
     _commands.push_back(Command("light_color", [&](const std::string& _line){ 
-         std::vector<std::string> values = ada::split(_line,',');
+        std::vector<std::string> values = ada::split(_line,',');
         if (values.size() == 4) {
             if (uniforms.lights.size() > 0) {
                 uniforms.lights[0].color = glm::vec3(ada::toFloat(values[1]), ada::toFloat(values[2]), ada::toFloat(values[3]));
@@ -1363,6 +1409,8 @@ void Sandbox::render() {
     }
 
     TRACK_END("render")
+
+    console_uniforms_refresh();
 }
 
 
@@ -1534,15 +1582,13 @@ void Sandbox::renderUI() {
             m_plot_shader.load(ada::getDefaultSrc(ada::FRAG_PLOT), ada::getDefaultSrc(ada::VERT_DYNAMIC_BILLBOARD), false);
 
         m_plot_shader.use();
-        for (std::map<std::string, ada::Texture*>::iterator it = uniforms.textures.begin(); it != uniforms.textures.end(); it++) {
-            m_plot_shader.setUniform("u_scale", w, h);
-            m_plot_shader.setUniform("u_translate", x, y);
-            m_plot_shader.setUniform("u_resolution", (float)ada::getWindowWidth(), (float)ada::getWindowHeight());
-            m_plot_shader.setUniform("u_viewport", w, h);
-            m_plot_shader.setUniform("u_modelViewProjectionMatrix", ada::getOrthoMatrix());
-            m_plot_shader.setUniformTexture("u_plotData", m_plot_texture, 0);
-            m_billboard_vbo->render(&m_plot_shader);
-        }
+        m_plot_shader.setUniform("u_scale", w, h);
+        m_plot_shader.setUniform("u_translate", x, y);
+        m_plot_shader.setUniform("u_resolution", (float)ada::getWindowWidth(), (float)ada::getWindowHeight());
+        m_plot_shader.setUniform("u_viewport", w, h);
+        m_plot_shader.setUniform("u_modelViewProjectionMatrix", ada::getOrthoMatrix());
+        m_plot_shader.setUniformTexture("u_plotData", m_plot_texture, 0);
+        m_billboard_vbo->render(&m_plot_shader);
 
         // TRACK_END("plot_data")
     }
@@ -1974,7 +2020,7 @@ void Sandbox::onPlot() {
 
         m_plot_texture->load(256, 1, 4, 32, &m_plot_values[0], ada::NEAREST, ada::CLAMP);
 
-        uniforms.textures["u_sceneFPS"] = m_plot_texture;
+        // uniforms.textures["u_sceneFps"] = m_plot_texture;
 
         // TRACK_END("plot::fps")
     }
@@ -1992,7 +2038,7 @@ void Sandbox::onPlot() {
 
         m_plot_texture->load(256, 1, 4, 32, &m_plot_values[0], ada::NEAREST, ada::CLAMP);
 
-        uniforms.textures["u_sceneFPS"] = m_plot_texture;
+        // uniforms.textures["u_sceneMs"] = m_plot_texture;
 
         // TRACK_END("plot::ms")
     }

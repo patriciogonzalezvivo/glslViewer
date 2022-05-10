@@ -104,8 +104,8 @@ char* getVert() {
 #if defined(SUPPORT_OSC)
 #include <lo/lo_cpp.h>
 std::mutex                  oscMutex;
-int                         oscPort = 0;
 #endif
+int                         oscPort = 0;
 
 #if defined(__EMSCRIPTEN__)
 EM_BOOL loop (double time, void* userData) {
@@ -126,9 +126,9 @@ void loop() {
     #else
 
     if (sandbox.isReady() && commandsArgs.size() > 0) {
-        for (size_t i = 0; i < commandsArgs.size(); i++) {
+        for (size_t i = 0; i < commandsArgs.size(); i++)
             commandsRun(commandsArgs[i]);
-        }
+        
         commandsArgs.clear();
     }
 
@@ -300,7 +300,17 @@ int main(int argc, char **argv) {
                     argument.rfind("rtsp://", 0) == 0 ||
                     argument.rfind("rtmp://", 0) == 0 ) {
             willLoadTextures = true;
-        }   
+        }
+        else if ( argument == "-p" || argument == "--port" ) {
+            if(++i < argc)
+                oscPort = ada::toInt(std::string(argv[i]));
+            else
+        #if defined(SUPPORT_OSC)
+                std::cout << "Argument '" << argument << "' should be followed by an <osc_port>. Skipping argument." << std::endl;
+        #else
+                std::cout << "This version of GlslViewer wasn't compiled with OSC support" << std::endl;
+        #endif
+        }
     }
 
     #ifndef __EMSCRIPTEN__
@@ -333,7 +343,8 @@ int main(int argc, char **argv) {
                 argument == "-h" || argument == "--height" ||
                 argument == "-d" || argument == "--display" ||
                 argument == "--major" || argument == "--minor" ||
-                argument == "--mouse" || argument == "--fps" ) {
+                argument == "--mouse" || argument == "--fps" ||
+                argument == "-p" || argument == "--port" ) {
             i++;
         }
         else if (   argument == "-l" || argument == "--headless" ||
@@ -351,14 +362,7 @@ int main(int argc, char **argv) {
         else if ( argument == "--fxaa" ) {
             sandbox.fxaa = true;
         }
-        #if defined(SUPPORT_OSC)
-        else if ( argument== "-p" || argument == "--port" ) {
-            if(++i < argc)
-                oscPort = ada::toInt(std::string(argv[i]));
-            else
-                std::cout << "Argument '" << argument << "' should be followed by an <osc_port>. Skipping argument." << std::endl;
-        }
-        #endif
+        
         else if ( argument == "-e" ) {
             if(++i < argc)         
                 commandsArgs.push_back(std::string(argv[i]));
@@ -1378,7 +1382,7 @@ void fileWatcherThread() {
 void cinWatcherThread() {
 
     #if defined(SUPPORT_NCURSES)
-    console_init();
+    console_init(oscPort);
     signal(SIGWINCH, console_sigwinch_handler);
     console_refresh();
     #endif
@@ -1391,7 +1395,7 @@ void cinWatcherThread() {
     // Argument commands to execute comming from -e or -E
     if (commandsArgs.size() > 0) {
         for (size_t i = 0; i < commandsArgs.size(); i++) {
-            commandsRun(commandsArgs[i], commandsMutex);
+            commandsRun(commandsArgs[i]);
             #if defined(SUPPORT_NCURSES)
             console_refresh();
             #endif
@@ -1409,8 +1413,8 @@ void cinWatcherThread() {
     while ( keepRunnig.load() ) {
         std::string cmd;
         if (console_getline(cmd, commands, sandbox))
-            if (cmd.size())
-                commandsRun(cmd, commandsMutex);
+            if (cmd.size() > 0)
+                commandsRun(cmd);
     }
     console_end();
     #else
@@ -1418,7 +1422,7 @@ void cinWatcherThread() {
     std::string cmd;
     std::cout << "// > ";
     while (std::getline(std::cin, cmd)) {
-        commandsRun(cmd, commandsMutex);
+        commandsRun(cmd);
         std::cout << "// > ";
     }
     #endif
