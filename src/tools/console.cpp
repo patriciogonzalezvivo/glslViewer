@@ -1,7 +1,5 @@
 #include "console.h"
 
-int  osc_port = 0;
-
 #ifdef SUPPORT_NCURSES
 #include <signal.h>
 
@@ -35,6 +33,7 @@ WINDOW* cmd_win                 = nullptr;
 // Command state
 std::string cmd                 = "";
 std::string cmd_suggested       = "";
+std::string cmd_prompt          = "";
 std::vector<std::string> cmd_history;
 size_t      cmd_history_offset  = 0;
 size_t      cmd_cursor_offset   = 0;
@@ -45,22 +44,21 @@ void refresh_cmd_win() {
     werase(cmd_win);
     box(cmd_win, 0, 0);
 
-    std::string prompt = "";
-
-    if (osc_port > 0) {
-        prompt = "osc://localhost:" + ada::toString(osc_port) + " ";
+    if (cmd_prompt.size() > 0) {
         if (have_colors) wattron(cmd_win, COLOR_PAIR(5));
-        mvwprintw(cmd_win, 1, 1, "%s", prompt.c_str() );
+        mvwprintw(cmd_win, 1, 1, "%s", cmd_prompt.c_str() );
         if (have_colors)wattroff(cmd_win, COLOR_PAIR(5));
     }
 
-    if (have_colors) wattron(cmd_win, COLOR_PAIR(5));
-    mvwprintw(cmd_win, 1, 1 + prompt.size() + 2, "%s", cmd_suggested.c_str() );
-    if (have_colors) wattroff(cmd_win, COLOR_PAIR(5));
+    if (cmd_suggested.size()) {
+        if (have_colors) wattron(cmd_win, COLOR_PAIR(5));
+        mvwprintw(cmd_win, 1, 1 + cmd_prompt.size() + 2, "%s", cmd_suggested.c_str() );
+        if (have_colors) wattroff(cmd_win, COLOR_PAIR(5));
+    }
 
-    mvwprintw(cmd_win, 1, 1 + prompt.size(), "> %s", cmd.c_str() );
+    mvwprintw(cmd_win, 1, 1 + cmd_prompt.size(), "> %s", cmd.c_str() );
 
-    wmove(cmd_win, 1, 3 + cmd.size() - cmd_cursor_offset);
+    wmove(cmd_win, 1, 1 + cmd_prompt.size() + 2 + cmd.size() - cmd_cursor_offset);
     wrefresh(cmd_win);
 };
 
@@ -80,7 +78,7 @@ void refresh_stt_win() {
             mvwprintw(stt_win, y++, x, "%23s  %s", it->first.c_str(), it->second.print().c_str() );
 
     for (TextureList::iterator it = uniforms->textures.begin(); it != uniforms->textures.end(); ++it)
-        mvwprintw(stt_win, y++, x, "%23s  %.0f,%.0f", (it->first + "Resolution").c_str(), it->second->getWidth(), it->second->getHeight());
+        mvwprintw(stt_win, y++, x, "%23s  %.1f,%.1f", (it->first + "Resolution").c_str(), (float)it->second->getWidth(), (float)it->second->getHeight());
 
     for (StreamsList::iterator it = uniforms->streams.begin(); it != uniforms->streams.end(); ++it) {
         mvwprintw(stt_win, y++, x, "%23s  %.3f", (it->first+"CurrentFrame").c_str(), it->second->getCurrentFrame() );
@@ -166,6 +164,7 @@ void console_sigwinch_handler(int signal) {
     }
     else
         wresize(cmd_win, 3, COLS);
+
     cmd_tab_counter = 0;
 
     refresh_stt_win();
@@ -174,7 +173,9 @@ void console_sigwinch_handler(int signal) {
 }
 
 void console_init(int _osc_port) {
-    osc_port = _osc_port;
+
+    if (_osc_port > 0)
+        cmd_prompt = "osc://localhost:" + ada::toString(_osc_port) + " ";
 
     #ifdef SUPPORT_NCURSES
 
@@ -415,7 +416,7 @@ void console_uniforms_refresh() {
     #ifdef SUPPORT_NCURSES
     if (stt_visible) {
         refresh_stt_win();
-        wmove(cmd_win, 1, 3 + cmd.size() - cmd_cursor_offset);
+        wmove(cmd_win, 1, 1 + cmd_prompt.size() + 2 + cmd.size() - cmd_cursor_offset);
         wrefresh(cmd_win);
     }
     #endif

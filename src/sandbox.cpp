@@ -423,6 +423,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
             std::vector<std::string> values = ada::split(_line,',');
             if (values.size() == 2) {
                 m_showPasses = (values[1] == "on");
+                return true;
             }
         }
         return false;
@@ -433,13 +434,13 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         if (_line == "error_screen") {
             std::string rta = m_error_screen ? "on" : "off";
             std::cout << "error_screen," << rta << std::endl; 
-            
             return true;
         }
         else {
             std::vector<std::string> values = ada::split(_line,',');
             if (values.size() == 2) {
                 m_error_screen = (values[1] == "on");
+                return true;
             }
         }
         return false;
@@ -502,7 +503,6 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
                 glm::vec3 color = uniforms.lights[0].color;
                 std::cout << color.x << ',' << color.y << ',' << color.z << std::endl;
             }
-            
             return true;
         }
         return false;
@@ -527,9 +527,8 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
             return true;
         }
         else {
-            if (uniforms.lights.size() > 0) {
+            if (uniforms.lights.size() > 0)
                 std::cout <<  uniforms.lights[0].falloff << std::endl;
-            }
             return true;
         }
         return false;
@@ -554,10 +553,8 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
             return true;
         }
         else {
-            if (uniforms.lights.size() > 0) {
+            if (uniforms.lights.size() > 0)
                 std::cout <<  uniforms.lights[0].intensity << std::endl;
-            }
-            
             return true;
         }
         return false;
