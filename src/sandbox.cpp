@@ -656,12 +656,16 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
                 uniforms.setStreamStop( values[1] );
                 return true;
             }
+            else if ( values[2] == "restart") {
+                uniforms.setStreamRestart( values[1] );
+                return true;
+            }
             else if ( values[2] == "speed") {
-                uniforms.setStreamStop( values[1] );
+                std::cout << uniforms.getStreamSpeed( values[1] ) << std::endl;
                 return true;
             }
             else if ( values[2] == "time") {
-                uniforms.setStreamStop( values[1] );
+                std::cout << uniforms.getStreamTime( values[1] ) << std::endl;
                 return true;
             }
         }
@@ -695,6 +699,10 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
                 uniforms.setStreamsPlay();
                 return true;
             }
+            else if ( values[1] == "restart") {
+                uniforms.setStreamsRestart();
+                return true;
+            }
         }
         else if (values.size() == 3) {
             if ( values[1] == "speed") {
@@ -722,7 +730,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
 
         return false;
     },
-    "streams[,stop|play|speed|prevs[,<value>]]", "print all streams or get/set streams speed and previous frames"));
+    "streams[,stop|play|restart|speed|prevs[,<value>]]", "print all streams or get/set streams speed and previous frames"));
 
     #ifdef SUPPORT_MULTITHREAD_RECORDING 
     _commands.push_back(Command("max_mem_in_queue", [&](const std::string & line) {
@@ -1456,6 +1464,13 @@ void Sandbox::renderUI() {
                 m_billboard_shader.setUniform("u_modelViewProjectionMatrix", ada::getOrthoMatrix());
                 m_billboard_shader.setUniformTexture("u_tex0", it->second, 0);
                 m_billboard_vbo->render(&m_billboard_shader);
+
+                StreamsList::iterator slit = uniforms.streams.find(it->first);
+                if ( slit != uniforms.streams.end() ) {
+                        m_billboard_shader.setUniform("u_tex0CurrentFrame", slit->second->getCurrentFrame() );
+                        m_billboard_shader.setUniform("u_tex0TotalFrames", slit->second->getTotalFrames() );
+                }
+
                 yOffset -= yStep * 2.0;
             }
             // TRACK_END("textures")

@@ -544,6 +544,11 @@ void Uniforms::setStreamStop( const std::string& _name) {
         streams[_name]->stop();
 }
 
+void Uniforms::setStreamRestart( const std::string& _name ) {
+    if (streams.find(_name) != streams.end())
+        streams[_name]->restart();
+}
+
 float Uniforms::getStreamTime( const std::string& _name) {
     if (streams.find(_name) != streams.end())
         return streams[_name]->getTime();
@@ -572,8 +577,13 @@ void Uniforms::setStreamsPlay() {
 }
 
 void Uniforms::setStreamsStop() {
-for (StreamsList::iterator i = streams.begin(); i != streams.end(); ++i)
+    for (StreamsList::iterator i = streams.begin(); i != streams.end(); ++i)
         i->second->stop();
+}
+
+void Uniforms::setStreamsRestart() {
+    for (StreamsList::iterator i = streams.begin(); i != streams.end(); ++i)
+        i->second->restart();
 }
 
 void Uniforms::setStreamsSpeed( float _speed ) {

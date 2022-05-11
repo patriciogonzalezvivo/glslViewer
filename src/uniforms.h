@@ -80,6 +80,8 @@ public:
 
     void                    setStreamPlay( const std::string& _name);
     void                    setStreamStop( const std::string& _name);
+    void                    setStreamRestart( const std::string& _name );
+
     float                   getStreamTime( const std::string& _name);
     void                    setStreamTime( const std::string& _name, float _time );
     float                   getStreamSpeed( const std::string& _name);
@@ -87,6 +89,8 @@ public:
 
     void                    setStreamsPlay();
     void                    setStreamsStop();
+    void                    setStreamsRestart();
+    
     void                    setStreamsTime( float _time );
     void                    setStreamsSpeed( float _speed );
     void                    setStreamsPrevs( size_t _total );
