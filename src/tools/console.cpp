@@ -174,10 +174,10 @@ void console_sigwinch_handler(int signal) {
 
 void console_init(int _osc_port) {
 
+    #ifdef SUPPORT_NCURSES
+
     if (_osc_port > 0)
         cmd_prompt = "osc://localhost:" + ada::toString(_osc_port) + " ";
-
-    #ifdef SUPPORT_NCURSES
 
     initscr();
     raw();
@@ -185,15 +185,15 @@ void console_init(int _osc_port) {
         start_color();
         use_default_colors();
 
-        // init_color(COLOR_BLACK, 0, 0, 0);
-        init_color(COLOR_YELLOW, 600, 600, 600);
-        init_color(COLOR_CYAN, 300, 300, 300);
-        init_color(COLOR_BLUE, 100, 100, 100);
+        init_color(COLOR_MAGENTA, 1000, 100, 100);
+        init_color(COLOR_YELLOW, 800, 800, 800);
+        init_color(COLOR_BLUE, 300, 300, 300);
+        init_color(COLOR_GREEN, 100, 100, 100);
         init_pair(1, COLOR_WHITE, -1);
         init_pair(2, COLOR_YELLOW, -1);
-        init_pair(3, COLOR_RED, -1);
-        init_pair(4, COLOR_CYAN, -1);
-        init_pair(5, COLOR_BLUE, COLOR_BLACK);
+        init_pair(3, COLOR_MAGENTA, -1);
+        init_pair(4, COLOR_BLUE, -1);
+        init_pair(5, COLOR_GREEN, COLOR_BLACK);
 
         have_colors = true;
     }
