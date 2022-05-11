@@ -187,13 +187,13 @@ void console_init(int _osc_port) {
 
         init_color(COLOR_MAGENTA, 1000, 100, 100);
         init_color(COLOR_YELLOW, 800, 800, 800);
-        init_color(COLOR_BLUE, 300, 300, 300);
-        init_color(COLOR_GREEN, 100, 100, 100);
+        init_color(COLOR_GREEN, 400, 600, 600);
+        init_color(COLOR_BLUE, 300, 300, 400);
         init_pair(1, COLOR_WHITE, -1);
         init_pair(2, COLOR_YELLOW, -1);
         init_pair(3, COLOR_MAGENTA, -1);
-        init_pair(4, COLOR_BLUE, -1);
-        init_pair(5, COLOR_GREEN, COLOR_BLACK);
+        init_pair(4, COLOR_GREEN, -1);
+        init_pair(5, COLOR_BLUE, -1);
 
         have_colors = true;
     }
