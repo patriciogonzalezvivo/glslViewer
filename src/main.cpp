@@ -38,7 +38,7 @@
 #define TRACK_BEGIN(A)      if (sandbox.uniforms.tracker.isRunning()) sandbox.uniforms.tracker.begin(A); 
 #define TRACK_END(A)        if (sandbox.uniforms.tracker.isRunning()) sandbox.uniforms.tracker.end(A); 
 
-std::string                 version = "2.0.5";
+std::string                 version = ada::toString(GLSLVIEWER_VERSION_MAJOR) + "." + ada::toString(GLSLVIEWER_VERSION_MINOR) + "." + ada::toString(GLSLVIEWER_VERSION_PATCH);
 std::string                 about   = "GlslViewer " + version + " by Patricio Gonzalez Vivo ( http://patriciogonzalezvivo.com )"; 
 
 // Here is where all the magic happens
