@@ -1447,10 +1447,8 @@ void Sandbox::renderUI() {
             float xOffset = xStep;
             float yOffset = h - yStep;
 
-            if (!m_billboard_shader.isLoaded()) {
-
+            if (!m_billboard_shader.isLoaded()) 
                 m_billboard_shader.load(ada::getDefaultSrc(ada::FRAG_DYNAMIC_BILLBOARD), ada::getDefaultSrc(ada::VERT_DYNAMIC_BILLBOARD), false);
-            }
 
             m_billboard_shader.use();
 
@@ -1460,14 +1458,18 @@ void Sandbox::renderUI() {
                 m_billboard_shader.setUniform("u_translate", xOffset, yOffset);
                 m_billboard_shader.setUniform("u_modelViewProjectionMatrix", ada::getOrthoMatrix());
                 m_billboard_shader.setUniformTexture("u_tex0", it->second, 0);
-                m_billboard_vbo->render(&m_billboard_shader);
 
                 StreamsList::iterator slit = uniforms.streams.find(it->first);
                 if ( slit != uniforms.streams.end() ) {
                         m_billboard_shader.setUniform("u_tex0CurrentFrame", slit->second->getCurrentFrame() );
                         m_billboard_shader.setUniform("u_tex0TotalFrames", slit->second->getTotalFrames() );
                 }
+                else {
+                    m_billboard_shader.setUniform("u_tex0CurrentFrame", 0.0f );
+                    m_billboard_shader.setUniform("u_tex0TotalFrames", 0.0f );
+                }
 
+                m_billboard_vbo->render(&m_billboard_shader);
                 yOffset -= yStep * 2.0;
             }
             // TRACK_END("textures")
@@ -1509,6 +1511,8 @@ void Sandbox::renderUI() {
                 m_billboard_shader.setUniform("u_translate", xOffset, yOffset);
                 m_billboard_shader.setUniform("u_modelViewProjectionMatrix", ada::getOrthoMatrix());
                 m_billboard_shader.setUniformTexture("u_tex0", &uniforms.buffers[i]);
+                m_billboard_shader.setUniform("u_tex0CurrentFrame", 0.0f );
+                m_billboard_shader.setUniform("u_tex0TotalFrames", 0.0f );
                 m_billboard_vbo->render(&m_billboard_shader);
                 yOffset -= yStep * 2.0;
             }
@@ -1519,6 +1523,8 @@ void Sandbox::renderUI() {
                 m_billboard_shader.setUniform("u_translate", xOffset, yOffset);
                 m_billboard_shader.setUniform("u_modelViewProjectionMatrix", ada::getOrthoMatrix());
                 m_billboard_shader.setUniformTexture("u_tex0", uniforms.doubleBuffers[i].src);
+                m_billboard_shader.setUniform("u_tex0CurrentFrame", 0.0f );
+                m_billboard_shader.setUniform("u_tex0TotalFrames", 0.0f );
                 m_billboard_vbo->render(&m_billboard_shader);
                 yOffset -= yStep * 2.0;
             }
@@ -1533,6 +1539,8 @@ void Sandbox::renderUI() {
                     m_billboard_shader.setUniform("u_translate", xOffset + _x, yOffset);
                     m_billboard_shader.setUniform("u_modelViewProjectionMatrix", ada::getOrthoMatrix());
                     m_billboard_shader.setUniformTexture("u_tex0", uniforms.convolution_pyramids[i].getResult(j), 0);
+                    m_billboard_shader.setUniform("u_tex0CurrentFrame", 0.0f );
+                    m_billboard_shader.setUniform("u_tex0TotalFrames", 0.0f );
                     m_billboard_vbo->render(&m_billboard_shader);
 
                     _x -= _sw;
@@ -1556,6 +1564,8 @@ void Sandbox::renderUI() {
                     m_billboard_shader.setUniform("u_translate", xOffset, yOffset);
                     m_billboard_shader.setUniform("u_modelViewProjectionMatrix", ada::getOrthoMatrix());
                     m_billboard_shader.setUniformTexture("u_tex0", &m_scene_fbo, 0);
+                    m_billboard_shader.setUniform("u_tex0CurrentFrame", 0.0f );
+                    m_billboard_shader.setUniform("u_tex0TotalFrames", 0.0f );
                     m_billboard_vbo->render(&m_billboard_shader);
                     yOffset -= yStep * 2.0;
                 }
@@ -1569,6 +1579,8 @@ void Sandbox::renderUI() {
                     uniforms.functions["u_cameraDistance"].assign(m_billboard_shader);
                     m_billboard_shader.setUniform("u_modelViewProjectionMatrix", ada::getOrthoMatrix());
                     m_billboard_shader.setUniformDepthTexture("u_tex0", &m_scene_fbo);
+                    m_billboard_shader.setUniform("u_tex0CurrentFrame", 0.0f );
+                    m_billboard_shader.setUniform("u_tex0TotalFrames", 0.0f );
                     m_billboard_vbo->render(&m_billboard_shader);
                     yOffset -= yStep * 2.0;
                 }
@@ -1582,6 +1594,8 @@ void Sandbox::renderUI() {
                         m_billboard_shader.setUniform("u_depth", 0.0f);
                         m_billboard_shader.setUniform("u_modelViewProjectionMatrix", ada::getOrthoMatrix());
                         m_billboard_shader.setUniformDepthTexture("u_tex0", uniforms.lights[i].getShadowMap());
+                        m_billboard_shader.setUniform("u_tex0CurrentFrame", 0.0f );
+                        m_billboard_shader.setUniform("u_tex0TotalFrames", 0.0f );
                         m_billboard_vbo->render(&m_billboard_shader);
                         yOffset -= yStep * 2.0;
                     }
