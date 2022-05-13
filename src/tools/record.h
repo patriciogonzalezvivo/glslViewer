@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <memory>
 
 #ifdef SUPPORT_LIBAV
 struct RecordingSettings {
