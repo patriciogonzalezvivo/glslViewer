@@ -67,13 +67,15 @@ float getRecordingPercentage() {
 int getRecordingFrame() {
     if (sec) 
         return (int)(sec_start / fdelta) + counter;
-    else if (frame) 
+    else
         return frame_head;
+    
+    return 0;
 }
 
 float getRecordingTime() {
     if (sec)
         return sec_head;
-    else if (frame)
+    else
         return frame_head * fdelta;
 }
