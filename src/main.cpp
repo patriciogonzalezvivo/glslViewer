@@ -28,6 +28,7 @@
 #include "sandbox.h"
 #include "types/files.h"
 #include "tools/text.h"
+#include "tools/record.h"
 #include "tools/console.h"
 
 #ifdef SUPPORT_NCURSES
@@ -1183,14 +1184,14 @@ void commandsInit() {
             }
 
             commandsMutex.lock();
-            sandbox.recordSecs(from, to, fps);
+            recordingStartSecs(from, to, fps);
             commandsMutex.unlock();
 
             float pct = 0.0f;
             while (pct < 1.0f) {
                 // get progres.
                 commandsMutex.lock();
-                pct = sandbox.getRecordedPercentage();
+                pct = getRecordingPercentage();
                 commandsMutex.unlock();
 
                 console_draw_pct(pct);
@@ -1206,8 +1207,8 @@ void commandsInit() {
     commands.push_back(Command("secs", [&](const std::string& _line){ 
         std::vector<std::string> values = ada::split(_line,',');
         if (values.size() >= 3) {
-            int from = ada::toInt(values[1]);
-            int to = ada::toInt(values[2]);
+            float from = ada::toFloat(values[1]);
+            float to = ada::toFloat(values[2]);
             float fps = 24.0;
 
             if (values.size() == 4)
@@ -1218,14 +1219,14 @@ void commandsInit() {
             }
 
             commandsMutex.lock();
-            sandbox.recordSecs(from, to, fps);
+            recordingStartSecs(from, to, fps);
             commandsMutex.unlock();
 
             float pct = 0.0f;
             while (pct < 1.0f) {
                 // get progres.
                 commandsMutex.lock();
-                pct = sandbox.getRecordedPercentage();
+                pct = getRecordingPercentage();
                 commandsMutex.unlock();
 
                 console_draw_pct(pct);
@@ -1241,8 +1242,8 @@ void commandsInit() {
     commands.push_back(Command("frames", [&](const std::string& _line){ 
         std::vector<std::string> values = ada::split(_line,',');
         if (values.size() >= 3) {
-            float from = ada::toFloat(values[1]);
-            float to = ada::toFloat(values[2]);
+            int from = ada::toInt(values[1]);
+            int to = ada::toInt(values[2]);
             float fps = 24.0;
 
             if (values.size() == 4)
@@ -1252,7 +1253,7 @@ void commandsInit() {
                 from = 0.0;
 
             commandsMutex.lock();
-            sandbox.recordFrames(from, to, fps);
+            recordingStartFrames(from, to, fps);
             commandsMutex.unlock();
 
             float pct = 0.0f;
@@ -1260,7 +1261,7 @@ void commandsInit() {
 
                 // Check progres.
                 commandsMutex.lock();
-                pct = sandbox.getRecordedPercentage();
+                pct = getRecordingPercentage();
                 commandsMutex.unlock();
                 
                 console_draw_pct(pct);

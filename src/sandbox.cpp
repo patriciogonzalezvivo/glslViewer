@@ -6,7 +6,9 @@
 #include <math.h>
 #include <memory>
 
+#include "tools/job.h"
 #include "tools/text.h"
+#include "tools/record.h"
 #include "tools/console.h"
 
 #include "ada/window.h"
@@ -46,9 +48,6 @@ Sandbox::Sandbox():
     m_plot_texture(nullptr), 
 
     // Record
-    m_record_fdelta(0.04166666667), m_record_counter(0), 
-    m_record_sec_start(0.0f), m_record_sec_head(0.0f), m_record_sec_end(0.0f), m_record_sec(false),
-    m_record_frame_start(0), m_record_frame_head(0), m_record_frame_end(0), m_record_frame(false),
     #ifdef SUPPORT_MULTITHREAD_RECORDING 
     m_task_count(0),
     /** allow 500 MB to be used for the image save queue **/
@@ -66,23 +65,32 @@ Sandbox::Sandbox():
 
     // TIME UNIFORMS
     //
-    uniforms.functions["u_frame"] = UniformFunction( "int", [this](ada::Shader& _shader) {
-        if (m_record_sec) _shader.setUniform("u_frame", (int)(m_record_sec_start / m_record_fdelta) + m_record_counter);
-        else if (m_record_frame) _shader.setUniform("u_frame", m_record_frame_head);
+    uniforms.functions["u_frame"] = UniformFunction( "int", [&](ada::Shader& _shader) {
+        if (isRecording()) _shader.setUniform("u_frame", getRecordingFrame());
         _shader.setUniform("u_frame", (int)m_frame);
-    }, [this]() { return ada::toString(m_frame, 1); } );
+    }, 
+    [&]() { 
+        if (isRecording()) return ada::toString( getRecordingFrame() );
+        else return ada::toString(m_frame, 1); 
+    } );
 
-    uniforms.functions["u_time"] = UniformFunction( "float", [this](ada::Shader& _shader) {
-        if (m_record_sec) _shader.setUniform("u_time", m_record_sec_head);
-        else if (m_record_frame) _shader.setUniform("u_time", m_record_frame_head * m_record_fdelta);
+    uniforms.functions["u_time"] = UniformFunction( "float", [&](ada::Shader& _shader) {
+        if (isRecording()) _shader.setUniform("u_time", getRecordingTime());
         else _shader.setUniform("u_time", float(ada::getTime()) - m_time_offset);
-    }, [this]() { return ada::toString(ada::getTime() - m_time_offset); } );
+    }, 
+    [&]() {  
+        if (isRecording()) return ada::toString( getRecordingTime() );
+        else return ada::toString(ada::getTime() - m_time_offset); 
+    } );
 
-    uniforms.functions["u_delta"] = UniformFunction("float", [this](ada::Shader& _shader) {
-        if (m_record_sec || m_record_frame) _shader.setUniform("u_delta", float(m_record_fdelta));
+    uniforms.functions["u_delta"] = UniformFunction("float", [&](ada::Shader& _shader) {
+        if (isRecording()) _shader.setUniform("u_delta", getRecordingDelta());
         else _shader.setUniform("u_delta", float(ada::getDelta()));
-    },
-    []() { return ada::toString(ada::getDelta()); });
+    }, 
+    [&]() { 
+        if (isRecording()) return ada::toString( getRecordingDelta() );
+        else return ada::toString(ada::getDelta());
+    });
 
     uniforms.functions["u_date"] = UniformFunction("vec4", [](ada::Shader& _shader) {
         _shader.setUniform("u_date", ada::getDate());
@@ -896,13 +904,13 @@ void Sandbox::unflagChange() {
 bool Sandbox::haveChange() { 
 
     // std::cout << "CHANGE " << m_change << std::endl;
-    // std::cout << "RECORD " << m_record << std::endl;
+    // std::cout << "RECORDING " << isRecording() << std::endl;
     // std::cout << "SCENE " << m_scene.haveChange() << std::endl;
     // std::cout << "UNIFORMS " << uniforms.haveChange() << std::endl;
     // std::cout << std::endl;
 
     return  m_change ||
-            m_record_sec || m_record_frame ||
+            isRecording() ||
             screenshotFile != "" ||
             m_scene.haveChange() ||
             uniforms.haveChange();
@@ -910,15 +918,6 @@ bool Sandbox::haveChange() {
 
 const std::string& Sandbox::getSource(ShaderType _type) const {
     return (_type == FRAGMENT)? m_frag_source : m_vert_source;
-}
-
-float Sandbox::getRecordedPercentage() {
-    if (m_record_sec)
-        return ((m_record_sec_head - m_record_sec_start) / (m_record_sec_end - m_record_sec_start));
-    else if (m_record_frame)
-        return ( (float)(m_record_frame_head - m_record_frame_start) / (float)(m_record_frame_end - m_record_frame_start));
-    else 
-        return 1.0;
 }
 
 // ------------------------------------------------------------------------- RELOAD SHADER
@@ -1285,7 +1284,7 @@ void Sandbox::render() {
     
     // MAIN SCENE
     // ----------------------------------------------- < main scene start
-    if (screenshotFile != "" || m_record_sec || m_record_frame)
+    if (screenshotFile != "" || isRecording() )
         if (!m_record_fbo.isAllocated())
             m_record_fbo.allocate(ada::getWindowWidth(), ada::getWindowHeight(), ada::COLOR_TEXTURE_DEPTH_BUFFER);
 
@@ -1293,7 +1292,7 @@ void Sandbox::render() {
         _updateSceneBuffer(ada::getWindowWidth(), ada::getWindowHeight());
         m_scene_fbo.bind();
     }
-    else if (screenshotFile != "" || m_record_sec || m_record_frame )
+    else if (screenshotFile != "" || isRecording() )
         m_record_fbo.bind();
 
     // Clear the background
@@ -1368,7 +1367,7 @@ void Sandbox::render() {
 
         m_scene_fbo.unbind();
 
-        if (screenshotFile != "" || m_record_sec || m_record_frame)
+        if (screenshotFile != "" || isRecording())
             m_record_fbo.bind();
     
         m_postprocessing_shader.use();
@@ -1394,7 +1393,7 @@ void Sandbox::render() {
     else if (m_plot == PLOT_HISTOGRAM) {
         m_scene_fbo.unbind();
 
-        if (screenshotFile != "" || m_record_sec || m_record_frame)
+        if (screenshotFile != "" || isRecording())
             m_record_fbo.bind();
 
         if (!m_billboard_shader.isLoaded())
@@ -1409,7 +1408,7 @@ void Sandbox::render() {
         m_billboard_vbo->render( &m_billboard_shader );
     }
     
-    if (screenshotFile != "" || m_record_sec || m_record_frame) {
+    if (screenshotFile != "" || isRecording()) {
         m_record_fbo.unbind();
 
         if (!m_billboard_shader.isLoaded())
@@ -1656,24 +1655,12 @@ void Sandbox::renderUI() {
 }
 
 void Sandbox::renderDone() {
-
-    // TRACK_BEGIN("update")
+    // TRACK_BEGIN("update:post_render")
 
     // RECORD
-    if (m_record_sec || m_record_frame) {
-        onScreenshot( ada::toString(m_record_counter, 0, 5, '0') + ".png");
-        m_record_counter++;
-
-        if (m_record_sec) {
-            m_record_sec_head += m_record_fdelta;
-            if (m_record_sec_head >= m_record_sec_end)
-                m_record_sec = false;
-        }
-        else {
-            m_record_frame_head++;
-            if (m_record_frame_head >= m_record_frame_end)
-                m_record_frame = false;
-        }
+    if (isRecording()) {
+        onScreenshot( ada::toString( getRecordingCount() , 0, 5, '0') + ".png");
+        recordingFrameAdded();
     }
     // SCREENSHOT 
     else if (screenshotFile != "") {
@@ -1685,7 +1672,7 @@ void Sandbox::renderDone() {
         onPlot();
 
     unflagChange();
-// 
+
     if (!m_initialized) {
         m_initialized = true;
         ada::updateViewport();
@@ -1695,7 +1682,7 @@ void Sandbox::renderDone() {
         m_frame++;
     }
 
-    // TRACK_END("update")
+    // TRACK_END("update:post_render")
 }
 
 // ------------------------------------------------------------------------- ACTIONS
@@ -1711,26 +1698,6 @@ void Sandbox::clear() {
 
     if (m_cross_vbo)
         delete m_cross_vbo;
-}
-
-void Sandbox::recordSecs(float _start, float _end, float fps) {
-    m_record_fdelta = 1.0/fps;
-    m_record_counter = 0;
-
-    m_record_sec_start = _start;
-    m_record_sec_head = _start;
-    m_record_sec_end = _end;
-    m_record_sec = true;
-}
-
-void Sandbox::recordFrames(int _start, int _end, float fps) {
-    m_record_fdelta = 1.0/fps;
-    m_record_counter = 0;
-
-    m_record_frame_start = _start;
-    m_record_frame_head = _start;
-    m_record_frame_end = _end;
-    m_record_frame = true;
 }
 
 void Sandbox::printDependencies(ShaderType _type) const {
@@ -1886,7 +1853,7 @@ void Sandbox::onViewportResize(int _newWidth, int _newHeight) {
     if (m_postprocessing || m_plot == PLOT_HISTOGRAM)
         _updateSceneBuffer(_newWidth, _newHeight);
 
-    if (screenshotFile != "" || m_record_sec || m_record_frame)
+    if (screenshotFile != "" || isRecording())
         m_record_fbo.allocate(_newWidth, _newHeight, ada::COLOR_TEXTURE_DEPTH_BUFFER);
 
     flagChange();
@@ -1907,49 +1874,11 @@ void Sandbox::onScreenshot(std::string _file) {
         else {
             int width = ada::getWindowWidth();
             int height = ada::getWindowHeight();
-            #ifdef SUPPORT_MULTITHREAD_RECORDING 
             auto pixels = std::unique_ptr<unsigned char[]>(new unsigned char [width * height * 4]);
             glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixels.get());
 
-            /** Just a small helper that captures all the relevant data to save an image **/
-            class Job {
-                std::string m_file_name;
-                int m_width;
-                int m_height;
-                std::unique_ptr<unsigned char[]> m_pixels;
-                std::atomic<int> * m_task_count;
-                std::atomic<long long> * m_max_mem_in_queue;
-
-                long mem_consumed_by_pixels() const { return m_width * m_height * 4; }
-                /** the function that is being invoked when the task is done **/
-                public:
-                void operator()() {
-                    if (m_pixels) {
-                        ada::savePixels(m_file_name, m_pixels.get(), m_width, m_height);
-                        m_pixels = nullptr;
-                        (*m_task_count)--;
-                        (*m_max_mem_in_queue) += mem_consumed_by_pixels();
-                    }
-                }
-
-
-                Job (const Job& ) = delete;
-                Job (Job && ) = default;
-                Job(std::string file_name, int width, int height, std::unique_ptr<unsigned char[]>&& pixels,
-                        std::atomic<int>& task_count, std::atomic<long long>& max_mem_in_queue):
-                    m_file_name(std::move(file_name)),
-                    m_width(width),
-                    m_height(height),
-                    m_pixels(std::move(pixels)),
-                    m_task_count(&task_count),
-                    m_max_mem_in_queue(&max_mem_in_queue) {
-                    if (m_pixels) {
-                        task_count++;
-                        max_mem_in_queue -= mem_consumed_by_pixels();
-                    }
-                }
-            };
-
+            #ifdef SUPPORT_MULTITHREAD_RECORDING
+            
             std::shared_ptr<Job> saverPtr = std::make_shared<Job>(std::move(_file), width, height, std::move(pixels), m_task_count, m_max_mem_in_queue);
             /** In the case that we render faster than we can safe frames, more and more frames
              * have to be stored temporary in the save queue. That means that more and more ram is used.
@@ -1961,8 +1890,7 @@ void Sandbox::onScreenshot(std::string _file) {
                 saver();
             }
             else {
-                auto func = [saverPtr]()
-                {
+                auto func = [saverPtr]() {
                     Job& saver = *saverPtr;
                     saver();
                 };
@@ -1970,22 +1898,18 @@ void Sandbox::onScreenshot(std::string _file) {
             }
             #else
 
-            unsigned char* pixels = new unsigned char[width * height*4];
-            glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-            ada::savePixels(_file, pixels, width, height);
-            delete[] pixels;
+            ada::savePixels(_file, pixels.get(), width, height);
 
             #endif
         }
     
-        if (!m_record_sec && !m_record_frame)
+        if (!isRecording())
             std::cout << "Screenshot saved to " << _file << std::endl;
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
         // TRACK_END("screenshot")
     }
-    
 }
 
 void Sandbox::onPlot() {

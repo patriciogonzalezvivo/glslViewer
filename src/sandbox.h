@@ -37,10 +37,6 @@ public:
     
     bool                isReady();
 
-    void                recordSecs( float _start, float _end, float fps = 24.0 );
-    void                recordFrames( int _start, int _end, float fps = 24.0 );
-    float               getRecordedPercentage();
-
     void                addDefine( const std::string &_define, const std::string &_value = "");
     void                delDefine( const std::string &_define );
 
@@ -49,7 +45,6 @@ public:
     Scene&              getScene() { return m_scene; }
 
     void                printDependencies( ShaderType _type ) const;
-
     
     // Some events
     void                onScroll( float _yoffset );
@@ -135,16 +130,6 @@ private:
 
     // Recording
     ada::Fbo            m_record_fbo;
-    float               m_record_fdelta;
-    int                 m_record_counter;
-    float               m_record_sec_start;
-    float               m_record_sec_head;
-    float               m_record_sec_end;
-    bool                m_record_sec;
-    int                 m_record_frame_start;
-    int                 m_record_frame_head;
-    int                 m_record_frame_end;
-    bool                m_record_frame;
     #ifdef SUPPORT_MULTITHREAD_RECORDING 
     std::atomic<int>        m_task_count {0};
     std::atomic<long long>  m_max_mem_in_queue {0};
