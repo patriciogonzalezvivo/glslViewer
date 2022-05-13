@@ -1871,6 +1871,17 @@ void Sandbox::onScreenshot(std::string _file) {
             glReadPixels(0, 0, ada::getWindowWidth(), ada::getWindowHeight(), GL_RGBA, GL_FLOAT, pixels);
             ada::savePixelsHDR(_file, pixels, ada::getWindowWidth(), ada::getWindowHeight());
         }
+        #ifdef SUPPORT_LIBAV
+        else if (recordingPipe()) {
+            int width = ada::getWindowWidth();
+            int height = ada::getWindowHeight();
+            unsigned char* pixels = new unsigned char [width * height * 3];
+            glReadPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, pixels);
+            // ada::flipPixelsVertically(pixels, width, height, 3);
+            auto spixels = std::unique_ptr<unsigned char[]>(pixels);
+            recordingPipeFrame( std::move(spixels) );
+        }
+        #endif
         else {
             int width = ada::getWindowWidth();
             int height = ada::getWindowHeight();
@@ -1903,7 +1914,7 @@ void Sandbox::onScreenshot(std::string _file) {
             #endif
         }
     
-        if (!isRecording())
+        if ( !isRecording() )
             std::cout << "Screenshot saved to " << _file << std::endl;
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);

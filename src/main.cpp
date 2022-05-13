@@ -1274,6 +1274,49 @@ void commandsInit() {
     },
     "frames,<A>,<B>[,<fps>]","saves a sequence of images from frame <A> to <B> at <fps> (default: 24)", false));
 
+    #ifdef SUPPORT_LIBAV
+    commands.push_back(Command("record", [&](const std::string& _line){ 
+        std::vector<std::string> values = ada::split(_line,',');
+        if (values.size() >= 3) {
+            RecordingSettings settings;
+            settings.outputPath = values[1];
+            settings.extraOutputArgs = "-crf 18";
+            settings.width = ada::getWindowWidth();
+            settings.height = ada::getWindowHeight();
+
+            int from = ada::toInt(values[2]);
+            int to = ada::toInt(values[3]);
+            float fps = 24.0;
+
+            if (values.size() == 5)
+                fps = ada::toFloat(values[4]);
+
+            if (from >= to)
+                from = 0.0;
+
+            commandsMutex.lock();
+            recordingPipeOpen(settings, from, to, fps);
+            commandsMutex.unlock();
+
+            float pct = 0.0f;
+            while (pct < 1.0f) {
+
+                // Check progres.
+                commandsMutex.lock();
+                pct = getRecordingPercentage();
+                commandsMutex.unlock();
+                
+                console_draw_pct(pct);
+
+                std::this_thread::sleep_for(std::chrono::milliseconds( ada::getRestMs() ));
+            }
+            return true;
+        }
+        return false;
+    },
+    "record,<file>,<A>,<B>[,<fps>]","record a video from second <A> to second <B> at <fps> (default: 24.0f)", false));
+    #endif
+
     commands.push_back(Command("q", [&](const std::string& _line){ 
         if (_line == "q") {
             keepRunnig.store(false);
