@@ -3,7 +3,7 @@
 #include <string>
 #include <memory>
 
-#ifdef SUPPORT_LIBAV
+#if defined(SUPPORT_LIBAV) && !defined(PLATFORM_RPI)
 struct RecordingSettings {
     std::string ffmpegPath      = "ffmpeg";
     std::string src_args        = "";

@@ -1275,7 +1275,7 @@ void commandsInit() {
     },
     "frames,<A>,<B>[,<fps>]","saves a sequence of images from frame <A> to <B> at <fps> (default: 24)", false));
 
-    #ifdef SUPPORT_LIBAV
+    #if defined(SUPPORT_LIBAV) && !defined(PLATFORM_RPI)
     commands.push_back(Command("record", [&](const std::string& _line){ 
         std::vector<std::string> values = ada::split(_line,',');
         if (values.size() >= 3) {
@@ -1433,7 +1433,10 @@ void printUsage(char * executableName) {
 }
 
 void onExit() {
+
+    #if defined(SUPPORT_LIBAV) && !defined(PLATFORM_RPI)
     recordingPipeClose();
+    #endif
 
     // clear screen
     glClear( GL_COLOR_BUFFER_BIT );
