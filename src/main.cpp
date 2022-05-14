@@ -1116,6 +1116,7 @@ void commandsInit() {
                 std::this_thread::sleep_for(std::chrono::microseconds( ada::toInt(values[1])) );
             else
                 std::this_thread::sleep_for(std::chrono::microseconds( (int)(ada::toFloat(values[1]) * 1000000) ));
+            return true;
         }
         return false;
     },
