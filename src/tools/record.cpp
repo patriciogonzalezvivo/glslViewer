@@ -37,7 +37,7 @@ size_t frame_head = 0;
 size_t frame_end = 0;
 bool   frame = false;
 
-#ifdef SUPPORT_LIBAV
+#if defined(SUPPORT_LIBAV) && !defined(PLATFORM_RPI)
 
 // Video by Seconds
 using Clock         = std::chrono::steady_clock;
@@ -270,7 +270,7 @@ void recordingPipeClose() {
 
 #else
 
-bool    recordingPipe() { return false};
+bool    recordingPipe() { return false; };
 #endif
 
 // ---------------------------------------------------------------------------
@@ -303,11 +303,13 @@ void recordingFrameAdded() {
         if (sec_head >= sec_end)
             sec = false;
     }
+    #if defined(SUPPORT_LIBAV) && !defined(PLATFORM_RPI)
     else if (recordingPipe()) {
         sec_head += fdelta;
         if (sec_head >= sec_end)
             pipe_isRecording = false;
     }
+    #endif
     else if (frame) {
         frame_head++;
         if (frame_head >= frame_end)

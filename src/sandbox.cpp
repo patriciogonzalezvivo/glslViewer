@@ -1871,7 +1871,7 @@ void Sandbox::onScreenshot(std::string _file) {
             glReadPixels(0, 0, ada::getWindowWidth(), ada::getWindowHeight(), GL_RGBA, GL_FLOAT, pixels);
             ada::savePixelsHDR(_file, pixels, ada::getWindowWidth(), ada::getWindowHeight());
         }
-        #ifdef SUPPORT_LIBAV
+        #if defined(SUPPORT_LIBAV) && !defined(PLATFORM_RPI)
         else if (recordingPipe()) {
             int width = ada::getWindowWidth();
             int height = ada::getWindowHeight();
