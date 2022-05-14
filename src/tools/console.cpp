@@ -403,6 +403,8 @@ bool console_getline(std::string& _cmd, CommandList& _commands, Sandbox& _sandbo
         if (cmd_history_offset < cmd_history.size() )
             cmd = cmd_history[ cmd_history.size() - 1 - cmd_history_offset ];
     }
+    else if ( ch == KEY_RESIZE)
+        console_sigwinch_handler(0);
     else if ( ch == KEY_HOME)
         std::cout << "KEY_HOME" << std::endl;
     else if ( ch == KEY_F0)
@@ -491,8 +493,6 @@ bool console_getline(std::string& _cmd, CommandList& _commands, Sandbox& _sandbo
         std::cout << "KEY_REDO" << std::endl;
     else if ( ch == KEY_REFRESH)
         std::cout << "KEY_REFRESH" << std::endl;
-    else if ( ch == KEY_RESIZE)
-        std::cout << "KEY_RESIZE" << std::endl;
     else if ( ch == KEY_RESUME)
         std::cout << "KEY_RESUME" << std::endl;
     else if ( ch == KEY_SLEFT)
