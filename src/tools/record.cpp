@@ -101,7 +101,7 @@ bool recordingPipeOpen(const RecordingSettings& _settings, float _start, float _
     std::vector<std::string> args = {
         "-y",   // overwrite
 
-        "-an",  // disable audio -- todo: add audio,
+        "-an",  // disable audio -- todo: add audio,`
         #ifdef SUPPORT_NCURSES
         "-loglevel quiet",                                      // no log output 
         // "-stats",                                            // only stats
