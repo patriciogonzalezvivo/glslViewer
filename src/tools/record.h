@@ -6,16 +6,18 @@
 #ifdef SUPPORT_LIBAV
 struct RecordingSettings {
     std::string ffmpegPath      = "ffmpeg";
-    std::string inputArgs       = "";
-    // std::string videoCodec      = "libx264";
-    size_t width                = 512;
-    size_t height               = 512;
-    size_t channels             = 3;
-    float fps                   = 24.0f;
+    std::string src_args        = "";
+    size_t      src_width       = 512;
+    size_t      src_height      = 512;
+    size_t      src_channels    = 3;
+    float       src_fps         = 24.0f;
 
-    // unsigned int bitrate        = 20000;  // kbps
-    std::string outputArgs      = "-pix_fmt yuv420p -vsync 1 -g 1";  // -crf 0 -preset ultrafast -tune zerolatency setpts='(RTCTIME - RTCSTART) / (TB * 1000000)'
-    std::string outputPath      = "output.mp4";
+    size_t      trg_width       = 512;
+    size_t      trg_height      = 512;
+    float       trg_fps         = 24.0f;
+
+    std::string trg_args        = "-pix_fmt yuv420p -vsync 1 -g 1";  // -crf 0 -preset ultrafast -tune zerolatency setpts='(RTCTIME - RTCSTART) / (TB * 1000000)'
+    std::string trg_path        = "output.mp4";
 };
 
 bool    recordingPipeOpen(const RecordingSettings& _settings, float _start, float _end);

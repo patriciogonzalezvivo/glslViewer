@@ -68,29 +68,31 @@ bool recordingPipeOpen(const RecordingSettings& _settings, float _start, float _
     }
 
     pipe_settings = _settings;
-     
-    if ( pipe_settings.outputPath.empty() ) {
+    if ( pipe_settings.trg_path.empty() ) {
         std::cerr << "Can't start recording - output path is not set!" << std::endl;
         return false;
     }
 
-    if (ada::urlExists(pipe_settings.outputPath)) {
+    if (ada::urlExists(pipe_settings.trg_path)) {
+        console_clear();
+        std::cout << "That file " << pipe_settings.trg_path << " already exists.";
+
         int file_copy = 0;
-        std::string extension = ada::getExt(pipe_settings.outputPath); 
-        std::string basename = pipe_settings.outputPath.substr(0,pipe_settings.outputPath.size() - extension.size() - 1 );
-        while ( ada::urlExists(pipe_settings.outputPath) ) {
-            pipe_settings.outputPath = basename + "_" + ada::toString(file_copy, 0, 3, '0') + '.' + extension;
-            // return false;
+        std::string extension = ada::getExt(pipe_settings.trg_path); 
+        std::string basename = pipe_settings.trg_path.substr(0,pipe_settings.trg_path.size() - extension.size() - 1 );
+        while ( ada::urlExists(pipe_settings.trg_path) ) {
+            pipe_settings.trg_path = basename + "_" + ada::toString(file_copy, 0, 3, '0') + '.' + extension;
             file_copy++;
         }
 
-        std::cerr << "That file already exists, Data will be save to: " << pipe_settings.outputPath << std::endl;
+        std::cout << "Data will be save to " << pipe_settings.trg_path << " to avoid overwriting data." << std::endl;
+        console_refresh();
     }
 
     if ( pipe_settings.ffmpegPath.empty() )
         pipe_settings.ffmpegPath = "ffmpeg";
 
-    fdelta = 1.0/pipe_settings.fps;
+    fdelta = 1.0/pipe_settings.src_fps;
     counter = 0;
 
     sec_start = _start;
@@ -100,34 +102,31 @@ bool recordingPipeOpen(const RecordingSettings& _settings, float _start, float _
     std::string cmd = pipe_settings.ffmpegPath;
     std::vector<std::string> args = {
         "-y",   // overwrite
+        "-an",                                                  // disable audio -- todo: add audio,`
 
-        "-an",  // disable audio -- todo: add audio,`
         #ifdef SUPPORT_NCURSES
         "-loglevel quiet",                                      // no log output 
         // "-stats",                                            // only stats
         #endif
 
         // input
-        "-r " + ada::toString( pipe_settings.fps ),             // input frame rate
-        "-s " + std::to_string( pipe_settings.width ) +         // input resolution width
-            "x" + std::to_string( pipe_settings.height ),       // input resolution height
+        "-r " + ada::toString( pipe_settings.src_fps ),         // input frame rate
+        "-s " + std::to_string( pipe_settings.src_width ) +     // input resolution width
+            "x" + std::to_string( pipe_settings.src_height ),   // input resolution height
         "-f rawvideo",                                          // input codec
         "-pix_fmt rgb24",                                       // input pixel format
-        pipe_settings.inputArgs,                                // custom input args
+        pipe_settings.src_args,                                 // custom input args
         "-i pipe:",                                             // input source (default pipe)
 
-        // output
-        // "-r " + ada::toString( pipe_settings.fps ),             // output frame rate
-        // "-c:v libx264" + pipe_settings.videoCodec,              // output codec
-        // "-b:v " + ada::toString( pipe_settings.bitrate ) + "k", // output bitrate kbps (hint)
-        // "-vf vflip",                                            // flip image
-        pipe_settings.outputArgs,                               // custom output args
-        pipe_settings.outputPath                                // output path
+        pipe_settings.trg_args,                                 // custom output args
+        pipe_settings.trg_path                                  // output path
     };
 
     for ( size_t i = 0; i < args.size(); i++)
         if ( !args[i].empty() ) 
             cmd += " " + args[i];
+
+    // std::cout << cmd << std::endl; 
 
     if ( pipe != nullptr )
         P_CLOSE( pipe );
@@ -151,7 +150,7 @@ void processFrame() {
     while ( pipe_isRecording.load() ) {
 
         TimePoint lastFrameTime = Clock::now();
-        const float framedur    = 1.f / pipe_settings.fps;
+        const float framedur    = 1.f / pipe_settings.src_fps;
 
         while ( pipe_frames.size() ) {  // allows finish processing queue after we call stop()
 
@@ -159,14 +158,16 @@ void processFrame() {
             float delta = Seconds( Clock::now() - lastFrameTime ).count();
 
             if ( delta >= framedur ) {
-
-                if ( !pipe_isRecording.load() )
+                
+                if ( !pipe_isRecording.load() ) {
+                    console_clear();
                     std::cout << "Don't close. Recording stopped, but still processing " << pipe_frames.size() << " frames" << std::endl;
+                }
 
                 Pixels pixels;
                 if ( pipe_frames.consume( std::move( pixels ) ) && pixels ) {
                     std::unique_ptr<unsigned char[]> data = std::move( pixels );
-                    const size_t dataLength = pipe_settings.width * pipe_settings.height * pipe_settings.channels;
+                    const size_t dataLength = pipe_settings.src_width * pipe_settings.src_height * pipe_settings.src_channels;
                     const size_t written = pipe ? fwrite( data.get(), sizeof( char ), dataLength, pipe ) : 0;
 
                     if ( written <= 0 )
@@ -178,13 +179,16 @@ void processFrame() {
                 console_refresh();
             }
         }
-    }
 
-    // close ffmpeg pipe once stopped recording
-
-    if ( pipe ) {
         console_clear();
+        std::cout << "Don't close. Encoding data into " << pipe_settings.trg_path << std::endl;
+        console_refresh();
 
+    }
+    // close ffmpeg pipe once stopped recording
+    
+    console_clear();
+    if ( pipe ) {
         if ( P_CLOSE( pipe ) < 0 ) {
             // // get error string from 'errno' code
             // char errmsg[500];
@@ -192,7 +196,10 @@ void processFrame() {
             // std::cerr << "Error closing FFmpeg pipe. Error: " << errmsg << std::endl;
             std::cerr << "Error closing FFmpeg pipe." << std::endl;
         }
+        else 
+            std::cout << "Finish saving " << pipe_settings.trg_path << std::endl;
     }
+    console_refresh();
 
     pipe   = nullptr;
     counter = 0;

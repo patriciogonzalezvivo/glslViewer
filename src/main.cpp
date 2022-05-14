@@ -20,6 +20,7 @@
 #include "ada/window.h"
 #include "ada/gl/gl.h"
 #include "ada/tools/fs.h"
+#include "ada/tools/math.h"
 #include "ada/tools/time.h"
 #include "ada/tools/text.h"
 #include "ada/tools/holoplay.h"
@@ -1279,44 +1280,60 @@ void commandsInit() {
         std::vector<std::string> values = ada::split(_line,',');
         if (values.size() >= 3) {
             RecordingSettings settings;
-            settings.outputPath = values[1];
-            settings.width = ada::getWindowWidth();
-            settings.height = ada::getWindowHeight();
-            settings.fps = ada::getFps();
-            float fps = 24.0;
-
-            float from = ada::toFloat(values[2]);
-            float to = ada::toFloat(values[3]);
+            settings.src_width = ada::getWindowWidth();
+            settings.src_height = ada::getWindowHeight();
+            settings.src_fps = ada::getFps();
             float pd = ada::getPixelDensity();
 
-            if (values.size() == 5)
-                fps = ada::toFloat(values[4]);
+            settings.trg_path = values[1];
+            float from = 0;
+            float to = 0.0;
+            
+            if (values.size() > 2)
+                from = ada::toFloat(values[2]);
+
+            if (values.size() > 3) {
+                to = ada::toFloat(values[3]);
+            }
+            else {
+                to = ada::toFloat(values[2]);
+            }
 
             if (from >= to)
                 from = 0.0;
 
+            settings.trg_fps = 24.0f;
+            if (values.size() > 4)
+                settings.trg_fps = ada::toFloat(values[4]);
+
+            settings.trg_width = (int)(settings.src_width/pd);
+            settings.trg_height = (int)(settings.src_height/pd);
+
             bool valid = false;
-            if (ada::haveExt(values[1], "mp4") ) {
+            if (ada::haveExt(values[1], "mp4") || ada::haveExt(values[1], "MP4") ) {
+                settings.trg_width = ada::roundTo( settings.trg_width, 2);
+                settings.trg_height = ada::roundTo( settings.trg_height , 2);
+
                 valid = true;
-                settings.outputArgs = "-r " + ada::toString( fps );
-                settings.outputArgs += " -c:v libx264";
-                settings.outputArgs += " -b:v 20000k";
-                settings.outputArgs += " -vf \"vflip,fps=" + ada::toString(fps);
+                settings.trg_args = "-r " + ada::toString( settings.trg_fps );
+                settings.trg_args += " -c:v libx264";
+                settings.trg_args += " -b:v 20000k";
+                settings.trg_args += " -vf \"vflip,fps=" + ada::toString(settings.trg_fps);
                 if (pd > 1)
-                    settings.outputArgs += ",scale=" + ada::toString(settings.width/pd,0) + ":" + ada::toString(settings.height/pd,0) + ":flags=lanczos";
-                settings.outputArgs += "\"";
-                settings.outputArgs += " -crf 18 ";
-                settings.outputArgs += " -pix_fmt yuv420p";
-                settings.outputArgs += " -vsync 1";
-                settings.outputArgs += " -g 1";
+                    settings.trg_args += ",scale=" + ada::toString(settings.trg_width,0) + ":" + ada::toString(settings.trg_height,0) + ":flags=lanczos";
+                settings.trg_args += "\"";
+                settings.trg_args += " -crf 18 ";
+                settings.trg_args += " -pix_fmt yuv420p";
+                settings.trg_args += " -vsync 1";
+                settings.trg_args += " -g 1";
             }
-            else if (ada::haveExt(values[1], "gif") ) {
+            else if (ada::haveExt(values[1], "gif") || ada::haveExt(values[1], "GIF") ) {
                 valid = true;
-                settings.outputArgs = "-vf \"vflip,fps=" + ada::toString(fps);
+                settings.trg_args = " -vf \"vflip,fps=" + ada::toString(settings.trg_fps);
                 if (pd > 1)
-                    settings.outputArgs += ",scale=" + ada::toString(settings.width/pd,0) + ":" + ada::toString(settings.height/pd,0) + ":flags=lanczos,";
-                settings.outputArgs += ",split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse\"";
-                settings.outputArgs += " -loop 0";
+                    settings.trg_args += ",scale=" + ada::toString((float)settings.trg_width,0) + ":" + ada::toString((float)settings.trg_height,0) + ":flags=lanczos";
+                settings.trg_args += ",split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse\"";
+                settings.trg_args += " -loop 0";
             }
 
             if (valid) {
