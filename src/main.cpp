@@ -1302,8 +1302,8 @@ void commandsInit() {
                 settings.outputArgs += " -c:v libx264";
                 settings.outputArgs += " -b:v 20000k";
                 settings.outputArgs += " -vf \"vflip,fps=" + ada::toString(fps);
-                // if (pd > 1)
-                //     settings.outputArgs += ",scale=" + ada::toString(settings.width/pd,0) + ":" + ada::toString(settings.height/pd,0) + ":flags=lanczos";
+                if (pd > 1)
+                    settings.outputArgs += ",scale=" + ada::toString(settings.width/pd,0) + ":" + ada::toString(settings.height/pd,0) + ":flags=lanczos";
                 settings.outputArgs += "\"";
                 settings.outputArgs += " -crf 18 ";
                 settings.outputArgs += " -pix_fmt yuv420p";
@@ -1315,8 +1315,7 @@ void commandsInit() {
                 settings.outputArgs = "-vf \"vflip,fps=" + ada::toString(fps);
                 if (pd > 1)
                     settings.outputArgs += ",scale=" + ada::toString(settings.width/pd,0) + ":" + ada::toString(settings.height/pd,0) + ":flags=lanczos,";
-                settings.outputArgs += ",split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse";
-                settings.outputArgs += "\"";
+                settings.outputArgs += ",split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse\"";
                 settings.outputArgs += " -loop 0";
             }
 

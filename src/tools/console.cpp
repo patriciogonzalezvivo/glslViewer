@@ -385,14 +385,6 @@ bool console_getline(std::string& _cmd, CommandList& _commands, Sandbox& _sandbo
         cmd_cursor_offset += cmd_cursor_offset < cmd.size() ? 1 : 0;
     else if ( ch == KEY_RIGHT)
         cmd_cursor_offset = cmd_cursor_offset == 0 ? 0 : cmd_cursor_offset-1;
-    else if ( ch == KEY_SF || ch == 339 ) {
-        out_offset_line++;
-        refresh_out_win();
-    }
-    else if ( ch == KEY_SR || ch == 338 ) {
-        out_offset_line--;
-        refresh_out_win();
-    }
     else if ( ch == KEY_DOWN ) {
         if (cmd_history.size() > 0 && cmd_history_offset > 0) {
             cmd_history_offset--;
@@ -411,6 +403,103 @@ bool console_getline(std::string& _cmd, CommandList& _commands, Sandbox& _sandbo
         if (cmd_history_offset < cmd_history.size() )
             cmd = cmd_history[ cmd_history.size() - 1 - cmd_history_offset ];
     }
+    else if ( ch == KEY_HOME)
+        std::cout << "KEY_HOME" << std::endl;
+    else if ( ch == KEY_F0)
+        std::cout << "KEY_F0" << std::endl;
+    else if ( ch == KEY_DL )
+        std::cout << "KEY_DL" << std::endl;
+    else if ( ch == KEY_IL )
+        std::cout << "KEY_IL" << std::endl;
+    else if ( ch == KEY_DC )
+        std::cout << "KEY_DC" << std::endl;
+    else if ( ch == KEY_IC )
+        std::cout << "KEY_IC" << std::endl;
+    else if ( ch == KEY_CLEAR)
+        std::cout << "KEY_CLEAR" << std::endl;
+    else if ( ch == KEY_EOS)
+        std::cout << "KEY_EOS" << std::endl;
+    else if ( ch == KEY_EOL)
+        std::cout << "KEY_EOL" << std::endl;
+    else if ( ch == KEY_SF || ch == 339 ) {
+        out_offset_line++;
+        refresh_out_win();
+    }
+    else if ( ch == KEY_SR || ch == 338 ) {
+        out_offset_line--;
+        refresh_out_win();
+    }
+    else if ( ch == KEY_NPAGE)
+        std::cout << "KEY_NPAGE" << std::endl;
+    else if ( ch == KEY_PPAGE)
+        std::cout << "KEY_PPAGE" << std::endl;
+    else if ( ch == KEY_CTAB)
+        std::cout << "KEY_CTAB" << std::endl;
+    else if ( ch == KEY_BTAB)
+        std::cout << "KEY_BTAB" << std::endl;
+    else if ( ch == KEY_SRESET)
+        std::cout << "KEY_SRESET" << std::endl;
+    else if ( ch == KEY_RESET)
+        std::cout << "KEY_RESET" << std::endl;
+    else if ( ch == KEY_PRINT)
+        std::cout << "KEY_PRINT" << std::endl;
+    else if ( ch == KEY_LL)
+        std::cout << "KEY_LL" << std::endl;
+    else if ( ch == KEY_A1)
+        std::cout << "KEY_A1" << std::endl;
+    else if ( ch == KEY_A3)
+        std::cout << "KEY_A3" << std::endl;
+    else if ( ch == KEY_B2)
+        std::cout << "KEY_B2" << std::endl;
+    else if ( ch == KEY_C1)
+        std::cout << "KEY_C1" << std::endl;
+    else if ( ch == KEY_C3)
+        std::cout << "KEY_C3" << std::endl;
+    else if ( ch == KEY_BEG)
+        std::cout << "KEY_BEG" << std::endl;
+    else if ( ch == KEY_CANCEL)
+        std::cout << "KEY_CANCEL" << std::endl;
+    else if ( ch == KEY_CLOSE)
+        std::cout << "KEY_CLOSE" << std::endl;
+    else if ( ch == KEY_COMMAND)
+        std::cout << "KEY_COMMAND" << std::endl;
+    else if ( ch == KEY_COPY)
+        std::cout << "KEY_COPY" << std::endl;
+    else if ( ch == KEY_CREATE)
+        std::cout << "KEY_CREATE" << std::endl;
+    else if ( ch == KEY_END)
+        std::cout << "KEY_END" << std::endl;
+    else if ( ch == KEY_EXIT)
+        std::cout << "KEY_EXIT" << std::endl;
+    else if ( ch == KEY_FIND)
+        std::cout << "KEY_FIND" << std::endl;
+    else if ( ch == KEY_HELP)
+        std::cout << "KEY_HELP" << std::endl;
+    else if ( ch == KEY_MARK)
+        std::cout << "KEY_MARK" << std::endl;
+    else if ( ch == KEY_MESSAGE)
+        std::cout << "KEY_MESSAGE" << std::endl;
+    else if ( ch == KEY_MOUSE)
+        std::cout << "KEY_MOUSE" << std::endl;
+    else if ( ch == KEY_MOVE)
+        std::cout << "KEY_MOVE" << std::endl;
+    else if ( ch == KEY_NEXT)
+        std::cout << "KEY_NEXT" << std::endl;
+    else if ( ch == KEY_OPEN)
+        std::cout << "KEY_OPEN" << std::endl;
+    else if ( ch == KEY_REDO)
+        std::cout << "KEY_REDO" << std::endl;
+    else if ( ch == KEY_REFRESH)
+        std::cout << "KEY_REFRESH" << std::endl;
+    else if ( ch == KEY_RESIZE)
+        std::cout << "KEY_RESIZE" << std::endl;
+    else if ( ch == KEY_RESUME)
+        std::cout << "KEY_RESUME" << std::endl;
+    else if ( ch == KEY_SLEFT)
+        std::cout << "KEY_SLEFT" << std::endl;
+    else if ( ch == KEY_SRIGHT)
+        std::cout << "KEY_SRIGHT" << std::endl;
+
     
     // else if ( ch == KEY_END || ch == KEY_EXIT || ch == 27 || ch == EOF) {
     //     keepRunnig = false;

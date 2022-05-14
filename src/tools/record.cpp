@@ -62,22 +62,30 @@ bool recordingPipeOpen(const RecordingSettings& _settings, float _start, float _
         return false;
     }
 
-    if ( _settings.outputPath.empty() ) {
-        std::cerr << "Can't start recording - output path is not set!" << std::endl;
-        return false;
-    }
-
     if (pipe_frames.size() > 0) {
         std::cerr << "Can't start recording - previous recording is still processing." << std::endl;
         return false;
     }
 
-    if ( ada::urlExists(_settings.outputPath) ) {
-        std::cerr << "The output file already exists and overwriting is disabled. Can't record to file: " << _settings.outputPath << std::endl;
+    pipe_settings = _settings;
+     
+    if ( pipe_settings.outputPath.empty() ) {
+        std::cerr << "Can't start recording - output path is not set!" << std::endl;
         return false;
     }
 
-    pipe_settings = _settings;
+    if (ada::urlExists(pipe_settings.outputPath)) {
+        int file_copy = 0;
+        std::string extension = ada::getExt(pipe_settings.outputPath); 
+        std::string basename = pipe_settings.outputPath.substr(0,pipe_settings.outputPath.size() - extension.size() - 1 );
+        while ( ada::urlExists(pipe_settings.outputPath) ) {
+            pipe_settings.outputPath = basename + "_" + ada::toString(file_copy, 0, 3, '0') + '.' + extension;
+            // return false;
+            file_copy++;
+        }
+
+        std::cerr << "That file already exists, Data will be save to: " << pipe_settings.outputPath << std::endl;
+    }
 
     if ( pipe_settings.ffmpegPath.empty() )
         pipe_settings.ffmpegPath = "ffmpeg";
