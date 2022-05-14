@@ -15,13 +15,15 @@
 
 bool have_colors = false;
 
+// Out windows
+WINDOW* out_win                 = nullptr;
+int     out_offset_line         = 0;
+
 // Status
 WINDOW* stt_win                 = nullptr;
 Uniforms* uniforms              = nullptr;
 int     stt_win_width           = 50;
-int     stt_win_height          = 0;
 bool    stt_visible             = false;
-
 
 // Buffers
 std::stringstream buffer_cout;
@@ -39,7 +41,61 @@ size_t      cmd_history_offset  = 0;
 size_t      cmd_cursor_offset   = 0;
 size_t      cmd_tab_counter     = 0;
 
+void refresh_cursor() {
+    wmove(cmd_win, 1, 1 + cmd_prompt.size() + 2 + cmd.size() - cmd_cursor_offset);
+    wrefresh(cmd_win);
+}
 
+void print_out(const std::string& _str, int _x, int _y) {
+    std::vector<std::string> lines = ada::split(_str, '\n');
+    size_t total_lines, total_cols;
+    getmaxyx(out_win, total_lines, total_cols);
+    total_lines -= 2;
+
+    int line_n = 0;
+
+    if (lines.size() > total_lines)
+        line_n = lines.size() - total_lines;
+    
+    if (out_offset_line < 0)
+        out_offset_line = 0;
+
+    if (out_offset_line >= lines.size()-total_lines)
+        out_offset_line = lines.size()-total_lines;
+
+    line_n -= out_offset_line;
+    if (line_n < 0)
+        line_n = 0;
+
+    int y = 0;
+    for (size_t i = line_n; i < lines.size(); i++) {
+        if (y < total_lines)
+            mvwprintw(out_win, _y + y++, _x, "%s", lines[i].c_str() );
+    }
+}
+
+void refresh_out_win() {
+    werase(out_win);
+
+    // if (have_colors) wattron(out_win, COLOR_PAIR(5));
+    // box(out_win, 0, 0);
+    // if (have_colors) wattron(out_win, COLOR_PAIR(5));
+
+    if (buffer_cerr.str().size() > 0) {
+        if (have_colors) wattron(out_win, COLOR_PAIR(3));
+        print_out(buffer_cerr.str(), 0, 0);
+        if (have_colors) wattroff(out_win, COLOR_PAIR(3));
+    }
+    else {
+        if (have_colors) wattron(out_win, COLOR_PAIR(2));
+        print_out(buffer_cout.str(), 0, 0);
+        if (have_colors) wattroff(out_win, COLOR_PAIR(2));
+    } 
+
+    wrefresh(out_win);
+
+    refresh_cursor();
+}
 void refresh_cmd_win() {
     werase(cmd_win);
     box(cmd_win, 0, 0);
@@ -58,8 +114,7 @@ void refresh_cmd_win() {
 
     mvwprintw(cmd_win, 1, 1 + cmd_prompt.size(), "> %s", cmd.c_str() );
 
-    wmove(cmd_win, 1, 1 + cmd_prompt.size() + 2 + cmd.size() - cmd_cursor_offset);
-    wrefresh(cmd_win);
+    refresh_cursor();
 };
 
 void refresh_stt_win() {
@@ -69,9 +124,10 @@ void refresh_stt_win() {
     werase(stt_win);
 
     size_t x = 1;
-    size_t y = 0;
+    size_t y = 1;
 
     if (have_colors) wattron(stt_win, COLOR_PAIR(4));
+    box(stt_win, 0, 0);
     // Print Native Uniforms (they carry functions) that are present on the shader
     for (UniformFunctionsList::iterator it= uniforms->functions.begin(); it != uniforms->functions.end(); ++it)
         if (it->second.present && it->second.print)
@@ -102,13 +158,14 @@ void refresh_stt_win() {
     }
     if (have_colors) wattron(stt_win, COLOR_PAIR(2));
 
-    if (y > stt_win_height) {
-        stt_win_height = y;
-        wresize(stt_win, stt_win_height, stt_win_width );
-        mvwin(stt_win, 0, COLS - stt_win_width );
-    }
+    // if (y > stt_win_height) {
+    //     stt_win_height = y + 1;
+    //     wresize(stt_win, stt_win_height, stt_win_width );
+    //     mvwin(stt_win, 0, COLS - stt_win_width );
+    // }
 
     wrefresh(stt_win);
+    refresh_cursor();
 }
 
 std::string suggest(std::string _cmd, std::string& _suggestion, CommandList& _commands) {
@@ -158,17 +215,21 @@ void console_sigwinch_handler(int signal) {
 
     if (stt_visible) {
         wresize(cmd_win, 3, COLS - stt_win_width );
+        wresize(out_win, LINES - 3, COLS - stt_win_width);
 
-        wresize(stt_win, stt_win_height, stt_win_width );
+        // wresize(stt_win, stt_win_height, stt_win_width );
+        wresize(stt_win, LINES, stt_win_width );
         mvwin(stt_win, 0, COLS - stt_win_width );
+
     }
-    else
+    else {
         wresize(cmd_win, 3, COLS);
+        wresize(out_win, LINES - 3, COLS);
+    }
 
     cmd_tab_counter = 0;
 
-    refresh_stt_win();
-    refresh_cmd_win();
+    console_refresh();
     #endif
 }
 
@@ -180,7 +241,6 @@ void console_init(int _osc_port) {
         cmd_prompt = "osc://localhost:" + ada::toString(_osc_port) + " ";
 
     initscr();
-    raw();
     if (has_colors()) {
         start_color();
         use_default_colors();
@@ -197,23 +257,27 @@ void console_init(int _osc_port) {
 
         have_colors = true;
     }
-    cbreak();
 
     // Create windows
     cmd_win = newwin(3, COLS, 0, 0);
+    out_win = newwin(LINES-3, COLS, 3, 0);
     stt_win = newwin(LINES, stt_win_width, 0, COLS - stt_win_width);
+
+    raw();
+    // crmode();
+    cbreak();
+    // scrollok(out_win, true);
+    // idlok(out_win, false);
 
     // Capture Keys
     keypad(stdscr, true);
-    scrollok(stdscr, true);
     noecho();
 
     // Capture all standard console OUT and ERR
     std::streambuf * old_cout = std::cout.rdbuf(buffer_cout.rdbuf());
     std::streambuf * old_cerr = std::cerr.rdbuf(buffer_cerr.rdbuf());
 
-    refresh_stt_win();
-    refresh_cmd_win();
+    console_refresh();
     #endif
 }
 
@@ -233,23 +297,11 @@ void console_clear() {
 void console_refresh() {
     #ifdef SUPPORT_NCURSES
     erase();
-
-    if (buffer_cerr.str().size() > 0) {
-        if (have_colors) attron(COLOR_PAIR(3));
-        mvprintw(4, 0, "%s", buffer_cerr.str().c_str() );
-        if (have_colors) attroff(COLOR_PAIR(3));
-    }
-    else {
-        if (have_colors) attron(COLOR_PAIR(2));
-        mvprintw(4, 0, "%s", buffer_cout.str().c_str() );
-        if (have_colors) attroff(COLOR_PAIR(2));
-    } 
-
     refresh();
-
+    
+    refresh_out_win();
     refresh_stt_win();
     refresh_cmd_win();
-
     #endif
 }
 
@@ -270,7 +322,7 @@ bool console_getline(std::string& _cmd, CommandList& _commands, Sandbox& _sandbo
         cmd_tab_counter = 0;
 
     if ( ch == '\n' || ch == KEY_ENTER || ch == KEY_EOL) {
-        buffer_cout.str("");
+        // buffer_cout.str("");
         buffer_cerr.str("");
         cmd_history.push_back( cmd );
         cmd_cursor_offset = 0;
@@ -329,12 +381,18 @@ bool console_getline(std::string& _cmd, CommandList& _commands, Sandbox& _sandbo
     else if ( ch == KEY_BREAK || ch == ' ') {
         cmd += ",";
     }
-    else if ( ch == KEY_LEFT) {
-        if (cmd_cursor_offset < cmd.size())
-            cmd_cursor_offset++;
-    }
+    else if ( ch == KEY_LEFT)
+        cmd_cursor_offset += cmd_cursor_offset < cmd.size() ? 1 : 0;
     else if ( ch == KEY_RIGHT)
-        cmd_cursor_offset--;
+        cmd_cursor_offset = cmd_cursor_offset == 0 ? 0 : cmd_cursor_offset-1;
+    else if ( ch == KEY_SF || ch == 339 ) {
+        out_offset_line++;
+        refresh_out_win();
+    }
+    else if ( ch == KEY_SR || ch == 338 ) {
+        out_offset_line--;
+        refresh_out_win();
+    }
     else if ( ch == KEY_DOWN ) {
         if (cmd_history.size() > 0 && cmd_history_offset > 0) {
             cmd_history_offset--;
@@ -362,7 +420,7 @@ bool console_getline(std::string& _cmd, CommandList& _commands, Sandbox& _sandbo
     else
         cmd.insert(cmd.end() - cmd_cursor_offset, 1, (char)ch );  
       
-
+    refresh_cursor();
     // suggest(cmd, cmd_suggested, _commands);
     #endif
 
@@ -416,8 +474,7 @@ void console_uniforms_refresh() {
     #ifdef SUPPORT_NCURSES
     if (stt_visible) {
         refresh_stt_win();
-        wmove(cmd_win, 1, 1 + cmd_prompt.size() + 2 + cmd.size() - cmd_cursor_offset);
-        wrefresh(cmd_win);
+        refresh_cursor();
     }
     #endif
 }

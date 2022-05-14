@@ -12,6 +12,7 @@
 #include "ada/tools/text.h"
 
 #include "lockFreeQueue.h"
+#include "console.h"
 
 #if defined( _WIN32 )
 #define P_CLOSE( file ) _pclose( file )
@@ -55,19 +56,19 @@ LockFreeQueue               pipe_frames;
 bool recordingPipe() { return (pipe != nullptr && pipe_isRecording.load()); }
 
 // From https://github.com/tyhenry/ofxFFmpeg
-bool recordingPipeOpen(const RecordingSettings& _settings, float _start, float _end, float _fps) {
+bool recordingPipeOpen(const RecordingSettings& _settings, float _start, float _end) {
     if (pipe_isRecording.load()) {
         std::cout << "Can't start recording - already started." << std::endl;
         return false;
     }
 
-    // if (pipe_frames.size() == 0) {
-    //     std::cerr << "Can't start recording - previous recording is still processing." << std::endl;
-    //     return false;
-    // }
-
     if ( _settings.outputPath.empty() ) {
         std::cerr << "Can't start recording - output path is not set!" << std::endl;
+        return false;
+    }
+
+    if (pipe_frames.size() > 0) {
+        std::cerr << "Can't start recording - previous recording is still processing." << std::endl;
         return false;
     }
 
@@ -81,8 +82,7 @@ bool recordingPipeOpen(const RecordingSettings& _settings, float _start, float _
     if ( pipe_settings.ffmpegPath.empty() )
         pipe_settings.ffmpegPath = "ffmpeg";
 
-    pipe_settings.fps = _fps;
-    fdelta = 1.0/_fps;
+    fdelta = 1.0/pipe_settings.fps;
     counter = 0;
 
     sec_start = _start;
@@ -92,9 +92,12 @@ bool recordingPipeOpen(const RecordingSettings& _settings, float _start, float _
     std::string cmd = pipe_settings.ffmpegPath;
     std::vector<std::string> args = {
         "-y",   // overwrite
+
         "-an",  // disable audio -- todo: add audio,
+        #ifdef SUPPORT_NCURSES
         "-loglevel quiet",                                      // no log output 
-        // "-stats",                                               // only stats
+        // "-stats",                                            // only stats
+        #endif
 
         // input
         "-r " + ada::toString( pipe_settings.fps ),             // input frame rate
@@ -102,15 +105,15 @@ bool recordingPipeOpen(const RecordingSettings& _settings, float _start, float _
             "x" + std::to_string( pipe_settings.height ),       // input resolution height
         "-f rawvideo",                                          // input codec
         "-pix_fmt rgb24",                                       // input pixel format
-        pipe_settings.extraInputArgs,                           // custom input args
+        pipe_settings.inputArgs,                                // custom input args
         "-i pipe:",                                             // input source (default pipe)
 
         // output
-        "-r " + ada::toString( pipe_settings.fps ),             // output frame rate
-        "-c:v " + pipe_settings.videoCodec,                     // output codec
-        "-b:v " + ada::toString( pipe_settings.bitrate ) + "k", // output bitrate kbps (hint)
-        "-vf vflip",                                            // flip image
-        pipe_settings.extraOutputArgs,                          // custom output args
+        // "-r " + ada::toString( pipe_settings.fps ),             // output frame rate
+        // "-c:v libx264" + pipe_settings.videoCodec,              // output codec
+        // "-b:v " + ada::toString( pipe_settings.bitrate ) + "k", // output bitrate kbps (hint)
+        // "-vf vflip",                                            // flip image
+        pipe_settings.outputArgs,                               // custom output args
         pipe_settings.outputPath                                // output path
     };
 
@@ -150,10 +153,9 @@ void processFrame() {
             if ( delta >= framedur ) {
 
                 if ( !pipe_isRecording.load() )
-                    std::cout << "Recording stopped, but finishing frame queue - " << pipe_frames.size() << " remaining frames at " << pipe_settings.fps << " fps" << std::endl;
+                    std::cout << "Don't close. Recording stopped, but still processing " << pipe_frames.size() << " frames" << std::endl;
 
                 Pixels pixels;
-
                 if ( pipe_frames.consume( std::move( pixels ) ) && pixels ) {
                     std::unique_ptr<unsigned char[]> data = std::move( pixels );
                     const size_t dataLength = pipe_settings.width * pipe_settings.height * pipe_settings.channels;
@@ -164,6 +166,8 @@ void processFrame() {
 
                     lastFrameTime = Clock::now();
                 }
+
+                console_refresh();
             }
         }
     }
@@ -171,6 +175,8 @@ void processFrame() {
     // close ffmpeg pipe once stopped recording
 
     if ( pipe ) {
+        console_clear();
+
         if ( P_CLOSE( pipe ) < 0 ) {
             // // get error string from 'errno' code
             // char errmsg[500];
@@ -202,37 +208,31 @@ size_t recordingPipeFrame( std::unique_ptr<unsigned char[]>&& _pixels ) {
         pipe_lastFrame  = pipe_start;
     }
 
-    // add new frame(s) at specified frame rate
-    float recordedDuration      = counter / pipe_settings.fps;
-    const float delta           = Seconds( Clock::now() - pipe_start ).count() - recordedDuration;
-    const size_t framesToWrite  = delta * pipe_settings.fps;
-    size_t written              = 0;
-    // Pixels pixels;
     pipe_frames.produce( std::move(_pixels) );
     pipe_lastFrame = Clock::now();
 
-    // drop or duplicate frames to maintain constant framerate
+    size_t written              = 0;
+
+    // // add new frame(s) at specified frame rate
+    // float recordedDuration      = counter / pipe_settings.fps;
+    // const float delta           = Seconds( Clock::now() - pipe_start ).count() - recordedDuration;
+    // const size_t framesToWrite  = delta * pipe_settings.fps;
+    // Pixels pixels;
+    // // drop or duplicate frames to maintain constant framerate
     // while ( counter == 0 || framesToWrite > written ) {
+    //     // copy pixel data
+    //     if ( !pixPtr )
+    //         pixPtr = new ofPixels( pixels );  
 
-
-        // // copy pixel data
-        // if ( _pixels ) 
-        //     pixels = std::move(_pixels);
-
-        // if ( written == framesToWrite - 1 )
-        // //     // only the last frame we produce owns the pixel data
-        //     pipe_frames.produce( std::move(_pixels) );
-        
-        // else {
-        //     // otherwise, we reference the data
-
-        //     Pixels *pixRef = new Pixels( std::move(_pixels) );
-        //     pipe_frames.produce( pixRef );
-        // //     FrameData *pixRef = new FrameData();
-        // //     pixRef->setFromExternalPixels( pixPtr->getData(), pixPtr->getWidth(), pixPtr->getHeight(), pixPtr->getPixelFormat() );  // re-use already copied pointer
-        // //     pipe_frames.produce( pixRef );
-        // }
-
+    //     if ( written == framesToWrite - 1 )
+    //         // only the last frame we produce owns the pixel data
+    //         m_frames.produce( pixPtr );
+    //     else {
+    //         // otherwise, we reference the data
+    //         ofPixels *pixRef = new ofPixels();
+    //         pixRef->setFromExternalPixels( pixPtr->getData(), pixPtr->getWidth(), pixPtr->getHeight(), pixPtr->getPixelFormat() );  // re-use already copied pointer
+    //         m_frames.produce( pixRef );
+    //     }
     //     ++counter;
     //     ++written;
     //     pipe_lastFrame = Clock::now();

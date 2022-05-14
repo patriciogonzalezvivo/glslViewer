@@ -1280,13 +1280,14 @@ void commandsInit() {
         if (values.size() >= 3) {
             RecordingSettings settings;
             settings.outputPath = values[1];
-            settings.extraOutputArgs = "-crf 18";
             settings.width = ada::getWindowWidth();
             settings.height = ada::getWindowHeight();
-
-            int from = ada::toInt(values[2]);
-            int to = ada::toInt(values[3]);
+            settings.fps = ada::getFps();
             float fps = 24.0;
+
+            float from = ada::toFloat(values[2]);
+            float to = ada::toFloat(values[3]);
+            float pd = ada::getPixelDensity();
 
             if (values.size() == 5)
                 fps = ada::toFloat(values[4]);
@@ -1294,22 +1295,48 @@ void commandsInit() {
             if (from >= to)
                 from = 0.0;
 
-            commandsMutex.lock();
-            recordingPipeOpen(settings, from, to, fps);
-            commandsMutex.unlock();
-
-            float pct = 0.0f;
-            while (pct < 1.0f) {
-
-                // Check progres.
-                commandsMutex.lock();
-                pct = getRecordingPercentage();
-                commandsMutex.unlock();
-                
-                console_draw_pct(pct);
-
-                std::this_thread::sleep_for(std::chrono::milliseconds( ada::getRestMs() ));
+            bool valid = false;
+            if (ada::haveExt(values[1], "mp4") ) {
+                valid = true;
+                settings.outputArgs = "-r " + ada::toString( fps );
+                settings.outputArgs += " -c:v libx264";
+                settings.outputArgs += " -b:v 20000k";
+                settings.outputArgs += " -vf \"vflip,fps=" + ada::toString(fps);
+                // if (pd > 1)
+                //     settings.outputArgs += ",scale=" + ada::toString(settings.width/pd,0) + ":" + ada::toString(settings.height/pd,0) + ":flags=lanczos";
+                settings.outputArgs += "\"";
+                settings.outputArgs += " -crf 18 ";
+                settings.outputArgs += " -pix_fmt yuv420p";
+                settings.outputArgs += " -vsync 1";
+                settings.outputArgs += " -g 1";
             }
+            else if (ada::haveExt(values[1], "gif") ) {
+                valid = true;
+                settings.outputArgs = "-vf \"vflip,fps=" + ada::toString(fps);
+                if (pd > 1)
+                    settings.outputArgs += ",scale=" + ada::toString(settings.width/pd,0) + ":" + ada::toString(settings.height/pd,0) + ":flags=lanczos,";
+                settings.outputArgs += ",split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse";
+                settings.outputArgs += "\"";
+                settings.outputArgs += " -loop 0";
+            }
+
+            if (valid) {
+                commandsMutex.lock();
+                recordingPipeOpen(settings, from, to);
+                commandsMutex.unlock();
+
+                float pct = 0.0f;
+                while (pct < 1.0f) {
+                    commandsMutex.lock();
+                    pct = getRecordingPercentage();
+                    commandsMutex.unlock();
+
+                    console_draw_pct(pct);
+
+                    std::this_thread::sleep_for(std::chrono::milliseconds( ada::getRestMs() ));
+                }
+            }
+
             return true;
         }
         return false;

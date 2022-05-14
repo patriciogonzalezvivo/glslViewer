@@ -234,8 +234,8 @@ bool Uniforms::addTexture(const std::string& _name, const std::string& _path, Wa
 
                 if (_verbose) {
                     std::cout << "// " << _path << " loaded as: " << std::endl;
-                    std::cout << "//    uniform sampler2D   " << _name  << ";"<< std::endl;
-                    std::cout << "//    uniform vec2        " << _name  << "Resolution;"<< std::endl;
+                    std::cout << "uniform sampler2D   " << _name  << ";"<< std::endl;
+                    std::cout << "uniform vec2        " << _name  << "Resolution;"<< std::endl;
                 }
 
                 if (ada::haveExt(_path,"jpeg")) {
@@ -257,8 +257,8 @@ bool Uniforms::addTexture(const std::string& _name, const std::string& _path, Wa
                                 textures[ _name + "Depth"] = tex_dm;
 
                                 if (_verbose) {
-                                    std::cout << "//    uniform sampler2D   " << _name  << "Depth;"<< std::endl;
-                                    std::cout << "//    uniform vec2        " << _name  << "DepthResolution;"<< std::endl;
+                                    std::cout << "uniform sampler2D   " << _name  << "Depth;"<< std::endl;
+                                    std::cout << "uniform vec2        " << _name  << "DepthResolution;"<< std::endl;
                                 }
                             }   
                             ada::freePixels(pixels);
@@ -303,8 +303,8 @@ bool Uniforms::addBumpTexture(const std::string& _name, const std::string& _path
 
                 if (_verbose) {
                     std::cout << "// " << _path << " loaded and transform to normalmap as: " << std::endl;
-                    std::cout << "//    uniform sampler2D   " << _name  << ";"<< std::endl;
-                    std::cout << "//    uniform vec2        " << _name  << "Resolution;"<< std::endl;
+                    std::cout << "uniform sampler2D   " << _name  << ";"<< std::endl;
+                    std::cout << "uniform vec2        " << _name  << "Resolution;"<< std::endl;
                 }
 
                 return true;
@@ -330,14 +330,14 @@ bool Uniforms::addStreamingTexture( const std::string& _name, const std::string&
 
                 if (_verbose) {
                     std::cout << "// " << _url << " sequence loaded as streaming texture: " << std::endl;
-                    std::cout << "//    uniform sampler2D   " << _name  << ";"<< std::endl;
-                    std::cout << "//    uniform sampler2D   " << _name  << "Prev[STREAMS_PREVS];"<< std::endl;
-                    std::cout << "//    uniform vec2        " << _name  << "Resolution;"<< std::endl;
-                    std::cout << "//    uniform float       " << _name  << "Time;" << std::endl;
-                    std::cout << "//    uniform float       " << _name  << "Duration;" << std::endl;
-                    std::cout << "//    uniform float       " << _name  << "CurrentFrame;"<< std::endl;
-                    std::cout << "//    uniform float       " << _name  << "TotalFrames;"<< std::endl;
-                    std::cout << "//    uniform float       " << _name  << "Fps;"<< std::endl;
+                    std::cout << "uniform sampler2D   " << _name  << ";"<< std::endl;
+                    std::cout << "uniform sampler2D   " << _name  << "Prev[STREAMS_PREVS];"<< std::endl;
+                    std::cout << "uniform vec2        " << _name  << "Resolution;"<< std::endl;
+                    std::cout << "uniform float       " << _name  << "Time;" << std::endl;
+                    std::cout << "uniform float       " << _name  << "Duration;" << std::endl;
+                    std::cout << "uniform float       " << _name  << "CurrentFrame;"<< std::endl;
+                    std::cout << "uniform float       " << _name  << "TotalFrames;"<< std::endl;
+                    std::cout << "uniform float       " << _name  << "Fps;"<< std::endl;
                 }
 
                 return true;
@@ -359,8 +359,8 @@ bool Uniforms::addStreamingTexture( const std::string& _name, const std::string&
 
                 if (_verbose) {
                     std::cout << "// " << _url << " loaded as streaming texture: " << std::endl;
-                    std::cout << "//    uniform sampler2D   " << _name  << ";"<< std::endl;
-                    std::cout << "//    uniform vec2        " << _name  << "Resolution;"<< std::endl;
+                    std::cout << "uniform sampler2D   " << _name  << ";"<< std::endl;
+                    std::cout << "uniform vec2        " << _name  << "Resolution;"<< std::endl;
                 }
 
                 return true;
@@ -381,8 +381,8 @@ bool Uniforms::addStreamingTexture( const std::string& _name, const std::string&
 
                 if (_verbose) {
                     std::cout << "// " << _url << " loaded as streaming texture: " << std::endl;
-                    std::cout << "//    uniform sampler2D   " << _name  << ";"<< std::endl;
-                    std::cout << "//    uniform vec2        " << _name  << "Resolution;"<< std::endl;
+                    std::cout << "uniform sampler2D   " << _name  << ";"<< std::endl;
+                    std::cout << "uniform vec2        " << _name  << "Resolution;"<< std::endl;
                 }
 
                 return true;
@@ -403,16 +403,16 @@ bool Uniforms::addStreamingTexture( const std::string& _name, const std::string&
 
             if (_verbose) {
                 std::cout << "// " << _url << " loaded as streaming texture: " << std::endl;
-                std::cout << "//    uniform sampler2D   " << _name  << ";"<< std::endl;
-                std::cout << "//    uniform sampler2D   " << _name  << "Prev[STREAMS_PREVS];"<< std::endl;
-                std::cout << "//    uniform vec2        " << _name  << "Resolution;"<< std::endl;
+                std::cout << "uniform sampler2D   " << _name  << ";"<< std::endl;
+                std::cout << "uniform sampler2D   " << _name  << "Prev[STREAMS_PREVS];"<< std::endl;
+                std::cout << "uniform vec2        " << _name  << "Resolution;"<< std::endl;
 
                 if (!_device) {
-                    std::cout << "//    uniform float       " << _name  << "Time;" << std::endl;
-                    std::cout << "//    uniform float       " << _name  << "Duration;" << std::endl;
-                    std::cout << "//    uniform float       " << _name  << "CurrentFrame;" << std::endl;
-                    std::cout << "//    uniform float       " << _name  << "TotalFrames;" << std::endl;
-                    std::cout << "//    uniform float       " << _name  << "Fps;" << std::endl;
+                    std::cout << "uniform float       " << _name  << "Time;" << std::endl;
+                    std::cout << "uniform float       " << _name  << "Duration;" << std::endl;
+                    std::cout << "uniform float       " << _name  << "CurrentFrame;" << std::endl;
+                    std::cout << "uniform float       " << _name  << "TotalFrames;" << std::endl;
+                    std::cout << "uniform float       " << _name  << "Fps;" << std::endl;
                 }
             }
 
@@ -440,9 +440,9 @@ bool Uniforms::addAudioTexture(const std::string& _name, const std::string& devi
     if (tex->load(device_id, _flip)) {
 
         if (_verbose) {
-            std::cout << "//    loaded audio texture: " << std::endl;
-            std::cout << "//    uniform sampler2D   " << _name  << ";"<< std::endl;
-            std::cout << "//    uniform vec2        " << _name  << "Resolution;"<< std::endl;
+            std::cout << "loaded audio texture: " << std::endl;
+            std::cout << "uniform sampler2D   " << _name  << ";"<< std::endl;
+            std::cout << "uniform vec2        " << _name  << "Resolution;"<< std::endl;
         }
             textures[ _name ] = (ada::Texture*)tex;
             streams[ _name ] = (ada::TextureStream*)tex;
@@ -686,8 +686,8 @@ void Uniforms::setCubeMap( const std::string& _filename, WatchFileList& _files, 
             _files.push_back(file);
 
             std::cout << "// " << _filename << " loaded as: " << std::endl;
-            std::cout << "//    uniform samplerCube u_cubeMap;"<< std::endl;
-            std::cout << "//    uniform vec3        u_SH[9];"<< std::endl;
+            std::cout << "uniform samplerCube u_cubeMap;"<< std::endl;
+            std::cout << "uniform vec3        u_SH[9];"<< std::endl;
 
         }
         else {

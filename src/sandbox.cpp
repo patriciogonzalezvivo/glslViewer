@@ -1875,11 +1875,9 @@ void Sandbox::onScreenshot(std::string _file) {
         else if (recordingPipe()) {
             int width = ada::getWindowWidth();
             int height = ada::getWindowHeight();
-            unsigned char* pixels = new unsigned char [width * height * 3];
-            glReadPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, pixels);
-            // ada::flipPixelsVertically(pixels, width, height, 3);
-            auto spixels = std::unique_ptr<unsigned char[]>(pixels);
-            recordingPipeFrame( std::move(spixels) );
+            auto pixels = std::unique_ptr<unsigned char[]>(new unsigned char [width * height * 3]);
+            glReadPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, pixels.get());
+            recordingPipeFrame( std::move(pixels) );
         }
         #endif
         else {
