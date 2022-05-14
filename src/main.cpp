@@ -1433,6 +1433,8 @@ void printUsage(char * executableName) {
 }
 
 void onExit() {
+    recordingPipeClose();
+
     // clear screen
     glClear( GL_COLOR_BUFFER_BIT );
 

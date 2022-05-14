@@ -187,8 +187,9 @@ void processFrame() {
     }
     // close ffmpeg pipe once stopped recording
     
-    console_clear();
+    
     if ( pipe ) {
+        console_clear();
         if ( P_CLOSE( pipe ) < 0 ) {
             // // get error string from 'errno' code
             // char errmsg[500];
@@ -198,9 +199,9 @@ void processFrame() {
         }
         else 
             std::cout << "Finish saving " << pipe_settings.trg_path << std::endl;
+        console_refresh();
     }
-    console_refresh();
-
+    
     pipe   = nullptr;
     counter = 0;
 }
