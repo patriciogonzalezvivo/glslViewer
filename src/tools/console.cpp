@@ -322,7 +322,7 @@ bool console_getline(std::string& _cmd, CommandList& _commands, Sandbox& _sandbo
         cmd_tab_counter = 0;
 
     if ( ch == '\n' || ch == KEY_ENTER || ch == KEY_EOL) {
-        // buffer_cout.str("");
+        buffer_cout.str("");
         buffer_cerr.str("");
         cmd_history.push_back( cmd );
         cmd_cursor_offset = 0;
