@@ -242,21 +242,30 @@ int main(int argc, char **argv) {
         else if (   std::string(argv[i]) == "--headless" ) {
             window_properties.style = ada::HEADLESS;
         }
-        else if (   std::string(argv[i]) == "-f" ||
-                    std::string(argv[i]) == "--fullscreen" ) {
-            window_properties.style = ada::FULLSCREEN;
-        }
-        else if (   std::string(argv[i]) == "--lenticular") {
-            window_properties.style = ada::LENTICULAR;
-        }
         else if (   std::string(argv[i]) == "-l" ||
                     std::string(argv[i]) == "--life-coding" ){
             #if defined(DRIVER_BROADCOM) || defined(DRIVER_GBM) 
                 window_viewport.x = window_viewport.z - 512;
                 window_viewport.z = window_viewport.w = 512;
             #else
-                window_properties.style = ada::ALLWAYS_ON_TOP;
+                if (window_properties.style == ada::UNDECORATED)
+                    window_properties.style = ada::UNDECORATED_ALLWAYS_ON_TOP;
+                else
+                    window_properties.style = ada::ALLWAYS_ON_TOP;
             #endif
+        }
+        else if (   std::string(argv[i]) == "--undecorated" ) {
+            if (window_properties.style == ada::ALLWAYS_ON_TOP)
+                window_properties.style = ada::UNDECORATED_ALLWAYS_ON_TOP;
+            else 
+                window_properties.style = ada::UNDECORATED;
+        }
+        else if (   std::string(argv[i]) == "--lenticular") {
+            window_properties.style = ada::LENTICULAR;
+        }
+        else if (   std::string(argv[i]) == "-f" ||
+                    std::string(argv[i]) == "--fullscreen" ) {
+            window_properties.style = ada::FULLSCREEN;
         }
         else if (   std::string(argv[i]) == "-ss" ||
                     std::string(argv[i]) == "--screensaver") {
@@ -350,6 +359,7 @@ int main(int argc, char **argv) {
             i++;
         }
         else if (   argument == "-l" || argument == "--headless" ||
+                    argument == "--undecorated" || 
                     argument == "--msaa" ) {
         }
         else if (   std::string(argv[i]) == "-f" ||
