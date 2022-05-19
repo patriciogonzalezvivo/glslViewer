@@ -560,15 +560,26 @@ float Uniforms::getStreamSpeed( const std::string& _name) {
         return streams[_name]->getSpeed();
     return 0.0f;
 }
-    
-void Uniforms::setStreamTime( const std::string& _name, float _time ) {
-    if (streams.find(_name) != streams.end())
-        streams[_name]->setTime(_time);
-}
 
 void Uniforms::setStreamSpeed( const std::string& _name, float _speed ) {
     if (streams.find(_name) != streams.end())
         streams[_name]->setSpeed(_speed);
+}
+
+float Uniforms::getStreamPct( const std::string& _name) {
+    if (streams.find(_name) != streams.end())
+        return streams[_name]->getPct();
+    return 0.0f;
+}
+
+void Uniforms::setStreamPct( const std::string& _name, float _pct ) {
+    if (streams.find(_name) != streams.end())
+        streams[_name]->setPct(_pct);
+}
+
+void Uniforms::setStreamTime( const std::string& _name, float _time ) {
+    if (streams.find(_name) != streams.end())
+        streams[_name]->setTime(_time);
 }
 
 void Uniforms::setStreamsPlay() {
@@ -594,6 +605,11 @@ void Uniforms::setStreamsSpeed( float _speed ) {
 void Uniforms::setStreamsTime( float _time ) {
     for (StreamsList::iterator i = streams.begin(); i != streams.end(); ++i)
         i->second->setTime(_time);
+}
+
+void Uniforms::setStreamsPct( float _pct ) {
+    for (StreamsList::iterator i = streams.begin(); i != streams.end(); ++i)
+        i->second->setPct(_pct);
 }
 
 void Uniforms::setStreamsPrevs( size_t _total ) {

@@ -673,6 +673,10 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
                 std::cout << uniforms.getStreamTime( values[1] ) << std::endl;
                 return true;
             }
+            else if ( values[2] == "pct") {
+                std::cout << uniforms.getStreamPct( values[1] ) << std::endl;
+                return true;
+            }
         }
         else if (values.size() == 4) {
             if ( values[2] == "speed") {
@@ -681,6 +685,10 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
             }
             else if ( values[2] == "time") {
                 uniforms.setStreamTime( values[1], ada::toFloat(values[3]) );
+                return true;
+            }
+            else if ( values[2] == "pct") {
+                uniforms.setStreamPct( values[1], ada::toFloat(values[3]) );
                 return true;
             }
         }
@@ -716,6 +724,10 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
             }
             else if ( values[1] == "time") {
                 uniforms.setStreamsTime( ada::toFloat(values[2]) );
+                return true;
+            }
+            else if ( values[1] == "pct") {
+                uniforms.setStreamsPct( ada::toFloat(values[2]) );
                 return true;
             }
             else if ( values[1] == "prevs") {

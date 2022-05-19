@@ -41,9 +41,27 @@ size_t      cmd_history_offset  = 0;
 size_t      cmd_cursor_offset   = 0;
 size_t      cmd_tab_counter     = 0;
 
+int         mouse_x, mouse_y;
+int         mouse_at = -1;
+std::string mouse_at_key = "";
+size_t      mouse_at_index = 0;
+int         uniforms_starts_at = 0;
+
 void refresh_cursor() {
     wmove(cmd_win, 1, 1 + cmd_prompt.size() + 2 + cmd.size() - cmd_cursor_offset);
     wrefresh(cmd_win);
+}
+
+void enable_mouse() {
+    mouseinterval(0);
+    mousemask(ALL_MOUSE_EVENTS | REPORT_MOUSE_POSITION, nullptr);
+    printf("\033[?1003h\n");
+
+    MEVENT mouse_event;
+    mouse_event.x = 0;
+    mouse_event.y = 0;
+    mouse_event.bstate = REPORT_MOUSE_POSITION;
+    ungetmouse(&mouse_event);
 }
 
 void print_out(const std::string& _str, int _x, int _y) {
@@ -146,15 +164,32 @@ void refresh_stt_win() {
     if (have_colors) wattroff(stt_win, COLOR_PAIR(4));
 
     if (have_colors) wattron(stt_win, COLOR_PAIR(2));
+    uniforms_starts_at = y;
+    int i = 0;
+    int values_col = 26;
     for (UniformDataList::iterator it= uniforms->data.begin(); it != uniforms->data.end(); ++it) {
-        if (it->second.size == 1)
-            mvwprintw(stt_win, y++, x, "%23s  %.3f", it->first.c_str(), it->second.value[0]);
-        else if (it->second.size == 2)
-            mvwprintw(stt_win, y++, x, "%23s  %.3f,%.3f", it->first.c_str(), it->second.value[0], it->second.value[1]);
-        else if (it->second.size == 3)
-            mvwprintw(stt_win, y++, x, "%23s  %.3f,%.3f,%.3f", it->first.c_str(), it->second.value[0], it->second.value[1], it->second.value[2]);
-        else if (it->second.size == 4)
-            mvwprintw(stt_win, y++, x, "%23s  %.3f,%.3f,%.3f,%.3f", it->first.c_str(), it->second.value[0], it->second.value[1], it->second.value[2], it->second.value[3]);
+        if (it->second.size > 4)
+            continue;
+
+        mvwprintw(stt_win, y, x, "%23s", it->first.c_str());
+        int cell_width = (stt_win_width - values_col) / it->second.size;
+
+        if (i == mouse_at) {
+            mouse_at_key = it->first.c_str();
+            mouse_at_index = 0;
+            
+            if (mouse_x > values_col + cell_width)
+                mouse_at_index = (mouse_x - values_col) / cell_width;
+        }
+
+        for (size_t j = 0 ; j < it->second.size && j < 4; j++) {
+            if (i == mouse_at && j == mouse_at_index)
+                if (have_colors) wattron(stt_win, COLOR_PAIR(3));
+            mvwprintw(stt_win, y, values_col + cell_width * j, "%.3f",it->second.value[j]);
+            if (have_colors) wattroff(stt_win, COLOR_PAIR(3));
+        }
+        y++;
+        i++;
     }
     if (have_colors) wattron(stt_win, COLOR_PAIR(2));
 
@@ -272,6 +307,9 @@ void console_init(int _osc_port) {
     // Capture Keys
     keypad(stdscr, true);
     noecho();
+
+     // mouse capture
+    enable_mouse();
 
     // Capture all standard console OUT and ERR
     std::streambuf * old_cout = std::cout.rdbuf(buffer_cout.rdbuf());
@@ -481,8 +519,32 @@ bool console_getline(std::string& _cmd, CommandList& _commands, Sandbox& _sandbo
         std::cout << "KEY_MARK" << std::endl;
     else if ( ch == KEY_MESSAGE)
         std::cout << "KEY_MESSAGE" << std::endl;
-    else if ( ch == KEY_MOUSE)
-        std::cout << "KEY_MOUSE" << std::endl;
+    else if ( ch == KEY_MOUSE) {
+        MEVENT m;
+        if (getmouse(&m) == OK) {
+            if ( wenclose(stt_win, m.y, m.x) && (m.bstate & BUTTON1_PRESSED) ) {
+                if (wmouse_trafo(stt_win, &m.y, &m.x, false) ) {
+                    mouse_x = m.x;
+                    mouse_y = m.y;
+                    if (mouse_y >= uniforms_starts_at)
+                        mouse_at = mouse_y - uniforms_starts_at;
+                }
+            }
+            else if ( m.bstate & BUTTON1_RELEASED) {
+                if (mouse_at >= 0) {
+                    if (wmouse_trafo(stt_win, &m.y, &m.x, false) ) {
+                        float delta = (m.x - mouse_x) * 0.01 + (m.y - mouse_y) * 0.1;
+                        if (uniforms->data[mouse_at_key].size < 5) {
+                            uniforms->data[mouse_at_key].value[mouse_at_index] += delta;
+                            uniforms->data[mouse_at_key].change = true;
+                            uniforms->flagChange();
+                        }
+                    }
+                }
+                mouse_at = -1;
+            }
+        }
+    }
     else if ( ch == KEY_MOVE)
         std::cout << "KEY_MOVE" << std::endl;
     else if ( ch == KEY_NEXT)
@@ -562,6 +624,7 @@ void console_uniforms( bool _show ) {
 void console_uniforms_refresh() {
     #ifdef SUPPORT_NCURSES
     if (stt_visible) {
+        refresh();
         refresh_stt_win();
         refresh_cursor();
     }
