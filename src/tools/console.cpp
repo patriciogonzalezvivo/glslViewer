@@ -52,16 +52,21 @@ void refresh_cursor() {
     wrefresh(cmd_win);
 }
 
-void enable_mouse() {
-    mouseinterval(0);
-    mousemask(ALL_MOUSE_EVENTS | REPORT_MOUSE_POSITION, nullptr);
-    printf("\033[?1003h\n");
+void mouse(bool _enable) {
+    if (_enable) {
+        // mouseinterval(0);
+        mousemask(BUTTON1_PRESSED | BUTTON1_RELEASED | REPORT_MOUSE_POSITION, nullptr);
+        // printf("\033[?1003h\n");
 
-    MEVENT mouse_event;
-    mouse_event.x = 0;
-    mouse_event.y = 0;
-    mouse_event.bstate = REPORT_MOUSE_POSITION;
-    ungetmouse(&mouse_event);
+        // MEVENT mouse_event;
+        // mouse_event.x = 0;
+        // mouse_event.y = 0;
+        // mouse_event.bstate = REPORT_MOUSE_POSITION;
+        // ungetmouse(&mouse_event);
+    }
+    else {
+        // printf("\033[?1003l\n");
+    }
 }
 
 void print_out(const std::string& _str, int _x, int _y) {
@@ -309,7 +314,7 @@ void console_init(int _osc_port) {
     noecho();
 
      // mouse capture
-    enable_mouse();
+    mouse(true);
 
     // Capture all standard console OUT and ERR
     std::streambuf * old_cout = std::cout.rdbuf(buffer_cout.rdbuf());
@@ -634,6 +639,7 @@ void console_uniforms_refresh() {
 
 void console_end() {
     #ifdef SUPPORT_NCURSES
+    mouse(false);
     endwin();
     #endif
 }
