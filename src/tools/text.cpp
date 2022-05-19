@@ -2,7 +2,7 @@
 
 #include <algorithm>
 #include <regex>
-
+#include <cstring>
 #include "ada/tools/text.h"
 
 // Quickly determine if a shader program contains the specified identifier.
