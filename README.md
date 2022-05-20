@@ -1,6 +1,6 @@
 # glslViewer [![Build Status](https://app.travis-ci.com/patriciogonzalezvivo/glslViewer.svg?branch=main)](https://app.travis-ci.com/github/patriciogonzalezvivo/glslViewer)
 
-![](.github/images/00.gif)
+![](.github/images/02.gif)
 
 [![Donate](https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=4BQMKQJDQ9XH6)
 
@@ -8,7 +8,7 @@ GlslViewer is a flexible console-base OpenGL Sandbox to display 2D/3D GLSL shade
 
 Joing [#GlslViewer channel on shader.zone discord](https://shader.zone/) to learn how to use it, share work and get help.
 
-![](.github/images/scene.png)
+![](.github/images/03.gif)
 
 GlslViewer gives support to:
 
@@ -33,17 +33,7 @@ GlslViewer gives support to:
 * PNG sequence export
 * WASM crosscompiling
 
-![](.github/images/01.gif)
-![](.github/images/02.gif)
-![](.github/images/03.gif)
-![](.github/images/04.gif)
-![](.github/images/05.gif)
-![](.github/images/06.gif)
-![](.github/images/08.gif)
-![](.github/images/09.gif)
 ![](.github/images/10.gif)
-![](.github/images/12.gif)
-![](.github/images/13.gif)
 
 ## Wiki themes
 
