@@ -41,6 +41,10 @@ GlslViewer gives support to:
 
 ![](.github/images/10.gif)
 
+![](.github/images/00.gif)
+
+![](.github/images/dof.gif)
+
 ## Wiki themes
 
 * [Installing](https://github.com/patriciogonzalezvivo/glslViewer/wiki/Installing)
@@ -95,5 +99,3 @@ Thanks to:
 * [Philip Rideout](http://prideout.net/) and [Romain Guy](http://www.curious-creature.com/) general generosity to share their code and experience
 
 * [Sergei B](https://github.com/bespsm) for adding support for Audio textures
-
-![](.github/images/dof.gif)
