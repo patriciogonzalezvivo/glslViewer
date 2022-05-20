@@ -33,6 +33,12 @@ GlslViewer gives support to:
 * PNG sequence export
 * WASM crosscompiling
 
+![](.github/images/05.gif)
+
+![](.github/images/06.gif)
+
+![](.github/images/09.gif)
+
 ![](.github/images/10.gif)
 
 ## Wiki themes
