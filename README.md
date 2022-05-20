@@ -34,6 +34,16 @@ GlslViewer gives support to:
 * WASM crosscompiling
 
 ![](.github/images/01.gif)
+![](.github/images/02.gif)
+![](.github/images/03.gif)
+![](.github/images/04.gif)
+![](.github/images/05.gif)
+![](.github/images/06.gif)
+![](.github/images/08.gif)
+![](.github/images/09.gif)
+![](.github/images/10.gif)
+![](.github/images/12.gif)
+![](.github/images/13.gif)
 
 ## Wiki themes
 
