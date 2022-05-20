@@ -46,6 +46,7 @@ int         mouse_at = -1;
 std::string mouse_at_key = "";
 size_t      mouse_at_index = 0;
 int         uniforms_starts_at = 0;
+mmask_t     mouse_old_mask;
 
 void refresh_cursor() {
     wmove(cmd_win, 1, 1 + cmd_prompt.size() + 2 + cmd.size() - cmd_cursor_offset);
@@ -55,17 +56,18 @@ void refresh_cursor() {
 void mouse(bool _enable) {
     if (_enable) {
         // mouseinterval(0);
-        mousemask(BUTTON1_PRESSED | BUTTON1_RELEASED | REPORT_MOUSE_POSITION, nullptr);
-        // printf("\033[?1003h\n");
+        mousemask(BUTTON1_PRESSED | BUTTON1_RELEASED | REPORT_MOUSE_POSITION, &mouse_old_mask);
+        printf("\033[?1003l\n"); // not send mouse events
+        // printf("\033[?1003h\n"); // send mouse events
 
-        // MEVENT mouse_event;
-        // mouse_event.x = 0;
-        // mouse_event.y = 0;
-        // mouse_event.bstate = REPORT_MOUSE_POSITION;
-        // ungetmouse(&mouse_event);
+        MEVENT mouse_event;
+        mouse_event.x = 0;
+        mouse_event.y = 0;
+        mouse_event.bstate = REPORT_MOUSE_POSITION;
+        ungetmouse(&mouse_event);
     }
     else {
-        // printf("\033[?1003l\n");
+        // printf("\033[?1003l\n"); // not send mouse events
     }
 }
 
@@ -306,15 +308,15 @@ void console_init(int _osc_port) {
     raw();
     // crmode();
     cbreak();
+    noecho();
     // scrollok(out_win, true);
     // idlok(out_win, false);
 
-    // Capture Keys
-    keypad(stdscr, true);
-    noecho();
-
      // mouse capture
     mouse(true);
+
+    // Capture Keys
+    keypad(stdscr, true);
 
     // Capture all standard console OUT and ERR
     std::streambuf * old_cout = std::cout.rdbuf(buffer_cout.rdbuf());
@@ -526,27 +528,30 @@ bool console_getline(std::string& _cmd, CommandList& _commands, Sandbox& _sandbo
         std::cout << "KEY_MESSAGE" << std::endl;
     else if ( ch == KEY_MOUSE) {
         MEVENT m;
-        if (getmouse(&m) == OK) {
-            if ( wenclose(stt_win, m.y, m.x) && (m.bstate & BUTTON1_PRESSED) ) {
-                if (wmouse_trafo(stt_win, &m.y, &m.x, false) ) {
-                    mouse_x = m.x;
-                    mouse_y = m.y;
-                    if (mouse_y >= uniforms_starts_at)
-                        mouse_at = mouse_y - uniforms_starts_at;
-                }
-            }
-            else if ( m.bstate & BUTTON1_RELEASED) {
-                if (mouse_at >= 0) {
+        assert (getmouse(&m) == OK);
+        {
+            if (stt_visible) {
+                if ( wenclose(stt_win, m.y, m.x) && (m.bstate & BUTTON1_PRESSED) ) {
                     if (wmouse_trafo(stt_win, &m.y, &m.x, false) ) {
-                        float delta = (m.x - mouse_x) * 0.01 + (m.y - mouse_y) * 0.1;
-                        if (uniforms->data[mouse_at_key].size < 5) {
-                            uniforms->data[mouse_at_key].value[mouse_at_index] += delta;
-                            uniforms->data[mouse_at_key].change = true;
-                            uniforms->flagChange();
-                        }
+                        mouse_x = m.x;
+                        mouse_y = m.y;
+                        if (mouse_y >= uniforms_starts_at)
+                            mouse_at = mouse_y - uniforms_starts_at;
                     }
                 }
-                mouse_at = -1;
+                else if ( m.bstate & BUTTON1_RELEASED) {
+                    if (mouse_at >= 0) {
+                        if (wmouse_trafo(stt_win, &m.y, &m.x, false) ) {
+                            float delta = (m.x - mouse_x) * 0.01 + (m.y - mouse_y) * 0.1;
+                            if (uniforms->data[mouse_at_key].size < 5) {
+                                uniforms->data[mouse_at_key].value[mouse_at_index] += delta;
+                                uniforms->data[mouse_at_key].change = true;
+                                uniforms->flagChange();
+                            }
+                        }
+                    }
+                    mouse_at = -1;
+                }
             }
         }
     }
@@ -635,7 +640,6 @@ void console_uniforms_refresh() {
     }
     #endif
 }
-
 
 void console_end() {
     #ifdef SUPPORT_NCURSES
