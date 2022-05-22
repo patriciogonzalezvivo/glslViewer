@@ -4,25 +4,11 @@
 #include "uniforms.h"
 #include "types/command.h"
 
+#include "ada/gl/gl.h"
 #include "ada/gl/vbo.h"
 #include "ada/gl/shader.h"
 #include "ada/gl/textureCube.h"
 #include "ada/scene/model.h"
-
-enum CullingMode {
-    CULL_NONE = 0,
-    CULL_FRONT = 1,
-    CULL_BACK = 2,
-    CULL_BOTH = 3
-};
-
-enum BlendMode {
-    BLEND_ALPHA = 0,       // Alpha is the default
-    BLEND_ADD = 1,
-    BLEND_MULTIPLY = 2,
-    BLEND_SCREEN = 3,
-    BLEND_SUBSTRACT = 4,
-};
 
 class Scene {
 public:
@@ -41,11 +27,11 @@ public:
     void            delDefine(const std::string& _define);
     void            printDefines();
 
-    void            setBlend(BlendMode _blend) { m_blend = _blend; }
-    BlendMode       getBlend() { return m_blend; }
+    void            setBlend(ada::BlendMode _blend) { m_blend = _blend; }
+    ada::BlendMode  getBlend() { return m_blend; }
 
-    void            setCulling(CullingMode _culling) { m_culling = _culling; }
-    CullingMode     getCulling() { return m_culling; }
+    void            setCulling(ada::CullingMode _culling) { m_culling = _culling; }
+    ada::CullingMode getCulling() { return m_culling; }
 
     void            setCubeMap(ada::SkyData* _skybox );
 
@@ -74,12 +60,11 @@ protected:
     std::map<std::string,ada::Material>  m_materials;
 
     ada::Node           m_origin;
-    glm::mat4           m_mvp;
     float               m_area;
 
     // Camera
-    BlendMode           m_blend;
-    CullingMode         m_culling;
+    ada::BlendMode      m_blend;
+    ada::CullingMode    m_culling;
     bool                m_depth_test;
     
     // Ligth
@@ -109,7 +94,4 @@ protected:
     // UI Grid
     ada::Vbo*           m_grid_vbo;
     ada::Vbo*           m_axis_vbo;
-    
-    // UI Bbox
-    ada::Shader         m_wireframe3D_shader;
 };

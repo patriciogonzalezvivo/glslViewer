@@ -8,6 +8,8 @@
 #include <sys/stat.h>
 
 #include "ada/window.h"
+#include "ada/gl/draw.h"
+#include "ada/gl/meshes.h"
 #include "ada/tools/fs.h"
 #include "ada/tools/geom.h"
 #include "ada/tools/text.h"
@@ -27,9 +29,7 @@ Scene::Scene():
     // Debug State
     showGrid(false), showAxis(false), showBBoxes(false), showCubebox(false), 
     // Camera.
-    m_blend(BLEND_ALPHA),
-    m_culling(CULL_NONE),
-    m_depth_test(true),
+    m_blend(ada::BLEND_ALPHA), m_culling(ada::CULL_NONE), m_depth_test(true),
     // Light
     m_lightUI_vbo(nullptr), m_dynamicShadows(false), m_shadows(false),
     // Background
@@ -125,20 +125,22 @@ void Scene::setup(CommandList& _commands, Uniforms& _uniforms) {
     _commands.push_back(Command("blend", [&](const std::string& _line){ 
         std::vector<std::string> values = ada::split(_line,',');
         if (values.size() == 1) {
-            if (getBlend() == BLEND_ALPHA) std::cout << "alpha" << std::endl;
-            else if (getBlend() == BLEND_ADD) std::cout << "add" << std::endl;
-            else if (getBlend() == BLEND_MULTIPLY) std::cout << "multiply" << std::endl;
-            else if (getBlend() == BLEND_SCREEN) std::cout << "screen" << std::endl;
-            else if (getBlend() == BLEND_SUBSTRACT) std::cout << "substract" << std::endl;
+            if (getBlend() == ada::BLEND_NONE) std::cout << "none" << std::endl;
+            else if (getBlend() == ada::BLEND_ALPHA) std::cout << "alpha" << std::endl;
+            else if (getBlend() == ada::BLEND_ADD) std::cout << "add" << std::endl;
+            else if (getBlend() == ada::BLEND_MULTIPLY) std::cout << "multiply" << std::endl;
+            else if (getBlend() == ada::BLEND_SCREEN) std::cout << "screen" << std::endl;
+            else if (getBlend() == ada::BLEND_SUBSTRACT) std::cout << "substract" << std::endl;
             
             return true;
         }
         else if (values.size() == 2) {
-            if (values[1] == "alpha") setBlend(BLEND_ALPHA);
-            else if (values[1] == "add") setBlend(BLEND_ADD);
-            else if (values[1] == "multiply") setBlend(BLEND_MULTIPLY);
-            else if (values[1] == "screen") setBlend(BLEND_SCREEN);
-            else if (values[1] == "substract") setBlend(BLEND_SUBSTRACT);
+            if (values[1] == "none" || values[1] == "off") setBlend(ada::BLEND_NONE);
+            else if (values[1] == "alpha") setBlend(ada::BLEND_ALPHA);
+            else if (values[1] == "add") setBlend(ada::BLEND_ADD);
+            else if (values[1] == "multiply") setBlend(ada::BLEND_MULTIPLY);
+            else if (values[1] == "screen") setBlend(ada::BLEND_SCREEN);
+            else if (values[1] == "substract") setBlend(ada::BLEND_SUBSTRACT);
 
             return true;
         }
@@ -167,18 +169,18 @@ void Scene::setup(CommandList& _commands, Uniforms& _uniforms) {
     _commands.push_back(Command("culling", [&](const std::string& _line){ 
         std::vector<std::string> values = ada::split(_line,',');
         if (values.size() == 1) {
-            if (getCulling() == CULL_NONE) std::cout << "none" << std::endl;
-            else if (getCulling() == CULL_FRONT) std::cout << "front" << std::endl;
-            else if (getCulling() == CULL_BACK) std::cout << "back" << std::endl;
-            else if (getCulling() == CULL_BOTH) std::cout << "both" << std::endl;
+            if (getCulling() == ada::CULL_NONE) std::cout << "none" << std::endl;
+            else if (getCulling() == ada::CULL_FRONT) std::cout << "front" << std::endl;
+            else if (getCulling() == ada::CULL_BACK) std::cout << "back" << std::endl;
+            else if (getCulling() == ada::CULL_BOTH) std::cout << "both" << std::endl;
 
             return true;
         }
         else if (values.size() == 2) {
-            if (values[1] == "none") setCulling(CULL_NONE);
-            else if (values[1] == "front") setCulling(CULL_FRONT);
-            else if (values[1] == "back") setCulling(CULL_BACK);
-            else if (values[1] == "both") setCulling(CULL_BOTH);
+            if (values[1] == "none") setCulling(ada::CULL_NONE);
+            else if (values[1] == "front") setCulling(ada::CULL_FRONT);
+            else if (values[1] == "back") setCulling(ada::CULL_BACK);
+            else if (values[1] == "both") setCulling(ada::CULL_BOTH);
 
             return true;
         }
@@ -537,62 +539,20 @@ void Scene::render(Uniforms& _uniforms) {
     if (m_depth_test)
         glEnable(GL_DEPTH_TEST);
 
-    if (m_blend != 0) {
-        switch (m_blend) {
-            case 1: // Add
-                glEnable(GL_BLEND);
-                glBlendEquation(GL_FUNC_ADD);
-                glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-                break;
-
-            case 2: // Multiply
-                glEnable(GL_BLEND);
-                glBlendEquation(GL_FUNC_ADD);
-                glBlendFunc(GL_DST_COLOR, GL_ONE_MINUS_SRC_ALPHA /* GL_ZERO or GL_ONE_MINUS_SRC_ALPHA */);
-                break;
-
-            case 3: // Screen
-                glEnable(GL_BLEND);
-                glBlendEquation(GL_FUNC_ADD);
-                glBlendFunc(GL_ONE_MINUS_DST_COLOR, GL_ONE);
-                break;
-
-            case 4: // Substract
-                glEnable(GL_BLEND);
-                glBlendEquation(GL_FUNC_REVERSE_SUBTRACT);
-                glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-                break;
-            default:
-			    break;
-	    }
-    }
+    ada::blendMode(m_blend);
 
     if (_uniforms.getCamera().bChange || m_origin.bChange)
-        m_mvp = _uniforms.getCamera().getProjectionViewMatrix() * m_origin.getTransformMatrix(); 
-
+        ada::setCameraMatrix( _uniforms.getCamera().getProjectionViewMatrix() * m_origin.getTransformMatrix() );
+    ada::resetMatrix();
 
     TRACK_BEGIN("render:scene:floor")
-
-    renderFloor(_uniforms, m_mvp);
-
+    renderFloor(_uniforms, ada::getCameraMatrix() );
     TRACK_END("render:scene:floor")
 
-    if (m_culling != 0) {
-        glEnable(GL_CULL_FACE);
+    ada::cullingMode(m_culling);
 
-        if (m_culling == 1) 
-            glCullFace(GL_FRONT);
-        
-        else if (m_culling == 2)
-            glCullFace(GL_BACK);
-        
-        else if (m_culling == 3)
-            glCullFace(GL_FRONT_AND_BACK);
+    for (size_t i = 0; i < m_models.size(); i++) {
 
-    }
-
-    for (unsigned int i = 0; i < m_models.size(); i++) {
-        // m_models[i]->render(_uniforms, m_mvp);
         if (m_models[i]->getShader()->isLoaded() ) {
 
             TRACK_BEGIN("render:scene:" + m_models[i]->getName() )
@@ -604,7 +564,7 @@ void Scene::render(Uniforms& _uniforms) {
             _uniforms.feedTo( m_models[i]->getShader() );
 
             // Pass special uniforms
-            m_models[i]->getShader()->setUniform( "u_modelViewProjectionMatrix", m_mvp);
+            m_models[i]->getShader()->setUniform( "u_modelViewProjectionMatrix", ada::getCameraMatrix() );
             m_models[i]->render();
 
             TRACK_END("render:scene:" + m_models[i]->getName() )
@@ -615,9 +575,10 @@ void Scene::render(Uniforms& _uniforms) {
         glDisable(GL_DEPTH_TEST);
 
     if (m_blend != 0) {
-        glEnable(GL_BLEND);
-        glBlendEquation(GL_FUNC_ADD);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        // glEnable(GL_BLEND);
+        // glBlendEquation(GL_FUNC_ADD);
+        // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        ada::blendMode(ada::BLEND_ALPHA);
     }
 
     if (m_culling != 0)
@@ -688,7 +649,7 @@ void Scene::renderBackground(Uniforms& _uniforms) {
         _uniforms.feedTo( m_background_shader );
 
         if (!m_background_vbo)
-            m_background_vbo = ada::rect(0.0,0.0,1.0,1.0).getVbo();
+            m_background_vbo = ada::rectMesh(0.0,0.0,1.0,1.0).getVbo();
         m_background_vbo->render( &m_background_shader );
 
         TRACK_END("render:scene:background")
@@ -697,7 +658,7 @@ void Scene::renderBackground(Uniforms& _uniforms) {
     else if (_uniforms.cubemap && showCubebox) {
 
         if (!m_cubemap_vbo) {
-            m_cubemap_vbo = ada::cube(1.0f).getVbo();
+            m_cubemap_vbo = ada::cubeMesh(1.0f).getVbo();
             m_cubemap_shader.load(ada::getDefaultSrc(ada::FRAG_CUBEMAP), ada::getDefaultSrc(ada::VERT_CUBEMAP), false);
         }
 
@@ -721,7 +682,7 @@ void Scene::renderFloor(Uniforms& _uniforms, const glm::mat4& _mvp) {
             if (m_floor_vbo)
                 delete m_floor_vbo;
 
-            m_floor_vbo = ada::floor(m_area * 5.0, m_floor_subd_target, m_floor_height).getVbo();
+            m_floor_vbo = ada::floorMesh(m_area * 5.0, m_floor_subd_target, m_floor_height).getVbo();
             m_floor_subd = m_floor_subd_target;
 
             if (!m_floor_shader.isLoaded()) 
@@ -759,42 +720,34 @@ void Scene::renderFloor(Uniforms& _uniforms, const glm::mat4& _mvp) {
 void Scene::renderDebug(Uniforms& _uniforms) {
     glEnable(GL_DEPTH_TEST);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-
-    if (!m_wireframe3D_shader.isLoaded())
-        m_wireframe3D_shader.load(ada::getDefaultSrc(ada::FRAG_WIREFRAME_3D), ada::getDefaultSrc(ada::VERT_WIREFRAME_3D), false);
+    ada::camera(true);
 
     // Draw Bounding boxes
     if (showBBoxes) {
-        glLineWidth(3.0f);
-        m_wireframe3D_shader.use();
-        m_wireframe3D_shader.setUniform("u_color", glm::vec4(1.0,0.0,0.0,1.0));
-        m_wireframe3D_shader.setUniform("u_modelViewProjectionMatrix", m_mvp );
-        for (unsigned int i = 0; i < m_models.size(); i++) {
-            m_models[i]->renderBbox( &m_wireframe3D_shader );
-        }
+        ada::strokeWeight(3.0f);
+        ada::stroke(glm::vec3(1.0f, 0.0f, 0.0f));
+        for (unsigned int i = 0; i < m_models.size(); i++)
+            ada::line( m_models[i]->getVboBbox() );
     }
     
     // Axis
     if (showAxis) {
         if (m_axis_vbo == nullptr)
-            m_axis_vbo = ada::axis(_uniforms.getCamera().getFarClip(), m_floor_height).getVbo();
+            m_axis_vbo = ada::axisMesh(_uniforms.getCamera().getFarClip(), m_floor_height).getVbo();
 
-        glLineWidth(2.0f);
-        m_wireframe3D_shader.use();
-        m_wireframe3D_shader.setUniform("u_color", glm::vec4(0.75));
-        m_wireframe3D_shader.setUniform("u_modelViewProjectionMatrix", m_mvp );
-        m_axis_vbo->render( &m_wireframe3D_shader );
+        ada::strokeWeight(2.0f);
+        ada::stroke( glm::vec4(0.75f) );
+        ada::line( m_axis_vbo );
     }
     
     // Grid
     if (showGrid) {
         if (m_grid_vbo == nullptr)
-            m_grid_vbo = ada::grid(_uniforms.getCamera().getFarClip(), _uniforms.getCamera().getFarClip() / 20.0, m_floor_height).getVbo();
-        glLineWidth(1.0f);
-        m_wireframe3D_shader.use();
-        m_wireframe3D_shader.setUniform("u_color", glm::vec4(0.5));
-        m_wireframe3D_shader.setUniform("u_modelViewProjectionMatrix", m_mvp );
-        m_grid_vbo->render( &m_wireframe3D_shader );
+            m_grid_vbo = ada::gridMesh(_uniforms.getCamera().getFarClip(), _uniforms.getCamera().getFarClip() / 20.0, m_floor_height).getVbo();
+
+        ada::strokeWeight(1.0f);
+        ada::stroke( glm::vec4(0.5f) );
+        ada::line( m_grid_vbo );
     }
 
 
@@ -804,12 +757,12 @@ void Scene::renderDebug(Uniforms& _uniforms) {
             m_lightUI_shader.load(ada::getDefaultSrc(ada::FRAG_LIGHT), ada::getDefaultSrc(ada::VERT_LIGHT), false);
 
         if (m_lightUI_vbo == nullptr)
-            m_lightUI_vbo = ada::rect(0.0,0.0,0.0,0.0).getVbo();
+            m_lightUI_vbo = ada::rectMesh(0.0,0.0,0.0,0.0).getVbo();
 
         m_lightUI_shader.use();
         m_lightUI_shader.setUniform("u_scale", 24.0f, 24.0f);
         m_lightUI_shader.setUniform("u_viewMatrix", _uniforms.getCamera().getViewMatrix());
-        m_lightUI_shader.setUniform("u_modelViewProjectionMatrix", m_mvp );
+        m_lightUI_shader.setUniform("u_modelViewProjectionMatrix", ada::getCameraMatrix() );
 
         for (unsigned int i = 0; i < _uniforms.lights.size(); i++) {
             m_lightUI_shader.setUniform("u_translate", _uniforms.lights[i].getPosition());

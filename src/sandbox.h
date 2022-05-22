@@ -120,7 +120,6 @@ private:
     ada::Vbo*           m_billboard_vbo;
     
     // Cursor
-    ada::Shader         m_wireframe2D_shader;
     ada::Vbo*           m_cross_vbo;
 
     // debug plot texture and shader for histogram or fps plots

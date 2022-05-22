@@ -12,8 +12,9 @@
 #include "tools/console.h"
 
 #include "ada/window.h"
+#include "ada/gl/draw.h"
+#include "ada/gl/meshes.h"
 #include "ada/tools/text.h"
-#include "ada/tools/geom.h"
 #include "ada/tools/pixels.h"
 #include "ada/tools/holoplay.h"
 #include "ada/shaders/defaultShaders.h"
@@ -800,7 +801,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     }
 
     // Init Scene elements
-    m_billboard_vbo = ada::rect(0.0,0.0,1.0,1.0).getVbo();
+    m_billboard_vbo = ada::rectMesh(0.0,0.0,1.0,1.0).getVbo();
 
     // LOAD GEOMETRY
     // -----------------------------------------------
@@ -1646,19 +1647,22 @@ void Sandbox::renderUI() {
         // TRACK_BEGIN("cursor")
 
         if (m_cross_vbo == nullptr) 
-            m_cross_vbo = ada::cross(glm::vec3(0.0, 0.0, 0.0), 10.).getVbo();
+            m_cross_vbo = ada::crossMesh(glm::vec3(0.0, 0.0, 0.0), 10.).getVbo();
 
-        if (!m_wireframe2D_shader.isLoaded())
-            m_wireframe2D_shader.load(ada::getDefaultSrc(ada::FRAG_WIREFRAME_2D), ada::getDefaultSrc(ada::VERT_WIREFRAME_2D), false);
+        ada::camera(false);
+        ada::strokeWeight(2.0f);
+        ada::resetMatrix();
+        ada::translate(ada::getMouseX(), ada::getMouseY());
+        ada::stroke(glm::vec4(1.0));
+        ada::line(m_cross_vbo);
 
-        glLineWidth(2.0f);
-        m_wireframe2D_shader.use();
-        m_wireframe2D_shader.setUniform("u_color", glm::vec4(1.0));
-        m_wireframe2D_shader.setUniform("u_scale", 1.0f, 1.0f);
-        m_wireframe2D_shader.setUniform("u_translate", (float)ada::getMouseX(), (float)ada::getMouseY());
-        m_wireframe2D_shader.setUniform("u_modelViewProjectionMatrix", ada::getOrthoMatrix());
-        m_cross_vbo->render(&m_wireframe2D_shader);
-        glLineWidth(1.0f);
+        // if (!m_lines_shader.isLoaded())
+        //     m_lines_shader.load(ada::getDefaultSrc(ada::FRAG_LINES), ada::getDefaultSrc(ada::VERT_LINES), false);
+        // m_lines_shader.use();
+        // m_lines_shader.setUniform("u_color", glm::vec4(1.0));
+        // m_lines_shader.setUniform("u_modelViewProjectionMatrix", glm::translate( ada::getOrthoMatrix() , glm::vec3(ada::getMouseX(), ada::getMouseY(), 0.0f) )  );
+        // m_cross_vbo->render(&m_lines_shader);
+        // ada::strokeWeight(1.0f);
 
         // TRACK_END("cursor")
     }
