@@ -1656,14 +1656,6 @@ void Sandbox::renderUI() {
         ada::stroke(glm::vec4(1.0));
         ada::line(m_cross_vbo);
 
-        // if (!m_lines_shader.isLoaded())
-        //     m_lines_shader.load(ada::getDefaultSrc(ada::FRAG_LINES), ada::getDefaultSrc(ada::VERT_LINES), false);
-        // m_lines_shader.use();
-        // m_lines_shader.setUniform("u_color", glm::vec4(1.0));
-        // m_lines_shader.setUniform("u_modelViewProjectionMatrix", glm::translate( ada::getOrthoMatrix() , glm::vec3(ada::getMouseX(), ada::getMouseY(), 0.0f) )  );
-        // m_cross_vbo->render(&m_lines_shader);
-        // ada::strokeWeight(1.0f);
-
         // TRACK_END("cursor")
     }
 
