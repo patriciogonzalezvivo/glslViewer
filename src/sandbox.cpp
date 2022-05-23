@@ -25,10 +25,11 @@
 #define TRACK_BEGIN(A) if (uniforms.tracker.isRunning()) uniforms.tracker.begin(A); 
 #define TRACK_END(A) if (uniforms.tracker.isRunning()) uniforms.tracker.end(A); 
 #define PLOT_OFF 0
-#define PLOT_HISTOGRAM 1
+#define PLOT_LUMA 1
+#define PLOT_RGB 1
 #define PLOT_FPS 2
 #define PLOT_MS 3
-const std::string plot_options[] = { "off", "histogram", "fps", "ms" };
+const std::string plot_options[] = { "off", "rgb", "luma", "fps", "ms" };
 
 // ------------------------------------------------------------------------- CONTRUCTOR
 Sandbox::Sandbox(): 
@@ -314,14 +315,18 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
                 m_plot_shader.delDefine("PLOT_VALUE");
                 if (values[1] == "off") 
                     m_plot = 0;
-                else if (values[1] == "histogram") 
-                    m_plot = 1;
+                else if (values[1] == "rgb") 
+                    m_plot = PLOT_RGB;
+                else if (values[1] == "luma") {
+                    m_plot = PLOT_LUMA;
+                     m_plot_shader.addDefine("PLOT_VALUE", "color.rgb = vec3(step(st.y, data.a));");
+                }
                 else if (values[1] == "fps") {
-                    m_plot = 2;
+                    m_plot = PLOT_FPS;
                     m_plot_shader.addDefine("PLOT_VALUE", "color.rgb += digits(uv * 0.1 + vec2(0.0, -0.01), value.r * 60.0, 1.0);");
                 }
                 else if (values[1] == "ms") {
-                    m_plot = 3;
+                    m_plot = PLOT_MS;
                     m_plot_shader.addDefine("PLOT_VALUE", "color.rgb += digits(uv * 0.1 + vec2(0.105, -0.01), value.r * 60.0, 1.0);");
                 }
                 return true;
@@ -329,7 +334,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         }
         return false;
     },
-    "plot[,off|histogram|fps]", "show/hide a histogram or FPS plot on screen", false));
+    "plot[,off|luma|rgb|fps|ms]", "show/hide a histogram or FPS plot on screen", false));
 
     _commands.push_back(Command("defines", [&](const std::string& _line){ 
         if (_line == "defines") {
@@ -1040,7 +1045,7 @@ bool Sandbox::reloadShaders( WatchFileList &_files ) {
     else 
         m_postprocessing = false;
 
-    if (m_postprocessing || m_plot == PLOT_HISTOGRAM)
+    if (m_postprocessing || m_plot == PLOT_RGB || m_plot == PLOT_LUMA)
         _updateSceneBuffer(ada::getWindowWidth(), ada::getWindowHeight());
 
     console_refresh();
@@ -1301,7 +1306,7 @@ void Sandbox::render() {
         if (!m_record_fbo.isAllocated())
             m_record_fbo.allocate(ada::getWindowWidth(), ada::getWindowHeight(), ada::COLOR_TEXTURE_DEPTH_BUFFER);
 
-    if (m_postprocessing || m_plot == PLOT_HISTOGRAM ) {
+    if (m_postprocessing || m_plot == PLOT_LUMA || m_plot == PLOT_RGB) {
         _updateSceneBuffer(ada::getWindowWidth(), ada::getWindowHeight());
         m_scene_fbo.bind();
     }
@@ -1403,7 +1408,7 @@ void Sandbox::render() {
 
         TRACK_END("render:postprocessing")
     }
-    else if (m_plot == PLOT_HISTOGRAM) {
+    else if (m_plot == PLOT_RGB || m_plot == PLOT_LUMA) {
         m_scene_fbo.unbind();
 
         if (screenshotFile != "" || isRecording())
@@ -1676,10 +1681,10 @@ void Sandbox::renderDone() {
         screenshotFile = "";
     }
 
+    unflagChange();
+
     if (m_plot != PLOT_OFF)
         onPlot();
-
-    unflagChange();
 
     if (!m_initialized) {
         m_initialized = true;
@@ -1858,7 +1863,7 @@ void Sandbox::onViewportResize(int _newWidth, int _newHeight) {
         }
     }
 
-    if (m_postprocessing || m_plot == PLOT_HISTOGRAM)
+    if (m_postprocessing || m_plot == PLOT_LUMA || m_plot == PLOT_RGB)
         _updateSceneBuffer(_newWidth, _newHeight);
 
     if (screenshotFile != "" || isRecording())
@@ -1933,7 +1938,7 @@ void Sandbox::onPlot() {
     if ( !ada::isGL() )
         return;
 
-    if ( m_plot == PLOT_HISTOGRAM && haveChange() ) {
+    if ( (m_plot == PLOT_LUMA || m_plot == PLOT_RGB) && haveChange() ) {
 
         // TRACK_BEGIN("plot::histogram")
 
@@ -1941,10 +1946,10 @@ void Sandbox::onPlot() {
         glBindFramebuffer(GL_FRAMEBUFFER, m_scene_fbo.getId());
         int w = ada::getWindowWidth();
         int h = ada::getWindowHeight();
-        int c = 4;
+        int c = 3;
         int total = w * h * c;
         unsigned char* pixels = new unsigned char[total];
-        glReadPixels(0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+        glReadPixels(0, 0, w, h, GL_RGB, GL_UNSIGNED_BYTE, pixels);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
         // Count frequencies of appearances 
@@ -1977,10 +1982,10 @@ void Sandbox::onPlot() {
 
         if (m_plot_texture == nullptr)
             m_plot_texture = new ada::Texture();
-
         m_plot_texture->load(256, 1, 4, 32, &m_plot_values[0], ada::NEAREST, ada::CLAMP);
 
         uniforms.textures["u_histogram"] = m_plot_texture;
+        uniforms.flagChange();
         // TRACK_END("plot::histogram")
     }
 

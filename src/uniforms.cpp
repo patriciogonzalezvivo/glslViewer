@@ -151,13 +151,29 @@ bool parseUniformData(const std::string &_line, UniformDataList *_uniforms) {
     if (value.size() > 1) {
         std::string name = value[0];
 
+        bool isFloat = false;
         for (size_t i = 1; i < value.size(); i++) {
-            (*_uniforms)[name].bInt = !ada::isFloat(value[i]);
+            isFloat += ada::isFloat(value[i]);
             (*_uniforms)[name].value[i-1] = ada::toFloat(value[i]);
-            (*_uniforms)[name].change = true;
         }
 
+        (*_uniforms)[name].bInt = !isFloat;
+        (*_uniforms)[name].change = true;
         (*_uniforms)[name].size = value.size()-1;
+
+        // if ((*_uniforms)[name].size > 1) {
+        //     if ((*_uniforms)[name].bInt)
+        //         std::cout << "ivec" << ada::toString((*_uniforms)[name].size) << " " << name;
+        //     else
+        //         std::cout << "ivec" << ada::toString((*_uniforms)[name].size) << " " << name;
+        // }
+        // else {
+        //     if ((*_uniforms)[name].bInt)
+        //         std::cout << "int " << name;
+        //     else
+        //         std::cout << "float " << name;
+        // }
+
         rta = true;
     }
 
