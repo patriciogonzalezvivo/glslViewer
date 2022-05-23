@@ -22,7 +22,10 @@ int     out_offset_line         = 0;
 // Status
 WINDOW* stt_win                 = nullptr;
 Uniforms* uniforms              = nullptr;
-int     stt_win_width           = 50;
+int     stt_width               = 50;
+int     stt_y                   = 0;
+int     stt_x                   = 1;
+int     stt_values_col          = 26;
 bool    stt_visible             = false;
 
 // Buffers
@@ -40,6 +43,8 @@ std::vector<std::string> cmd_history;
 size_t      cmd_history_offset  = 0;
 size_t      cmd_cursor_offset   = 0;
 size_t      cmd_tab_counter     = 0;
+int         cmd_x               = 1;
+int         cmd_y               = 1;
 
 int         mouse_x, mouse_y;
 int         mouse_at = -1;
@@ -49,7 +54,7 @@ int         uniforms_starts_at = 0;
 mmask_t     mouse_old_mask;
 
 void refresh_cursor() {
-    wmove(cmd_win, 1, 1 + cmd_prompt.size() + 2 + cmd.size() - cmd_cursor_offset);
+    wmove(cmd_win, cmd_y, cmd_x + cmd_prompt.size() + 2 + cmd.size() - cmd_cursor_offset);
     wrefresh(cmd_win);
 }
 
@@ -124,20 +129,21 @@ void refresh_out_win() {
 void refresh_cmd_win() {
     werase(cmd_win);
     box(cmd_win, 0, 0);
+    // wborder(cmd_win, ' ', ' ', ' ', '-', ' ', ' ', '-', '-');
 
     if (cmd_prompt.size() > 0) {
         if (have_colors) wattron(cmd_win, COLOR_PAIR(5));
-        mvwprintw(cmd_win, 1, 1, "%s", cmd_prompt.c_str() );
+        mvwprintw(cmd_win, cmd_y, cmd_x, "%s", cmd_prompt.c_str() );
         if (have_colors)wattroff(cmd_win, COLOR_PAIR(5));
     }
 
     if (cmd_suggested.size()) {
         if (have_colors) wattron(cmd_win, COLOR_PAIR(5));
-        mvwprintw(cmd_win, 1, 1 + cmd_prompt.size() + 2, "%s", cmd_suggested.c_str() );
+        mvwprintw(cmd_win, cmd_y, cmd_x + cmd_prompt.size() + 2, "%s", cmd_suggested.c_str() );
         if (have_colors) wattroff(cmd_win, COLOR_PAIR(5));
     }
 
-    mvwprintw(cmd_win, 1, 1 + cmd_prompt.size(), "> %s", cmd.c_str() );
+    mvwprintw(cmd_win, cmd_y, cmd_x + cmd_prompt.size(), "> %s", cmd.c_str() );
 
     refresh_cursor();
 };
@@ -148,51 +154,50 @@ void refresh_stt_win() {
 
     werase(stt_win);
 
-    size_t x = 1;
-    size_t y = 1;
+    size_t y = stt_y;
 
     if (have_colors) wattron(stt_win, COLOR_PAIR(4));
-    box(stt_win, 0, 0);
+    wborder(stt_win, '|', ' ', ' ', ' ', '+', '+', '+', '+');
+    // box(stt_win, 0, 0);
     // Print Native Uniforms (they carry functions) that are present on the shader
     for (UniformFunctionsList::iterator it= uniforms->functions.begin(); it != uniforms->functions.end(); ++it)
         if (it->second.present && it->second.print)
-            mvwprintw(stt_win, y++, x, "%23s  %s", it->first.c_str(), it->second.print().c_str() );
+            mvwprintw(stt_win, y++, stt_x, "%23s  %s", it->first.c_str(), it->second.print().c_str() );
 
     for (TextureList::iterator it = uniforms->textures.begin(); it != uniforms->textures.end(); ++it)
-        mvwprintw(stt_win, y++, x, "%23s  %.1f,%.1f", (it->first + "Resolution").c_str(), (float)it->second->getWidth(), (float)it->second->getHeight());
+        mvwprintw(stt_win, y++, stt_x, "%23s  %.1f,%.1f", (it->first + "Resolution").c_str(), (float)it->second->getWidth(), (float)it->second->getHeight());
 
     for (StreamsList::iterator it = uniforms->streams.begin(); it != uniforms->streams.end(); ++it) {
-        mvwprintw(stt_win, y++, x, "%23s  %.3f", (it->first+"CurrentFrame").c_str(), it->second->getCurrentFrame() );
-        mvwprintw(stt_win, y++, x, "%23s  %.3f", (it->first+"TotalFrames").c_str(), it->second->getTotalFrames() );
-        mvwprintw(stt_win, y++, x, "%23s  %.3f", (it->first+"Time").c_str(), it->second->getTime() );
-        mvwprintw(stt_win, y++, x, "%23s  %.3f", (it->first+"Duration").c_str(), it->second->getDuration() );
-        mvwprintw(stt_win, y++, x, "%23s  %.3f", (it->first+"Fps").c_str(), it->second->getFps() );
+        mvwprintw(stt_win, y++, stt_x, "%23s  %.3f", (it->first+"CurrentFrame").c_str(), it->second->getCurrentFrame() );
+        mvwprintw(stt_win, y++, stt_x, "%23s  %.3f", (it->first+"TotalFrames").c_str(), it->second->getTotalFrames() );
+        mvwprintw(stt_win, y++, stt_x, "%23s  %.3f", (it->first+"Time").c_str(), it->second->getTime() );
+        mvwprintw(stt_win, y++, stt_x, "%23s  %.3f", (it->first+"Duration").c_str(), it->second->getDuration() );
+        mvwprintw(stt_win, y++, stt_x, "%23s  %.3f", (it->first+"Fps").c_str(), it->second->getFps() );
     }
     if (have_colors) wattroff(stt_win, COLOR_PAIR(4));
 
     if (have_colors) wattron(stt_win, COLOR_PAIR(2));
     uniforms_starts_at = y;
     int i = 0;
-    int values_col = 26;
     for (UniformDataList::iterator it= uniforms->data.begin(); it != uniforms->data.end(); ++it) {
         if (it->second.size > 4)
             continue;
 
-        mvwprintw(stt_win, y, x, "%23s", it->first.c_str());
-        int cell_width = (stt_win_width - values_col) / it->second.size;
+        mvwprintw(stt_win, y, stt_x, "%23s", it->first.c_str());
+        int cell_width = stt_x + (stt_width - stt_values_col) / it->second.size;
 
         if (i == mouse_at) {
             mouse_at_key = it->first.c_str();
             mouse_at_index = 0;
             
-            if (mouse_x > values_col + cell_width)
-                mouse_at_index = (mouse_x - values_col) / cell_width;
+            if (mouse_x > stt_values_col + cell_width)
+                mouse_at_index = (mouse_x - stt_values_col) / cell_width;
         }
 
         for (size_t j = 0 ; j < it->second.size && j < 4; j++) {
             if (i == mouse_at && j == mouse_at_index)
                 if (have_colors) wattron(stt_win, COLOR_PAIR(3));
-            mvwprintw(stt_win, y, values_col + cell_width * j, "%.3f",it->second.value[j]);
+            mvwprintw(stt_win, y, stt_values_col + cell_width * j, "%.3f",it->second.value[j]);
             if (have_colors) wattroff(stt_win, COLOR_PAIR(3));
         }
         y++;
@@ -202,8 +207,8 @@ void refresh_stt_win() {
 
     // if (y > stt_win_height) {
     //     stt_win_height = y + 1;
-    //     wresize(stt_win, stt_win_height, stt_win_width );
-    //     mvwin(stt_win, 0, COLS - stt_win_width );
+    //     wresize(stt_win, stt_win_height, stt_width );
+    //     mvwin(stt_win, 0, COLS - stt_width );
     // }
 
     wrefresh(stt_win);
@@ -256,12 +261,12 @@ void console_sigwinch_handler(int signal) {
     refresh();
 
     if (stt_visible) {
-        wresize(cmd_win, 3, COLS - stt_win_width );
-        wresize(out_win, LINES - 3, COLS - stt_win_width);
+        wresize(cmd_win, 3, COLS - stt_width );
+        wresize(out_win, LINES - 3, COLS - stt_width);
 
-        // wresize(stt_win, stt_win_height, stt_win_width );
-        wresize(stt_win, LINES, stt_win_width );
-        mvwin(stt_win, 0, COLS - stt_win_width );
+        // wresize(stt_win, stt_win_height, stt_width );
+        wresize(stt_win, LINES, stt_width );
+        mvwin(stt_win, 0, COLS - stt_width );
 
     }
     else {
@@ -303,7 +308,7 @@ void console_init(int _osc_port) {
     // Create windows
     cmd_win = newwin(3, COLS, 0, 0);
     out_win = newwin(LINES-3, COLS, 3, 0);
-    stt_win = newwin(LINES, stt_win_width, 0, COLS - stt_win_width);
+    stt_win = newwin(LINES, stt_width, 0, COLS - stt_width);
 
     raw();
     // crmode();
@@ -594,6 +599,7 @@ void console_draw_pct(float _pct) {
 
     werase(cmd_win);
     box(cmd_win,0, 0);
+    // wborder(cmd_win, '|', '|', '-', '-', '+', '+', '+', '+');
 
     size_t l = (cols-4) * _pct;
     wattron(cmd_win, COLOR_PAIR(3));
