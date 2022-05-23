@@ -866,10 +866,15 @@ void commandsInit() {
     },
     "viewport", "return the viewport size", false));
 
-    commands.push_back(Command("mouse", [&](const std::string& _line){ 
+    commands.push_back(Command("mouse", [&](const std::string& _line) { 
+        std::vector<std::string> values = ada::split(_line,',');
         if (_line == "mouse") {
             glm::vec2 pos = ada::getMousePosition();
             std::cout << pos.x << "," << pos.y << std::endl;
+            return true;
+        }
+        else if (values[1] == "capture") {
+            captureMouse(true);
             return true;
         }
         return false;

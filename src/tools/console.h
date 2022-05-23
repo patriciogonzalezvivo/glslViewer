@@ -17,3 +17,5 @@ void console_uniforms( bool _show );
 void console_uniforms_refresh();
 
 void console_end();
+
+void captureMouse(bool _enable);

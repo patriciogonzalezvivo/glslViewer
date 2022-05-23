@@ -51,29 +51,11 @@ int         mouse_at = -1;
 std::string mouse_at_key = "";
 size_t      mouse_at_index = 0;
 int         uniforms_starts_at = 0;
-mmask_t     mouse_old_mask;
+bool        mouse_capture_enabled = false;
 
 void refresh_cursor() {
     wmove(cmd_win, cmd_y, cmd_x + cmd_prompt.size() + 2 + cmd.size() - cmd_cursor_offset);
     wrefresh(cmd_win);
-}
-
-void mouse(bool _enable) {
-    // if (_enable) {
-    //     // mouseinterval(0);
-    //     mousemask(BUTTON1_PRESSED | BUTTON1_RELEASED | REPORT_MOUSE_POSITION, &mouse_old_mask);
-    //     printf("\033[?1003l\n"); // not send mouse events
-    //     // printf("\033[?1003h\n"); // send mouse events
-
-    //     MEVENT mouse_event;
-    //     mouse_event.x = 0;
-    //     mouse_event.y = 0;
-    //     mouse_event.bstate = REPORT_MOUSE_POSITION;
-    //     ungetmouse(&mouse_event);
-    // }
-    // else {
-    //     // printf("\033[?1003l\n"); // not send mouse events
-    // }
 }
 
 void print_out(const std::string& _str, int _x, int _y) {
@@ -317,8 +299,8 @@ void console_init(int _osc_port) {
     // scrollok(out_win, true);
     // idlok(out_win, false);
 
-     // mouse capture
-    mouse(true);
+    //  // mouse capture
+    // captureMouse(true);
 
     // Capture Keys
     keypad(stdscr, true);
@@ -532,32 +514,34 @@ bool console_getline(std::string& _cmd, CommandList& _commands, Sandbox& _sandbo
     else if ( ch == KEY_MESSAGE)
         std::cout << "KEY_MESSAGE" << std::endl;
     else if ( ch == KEY_MOUSE) {
-        // MEVENT m;
-        // if (getmouse(&m) == OK) {
-        //     if (stt_visible) {
-        //         if ( wenclose(stt_win, m.y, m.x) && (m.bstate & BUTTON1_PRESSED) ) {
-        //             if (wmouse_trafo(stt_win, &m.y, &m.x, false) ) {
-        //                 mouse_x = m.x;
-        //                 mouse_y = m.y;
-        //                 if (mouse_y >= uniforms_starts_at)
-        //                     mouse_at = mouse_y - uniforms_starts_at;
-        //             }
-        //         }
-        //         else if ( m.bstate & BUTTON1_RELEASED) {
-        //             if (mouse_at >= 0) {
-        //                 if (wmouse_trafo(stt_win, &m.y, &m.x, false) ) {
-        //                     float delta = (m.x - mouse_x) * 0.01 + (m.y - mouse_y) * 0.1;
-        //                     if (uniforms->data[mouse_at_key].size < 5) {
-        //                         uniforms->data[mouse_at_key].value[mouse_at_index] += delta;
-        //                         uniforms->data[mouse_at_key].change = true;
-        //                         uniforms->flagChange();
-        //                     }
-        //                 }
-        //             }
-        //             mouse_at = -1;
-        //         }
-        //     }
-        // }
+        if (mouse_capture_enabled) {
+            MEVENT m;
+            if (getmouse(&m) == OK) {
+                if (stt_visible) {
+                    if ( wenclose(stt_win, m.y, m.x) && (m.bstate & BUTTON1_PRESSED) ) {
+                        if (wmouse_trafo(stt_win, &m.y, &m.x, false) ) {
+                            mouse_x = m.x;
+                            mouse_y = m.y;
+                            if (mouse_y >= uniforms_starts_at)
+                                mouse_at = mouse_y - uniforms_starts_at;
+                        }
+                    }
+                    else if ( m.bstate & BUTTON1_RELEASED) {
+                        if (mouse_at >= 0) {
+                            if (wmouse_trafo(stt_win, &m.y, &m.x, false) ) {
+                                float delta = (m.x - mouse_x) * 0.01 + (m.y - mouse_y) * 0.1;
+                                if (uniforms->data[mouse_at_key].size < 5) {
+                                    uniforms->data[mouse_at_key].value[mouse_at_index] += delta;
+                                    uniforms->data[mouse_at_key].change = true;
+                                    uniforms->flagChange();
+                                }
+                            }
+                        }
+                        mouse_at = -1;
+                    }
+                }
+            }
+        }
     }
     else if ( ch == KEY_MOVE)
         std::cout << "KEY_MOVE" << std::endl;
@@ -648,7 +632,28 @@ void console_uniforms_refresh() {
 
 void console_end() {
     #ifdef SUPPORT_NCURSES
-    mouse(false);
+    captureMouse(false);
     endwin();
+    #endif
+}
+
+void captureMouse(bool _enable) {
+    #ifdef SUPPORT_NCURSES
+    mouse_capture_enabled = _enable;
+    if (_enable) {
+        mouseinterval(0);
+        mousemask(BUTTON1_PRESSED | BUTTON1_RELEASED | REPORT_MOUSE_POSITION, nullptr);
+        // printf("\033[?1003h\n"); // send mouse events
+
+        // MEVENT mouse_event;
+        // mouse_event.x = 0;
+        // mouse_event.y = 0;
+        // mouse_event.bstate = REPORT_MOUSE_POSITION;
+        // ungetmouse(&mouse_event);
+
+    }
+    else {
+        // printf("\033[?1003l\n"); // not send mouse events
+    }
     #endif
 }
