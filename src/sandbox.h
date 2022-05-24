@@ -14,6 +14,14 @@ enum ShaderType {
     VERTEX = 1
 };
 
+enum PlotType {
+    PLOT_OFF = 0,
+    PLOT_LUMA, PLOT_RED, PLOT_GREEN, PLOT_BLUE, PLOT_RGB,
+    PLOT_FPS, PLOT_MS
+};
+
+const std::string plot_options[] = { "off", "luma", "red", "green", "blue", "rgb", "fps", "ms" };
+
 class Sandbox {
 public:
     Sandbox();
@@ -126,6 +134,7 @@ private:
     ada::Shader         m_plot_shader;
     ada::Texture*       m_plot_texture;
     glm::vec4           m_plot_values[256];
+    PlotType            m_plot;
 
     // Recording
     ada::Fbo            m_record_fbo;
@@ -146,7 +155,6 @@ private:
     bool                m_error_screen;
 
     //  Debug
-    size_t              m_plot;
     bool                m_showTextures;
     bool                m_showPasses;
     

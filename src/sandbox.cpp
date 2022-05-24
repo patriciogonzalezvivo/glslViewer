@@ -24,12 +24,6 @@
 
 #define TRACK_BEGIN(A) if (uniforms.tracker.isRunning()) uniforms.tracker.begin(A); 
 #define TRACK_END(A) if (uniforms.tracker.isRunning()) uniforms.tracker.end(A); 
-#define PLOT_OFF 0
-#define PLOT_LUMA 1
-#define PLOT_RGB 1
-#define PLOT_FPS 2
-#define PLOT_MS 3
-const std::string plot_options[] = { "off", "rgb", "luma", "fps", "ms" };
 
 // ------------------------------------------------------------------------- CONTRUCTOR
 Sandbox::Sandbox(): 
@@ -47,7 +41,7 @@ Sandbox::Sandbox():
     // Geometry helpers
     m_billboard_vbo(nullptr), m_cross_vbo(nullptr),
     // Plot helpers
-    m_plot_texture(nullptr), 
+    m_plot_texture(nullptr), m_plot(PLOT_OFF),
 
     // Record
     #ifdef SUPPORT_MULTITHREAD_RECORDING 
@@ -61,7 +55,7 @@ Sandbox::Sandbox():
     m_view2d(1.0), m_time_offset(0.0), m_lat(180.0), m_lon(0.0), m_frame(0), m_change(true), m_initialized(false), m_error_screen(true),
 
     // Debug
-    m_plot(0), m_showTextures(false), m_showPasses(false)
+    m_showTextures(false), m_showPasses(false)
 
 {
 
@@ -184,11 +178,11 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
                     }
                 }
                 if (values[1] == "on") {
-                    m_plot = 3;
+                    m_plot = PLOT_FPS;
                     m_plot_shader.addDefine("PLOT_VALUE", "color.rgb += digits(uv * 0.1 + vec2(0.105, -0.01), value.r * 60.0, 1.0);");
                 }
                 else {
-                    m_plot = 0;
+                    m_plot = PLOT_OFF;
                     m_plot_shader.delDefine("PLOT_VALUE");
                 }
                 return true;
@@ -314,27 +308,41 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
                 //
                 m_plot_shader.delDefine("PLOT_VALUE");
                 if (values[1] == "off") 
-                    m_plot = 0;
-                else if (values[1] == "rgb") 
-                    m_plot = PLOT_RGB;
+                    m_plot = PLOT_OFF;
                 else if (values[1] == "luma") {
                     m_plot = PLOT_LUMA;
-                     m_plot_shader.addDefine("PLOT_VALUE", "color.rgb = vec3(step(st.y, data.a));");
+                     m_plot_shader.addDefine("PLOT_VALUE", "color.rgb = vec3(step(st.y, data.a)); color += stroke(fract(st.x * 5.0), 0.5, 0.025) * 0.1;");
+                }
+                else if (values[1] == "red") {
+                    m_plot = PLOT_RED;
+                     m_plot_shader.addDefine("PLOT_VALUE", "color.rgb = vec3(step(st.y, data.r), 0.0, 0.0);  color += stroke(fract(st.x * 5.0), 0.5, 0.025) * 0.1;");
+                }
+                else if (values[1] == "green") {
+                    m_plot = PLOT_GREEN;
+                    m_plot_shader.addDefine("PLOT_VALUE", "color.rgb = vec3(0.0, step(st.y, data.g), 0.0);  color += stroke(fract(st.x * 5.0), 0.5, 0.025) * 0.1;");
+                }
+                else if (values[1] == "blue") {
+                    m_plot = PLOT_BLUE;
+                    m_plot_shader.addDefine("PLOT_VALUE", "color.rgb = vec3(0.0, 0.0, step(st.y, data.b));  color += stroke(fract(st.x * 5.0), 0.5, 0.025) * 0.1;");
+                }
+                else if (values[1] == "rgb") {
+                    m_plot = PLOT_RGB;
+                    m_plot_shader.addDefine("PLOT_VALUE", "color += stroke(fract(st.x * 5.0), 0.5, 0.025) * 0.1;");
                 }
                 else if (values[1] == "fps") {
                     m_plot = PLOT_FPS;
-                    m_plot_shader.addDefine("PLOT_VALUE", "color.rgb += digits(uv * 0.1 + vec2(0.0, -0.01), value.r * 60.0, 1.0);");
+                    m_plot_shader.addDefine("PLOT_VALUE", "color.rgb += digits(uv * 0.1 + vec2(0.0, -0.01), value.r * 60.0, 1.0); color += stroke(fract(st.y * 3.0), 0.5, 0.05) * 0.1;");
                 }
                 else if (values[1] == "ms") {
                     m_plot = PLOT_MS;
-                    m_plot_shader.addDefine("PLOT_VALUE", "color.rgb += digits(uv * 0.1 + vec2(0.105, -0.01), value.r * 60.0, 1.0);");
+                    m_plot_shader.addDefine("PLOT_VALUE", "color.rgb += digits(uv * 0.1 + vec2(0.105, -0.01), value.r * 60.0, 1.0); color += stroke(fract(st.y * 3.0), 0.5, 0.05) * 0.1;");
                 }
                 return true;
             }
         }
         return false;
     },
-    "plot[,off|luma|rgb|fps|ms]", "show/hide a histogram or FPS plot on screen", false));
+    "plot[,off|luma|red|green|blue|rgb|fps|ms]", "show/hide a histogram or FPS plot on screen", false));
 
     _commands.push_back(Command("defines", [&](const std::string& _line){ 
         if (_line == "defines") {
@@ -1045,7 +1053,7 @@ bool Sandbox::reloadShaders( WatchFileList &_files ) {
     else 
         m_postprocessing = false;
 
-    if (m_postprocessing || m_plot == PLOT_RGB || m_plot == PLOT_LUMA)
+    if (m_postprocessing || m_plot == PLOT_RGB || m_plot == PLOT_RED || m_plot == PLOT_GREEN || m_plot == PLOT_BLUE || m_plot == PLOT_LUMA)
         _updateSceneBuffer(ada::getWindowWidth(), ada::getWindowHeight());
 
     console_refresh();
@@ -1306,7 +1314,7 @@ void Sandbox::render() {
         if (!m_record_fbo.isAllocated())
             m_record_fbo.allocate(ada::getWindowWidth(), ada::getWindowHeight(), ada::COLOR_TEXTURE_DEPTH_BUFFER);
 
-    if (m_postprocessing || m_plot == PLOT_LUMA || m_plot == PLOT_RGB) {
+    if (m_postprocessing || m_plot == PLOT_LUMA || m_plot == PLOT_RGB || m_plot == PLOT_RED || m_plot == PLOT_GREEN || m_plot == PLOT_BLUE ) {
         _updateSceneBuffer(ada::getWindowWidth(), ada::getWindowHeight());
         m_scene_fbo.bind();
     }
@@ -1408,7 +1416,7 @@ void Sandbox::render() {
 
         TRACK_END("render:postprocessing")
     }
-    else if (m_plot == PLOT_RGB || m_plot == PLOT_LUMA) {
+    else if (m_plot == PLOT_RGB || m_plot == PLOT_RED || m_plot == PLOT_GREEN || m_plot == PLOT_BLUE || m_plot == PLOT_LUMA) {
         m_scene_fbo.unbind();
 
         if (screenshotFile != "" || isRecording())
@@ -1627,8 +1635,9 @@ void Sandbox::renderUI() {
         glDisable(GL_DEPTH_TEST);
         //TRACK_BEGIN("plot_data")
 
-        float w = 100;
-        float h = 30;
+        float p = ada::getPixelDensity();
+        float w = 100 * p;
+        float h = 30 * p;
         float x = (float)(ada::getWindowWidth()) * 0.5;
         float y = h + 10;
 
@@ -1863,7 +1872,7 @@ void Sandbox::onViewportResize(int _newWidth, int _newHeight) {
         }
     }
 
-    if (m_postprocessing || m_plot == PLOT_LUMA || m_plot == PLOT_RGB)
+    if (m_postprocessing || m_plot == PLOT_LUMA || m_plot == PLOT_RGB || m_plot == PLOT_RED || m_plot == PLOT_GREEN || m_plot == PLOT_BLUE )
         _updateSceneBuffer(_newWidth, _newHeight);
 
     if (screenshotFile != "" || isRecording())
@@ -1938,7 +1947,7 @@ void Sandbox::onPlot() {
     if ( !ada::isGL() )
         return;
 
-    if ( (m_plot == PLOT_LUMA || m_plot == PLOT_RGB) && haveChange() ) {
+    if ( (m_plot == PLOT_LUMA || m_plot == PLOT_RGB || m_plot == PLOT_RED || m_plot == PLOT_GREEN || m_plot == PLOT_BLUE ) && haveChange() ) {
 
         // TRACK_BEGIN("plot::histogram")
 
