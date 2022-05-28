@@ -1308,15 +1308,16 @@ void commandsInit() {
             if (values.size() > 2)
                 from = ada::toFloat(values[2]);
 
-            if (values.size() > 3) {
+            if (values.size() > 3)
                 to = ada::toFloat(values[3]);
-            }
-            else {
+            else
                 to = ada::toFloat(values[2]);
-            }
 
             if (from >= to)
                 from = 0.0;
+
+            if (from == 0.0)
+                sandbox.uniforms.setStreamsRestart();
 
             settings.trg_fps = 24.0f;
             if (values.size() > 4)

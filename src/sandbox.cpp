@@ -303,9 +303,6 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
             std::vector<std::string> values = ada::split(_line,',');
             if (values[0] == "plot" && values.size() == 2) {
 
-                // TODO:
-                //  - use plot_options to sort this out
-                //
                 m_plot_shader.delDefine("PLOT_VALUE");
                 if (values[1] == "off") 
                     m_plot = PLOT_OFF;
