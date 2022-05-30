@@ -5,9 +5,9 @@
 #include <string>
 
 #include "../tools/text.h"
+#include "ada/string.h"
 
-#include "ada/tools/geom.h"
-#include "ada/tools/text.h"
+#include "ada/geom/ops.h"
 
 #define TINYOBJLOADER_IMPLEMENTATION
 #include "tinyobjloader/tiny_obj_loader.h"
@@ -28,7 +28,7 @@ void addModel (std::vector<ada::Model*>& _models, const std::string& _name, ada:
         }
     }
 
-    if ( !_mesh.hasNormals() )
+    if ( !_mesh.haveNormals() )
         if ( _mesh.computeNormals() )
             if ( _verbose )
                 std::cout << "    . Compute normals" << std::endl;
@@ -405,7 +405,7 @@ bool loadOBJ(Uniforms& _uniforms, WatchFileList& _files, ada::Materials& _materi
         }
 
         ada::Mesh mesh;
-        mesh.setDrawMode(GL_TRIANGLES);
+        mesh.setDrawMode(ada::TRIANGLES);
 
         ada::Material mat;
         std::map<int, tinyobj::index_t> unique_indices;

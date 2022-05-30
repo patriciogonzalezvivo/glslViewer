@@ -1,5 +1,5 @@
 #include "textureAudio.h"
-#include "ada/tools/text.h"
+#include "ada/string.h"
 
 #include <iostream>
 #include <mutex>

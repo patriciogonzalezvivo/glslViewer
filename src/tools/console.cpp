@@ -11,7 +11,7 @@
 #include <vector>
 
 #include <ncurses.h>
-#include "ada/tools/text.h"
+#include "ada/string.h"
 
 bool have_colors = false;
 

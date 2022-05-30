@@ -5,8 +5,8 @@
 #include <fstream>
 #include <string>
 
-#include "ada/tools/geom.h"
-#include "ada/tools/text.h"
+#include "ada/geom/ops.h"
+#include "ada/string.h"
 
 #if defined(SUPPORT_PLY_BINARY)
 
@@ -481,7 +481,7 @@ bool loadPLY(Uniforms& _uniforms, WatchFileList& _files, ada::Materials& _materi
             mesh.addIndices( indices );
         }
         else {
-            mesh.setDrawMode( GL_POINTS );
+            mesh.setDrawMode( ada::POINTS );
         }
         
         if ( normals.size() > 0 ) {

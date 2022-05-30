@@ -5,7 +5,7 @@
 #include <string>
 #include <utility>
 
-#include "ada/tools/pixels.h"
+#include "ada/pixel.h"
 
 /** Just a small helper that captures all the relevant data to save an image **/
 class Job {

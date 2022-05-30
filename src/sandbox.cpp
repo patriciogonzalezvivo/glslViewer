@@ -12,11 +12,11 @@
 #include "tools/console.h"
 
 #include "ada/window.h"
-#include "ada/gl/draw.h"
-#include "ada/gl/meshes.h"
-#include "ada/tools/text.h"
-#include "ada/tools/pixels.h"
-#include "ada/tools/holoplay.h"
+#include "ada/draw.h"
+#include "ada/geom/meshes.h"
+#include "ada/string.h"
+#include "ada/pixel.h"
+#include "ada/devices/holoPlay.h"
 #include "ada/shaders/defaultShaders.h"
 
 #include "glm/gtx/matrix_transform_2d.hpp"
@@ -775,8 +775,6 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
 
     // LOAD SHACER 
     // -----------------------------------------------
-
-
     if (frag_index != -1) {
         // If there is a Fragment shader load it
         m_frag_source = "";
@@ -811,11 +809,12 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     }
 
     // Init Scene elements
-    m_billboard_vbo = ada::rectMesh(0.0,0.0,1.0,1.0).getVbo();
+    m_billboard_vbo = new ada::Vbo( ada::rectMesh(0.0,0.0,1.0,1.0) );
+    // m_billboard_vbo = new ada::Vbo();
+    // m_billboard_vbo->load( ada::rectMesh(0.0,0.0,1.0,1.0) );
 
     // LOAD GEOMETRY
     // -----------------------------------------------
-
     if (geom_index == -1) {
         m_canvas_shader.addDefine("MODEL_VERTEX_TEXCOORD");
         uniforms.getCamera().orbit(m_lat, m_lon, 2.0);
@@ -989,7 +988,7 @@ bool Sandbox::reloadShaders( WatchFileList &_files ) {
 
     // UPDATE shaders dependencies
     {
-        ada::List new_dependencies = ada::merge(m_frag_dependencies, m_vert_dependencies);
+        ada::StringList new_dependencies = ada::merge(m_frag_dependencies, m_vert_dependencies);
 
         // remove old dependencies
         for (int i = _files.size() - 1; i >= 0; i--)
@@ -1658,14 +1657,15 @@ void Sandbox::renderUI() {
         // TRACK_BEGIN("cursor")
 
         if (m_cross_vbo == nullptr) 
-            m_cross_vbo = ada::crossMesh(glm::vec3(0.0, 0.0, 0.0), 10.).getVbo();
+            m_cross_vbo = new ada::Vbo( ada::crossMesh( glm::vec3(0.0f, 0.0f, 0.0f), 10.0f) );
 
-        ada::camera(false);
+        ada::resetCamera();
+
         ada::strokeWeight(2.0f);
         ada::resetMatrix();
         ada::translate(ada::getMouseX(), ada::getMouseY());
         ada::stroke(glm::vec4(1.0));
-        ada::line(m_cross_vbo);
+        ada::model( m_cross_vbo );
 
         // TRACK_END("cursor")
     }

@@ -7,12 +7,12 @@
 
 #include <sys/stat.h>
 
+#include "ada/fs.h"
+#include "ada/draw.h"
 #include "ada/window.h"
-#include "ada/gl/draw.h"
-#include "ada/gl/meshes.h"
-#include "ada/tools/fs.h"
-#include "ada/tools/geom.h"
-#include "ada/tools/text.h"
+#include "ada/string.h"
+#include "ada/geom/ops.h"
+#include "ada/geom/meshes.h"
 #include "ada/shaders/defaultShaders.h"
 
 #include "io/ply.h"
@@ -475,16 +475,14 @@ bool Scene::loadGeometry(Uniforms& _uniforms, WatchFileList& _files, int _index,
         loadSTL(_files, m_materials, m_models, _index, _verbose);
 
     // Calculate the total area
-    glm::vec3 min_v;
-    glm::vec3 max_v;
-    for (unsigned int i = 0; i < m_models.size(); i++) {
-        ada::expandBoundingBox( m_models[i]->getMinBoundingBox(), min_v, max_v);
-        ada::expandBoundingBox( m_models[i]->getMaxBoundingBox(), min_v, max_v);
-    }
-    m_area = glm::max(0.5f, glm::max(glm::length(min_v), glm::length(max_v)));
-    glm::vec3 centroid = (min_v + max_v) * 0.5f;
+    ada::BoundingBox bbox;
+    for (unsigned int i = 0; i < m_models.size(); i++)
+        bbox.expand( m_models[i]->getBoundingBox() );
+
+    m_area = glm::max(0.5f, glm::max(glm::length(bbox.min), glm::length(bbox.max)));
+    glm::vec3 centroid = (bbox.min + bbox.max) * 0.5f;
     m_origin.setPosition( -centroid );
-    m_floor_height = min_v.y;
+    m_floor_height = bbox.min.y;
 
     // Setup light
     if (_uniforms.lights.size() == 0)
@@ -541,12 +539,15 @@ void Scene::render(Uniforms& _uniforms) {
 
     ada::blendMode(m_blend);
 
-    if (_uniforms.getCamera().bChange || m_origin.bChange)
-        ada::setCameraMatrix( _uniforms.getCamera().getProjectionViewMatrix() * m_origin.getTransformMatrix() );
-    ada::resetMatrix();
+    // if (_uniforms.getCamera().bChange || m_origin.bChange) 
+    {
+        ada::setCamera( _uniforms.getCamera() );
+        ada::applyMatrix( m_origin.getTransformMatrix() );
+    }
+    // ada::resetMatrix();
 
     TRACK_BEGIN("render:scene:floor")
-    renderFloor(_uniforms, ada::getCameraMatrix() );
+    renderFloor(_uniforms, ada::getProjectionViewWorldMatrix() );
     TRACK_END("render:scene:floor")
 
     ada::cullingMode(m_culling);
@@ -564,7 +565,7 @@ void Scene::render(Uniforms& _uniforms) {
             _uniforms.feedTo( m_models[i]->getShader() );
 
             // Pass special uniforms
-            m_models[i]->getShader()->setUniform( "u_modelViewProjectionMatrix", ada::getCameraMatrix() );
+            m_models[i]->getShader()->setUniform( "u_modelViewProjectionMatrix", ada::getProjectionViewWorldMatrix() );
             m_models[i]->render();
 
             TRACK_END("render:scene:" + m_models[i]->getName() )
@@ -574,12 +575,8 @@ void Scene::render(Uniforms& _uniforms) {
     if (m_depth_test)
         glDisable(GL_DEPTH_TEST);
 
-    if (m_blend != 0) {
-        // glEnable(GL_BLEND);
-        // glBlendEquation(GL_FUNC_ADD);
-        // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    if (m_blend != 0)
         ada::blendMode(ada::BLEND_ALPHA);
-    }
 
     if (m_culling != 0)
         glDisable(GL_CULL_FACE);
@@ -649,7 +646,7 @@ void Scene::renderBackground(Uniforms& _uniforms) {
         _uniforms.feedTo( m_background_shader );
 
         if (!m_background_vbo)
-            m_background_vbo = ada::rectMesh(0.0,0.0,1.0,1.0).getVbo();
+            m_background_vbo = new ada::Vbo( ada::rectMesh(0.0,0.0,1.0,1.0) );
         m_background_vbo->render( &m_background_shader );
 
         TRACK_END("render:scene:background")
@@ -658,7 +655,7 @@ void Scene::renderBackground(Uniforms& _uniforms) {
     else if (_uniforms.cubemap && showCubebox) {
 
         if (!m_cubemap_vbo) {
-            m_cubemap_vbo = ada::cubeMesh(1.0f).getVbo();
+            m_cubemap_vbo = new ada::Vbo( ada::cubeMesh(1.0f) );
             m_cubemap_shader.load(ada::getDefaultSrc(ada::FRAG_CUBEMAP), ada::getDefaultSrc(ada::VERT_CUBEMAP), false);
         }
 
@@ -682,7 +679,7 @@ void Scene::renderFloor(Uniforms& _uniforms, const glm::mat4& _mvp) {
             if (m_floor_vbo)
                 delete m_floor_vbo;
 
-            m_floor_vbo = ada::floorMesh(m_area * 5.0, m_floor_subd_target, m_floor_height).getVbo();
+            m_floor_vbo = new ada::Vbo( ada::floorMesh(m_area * 5.0, m_floor_subd_target, m_floor_height) );
             m_floor_subd = m_floor_subd_target;
 
             if (!m_floor_shader.isLoaded()) 
@@ -719,35 +716,38 @@ void Scene::renderFloor(Uniforms& _uniforms, const glm::mat4& _mvp) {
 
 void Scene::renderDebug(Uniforms& _uniforms) {
     glEnable(GL_DEPTH_TEST);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-    ada::camera(true);
+    ada::blendMode(ada::BLEND_ALPHA);
+    // glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+    // glEnable(GL_DEPTH);
+
 
     // Draw Bounding boxes
     if (showBBoxes) {
         ada::strokeWeight(3.0f);
-        ada::stroke(glm::vec3(1.0f, 0.0f, 0.0f));
+        ada::stroke( glm::vec3(1.0f, 0.0f, 0.0f) );
+        ada::shader( ada::getShader() );
         for (unsigned int i = 0; i < m_models.size(); i++)
-            ada::line( m_models[i]->getVboBbox() );
+            ada::model( m_models[i]->getVboBbox() );
     }
     
     // Axis
     if (showAxis) {
         if (m_axis_vbo == nullptr)
-            m_axis_vbo = ada::axisMesh(_uniforms.getCamera().getFarClip(), m_floor_height).getVbo();
+            m_axis_vbo = new ada::Vbo( ada::axisMesh(_uniforms.getCamera().getFarClip(), m_floor_height) );
 
         ada::strokeWeight(2.0f);
         ada::stroke( glm::vec4(0.75f) );
-        ada::line( m_axis_vbo );
+        ada::model( m_axis_vbo );
     }
     
     // Grid
     if (showGrid) {
         if (m_grid_vbo == nullptr)
-            m_grid_vbo = ada::gridMesh(_uniforms.getCamera().getFarClip(), _uniforms.getCamera().getFarClip() / 20.0, m_floor_height).getVbo();
+            m_grid_vbo = new ada::Vbo( ada::gridMesh(_uniforms.getCamera().getFarClip(), _uniforms.getCamera().getFarClip() / 20.0, m_floor_height) );
 
         ada::strokeWeight(1.0f);
         ada::stroke( glm::vec4(0.5f) );
-        ada::line( m_grid_vbo );
+        ada::model( m_grid_vbo );
     }
 
 
@@ -757,12 +757,12 @@ void Scene::renderDebug(Uniforms& _uniforms) {
             m_lightUI_shader.load(ada::getDefaultSrc(ada::FRAG_LIGHT), ada::getDefaultSrc(ada::VERT_LIGHT), false);
 
         if (m_lightUI_vbo == nullptr)
-            m_lightUI_vbo = ada::rectMesh(0.0,0.0,0.0,0.0).getVbo();
+            m_lightUI_vbo = new ada::Vbo( ada::rectMesh(0.0,0.0,0.0,0.0) );
 
         m_lightUI_shader.use();
         m_lightUI_shader.setUniform("u_scale", 24.0f, 24.0f);
         m_lightUI_shader.setUniform("u_viewMatrix", _uniforms.getCamera().getViewMatrix());
-        m_lightUI_shader.setUniform("u_modelViewProjectionMatrix", ada::getCameraMatrix() );
+        m_lightUI_shader.setUniform("u_modelViewProjectionMatrix", ada::getProjectionViewWorldMatrix() );
 
         for (unsigned int i = 0; i < _uniforms.lights.size(); i++) {
             m_lightUI_shader.setUniform("u_translate", _uniforms.lights[i].getPosition());

@@ -19,11 +19,11 @@
 
 #include "ada/window.h"
 #include "ada/gl/gl.h"
-#include "ada/tools/fs.h"
-#include "ada/tools/math.h"
-#include "ada/tools/time.h"
-#include "ada/tools/text.h"
-#include "ada/tools/holoplay.h"
+#include "ada/fs.h"
+#include "ada/math.h"
+#include "ada/time.h"
+#include "ada/string.h"
+#include "ada/devices/holoPlay.h"
 #include "ada/shaders/defaultShaders.h"
 
 #include "sandbox.h"
@@ -739,10 +739,11 @@ void ada::onMouseMove(float _x, float _y) {
         }
     }
 }
-
-void ada::onMouseClick(float _x, float _y, int _button) { }
-void ada::onScroll(float _yoffset) { sandbox.onScroll(_yoffset); }
+void ada::onMousePress(float _x, float _y, int _button) { }
+void ada::onMouseRelease(float _x, float _y, int _button) { }
 void ada::onMouseDrag(float _x, float _y, int _button) { sandbox.onMouseDrag(_x, _y, _button); }
+
+void ada::onScroll(float _yoffset) { sandbox.onScroll(_yoffset); }
 void ada::onViewportResize(int _newWidth, int _newHeight) { sandbox.onViewportResize(_newWidth, _newHeight); }
 
 void commandsRun(const std::string &_cmd) { commandsRun(_cmd, commandsMutex); }

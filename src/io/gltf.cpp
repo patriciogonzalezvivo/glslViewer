@@ -9,10 +9,9 @@
 #include "../types/files.h"
 
 #include "ada/gl/vbo.h"
-#include "ada/tools/fs.h"
-#include "ada/tools/geom.h"
-#include "ada/tools/text.h"
-#include "ada/tools/pixels.h"
+#include "ada/fs.h"
+#include "ada/string.h"
+#include "ada/pixel.h"
 
 #include "stb_image.h"
 #include "stb_image_write.h"
@@ -58,22 +57,21 @@ bool loadModel(tinygltf::Model& _model, const std::string& _filename) {
     return res;
 }
 
-GLenum extractMode(const tinygltf::Primitive& _primitive) {
-    if (_primitive.mode == TINYGLTF_MODE_TRIANGLES) {
-      return GL_TRIANGLES;
-    } else if (_primitive.mode == TINYGLTF_MODE_TRIANGLE_STRIP) {
-      return GL_TRIANGLE_STRIP;
-    } else if (_primitive.mode == TINYGLTF_MODE_TRIANGLE_FAN) {
-      return GL_TRIANGLE_FAN;
-    } else if (_primitive.mode == TINYGLTF_MODE_POINTS) {
-      return GL_POINTS;
-    } else if (_primitive.mode == TINYGLTF_MODE_LINE) {
-      return GL_LINES;
-    } else if (_primitive.mode == TINYGLTF_MODE_LINE_LOOP) {
-      return GL_LINE_LOOP;
-    } else {
-      return 0;
-    }
+ada::DrawMode extractMode(const tinygltf::Primitive& _primitive) {
+    if (_primitive.mode == TINYGLTF_MODE_TRIANGLES)
+      return ada::TRIANGLES;
+    else if (_primitive.mode == TINYGLTF_MODE_TRIANGLE_STRIP)
+      return ada::TRIANGLE_STRIP;
+    else if (_primitive.mode == TINYGLTF_MODE_TRIANGLE_FAN)
+      return ada::TRIANGLE_FAN;
+    else if (_primitive.mode == TINYGLTF_MODE_POINTS)
+      return ada::POINTS;
+    else if (_primitive.mode == TINYGLTF_MODE_LINE)
+      return ada::LINES;
+    else if (_primitive.mode == TINYGLTF_MODE_LINE_LOOP)
+      return ada::LINE_LOOP;
+    
+    return ada::TRIANGLES;
 }
 
 void extractIndices(const tinygltf::Model& _model, const tinygltf::Accessor& _indexAccessor, ada::Mesh& _mesh) {
@@ -352,7 +350,7 @@ void extractMesh(const tinygltf::Model& _model, const tinygltf::Mesh& _mesh, glm
             }
         }
 
-        if ( !mesh.hasNormals() )
+        if ( !mesh.haveNormals() )
             if ( mesh.computeNormals() )
                 if ( _verbose )
                     std::cout << "    . Compute normals" << std::endl;

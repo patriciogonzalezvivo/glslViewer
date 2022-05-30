@@ -1,6 +1,6 @@
 #include "tracker.h"
 
-#include "ada/tools/text.h"
+#include "ada/string.h"
 
 Tracker::Tracker() {
 

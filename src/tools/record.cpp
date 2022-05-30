@@ -8,8 +8,8 @@
 #include <thread>
 #include <chrono>
 
-#include "ada/tools/fs.h"
-#include "ada/tools/text.h"
+#include "ada/fs.h"
+#include "ada/string.h"
 
 #include "lockFreeQueue.h"
 #include "console.h"

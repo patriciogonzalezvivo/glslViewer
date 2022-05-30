@@ -5,8 +5,8 @@
 #include <fstream>
 #include <string>
 
-#include "ada/tools/geom.h"
-#include "ada/tools/text.h"
+#include "ada/geom/ops.h"
+#include "ada/string.h"
 
 
 #ifndef LINE_MAX

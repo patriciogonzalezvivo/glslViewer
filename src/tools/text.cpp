@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <regex>
 #include <cstring>
-#include "ada/tools/text.h"
+#include "ada/string.h"
 
 // Quickly determine if a shader program contains the specified identifier.
 bool findId(const std::string& program, const char* id) {

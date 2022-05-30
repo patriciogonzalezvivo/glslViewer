@@ -7,7 +7,7 @@
 
 #include "scene.h"
 #include "types/files.h"
-#include "ada/tools/list.h"
+#include "ada/string.h"
 
 enum ShaderType {
     FRAGMENT = 0,
@@ -63,7 +63,7 @@ public:
     void                onPlot();
    
     // Include folders
-    ada::List           include_folders;
+    ada::StringList     include_folders;
 
     // Uniforms
     Uniforms            uniforms;
@@ -95,8 +95,8 @@ private:
     std::string         m_vert_source;
 
     // Dependencies
-    ada::List           m_vert_dependencies;
-    ada::List           m_frag_dependencies;
+    ada::StringList     m_vert_dependencies;
+    ada::StringList     m_frag_dependencies;
 
     // Buffers
     std::vector<ada::Shader>    m_buffers_shaders;

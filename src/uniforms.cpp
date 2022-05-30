@@ -13,8 +13,8 @@
 #include "tools/text.h"
 #include "types/files.h"
 
-#include "ada/tools/text.h"
-#include "ada/tools/pixels.h"
+#include "ada/pixel.h"
+#include "ada/string.h"
 #include "ada/gl/textureBump.h"
 #include "ada/gl/textureStreamSequence.h"
 
