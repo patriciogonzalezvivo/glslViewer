@@ -54,15 +54,15 @@ int countBuffers(const std::string& _source) {
     return results.size();
 }
 
-bool getBufferSize(const std::string& _source, size_t _index, glm::vec2& _size) {
-    std::regex re(R"(uniform\s*sampler2D\s*u_buffer(\d+)\;\s*\/\/*\s(\d+)x(\d+))");
+bool getBufferSize(const std::string& _source, const std::string& _name, glm::vec2& _size) {
+    std::regex re(R"(uniform\s*sampler2D\s*(\w*)\;\s*\/\/*\s(\d+)x(\d+))");
     std::smatch match;
 
     // Split Source code in lines
     std::vector<std::string> lines = ada::split(_source, '\n');
     for (unsigned int l = 0; l < lines.size(); l++) {
         if (std::regex_search(lines[l], match, re)) {
-            if (match[1] == ada::toString(_index)) {
+            if (match[1] == _name) {
                 _size.x = ada::toFloat(match[2]);
                 _size.y = ada::toFloat(match[3]);
                 return true;
@@ -116,26 +116,6 @@ int countDoubleBuffers(const std::string& _source) {
     // return the number of results
     return results.size();
 }
-
-bool getDoubleBufferSize(const std::string& _source, size_t _index, glm::vec2& _size) {
-    std::regex re(R"(uniform\s*sampler2D\s*u_doubleBuffer(\d+)\;\s*\/\/*\s(\d+)x(\d+))");
-    std::smatch match;
-
-    // Split Source code in lines
-    std::vector<std::string> lines = ada::split(_source, '\n');
-    for (unsigned int l = 0; l < lines.size(); l++) {
-        if (std::regex_search(lines[l], match, re)) {
-            if (match[1] == ada::toString(_index)) {
-                _size.x = ada::toFloat(match[2]);
-                _size.y = ada::toFloat(match[3]);
-                return true;
-            }
-        }
-    }
-
-    return false;
-}
-
 
 // Count how many BUFFERS are in the shader
 bool checkBackground(const std::string& _source) {

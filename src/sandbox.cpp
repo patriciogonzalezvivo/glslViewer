@@ -1020,11 +1020,8 @@ bool Sandbox::reloadShaders( WatchFileList &_files ) {
     // UPDATE Buffers
     m_buffers_total = countBuffers(m_frag_source);
     m_doubleBuffers_total = countDoubleBuffers(m_frag_source);
-    _updateBuffers();
-
-    // Convolution Pyramids
     m_convolution_pyramid_total = countConvolutionPyramid( getSource(FRAGMENT) );
-    _updateConvolutionPyramids();
+    _updateBuffers();
     
     // UPDATE Postprocessing
     bool havePostprocessing = checkPostprocessing( getSource(FRAGMENT) );
@@ -1070,7 +1067,7 @@ void Sandbox::_updateBuffers() {
             uniforms.buffers.push_back( ada::Fbo() );
 
             glm::vec2 size = glm::vec2(ada::getWindowWidth(), ada::getWindowHeight());
-            uniforms.buffers[i].fixed = getBufferSize(m_frag_source, i, size);
+            uniforms.buffers[i].fixed = getBufferSize(m_frag_source, "u_buffer" + ada::toString(i), size);
             uniforms.buffers[i].allocate(size.x, size.y, ada::COLOR_FLOAT_TEXTURE);
             
             // New Shader
@@ -1101,7 +1098,7 @@ void Sandbox::_updateBuffers() {
             uniforms.doubleBuffers.push_back( ada::PingPong() );
 
             glm::vec2 size = glm::vec2(ada::getWindowWidth(), ada::getWindowHeight());
-            bool fixed = getDoubleBufferSize(m_frag_source, i, size);
+            bool fixed = getBufferSize(m_frag_source, "u_doubleBuffer" + ada::toString(i), size);
             uniforms.doubleBuffers[i][0].fixed = fixed;
             uniforms.doubleBuffers[i][1].fixed = fixed;
             uniforms.doubleBuffers[i].allocate(size.x, size.y, ada::COLOR_FLOAT_TEXTURE);
@@ -1121,9 +1118,6 @@ void Sandbox::_updateBuffers() {
         }
     }
 
-}
-
-void Sandbox::_updateConvolutionPyramids() {
     if ( m_convolution_pyramid_total != int(uniforms.convolution_pyramids.size()) ) {
 
         if (verbose)
@@ -1133,15 +1127,19 @@ void Sandbox::_updateConvolutionPyramids() {
         m_convolution_pyramid_fbos.clear();
         m_convolution_pyramid_subshaders.clear();
         for (int i = 0; i < m_convolution_pyramid_total; i++) {
+            glm::vec2 size = glm::vec2(ada::getWindowWidth(), ada::getWindowHeight());
+            bool fixed = getBufferSize(m_frag_source, "u_convolutionPyramid" + ada::toString(i), size);
+            
             uniforms.convolution_pyramids.push_back( ada::ConvolutionPyramid() );
-            uniforms.convolution_pyramids[i].allocate(ada::getWindowWidth(), ada::getWindowHeight());
+            uniforms.convolution_pyramids[i].allocate(size.x, size.y);
+            uniforms.convolution_pyramids[i].fixed = fixed;
             uniforms.convolution_pyramids[i].pass = [this](ada::Fbo *_target, const ada::Fbo *_tex0, const ada::Fbo *_tex1, int _depth) {
                 _target->bind();
                 glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
                 glClear(GL_COLOR_BUFFER_BIT);
                 m_convolution_pyramid_shader.use();
 
-                uniforms.feedTo(m_convolution_pyramid_shader);
+                uniforms.feedTo( m_convolution_pyramid_shader);
 
                 m_convolution_pyramid_shader.setUniform("u_convolutionPyramidDepth", _depth);
                 m_convolution_pyramid_shader.setUniform("u_convolutionPyramidTotalDepth", (int)uniforms.convolution_pyramids[0].getDepth());
@@ -1158,7 +1156,8 @@ void Sandbox::_updateConvolutionPyramids() {
                 _target->unbind();
             };
             m_convolution_pyramid_fbos.push_back( ada::Fbo() );
-            m_convolution_pyramid_fbos[i].allocate(ada::getWindowWidth(), ada::getWindowHeight(), ada::COLOR_TEXTURE);
+            m_convolution_pyramid_fbos[i].allocate(size.x, size.y, ada::COLOR_TEXTURE);
+            m_convolution_pyramid_fbos[i].fixed = fixed;
             m_convolution_pyramid_subshaders.push_back( ada::Shader() );
         }
     }
@@ -1235,27 +1234,13 @@ void Sandbox::_renderBuffers() {
         TRACK_END("render:doubleBuffer" + ada::toString(i))
     }
 
-    #if defined(__EMSCRIPTEN__)
-    if (ada::getWebGLVersionNumber() == 1)
-        reset_viewport = true;
-    #endif
-
-    if (reset_viewport)
-        glViewport(0.0f, 0.0f, ada::getWindowWidth(), ada::getWindowHeight());
-    
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-}
-
-void Sandbox::_renderConvolutionPyramids() {
-    // 
     // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_DST_ALPHA);
     // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     for (size_t i = 0; i < m_convolution_pyramid_subshaders.size(); i++) {
         TRACK_BEGIN("render:convolution_pyramid" + ada::toString(i))
 
-        glDisable(GL_BLEND);
+        reset_viewport += m_convolution_pyramid_fbos[i].fixed;
 
         m_convolution_pyramid_fbos[i].bind();
         m_convolution_pyramid_subshaders[i].use();
@@ -1277,6 +1262,16 @@ void Sandbox::_renderConvolutionPyramids() {
         TRACK_END("render:convolution_pyramid" + ada::toString(i))
     }
 
+    #if defined(__EMSCRIPTEN__)
+    if (ada::getWebGLVersionNumber() == 1)
+        reset_viewport = true;
+    #endif
+
+    if (reset_viewport)
+        glViewport(0.0f, 0.0f, ada::getWindowWidth(), ada::getWindowHeight());
+    
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
 void Sandbox::render() {
@@ -1295,12 +1290,9 @@ void Sandbox::render() {
     // BUFFERS
     // -----------------------------------------------
     if (uniforms.buffers.size() > 0 || 
-        uniforms.doubleBuffers.size() > 0)
+        uniforms.doubleBuffers.size() > 0 ||
+        m_convolution_pyramid_total > 0)
         _renderBuffers();
-
-    if (m_convolution_pyramid_total > 0)
-        _renderConvolutionPyramids();
-
     
     // MAIN SCENE
     // ----------------------------------------------- < main scene start
@@ -1397,14 +1389,6 @@ void Sandbox::render() {
 
         if (lenticular.size() > 0)
             feedLenticularUniforms(m_postprocessing_shader);
-
-        // // Pass textures of buffers
-        // for (size_t i = 0; i < uniforms.buffers.size(); i++)
-        //     m_postprocessing_shader.setUniformTexture("u_buffer" + ada::toString(i), &uniforms.buffers[i]);
-
-        // // Pass textures of buffers
-        // for (size_t i = 0; i < uniforms.doubleBuffers.size(); i++)
-        //     m_postprocessing_shader.setUniformTexture("u_doubleBuffer" + ada::toString(i), &uniforms.doubleBuffers[i]);
 
         m_billboard_vbo->render( &m_postprocessing_shader );
 
@@ -1525,9 +1509,13 @@ void Sandbox::renderUI() {
             m_billboard_shader.use();
 
             for (size_t i = 0; i < uniforms.buffers.size(); i++) {
+                glm::vec2 offset = glm::vec2(xOffset, yOffset);
+                glm::vec2 scale = glm::vec2(yStep);
+                scale *= ((float)uniforms.buffers[i].getWidth()/(float)uniforms.buffers[i].getHeight());
+                offset.x += xStep - scale.x;
                 m_billboard_shader.setUniform("u_depth", 0.0f);
-                m_billboard_shader.setUniform("u_scale", xStep, yStep);
-                m_billboard_shader.setUniform("u_translate", xOffset, yOffset);
+                m_billboard_shader.setUniform("u_scale", scale);
+                m_billboard_shader.setUniform("u_translate", offset);
                 m_billboard_shader.setUniform("u_modelViewProjectionMatrix", ada::getOrthoMatrix());
                 m_billboard_shader.setUniformTexture("u_tex0", &uniforms.buffers[i]);
                 m_billboard_shader.setUniform("u_tex0CurrentFrame", 0.0f );
@@ -1537,9 +1525,13 @@ void Sandbox::renderUI() {
             }
 
             for (size_t i = 0; i < uniforms.doubleBuffers.size(); i++) {
+                glm::vec2 offset = glm::vec2(xOffset, yOffset);
+                glm::vec2 scale = glm::vec2(yStep);
+                scale *= ((float)uniforms.doubleBuffers[i].src->getWidth()/(float)uniforms.doubleBuffers[i].src->getHeight());
+                offset.x += xStep - scale.x;
                 m_billboard_shader.setUniform("u_depth", 0.0f);
                 m_billboard_shader.setUniform("u_scale", xStep, yStep);
-                m_billboard_shader.setUniform("u_translate", xOffset, yOffset);
+                m_billboard_shader.setUniform("u_translate", offset);
                 m_billboard_shader.setUniform("u_modelViewProjectionMatrix", ada::getOrthoMatrix());
                 m_billboard_shader.setUniformTexture("u_tex0", uniforms.doubleBuffers[i].src);
                 m_billboard_shader.setUniform("u_tex0CurrentFrame", 0.0f );
@@ -1549,29 +1541,35 @@ void Sandbox::renderUI() {
             }
 
             for (size_t i = 0; i < uniforms.convolution_pyramids.size(); i++) {
-                float _x = 0;
-                float _sw = xStep;
-                float _sh = yStep; 
+                glm::vec2 offset = glm::vec2(xOffset, yOffset);
+                glm::vec2 scale = glm::vec2(yStep);
+                scale.x *= ((float)uniforms.convolution_pyramids[i].getWidth()/(float)uniforms.convolution_pyramids[i].getHeight());
+                float w = scale.x;
+                offset.x += xStep - w;
                 for (size_t j = 0; j < uniforms.convolution_pyramids[i].getDepth() * 2; j++ ) {
                     m_billboard_shader.setUniform("u_depth", 0.0f);
-                    m_billboard_shader.setUniform("u_scale", _sw, _sh);
-                    m_billboard_shader.setUniform("u_translate", xOffset + _x, yOffset);
+                    m_billboard_shader.setUniform("u_scale", scale);
+                    if (j < uniforms.convolution_pyramids[i].getDepth())
+                        m_billboard_shader.setUniform("u_translate", offset);
+                    else 
+                        m_billboard_shader.setUniform("u_translate", offset.x + w * 2., offset.y);
                     m_billboard_shader.setUniform("u_modelViewProjectionMatrix", ada::getOrthoMatrix());
                     m_billboard_shader.setUniformTexture("u_tex0", uniforms.convolution_pyramids[i].getResult(j), 0);
                     m_billboard_shader.setUniform("u_tex0CurrentFrame", 0.0f );
                     m_billboard_shader.setUniform("u_tex0TotalFrames", 0.0f );
                     m_billboard_vbo->render(&m_billboard_shader);
 
-                    _x -= _sw;
+                    offset.x -= scale.x;
                     if (j < uniforms.convolution_pyramids[i].getDepth()) {
-                        _sw *= 0.5;
-                        _sh *= 0.5;
+                        scale *= 0.5;
+                        offset.y = yOffset - yStep * 0.5;
                     }
                     else {
-                        _sw *= 2.0;
-                        _sh *= 2.0;
+                        offset.y = yOffset + yStep * 0.5;
+                        scale *= 2.0;
                     }
-                    _x -= _sw;
+                    offset.x -= scale.x;
+
                 }
                 yOffset -= yStep * 2.0;
             }
@@ -1858,8 +1856,8 @@ void Sandbox::onViewportResize(int _newWidth, int _newHeight) {
             uniforms.doubleBuffers[i][1].allocate(_newWidth, _newHeight, ada::COLOR_TEXTURE);
     }
 
-    if (m_convolution_pyramid_fbos.size() > 0) {
-        for (size_t i = 0; i < uniforms.convolution_pyramids.size(); i++) {
+    for (size_t i = 0; i < uniforms.convolution_pyramids.size(); i++) {
+        if (!m_convolution_pyramid_fbos[i].fixed) {
             m_convolution_pyramid_fbos[i].allocate(_newWidth, _newHeight, ada::COLOR_TEXTURE);
             uniforms.convolution_pyramids[i].allocate(ada::getWindowWidth(), ada::getWindowHeight());
         }

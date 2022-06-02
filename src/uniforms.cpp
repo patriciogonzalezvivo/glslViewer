@@ -791,10 +791,6 @@ bool Uniforms::feedTo(ada::Shader *_shader, bool _lights, bool _buffers ) {
         _shader->setUniform(it->first+"TotalFrames", float(it->second->getTotalFrames()));
     }
 
-    // Pass Convolution Piramids resultant Texture
-    for (unsigned int i = 0; i < convolution_pyramids.size(); i++)
-        _shader->setUniformTexture("u_convolutionPyramid" + ada::toString(i), convolution_pyramids[i].getResult(), _shader->textureIndex++ );
-
     // Pass Buffers Texture
     if (_buffers) {
         for (size_t i = 0; i < buffers.size(); i++)
@@ -803,6 +799,10 @@ bool Uniforms::feedTo(ada::Shader *_shader, bool _lights, bool _buffers ) {
         for (size_t i = 0; i < doubleBuffers.size(); i++)
             _shader->setUniformTexture("u_doubleBuffer" + ada::toString(i), doubleBuffers[i].src, _shader->textureIndex++ );
     }
+
+    // Pass Convolution Piramids resultant Texture
+    for (unsigned int i = 0; i < convolution_pyramids.size(); i++)
+        _shader->setUniformTexture("u_convolutionPyramid" + ada::toString(i), convolution_pyramids[i].getResult(), _shader->textureIndex++ );
     
     if (_lights) {
         // Pass Light Uniforms

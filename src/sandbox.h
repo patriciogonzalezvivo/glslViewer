@@ -85,9 +85,7 @@ public:
 
 private:
     void                _updateSceneBuffer(int _width, int _height);
-    void                _updateConvolutionPyramids();
     void                _updateBuffers();
-    void                _renderConvolutionPyramids();
     void                _renderBuffers();
 
     // Main Shader
