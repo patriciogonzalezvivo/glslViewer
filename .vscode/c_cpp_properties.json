@@ -2,7 +2,9 @@
     "configurations": [
         {
             "name": "Mac",
-            "defines": [ "PLATFORM_OSX" ],
+            "defines": [
+                "PLATFORM_OSX"
+            ],
             "includePath": [
                 "${workspaceRoot}/src",
                 "${workspaceRoot}/include",
@@ -37,11 +39,14 @@
                 "/Library/Frameworks/GLUI.framework",
                 "/Library/Frameworks",
                 "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/OpenGL.framework/Headers"
-            ]
+            ],
+            "configurationProvider": "ms-vscode.cmake-tools"
         },
         {
             "name": "Linux",
-            "defines": [ "PLATFORM_LINUX" ],
+            "defines": [
+                "PLATFORM_LINUX"
+            ],
             "includePath": [
                 "${workspaceRoot}/src",
                 "${workspaceRoot}/include",

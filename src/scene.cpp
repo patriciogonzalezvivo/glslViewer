@@ -720,14 +720,16 @@ void Scene::renderDebug(Uniforms& _uniforms) {
     // glBlendFunc(GL_SRC_ALPHA, GL_ONE);
     // glEnable(GL_DEPTH);
 
-
+    ada::Shader* fill = ada::getFillShader();
+    
     // Draw Bounding boxes
     if (showBBoxes) {
         ada::strokeWeight(3.0f);
-        ada::stroke( glm::vec3(1.0f, 0.0f, 0.0f) );
-        ada::shader( ada::getShader() );
-        for (unsigned int i = 0; i < m_models.size(); i++)
-            ada::model( m_models[i]->getVboBbox() );
+        fill->use();
+        fill->setUniform("u_modelViewProjectionMatrix", ada::getProjectionViewWorldMatrix() );
+        fill->setUniform("u_color", glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
+        for (unsigned int i = 0; i < m_models.size(); i++) 
+            m_models[i]->getVboBbox() ->render(fill);
     }
     
     // Axis
@@ -736,8 +738,10 @@ void Scene::renderDebug(Uniforms& _uniforms) {
             m_axis_vbo = new ada::Vbo( ada::axisMesh(_uniforms.getCamera().getFarClip(), m_floor_height) );
 
         ada::strokeWeight(2.0f);
-        ada::stroke( glm::vec4(0.75f) );
-        ada::model( m_axis_vbo );
+        fill->use();
+        fill->setUniform("u_modelViewProjectionMatrix", glm::vec4(0.75f) );
+        fill->setUniform("u_color", glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
+        m_axis_vbo->render(fill);
     }
     
     // Grid
@@ -746,8 +750,10 @@ void Scene::renderDebug(Uniforms& _uniforms) {
             m_grid_vbo = new ada::Vbo( ada::gridMesh(_uniforms.getCamera().getFarClip(), _uniforms.getCamera().getFarClip() / 20.0, m_floor_height) );
 
         ada::strokeWeight(1.0f);
-        ada::stroke( glm::vec4(0.5f) );
-        ada::model( m_grid_vbo );
+        fill->use();
+        fill->setUniform("u_modelViewProjectionMatrix", glm::vec4(0.75f) );
+        fill->setUniform("u_color", glm::vec4(0.5f) );
+        m_grid_vbo->render(fill);
     }
 
 

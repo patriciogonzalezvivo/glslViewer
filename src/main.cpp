@@ -1324,8 +1324,8 @@ void commandsInit() {
             if (values.size() > 4)
                 settings.trg_fps = ada::toFloat(values[4]);
 
-            settings.trg_width = (int)(settings.src_width/pd);
-            settings.trg_height = (int)(settings.src_height/pd);
+            settings.trg_width = (int)(settings.src_width);
+            settings.trg_height = (int)(settings.src_height);
 
             bool valid = false;
             if (ada::haveExt(values[1], "mp4") || ada::haveExt(values[1], "MP4") ) {
@@ -1345,7 +1345,10 @@ void commandsInit() {
                 settings.trg_args += " -vsync 1";
                 settings.trg_args += " -g 1";
             }
-            else if (ada::haveExt(values[1], "gif") || ada::haveExt(values[1], "GIF") ) {
+            else if (ada::haveExt(values[1], "gif") || ada::haveExt(values[1], "GIF") ) {;
+                settings.trg_width = ada::roundTo( (int)((settings.trg_width/pd)/2), 2);
+                settings.trg_height = ada::roundTo( (int)((settings.trg_width/pd)/2), 2);
+
                 valid = true;
                 settings.trg_args = " -vf \"vflip,fps=" + ada::toString(settings.trg_fps);
                 if (pd > 1)

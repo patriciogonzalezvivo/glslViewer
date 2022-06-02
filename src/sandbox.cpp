@@ -810,8 +810,6 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
 
     // Init Scene elements
     m_billboard_vbo = new ada::Vbo( ada::rectMesh(0.0,0.0,1.0,1.0) );
-    // m_billboard_vbo = new ada::Vbo();
-    // m_billboard_vbo->load( ada::rectMesh(0.0,0.0,1.0,1.0) );
 
     // LOAD GEOMETRY
     // -----------------------------------------------
@@ -1659,13 +1657,11 @@ void Sandbox::renderUI() {
         if (m_cross_vbo == nullptr) 
             m_cross_vbo = new ada::Vbo( ada::crossMesh( glm::vec3(0.0f, 0.0f, 0.0f), 10.0f) );
 
-        ada::resetCamera();
-
-        ada::strokeWeight(2.0f);
-        ada::resetMatrix();
-        ada::translate(ada::getMouseX(), ada::getMouseY());
-        ada::stroke(glm::vec4(1.0));
-        ada::model( m_cross_vbo );
+        ada::Shader* fill = ada::getFillShader();
+        fill->use();
+        fill->setUniform("u_modelViewProjectionMatrix", glm::translate(ada::getOrthoMatrix(), glm::vec3(ada::getMousePosition(), 0.0f) ) );
+        fill->setUniform("u_color", glm::vec4(1.0f));
+        m_cross_vbo->render(fill);
 
         // TRACK_END("cursor")
     }
