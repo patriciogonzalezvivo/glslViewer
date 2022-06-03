@@ -157,8 +157,10 @@ bool TextureAudio::update() {
     }
 
     // copy amplitude values to GREEN pixels
-    for (int i = 0; i < m_width; i++)
-        m_texture[1+i*4] = m_buffer_re.at(m_buf_len - m_width + i);
+    for (int i = 0; i < m_width; i++) {
+        m_texture[i*4 + 1] = m_buffer_re.at(m_buf_len - m_width + i);
+        m_texture[i*4 + 3] = 255;
+    }
 
     // prerare samples for dtf
     for (int i = 0; i < m_buf_len; i++) {
