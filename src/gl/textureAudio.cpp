@@ -60,7 +60,6 @@ TextureAudio::~TextureAudio() {
 }
 
 bool TextureAudio::load(const std::string &_device_id_str, bool _vFlip, ada::TextureFilter _filter, ada::TextureWrap _wrap) {
-
     ma_uint32 playbackDeviceCount = 0;
     ma_uint32 captureDeviceCount = 0;
     int default_device_id = -1;
@@ -202,9 +201,7 @@ bool TextureAudio::update() {
             m_texture[i*4] = mag_uint8;
     }
     
-    ada::Texture::load(m_width, m_height, 4, 8, &m_texture[0], m_filter, m_wrap);
-
-    return true;
+    return ada::Texture::load(m_width, m_height, 4, 8, &m_texture[0], m_filter, m_wrap);
 }
 
 void TextureAudio::clear() {

@@ -1511,7 +1511,7 @@ void Sandbox::renderUI() {
             for (size_t i = 0; i < uniforms.buffers.size(); i++) {
                 glm::vec2 offset = glm::vec2(xOffset, yOffset);
                 glm::vec2 scale = glm::vec2(yStep);
-                scale *= ((float)uniforms.buffers[i].getWidth()/(float)uniforms.buffers[i].getHeight());
+                scale.x *= ((float)uniforms.buffers[i].getWidth()/(float)uniforms.buffers[i].getHeight());
                 offset.x += xStep - scale.x;
                 m_billboard_shader.setUniform("u_depth", 0.0f);
                 m_billboard_shader.setUniform("u_scale", scale);
@@ -1527,7 +1527,7 @@ void Sandbox::renderUI() {
             for (size_t i = 0; i < uniforms.doubleBuffers.size(); i++) {
                 glm::vec2 offset = glm::vec2(xOffset, yOffset);
                 glm::vec2 scale = glm::vec2(yStep);
-                scale *= ((float)uniforms.doubleBuffers[i].src->getWidth()/(float)uniforms.doubleBuffers[i].src->getHeight());
+                scale.x *= ((float)uniforms.doubleBuffers[i].src->getWidth()/(float)uniforms.doubleBuffers[i].src->getHeight());
                 offset.x += xStep - scale.x;
                 m_billboard_shader.setUniform("u_depth", 0.0f);
                 m_billboard_shader.setUniform("u_scale", xStep, yStep);
