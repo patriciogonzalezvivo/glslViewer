@@ -30,17 +30,41 @@
 #include "ada/gl/textureStreamOMX.h"
 #endif
 
-
 std::string UniformData::getType() {
-    if (size == 1 && bInt) {
-        return "int";
+    if (size == 1) return (bInt ? "int" : "float");
+    else return (bInt ? "ivec" : "vec") + ada::toString(size); 
+}
+
+void UniformData::set(const UniformValue &_value, size_t _size, bool _int ) {
+    bInt = _int;
+    size = _size;
+
+    if (!change)
+        value = _value;
+    else
+        queue.push( _value );
+    change = true;
+}
+
+void UniformData::parse(const std::vector<std::string>& _command, size_t _start) {
+    bool isFloat = false;
+    UniformValue candidate;
+    for (size_t i = _start; i < _command.size() && i < 5; i++) {
+        isFloat += ada::isFloat(_command[i]);
+        candidate[i-_start] = ada::toFloat(_command[i]);
     }
-    else if (size == 1 && !bInt) {
-        return "float";
-    }
+    set(candidate, _command.size()-_start, !isFloat);
+}
+
+bool UniformData::check() {
+    if (queue.empty())
+        change = false;
     else {
-        return (bInt ? "ivec" : "vec") + ada::toString(size); 
+        value = queue.front();
+        queue.pop();
+        change = true;
     }
+    return change;
 }
 
 UniformFunction::UniformFunction() {
@@ -145,68 +169,14 @@ Uniforms::Uniforms(): cubemap(nullptr), m_streamsPrevs(0), m_streamsPrevsChange(
 Uniforms::~Uniforms(){
 }
 
-bool parseUniformData(const std::string &_line, UniformDataList *_uniforms) {
-    bool rta = false;
-    std::vector<std::string> value = ada::split(_line,',');
-    if (value.size() > 1) {
-        std::string name = value[0];
-
-        bool isFloat = false;
-        for (size_t i = 1; i < value.size(); i++) {
-            isFloat += ada::isFloat(value[i]);
-            (*_uniforms)[name].value[i-1] = ada::toFloat(value[i]);
-        }
-
-        (*_uniforms)[name].bInt = !isFloat;
-        (*_uniforms)[name].change = true;
-        (*_uniforms)[name].size = value.size()-1;
-
-        // if ((*_uniforms)[name].size > 1) {
-        //     if ((*_uniforms)[name].bInt)
-        //         std::cout << "ivec" << ada::toString((*_uniforms)[name].size) << " " << name;
-        //     else
-        //         std::cout << "ivec" << ada::toString((*_uniforms)[name].size) << " " << name;
-        // }
-        // else {
-        //     if ((*_uniforms)[name].bInt)
-        //         std::cout << "int " << name;
-        //     else
-        //         std::cout << "float " << name;
-        // }
-
-        rta = true;
-    }
-
-    // std::regex re("^(\\w+)\\,");
-    // std::smatch match;
-    // if (std::regex_search(_line, match, re)) {
-    //     // Extract uniform name
-    //     std::string name = std::ssub_match(match[1]).str();
-
-    //     Extract values
-    //     int index = 0;
-    //     std::stringstream ss(_line);
-    //     std::string item;
-    //     while (getline(ss, item, ',')) {
-    //         if (index != 0) {
-    //             (*_uniforms)[name].bInt = !ada::isFloat(item);
-    //             (*_uniforms)[name].value[index-1] = ada::toFloat(item);
-    //             (*_uniforms)[name].change = true;
-    //         }
-    //         index++;
-    //     }
-
-    //     // Set total amount of values
-    //     (*_uniforms)[name].size = index-1;
-    //     rta = true;
-    // }
-    return rta;
-}
-
 bool Uniforms::parseLine( const std::string &_line ) {
-    bool somethingChange = parseUniformData(_line, &data);
-    m_change += somethingChange;
-    return somethingChange;
+    std::vector<std::string> values = ada::split(_line,',');
+    if (values.size() > 1) {
+        data[ values[0] ].parse(values, 1);
+        m_change = true;
+        return true;
+    }
+    return false;
 }
 
 bool Uniforms::addTexture( const std::string& _name, ada::Texture* _texture) {
@@ -486,17 +456,18 @@ bool Uniforms::addCameraTrack( const std::string& _name ) {
         //     );
 
 
-        while (std::getline(is,line)) {
+        while (std::getline(is, line)) {
             // If line not commented 
             if (line[0] == '#')
                 continue;
+
             // parse through row spliting into commas
-            std::vector<std::string> data = ada::split(line, ',', true);
+            std::vector<std::string> params = ada::split(line, ',', true);
 
             CameraData frame;
-            float fL = ada::toFloat(data[0]);
-            float cx = ada::toFloat(data[1]);
-            float cy = ada::toFloat(data[2]);
+            float fL = ada::toFloat(params[0]);
+            float cx = ada::toFloat(params[1]);
+            float cy = ada::toFloat(params[2]);
 
             float near = cameras[0].getNearClip();
             float far = cameras[0].getFarClip();
@@ -530,10 +501,10 @@ bool Uniforms::addCameraTrack( const std::string& _name ) {
             // );
 
             frame.transform = glm::mat4(
-                glm::vec4( ada::toFloat(data[3]), ada::toFloat(data[ 4]), ada::toFloat(data[ 5]), 0.0),
-                glm::vec4( ada::toFloat(data[6]), -ada::toFloat(data[ 7]), ada::toFloat(data[ 8]), 0.0),
-                glm::vec4( ada::toFloat(data[9]), ada::toFloat(data[10]), ada::toFloat(data[11]), 0.0),
-                glm::vec4( ada::toFloat(data[12]), ada::toFloat(data[13]), -ada::toFloat(data[14]), 1.0)
+                glm::vec4( ada::toFloat(params[3]), ada::toFloat(params[ 4]), ada::toFloat(params[ 5]), 0.0),
+                glm::vec4( ada::toFloat(params[6]), -ada::toFloat(params[ 7]), ada::toFloat(params[ 8]), 0.0),
+                glm::vec4( ada::toFloat(params[9]), ada::toFloat(params[10]), ada::toFloat(params[11]), 0.0),
+                glm::vec4( ada::toFloat(params[12]), ada::toFloat(params[13]), -ada::toFloat(params[14]), 1.0)
             );
 
             // position += frame.translation;
@@ -541,7 +512,6 @@ bool Uniforms::addCameraTrack( const std::string& _name ) {
         }
 
         std::cout << "// Added " << cameraTrack.size() << " camera frames" << std::endl;
-
 
         position = position / float(cameraTrack.size());
         return true;
@@ -653,49 +623,42 @@ void Uniforms::updateStreams(size_t _frame) {
 }
 
 void Uniforms::set( const std::string& _name, float _value) {
-    data[_name].bInt = false;
-    data[_name].size = 1;
-    data[_name].value[0] = _value;
-    data[_name].change = true;
-
+    UniformValue value;
+    value[0] = _value;
+    data[_name].set(value, 1, false);
     m_change = true;
 }
 
-void Uniforms::set( const std::string& _name, float _x, float _y) {
-    data[_name].bInt = false;
-    data[_name].size = 2;
-    data[_name].value[0] = _x;
-    data[_name].value[1] = _y;
-    data[_name].change = true;
-
+void Uniforms::set(const std::string& _name, float _x, float _y) {
+    UniformValue value;
+    value[0] = _x;
+    value[1] = _y;
+    data[_name].set(value, 2, false);
     m_change = true;
 }
 
-void Uniforms::set( const std::string& _name, float _x, float _y, float _z) {
-    data[_name].bInt = false;
-    data[_name].size = 3;
-    data[_name].value[0] = _x;
-    data[_name].value[1] = _y;
-    data[_name].value[2] = _z;
-    data[_name].change = true;
+void Uniforms::set(const std::string& _name, float _x, float _y, float _z) {
+    UniformValue value;
+    value[0] = _x;
+    value[1] = _y;
+    value[2] = _z;
+    data[_name].set(value, 3, false);
+    m_change = true;
 }
 
-void Uniforms::set( const std::string& _name, float _x, float _y, float _z, float _w) {
-    data[_name].bInt = false;
-    data[_name].size = 4;
-    data[_name].value[0] = _x;
-    data[_name].value[1] = _y;
-    data[_name].value[2] = _z;
-    data[_name].value[3] = _w;
-    data[_name].change = true;
-
+void Uniforms::set(const std::string& _name, float _x, float _y, float _z, float _w) {
+    UniformValue value;
+    value[0] = _x;
+    value[1] = _y;
+    value[2] = _z;
+    value[3] = _w;
+    data[_name].set(value, 4, false);
     m_change = true;
 }
 
 void Uniforms::setCubeMap( ada::TextureCube* _cubemap ) {
     if (cubemap)
         delete cubemap;
-
     cubemap = _cubemap;
 }
 
@@ -768,8 +731,8 @@ bool Uniforms::feedTo(ada::Shader *_shader, bool _lights, bool _buffers ) {
                         _shader->setUniform(it->first, int(it->second.value[0]), int(it->second.value[1]), int(it->second.value[2]), int(it->second.value[3]));
                 }
                 else
-                    _shader->setUniform(it->first, it->second.value, it->second.size);
-                update = true;
+                    _shader->setUniform(it->first, it->second.value.data(), it->second.size);
+                update += true;
             }
         }
     }
@@ -801,7 +764,7 @@ bool Uniforms::feedTo(ada::Shader *_shader, bool _lights, bool _buffers ) {
     }
 
     // Pass Convolution Piramids resultant Texture
-    for (unsigned int i = 0; i < convolution_pyramids.size(); i++)
+    for (size_t i = 0; i < convolution_pyramids.size(); i++)
         _shader->setUniformTexture("u_convolutionPyramid" + ada::toString(i), convolution_pyramids[i].getResult(), _shader->textureIndex++ );
     
     if (_lights) {
@@ -819,7 +782,7 @@ bool Uniforms::feedTo(ada::Shader *_shader, bool _lights, bool _buffers ) {
             _shader->setUniformDepthTexture("u_lightShadowMap", lights[0].getShadowMap(), _shader->textureIndex++ );
         }
         else {
-            for (unsigned int i = 0; i < lights.size(); i++) {
+            for (size_t i = 0; i < lights.size(); i++) {
                 if (lights[i].getType() != ada::LIGHT_DIRECTIONAL)
                     _shader->setUniform("u_light", lights[i].getPosition());
                 _shader->setUniform("u_lightColor", lights[i].color);
@@ -844,23 +807,23 @@ bool Uniforms::feedTo(ada::Shader *_shader, bool _lights, bool _buffers ) {
 
 void Uniforms::flagChange() {
     // Flag all user uniforms as changed
-    for (UniformDataList::iterator it = data.begin(); it != data.end(); ++it) {
+    for (UniformDataList::iterator it = data.begin(); it != data.end(); ++it)
         it->second.change = true;
-    }
+    
     m_change = true;
     getCamera().bChange = true;
 }
 
 void Uniforms::unflagChange() {
     if (m_change) {
+        m_change = false;
+
         // Flag all user uniforms as NOT changed
         for (UniformDataList::iterator it = data.begin(); it != data.end(); ++it)
-            it->second.change = false;
-
-        m_change = false;
+            m_change += it->second.check();
     }
 
-    for (unsigned int i = 0; i < lights.size(); i++)
+    for (size_t i = 0; i < lights.size(); i++)
         lights[i].bChange = false;
 
     getCamera().bChange = false;
@@ -868,7 +831,7 @@ void Uniforms::unflagChange() {
 
 bool Uniforms::haveChange() { 
     bool lightChange = false;
-    for (unsigned int i = 0; i < lights.size(); i++) {
+    for (size_t i = 0; i < lights.size(); i++) {
         if (lights[i].bChange) {
             lightChange = true;
             break;
@@ -885,7 +848,6 @@ bool Uniforms::haveChange() {
 }
 
 void Uniforms::clear() {
-
     if (cubemap) {
         delete cubemap;
         cubemap = nullptr;
@@ -902,7 +864,6 @@ void Uniforms::clear() {
 
     // Streams are textures so it should be clear by now;
     // streams.clear();
-
 }
 
 void Uniforms::printAvailableUniforms(bool _non_active) {
@@ -1002,7 +963,7 @@ void Uniforms::printLights() {
             std::cout << "unifrom float u_lightFalloff; // " << ada::toString( lights[0].falloff, 3) << std::endl;
     }
     else if (lights.size() > 1) {
-        for (unsigned int i = 0; i < lights.size(); i++) {
+        for (size_t i = 0; i < lights.size(); i++) {
             if (lights[i].getType() != ada::LIGHT_DIRECTIONAL)
                 std::cout << "uniform vec3 u_light; // " << ada::toString( lights[i].getPosition() ) << std::endl;
             std::cout << "uniform vec3 u_lightColor; // " << ada::toString( lights[i].color )  << std::endl;

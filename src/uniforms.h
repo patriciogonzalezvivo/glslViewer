@@ -1,6 +1,8 @@
 #pragma once
 
 #include <map>
+#include <queue>
+#include <array>
 #include <vector>
 #include <string>
 #include <functional>
@@ -20,13 +22,21 @@
 #include "types/files.h"
 #include "tools/tracker.h"
 
+typedef std::array<float, 4> UniformValue;
+
 struct UniformData {
     std::string getType();
 
-    float   value[4];
-    int     size;
-    bool    bInt = false;
-    bool    change = false;
+    void    set(const UniformValue &_value, size_t _size, bool _int);
+    void    parse(const std::vector<std::string>& _command, size_t _start = 1);
+    bool    check();
+
+    std::queue<UniformValue>    queue;
+    UniformValue                value;
+    size_t                      size = 0;
+    bool                        bInt = false;
+    bool                        change = false;
+
 };
 
 typedef std::map<std::string, UniformData> UniformDataList;
