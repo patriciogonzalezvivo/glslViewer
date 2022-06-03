@@ -47,13 +47,14 @@ void UniformData::set(const UniformValue &_value, size_t _size, bool _int ) {
 }
 
 void UniformData::parse(const std::vector<std::string>& _command, size_t _start) {
-    bool isFloat = false;
+    // bool isFloat = false;
     UniformValue candidate;
     for (size_t i = _start; i < _command.size() && i < 5; i++) {
-        isFloat += ada::isFloat(_command[i]);
+        // isFloat += ada::isFloat(_command[i]);
         candidate[i-_start] = ada::toFloat(_command[i]);
     }
-    set(candidate, _command.size()-_start, !isFloat);
+    // set(candidate, _command.size()-_start, !isFloat);
+    set(candidate, _command.size()-_start, true);
 }
 
 bool UniformData::check() {
@@ -720,17 +721,17 @@ bool Uniforms::feedTo(ada::Shader *_shader, bool _lights, bool _buffers ) {
     if (m_change) {
         for (UniformDataList::iterator it=data.begin(); it!=data.end(); ++it) {
             if (it->second.change) {
-                if (it->second.bInt) {
-                    if (it->second.size == 1)
-                        _shader->setUniform(it->first, int(it->second.value[0]));
-                    else if (it->second.size == 2)
-                        _shader->setUniform(it->first, int(it->second.value[0]), int(it->second.value[1]));
-                    else if (it->second.size == 3)
-                        _shader->setUniform(it->first, int(it->second.value[0]), int(it->second.value[1]), int(it->second.value[2]));
-                    else if (it->second.size == 4)
-                        _shader->setUniform(it->first, int(it->second.value[0]), int(it->second.value[1]), int(it->second.value[2]), int(it->second.value[3]));
-                }
-                else
+                // if (it->second.bInt) {
+                //     if (it->second.size == 1)
+                //         _shader->setUniform(it->first, int(it->second.value[0]));
+                //     else if (it->second.size == 2)
+                //         _shader->setUniform(it->first, int(it->second.value[0]), int(it->second.value[1]));
+                //     else if (it->second.size == 3)
+                //         _shader->setUniform(it->first, int(it->second.value[0]), int(it->second.value[1]), int(it->second.value[2]));
+                //     else if (it->second.size == 4)
+                //         _shader->setUniform(it->first, int(it->second.value[0]), int(it->second.value[1]), int(it->second.value[2]), int(it->second.value[3]));
+                // }
+                // else
                     _shader->setUniform(it->first, it->second.value.data(), it->second.size);
                 update += true;
             }
