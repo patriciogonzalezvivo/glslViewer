@@ -103,7 +103,6 @@ else()
     target_compile_definitions(glslViewer PUBLIC 
         SUPPORT_MULTITHREAD_RECORDING 
         SUPPORT_OSC
-        SUPPORT_AUDIO
         # SUPPORT_PLY_BINARY
     )
 

@@ -417,11 +417,11 @@ bool Uniforms::addStreamingTexture( const std::string& _name, const std::string&
 
 bool Uniforms::addAudioTexture(const std::string& _name, const std::string& device_id, bool _flip, bool _verbose) {
 
-#if defined(SUPPORT_LIBAV) && defined(SUPPORT_AUDIO)
+#if defined(SUPPORT_LIBAV)
     // already init
     if (m_is_audio_init) return false;
 
-    TextureAudio *tex = new TextureAudio();
+    TextureStreamAudio *tex = new TextureStreamAudio();
 
     // TODO: add flipping mode for audio texture
     if (tex->load(device_id, _flip)) {

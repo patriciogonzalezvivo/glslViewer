@@ -18,7 +18,7 @@
 #include "ada/scene/camera.h"
 #include "ada/scene/light.h"
 
-#include "gl/textureAudio.h"
+#include "ada/gl/textureStreamAudio.h"
 #include "types/files.h"
 #include "tools/tracker.h"
 
