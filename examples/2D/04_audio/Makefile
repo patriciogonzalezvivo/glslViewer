@@ -6,3 +6,6 @@ wave:
 
 spectrogram:
 	glslViewer spectogram.frag -l --audio
+
+historic_amp:
+	glslViewer historic_amp.frag -l --audio
