@@ -5,8 +5,7 @@ precision mediump float;
 uniform sampler2D   u_tex0;
 uniform vec2        u_tex0Resolution;
 
-uniform sampler2D   u_buffer0; 
-uniform sampler2D   u_buffer1; 
+uniform sampler2D   u_doubleBuffer0;
 
 uniform vec2        u_resolution;
 
@@ -28,16 +27,12 @@ void main (void) {
     // Volume
     float vol = value.y;
 
-#if defined(BUFFER_0)
-    color = texture2D(u_buffer1, st - vec2(0.0, 1.0) * pixel).rgb;
+#if defined(DOUBLE_BUFFER_0)
+    color = texture2D(u_doubleBuffer0, st - vec2(0.0, 1.0) * pixel).rgb;
     
     color = mix(color, heatmap(fft), step(st.y, pixel.y));
-
-#elif defined(BUFFER_1)
-    color = texture2D(u_buffer0, st).rgb;
-
 #else
-    color = texture2D(u_buffer0, st).rgb;
+    color = texture2D(u_doubleBuffer0, st).rgb;
 
 #endif
 
