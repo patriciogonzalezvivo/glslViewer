@@ -1437,7 +1437,8 @@ void Sandbox::renderUI() {
     // TRACK_BEGIN("renderUI")
 
     // IN PUT TEXTURES
-    if (m_showTextures) {        
+    if (m_showTextures) {      
+
         int nTotal = uniforms.textures.size();
         if (nTotal > 0) {
             glDisable(GL_DEPTH_TEST);
@@ -1449,6 +1450,11 @@ void Sandbox::renderUI() {
             float yStep = h * scale;
             float xOffset = xStep;
             float yOffset = h - yStep;
+
+            ada::textAngle(-M_PI_2);
+            ada::textAlign(ada::ALIGN_TOP);
+            ada::textAlign(ada::ALIGN_LEFT);
+            ada::textSize(yStep * 0.1f);
 
             if (!m_billboard_shader.isLoaded()) 
                 m_billboard_shader.load(ada::getDefaultSrc(ada::FRAG_DYNAMIC_BILLBOARD), ada::getDefaultSrc(ada::VERT_DYNAMIC_BILLBOARD), false);
@@ -1474,10 +1480,7 @@ void Sandbox::renderUI() {
 
                 m_billboard_vbo->render(&m_billboard_shader);
 
-                ada::textSize(10.0f);
-                ada::textAngle(-M_PI_2);
-                ada::textAlign(ada::ALIGN_TOP);
-                ada::text(it->first, xOffset + xStep, ada::getWindowHeight() - yOffset);
+                ada::text(it->first, xOffset + xStep, ada::getWindowHeight() - yOffset + yStep);
 
                 yOffset -= yStep * 2.0;
             }
@@ -1500,6 +1503,7 @@ void Sandbox::renderUI() {
         nTotal += uniforms.functions["u_scene"].present;
         nTotal += uniforms.functions["u_sceneDepth"].present;
         nTotal += (geom_index != -1);
+
         if (nTotal > 0) {
             float w = (float)(ada::getWindowWidth());
             float h = (float)(ada::getWindowHeight());
@@ -1508,6 +1512,11 @@ void Sandbox::renderUI() {
             float yStep = h * scale;
             float xOffset = w - xStep;
             float yOffset = h - yStep;
+
+            ada::textAngle(-M_PI_2);
+            ada::textSize(yStep * 0.1f);
+            ada::textAlign(ada::ALIGN_BOTTOM);
+            ada::textAlign(ada::ALIGN_LEFT);
 
             if (!m_billboard_shader.isLoaded())
                 m_billboard_shader.load(ada::getDefaultSrc(ada::FRAG_DYNAMIC_BILLBOARD), ada::getDefaultSrc(ada::VERT_DYNAMIC_BILLBOARD), false);
@@ -1528,10 +1537,7 @@ void Sandbox::renderUI() {
                 m_billboard_shader.setUniform("u_tex0TotalFrames", 0.0f );
                 m_billboard_vbo->render(&m_billboard_shader);
 
-                ada::textSize(10.0f);
-                ada::textAngle(-M_PI_2);
-                ada::textAlign(ada::ALIGN_BOTTOM);
-                ada::text("u_buffer" + ada::toString(i), xOffset - xStep, ada::getWindowHeight() - yOffset);
+                ada::text("u_buffer" + ada::toString(i), xOffset - xStep, ada::getWindowHeight() - yOffset + yStep);
 
                 yOffset -= yStep * 2.0;
             }
@@ -1550,11 +1556,7 @@ void Sandbox::renderUI() {
                 m_billboard_shader.setUniform("u_tex0TotalFrames", 0.0f );
                 m_billboard_vbo->render(&m_billboard_shader);
 
-                ada::textSize(10.0f);
-                ada::textAngle(-M_PI_2);
-                ada::textAlign(ada::ALIGN_BOTTOM);
-                ada::text("u_doubleBuffer" + ada::toString(i), xOffset - xStep, ada::getWindowHeight() - yOffset);
-
+                ada::text("u_doubleBuffer" + ada::toString(i), xOffset - xStep, ada::getWindowHeight() - yOffset + yStep);
                 yOffset -= yStep * 2.0;
             }
 
@@ -1590,11 +1592,7 @@ void Sandbox::renderUI() {
 
                 }
 
-                ada::textSize(10.0f);
-                ada::textAngle(-M_PI_2);
-                ada::textAlign(ada::ALIGN_BOTTOM);
-                ada::text("u_convolutionPyramid0" + ada::toString(i), xOffset - xStep * 1.5, ada::getWindowHeight() - yOffset);
-
+                // ada::text("u_convolutionPyramid0" + ada::toString(i), xOffset - xStep * 1.5, ada::getWindowHeight() - yOffset + yStep);
                 yOffset -= yStep * 2.0;
 
             }
@@ -1610,11 +1608,7 @@ void Sandbox::renderUI() {
                     m_billboard_shader.setUniform("u_tex0TotalFrames", 0.0f );
                     m_billboard_vbo->render(&m_billboard_shader);
 
-                    ada::textSize(10.0f);
-                    ada::textAngle(-M_PI_2);
-                    ada::textAlign(ada::ALIGN_BOTTOM);
-                    ada::text("u_scene", xOffset - xStep, ada::getWindowHeight() - yOffset);
-
+                    ada::text("u_scene", xOffset - xStep, ada::getWindowHeight() - yOffset + yStep);
                     yOffset -= yStep * 2.0;
                 }
 
@@ -1631,11 +1625,7 @@ void Sandbox::renderUI() {
                     m_billboard_shader.setUniform("u_tex0TotalFrames", 0.0f );
                     m_billboard_vbo->render(&m_billboard_shader);
 
-                    ada::textSize(10.0f);
-                    ada::textAngle(-M_PI_2);
-                    ada::textAlign(ada::ALIGN_BOTTOM);
-                    ada::text("u_sceneDepth", xOffset - xStep, ada::getWindowHeight() - yOffset);
-
+                    ada::text("u_sceneDepth", xOffset - xStep, ada::getWindowHeight() - yOffset + yStep);
                     yOffset -= yStep * 2.0;
                 }
             }
@@ -1652,11 +1642,7 @@ void Sandbox::renderUI() {
                         m_billboard_shader.setUniform("u_tex0TotalFrames", 0.0f );
                         m_billboard_vbo->render(&m_billboard_shader);
 
-                        ada::textSize(10.0f);
-                        ada::textAngle(-M_PI_2);
-                        ada::textAlign(ada::ALIGN_BOTTOM);
-                        ada::text("u_lightShadowMap", xOffset - xStep, ada::getWindowHeight() - yOffset);
-
+                        ada::text("u_lightShadowMap", xOffset - xStep, ada::getWindowHeight() - yOffset + yStep);
                         yOffset -= yStep * 2.0;
                     }
                 }
