@@ -13,6 +13,7 @@
 
 #include "ada/window.h"
 #include "ada/draw.h"
+#include "ada/math.h"
 #include "ada/geom/meshes.h"
 #include "ada/string.h"
 #include "ada/pixel.h"
@@ -1451,7 +1452,7 @@ void Sandbox::renderUI() {
             float xOffset = xStep;
             float yOffset = h - yStep;
 
-            ada::textAngle(-M_PI_2);
+            ada::textAngle(-HALF_PI);
             ada::textAlign(ada::ALIGN_TOP);
             ada::textAlign(ada::ALIGN_LEFT);
             ada::textSize(yStep * 0.1f);
@@ -1513,7 +1514,7 @@ void Sandbox::renderUI() {
             float xOffset = w - xStep;
             float yOffset = h - yStep;
 
-            ada::textAngle(-M_PI_2);
+            ada::textAngle(-HALF_PI);
             ada::textSize(yStep * 0.1f);
             ada::textAlign(ada::ALIGN_BOTTOM);
             ada::textAlign(ada::ALIGN_LEFT);
