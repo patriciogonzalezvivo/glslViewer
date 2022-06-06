@@ -5,6 +5,8 @@
 #include <unistd.h>
 #endif
 
+#define USE_ADA
+
 #include <sys/stat.h>
 
 #include "ada/fs.h"
@@ -48,7 +50,7 @@ Scene::~Scene(){
 }
 
 void Scene::clear() {
-    for (unsigned int i = 0; i < m_models.size(); i++) 
+    for (size_t i = 0; i < m_models.size(); i++) 
         delete m_models[i];
 
     m_models.clear();
@@ -79,14 +81,14 @@ void Scene::setup(CommandList& _commands, Uniforms& _uniforms) {
     // ----------------------------------------- 
     _commands.push_back(Command("model", [&](const std::string& _line){ 
         if (_line == "models") {
-            for (unsigned int i = 0; i < m_models.size(); i++)
+            for (size_t i = 0; i < m_models.size(); i++)
                 std::cout << m_models[i]->getName() << std::endl;
             return true;
         }
         else {
             std::vector<std::string> values = ada::split(_line,',');
             if (values.size() == 2 && values[0] == "model")
-                for (unsigned int i = 0; i < m_models.size(); i++)
+                for (size_t i = 0; i < m_models.size(); i++)
                     if (m_models[i]->getName() == values[1]) {
                         m_models[i]->printVboInfo();
                         std::cout << "Defines:" << std::endl;
@@ -409,7 +411,7 @@ void Scene::setup(CommandList& _commands, Uniforms& _uniforms) {
 void Scene::addDefine(const std::string& _define, const std::string& _value) {
     m_background_shader.addDefine(_define, _value);
     m_floor_shader.addDefine(_define, _value);
-    for (unsigned int i = 0; i < m_models.size(); i++) {
+    for (size_t i = 0; i < m_models.size(); i++) {
         m_models[i]->addDefine(_define, _value);
     }
 }
@@ -417,7 +419,7 @@ void Scene::addDefine(const std::string& _define, const std::string& _value) {
 void Scene::delDefine(const std::string& _define) {
     m_background_shader.delDefine(_define);
     m_floor_shader.delDefine(_define);
-    for (unsigned int i = 0; i < m_models.size(); i++) {
+    for (size_t i = 0; i < m_models.size(); i++) {
         m_models[i]->delDefine(_define);
     }
 }
@@ -447,7 +449,7 @@ void Scene::printDefines() {
         m_floor_shader.printDefines();
     }
 
-    for (unsigned int i = 0; i < m_models.size(); i++) {
+    for (size_t i = 0; i < m_models.size(); i++) {
         std::cout << std::endl;
         std::cout << m_models[i]->getName() << std::endl;
         std::cout << "-------------- " << std::endl;
@@ -476,12 +478,15 @@ bool Scene::loadGeometry(Uniforms& _uniforms, WatchFileList& _files, int _index,
 
     // Calculate the total area
     ada::BoundingBox bbox;
-    for (unsigned int i = 0; i < m_models.size(); i++)
+    for (size_t i = 0; i < m_models.size(); i++) {
+        ada::addLablel(m_models[i]->getName(), m_models[i], ada::LABEL_RIGHT);
         bbox.expand( m_models[i]->getBoundingBox() );
+    }
 
     m_area = glm::max(0.5f, glm::max(glm::length(bbox.min), glm::length(bbox.max)));
-    glm::vec3 centroid = (bbox.min + bbox.max) * 0.5f;
-    m_origin.setPosition( -centroid );
+    m_origin.setPosition( -bbox.getCenter() );
+    // ada::translate( -bbox.getCenter() );
+    
     m_floor_height = bbox.min.y;
 
     // Setup light
@@ -493,7 +498,7 @@ bool Scene::loadGeometry(Uniforms& _uniforms, WatchFileList& _files, int _index,
 
 bool Scene::loadShaders(const std::string& _fragmentShader, const std::string& _vertexShader, bool _verbose) {
     bool rta = true;
-    for (unsigned int i = 0; i < m_models.size(); i++)
+    for (size_t i = 0; i < m_models.size(); i++)
         if ( !m_models[i]->loadShader( _fragmentShader, _vertexShader, _verbose) )
             rta = false;
 
@@ -544,7 +549,6 @@ void Scene::render(Uniforms& _uniforms) {
         ada::setCamera( _uniforms.getCamera() );
         ada::applyMatrix( m_origin.getTransformMatrix() );
     }
-    // ada::resetMatrix();
 
     TRACK_BEGIN("render:scene:floor")
     renderFloor(_uniforms, ada::getProjectionViewWorldMatrix() );
@@ -587,7 +591,7 @@ void Scene::renderShadowMap(Uniforms& _uniforms) {
         return;
 
     bool changeOnLights = false;
-    for (unsigned int i = 0; i < _uniforms.lights.size(); i++) {
+    for (size_t i = 0; i < _uniforms.lights.size(); i++) {
         if (_uniforms.lights[i].bChange) {
             changeOnLights = true;
             break;
@@ -596,14 +600,15 @@ void Scene::renderShadowMap(Uniforms& _uniforms) {
 
     if ( m_dynamicShadows || changeOnLights || m_origin.bChange ) {
         // TRACK_BEGIN("shadowmap")
-        for (unsigned int i = 0; i < _uniforms.lights.size(); i++) {
+        for (size_t i = 0; i < _uniforms.lights.size(); i++) {
             // Temporally move the MVP matrix from the view of the light 
-            glm::mat4 mvp = _uniforms.lights[i].getMVPMatrix( m_origin.getTransformMatrix(), m_area );
+            // glm::mat4 mvp = _uniforms.lights[i].getMVPMatrix( m_origin.getTransformMatrix(), m_area );
+            glm::mat4 mvp = _uniforms.lights[i].getMVPMatrix( ada::getWorldMatrix(), m_area );
             _uniforms.lights[i].bindShadowMap();
 
             renderFloor(_uniforms, mvp);
 
-            for (unsigned int i = 0; i < m_models.size(); i++) {
+            for (size_t i = 0; i < m_models.size(); i++) {
                 // m_models[i]->render(_uniforms, mvp);
                 if (m_models[i]->getShader()->isLoaded() ) {
 
@@ -725,11 +730,21 @@ void Scene::renderDebug(Uniforms& _uniforms) {
     // Draw Bounding boxes
     if (showBBoxes) {
         ada::strokeWeight(3.0f);
+    #ifdef USE_ADA
+        ada::stroke(glm::vec3(1.0f, 0.0f, 0.0f));
+        for (size_t i = 0; i < m_models.size(); i++) 
+            ada::model(m_models[i]->getVboBbox());
+
+        ada::fill(.8f);
+        ada::textSize(14.0f);
+        ada::labels();
+    #else
         fill->use();
         fill->setUniform("u_modelViewProjectionMatrix", ada::getProjectionViewWorldMatrix() );
         fill->setUniform("u_color", glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
-        for (unsigned int i = 0; i < m_models.size(); i++) 
-            m_models[i]->getVboBbox() ->render(fill);
+        for (size_t i = 0; i < m_models.size(); i++) 
+            m_models[i]->getVboBbox()->render(fill);
+    #endif
     }
     
     // Axis
@@ -738,10 +753,15 @@ void Scene::renderDebug(Uniforms& _uniforms) {
             m_axis_vbo = new ada::Vbo( ada::axisMesh(_uniforms.getCamera().getFarClip(), m_floor_height) );
 
         ada::strokeWeight(2.0f);
+    #ifdef USE_ADA
+        ada::stroke( glm::vec4(1.0f) );
+        ada::model( m_axis_vbo );
+    #else
         fill->use();
-        fill->setUniform("u_modelViewProjectionMatrix", glm::vec4(0.75f) );
-        fill->setUniform("u_color", glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
+        fill->setUniform("u_modelViewProjectionMatrix", ada::getProjectionViewWorldMatrix() );
+        fill->setUniform("u_color", glm::vec4(1.0f));
         m_axis_vbo->render(fill);
+    #endif
     }
     
     // Grid
@@ -750,10 +770,15 @@ void Scene::renderDebug(Uniforms& _uniforms) {
             m_grid_vbo = new ada::Vbo( ada::gridMesh(_uniforms.getCamera().getFarClip(), _uniforms.getCamera().getFarClip() / 20.0, m_floor_height) );
 
         ada::strokeWeight(1.0f);
+        #ifdef USE_ADA
+        ada::stroke( glm::vec4(0.5f) );
+        ada::model( m_grid_vbo );
+        #else
         fill->use();
-        fill->setUniform("u_modelViewProjectionMatrix", glm::vec4(0.75f) );
+        fill->setUniform("u_modelViewProjectionMatrix", ada::getProjectionViewWorldMatrix() );
         fill->setUniform("u_color", glm::vec4(0.5f) );
         m_grid_vbo->render(fill);
+        #endif
     }
 
 
@@ -770,7 +795,7 @@ void Scene::renderDebug(Uniforms& _uniforms) {
         m_lightUI_shader.setUniform("u_viewMatrix", _uniforms.getCamera().getViewMatrix());
         m_lightUI_shader.setUniform("u_modelViewProjectionMatrix", ada::getProjectionViewWorldMatrix() );
 
-        for (unsigned int i = 0; i < _uniforms.lights.size(); i++) {
+        for (size_t i = 0; i < _uniforms.lights.size(); i++) {
             m_lightUI_shader.setUniform("u_translate", _uniforms.lights[i].getPosition());
             m_lightUI_shader.setUniform("u_color", glm::vec4(_uniforms.lights[i].color, 1.0));
 
