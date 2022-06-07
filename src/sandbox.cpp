@@ -1538,7 +1538,7 @@ void Sandbox::renderUI() {
                 m_billboard_shader.setUniform("u_tex0TotalFrames", 0.0f );
                 m_billboard_vbo->render(&m_billboard_shader);
 
-                ada::text("u_buffer" + ada::toString(i), xOffset - xStep, ada::getWindowHeight() - yOffset + yStep);
+                ada::text("u_buffer" + ada::toString(i), xOffset - scale.x, ada::getWindowHeight() - yOffset + yStep);
 
                 yOffset -= yStep * 2.0;
             }
@@ -1557,7 +1557,7 @@ void Sandbox::renderUI() {
                 m_billboard_shader.setUniform("u_tex0TotalFrames", 0.0f );
                 m_billboard_vbo->render(&m_billboard_shader);
 
-                ada::text("u_doubleBuffer" + ada::toString(i), xOffset - xStep, ada::getWindowHeight() - yOffset + yStep);
+                ada::text("u_doubleBuffer" + ada::toString(i), xOffset - scale.x, ada::getWindowHeight() - yOffset + yStep);
                 yOffset -= yStep * 2.0;
             }
 
@@ -1593,7 +1593,7 @@ void Sandbox::renderUI() {
 
                 }
 
-                // ada::text("u_convolutionPyramid0" + ada::toString(i), xOffset - xStep * 1.5, ada::getWindowHeight() - yOffset + yStep);
+                // ada::text("u_convolutionPyramid0" + ada::toString(i), xOffset - scale.x * 2.0, ada::getWindowHeight() - yOffset + yStep);
                 yOffset -= yStep * 2.0;
 
             }
