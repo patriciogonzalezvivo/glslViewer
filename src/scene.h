@@ -42,7 +42,7 @@ public:
     float           getArea() const { return m_area; }
 
     void            render(Uniforms& _uniforms);
-    void            renderFloor(Uniforms& _uniforms, const glm::mat4& _mvp);
+    void            renderFloor(Uniforms& _uniforms, const glm::mat4& _mvp, bool _lights = true);
     void            renderGeometry(Uniforms& _uniforms);
     void            renderBackground(Uniforms& _uniforms);
     void            renderDebug(Uniforms& _uniforms);

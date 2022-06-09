@@ -1,6 +1,6 @@
 #include "console.h"
 
-#ifdef SUPPORT_NCURSES
+#if defined(SUPPORT_NCURSES)
 #include <signal.h>
 
 #include <functional>
@@ -237,7 +237,7 @@ std::string suggest(std::string _cmd, std::string& _suggestion, CommandList& _co
 #endif
 
 void console_sigwinch_handler(int signal) {
-    #ifdef SUPPORT_NCURSES
+    #if defined(SUPPORT_NCURSES)
     endwin();
     erase();
     refresh();
@@ -264,7 +264,7 @@ void console_sigwinch_handler(int signal) {
 
 void console_init(int _osc_port) {
 
-    #ifdef SUPPORT_NCURSES
+    #if defined(SUPPORT_NCURSES)
 
     if (_osc_port > 0)
         cmd_prompt = "osc://localhost:" + ada::toString(_osc_port) + " ";
@@ -314,7 +314,7 @@ void console_init(int _osc_port) {
 }
 
 void console_clear() {
-    #ifdef SUPPORT_NCURSES
+    #if defined(SUPPORT_NCURSES)
     cmd = "";
     cmd_suggested = "";
     buffer_cout.str("");
@@ -327,7 +327,7 @@ void console_clear() {
 }
 
 void console_refresh() {
-    #ifdef SUPPORT_NCURSES
+    #if defined(SUPPORT_NCURSES)
     erase();
     refresh();
     
@@ -338,7 +338,7 @@ void console_refresh() {
 }
 
 bool console_getline(std::string& _cmd, CommandList& _commands, Sandbox& _sandbox) {
-    #ifdef SUPPORT_NCURSES
+    #if defined(SUPPORT_NCURSES)
 
     if (uniforms == nullptr)
         uniforms = &_sandbox.uniforms;
@@ -577,7 +577,7 @@ bool console_getline(std::string& _cmd, CommandList& _commands, Sandbox& _sandbo
 }
 
 void console_draw_pct(float _pct) {
-    #ifdef SUPPORT_NCURSES
+    #if defined(SUPPORT_NCURSES)
     size_t lines, cols;
     getmaxyx(cmd_win, lines, cols);
 
@@ -614,14 +614,14 @@ void console_draw_pct(float _pct) {
 }
 
 void console_uniforms( bool _show ) {
-    #ifdef SUPPORT_NCURSES
+    #if defined(SUPPORT_NCURSES)
     stt_visible = _show;
     console_sigwinch_handler(0);
     #endif
 }
 
 void console_uniforms_refresh() {
-    #ifdef SUPPORT_NCURSES
+    #if defined(SUPPORT_NCURSES)
     if (stt_visible) {
         refresh();
         refresh_stt_win();
@@ -631,14 +631,14 @@ void console_uniforms_refresh() {
 }
 
 void console_end() {
-    #ifdef SUPPORT_NCURSES
+    #if defined(SUPPORT_NCURSES)
     captureMouse(false);
     endwin();
     #endif
 }
 
 void captureMouse(bool _enable) {
-    #ifdef SUPPORT_NCURSES
+    #if defined(SUPPORT_NCURSES)
     mouse_capture_enabled = _enable;
     if (_enable) {
         mouseinterval(0);

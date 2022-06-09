@@ -1,6 +1,6 @@
 #pragma once
 
-#ifdef SUPPORT_MULTITHREAD_RECORDING 
+#if defined(SUPPORT_MULTITHREAD_RECORDING)
 #include <atomic>
 #include "thread_pool/thread_pool.hpp"
 #endif
@@ -136,7 +136,7 @@ private:
 
     // Recording
     ada::Fbo            m_record_fbo;
-    #ifdef SUPPORT_MULTITHREAD_RECORDING 
+    #if defined(SUPPORT_MULTITHREAD_RECORDING)
     std::atomic<int>        m_task_count {0};
     std::atomic<long long>  m_max_mem_in_queue {0};
     thread_pool::ThreadPool m_save_threads;

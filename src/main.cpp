@@ -1,4 +1,4 @@
-#ifdef __EMSCRIPTEN__
+#if defined(__EMSCRIPTEN__)
 #define GLFW_INCLUDE_ES3
 #include <emscripten/emscripten.h>
 #include <emscripten/html5.h>
@@ -32,7 +32,7 @@
 #include "tools/record.h"
 #include "tools/console.h"
 
-#ifdef SUPPORT_NCURSES
+#if defined(SUPPORT_NCURSES)
 #include <ncurses.h>
 #include <signal.h>
 #endif
@@ -613,7 +613,7 @@ int main(int argc, char **argv) {
 
     sandbox.setup(files, commands);
 
-#ifdef __EMSCRIPTEN__
+#if defined(__EMSCRIPTEN__)
     emscripten_request_animation_frame_loop(loop, 0);
 
     double width,  height;

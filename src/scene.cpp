@@ -609,7 +609,7 @@ void Scene::renderShadowMap(Uniforms& _uniforms) {
             glm::mat4 mvp = _uniforms.lights[i].getMVPMatrix( ada::getWorldMatrix(), m_area );
             _uniforms.lights[i].bindShadowMap();
 
-            renderFloor(_uniforms, mvp);
+            renderFloor(_uniforms, mvp, false);
 
             for (size_t i = 0; i < m_models.size(); i++) {
                 // m_models[i]->render(_uniforms, mvp);
@@ -677,8 +677,7 @@ void Scene::renderBackground(Uniforms& _uniforms) {
     }
 }
 
-void Scene::renderFloor(Uniforms& _uniforms, const glm::mat4& _mvp) {
-
+void Scene::renderFloor(Uniforms& _uniforms, const glm::mat4& _mvp, bool _lights) {
     if (m_floor_subd_target >= 0) {
 
         //  Floor
@@ -711,13 +710,12 @@ void Scene::renderFloor(Uniforms& _uniforms, const glm::mat4& _mvp) {
         }
 
         if (m_floor_vbo) {
-            
             m_floor_shader.use();
-            _uniforms.feedTo( m_floor_shader );
+            _uniforms.feedTo( m_floor_shader, _lights );
             m_floor_shader.setUniform("u_modelViewProjectionMatrix", _mvp );
             m_floor_vbo->render( &m_floor_shader );
-
         }
+
     }
 }
 
@@ -733,7 +731,7 @@ void Scene::renderDebug(Uniforms& _uniforms) {
     // Draw Bounding boxes
     if (showBBoxes) {
         ada::strokeWeight(3.0f);
-    #ifdef USE_ADA
+    #if defined(USE_ADA)
         ada::stroke(glm::vec3(1.0f, 0.0f, 0.0f));
         for (size_t i = 0; i < m_models.size(); i++) 
             ada::model(m_models[i]->getVboBbox());
@@ -756,7 +754,7 @@ void Scene::renderDebug(Uniforms& _uniforms) {
             m_axis_vbo = new ada::Vbo( ada::axisMesh(_uniforms.getCamera().getFarClip(), m_floor_height) );
 
         ada::strokeWeight(2.0f);
-    #ifdef USE_ADA
+    #if defined(USE_ADA)
         ada::stroke( glm::vec4(1.0f) );
         ada::model( m_axis_vbo );
     #else
@@ -773,7 +771,7 @@ void Scene::renderDebug(Uniforms& _uniforms) {
             m_grid_vbo = new ada::Vbo( ada::gridMesh(_uniforms.getCamera().getFarClip(), _uniforms.getCamera().getFarClip() / 20.0, m_floor_height) );
 
         ada::strokeWeight(1.0f);
-        #ifdef USE_ADA
+        #if defined(USE_ADA)
         ada::stroke( glm::vec4(0.5f) );
         ada::model( m_grid_vbo );
         #else

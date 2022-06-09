@@ -45,7 +45,7 @@ Sandbox::Sandbox():
     m_plot_texture(nullptr), m_plot(PLOT_OFF),
 
     // Record
-    #ifdef SUPPORT_MULTITHREAD_RECORDING 
+    #if defined(SUPPORT_MULTITHREAD_RECORDING)
     m_task_count(0),
     /** allow 500 MB to be used for the image save queue **/
     m_max_mem_in_queue(500 * 1024 * 1024),
@@ -127,7 +127,7 @@ Sandbox::Sandbox():
 }
 
 Sandbox::~Sandbox() {
-    #ifdef SUPPORT_MULTITHREAD_RECORDING 
+    #if defined(SUPPORT_MULTITHREAD_RECORDING)
     /** make sure every frame is saved before exiting **/
     if (m_task_count > 0)
         std::cout << "saving remaining frames to disk, this might take a while ..." << std::endl;
@@ -761,7 +761,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     },
     "streams[,stop|play|restart|speed|prevs[,<value>]]", "print all streams or get/set streams speed and previous frames"));
 
-    #ifdef SUPPORT_MULTITHREAD_RECORDING 
+    #if defined(SUPPORT_MULTITHREAD_RECORDING)
     _commands.push_back(Command("max_mem_in_queue", [&](const std::string & line) {
         std::vector<std::string> values = ada::split(line,',');
         if (values.size() == 2) {
@@ -1199,7 +1199,7 @@ void Sandbox::_renderBuffers() {
                 m_buffers_shaders[i].setUniformTexture("u_doubleBuffer" + ada::toString(j), uniforms.doubleBuffers[j].src );
 
         // Update uniforms and textures
-        uniforms.feedTo( m_buffers_shaders[i], true, false);
+        uniforms.feedTo(m_buffers_shaders[i], true, false);
 
         m_billboard_vbo->render( &m_buffers_shaders[i] );
         
@@ -1225,7 +1225,7 @@ void Sandbox::_renderBuffers() {
             m_doubleBuffers_shaders[i].setUniformTexture("u_doubleBuffer" + ada::toString(j), uniforms.doubleBuffers[j].src );
 
         // Update uniforms and textures
-        uniforms.feedTo( m_doubleBuffers_shaders[i], true, false);
+        uniforms.feedTo(m_doubleBuffers_shaders[i], true, false);
 
         m_billboard_vbo->render( &m_doubleBuffers_shaders[i] );
         
@@ -1929,7 +1929,7 @@ void Sandbox::onScreenshot(std::string _file) {
             auto pixels = std::unique_ptr<unsigned char[]>(new unsigned char [width * height * 4]);
             glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixels.get());
 
-            #ifdef SUPPORT_MULTITHREAD_RECORDING
+            #if defined(SUPPORT_MULTITHREAD_RECORDING)
             
             std::shared_ptr<Job> saverPtr = std::make_shared<Job>(std::move(_file), width, height, std::move(pixels), m_task_count, m_max_mem_in_queue);
             /** In the case that we render faster than we can safe frames, more and more frames

@@ -104,7 +104,7 @@ bool recordingPipeOpen(const RecordingSettings& _settings, float _start, float _
         "-y",   // overwrite
         "-an",                                                  // disable audio -- todo: add audio,`
 
-        #ifdef SUPPORT_NCURSES
+        #if defined(SUPPORT_NCURSES)
         "-loglevel quiet",                                      // no log output 
         // "-stats",                                            // only stats
         #endif

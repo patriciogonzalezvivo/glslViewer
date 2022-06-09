@@ -712,10 +712,14 @@ bool Uniforms::feedTo(ada::Shader *_shader, bool _lights, bool _buffers ) {
     bool update = false;
 
     // Pass Native uniforms 
-    for (UniformFunctionsList::iterator it=functions.begin(); it!=functions.end(); ++it)
+    for (UniformFunctionsList::iterator it=functions.begin(); it!=functions.end(); ++it) {
+        if (!_lights && ( it->first == "u_scene" || "u_sceneDepth") )
+            continue;
+
         if (it->second.present)
             if (it->second.assign)
                 it->second.assign( *_shader );
+    }
 
     // Pass User defined uniforms
     if (m_change) {
