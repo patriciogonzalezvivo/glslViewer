@@ -200,7 +200,7 @@ Module['FS_createPath']("/examples/3D", "03_models", true, true);
     }
 
     }
-    loadPackage({"files": [{"filename": "/examples/3D/00_pipeline/00_background.frag", "start": 0, "end": 1908}, {"filename": "/examples/3D/00_pipeline/01_postprocessing.frag", "start": 1908, "end": 4826}, {"filename": "/examples/3D/01_lighting/00_gooch.frag", "start": 4826, "end": 6555}, {"filename": "/examples/3D/01_lighting/01_shadows.frag", "start": 6555, "end": 7883}, {"filename": "/examples/3D/01_lighting/02_cubemap.frag", "start": 7883, "end": 8856}, {"filename": "/examples/3D/01_lighting/04_fresnel.vert", "start": 8856, "end": 10475}, {"filename": "/examples/3D/01_lighting/04_fresnel.frag", "start": 10475, "end": 11431}, {"filename": "/examples/3D/01_lighting/uffizi_cross.jpg", "start": 11431, "end": 332917}, {"filename": "/examples/3D/03_models/duck.glb", "start": 332917, "end": 453401}], "remote_package_size": 453401, "package_uuid": "d45bab68-e0a4-454c-afa4-15ffa61a7ff1"});
+    loadPackage({"files": [{"filename": "/examples/3D/00_pipeline/00_background.frag", "start": 0, "end": 1908}, {"filename": "/examples/3D/00_pipeline/01_postprocessing.frag", "start": 1908, "end": 4826}, {"filename": "/examples/3D/01_lighting/00_gooch.frag", "start": 4826, "end": 6555}, {"filename": "/examples/3D/01_lighting/01_shadows.frag", "start": 6555, "end": 7883}, {"filename": "/examples/3D/01_lighting/02_cubemap.frag", "start": 7883, "end": 8856}, {"filename": "/examples/3D/01_lighting/04_fresnel.vert", "start": 8856, "end": 10475}, {"filename": "/examples/3D/01_lighting/04_fresnel.frag", "start": 10475, "end": 11431}, {"filename": "/examples/3D/01_lighting/uffizi_cross.jpg", "start": 11431, "end": 376275}, {"filename": "/examples/3D/01_lighting/uffizi_latlong.jpg", "start": 376275, "end": 442732}, {"filename": "/examples/3D/03_models/duck.glb", "start": 442732, "end": 563216}], "remote_package_size": 563216, "package_uuid": "45ec6aef-35ca-4035-8d9c-576dd5e20c43"});
 
   })();
 
@@ -5754,6 +5754,8 @@ var ASM_CONSTS = {
         );
     }
 
+  function _glGenerateMipmap(x0) { GLctx['generateMipmap'](x0) }
+
   function _glGetAttribLocation(program, name) {
       return GLctx.getAttribLocation(GL.programs[program], UTF8ToString(name));
     }
@@ -8823,6 +8825,7 @@ var asmLibraryArg = {
   "glGenFramebuffers": _glGenFramebuffers,
   "glGenRenderbuffers": _glGenRenderbuffers,
   "glGenTextures": _glGenTextures,
+  "glGenerateMipmap": _glGenerateMipmap,
   "glGetAttribLocation": _glGetAttribLocation,
   "glGetBooleanv": _glGetBooleanv,
   "glGetIntegerv": _glGetIntegerv,

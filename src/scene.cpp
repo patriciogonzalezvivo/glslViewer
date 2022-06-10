@@ -277,8 +277,13 @@ void Scene::setup(CommandList& _commands, Uniforms& _uniforms) {
         else {
             std::vector<std::string> values = ada::split(_line,',');
             if (values.size() == 2) {
-                if (values[1] == "on")
+                if (values[1] == "on") {
                     setCubeMap(&m_skybox);
+                    addDefine("SCENE_CUBEMAP_HDR", "1");
+                }
+                else {
+                    delDefine("SCENE_CUBEMAP_HDR");
+                }
                 showCubebox = values[1] == "on";
                 return true;
             }
@@ -411,17 +416,15 @@ void Scene::setup(CommandList& _commands, Uniforms& _uniforms) {
 void Scene::addDefine(const std::string& _define, const std::string& _value) {
     m_background_shader.addDefine(_define, _value);
     m_floor_shader.addDefine(_define, _value);
-    for (size_t i = 0; i < m_models.size(); i++) {
+    for (size_t i = 0; i < m_models.size(); i++)
         m_models[i]->addDefine(_define, _value);
-    }
 }
 
 void Scene::delDefine(const std::string& _define) {
     m_background_shader.delDefine(_define);
     m_floor_shader.delDefine(_define);
-    for (size_t i = 0; i < m_models.size(); i++) {
+    for (size_t i = 0; i < m_models.size(); i++)
         m_models[i]->delDefine(_define);
-    }
 }
 
 void Scene::setCubeMap(ada::SkyData* _skybox ) { 
@@ -662,18 +665,19 @@ void Scene::renderBackground(Uniforms& _uniforms) {
 
     else if (_uniforms.cubemap && showCubebox) {
 
-        if (!m_cubemap_vbo) {
-            m_cubemap_vbo = new ada::Vbo( ada::cubeMesh(1.0f) );
-            m_cubemap_shader.load(ada::getDefaultSrc(ada::FRAG_CUBEMAP), ada::getDefaultSrc(ada::VERT_CUBEMAP), false);
+        if (_uniforms.cubemap->isLoaded()) {
+            if (!m_cubemap_vbo) {
+                m_cubemap_vbo = new ada::Vbo( ada::cubeMesh(1.0f) );
+                m_cubemap_shader.load(ada::getDefaultSrc(ada::FRAG_CUBEMAP), ada::getDefaultSrc(ada::VERT_CUBEMAP), false);
+            }
+
+            m_cubemap_shader.use();
+
+            m_cubemap_shader.setUniform("u_modelViewProjectionMatrix", _uniforms.getCamera().getProjectionMatrix() * glm::toMat4(_uniforms.getCamera().getOrientationQuat()) );
+            m_cubemap_shader.setUniformTextureCube( "u_cubeMap", _uniforms.cubemap, 0 );
+
+            m_cubemap_vbo->render( &m_cubemap_shader );
         }
-
-        m_cubemap_shader.use();
-
-        m_cubemap_shader.setUniform("u_modelViewProjectionMatrix", _uniforms.getCamera().getProjectionMatrix() * glm::toMat4(_uniforms.getCamera().getOrientationQuat()) );
-        m_cubemap_shader.setUniformTextureCube( "u_cubeMap", _uniforms.cubemap, 0 );
-
-        m_cubemap_vbo->render( &m_cubemap_shader );
-
     }
 }
 

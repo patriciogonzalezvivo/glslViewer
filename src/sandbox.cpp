@@ -886,9 +886,9 @@ void Sandbox::addDefine(const std::string &_define, const std::string &_value) {
     for (int i = 0; i < m_doubleBuffers_total; i++)
         m_doubleBuffers_shaders[i].addDefine(_define, _value);
 
-    if (geom_index == -1)
+    // if (geom_index == -1)
         m_canvas_shader.addDefine(_define, _value);
-    else
+    // else
         m_scene.addDefine(_define, _value);
 
     m_postprocessing_shader.addDefine(_define, _value);
@@ -897,6 +897,9 @@ void Sandbox::addDefine(const std::string &_define, const std::string &_value) {
 void Sandbox::delDefine(const std::string &_define) {
     for (int i = 0; i < m_buffers_total; i++)
         m_buffers_shaders[i].delDefine(_define);
+
+    for (int i = 0; i < m_doubleBuffers_total; i++)
+        m_doubleBuffers_shaders[i].delDefine(_define);
 
     if (geom_index == -1)
         m_canvas_shader.delDefine(_define);
