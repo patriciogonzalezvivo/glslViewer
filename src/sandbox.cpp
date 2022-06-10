@@ -1639,7 +1639,13 @@ void Sandbox::renderUI() {
                     if ( uniforms.lights[i].getShadowMap()->getDepthTextureId() ) {
                         m_billboard_shader.setUniform("u_scale", xStep, yStep);
                         m_billboard_shader.setUniform("u_translate", xOffset, yOffset);
-                        m_billboard_shader.setUniform("u_depth", 0.0f);
+                        m_billboard_shader.setUniform("u_depth", 1.0f);
+                        // m_billboard_shader.setUniform("u_cameraNearClip", uniforms.lights[i].getShadowMapNear() );
+                        // m_billboard_shader.setUniform("u_cameraFarClip", uniforms.lights[i].getShadowMapNear() );
+                        // m_billboard_shader.setUniform("u_cameraDistance", glm::length( uniforms.lights[i].getPosition() ) );
+                        m_billboard_shader.setUniform("u_cameraNearClip", 0.001f );
+                        m_billboard_shader.setUniform("u_cameraFarClip", 100.0f);
+                        m_billboard_shader.setUniform("u_cameraDistance", 0.0f );
                         m_billboard_shader.setUniform("u_modelViewProjectionMatrix", ada::getOrthoMatrix());
                         m_billboard_shader.setUniformDepthTexture("u_tex0", uniforms.lights[i].getShadowMap());
                         m_billboard_shader.setUniform("u_tex0CurrentFrame", 0.0f );
