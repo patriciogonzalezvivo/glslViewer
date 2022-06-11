@@ -697,11 +697,12 @@ void Scene::renderFloor(Uniforms& _uniforms, const glm::mat4& _mvp, bool _lights
             m_floor_shader.addDefine("FLOOR_AREA", m_area * 3.0f);
             m_floor_shader.addDefine("FLOOR_HEIGHT", m_floor_height);
 
-            m_floor_shader.addDefine("MODEL_VERTEX_COLOR");
-            m_floor_shader.addDefine("MODEL_VERTEX_NORMAL");
-            m_floor_shader.addDefine("MODEL_VERTEX_TEXCOORD");
+            m_floor_shader.addDefine("MODEL_VERTEX_COLOR", "v_color");
+            m_floor_shader.addDefine("MODEL_VERTEX_NORMAL", "v_normal");
+            m_floor_shader.addDefine("MODEL_VERTEX_TEXCOORD","v_texcoord");
             
             m_floor_shader.addDefine("LIGHT_SHADOWMAP", "u_lightShadowMap");
+            
             #if defined(PLATFORM_RPI)
                 m_floor_shader.addDefine("LIGHT_SHADOWMAP_SIZE", "512.0");
             #else

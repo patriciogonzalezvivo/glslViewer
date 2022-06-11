@@ -815,7 +815,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     // LOAD GEOMETRY
     // -----------------------------------------------
     if (geom_index == -1) {
-        m_canvas_shader.addDefine("MODEL_VERTEX_TEXCOORD");
+        m_canvas_shader.addDefine("MODEL_VERTEX_TEXCOORD", "v_texcoord");
         uniforms.getCamera().orbit(m_lat, m_lon, 2.0);
     }
     else {
