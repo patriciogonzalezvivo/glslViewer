@@ -277,13 +277,8 @@ void Scene::setup(CommandList& _commands, Uniforms& _uniforms) {
         else {
             std::vector<std::string> values = ada::split(_line,',');
             if (values.size() == 2) {
-                if (values[1] == "on") {
+                if (values[1] == "on")
                     setCubeMap(&m_skybox);
-                    addDefine("SCENE_CUBEMAP_HDR", "1");
-                }
-                else {
-                    delDefine("SCENE_CUBEMAP_HDR");
-                }
                 showCubebox = values[1] == "on";
                 return true;
             }
@@ -605,6 +600,7 @@ void Scene::renderShadowMap(Uniforms& _uniforms) {
     }
 
     if ( m_dynamicShadows || changeOnLights || m_origin.bChange ) {
+        std::cout << "rendering lights" << std::endl;
         // TRACK_BEGIN("shadowmap")
         for (size_t i = 0; i < _uniforms.lights.size(); i++) {
             // Temporally move the MVP matrix from the view of the light 
@@ -674,7 +670,7 @@ void Scene::renderBackground(Uniforms& _uniforms) {
             m_cubemap_shader.use();
 
             m_cubemap_shader.setUniform("u_modelViewProjectionMatrix", _uniforms.getCamera().getProjectionMatrix() * glm::toMat4(_uniforms.getCamera().getOrientationQuat()) );
-            m_cubemap_shader.setUniformTextureCube( "u_cubeMap", _uniforms.cubemap, 0 );
+            m_cubemap_shader.setUniformTextureCube("u_cubeMap", _uniforms.cubemap, 0);
 
             m_cubemap_vbo->render( &m_cubemap_shader );
         }
@@ -785,7 +781,6 @@ void Scene::renderDebug(Uniforms& _uniforms) {
         m_grid_vbo->render(fill);
         #endif
     }
-
 
     // Light
     {

@@ -527,12 +527,6 @@ int main(int argc, char **argv) {
             if(++i < argc) {
                 argument = std::string(argv[i]);
                 sandbox.uniforms.setCubeMap(argument, files);
-
-                if (ada::haveExt(argument,"hdr") || ada::haveExt(argument,"HDR")) {
-                    commandsArgs.push_back("define,SCENE_CUBEMAP_HDR");
-                    commandsArgs.push_back("reload");
-                }
-
                 sandbox.getScene().showCubebox = false;
             }
             else
@@ -544,11 +538,6 @@ int main(int argc, char **argv) {
                 argument = std::string(argv[i]);
                 sandbox.uniforms.setCubeMap(argument, files);
                 sandbox.getScene().showCubebox = true;
-
-                if (ada::haveExt(argument,"hdr") || ada::haveExt(argument,"HDR")) {
-                    commandsArgs.push_back("define,SCENE_CUBEMAP_HDR");
-                    commandsArgs.push_back("reload");
-                }
             }
             else
                 std::cout << "Argument '" << argument << "' should be followed by a <environmental_map>. Skipping argument." << std::endl;
