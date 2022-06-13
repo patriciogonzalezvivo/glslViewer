@@ -273,7 +273,7 @@ bool console_is_init() {
     return cmd_win != nullptr && out_win != nullptr && stt_win != nullptr;
     #else
     return false;
-    #endif;
+    #endif
 
 }
 

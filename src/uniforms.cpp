@@ -800,12 +800,13 @@ bool Uniforms::feedTo(ada::Shader *_shader, bool _lights, bool _buffers ) {
                 _shader->setUniformDepthTexture("u_lightShadowMap", lights[i].getShadowMap(), _shader->textureIndex++ );
             }
         }
+        
+        if (cubemap) {
+            _shader->setUniformTextureCube("u_cubeMap", (ada::TextureCube*)cubemap);
+            _shader->setUniform("u_SH", cubemap->SH, 9);
+        }
     }
 
-    if (cubemap) {
-        _shader->setUniformTextureCube("u_cubeMap", (ada::TextureCube*)cubemap);
-        _shader->setUniform("u_SH", cubemap->SH, 9);
-    }
 
     return update;
 }

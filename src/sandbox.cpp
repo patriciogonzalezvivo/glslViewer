@@ -478,6 +478,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     "lights", "print all light related uniforms"));
 
     _commands.push_back(Command("light_position", [&](const std::string& _line){ 
+        
         std::vector<std::string> values = ada::split(_line,',');
         if (values.size() == 4) {
             if (uniforms.lights.size() > 0) 
@@ -486,8 +487,9 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         }
         else if (values.size() == 5) {
             size_t i = ada::toInt(values[1]);
-            if (uniforms.lights.size() > i) 
+            if (uniforms.lights.size() > i)
                 uniforms.lights[i].setPosition(glm::vec3(ada::toFloat(values[2]), ada::toFloat(values[3]), ada::toFloat(values[4])));
+
             return true;
         }
         else {

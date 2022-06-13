@@ -545,15 +545,15 @@ void Scene::render(Uniforms& _uniforms) {
 
     ada::blendMode(m_blend);
 
-    // if (_uniforms.getCamera().bChange || m_origin.bChange) 
+    if (_uniforms.getCamera().bChange || m_origin.bChange) 
     {
         ada::setCamera( _uniforms.getCamera() );
         ada::applyMatrix( m_origin.getTransformMatrix() );
     }
 
-    TRACK_BEGIN("render:scene:floor")
+    // TRACK_BEGIN("render:scene:floor")
     renderFloor(_uniforms, ada::getProjectionViewWorldMatrix() );
-    TRACK_END("render:scene:floor")
+    // TRACK_END("render:scene:floor")
 
     ada::cullingMode(m_culling);
 
@@ -591,45 +591,45 @@ void Scene::renderShadowMap(Uniforms& _uniforms) {
     if (!m_shadows)
         return;
 
-    bool changeOnLights = false;
+    // TRACK_BEGIN("shadowmap")
+    bool dirty = false;
     for (size_t i = 0; i < _uniforms.lights.size(); i++) {
-        if (_uniforms.lights[i].bChange) {
-            changeOnLights = true;
-            break;
-        }
-    }
+        if (m_dynamicShadows || 
+            _uniforms.lights[i].bChange || 
+            _uniforms.lights[i].bUpdateShadowMap || 
+            haveChange() ) {
 
-    if ( m_dynamicShadows || changeOnLights || m_origin.bChange ) {
-        std::cout << "rendering lights" << std::endl;
-        // TRACK_BEGIN("shadowmap")
-        for (size_t i = 0; i < _uniforms.lights.size(); i++) {
             // Temporally move the MVP matrix from the view of the light 
-            // glm::mat4 mvp = _uniforms.lights[i].getMVPMatrix( m_origin.getTransformMatrix(), m_area );
-            glm::mat4 mvp = _uniforms.lights[i].getMVPMatrix( ada::getWorldMatrix(), m_area );
+            glm::mat4 mvp = _uniforms.lights[i].getMVPMatrix( m_origin.getTransformMatrix(), m_area );
+            // glm::mat4 mvp = _uniforms.lights[i].getMVPMatrix( ada::getWorldMatrix(), m_area );
             _uniforms.lights[i].bindShadowMap();
-
-            renderFloor(_uniforms, mvp, false);
-
-            for (size_t i = 0; i < m_models.size(); i++) {
+            
+            // renderFloor(_uniforms, mvp, false);
+            dirty += m_models.size() == 0;
+            for (size_t j = 0; j < m_models.size(); j++) {
                 // m_models[i]->render(_uniforms, mvp);
-                if (m_models[i]->getShader()->isLoaded() ) {
+                if (m_models[j]->getShader()->isLoaded() ) {
 
                     // bind the shader
-                    m_models[i]->getShader()->use();
+                    m_models[j]->getShader()->use();
 
                     // Update Uniforms and textures variables to the shader
-                    _uniforms.feedTo( m_models[i]->getShader(), false );
+                    _uniforms.feedTo( m_models[j]->getShader(), false );
 
                     // Pass special uniforms
-                    m_models[i]->getShader()->setUniform( "u_modelViewProjectionMatrix", mvp);
-                    m_models[i]->render();
+                    m_models[j]->getShader()->setUniform( "u_modelViewProjectionMatrix", mvp );
+                    m_models[j]->render();
                 }
+                else
+                    dirty += true;
             }
 
             _uniforms.lights[i].unbindShadowMap();
         }
-        // TRACK_END("shadowmap")
+
+        _uniforms.lights[i].bUpdateShadowMap += dirty;
     }
+    // TRACK_END("shadowmap")
 }
 
 void Scene::renderBackground(Uniforms& _uniforms) {
