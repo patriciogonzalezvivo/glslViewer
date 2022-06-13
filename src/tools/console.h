@@ -6,6 +6,8 @@
 
 void console_init(int _osc_port);
 
+bool console_is_init();
+
 void console_clear();
 void console_refresh();
 

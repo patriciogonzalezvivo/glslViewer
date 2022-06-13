@@ -56,6 +56,11 @@ CommandList                 commands;
 std::mutex                  commandsMutex;
 std::vector<std::string>    commandsArgs;    // Execute commands
 bool                        commandsExit = false;
+#if defined(SUPPORT_NCURSES)
+bool                        commands_ncurses = true;
+#else
+bool                        commands_ncurses = false;
+#endif
 
 std::atomic<bool>           keepRunnig(true);
 bool                        screensaver = false;
@@ -239,6 +244,9 @@ int main(int argc, char **argv) {
         else if (   std::string(argv[i]) == "--nocursor" ) {
             commandsArgs.push_back("cursor,off");
         }
+        else if ( argument == "--noncurses" ) {
+            commands_ncurses = false;
+        }
         else if (   std::string(argv[i]) == "--headless" ) {
             window_properties.style = ada::HEADLESS;
         }
@@ -367,6 +375,9 @@ int main(int argc, char **argv) {
         }
         else if (   argument == "--verbose" ) {
             sandbox.verbose = true;
+        }
+        else if ( argument == "--noncurses" ) {
+            commands_ncurses = false;
         }
         else if ( argument == "--nocursor" ) {
             sandbox.cursor = false;
@@ -1436,6 +1447,7 @@ void printUsage(char * executableName) {
     std::cerr << "      -ss or --screensaver        # screensaver mode, any pressed key will exit" << std::endl;
     std::cerr << "      --headless                  # headless rendering" << std::endl;
     std::cerr << "      --nocursor                  # hide cursor" << std::endl;
+    std::cerr << "      --noncurses                 # disable ncurses command interface" << std::endl;
     std::cerr << "      --fps <fps>                 # fix the max FPS" << std::endl;
     std::cerr << "      --fxaa                      # set FXAA as postprocess filter" << std::endl;
     std::cerr << "      --quilt <0-7>               # quilt render (HoloPlay)" << std::endl;
@@ -1491,9 +1503,11 @@ void fileWatcherThread() {
 void cinWatcherThread() {
 
     #if defined(SUPPORT_NCURSES)
-    console_init(oscPort);
-    signal(SIGWINCH, console_sigwinch_handler);
-    console_refresh();
+    if (commands_ncurses) {
+        console_init(oscPort);
+        signal(SIGWINCH, console_sigwinch_handler);
+        console_refresh();
+    }
     #endif
 
     while (!sandbox.isReady()) {
@@ -1519,23 +1533,25 @@ void cinWatcherThread() {
     }
 
     #if defined(SUPPORT_NCURSES)
-    while ( keepRunnig.load() ) {
-        std::string cmd;
-        if (console_getline(cmd, commands, sandbox))
-            if (cmd.size() > 0)
-                commandsRun(cmd);
-    }
-    console_end();
-    #else
-    // Commands coming from the console IN
-    std::string cmd;
-    std::cout << "// > ";
-    while (std::getline(std::cin, cmd)) {
-        commandsRun(cmd);
-        std::cout << "// > ";
-    }
+    if (commands_ncurses) {
+        while ( keepRunnig.load() ) {
+            std::string cmd;
+            if (console_getline(cmd, commands, sandbox))
+                if (cmd.size() > 0)
+                    commandsRun(cmd);
+        }
+        console_end();
+    } else
     #endif
-
+    {
+        // Commands coming from the console IN
+        std::string cmd;
+        std::cout << "// > ";
+        while (std::getline(std::cin, cmd)) {
+            commandsRun(cmd);
+            std::cout << "// > ";
+        }
+    }
 }
 
 #endif

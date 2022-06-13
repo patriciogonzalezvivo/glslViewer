@@ -108,6 +108,7 @@ void refresh_out_win() {
 
     refresh_cursor();
 }
+
 void refresh_cmd_win() {
     werase(cmd_win);
     box(cmd_win, 0, 0);
@@ -238,6 +239,10 @@ std::string suggest(std::string _cmd, std::string& _suggestion, CommandList& _co
 
 void console_sigwinch_handler(int signal) {
     #if defined(SUPPORT_NCURSES)
+
+    if (!console_is_init())
+        return;
+
     endwin();
     erase();
     refresh();
@@ -260,6 +265,16 @@ void console_sigwinch_handler(int signal) {
 
     console_refresh();
     #endif
+}
+
+bool console_is_init() {
+
+    #if defined(SUPPORT_NCURSES)
+    return cmd_win != nullptr && out_win != nullptr && stt_win != nullptr;
+    #else
+    return false;
+    #endif;
+
 }
 
 void console_init(int _osc_port) {
@@ -315,6 +330,7 @@ void console_init(int _osc_port) {
 
 void console_clear() {
     #if defined(SUPPORT_NCURSES)
+
     cmd = "";
     cmd_suggested = "";
     buffer_cout.str("");
@@ -328,6 +344,10 @@ void console_clear() {
 
 void console_refresh() {
     #if defined(SUPPORT_NCURSES)
+
+    if (!console_is_init())
+        return;
+
     erase();
     refresh();
     
@@ -578,60 +598,70 @@ bool console_getline(std::string& _cmd, CommandList& _commands, Sandbox& _sandbo
 
 void console_draw_pct(float _pct) {
     #if defined(SUPPORT_NCURSES)
-    size_t lines, cols;
-    getmaxyx(cmd_win, lines, cols);
 
-    werase(cmd_win);
-    box(cmd_win,0, 0);
-    // wborder(cmd_win, '|', '|', '-', '-', '+', '+', '+', '+');
+    if (console_is_init()) {
+        size_t lines, cols;
+        getmaxyx(cmd_win, lines, cols);
 
-    size_t l = (cols-4) * _pct;
-    wattron(cmd_win, COLOR_PAIR(3));
-    for (size_t i = 0; i < cols-4; i++)
-        mvwprintw(cmd_win, 1, 2 + i, "%s", (i < l )? "#" : ".");
-    wattroff(cmd_win, COLOR_PAIR(3));
+        werase(cmd_win);
+        box(cmd_win,0, 0);
+        // wborder(cmd_win, '|', '|', '-', '-', '+', '+', '+', '+');
 
-    wrefresh(cmd_win);
-    #else
+        size_t l = (cols-4) * _pct;
+        wattron(cmd_win, COLOR_PAIR(3));
+        for (size_t i = 0; i < cols-4; i++)
+            mvwprintw(cmd_win, 1, 2 + i, "%s", (i < l )? "#" : ".");
+        wattroff(cmd_win, COLOR_PAIR(3));
 
-    // Delete previous line
-    const std::string deleteLine = "\e[2K\r\e[1A";
-    std::cout << deleteLine;
-
-    int pct = 100 * _pct;
-    std::cout << "// [ ";
-    for (int i = 0; i < 50; i++) {
-        if (i < pct/2) {
-            std::cout << "#";
-        }
-        else {
-            std::cout << ".";
-        }
-    }
-    std::cout << " ] " << pct << "%" << std::endl;
-
+        wrefresh(cmd_win);
+    } else 
     #endif
+    {
+        // Delete previous line
+        const std::string deleteLine = "\e[2K\r\e[1A";
+        std::cout << deleteLine;
+
+        int pct = 100 * _pct;
+        std::cout << "// [ ";
+        for (int i = 0; i < 50; i++) {
+            if (i < pct/2) {
+                std::cout << "#";
+            }
+            else {
+                std::cout << ".";
+            }
+        }
+        std::cout << " ] " << pct << "%" << std::endl;
+    }
 }
 
 void console_uniforms( bool _show ) {
     #if defined(SUPPORT_NCURSES)
+    if (!console_is_init())
+        return;
+
     stt_visible = _show;
     console_sigwinch_handler(0);
+
     #endif
 }
 
 void console_uniforms_refresh() {
     #if defined(SUPPORT_NCURSES)
-    if (stt_visible) {
-        refresh();
-        refresh_stt_win();
-        refresh_cursor();
-    }
+    if (!console_is_init())
+        return;
+
+    refresh();
+    refresh_stt_win();
+    refresh_cursor();
     #endif
 }
 
 void console_end() {
     #if defined(SUPPORT_NCURSES)
+    if (!console_is_init())
+        return;
+
     captureMouse(false);
     endwin();
     #endif
