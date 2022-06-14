@@ -489,7 +489,7 @@ bool Scene::loadGeometry(Uniforms& _uniforms, WatchFileList& _files, int _index,
 
     // Setup light
     if (_uniforms.lights.size() == 0) {
-        _uniforms.lights.push_back( ada::Light( glm::vec3(0.0,m_area*100.0,m_area*100.0), -1.0 ) );
+        _uniforms.lights.push_back( ada::Light( glm::vec3(0.0,m_area*10.0,m_area*10.0), -1.0 ) );
         ada::addLabel("u_light", &_uniforms.lights[0] );
     }
 

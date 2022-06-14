@@ -1845,9 +1845,10 @@ void Sandbox::onMouseDrag(float _x, float _y, int _button) {
         //
         float x = _x;
         float y = _y;
+        float pd = ada::getPixelDensity();
 
-        if (x <= 0) x = ada::getWindowWidth();
-        else if (x > ada::getWindowWidth()) x = 0; 
+        if (x <= 0) x = ada::getWindowWidth() - 2;
+        else if (x >= ada::getWindowWidth()) x = 2; 
 
         if (y <= 0) y = ada::getWindowHeight() - 2;
         else if (y >= ada::getWindowHeight()) y = 2;
