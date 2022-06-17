@@ -490,7 +490,23 @@ bool Scene::loadGeometry(Uniforms& _uniforms, WatchFileList& _files, int _index,
     // Setup light
     if (_uniforms.lights.size() == 0) {
         _uniforms.lights.push_back( ada::Light( glm::vec3(0.0,m_area*10.0,m_area*10.0), -1.0 ) );
-        ada::addLabel("u_light", &_uniforms.lights[0] );
+        ada::addLabel("u_light", &_uniforms.lights[0], ada::LABEL_DOWN);
+        // ada::addLabel( [&](ada::Label* _label) { 
+        //     if (_label == nullptr)
+        //         return glm::vec4(0.0f);
+
+        //     float pd = ada::getPixelDensity();
+
+        //     ada::Font *font = ada::getFont();
+        //     font->setAlign(ada::ALIGN_CENTER);
+        //     font->setAlign(ada::ALIGN_MIDDLE);
+        //     font->setAngle(0.0f);
+        //     font->render( "u_light", _label->getScreenPosition().x, _label->getScreenPosition().y + 36.0f * pd);
+        //     return font->getBoundingBox( "u_light", _label->getScreenPosition().x, _label->getScreenPosition().y + 36.0f * pd );
+
+        //     return glm::vec4(0.0f);
+        // }, &_uniforms.lights[0]);
+
     }
 
 

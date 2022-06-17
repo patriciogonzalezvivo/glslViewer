@@ -1468,11 +1468,11 @@ void Sandbox::renderUI() {
             m_billboard_shader.use();
 
             for (std::map<std::string, ada::Texture*>::iterator it = uniforms.textures.begin(); it != uniforms.textures.end(); it++) {
-                m_billboard_shader.setUniform("u_depth", 0.0f);
                 m_billboard_shader.setUniform("u_scale", xStep, yStep);
                 m_billboard_shader.setUniform("u_translate", xOffset, yOffset);
                 m_billboard_shader.setUniform("u_modelViewProjectionMatrix", ada::getOrthoMatrix());
                 m_billboard_shader.setUniformTexture("u_tex0", it->second, 0);
+                m_billboard_shader.setUniform("u_depth", 0.0f);
 
                 StreamsList::iterator slit = uniforms.streams.find(it->first);
                 if ( slit != uniforms.streams.end() ) {
