@@ -208,9 +208,12 @@ void Scene::setup(CommandList& _commands, Uniforms& _uniforms) {
     },
     "dynamic_shadows[,on|off]", "get or set dynamic shadows"));
 
-    _commands.push_back(Command("skybox_ground", [&](const std::string& _line){ 
+    _commands.push_back(Command("floor_color", [&](const std::string& _line){ 
         std::vector<std::string> values = ada::split(_line,',');
         if (values.size() == 4) {
+            std::string str_color = "vec4("+values[1]+","+values[2]+","+values[3]+",1.0)"; 
+            addDefine("FLOOR_COLOR",str_color);
+            
             m_skybox.groundAlbedo = glm::vec3(ada::toFloat(values[1]), ada::toFloat(values[2]), ada::toFloat(values[3]));
             setCubeMap(&m_skybox);
             return true;
@@ -221,13 +224,23 @@ void Scene::setup(CommandList& _commands, Uniforms& _uniforms) {
         }
         return false;
     },
-    "skybox_ground[,<r>,<g>,<b>]", "get or set the ground color of the skybox."));
+    "floor_color[,<r>,<g>,<b>]", "get or set the ground color of the skybox."));
 
-    _commands.push_back(Command("skybox_elevation", [&](const std::string& _line){ 
+    _commands.push_back(Command("sun_elevation", [&](const std::string& _line){ 
         std::vector<std::string> values = ada::split(_line,',');
         if (values.size() == 2) {
-            m_skybox.elevation = ada::toFloat(values[1]);
+
+            m_skybox.elevation = glm::radians( ada::toFloat(values[1]) );
             setCubeMap(&m_skybox);
+
+            addDefine("SUN", "u_light");
+            glm::vec3 p = glm::vec3(0.0f, 0.0f, glm::length( _uniforms.lights[0].getPosition() ) );
+            glm::quat lat = glm::angleAxis(-m_skybox.elevation, glm::vec3(1.0, 0.0, 0.0));
+            glm::quat lon = glm::angleAxis(m_skybox.azimuth, glm::vec3(0.0, 1.0, 0.0));
+            p = lat * p;
+            p = lon * p;
+            _uniforms.lights[0].setPosition(p);
+
             return true;
         }
         else {
@@ -236,13 +249,23 @@ void Scene::setup(CommandList& _commands, Uniforms& _uniforms) {
         }
         return false;
     },
-    "skybox_elevation[,<sun_elevation>]", "get or set the sun elevation (in rads) of the skybox."));
+    "sun_elevation[,<degrees>]", "get or set the sun elevation in degrees (remember to skybox,on)."));
 
-    _commands.push_back(Command("skybox_azimuth", [&](const std::string& _line){ 
+    _commands.push_back(Command("sun_azimuth", [&](const std::string& _line){ 
         std::vector<std::string> values = ada::split(_line,',');
         if (values.size() == 2) {
-            m_skybox.azimuth = ada::toFloat(values[1]);
+
+            m_skybox.azimuth = glm::radians( ada::toFloat(values[1]) );
             setCubeMap(&m_skybox);
+
+            addDefine("SUN", "u_light");
+            glm::vec3 p = glm::vec3(0.0f, 0.0f, glm::length( _uniforms.lights[0].getPosition() ) );
+            glm::quat lat = glm::angleAxis(-m_skybox.elevation, glm::vec3(1.0, 0.0, 0.0));
+            glm::quat lon = glm::angleAxis(m_skybox.azimuth, glm::vec3(0.0, 1.0, 0.0));
+            p = lat * p;
+            p = lon * p;
+            _uniforms.lights[0].setPosition(p);
+
             return true;
         }
         else {
@@ -251,9 +274,9 @@ void Scene::setup(CommandList& _commands, Uniforms& _uniforms) {
         }
         return false;
     },
-    "skybox_azimuth[,<sun_azimuth>]", "get or set the sun azimuth (in rads) of the skybox."));
+    "sun_azimuth[,<degrees>]", "get or set the sun azimuth in degrees (remember to skybox,on)."));
 
-    _commands.push_back(Command("skybox_turbidity", [&](const std::string& _line){ 
+    _commands.push_back(Command("sky_turbidity", [&](const std::string& _line){ 
         std::vector<std::string> values = ada::split(_line,',');
         if (values.size() == 2) {
             m_skybox.turbidity = ada::toFloat(values[1]);
@@ -266,10 +289,10 @@ void Scene::setup(CommandList& _commands, Uniforms& _uniforms) {
         }
         return false;
     },
-    "skybox_turbidity[,<sky_turbidty>]", "get or set the sky turbidity of the m_skybox."));
+    "sky_turbidity[,<sky_turbidty>]", "get or set the sky turbidity."));
 
-    _commands.push_back(Command("skybox", [&](const std::string& _line){
-        if (_line == "skybox") {
+    _commands.push_back(Command("sky", [&](const std::string& _line){
+        if (_line == "sky") {
             std::string rta = showCubebox ? "on" : "off";
             std::cout << rta << std::endl; 
             return true;
@@ -285,7 +308,7 @@ void Scene::setup(CommandList& _commands, Uniforms& _uniforms) {
         }
         return false;
     },
-    "skybox[,on|off]", "show/hide skybox"));
+    "sky[,on|off]", "show/hide skybox"));
 
     _commands.push_back(Command("cubemap", [&](const std::string& _line){
         if (_line == "cubemap") {
