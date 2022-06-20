@@ -184,9 +184,7 @@ int main(int argc, char **argv) {
     #endif
 
     // Set the size
-    glm::ivec4 window_viewport = glm::ivec4(0);
-    window_viewport.z = 512;
-    window_viewport.w = 512;
+    glm::ivec4 window_viewport = glm::ivec4(-1, -1, 512, 512);
     #if defined(DRIVER_BROADCOM) || defined(DRIVER_GBM) 
     glm::ivec2 screen = ada::getScreenSize();
     window_viewport.z = screen.x;

@@ -493,7 +493,6 @@ bool Scene::loadGeometry(Uniforms& _uniforms, WatchFileList& _files, int _index,
         ada::addLabel("u_light", &_uniforms.lights[0], ada::LABEL_DOWN, 30.0f);
     }
 
-
     return true;
 }
 
