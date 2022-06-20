@@ -183,14 +183,6 @@ int main(int argc, char **argv) {
     }
     #endif
 
-    // Set the size
-    glm::ivec4 window_viewport = glm::ivec4(-1, -1, 512, 512);
-    #if defined(DRIVER_BROADCOM) || defined(DRIVER_GBM) 
-    glm::ivec2 screen = ada::getScreenSize();
-    window_viewport.z = screen.x;
-    window_viewport.w = screen.y;
-    #endif
-
     bool displayHelp = false;
     bool willLoadGeometry = false;
     bool willLoadTextures = false;
@@ -198,27 +190,27 @@ int main(int argc, char **argv) {
         std::string argument = std::string(argv[i]);
         if (        std::string(argv[i]) == "-x" ) {
             if(++i < argc)
-                window_viewport.x = ada::toInt(std::string(argv[i]));
+                window_properties.screen_x = ada::toInt(std::string(argv[i]));
             else
                 std::cout << "Argument '" << argument << "' should be followed by a <pixels>. Skipping argument." << std::endl;
         }
         else if (   std::string(argv[i]) == "-y" ) {
             if(++i < argc)
-                window_viewport.y = ada::toInt(std::string(argv[i]));
+                window_properties.screen_y = ada::toInt(std::string(argv[i]));
             else
                 std::cout << "Argument '" << argument << "' should be followed by a <pixels>. Skipping argument." << std::endl;
         }
         else if (   std::string(argv[i]) == "-w" ||
                     std::string(argv[i]) == "--width" ) {
             if(++i < argc)
-                window_viewport.z = ada::toInt(std::string(argv[i]));
+                window_properties.screen_width = ada::toInt(std::string(argv[i]));
             else
                 std::cout << "Argument '" << argument << "' should be followed by a <pixels>. Skipping argument." << std::endl;
         }
         else if (   std::string(argv[i]) == "-h" ||
                     std::string(argv[i]) == "--height" ) {
             if(++i < argc)
-                window_viewport.w = ada::toInt(std::string(argv[i]));
+                window_properties.screen_height = ada::toInt(std::string(argv[i]));
             else
                 std::cout << "Argument '" << argument << "' should be followed by a <pixels>. Skipping argument." << std::endl;
         }
@@ -251,8 +243,8 @@ int main(int argc, char **argv) {
         else if (   std::string(argv[i]) == "-l" ||
                     std::string(argv[i]) == "--life-coding" ){
             #if defined(DRIVER_BROADCOM) || defined(DRIVER_GBM) 
-                window_viewport.x = window_viewport.z - 512;
-                window_viewport.z = window_viewport.w = 512;
+                window_properties.screen_x = window_properties.screen_width - 512;
+                window_properties.screen_width = window_properties.screen_height = 512;
             #else
                 if (window_properties.style == ada::UNDECORATED)
                     window_properties.style = ada::UNDECORATED_ALLWAYS_ON_TOP;
@@ -341,7 +333,7 @@ int main(int argc, char **argv) {
     commandsInit();
 
     // Initialize openGL context
-    ada::initGL (window_viewport, window_properties);
+    ada::initGL (window_properties);
     #ifndef __EMSCRIPTEN__
     ada::setWindowTitle("GlslViewer");
     std::thread cinWatcher( &cinWatcherThread );
@@ -854,8 +846,7 @@ void commandsInit() {
 
     commands.push_back(Command("screen_size", [&](const std::string& _line){ 
         if (_line == "screen_size") {
-            glm::ivec2 screen_size = ada::getScreenSize();
-            std::cout << screen_size.x << ',' << screen_size.y << std::endl;
+            std::cout << ada::getScreenWidth() << ',' << ada::getScreenHeight()<< std::endl;
             return true;
         }
         return false;
@@ -875,8 +866,7 @@ void commandsInit() {
     commands.push_back(Command("mouse", [&](const std::string& _line) { 
         std::vector<std::string> values = ada::split(_line,',');
         if (_line == "mouse") {
-            glm::vec2 pos = ada::getMousePosition();
-            std::cout << pos.x << "," << pos.y << std::endl;
+            std::cout << ada::getMouseX() << "," << ada::getMouseY() << std::endl;
             return true;
         }
         else if (values[1] == "capture") {

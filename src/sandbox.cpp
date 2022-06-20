@@ -1698,7 +1698,7 @@ void Sandbox::renderUI() {
 
         ada::Shader* fill = ada::getFillShader();
         fill->use();
-        fill->setUniform("u_modelViewProjectionMatrix", glm::translate(ada::getOrthoMatrix(), glm::vec3(ada::getMousePosition(), 0.0f) ) );
+        fill->setUniform("u_modelViewProjectionMatrix", glm::translate(ada::getOrthoMatrix(), glm::vec3(ada::getMouseX(), ada::getMouseY(), 0.0f) ) );
         fill->setUniform("u_color", glm::vec4(1.0f));
         m_cross_vbo->render(fill);
 
@@ -1858,7 +1858,7 @@ void Sandbox::onMouseDrag(float _x, float _y, int _button) {
 
     if (_button == 1) {
         // Left-button drag is used to pan u_view2d.
-        m_view2d = glm::translate(m_view2d, -ada::getMouseVelocity());
+        m_view2d = glm::translate(m_view2d, glm::vec2(-ada::getMouseVelX(),-ada::getMouseVelY()) );
 
         // Left-button drag is used to rotate geometry.
         float dist = uniforms.getCamera().getDistance();
