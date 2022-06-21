@@ -445,6 +445,14 @@ void Scene::delDefine(const std::string& _define) {
         m_models[i]->delDefine(_define);
 }
 
+void Scene::setSun(double _elevation, double _azimuth) {
+    m_skybox.elevation = _elevation;
+    m_skybox.azimuth = _azimuth;
+
+    if (m_cubemap_skybox == &m_skybox)
+            setCubeMap(&m_skybox);
+}
+
 void Scene::setCubeMap(ada::SkyData* _skybox ) { 
     if (m_cubemap_skybox)
         if (m_cubemap_skybox != _skybox)
@@ -512,7 +520,10 @@ bool Scene::loadGeometry(Uniforms& _uniforms, WatchFileList& _files, int _index,
 
     // Setup light
     if (_uniforms.lights.size() == 0) {
-        _uniforms.lights.push_back( ada::Light( glm::vec3(0.0,m_area*10.0,m_area*10.0), -1.0 ) );
+        glm::vec3 sun_position = glm::vec3(0.0,m_area*10.0,m_area*10.0);
+        _uniforms.lights.push_back( ada::Light( sun_position, -1.0 ) );
+        // setSun( ada::toLat( sun_position ), 
+        //         ada::toLon( sun_position ) );
         ada::addLabel("u_light", &_uniforms.lights[0], ada::LABEL_DOWN, 30.0f);
     }
 

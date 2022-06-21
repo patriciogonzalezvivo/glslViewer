@@ -481,8 +481,12 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         
         std::vector<std::string> values = ada::split(_line,',');
         if (values.size() == 4) {
-            if (uniforms.lights.size() > 0) 
+            if (uniforms.lights.size() > 0) {
                 uniforms.lights[0].setPosition(glm::vec3(ada::toFloat(values[1]), ada::toFloat(values[2]), ada::toFloat(values[3])));
+
+                m_scene.setSun( ada::toLat( uniforms.lights[0].getPosition() ), 
+                                ada::toLon( uniforms.lights[0].getPosition() ) );
+            }
             return true;
         }
         else if (values.size() == 5) {
@@ -495,13 +499,13 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         else {
             if (uniforms.lights.size() > 0) {
                 glm::vec3 pos = uniforms.lights[0].getPosition();
-                std::cout << ',' << pos.x << ',' << pos.y << ',' << pos.z << std::endl;
+                std::cout << pos.x << ',' << pos.y << ',' << pos.z << std::endl;
             }
             return true;
         }
         return false;
     },
-    "light_position[,<x>,<y>,<z>]", "get or set the light position"));
+    "light_position[[,<index>],<x>,<y>,<z>]", "get or set the light position"));
 
     _commands.push_back(Command("light_color", [&](const std::string& _line){ 
         std::vector<std::string> values = ada::split(_line,',');
@@ -636,12 +640,27 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     _commands.push_back(Command("camera_position", [&](const std::string& _line){ 
         std::vector<std::string> values = ada::split(_line,',');
         if (values.size() == 4) {
-            uniforms.getCamera().setPosition(glm::vec3(ada::toFloat(values[1]), ada::toFloat(values[2]), ada::toFloat(values[3])));
-            uniforms.getCamera().lookAt(uniforms.getCamera().getTarget());
+            uniforms.getCamera().setPosition( -glm::vec3(ada::toFloat(values[1]), ada::toFloat(values[2]), ada::toFloat(values[3])));
+            uniforms.getCamera().lookAt( uniforms.getCamera().getTarget() );
+
+            glm::vec3 pos = ( -uniforms.getCamera().getPosition() );
+            m_lat = glm::degrees( ada::toLat( pos ) );
+            m_lon = glm::degrees( ada::toLon( pos ) );
+            if (pos.z > 0)
+                m_lat += 180;
+            if (m_lon <= -90.0)  {
+                m_lon += 90;
+                m_lat = 360-m_lat;
+            }
+            else if (m_lon >= 90.0)  {
+                m_lon -= 90;
+                m_lat = 360-m_lat;
+            }
+
             return true;
         }
         else {
-            glm::vec3 pos = uniforms.getCamera().getPosition();
+            glm::vec3 pos = -uniforms.getCamera().getPosition();
             std::cout << pos.x << ',' << pos.y << ',' << pos.z << std::endl;
             return true;
         }

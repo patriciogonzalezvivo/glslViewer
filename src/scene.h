@@ -22,7 +22,6 @@ public:
     bool            loadGeometry(Uniforms& _uniforms, WatchFileList& _files, int _index, bool _verbose);
     bool            loadShaders(const std::string& _fragmentShader, const std::string& _vertexShader, bool _verbose);
 
-
     void            addDefine(const std::string& _define, const std::string& _value);
     void            delDefine(const std::string& _define);
     void            printDefines();
@@ -34,6 +33,7 @@ public:
     ada::CullingMode getCulling() { return m_culling; }
 
     void            setCubeMap(ada::SkyData* _skybox );
+    void            setSun(double _elevation, double _azimuth);
 
     void            flagChange();
     void            unflagChange();

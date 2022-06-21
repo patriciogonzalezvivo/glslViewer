@@ -431,7 +431,7 @@ bool console_getline(std::string& _cmd, CommandList& _commands, Sandbox& _sandbo
         }
     }
     else if ( ch == KEY_BREAK || ch == ' ') {
-        cmd += ",";
+        cmd += "_";
     }
     else if ( ch == KEY_LEFT)
         cmd_cursor_offset += cmd_cursor_offset < cmd.size() ? 1 : 0;
