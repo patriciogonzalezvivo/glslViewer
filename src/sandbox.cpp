@@ -1460,7 +1460,7 @@ void Sandbox::renderUI() {
             ada::textAngle(-HALF_PI);
             ada::textAlign(ada::ALIGN_TOP);
             ada::textAlign(ada::ALIGN_LEFT);
-            ada::textSize(yStep * 0.1f);
+            ada::textSize(yStep * 0.2f);
 
             if (!m_billboard_shader.isLoaded()) 
                 m_billboard_shader.load(ada::getDefaultSrc(ada::FRAG_DYNAMIC_BILLBOARD), ada::getDefaultSrc(ada::VERT_DYNAMIC_BILLBOARD), false);
@@ -1520,7 +1520,7 @@ void Sandbox::renderUI() {
             float yOffset = h - yStep;
 
             ada::textAngle(-HALF_PI);
-            ada::textSize(yStep * 0.1f);
+            ada::textSize(yStep * 0.2f);
             ada::textAlign(ada::ALIGN_BOTTOM);
             ada::textAlign(ada::ALIGN_LEFT);
 
