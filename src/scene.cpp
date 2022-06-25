@@ -11,6 +11,7 @@
 
 #include "ada/fs.h"
 #include "ada/draw.h"
+#include "ada/math.h"
 #include "ada/window.h"
 #include "ada/string.h"
 #include "ada/geom/ops.h"
@@ -446,10 +447,8 @@ void Scene::delDefine(const std::string& _define) {
 }
 
 void Scene::setSun(const glm::vec3& _v) {
-
-    m_skybox.elevation = atan2(_v.z, sqrt(_v.x * _v.x + _v.y * _v.y) );
-    m_skybox.azimuth = atan2(_v.y, _v.x);
-
+    m_skybox.elevation = atan2(_v.y, sqrt(_v.x * _v.x + _v.z * _v.z) );
+    m_skybox.azimuth = atan2(_v.x, _v.z);
     if (m_cubemap_skybox == &m_skybox)
             setCubeMap(&m_skybox);
 }

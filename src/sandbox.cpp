@@ -53,7 +53,7 @@ Sandbox::Sandbox():
     #endif
 
     // Scene
-    m_view2d(1.0), m_time_offset(0.0), m_lat(180.0), m_lon(0.0), m_frame(0), m_change(true), m_initialized(false), m_error_screen(true),
+    m_view2d(1.0), m_time_offset(0.0), m_camera_elevation(180.0), m_camera_azimuth(0.0), m_frame(0), m_change(true), m_initialized(false), m_error_screen(true),
 
     // Debug
     m_showTextures(false), m_showPasses(false)
@@ -641,21 +641,9 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         if (values.size() == 4) {
             uniforms.getCamera().setPosition( -glm::vec3(ada::toFloat(values[1]), ada::toFloat(values[2]), ada::toFloat(values[3])));
             uniforms.getCamera().lookAt( uniforms.getCamera().getTarget() );
-
-            glm::vec3 v = ( -uniforms.getCamera().getPosition() );
-            m_lat = glm::degrees( atan2(v.z, sqrt(v.x * v.x + v.y * v.y)) );
-            m_lon = glm::degrees( atan2(v.y, v.x) );
-            if (v.z > 0)
-                m_lat += 180;
-            if (m_lon <= -90.0)  {
-                m_lon += 90;
-                m_lat = 360-m_lat;
-            }
-            else if (m_lon >= 90.0)  {
-                m_lon -= 90;
-                m_lat = 360-m_lat;
-            }
-
+            glm::vec3 v = uniforms.getCamera().getPosition();
+            m_camera_azimuth = glm::degrees( atan2(v.x, v.z) );
+            m_camera_elevation = glm::degrees( atan2(-v.y, sqrt(v.x * v.x + v.z * v.z)) );
             return true;
         }
         else {
@@ -836,12 +824,12 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     // -----------------------------------------------
     if (geom_index == -1) {
         m_canvas_shader.addDefine("MODEL_VERTEX_TEXCOORD", "v_texcoord");
-        uniforms.getCamera().orbit(m_lat, m_lon, 2.0);
+        uniforms.getCamera().orbit(m_camera_azimuth, m_camera_elevation, 2.0);
     }
     else {
         m_scene.setup( _commands, uniforms);
         m_scene.loadGeometry( uniforms, _files, geom_index, verbose );
-        uniforms.getCamera().orbit(m_lat, m_lon, m_scene.getArea() * 2.0);
+        uniforms.getCamera().orbit(m_camera_azimuth, m_camera_elevation, m_scene.getArea() * 2.0);
     }
 
     // FINISH SCENE SETUP
@@ -865,7 +853,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         // uniforms.getCamera().setClipping(0.01, 100.0);
 
         if (geom_index != -1)
-            uniforms.getCamera().orbit(m_lat, m_lon, m_scene.getArea() * 8.5);
+            uniforms.getCamera().orbit(m_camera_elevation, m_camera_azimuth, m_scene.getArea() * 8.5);
 
         if (lenticular.size() == 0)
             ada::setWindowSize(ada::getQuiltWidth(), ada::getQuiltHeight());
@@ -1885,9 +1873,9 @@ void Sandbox::onMouseDrag(float _x, float _y, int _button) {
         float vel_y = ada::getMouseVelY();
 
         if (fabs(vel_x) < 50.0 && fabs(vel_y) < 50.0) {
-            m_lat -= vel_x;
-            m_lon -= vel_y * 0.5;
-            uniforms.getCamera().orbit(m_lat, m_lon, dist);
+            m_camera_azimuth -= vel_x;
+            m_camera_elevation -= vel_y * 0.5;
+            uniforms.getCamera().orbit(m_camera_azimuth, m_camera_elevation, dist);
             uniforms.getCamera().lookAt(glm::vec3(0.0));
         }
     } 
@@ -1896,7 +1884,7 @@ void Sandbox::onMouseDrag(float _x, float _y, int _button) {
         float dist = uniforms.getCamera().getDistance();
         dist += (-.008f * ada::getMouseVelY());
         if (dist > 0.0f) {
-            uniforms.getCamera().orbit(m_lat, m_lon, dist);
+            uniforms.getCamera().orbit(m_camera_azimuth, m_camera_elevation, dist);
             uniforms.getCamera().lookAt(glm::vec3(0.0));
         }
     }
