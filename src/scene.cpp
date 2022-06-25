@@ -578,8 +578,7 @@ void Scene::render(Uniforms& _uniforms) {
 
     ada::blendMode(m_blend);
 
-    if (_uniforms.getCamera().bChange || m_origin.bChange) 
-    {
+    if (_uniforms.getCamera().bChange || m_origin.bChange) {
         ada::setCamera( _uniforms.getCamera() );
         ada::applyMatrix( m_origin.getTransformMatrix() );
     }

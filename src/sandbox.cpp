@@ -53,7 +53,7 @@ Sandbox::Sandbox():
     #endif
 
     // Scene
-    m_view2d(1.0), m_time_offset(0.0), m_camera_elevation(180.0), m_camera_azimuth(0.0), m_frame(0), m_change(true), m_initialized(false), m_error_screen(true),
+    m_view2d(1.0), m_time_offset(0.0), m_camera_elevation(1.0), m_camera_azimuth(180.0), m_frame(0), m_change(true), m_initialized(false), m_error_screen(true),
 
     // Debug
     m_showTextures(false), m_showPasses(false)
@@ -830,6 +830,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         m_scene.setup( _commands, uniforms);
         m_scene.loadGeometry( uniforms, _files, geom_index, verbose );
         uniforms.getCamera().orbit(m_camera_azimuth, m_camera_elevation, m_scene.getArea() * 2.0);
+        uniforms.getCamera().lookAt( uniforms.getCamera().getTarget() );
     }
 
     // FINISH SCENE SETUP
