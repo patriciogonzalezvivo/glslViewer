@@ -33,7 +33,7 @@ public:
     ada::CullingMode getCulling() { return m_culling; }
 
     void            setCubeMap(ada::SkyData* _skybox );
-    void            setSun(double _elevation, double _azimuth);
+    void            setSun(const glm::vec3& _vec);
 
     void            flagChange();
     void            unflagChange();

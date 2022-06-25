@@ -484,8 +484,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
             if (uniforms.lights.size() > 0) {
                 uniforms.lights[0].setPosition(glm::vec3(ada::toFloat(values[1]), ada::toFloat(values[2]), ada::toFloat(values[3])));
 
-                m_scene.setSun( ada::toLat( uniforms.lights[0].getPosition() ), 
-                                ada::toLon( uniforms.lights[0].getPosition() ) );
+                m_scene.setSun( uniforms.lights[0].getPosition() );
             }
             return true;
         }
@@ -643,10 +642,10 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
             uniforms.getCamera().setPosition( -glm::vec3(ada::toFloat(values[1]), ada::toFloat(values[2]), ada::toFloat(values[3])));
             uniforms.getCamera().lookAt( uniforms.getCamera().getTarget() );
 
-            glm::vec3 pos = ( -uniforms.getCamera().getPosition() );
-            m_lat = glm::degrees( ada::toLat( pos ) );
-            m_lon = glm::degrees( ada::toLon( pos ) );
-            if (pos.z > 0)
+            glm::vec3 v = ( -uniforms.getCamera().getPosition() );
+            m_lat = glm::degrees( atan2(v.z, sqrt(v.x * v.x + v.y * v.y)) );
+            m_lon = glm::degrees( atan2(v.y, v.x) );
+            if (v.z > 0)
                 m_lat += 180;
             if (m_lon <= -90.0)  {
                 m_lon += 90;

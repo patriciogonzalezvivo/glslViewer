@@ -445,9 +445,10 @@ void Scene::delDefine(const std::string& _define) {
         m_models[i]->delDefine(_define);
 }
 
-void Scene::setSun(double _elevation, double _azimuth) {
-    m_skybox.elevation = _elevation;
-    m_skybox.azimuth = _azimuth;
+void Scene::setSun(const glm::vec3& _v) {
+
+    m_skybox.elevation = atan2(_v.z, sqrt(_v.x * _v.x + _v.y * _v.y) );
+    m_skybox.azimuth = atan2(_v.y, _v.x);
 
     if (m_cubemap_skybox == &m_skybox)
             setCubeMap(&m_skybox);
