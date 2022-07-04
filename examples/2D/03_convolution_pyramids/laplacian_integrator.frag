@@ -8,10 +8,10 @@ uniform vec2        u_tex0Resolution;
 
 uniform vec2        u_resolution;
 
-uniform sampler2D   u_convolutionPyramid0;
-uniform sampler2D   u_convolutionPyramidTex0;
-uniform sampler2D   u_convolutionPyramidTex1;
-uniform bool        u_convolutionPyramidUpscaling;
+uniform sampler2D   u_pyramid0;
+uniform sampler2D   u_pyramidTex0;
+uniform sampler2D   u_pyramidTex1;
+uniform bool        u_pyramidUpscaling;
 
 // Laplacian Integrator
 const vec3  h1      = vec3(.7, 0.5, 0.15);
@@ -33,14 +33,14 @@ void main (void) {
 
 #elif defined(CONVOLUTION_PYRAMID_ALGORITHM)
 
-    if (!u_convolutionPyramidUpscaling) {
+    if (!u_pyramidUpscaling) {
         for (int dy = -2; dy <= 2; dy++) {
             for (int dx = -2; dx <= 2; dx++) {
                 vec2 uv = st + vec2(float(dx), float(dy)) * pixel * 0.5;
                 if (uv.x <= 0.0 || uv.x >= 1.0 || uv.y <= 0.0 || uv.y >= 1.0)
                     continue;
 
-                vec4 sample = texture2D(u_convolutionPyramidTex0, saturate(uv)) ;
+                vec4 sample = texture2D(u_pyramidTex0, saturate(uv)) ;
                 sample.xyz = sample.rgb * 2.0 - 1.0;
                 color += sample * h1[ absi(dx) ] * h1[ absi(dy) ];
             }
@@ -55,7 +55,7 @@ void main (void) {
                 if (uv.x <= 0.0 || uv.x >= 1.0 || uv.y <= 0.0 || uv.y >= 1.0)
                     continue;
 
-                vec4 sample = texture2D(u_convolutionPyramidTex0, uv);
+                vec4 sample = texture2D(u_pyramidTex0, uv);
                 sample.xyz = sample.rgb * 2.0 - 1.0;
                 color += sample * g[ absi(dx) ] * g[ absi(dy) ];
             }
@@ -67,7 +67,7 @@ void main (void) {
                 if (uv.x <= 0.0 || uv.x >= 1.0 || uv.y <= 0.0 || uv.y >= 1.0)
                     continue;
 
-                vec4 sample = texture2D(u_convolutionPyramidTex1, uv);
+                vec4 sample = texture2D(u_pyramidTex1, uv);
                 color += sample * h2 * h1[ absi(dx) ] * h1[ absi(dy) ];
             }
         }
@@ -75,7 +75,7 @@ void main (void) {
 
     
 #else
-    color = texture2D(u_convolutionPyramid0, st);
+    color = texture2D(u_pyramid0, st);
 
     // vec3 edge = laplacian(u_tex0, st, pixel, 1.0);
     // color.rgb = mix(edge, color.rgb, step(st.y - st.x, 0.));

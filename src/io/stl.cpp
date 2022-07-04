@@ -8,22 +8,20 @@
 #include "ada/geom/ops.h"
 #include "ada/string.h"
 
-
 #ifndef LINE_MAX
 #define LINE_MAX 2048
 #endif
 
-bool loadSTL(WatchFileList& _files, ada::Materials& _materials, ada::Models& _models, int _index, bool _verbose) {
-    std::string filename = _files[_index].path;
-    std::string name = filename.substr(0, filename.size()-4);
+bool loadSTL(const std::string& _filename, ada::Scene& _scene, bool _verbose) {
+    std::string name = _filename.substr(0, _filename.size()-4);
 
     ada::Mesh mesh;
     ada::Material default_material;
-    _materials[default_material.name] = default_material;
+    _scene.materials[default_material.name] = default_material;
 
-    FILE * stl_file = fopen(filename.c_str(),"rb");
+    FILE * stl_file = fopen(_filename.c_str(),"rb");
     if (NULL == stl_file) {
-        fprintf(stderr,"IOError: %s could not be opened...\n", filename.c_str());
+        fprintf(stderr,"IOError: %s could not be opened...\n", _filename.c_str());
         return false;
     }
 
@@ -196,7 +194,7 @@ bool loadSTL(WatchFileList& _files, ada::Materials& _materials, ada::Models& _mo
         return false;
     close_true:
         fclose(stl_file);
-        _models.push_back( new ada::Model(name, mesh, default_material) );
+        _scene.setModel( name, new ada::Model(name, mesh, default_material) );
         return true;
 
 }

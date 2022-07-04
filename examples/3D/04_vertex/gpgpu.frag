@@ -20,7 +20,7 @@ precision mediump float;
 //
 
 // position
-uniform sampler2D   u_doubleBuffer0; // 512z512
+uniform sampler2D   u_doubleBuffer0; // 512x512
 
 // velocity
 uniform sampler2D   u_doubleBuffer1; // 512x512

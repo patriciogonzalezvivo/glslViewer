@@ -32,7 +32,7 @@
 
 #define BUFFER_OFFSET(i) ((char *)NULL + (i))
 
-bool loadModel(tinygltf::Model& _model, const std::string& _filename) {
+bool loadModel(const std::string& _filename, tinygltf::Model& _model) {
     tinygltf::TinyGLTF loader;
     std::string err;
     std::string warn;
@@ -130,7 +130,7 @@ void extractVertexData(uint32_t v_pos, const uint8_t *base, int accesor_componen
     }
 }
 
-ada::Material extractMaterial(const tinygltf::Model& _model, const tinygltf::Material& _material, Uniforms& _uniforms, bool _verbose) {
+ada::Material extractMaterial(const tinygltf::Model& _model, const tinygltf::Material& _material, ada::Scene& _scene, bool _verbose) {
     int texCounter = 0;
     ada::Material mat;
     mat.name = ada::toLower( ada::toUnderscore( ada::purifyString( _material.name ) ) );
@@ -148,10 +148,10 @@ ada::Material extractMaterial(const tinygltf::Model& _model, const tinygltf::Mat
         if (_verbose)
             std::cout << "Loading " << name << "for BASECOLORMAP as " << name << std::endl;
 
-        ada::Texture* texture = new ada::Texture();
-        texture->load(image.width, image.height, image.component, image.bits, &image.image.at(0));
-        if (!_uniforms.addTexture(name, texture)) {
-            delete texture;
+        if (!_scene.haveTexture(name)) {
+            ada::Texture* texture = new ada::Texture();
+            texture->load(image.width, image.height, image.component, image.bits, &image.image.at(0));
+            _scene.setTexture(name, texture);
         }
         mat.addDefine("MATERIAL_BASECOLORMAP", name);
     }
@@ -167,10 +167,10 @@ ada::Material extractMaterial(const tinygltf::Model& _model, const tinygltf::Mat
         if (_verbose)
             std::cout << "Loading " << name << "for EMISSIVEMAP as " << name << std::endl;
 
-        ada::Texture* texture = new ada::Texture();
-        texture->load(image.width, image.height, image.component, image.bits, &image.image.at(0));
-        if (!_uniforms.addTexture(name, texture)) {
-            delete texture;
+        if (!_scene.haveTexture(name)) {
+            ada::Texture* texture = new ada::Texture();
+            texture->load(image.width, image.height, image.component, image.bits, &image.image.at(0));
+            _scene.setTexture(name, texture);
         }
         mat.addDefine("MATERIAL_EMISSIVEMAP", name);
     }
@@ -189,10 +189,10 @@ ada::Material extractMaterial(const tinygltf::Model& _model, const tinygltf::Mat
         if (_verbose)
             std::cout << "Loading " << name << "for METALLICROUGHNESSMAP as " << name << std::endl;
 
-        ada::Texture* texture = new ada::Texture();
-        texture->load(image.width, image.height, image.component, image.bits, &image.image.at(0));
-        if (!_uniforms.addTexture(name, texture)) {
-            delete texture;
+        if (!_scene.haveTexture(name)) {
+            ada::Texture* texture = new ada::Texture();
+            texture->load(image.width, image.height, image.component, image.bits, &image.image.at(0));
+            _scene.setTexture(name, texture);
         }
 
         if (_material.occlusionTexture.index >= 0) {
@@ -221,10 +221,10 @@ ada::Material extractMaterial(const tinygltf::Model& _model, const tinygltf::Mat
         if (_verbose)
             std::cout << "Loading " << name << "for OCCLUSIONMAP as " << name << std::endl;
 
-        ada::Texture* texture = new ada::Texture();
-        texture->load(image.width, image.height, image.component, image.bits, &image.image.at(0));
-        if (!_uniforms.addTexture(name, texture)) {
-            delete texture;
+        if (!_scene.haveTexture(name)) {
+            ada::Texture* texture = new ada::Texture();
+            texture->load(image.width, image.height, image.component, image.bits, &image.image.at(0));
+            _scene.setTexture(name, texture);
         }
         mat.addDefine("MATERIAL_OCCLUSIONMAP", name);
 
@@ -243,10 +243,10 @@ ada::Material extractMaterial(const tinygltf::Model& _model, const tinygltf::Mat
         if (_verbose)
             std::cout << "Loading " << name << "for NORMALMAP as " << name << std::endl;
 
-        ada::Texture* texture = new ada::Texture();
-        texture->load(image.width, image.height, image.component, image.bits, &image.image.at(0));
-        if (!_uniforms.addTexture(name, texture)) {
-            delete texture;
+        if (!_scene.haveTexture(name)) {
+            ada::Texture* texture = new ada::Texture();
+            texture->load(image.width, image.height, image.component, image.bits, &image.image.at(0));
+            _scene.setTexture(name, texture);
         }
         mat.addDefine("MATERIAL_NORMALMAP", name);
 
@@ -257,7 +257,7 @@ ada::Material extractMaterial(const tinygltf::Model& _model, const tinygltf::Mat
     return mat;
 }
 
-void extractMesh(const tinygltf::Model& _model, const tinygltf::Mesh& _mesh, glm::mat4 _matrix, Uniforms& _uniforms, ada::Models& _models, bool _verbose) {
+void extractMesh(const tinygltf::Model& _model, const tinygltf::Mesh& _mesh, glm::mat4 _matrix, ada::Scene& _scene, bool _verbose) {
     if (_verbose)
         std::cout << "  Parsing Mesh " << _mesh.name << std::endl;
 
@@ -359,14 +359,14 @@ void extractMesh(const tinygltf::Model& _model, const tinygltf::Mesh& _mesh, glm
             if ( _verbose )
                 std::cout << "    . Compute tangents" << std::endl;
 
-        ada::Material mat = extractMaterial( _model, _model.materials[primitive.material], _uniforms, _verbose );
+        ada::Material mat = extractMaterial( _model, _model.materials[primitive.material], _scene, _verbose );
 
-        _models.push_back( new ada::Model(_mesh.name, mesh, mat) );
+        _scene.setModel( _mesh.name, new ada::Model(_mesh.name, mesh, mat) );
     }
 };
 
 // bind models
-void extractNodes(const tinygltf::Model& _model, const tinygltf::Node& _node, glm::mat4 _matrix, Uniforms& _uniforms, ada::Models& _models, bool _verbose) {
+void extractNodes(const tinygltf::Model& _model, const tinygltf::Node& _node, glm::mat4 _matrix, ada::Scene& _scene, bool _verbose) {
     if (_verbose)
         std::cout << "Entering node " << _node.name << std::endl;
 
@@ -393,7 +393,7 @@ void extractNodes(const tinygltf::Model& _model, const tinygltf::Node& _node, gl
     _matrix = _matrix * localMatrix;
 
     if (_node.mesh >= 0)
-        extractMesh(_model, _model.meshes[ _node.mesh ], _matrix, _uniforms, _models, _verbose);
+        extractMesh(_model, _model.meshes[ _node.mesh ], _matrix, _scene, _verbose);
 
     if (_node.camera >= 0)
         if (_verbose)
@@ -401,23 +401,21 @@ void extractNodes(const tinygltf::Model& _model, const tinygltf::Node& _node, gl
         // TODO extract camera
     
     for (size_t i = 0; i < _node.children.size(); i++) {
-        extractNodes(_model, _model.nodes[ _node.children[i] ], _matrix, _uniforms, _models, _verbose);
+        extractNodes(_model, _model.nodes[ _node.children[i] ], _matrix, _scene, _verbose);
     }
 };
 
-bool loadGLTF(Uniforms& _uniforms, WatchFileList& _files, ada::Materials& _materials, ada::Models& _models, int _index, bool _verbose) {
+bool loadGLTF( const std::string& _filename, ada::Scene& _scene, bool _verbose) {
     tinygltf::Model model;
-    std::string filename = _files[_index].path;
 
-    if (! loadModel(model, filename)) {
-        std::cout << "Failed to load .glTF : " << filename << std::endl;
+    if ( !loadModel(_filename, model) ) {
+        std::cout << "Failed to load .glTF : " << _filename << std::endl;
         return false;
     }
 
     const tinygltf::Scene &scene = model.scenes[model.defaultScene];
-    for (size_t i = 0; i < scene.nodes.size(); ++i) {
-        extractNodes(model, model.nodes[scene.nodes[i]], glm::mat4(1.0), _uniforms, _models, _verbose);
-    }
+    for (size_t i = 0; i < scene.nodes.size(); ++i)
+        extractNodes(model, model.nodes[scene.nodes[i]], glm::mat4(1.0), _scene, _verbose);
 
     return true;
 }

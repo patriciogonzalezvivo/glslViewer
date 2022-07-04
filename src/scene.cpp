@@ -5,8 +5,6 @@
 #include <unistd.h>
 #endif
 
-#define USE_ADA
-
 #include <sys/stat.h>
 
 #include "ada/fs.h"
@@ -37,8 +35,6 @@ Scene::Scene():
     m_lightUI_vbo(nullptr), m_dynamicShadows(false), m_shadows(false),
     // Background
     m_background_vbo(nullptr), m_background(false), 
-    // CubeMap
-    m_cubemap_vbo(nullptr), m_cubemap_skybox(nullptr),
     // Floor
     m_floor_vbo(nullptr), m_floor_height(0.0), m_floor_subd_target(-1), m_floor_subd(-1), 
     // UI
@@ -51,11 +47,6 @@ Scene::~Scene(){
 }
 
 void Scene::clear() {
-    for (size_t i = 0; i < m_models.size(); i++) 
-        delete m_models[i];
-
-    m_models.clear();
-
     if (m_lightUI_vbo) {
         delete m_lightUI_vbo;
         m_lightUI_vbo = nullptr;
@@ -82,18 +73,18 @@ void Scene::setup(CommandList& _commands, Uniforms& _uniforms) {
     // ----------------------------------------- 
     _commands.push_back(Command("model", [&](const std::string& _line){ 
         if (_line == "models") {
-            for (size_t i = 0; i < m_models.size(); i++)
-                std::cout << m_models[i]->getName() << std::endl;
+            for (ada::ModelsMap::iterator it = _uniforms.models.begin(); it != _uniforms.models.end(); ++it)
+                std::cout << it->second->getName() << std::endl;
             return true;
         }
         else {
             std::vector<std::string> values = ada::split(_line,',');
             if (values.size() == 2 && values[0] == "model")
-                for (size_t i = 0; i < m_models.size(); i++)
-                    if (m_models[i]->getName() == values[1]) {
-                        m_models[i]->printVboInfo();
+                for (ada::ModelsMap::iterator it = _uniforms.models.begin(); it != _uniforms.models.end(); ++it)
+                    if (it->second->getName() == values[1]) {
+                        it->second->printVboInfo();
                         std::cout << "Defines:" << std::endl;
-                        m_models[i]->printDefines();
+                        it->second->printDefines();
                         return true;
                     }
         }
@@ -104,15 +95,14 @@ void Scene::setup(CommandList& _commands, Uniforms& _uniforms) {
 
     _commands.push_back(Command("material", [&](const std::string& _line){ 
         if (_line == "materials") {
-            for (std::map<std::string,ada::Material>::iterator it = m_materials.begin(); it != m_materials.end(); it++) {
+            for (ada::MaterialsMap::iterator it = _uniforms.materials.begin(); it != _uniforms.materials.end(); it++)
                 std::cout << it->second.name << std::endl;
-            }
             return true;
         }
         else {
             std::vector<std::string> values = ada::split(_line,',');
             if (values.size() == 2 && values[0] == "material") {
-                for (std::map<std::string,ada::Material>::iterator it = m_materials.begin(); it != m_materials.end(); it++){
+                for (ada::MaterialsMap::iterator it = _uniforms.materials.begin(); it != _uniforms.materials.end(); it++) {
                     if (it->second.name == values[1]) {
                         it->second.printDefines();
                         return true;
@@ -235,12 +225,13 @@ void Scene::setup(CommandList& _commands, Uniforms& _uniforms) {
             setCubeMap(&m_skybox);
 
             addDefine("SUN", "u_light");
-            glm::vec3 p = glm::vec3(0.0f, 0.0f, glm::length( _uniforms.lights[0].getPosition() ) );
+            ada::Light* sun = _uniforms.getLight("sun");
+            glm::vec3 p = glm::vec3(0.0f, 0.0f, glm::length( sun->getPosition() ) );
             glm::quat lat = glm::angleAxis(-m_skybox.elevation, glm::vec3(1.0, 0.0, 0.0));
             glm::quat lon = glm::angleAxis(m_skybox.azimuth, glm::vec3(0.0, 1.0, 0.0));
             p = lat * p;
             p = lon * p;
-            _uniforms.lights[0].setPosition(p);
+            sun->setPosition(p);
 
             return true;
         }
@@ -260,12 +251,13 @@ void Scene::setup(CommandList& _commands, Uniforms& _uniforms) {
             setCubeMap(&m_skybox);
 
             addDefine("SUN", "u_light");
-            glm::vec3 p = glm::vec3(0.0f, 0.0f, glm::length( _uniforms.lights[0].getPosition() ) );
+            ada::Light* sun = _uniforms.getLight("sun");
+            glm::vec3 p = glm::vec3(0.0f, 0.0f, glm::length( sun->getPosition() ) );
             glm::quat lat = glm::angleAxis(-m_skybox.elevation, glm::vec3(1.0, 0.0, 0.0));
             glm::quat lon = glm::angleAxis(m_skybox.azimuth, glm::vec3(0.0, 1.0, 0.0));
             p = lat * p;
             p = lon * p;
-            _uniforms.lights[0].setPosition(p);
+            sun->setPosition(p);
 
             return true;
         }
@@ -435,15 +427,11 @@ void Scene::setup(CommandList& _commands, Uniforms& _uniforms) {
 void Scene::addDefine(const std::string& _define, const std::string& _value) {
     m_background_shader.addDefine(_define, _value);
     m_floor_shader.addDefine(_define, _value);
-    for (size_t i = 0; i < m_models.size(); i++)
-        m_models[i]->addDefine(_define, _value);
 }
 
 void Scene::delDefine(const std::string& _define) {
     m_background_shader.delDefine(_define);
     m_floor_shader.delDefine(_define);
-    for (size_t i = 0; i < m_models.size(); i++)
-        m_models[i]->delDefine(_define);
 }
 
 void Scene::setSun(const glm::vec3& _v) {
@@ -477,39 +465,32 @@ void Scene::printDefines() {
         std::cout << "-------------- " << std::endl;
         m_floor_shader.printDefines();
     }
-
-    for (size_t i = 0; i < m_models.size(); i++) {
-        std::cout << std::endl;
-        std::cout << m_models[i]->getName() << std::endl;
-        std::cout << "-------------- " << std::endl;
-        m_models[i]->printDefines();
-    }
 }
 
-bool Scene::loadGeometry(Uniforms& _uniforms, WatchFileList& _files, int _index, bool _verbose) {
-    std::string ext = ada::getExt(_files[_index].path);
+bool Scene::loadGeometry(Uniforms& _uniforms, const std::string& _filename, bool _verbose) {
+    std::string ext = ada::getExt(_filename);
 
     // If the geometry is a PLY it's easy because is only one mesh
     if ( ext == "ply" || ext == "PLY" )
-        loadPLY(_uniforms, _files, m_materials, m_models, _index, _verbose);
+        loadPLY( _filename, _uniforms, _verbose);
 
     // If it's a OBJ could be more complicated because they can contain several meshes and materials
     else if ( ext == "obj" || ext == "OBJ" )
-        loadOBJ(_uniforms, _files, m_materials, m_models, _index, _verbose);
+        loadOBJ( _filename, _uniforms, _verbose);
 
     // If it's a GLTF it's not just multiple meshes and materials but also nodes, lights and cameras
     else if ( ext == "glb" || ext == "GLB" || ext == "gltf" || ext == "GLTF" )
-        loadGLTF(_uniforms, _files, m_materials, m_models, _index, _verbose);
+        loadGLTF( _filename, _uniforms, _verbose);
 
     // If it's a STL 
     else if ( ext == "stl" || ext == "STL" )
-        loadSTL(_files, m_materials, m_models, _index, _verbose);
+        loadSTL( _filename, _uniforms, _verbose);
 
     // Calculate the total area
     ada::BoundingBox bbox;
-    for (size_t i = 0; i < m_models.size(); i++) {
-        ada::addLabel(m_models[i]->getName(), m_models[i], ada::LABEL_RIGHT);
-        bbox.expand( m_models[i]->getBoundingBox() );
+    for (ada::ModelsMap::iterator it = _uniforms.models.begin(); it != _uniforms.models.end(); ++it) {
+        ada::addLabel( it->second->getName(), it->second, ada::LABEL_RIGHT);
+        bbox.expand( it->second->getBoundingBox() );
     }
 
     m_area = glm::max(0.5f, glm::max(glm::length(bbox.min), glm::length(bbox.max)));
@@ -521,19 +502,20 @@ bool Scene::loadGeometry(Uniforms& _uniforms, WatchFileList& _files, int _index,
     // Setup light
     if (_uniforms.lights.size() == 0) {
         glm::vec3 sun_position = glm::vec3(0.0,m_area*10.0,m_area*10.0);
-        _uniforms.lights.push_back( ada::Light( sun_position, -1.0 ) );
+        ada::Light* sun = new ada::Light( sun_position, -1.0 );
+        _uniforms.setLight("sun", sun);
         // setSun( ada::toLat( sun_position ), 
         //         ada::toLon( sun_position ) );
-        ada::addLabel("u_light", &_uniforms.lights[0], ada::LABEL_DOWN, 30.0f);
+        ada::addLabel("u_light", sun, ada::LABEL_DOWN, 30.0f);
     }
 
     return true;
 }
 
-bool Scene::loadShaders(const std::string& _fragmentShader, const std::string& _vertexShader, bool _verbose) {
+bool Scene::loadShaders(Uniforms& _uniforms, const std::string& _fragmentShader, const std::string& _vertexShader, bool _verbose) {
     bool rta = true;
-    for (size_t i = 0; i < m_models.size(); i++)
-        if ( !m_models[i]->loadShader( _fragmentShader, _vertexShader, _verbose) )
+    for (ada::ModelsMap::iterator it = _uniforms.models.begin(); it != _uniforms.models.end(); ++it) 
+        if ( !it->second->loadShader( _fragmentShader, _vertexShader, _verbose) )
             rta = false;
 
 
@@ -578,8 +560,8 @@ void Scene::render(Uniforms& _uniforms) {
 
     ada::blendMode(m_blend);
 
-    if (_uniforms.getCamera().bChange || m_origin.bChange) {
-        ada::setCamera( _uniforms.getCamera() );
+    if (_uniforms.getActiveCamera()->bChange || m_origin.bChange) {
+        ada::setCamera( _uniforms.getActiveCamera() );
         ada::applyMatrix( m_origin.getTransformMatrix() );
     }
 
@@ -589,23 +571,21 @@ void Scene::render(Uniforms& _uniforms) {
 
     ada::cullingMode(m_culling);
 
-    for (size_t i = 0; i < m_models.size(); i++) {
-
-        if (m_models[i]->getShader()->isLoaded() ) {
-
-            TRACK_BEGIN("render:scene:" + m_models[i]->getName() )
+    for (ada::ModelsMap::iterator it = _uniforms.models.begin(); it != _uniforms.models.end(); ++it) {
+        if (it->second->getShader()->isLoaded() ) {
+            TRACK_BEGIN("render:scene:" + it->second->getName() )
 
             // bind the shader
-            m_models[i]->getShader()->use();
+            it->second->getShader()->use();
 
             // Update Uniforms and textures variables to the shader
-            _uniforms.feedTo( m_models[i]->getShader() );
+            _uniforms.feedTo( it->second->getShader() );
 
             // Pass special uniforms
-            m_models[i]->getShader()->setUniform( "u_modelViewProjectionMatrix", ada::getProjectionViewWorldMatrix() );
-            m_models[i]->render();
+            it->second->getShader()->setUniform( "u_modelViewProjectionMatrix", ada::getProjectionViewWorldMatrix() );
+            it->second->render();
 
-            TRACK_END("render:scene:" + m_models[i]->getName() )
+            TRACK_END("render:scene:" + it->second->getName() )
         }
     }
 
@@ -625,56 +605,55 @@ void Scene::renderShadowMap(Uniforms& _uniforms) {
 
     // TRACK_BEGIN("shadowmap")
     bool dirty = false;
-    for (size_t i = 0; i < _uniforms.lights.size(); i++) {
+    for (ada::LightsMap::iterator lit = _uniforms.lights.begin(); lit != _uniforms.lights.end(); ++lit) {
         if (m_dynamicShadows || 
-            _uniforms.lights[i].bChange || 
-            _uniforms.lights[i].bUpdateShadowMap || 
+            lit->second->bChange || 
+            lit->second->bUpdateShadowMap || 
             haveChange() ) {
 
             // Temporally move the MVP matrix from the view of the light 
-            glm::mat4 mvp = _uniforms.lights[i].getMVPMatrix( m_origin.getTransformMatrix(), m_area );
-            // glm::mat4 mvp = _uniforms.lights[i].getMVPMatrix( ada::getWorldMatrix(), m_area );
-            _uniforms.lights[i].bindShadowMap();
+            glm::mat4 mvp = lit->second->getMVPMatrix( m_origin.getTransformMatrix(), m_area );
+            // glm::mat4 mvp = lit->second->getMVPMatrix( ada::getWorldMatrix(), m_area );
+            lit->second->bindShadowMap();
             
             // renderFloor(_uniforms, mvp, false);
-            dirty += m_models.size() == 0;
-            for (size_t j = 0; j < m_models.size(); j++) {
+            dirty += _uniforms.models.size() == 0;
+            for (ada::ModelsMap::iterator mit = _uniforms.models.begin(); mit != _uniforms.models.end(); ++mit) {
                 // m_models[i]->render(_uniforms, mvp);
-                if (m_models[j]->getShader()->isLoaded() ) {
+                if (mit->second->getShader()->isLoaded() ) {
 
                     // bind the shader
-                    m_models[j]->getShader()->use();
+                    mit->second->getShader()->use();
 
                     // Update Uniforms and textures variables to the shader
-                    _uniforms.feedTo( m_models[j]->getShader(), false );
+                    _uniforms.feedTo( mit->second->getShader(), false );
 
                     // Pass special uniforms
-                    m_models[j]->getShader()->setUniform( "u_modelViewProjectionMatrix", mvp );
-                    m_models[j]->render();
+                    mit->second->getShader()->setUniform( "u_modelViewProjectionMatrix", mvp );
+                    mit->second->render();
                 }
                 else
                     dirty += true;
             }
 
-            _uniforms.lights[i].unbindShadowMap();
+            lit->second->unbindShadowMap();
         }
 
-        _uniforms.lights[i].bUpdateShadowMap += dirty;
+        lit->second->bUpdateShadowMap += dirty;
     }
     // TRACK_END("shadowmap")
 }
 
 void Scene::renderBackground(Uniforms& _uniforms) {
     // If there is a skybox and it had changes re generate
-    if (m_cubemap_skybox) {
+    if (m_cubemap_skybox)
         if (m_cubemap_skybox->change) {
-            if (!_uniforms.cubemap) {
-                _uniforms.cubemap = new ada::TextureCube();
-            }
-            _uniforms.cubemap->load(m_cubemap_skybox);
+            if (!_uniforms.getActiveCubemap() )
+                _uniforms.setCubemap("skybox", new ada::TextureCube());
+            
+            _uniforms.getActiveCubemap()->load(m_cubemap_skybox);
             m_cubemap_skybox->change = false;
         }
-    }
 
     if (m_background) {
         TRACK_BEGIN("render:scene:background")
@@ -691,9 +670,9 @@ void Scene::renderBackground(Uniforms& _uniforms) {
         TRACK_END("render:scene:background")
     }
 
-    else if (_uniforms.cubemap && showCubebox) {
+    else if (_uniforms.getActiveCubemap() && showCubebox) {
 
-        if (_uniforms.cubemap->isLoaded()) {
+        if (_uniforms.getActiveCubemap()->isLoaded()) {
             if (!m_cubemap_vbo) {
                 m_cubemap_vbo = new ada::Vbo( ada::cubeMesh(1.0f) );
                 m_cubemap_shader.load(ada::getDefaultSrc(ada::FRAG_CUBEMAP), ada::getDefaultSrc(ada::VERT_CUBEMAP), false);
@@ -701,8 +680,8 @@ void Scene::renderBackground(Uniforms& _uniforms) {
 
             m_cubemap_shader.use();
 
-            m_cubemap_shader.setUniform("u_modelViewProjectionMatrix", _uniforms.getCamera().getProjectionMatrix() * glm::toMat4(_uniforms.getCamera().getOrientationQuat()) );
-            m_cubemap_shader.setUniformTextureCube("u_cubeMap", _uniforms.cubemap, 0);
+            m_cubemap_shader.setUniform("u_modelViewProjectionMatrix", _uniforms.getActiveCamera()->getProjectionMatrix() * glm::toMat4(_uniforms.getActiveCamera()->getOrientationQuat()) );
+            m_cubemap_shader.setUniformTextureCube("u_cubeMap", _uniforms.getActiveCubemap(), 0);
 
             m_cubemap_vbo->render( &m_cubemap_shader );
         }
@@ -764,55 +743,34 @@ void Scene::renderDebug(Uniforms& _uniforms) {
     // Draw Bounding boxes
     if (showBBoxes) {
         ada::strokeWeight(3.0f);
-    #if defined(USE_ADA)
+
         ada::stroke(glm::vec3(1.0f, 0.0f, 0.0f));
-        for (size_t i = 0; i < m_models.size(); i++) 
-            ada::model(m_models[i]->getVboBbox());
+        for (ada::ModelsMap::iterator it = _uniforms.models.begin(); it != _uniforms.models.end(); ++it)
+            ada::model( it->second->getVboBbox() );
 
         ada::fill(.8f);
         ada::textSize(24.0f);
         ada::labels();
-    #else
-        fill->use();
-        fill->setUniform("u_modelViewProjectionMatrix", ada::getProjectionViewWorldMatrix() );
-        fill->setUniform("u_color", glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
-        for (size_t i = 0; i < m_models.size(); i++) 
-            m_models[i]->getVboBbox()->render(fill);
-    #endif
     }
     
     // Axis
     if (showAxis) {
         if (m_axis_vbo == nullptr)
-            m_axis_vbo = new ada::Vbo( ada::axisMesh(_uniforms.getCamera().getFarClip(), m_floor_height) );
+            m_axis_vbo = new ada::Vbo( ada::axisMesh(_uniforms.getActiveCamera()->getFarClip(), m_floor_height) );
 
         ada::strokeWeight(2.0f);
-    #if defined(USE_ADA)
         ada::stroke( glm::vec4(1.0f) );
         ada::model( m_axis_vbo );
-    #else
-        fill->use();
-        fill->setUniform("u_modelViewProjectionMatrix", ada::getProjectionViewWorldMatrix() );
-        fill->setUniform("u_color", glm::vec4(1.0f));
-        m_axis_vbo->render(fill);
-    #endif
     }
     
     // Grid
     if (showGrid) {
         if (m_grid_vbo == nullptr)
-            m_grid_vbo = new ada::Vbo( ada::gridMesh(_uniforms.getCamera().getFarClip(), _uniforms.getCamera().getFarClip() / 20.0, m_floor_height) );
+            m_grid_vbo = new ada::Vbo( ada::gridMesh(_uniforms.getActiveCamera()->getFarClip(), _uniforms.getActiveCamera()->getFarClip() / 20.0, m_floor_height) );
 
         ada::strokeWeight(1.0f);
-        #if defined(USE_ADA)
         ada::stroke( glm::vec4(0.5f) );
         ada::model( m_grid_vbo );
-        #else
-        fill->use();
-        fill->setUniform("u_modelViewProjectionMatrix", ada::getProjectionViewWorldMatrix() );
-        fill->setUniform("u_color", glm::vec4(0.5f) );
-        m_grid_vbo->render(fill);
-        #endif
     }
 
     // Light
@@ -825,12 +783,12 @@ void Scene::renderDebug(Uniforms& _uniforms) {
 
         m_lightUI_shader.use();
         m_lightUI_shader.setUniform("u_scale", 24.0f, 24.0f);
-        m_lightUI_shader.setUniform("u_viewMatrix", _uniforms.getCamera().getViewMatrix());
+        m_lightUI_shader.setUniform("u_viewMatrix", _uniforms.getActiveCamera()->getViewMatrix());
         m_lightUI_shader.setUniform("u_modelViewProjectionMatrix", ada::getProjectionViewWorldMatrix() );
 
-        for (size_t i = 0; i < _uniforms.lights.size(); i++) {
-            m_lightUI_shader.setUniform("u_translate", _uniforms.lights[i].getPosition());
-            m_lightUI_shader.setUniform("u_color", glm::vec4(_uniforms.lights[i].color, 1.0));
+        for (ada::LightsMap::iterator it = _uniforms.lights.begin(); it != _uniforms.lights.end(); ++it) {
+            m_lightUI_shader.setUniform("u_translate", it->second->getPosition());
+            m_lightUI_shader.setUniform("u_color", glm::vec4(it->second->color, 1.0));
 
             m_lightUI_vbo->render( &m_lightUI_shader );
         }

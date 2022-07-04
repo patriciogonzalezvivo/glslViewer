@@ -4,7 +4,7 @@ precision highp float;
 #endif
 
 uniform sampler2D   u_buffer0;
-uniform sampler2D   u_convolutionPyramid0;
+uniform sampler2D   u_pyramid0;
 
 uniform vec2        u_resolution;
 uniform vec2        u_mouse;
@@ -43,7 +43,7 @@ void main (void) {
 
 
 #else
-    color = texture2D(u_convolutionPyramid0, st);
+    color = texture2D(u_pyramid0, st);
 #endif
 
     gl_FragColor = color;

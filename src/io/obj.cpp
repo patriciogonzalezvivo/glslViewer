@@ -5,14 +5,15 @@
 #include <string>
 
 #include "../tools/text.h"
-#include "ada/string.h"
 
+#include "ada/fs.h"
+#include "ada/string.h"
 #include "ada/geom/ops.h"
 
 #define TINYOBJLOADER_IMPLEMENTATION
 #include "tinyobjloader/tiny_obj_loader.h"
 
-void addModel (std::vector<ada::Model*>& _models, const std::string& _name, ada::Mesh& _mesh, ada::Material& _mat, bool _verbose) {
+void addModel(ada::Scene& _scene, const std::string& _name, ada::Mesh& _mesh, ada::Material& _mat, bool _verbose) {
     if (_verbose) {
         std::cout << "    vertices = " << _mesh.getVertices().size() << std::endl;
         std::cout << "    colors   = " << _mesh.getColors().size() << std::endl;
@@ -37,7 +38,7 @@ void addModel (std::vector<ada::Model*>& _models, const std::string& _name, ada:
         if ( _verbose )
             std::cout << "    . Compute tangents" << std::endl;
 
-    _models.push_back( new ada::Model(_name, _mesh, _mat) );
+    _scene.setModel( _name, new ada::Model(_name, _mesh, _mat) );
 }
 
 glm::vec3 getVertex(const tinyobj::attrib_t& _attrib, int _index) {
@@ -115,7 +116,7 @@ glm::vec2 getTexCoords(const tinyobj::attrib_t& _attrib, int _index) {
                         1.0f - _attrib.texcoords[2 * _index + 1]);
 }
 
-ada::Material InitMaterial (const tinyobj::material_t& _material, Uniforms& _uniforms, WatchFileList& _files, const std::string& _folder ) {
+ada::Material InitMaterial (const tinyobj::material_t& _material, ada::Scene& _scene, const std::string& _folder ) {
     ada::Material mat;
     mat.name = ada::toLower( ada::toUnderscore( ada::purifyString( _material.name ) ) );
 
@@ -124,7 +125,7 @@ ada::Material InitMaterial (const tinyobj::material_t& _material, Uniforms& _uni
     mat.addDefine("MATERIAL_BASECOLOR", glm::vec4(_material.diffuse[0], _material.diffuse[1], _material.diffuse[2], 1.0));
     if (!_material.diffuse_texname.empty()) {
         std::string name = getUniformName(_material.diffuse_texname);
-        _uniforms.addTexture(name, _folder + _material.diffuse_texname, _files);
+        _scene.addTexture(name, _folder + _material.diffuse_texname);
         mat.addDefine("MATERIAL_BASECOLORMAP", name);
 
         if (_material.diffuse_texopt.origin_offset[0] != 0.0 ||
@@ -141,7 +142,7 @@ ada::Material InitMaterial (const tinyobj::material_t& _material, Uniforms& _uni
     mat.addDefine("MATERIAL_SPECULAR", (float*)_material.specular, 3);
     if (!_material.specular_texname.empty()) {
         std::string name = getUniformName(_material.specular_texname);
-        _uniforms.addTexture(name, _folder + _material.specular_texname, _files);
+        _scene.addTexture(name, _folder + _material.specular_texname);
         mat.addDefine("MATERIAL_SPECULARMAP", name);
 
         if (_material.specular_texopt.origin_offset[0] != 0.0 ||
@@ -158,7 +159,7 @@ ada::Material InitMaterial (const tinyobj::material_t& _material, Uniforms& _uni
     mat.addDefine("MATERIAL_EMISSIVE", (float*)_material.emission, 3);
     if (!_material.emissive_texname.empty()) {
         std::string name = getUniformName(_material.emissive_texname);
-        _uniforms.addTexture(name, _folder + _material.emissive_texname, _files);
+        _scene.addTexture(name, _folder + _material.emissive_texname);
         mat.addDefine("MATERIAL_EMISSIVEMAP", name);
 
         if (_material.emissive_texopt.origin_offset[0] != 0.0 ||
@@ -175,7 +176,7 @@ ada::Material InitMaterial (const tinyobj::material_t& _material, Uniforms& _uni
     mat.addDefine("MATERIAL_ROUGHNESS", _material.roughness);
     if (!_material.roughness_texname.empty()) {
         std::string name = getUniformName(_material.roughness_texname);
-        _uniforms.addTexture(name, _folder + _material.roughness_texname, _files);
+        _scene.addTexture(name, _folder + _material.roughness_texname);
         mat.addDefine("MATERIAL_ROUGHNESSMAP", name);
 
         if (_material.roughness_texopt.origin_offset[0] != 0.0 ||
@@ -192,7 +193,7 @@ ada::Material InitMaterial (const tinyobj::material_t& _material, Uniforms& _uni
     mat.addDefine("MATERIAL_METALLIC", _material.metallic);
     if (!_material.metallic_texname.empty()) {
         std::string name = getUniformName(_material.metallic_texname);
-        _uniforms.addTexture(name, _folder + _material.metallic_texname, _files);
+        _scene.addTexture(name, _folder + _material.metallic_texname);
         mat.addDefine("MATERIAL_METALLICMAP", name);
 
         if (_material.metallic_texopt.origin_offset[0] != 0.0 ||
@@ -208,7 +209,7 @@ ada::Material InitMaterial (const tinyobj::material_t& _material, Uniforms& _uni
 
     if (!_material.normal_texname.empty()) {
         std::string name = getUniformName(_material.normal_texname);
-        _uniforms.addTexture(name, _folder + _material.normal_texname, _files);
+        _scene.addTexture(name, _folder + _material.normal_texname);
         mat.addDefine("MATERIAL_NORMALMAP", name);
 
         if (_material.normal_texopt.origin_offset[0] != 0.0 ||
@@ -224,9 +225,9 @@ ada::Material InitMaterial (const tinyobj::material_t& _material, Uniforms& _uni
 
     if (!_material.bump_texname.empty()) {
         std::string name = getUniformName(_material.bump_texname);
-        _uniforms.addTexture(name, _folder + _material.bump_texname, _files);
+        _scene.addTexture(name, _folder + _material.bump_texname);
         mat.addDefine("MATERIAL_BUMPMAP", name);
-        _uniforms.addBumpTexture(name + "_normalmap", _folder + _material.bump_texname, _files);
+        _scene.addBumpTexture(name + "_normalmap", _folder + _material.bump_texname);
         mat.addDefine("MATERIAL_BUMPMAP_NORMALMAP", name + "_normalmap");
 
         if (_material.bump_texopt.origin_offset[0] != 0.0 ||
@@ -243,7 +244,7 @@ ada::Material InitMaterial (const tinyobj::material_t& _material, Uniforms& _uni
 
     if (!_material.displacement_texname.empty()) {
         std::string name = getUniformName(_material.displacement_texname);
-        _uniforms.addTexture(name, _folder + _material.displacement_texname, _files);
+        _scene.addTexture(name, _folder + _material.displacement_texname);
         mat.addDefine("MATERIAL_DISPLACEMENTMAP", name);
 
         if (_material.displacement_texopt.origin_offset[0] != 0.0 ||
@@ -259,7 +260,7 @@ ada::Material InitMaterial (const tinyobj::material_t& _material, Uniforms& _uni
 
     if (!_material.alpha_texname.empty()) {
         std::string name = getUniformName(_material.alpha_texname);
-        _uniforms.addTexture(name, _folder + _material.alpha_texname, _files);
+        _scene.addTexture(name, _folder + _material.alpha_texname);
         mat.addDefine("MATERIAL_ALPHAMAP", name);
 
         if (_material.alpha_texopt.origin_offset[0] != 0.0 ||
@@ -277,7 +278,7 @@ ada::Material InitMaterial (const tinyobj::material_t& _material, Uniforms& _uni
      mat.addDefine("MATERIAL_SHEEN", _material.sheen);
     if (!_material.sheen_texname.empty()) {
         std::string name = getUniformName(_material.sheen_texname);
-        _uniforms.addTexture(name, _folder + _material.sheen_texname, _files);
+        _scene.addTexture(name, _folder + _material.sheen_texname);
         mat.addDefine("MATERIAL_SHEENMAP", name);
 
         if (_material.sheen_texopt.origin_offset[0] != 0.0 ||
@@ -312,7 +313,7 @@ ada::Material InitMaterial (const tinyobj::material_t& _material, Uniforms& _uni
     // mat.addDefine("MATERIAL_AMBIENT", (float*)_material.ambient, 3);
     // if (!_material.ambient_texname.empty()) {
     //     std::string name = getUniformName(_material.ambient_texname);
-    //     _uniforms.addTexture(name, _folder + _material.ambient_texname, _files);
+    //     _scene.addTexture(name, _folder + _material.ambient_texname);
     //     mat.addDefine("MATERIAL_AMBIENTMAP", name);
     // }
 
@@ -320,7 +321,7 @@ ada::Material InitMaterial (const tinyobj::material_t& _material, Uniforms& _uni
     mat.addDefine("MATERIAL_TRANSMITTANCE", (float*)_material.transmittance, 3);
     if (!_material.reflection_texname.empty()) {
         std::string name = getUniformName(_material.reflection_texname);
-        _uniforms.addTexture(name, _folder + _material.reflection_texname, _files);
+        _scene.addTexture(name, _folder + _material.reflection_texname);
         mat.addDefine("MATERIAL_REFLECTIONMAP", name);
 
         if (_material.reflection_texopt.origin_offset[0] != 0.0 ||
@@ -339,17 +340,15 @@ ada::Material InitMaterial (const tinyobj::material_t& _material, Uniforms& _uni
     return mat;
 }
 
-bool loadOBJ(Uniforms& _uniforms, WatchFileList& _files, ada::Materials& _materials, ada::Models& _models, int _index, bool _verbose) {
-    std::string filename = _files[_index].path;
-
+bool loadOBJ(const std::string& _filename, ada::Scene& _scene, bool _verbose) {
     tinyobj::attrib_t attrib;
     std::vector<tinyobj::shape_t> shapes;
     std::vector<tinyobj::material_t> materials;
 
     std::string warn;
     std::string err;
-    std::string base_dir = ada::getBaseDir(filename.c_str());
-    bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, filename.c_str(), base_dir.c_str());
+    std::string base_dir = ada::getBaseDir(_filename.c_str());
+    bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, _filename.c_str(), base_dir.c_str());
 
     if (!warn.empty()) {
         std::cout << "WARN: " << warn << std::endl;
@@ -358,7 +357,7 @@ bool loadOBJ(Uniforms& _uniforms, WatchFileList& _files, ada::Materials& _materi
         std::cerr << err << std::endl;
     }
     if (!ret) {
-        std::cerr << "Failed to load " << filename.c_str() << std::endl;
+        std::cerr << "Failed to load " << _filename.c_str() << std::endl;
         return false;
     }
 
@@ -366,7 +365,7 @@ bool loadOBJ(Uniforms& _uniforms, WatchFileList& _files, ada::Materials& _materi
     // materials.push_back(tinyobj::material_t());
 
     if (_verbose) {
-        std::cerr << "Loading " << filename.c_str() << std::endl;
+        std::cerr << "Loading " << _filename.c_str() << std::endl;
         printf("    Total vertices  = %d\n", (int)(attrib.vertices.size()) / 3);
         printf("    Total colors    = %d\n", (int)(attrib.colors.size()) / 3);
         printf("    Total normals   = %d\n", (int)(attrib.normals.size()) / 3);
@@ -378,17 +377,16 @@ bool loadOBJ(Uniforms& _uniforms, WatchFileList& _files, ada::Materials& _materi
     }
 
     for (size_t m = 0; m < materials.size(); m++) {
-        if (_materials.find( materials[m].name ) == _materials.end()) {
+        if ( !_scene.haveMaterial( materials[m].name ) ) {
             if (_verbose)
                 std::cout << "Add Material " << materials[m].name << std::endl;
 
-            ada::Material mat = InitMaterial( materials[m], _uniforms, _files, base_dir );
-            _materials[ materials[m].name ] = mat;
+            ada::Material mat = InitMaterial( materials[m], _scene, base_dir );
+            _scene.setMaterial( materials[m].name, mat);
         }
     }
 
     for (size_t s = 0; s < shapes.size(); s++) {
-
         std::string name = shapes[s].name;
         if (name.empty())
             name = ada::toString(s);
@@ -433,7 +431,7 @@ bool loadOBJ(Uniforms& _uniforms, WatchFileList& _files, ada::Materials& _materi
                         // std::cout << "Adding model " << name  << "_" << ada::toString(mCounter, 3, '0') << " w new material " << mat.name << std::endl;
                         
                         // Add the model to the stack 
-                        addModel(_models, name + "_"+ ada::toString(mCounter,3,'0'), mesh, mat, _verbose);
+                        addModel(_scene, name + "_"+ ada::toString(mCounter,3,'0'), mesh, mat, _verbose);
                         mCounter++;
 
                         // Restart the mesh
@@ -444,7 +442,7 @@ bool loadOBJ(Uniforms& _uniforms, WatchFileList& _files, ada::Materials& _materi
 
                     // assign the current material
                     mi = material_index;
-                    mat = _materials[ materials[material_index].name ];
+                    mat = _scene.materials[ materials[material_index].name ];
                 }
             }
 
@@ -491,7 +489,7 @@ bool loadOBJ(Uniforms& _uniforms, WatchFileList& _files, ada::Materials& _materi
             meshName = name + "_" + ada::toString(mCounter, 3, '0');
 
         // std::cout << "Adding model " << meshName << " w material " << mat.name << std::endl;
-        addModel(_models, meshName, mesh, mat, _verbose);
+        addModel(_scene, meshName, mesh, mat, _verbose);
     }
 
     return true;

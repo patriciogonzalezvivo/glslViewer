@@ -6,12 +6,12 @@ precision mediump float;
 uniform sampler2D   u_tex0;
 uniform vec2        u_tex0Resolution;
 
-uniform sampler2D   u_convolutionPyramid0;
-uniform sampler2D   u_convolutionPyramidTex0;
-uniform sampler2D   u_convolutionPyramidTex1;
-uniform int         u_convolutionPyramidDepth;
-uniform int         u_convolutionPyramidTotalDepth;
-uniform bool        u_convolutionPyramidUpscaling;
+uniform sampler2D   u_pyramid0;
+uniform sampler2D   u_pyramidTex0;
+uniform sampler2D   u_pyramidTex1;
+uniform int         u_pyramidDepth;
+uniform int         u_pyramidTotalDepth;
+uniform bool        u_pyramidUpscaling;
 
 uniform vec2        u_resolution;
 uniform int         u_frame;
@@ -48,41 +48,41 @@ void main (void) {
     color.rgb *= step(0.001, color.a);
 
 #elif defined(CONVOLUTION_PYRAMID_ALGORITHM)
-    if (!u_convolutionPyramidUpscaling) {
+    if (!u_pyramidUpscaling) {
         for (int dy = -2; dy <= 2; dy++) {
             for (int dx = -2; dx <= 2; dx++) {
                 vec2 uv = st + vec2(float(dx), float(dy)) * pixel * 0.5;
                 if (uv.x <= 0.0 || uv.x >= 1.0 || uv.y <= 0.0 || uv.y >= 1.0)
                     continue;
-                vec4 prev = texture2D(u_convolutionPyramidTex0, saturate(uv)) * h1[ absi(dx) ] * h1[ absi(dy) ];
+                vec4 prev = texture2D(u_pyramidTex0, saturate(uv)) * h1[ absi(dx) ] * h1[ absi(dy) ];
 
                 color.rgb += prev.rgb;
                 color.a += prev.a;
             }
         }
     }
-    else if (modi(int(u_time),u_convolutionPyramidTotalDepth) == u_convolutionPyramidDepth) {
-        color = texture2D(u_convolutionPyramidTex0, st);
+    else if (modi(int(u_time),u_pyramidTotalDepth) == u_pyramidDepth) {
+        color = texture2D(u_pyramidTex0, st);
     }
     else {
         for (int dy = -1; dy <= 1; dy++) {
             for (int dx = -1; dx <= 1; dx++) {
                 vec2 uv = st + vec2(float(dx), float(dy)) * pixel;
-                color += texture2D(u_convolutionPyramidTex0, saturate(uv)) * g[ absi(dx) ] * g[ absi(dy) ];
+                color += texture2D(u_pyramidTex0, saturate(uv)) * g[ absi(dx) ] * g[ absi(dy) ];
             }
         }
 
         for (int dy = -2; dy <= 2; dy++) {
             for (int dx = -2; dx <= 2; dx++) {
                 vec2 uv = st + vec2(float(dx), float(dy)) * pixel;
-                color += texture2D(u_convolutionPyramidTex1, saturate(uv)) * h2 * h1[ absi(dx) ] * h1[ absi(dy) ];
+                color += texture2D(u_pyramidTex1, saturate(uv)) * h2 * h1[ absi(dx) ] * h1[ absi(dy) ];
             }
         }
     }
     color = (color.a == 0.0)? color : vec4(color.rgb/color.a, 1.0);
 
 #else
-    color = texture2D(u_convolutionPyramid0, st);
+    color = texture2D(u_pyramid0, st);
 
 #endif
 

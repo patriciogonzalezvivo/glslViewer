@@ -19,8 +19,8 @@ public:
     void            setup(CommandList& _commands, Uniforms& _uniforms);
     void            clear();
 
-    bool            loadGeometry(Uniforms& _uniforms, WatchFileList& _files, int _index, bool _verbose);
-    bool            loadShaders(const std::string& _fragmentShader, const std::string& _vertexShader, bool _verbose);
+    bool            loadGeometry(Uniforms& _uniforms, const std::string& _filename, bool _verbose);
+    bool            loadShaders(Uniforms& _uniforms, const std::string& _fragmentShader, const std::string& _vertexShader, bool _verbose);
 
     void            addDefine(const std::string& _define, const std::string& _value);
     void            delDefine(const std::string& _define);
@@ -55,10 +55,6 @@ public:
     bool            showCubebox;
 
 protected:
-     // Geometry
-    std::vector<ada::Model*>             m_models;
-    std::map<std::string,ada::Material>  m_materials;
-
     ada::Node           m_origin;
     float               m_area;
 

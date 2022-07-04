@@ -229,8 +229,3 @@ std::string getUniformName(const std::string& _str) {
     std::vector<std::string> values = ada::split(_str, '.');
     return "u_" + ada::toLower( ada::toUnderscore( ada::purifyString( values[0] ) ) );
 }
-
-bool checkPattern(const std::string& _str) {
-    return  (_str.find('*') != std::string::npos) ||
-            (_str.find('?') != std::string::npos);
-}

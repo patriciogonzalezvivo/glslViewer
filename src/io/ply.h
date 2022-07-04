@@ -1,6 +1,5 @@
 #pragma once
 
-#include "../uniforms.h"
-#include "ada/scene/model.h"
+#include "ada/scene.h"
 
-bool loadPLY(Uniforms& _uniforms, WatchFileList& _files, ada::Materials& _materials, ada::Models& _models, int _index, bool _verbose);
+bool loadPLY(const std::string& _filename, ada::Scene& _scene, bool _verbose);

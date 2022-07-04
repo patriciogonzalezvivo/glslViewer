@@ -1,6 +1,5 @@
 #pragma once
 
-#include "ada/scene/model.h"
-#include "../types/files.h"
+#include "ada/scene.h"
 
-bool loadSTL(WatchFileList& _files, ada::Materials& _materials, ada::Models& _models, int _index, bool _verbose);
+bool loadSTL(const std::string& _filename, ada::Scene& _scene, bool _verbose);

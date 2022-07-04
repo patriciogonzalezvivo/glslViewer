@@ -8,7 +8,7 @@ uniform sampler2D   u_source;
 uniform sampler2D   u_source_mask;
 uniform vec2        u_sourceResolution;
 
-uniform sampler2D   u_convolutionPyramid0;
+uniform sampler2D   u_pyramid0;
 
 uniform vec2        u_resolution;
 uniform vec2        u_mouse;
@@ -36,7 +36,7 @@ void main (void) {
     color *= 1.0-msk;
 
 #else
-    vec3 er = texture2D(u_convolutionPyramid0, st).xyz * 2.0 - 1.0;
+    vec3 er = texture2D(u_pyramid0, st).xyz * 2.0 - 1.0;
     color.rgb = er.rgb + src.rgb;
 
 #endif

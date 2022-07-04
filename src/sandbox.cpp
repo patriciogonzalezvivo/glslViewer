@@ -11,6 +11,8 @@
 #include "tools/record.h"
 #include "tools/console.h"
 
+
+#include "ada/fs.h"
 #include "ada/window.h"
 #include "ada/draw.h"
 #include "ada/math.h"
@@ -36,7 +38,7 @@ Sandbox::Sandbox():
     // Buffers
     m_buffers_total(0),
     // Poisson Fill
-    m_convolution_pyramid_total(0),
+    m_pyramid_total(0),
     // PostProcessing
     m_postprocessing(false),
     // Geometry helpers
@@ -57,8 +59,8 @@ Sandbox::Sandbox():
 
     // Debug
     m_showTextures(false), m_showPasses(false)
-
 {
+    ada::setScene( (ada::Scene*)&uniforms );
 
     // TIME UNIFORMS
     //
@@ -173,9 +175,11 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
                     m_scene.showBBoxes = (values[1] == "on");
                     if (values[1] == "on") {
                         m_scene.addDefine("DEBUG", values[1]);
+                        uniforms.addDefine("DEBUG", values[1]);
                     }
                     else {
                         m_scene.delDefine("DEBUG");
+                        uniforms.delDefine("DEBUG");
                     }
                 }
                 // if (values[1] == "on") {
@@ -346,8 +350,11 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         if (_line == "defines") {
             if (geom_index == -1)
                 m_canvas_shader.printDefines();
-            else
+            else {
                 m_scene.printDefines();
+                uniforms.printDefines();
+            }
+            
             return true;
         }
         return false;
@@ -482,22 +489,23 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         std::vector<std::string> values = ada::split(_line,',');
         if (values.size() == 4) {
             if (uniforms.lights.size() > 0) {
-                uniforms.lights[0].setPosition(glm::vec3(ada::toFloat(values[1]), ada::toFloat(values[2]), ada::toFloat(values[3])));
-
-                m_scene.setSun( uniforms.lights[0].getPosition() );
+                ada::Light* sun = uniforms.getLight("sun");
+                sun->setPosition(glm::vec3(ada::toFloat(values[1]), ada::toFloat(values[2]), ada::toFloat(values[3])));
+                m_scene.setSun( sun->getPosition() );
             }
             return true;
         }
-        else if (values.size() == 5) {
-            size_t i = ada::toInt(values[1]);
-            if (uniforms.lights.size() > i)
-                uniforms.lights[i].setPosition(glm::vec3(ada::toFloat(values[2]), ada::toFloat(values[3]), ada::toFloat(values[4])));
+        // else if (values.size() == 5) {
+        //     size_t i = ada::toInt(values[1]);
+        //     if (uniforms.lights.size() > i)
+        //         uniforms.lights[i].setPosition(glm::vec3(ada::toFloat(values[2]), ada::toFloat(values[3]), ada::toFloat(values[4])));
 
-            return true;
-        }
+        //     return true;
+        // }
         else {
             if (uniforms.lights.size() > 0) {
-                glm::vec3 pos = uniforms.lights[0].getPosition();
+                ada::Light* sun = uniforms.getLight("sun");
+                glm::vec3 pos = sun->getPosition();
                 std::cout << pos.x << ',' << pos.y << ',' << pos.z << std::endl;
             }
             return true;
@@ -510,22 +518,24 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         std::vector<std::string> values = ada::split(_line,',');
         if (values.size() == 4) {
             if (uniforms.lights.size() > 0) {
-                uniforms.lights[0].color = glm::vec3(ada::toFloat(values[1]), ada::toFloat(values[2]), ada::toFloat(values[3]));
-                uniforms.lights[0].bChange = true;
+                ada::Light* sun = uniforms.getLight("sun");
+                sun->color = glm::vec3(ada::toFloat(values[1]), ada::toFloat(values[2]), ada::toFloat(values[3]));
+                sun->bChange = true;
             }
             return true;
         }
-        else if (values.size() == 5) {
-            size_t i = ada::toInt(values[1]);
-            if (uniforms.lights.size() > i) {
-                uniforms.lights[i].color = glm::vec3(ada::toFloat(values[2]), ada::toFloat(values[3]), ada::toFloat(values[4]));
-                uniforms.lights[i].bChange = true;
-            }
-            return true;
-        }
+        // else if (values.size() == 5) {
+        //     size_t i = ada::toInt(values[1]);
+        //     if (uniforms.lights.size() > i) {
+        //         uniforms.lights[i].color = glm::vec3(ada::toFloat(values[2]), ada::toFloat(values[3]), ada::toFloat(values[4]));
+        //         uniforms.lights[i].bChange = true;
+        //     }
+        //     return true;
+        // }
         else {
             if (uniforms.lights.size() > 0) {
-                glm::vec3 color = uniforms.lights[0].color;
+                ada::Light* sun = uniforms.getLight("sun");
+                glm::vec3 color = sun->color;
                 std::cout << color.x << ',' << color.y << ',' << color.z << std::endl;
             }
             return true;
@@ -538,22 +548,25 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
          std::vector<std::string> values = ada::split(_line,',');
         if (values.size() == 2) {
             if (uniforms.lights.size() > 0) {
-                uniforms.lights[0].falloff = ada::toFloat(values[1]);
-                uniforms.lights[0].bChange = true;
+                ada::Light* sun = uniforms.getLight("sun");
+                sun->falloff = ada::toFloat(values[1]);
+                sun->bChange = true;
             }
             return true;
         }
-        else if (values.size() == 5) {
-            size_t i = ada::toInt(values[1]);
-            if (uniforms.lights.size() > i) {
-                uniforms.lights[i].falloff = ada::toFloat(values[2]);
-                uniforms.lights[i].bChange = true;
-            }
-            return true;
-        }
+        // else if (values.size() == 5) {
+        //     size_t i = ada::toInt(values[1]);
+        //     if (uniforms.lights.size() > i) {
+        //         uniforms.lights[i].falloff = ada::toFloat(values[2]);
+        //         uniforms.lights[i].bChange = true;
+        //     }
+        //     return true;
+        // }
         else {
-            if (uniforms.lights.size() > 0)
-                std::cout <<  uniforms.lights[0].falloff << std::endl;
+            if (uniforms.lights.size() > 0) {
+                ada::Light* sun = uniforms.getLight("sun");
+                std::cout <<  sun->falloff << std::endl;
+            }
             return true;
         }
         return false;
@@ -564,22 +577,25 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
          std::vector<std::string> values = ada::split(_line,',');
         if (values.size() == 2) {
             if (uniforms.lights.size() > 0) {
-                uniforms.lights[0].intensity = ada::toFloat(values[1]);
-                uniforms.lights[0].bChange = true;
+                ada::Light* sun = uniforms.getLight("sun");
+                sun->intensity = ada::toFloat(values[1]);
+                sun->bChange = true;
             }
             return true;
         }
-        else if (values.size() == 5) {
-            size_t i = ada::toInt(values[1]);
-            if (uniforms.lights.size() > i) {
-                uniforms.lights[i].intensity = ada::toFloat(values[2]);
-                uniforms.lights[i].bChange = true;
-            }
-            return true;
-        }
+        // else if (values.size() == 5) {
+        //     size_t i = ada::toInt(values[1]);
+        //     if (uniforms.lights.size() > i) {
+        //         uniforms.lights[i].intensity = ada::toFloat(values[2]);
+        //         uniforms.lights[i].bChange = true;
+        //     }
+        //     return true;
+        // }
         else {
-            if (uniforms.lights.size() > 0)
-                std::cout <<  uniforms.lights[0].intensity << std::endl;
+            if (uniforms.lights.size() > 0) {
+                ada::Light* sun = uniforms.getLight("sun");
+                std::cout <<  sun->intensity << std::endl;
+            }
             return true;
         }
         return false;
@@ -590,11 +606,11 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     _commands.push_back(Command("camera_distance", [&](const std::string& _line){ 
         std::vector<std::string> values = ada::split(_line,',');
         if (values.size() == 2) {
-            uniforms.getCamera().setDistance(ada::toFloat(values[1]));
+            uniforms.getActiveCamera()->setDistance(ada::toFloat(values[1]));
             return true;
         }
         else {
-            std::cout << uniforms.getCamera().getDistance() << std::endl;
+            std::cout << uniforms.getActiveCamera()->getDistance() << std::endl;
             return true;
         }
         return false;
@@ -605,13 +621,13 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         std::vector<std::string> values = ada::split(_line,',');
         if (values.size() == 2) {
             if (values[1] == "ortho")
-                uniforms.getCamera().setProjection(ada::Projection::ORTHO);
+                uniforms.getActiveCamera()->setProjection(ada::Projection::ORTHO);
             else if (values[1] == "perspective")
-                uniforms.getCamera().setProjection(ada::Projection::PERSPECTIVE);
+                uniforms.getActiveCamera()->setProjection(ada::Projection::PERSPECTIVE);
             return true;
         }
         else {
-            ada::Projection type = uniforms.getCamera().getType();
+            ada::Projection type = uniforms.getActiveCamera()->getType();
             if (type == ada::Projection::ORTHO)
                 std::cout << "ortho" << std::endl;
             else
@@ -625,11 +641,11 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     _commands.push_back(Command("camera_fov", [&](const std::string& _line){ 
         std::vector<std::string> values = ada::split(_line,',');
         if (values.size() == 2) {
-            uniforms.getCamera().setFOV( ada::toFloat(values[1]) );
+            uniforms.getActiveCamera()->setFOV( ada::toFloat(values[1]) );
             return true;
         }
         else {
-            std::cout << uniforms.getCamera().getFOV() << std::endl;
+            std::cout << uniforms.getActiveCamera()->getFOV() << std::endl;
             return true;
         }
         return false;
@@ -639,15 +655,15 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     _commands.push_back(Command("camera_position", [&](const std::string& _line){ 
         std::vector<std::string> values = ada::split(_line,',');
         if (values.size() == 4) {
-            uniforms.getCamera().setPosition( -glm::vec3(ada::toFloat(values[1]), ada::toFloat(values[2]), ada::toFloat(values[3])));
-            uniforms.getCamera().lookAt( uniforms.getCamera().getTarget() );
-            glm::vec3 v = uniforms.getCamera().getPosition();
+            uniforms.getActiveCamera()->setPosition( -glm::vec3(ada::toFloat(values[1]), ada::toFloat(values[2]), ada::toFloat(values[3])));
+            uniforms.getActiveCamera()->lookAt( uniforms.getActiveCamera()->getTarget() );
+            glm::vec3 v = uniforms.getActiveCamera()->getPosition();
             m_camera_azimuth = glm::degrees( atan2(v.x, v.z) );
             m_camera_elevation = glm::degrees( atan2(-v.y, sqrt(v.x * v.x + v.z * v.z)) );
             return true;
         }
         else {
-            glm::vec3 pos = -uniforms.getCamera().getPosition();
+            glm::vec3 pos = -uniforms.getActiveCamera()->getPosition();
             std::cout << pos.x << ',' << pos.y << ',' << pos.z << std::endl;
             return true;
         }
@@ -658,11 +674,11 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     _commands.push_back(Command("camera_exposure", [&](const std::string& _line){ 
         std::vector<std::string> values = ada::split(_line,',');
         if (values.size() == 4) {
-            uniforms.getCamera().setExposure( ada::toFloat(values[1]), ada::toFloat(values[2]), ada::toFloat(values[3]));
+            uniforms.getActiveCamera()->setExposure( ada::toFloat(values[1]), ada::toFloat(values[2]), ada::toFloat(values[3]));
             return true;
         }
         else {
-            std::cout << uniforms.getCamera().getExposure() << std::endl;
+            std::cout << uniforms.getActiveCamera()->getExposure() << std::endl;
             return true;
         }
         return false;
@@ -824,18 +840,18 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     // -----------------------------------------------
     if (geom_index == -1) {
         m_canvas_shader.addDefine("MODEL_VERTEX_TEXCOORD", "v_texcoord");
-        uniforms.getCamera().orbit(m_camera_azimuth, m_camera_elevation, 2.0);
+        uniforms.getActiveCamera()->orbit(m_camera_azimuth, m_camera_elevation, 2.0);
     }
     else {
         m_scene.setup( _commands, uniforms);
-        m_scene.loadGeometry( uniforms, _files, geom_index, verbose );
-        uniforms.getCamera().orbit(m_camera_azimuth, m_camera_elevation, m_scene.getArea() * 2.0);
-        uniforms.getCamera().lookAt( uniforms.getCamera().getTarget() );
+        m_scene.loadGeometry( uniforms, _files[geom_index].path, verbose );
+        uniforms.getActiveCamera()->orbit(m_camera_azimuth, m_camera_elevation, m_scene.getArea() * 2.0);
+        uniforms.getActiveCamera()->lookAt( uniforms.getActiveCamera()->getTarget() );
     }
 
     // FINISH SCENE SETUP
     // -------------------------------------------------
-    uniforms.getCamera().setViewport(ada::getWindowWidth(), ada::getWindowHeight());
+    uniforms.getActiveCamera()->setViewport(ada::getWindowWidth(), ada::getWindowHeight());
 
     if (lenticular.size() > 0)
         ada::setLenticularProperties(lenticular);
@@ -849,12 +865,12 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         addDefine("QUILT_ROWS", ada::toString( ada::getQuiltRows() ));
         addDefine("QUILT_TOTALVIEWS", ada::toString( ada::getQuiltTotalViews() ));
 
-        uniforms.getCamera().setFOV(glm::radians(14.0f));
-        uniforms.getCamera().setProjection(ada::Projection::PERSPECTIVE_VIRTUAL_OFFSET);
-        // uniforms.getCamera().setClipping(0.01, 100.0);
+        uniforms.getActiveCamera()->setFOV(glm::radians(14.0f));
+        uniforms.getActiveCamera()->setProjection(ada::Projection::PERSPECTIVE_VIRTUAL_OFFSET);
+        // uniforms.getActiveCamera()->setClipping(0.01, 100.0);
 
         if (geom_index != -1)
-            uniforms.getCamera().orbit(m_camera_elevation, m_camera_azimuth, m_scene.getArea() * 8.5);
+            uniforms.getActiveCamera()->orbit(m_camera_elevation, m_camera_azimuth, m_scene.getArea() * 8.5);
 
         if (lenticular.size() == 0)
             ada::setWindowSize(ada::getQuiltWidth(), ada::getQuiltHeight());
@@ -910,9 +926,9 @@ void Sandbox::delDefine(const std::string &_define) {
     for (int i = 0; i < m_doubleBuffers_total; i++)
         m_doubleBuffers_shaders[i].delDefine(_define);
 
-    if (geom_index == -1)
+    // if (geom_index == -1)
         m_canvas_shader.delDefine(_define);
-    else
+    // else
         m_scene.delDefine(_define);
 
     m_postprocessing_shader.delDefine(_define);
@@ -994,7 +1010,7 @@ bool Sandbox::reloadShaders( WatchFileList &_files ) {
         if (verbose)
             std::cout << "Reload 3D scene shaders" << std::endl;
 
-        m_scene.loadShaders(m_frag_source, m_vert_source, verbose);
+        m_scene.loadShaders(uniforms, m_frag_source, m_vert_source, verbose);
     }
 
     // UPDATE shaders dependencies
@@ -1022,10 +1038,10 @@ bool Sandbox::reloadShaders( WatchFileList &_files ) {
     }
 
     // UPDATE uniforms
-    uniforms.checkPresenceIn(m_vert_source, m_frag_source); // Check active native uniforms
+    uniforms.checkUniforms(m_vert_source, m_frag_source); // Check active native uniforms
     uniforms.flagChange();                                  // Flag all user defined uniforms as changed
 
-    if (uniforms.cubemap) {
+    if ( uniforms.getActiveCubemap() != nullptr ) {
         addDefine("SCENE_SH_ARRAY", "u_SH");
         addDefine("SCENE_CUBEMAP", "u_cubeMap");
     }
@@ -1033,7 +1049,7 @@ bool Sandbox::reloadShaders( WatchFileList &_files ) {
     // UPDATE Buffers
     m_buffers_total = countBuffers(m_frag_source);
     m_doubleBuffers_total = countDoubleBuffers(m_frag_source);
-    m_convolution_pyramid_total = countConvolutionPyramid( getSource(FRAGMENT) );
+    m_pyramid_total = countConvolutionPyramid( getSource(FRAGMENT) );
     _updateBuffers();
     
     // UPDATE Postprocessing
@@ -1131,60 +1147,60 @@ void Sandbox::_updateBuffers() {
         }
     }
 
-    if ( m_convolution_pyramid_total != int(uniforms.convolution_pyramids.size()) ) {
+    if ( m_pyramid_total != int(uniforms.pyramids.size()) ) {
 
         if (verbose)
-            std::cout << "Removing " << uniforms.convolution_pyramids.size() << " convolution pyramids to create  " << m_convolution_pyramid_total << std::endl;
+            std::cout << "Removing " << uniforms.pyramids.size() << " convolution pyramids to create  " << m_pyramid_total << std::endl;
 
-        uniforms.convolution_pyramids.clear();
-        m_convolution_pyramid_fbos.clear();
-        m_convolution_pyramid_subshaders.clear();
-        for (int i = 0; i < m_convolution_pyramid_total; i++) {
+        uniforms.pyramids.clear();
+        m_pyramid_fbos.clear();
+        m_pyramid_subshaders.clear();
+        for (int i = 0; i < m_pyramid_total; i++) {
             glm::vec2 size = glm::vec2(ada::getWindowWidth(), ada::getWindowHeight());
-            bool fixed = getBufferSize(m_frag_source, "u_convolutionPyramid" + ada::toString(i), size);
+            bool fixed = getBufferSize(m_frag_source, "u_pyramid" + ada::toString(i), size);
             
-            uniforms.convolution_pyramids.push_back( ada::ConvolutionPyramid() );
-            uniforms.convolution_pyramids[i].allocate(size.x, size.y);
-            uniforms.convolution_pyramids[i].fixed = fixed;
-            uniforms.convolution_pyramids[i].pass = [this](ada::Fbo *_target, const ada::Fbo *_tex0, const ada::Fbo *_tex1, int _depth) {
+            uniforms.pyramids.push_back( ada::Pyramid() );
+            uniforms.pyramids[i].allocate(size.x, size.y);
+            uniforms.pyramids[i].fixed = fixed;
+            uniforms.pyramids[i].pass = [this](ada::Fbo *_target, const ada::Fbo *_tex0, const ada::Fbo *_tex1, int _depth) {
                 _target->bind();
                 glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
                 glClear(GL_COLOR_BUFFER_BIT);
-                m_convolution_pyramid_shader.use();
+                m_pyramid_shader.use();
 
-                uniforms.feedTo( m_convolution_pyramid_shader);
+                uniforms.feedTo( m_pyramid_shader);
 
-                m_convolution_pyramid_shader.setUniform("u_convolutionPyramidDepth", _depth);
-                m_convolution_pyramid_shader.setUniform("u_convolutionPyramidTotalDepth", (int)uniforms.convolution_pyramids[0].getDepth());
-                m_convolution_pyramid_shader.setUniform("u_convolutionPyramidUpscaling", _tex1 != NULL);
+                m_pyramid_shader.setUniform("u_pyramidDepth", _depth);
+                m_pyramid_shader.setUniform("u_pyramidTotalDepth", (int)uniforms.pyramids[0].getDepth());
+                m_pyramid_shader.setUniform("u_pyramidUpscaling", _tex1 != NULL);
 
-                m_convolution_pyramid_shader.textureIndex = geom_index == -1 ? 1 : 0;
-                m_convolution_pyramid_shader.setUniformTexture("u_convolutionPyramidTex0", _tex0);
+                m_pyramid_shader.textureIndex = geom_index == -1 ? 1 : 0;
+                m_pyramid_shader.setUniformTexture("u_pyramidTex0", _tex0);
                 if (_tex1 != NULL)
-                    m_convolution_pyramid_shader.setUniformTexture("u_convolutionPyramidTex1", _tex1);
-                m_convolution_pyramid_shader.setUniform("u_resolution", ((float)_target->getWidth()), ((float)_target->getHeight()));
-                m_convolution_pyramid_shader.setUniform("u_pixel", 1.0f/((float)_target->getWidth()), 1.0f/((float)_target->getHeight()));
+                    m_pyramid_shader.setUniformTexture("u_pyramidTex1", _tex1);
+                m_pyramid_shader.setUniform("u_resolution", ((float)_target->getWidth()), ((float)_target->getHeight()));
+                m_pyramid_shader.setUniform("u_pixel", 1.0f/((float)_target->getWidth()), 1.0f/((float)_target->getHeight()));
 
-                m_billboard_vbo->render( &m_convolution_pyramid_shader );
+                m_billboard_vbo->render( &m_pyramid_shader );
                 _target->unbind();
             };
-            m_convolution_pyramid_fbos.push_back( ada::Fbo() );
-            m_convolution_pyramid_fbos[i].allocate(size.x, size.y, ada::COLOR_TEXTURE);
-            m_convolution_pyramid_fbos[i].fixed = fixed;
-            m_convolution_pyramid_subshaders.push_back( ada::Shader() );
+            m_pyramid_fbos.push_back( ada::Fbo() );
+            m_pyramid_fbos[i].allocate(size.x, size.y, ada::COLOR_TEXTURE);
+            m_pyramid_fbos[i].fixed = fixed;
+            m_pyramid_subshaders.push_back( ada::Shader() );
         }
     }
     
     if ( checkConvolutionPyramid( getSource(FRAGMENT) ) ) {
-        m_convolution_pyramid_shader.addDefine("CONVOLUTION_PYRAMID_ALGORITHM");
-        m_convolution_pyramid_shader.load(m_frag_source, ada::getDefaultSrc(ada::VERT_BILLBOARD), false);
+        m_pyramid_shader.addDefine("CONVOLUTION_PYRAMID_ALGORITHM");
+        m_pyramid_shader.load(m_frag_source, ada::getDefaultSrc(ada::VERT_BILLBOARD), false);
     }
     else
-        m_convolution_pyramid_shader.load(ada::getDefaultSrc(ada::FRAG_POISSON), ada::getDefaultSrc(ada::VERT_BILLBOARD), false);
+        m_pyramid_shader.load(ada::getDefaultSrc(ada::FRAG_POISSON), ada::getDefaultSrc(ada::VERT_BILLBOARD), false);
 
-    for (size_t i = 0; i < m_convolution_pyramid_subshaders.size(); i++) {
-        m_convolution_pyramid_subshaders[i].addDefine("CONVOLUTION_PYRAMID_" + ada::toString(i));
-        m_convolution_pyramid_subshaders[i].load(m_frag_source, ada::getDefaultSrc(ada::VERT_BILLBOARD), false);
+    for (size_t i = 0; i < m_pyramid_subshaders.size(); i++) {
+        m_pyramid_subshaders[i].addDefine("CONVOLUTION_PYRAMID_" + ada::toString(i));
+        m_pyramid_subshaders[i].load(m_frag_source, ada::getDefaultSrc(ada::VERT_BILLBOARD), false);
     }
 }
 
@@ -1250,27 +1266,27 @@ void Sandbox::_renderBuffers() {
     // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_DST_ALPHA);
     // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    for (size_t i = 0; i < m_convolution_pyramid_subshaders.size(); i++) {
+    for (size_t i = 0; i < m_pyramid_subshaders.size(); i++) {
         TRACK_BEGIN("render:convolution_pyramid" + ada::toString(i))
 
-        reset_viewport += m_convolution_pyramid_fbos[i].fixed;
+        reset_viewport += m_pyramid_fbos[i].fixed;
 
-        m_convolution_pyramid_fbos[i].bind();
-        m_convolution_pyramid_subshaders[i].use();
+        m_pyramid_fbos[i].bind();
+        m_pyramid_subshaders[i].use();
 
         // Clear the background
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Update uniforms and textures
-        uniforms.feedTo( m_convolution_pyramid_subshaders[i] );
-        m_billboard_vbo->render( &m_convolution_pyramid_subshaders[i] );
+        uniforms.feedTo( m_pyramid_subshaders[i] );
+        m_billboard_vbo->render( &m_pyramid_subshaders[i] );
 
-        m_convolution_pyramid_fbos[i].unbind();
+        m_pyramid_fbos[i].unbind();
 
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        uniforms.convolution_pyramids[i].process(&m_convolution_pyramid_fbos[i]);
+        uniforms.pyramids[i].process(&m_pyramid_fbos[i]);
 
         TRACK_END("render:convolution_pyramid" + ada::toString(i))
     }
@@ -1304,7 +1320,7 @@ void Sandbox::render() {
     // -----------------------------------------------
     if (uniforms.buffers.size() > 0 || 
         uniforms.doubleBuffers.size() > 0 ||
-        m_convolution_pyramid_total > 0)
+        m_pyramid_total > 0)
         _renderBuffers();
     
     // MAIN SCENE
@@ -1334,7 +1350,7 @@ void Sandbox::render() {
             ada::renderQuilt([&](const ada::QuiltProperties& quilt, glm::vec4& viewport, int &viewIndex) {
 
                 // set up the camera rotation and position for current view
-                uniforms.getCamera().setVirtualOffset(5.0, viewIndex, quilt.totalViews);
+                uniforms.getActiveCamera()->setVirtualOffset(5.0, viewIndex, quilt.totalViews);
                 uniforms.set("u_tile", float(quilt.columns), float(quilt.rows), float(quilt.totalViews));
                 uniforms.set("u_viewport", float(viewport.x), float(viewport.y), float(viewport.z), float(viewport.w));
 
@@ -1365,7 +1381,7 @@ void Sandbox::render() {
             ada::renderQuilt([&](const ada::QuiltProperties& quilt, glm::vec4& viewport, int &viewIndex){
 
                 // set up the camera rotation and position for current view
-                uniforms.getCamera().setVirtualOffset(m_scene.getArea(), viewIndex, quilt.totalViews);
+                uniforms.getActiveCamera()->setVirtualOffset(m_scene.getArea(), viewIndex, quilt.totalViews);
                 uniforms.set("u_tile", float(quilt.columns), float(quilt.rows), float(quilt.totalViews));
                 uniforms.set("u_viewport", float(viewport.x), float(viewport.y), float(viewport.z), float(viewport.w));
 
@@ -1481,7 +1497,7 @@ void Sandbox::renderUI() {
                 m_billboard_shader.setUniformTexture("u_tex0", it->second, 0);
                 m_billboard_shader.setUniform("u_depth", 0.0f);
 
-                StreamsList::iterator slit = uniforms.streams.find(it->first);
+                ada::TextureStreamsMap::const_iterator slit = uniforms.streams.find(it->first);
                 if ( slit != uniforms.streams.end() ) {
                         m_billboard_shader.setUniform("u_tex0CurrentFrame", slit->second->getCurrentFrame() );
                         m_billboard_shader.setUniform("u_tex0TotalFrames", slit->second->getTotalFrames() );
@@ -1511,8 +1527,8 @@ void Sandbox::renderUI() {
         int nTotal = uniforms.buffers.size();
         if (m_doubleBuffers_total > 0)
             nTotal += uniforms.doubleBuffers.size();
-        if (m_convolution_pyramid_total > 0)
-            nTotal += uniforms.convolution_pyramids.size();
+        if (m_pyramid_total > 0)
+            nTotal += uniforms.pyramids.size();
         nTotal += uniforms.functions["u_scene"].present;
         nTotal += uniforms.functions["u_sceneDepth"].present;
         nTotal += (geom_index != -1);
@@ -1573,27 +1589,27 @@ void Sandbox::renderUI() {
                 yOffset -= yStep * 2.0;
             }
 
-            for (size_t i = 0; i < uniforms.convolution_pyramids.size(); i++) {
+            for (size_t i = 0; i < uniforms.pyramids.size(); i++) {
                 glm::vec2 offset = glm::vec2(xOffset, yOffset);
                 glm::vec2 scale = glm::vec2(yStep);
-                scale.x *= ((float)uniforms.convolution_pyramids[i].getWidth()/(float)uniforms.convolution_pyramids[i].getHeight());
+                scale.x *= ((float)uniforms.pyramids[i].getWidth()/(float)uniforms.pyramids[i].getHeight());
                 float w = scale.x;
                 offset.x += xStep - w;
-                for (size_t j = 0; j < uniforms.convolution_pyramids[i].getDepth() * 2; j++ ) {
+                for (size_t j = 0; j < uniforms.pyramids[i].getDepth() * 2; j++ ) {
                     m_billboard_shader.setUniform("u_depth", 0.0f);
                     m_billboard_shader.setUniform("u_scale", scale);
-                    if (j < uniforms.convolution_pyramids[i].getDepth())
+                    if (j < uniforms.pyramids[i].getDepth())
                         m_billboard_shader.setUniform("u_translate", offset);
                     else 
                         m_billboard_shader.setUniform("u_translate", offset.x + w * 2., offset.y);
                     m_billboard_shader.setUniform("u_modelViewProjectionMatrix", ada::getOrthoMatrix());
-                    m_billboard_shader.setUniformTexture("u_tex0", uniforms.convolution_pyramids[i].getResult(j), 0);
+                    m_billboard_shader.setUniformTexture("u_tex0", uniforms.pyramids[i].getResult(j), 0);
                     m_billboard_shader.setUniform("u_tex0CurrentFrame", 0.0f );
                     m_billboard_shader.setUniform("u_tex0TotalFrames", 0.0f );
                     m_billboard_vbo->render(&m_billboard_shader);
 
                     offset.x -= scale.x;
-                    if (j < uniforms.convolution_pyramids[i].getDepth()) {
+                    if (j < uniforms.pyramids[i].getDepth()) {
                         scale *= 0.5;
                         offset.y = yOffset - yStep * 0.5;
                     }
@@ -1605,7 +1621,7 @@ void Sandbox::renderUI() {
 
                 }
 
-                // ada::text("u_convolutionPyramid0" + ada::toString(i), xOffset - scale.x * 2.0, ada::getWindowHeight() - yOffset + yStep);
+                // ada::text("u_pyramid0" + ada::toString(i), xOffset - scale.x * 2.0, ada::getWindowHeight() - yOffset + yStep);
                 yOffset -= yStep * 2.0;
 
             }
@@ -1644,19 +1660,19 @@ void Sandbox::renderUI() {
             }
 
             if (geom_index != -1) {
-                for (size_t i = 0; i < uniforms.lights.size(); i++) {
-                    if ( uniforms.lights[i].getShadowMap()->getDepthTextureId() ) {
+                for (ada::LightsMap::iterator it = uniforms.lights.begin(); it != uniforms.lights.end(); ++it ) {
+                    if ( it->second->getShadowMap()->getDepthTextureId() ) {
                         m_billboard_shader.setUniform("u_scale", xStep, yStep);
                         m_billboard_shader.setUniform("u_translate", xOffset, yOffset);
                         m_billboard_shader.setUniform("u_depth", 1.0f);
-                        // m_billboard_shader.setUniform("u_cameraNearClip", uniforms.lights[i].getShadowMapNear() );
-                        // m_billboard_shader.setUniform("u_cameraFarClip", uniforms.lights[i].getShadowMapNear() );
-                        // m_billboard_shader.setUniform("u_cameraDistance", glm::length( uniforms.lights[i].getPosition() ) );
+                        // m_billboard_shader.setUniform("u_cameraNearClip", it->second->getShadowMapNear() );
+                        // m_billboard_shader.setUniform("u_cameraFarClip", it->second->getShadowMapNear() );
+                        // m_billboard_shader.setUniform("u_cameraDistance", glm::length( it->second->getPosition() ) );
                         m_billboard_shader.setUniform("u_cameraNearClip", 0.001f );
                         m_billboard_shader.setUniform("u_cameraFarClip", 100.0f);
                         m_billboard_shader.setUniform("u_cameraDistance", 0.0f );
                         m_billboard_shader.setUniform("u_modelViewProjectionMatrix", ada::getOrthoMatrix());
-                        m_billboard_shader.setUniformDepthTexture("u_tex0", uniforms.lights[i].getShadowMap());
+                        m_billboard_shader.setUniformDepthTexture("u_tex0", it->second->getShadowMap());
                         m_billboard_shader.setUniform("u_tex0CurrentFrame", 0.0f );
                         m_billboard_shader.setUniform("u_tex0TotalFrames", 0.0f );
                         m_billboard_vbo->render(&m_billboard_shader);
@@ -1810,17 +1826,22 @@ void Sandbox::onFileChange(WatchFileList &_files, int index) {
         // TODO
     }
     else if (type == IMAGE) {
-        for (TextureList::iterator it = uniforms.textures.begin(); it!=uniforms.textures.end(); it++) {
+        for (ada::TexturesMap::iterator it = uniforms.textures.begin(); it!=uniforms.textures.end(); it++) {
             if (filename == it->second->getFilePath()) {
-                std::cout << filename << std::endl;
+                std::cout << "Reloading" << filename << std::endl;
                 it->second->load(filename, _files[index].vFlip);
                 break;
             }
         }
     }
     else if (type == CUBEMAP) {
-        if (uniforms.cubemap)
-            uniforms.cubemap->load(filename, _files[index].vFlip);
+        for (ada::TextureCubesMap::iterator it = uniforms.cubemaps.begin(); it!=uniforms.cubemaps.end(); it++) {
+            if (filename == it->second->getFilePath()) {
+                std::cout << "Reloading" << filename << std::endl;
+                it->second->load(filename, _files[index].vFlip);
+                break;
+            }
+        }
     }
 
     flagChange();
@@ -1868,7 +1889,7 @@ void Sandbox::onMouseDrag(float _x, float _y, int _button) {
         m_view2d = glm::translate(m_view2d, glm::vec2(-ada::getMouseVelX(),-ada::getMouseVelY()) );
 
         // Left-button drag is used to rotate geometry.
-        float dist = uniforms.getCamera().getDistance();
+        float dist = uniforms.getActiveCamera()->getDistance();
 
         float vel_x = ada::getMouseVelX();
         float vel_y = ada::getMouseVelY();
@@ -1876,23 +1897,23 @@ void Sandbox::onMouseDrag(float _x, float _y, int _button) {
         if (fabs(vel_x) < 50.0 && fabs(vel_y) < 50.0) {
             m_camera_azimuth -= vel_x;
             m_camera_elevation -= vel_y * 0.5;
-            uniforms.getCamera().orbit(m_camera_azimuth, m_camera_elevation, dist);
-            uniforms.getCamera().lookAt(glm::vec3(0.0));
+            uniforms.getActiveCamera()->orbit(m_camera_azimuth, m_camera_elevation, dist);
+            uniforms.getActiveCamera()->lookAt(glm::vec3(0.0));
         }
     } 
     else {
         // Right-button drag is used to zoom geometry.
-        float dist = uniforms.getCamera().getDistance();
+        float dist = uniforms.getActiveCamera()->getDistance();
         dist += (-.008f * ada::getMouseVelY());
         if (dist > 0.0f) {
-            uniforms.getCamera().orbit(m_camera_azimuth, m_camera_elevation, dist);
-            uniforms.getCamera().lookAt(glm::vec3(0.0));
+            uniforms.getActiveCamera()->orbit(m_camera_azimuth, m_camera_elevation, dist);
+            uniforms.getActiveCamera()->lookAt(glm::vec3(0.0));
         }
     }
 }
 
 void Sandbox::onViewportResize(int _newWidth, int _newHeight) {
-    uniforms.getCamera().setViewport(_newWidth, _newHeight);
+    uniforms.getActiveCamera()->setViewport(_newWidth, _newHeight);
     
     for (size_t i = 0; i < uniforms.buffers.size(); i++) 
         if (!uniforms.buffers[i].fixed)
@@ -1905,10 +1926,10 @@ void Sandbox::onViewportResize(int _newWidth, int _newHeight) {
             uniforms.doubleBuffers[i][1].allocate(_newWidth, _newHeight, ada::COLOR_TEXTURE);
     }
 
-    for (size_t i = 0; i < uniforms.convolution_pyramids.size(); i++) {
-        if (!m_convolution_pyramid_fbos[i].fixed) {
-            m_convolution_pyramid_fbos[i].allocate(_newWidth, _newHeight, ada::COLOR_TEXTURE);
-            uniforms.convolution_pyramids[i].allocate(ada::getWindowWidth(), ada::getWindowHeight());
+    for (size_t i = 0; i < uniforms.pyramids.size(); i++) {
+        if (!m_pyramid_fbos[i].fixed) {
+            m_pyramid_fbos[i].allocate(_newWidth, _newHeight, ada::COLOR_TEXTURE);
+            uniforms.pyramids[i].allocate(ada::getWindowWidth(), ada::getWindowHeight());
         }
     }
 

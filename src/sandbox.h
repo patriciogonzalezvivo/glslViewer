@@ -22,6 +22,9 @@ enum PlotType {
 
 const std::string plot_options[] = { "off", "luma", "red", "green", "blue", "rgb", "fps", "ms" };
 
+typedef std::vector<ada::Fbo>       FboList;
+typedef std::vector<ada::Shader>    ShaderList;
+
 class Sandbox {
 public:
     Sandbox();
@@ -97,12 +100,12 @@ private:
     ada::StringList     m_frag_dependencies;
 
     // Buffers
-    std::vector<ada::Shader>    m_buffers_shaders;
-    int                         m_buffers_total;
+    ShaderList          m_buffers_shaders;
+    int                 m_buffers_total;
 
     // Buffers
-    std::vector<ada::Shader>    m_doubleBuffers_shaders;
-    int                         m_doubleBuffers_total;
+    ShaderList          m_doubleBuffers_shaders;
+    int                 m_doubleBuffers_total;
 
     // A. CANVAS
     ada::Shader         m_canvas_shader;
@@ -112,10 +115,10 @@ private:
     ada::Fbo            m_scene_fbo;
 
     // Pyramid Convolution
-    std::vector<ada::Fbo>       m_convolution_pyramid_fbos;
-    std::vector<ada::Shader>    m_convolution_pyramid_subshaders;
-    ada::Shader                 m_convolution_pyramid_shader;
-    int                         m_convolution_pyramid_total;
+    FboList             m_pyramid_fbos;
+    ShaderList          m_pyramid_subshaders;
+    ada::Shader         m_pyramid_shader;
+    int                 m_pyramid_total;
 
     // Postprocessing
     ada::Shader         m_postprocessing_shader;
@@ -137,9 +140,9 @@ private:
     // Recording
     ada::Fbo            m_record_fbo;
     #if defined(SUPPORT_MULTITHREAD_RECORDING)
-    std::atomic<int>        m_task_count {0};
-    std::atomic<long long>  m_max_mem_in_queue {0};
-    thread_pool::ThreadPool m_save_threads;
+    std::atomic<int>    m_task_count {0};
+    std::atomic<long long>      m_max_mem_in_queue {0};
+    thread_pool::ThreadPool     m_save_threads;
     #endif
 
     // Other state properties
@@ -155,5 +158,4 @@ private:
     //  Debug
     bool                m_showTextures;
     bool                m_showPasses;
-    
 };

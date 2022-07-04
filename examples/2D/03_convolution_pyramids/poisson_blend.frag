@@ -15,10 +15,10 @@ uniform sampler2D   u_buffer1;
 uniform sampler2D   u_buffer2;
 uniform sampler2D   u_buffer3;
 
-uniform sampler2D   u_convolutionPyramid0;
-uniform sampler2D   u_convolutionPyramidTex0;
-uniform sampler2D   u_convolutionPyramidTex1;
-uniform bool        u_convolutionPyramidUpscaling;
+uniform sampler2D   u_pyramid0;
+uniform sampler2D   u_pyramidTex0;
+uniform sampler2D   u_pyramidTex1;
+uniform bool        u_pyramidUpscaling;
 
 uniform vec2        u_resolution;
 uniform vec2        u_mouse;
@@ -68,13 +68,13 @@ void main (void) {
 #elif defined(CONVOLUTION_PYRAMID_ALGORITHM)
     color = vec4(0.0);
 
-    if (!u_convolutionPyramidUpscaling) {
+    if (!u_pyramidUpscaling) {
         for (int dy = -2; dy <= 2; dy++) {
             for (int dx = -2; dx <= 2; dx++) {
                 vec2 uv = st + vec2(float(dx), float(dy)) * pixel;
                 if (uv.x <= 0.0 || uv.x >= 1.0 || uv.y <= 0.0 || uv.y >= 1.0)
                     continue;
-                color += texture2D(u_convolutionPyramidTex0, saturate(uv)) * h1[ absi(dx) ] * h1[ absi(dy) ];
+                color += texture2D(u_pyramidTex0, saturate(uv)) * h1[ absi(dx) ] * h1[ absi(dy) ];
             }
         }
     }
@@ -82,7 +82,7 @@ void main (void) {
         for (int dy = -1; dy <= 1; dy++) {
             for (int dx = -1; dx <= 1; dx++) {
                 vec2 uv = st + vec2(float(dx), float(dy)) * pixel;
-                color += texture2D(u_convolutionPyramidTex0, saturate(uv)) * g[ absi(dx) ] * g[ absi(dy) ];
+                color += texture2D(u_pyramidTex0, saturate(uv)) * g[ absi(dx) ] * g[ absi(dy) ];
             }
         }
 
@@ -90,7 +90,7 @@ void main (void) {
         for (int dy = -2; dy <= 2; dy++) {
             for (int dx = -2; dx <= 2; dx++) {
                 vec2 offset = vec2(float(dx), float(dy)) * pixel;
-                color += texture2D(u_convolutionPyramidTex1, saturate(st + offset * 5.0)) * h2 * h1[ absi(dx) ] * h1[ absi(dy) ] ;
+                color += texture2D(u_pyramidTex1, saturate(st + offset * 5.0)) * h2 * h1[ absi(dx) ] * h1[ absi(dy) ] ;
                 vec3 src = texture2D(u_buffer1, saturate(st + offset)).rgb - 0.5;
                 color.rgb += src * msk * .08 * pct;
             }
@@ -100,7 +100,7 @@ void main (void) {
     color = (color.a == 0.0)? color : vec4(color.rgb/color.a, 1.0);
 
 #else
-    color = texture2D(u_convolutionPyramid0, st);
+    color = texture2D(u_pyramid0, st);
     
     // vec4 naive = mix( texture2D(u_target,st), texture2D(u_buffer0,st), texture2D(u_buffer0,st).a );
     // color = mix(color, naive, step(st.x, u_mouse.x/u_resolution.x));

@@ -464,11 +464,11 @@ int main(int argc, char **argv) {
                     ada::haveExt(argument,"jpg") || ada::haveExt(argument,"JPG") ||
                     ada::haveExt(argument,"jpeg") || ada::haveExt(argument,"JPEG")) {
 
-            if ( checkPattern(argument) ) {
+            if ( ada::haveWildcard(argument) ) {
                 if ( sandbox.uniforms.addStreamingTexture("u_tex" + ada::toString(textureCounter), argument, vFlip, false) )
                     textureCounter++;
             }
-            else if ( sandbox.uniforms.addTexture("u_tex" + ada::toString(textureCounter), argument, files, vFlip) )
+            else if ( sandbox.uniforms.addTexture("u_tex" + ada::toString(textureCounter), argument, vFlip) )
                 textureCounter++;
         } 
         else if ( argument == "--video" ) {
@@ -496,7 +496,7 @@ int main(int argc, char **argv) {
                 textureCounter++;
         }
         else if ( ada::haveExt(argument,"csv") || ada::haveExt(argument,"CSV") ) {
-            sandbox.uniforms.addCameraTrack(argument);
+            sandbox.uniforms.addCameraPath(argument);
         }
         else if ( argument == "--audio" || argument == "-a" ) {
             std::string device_id = "-1"; //default device id
@@ -508,7 +508,7 @@ int main(int argc, char **argv) {
                     i++;
                 }
             }
-            if ( sandbox.uniforms.addAudioTexture("u_tex" + ada::toString(textureCounter), device_id, vFlip, true) )
+            if ( sandbox.uniforms.addStreamingAudioTexture("u_tex" + ada::toString(textureCounter), device_id, vFlip, true) )
                 textureCounter++;
         }
         else if ( argument == "--quilt" ) {
@@ -527,7 +527,8 @@ int main(int argc, char **argv) {
         else if ( argument == "-c" || argument == "-sh" ) {
             if(++i < argc) {
                 argument = std::string(argv[i]);
-                sandbox.uniforms.setCubeMap(argument, files);
+                sandbox.uniforms.addCubemap("enviroment", argument);
+                sandbox.uniforms.setActiveCubemap("enviroment");
                 sandbox.getScene().showCubebox = false;
             }
             else
@@ -537,7 +538,8 @@ int main(int argc, char **argv) {
             if(++i < argc)
             {
                 argument = std::string(argv[i]);
-                sandbox.uniforms.setCubeMap(argument, files);
+                sandbox.uniforms.addCubemap("enviroment", argument);
+                sandbox.uniforms.setActiveCubemap("enviroment");
                 sandbox.getScene().showCubebox = true;
             }
             else
@@ -573,12 +575,12 @@ int main(int argc, char **argv) {
                     argument.rfind("https://", 0) == 0 ||
                     argument.rfind("rtsp://", 0) == 0 ||
                     argument.rfind("rtmp://", 0) == 0 ||
-                    checkPattern(argument) ) {
+                    ada::haveWildcard(argument) ) {
                     sandbox.uniforms.addStreamingTexture(parameterPair, argument, vFlip, false);
                 }
                 // Else load it as a single texture
                 else 
-                    sandbox.uniforms.addTexture(parameterPair, argument, files, vFlip);
+                    sandbox.uniforms.addTexture(parameterPair, argument, vFlip);
             }
             else
                 std::cout << "Argument '" << argument << "' should be followed by a <texture>. Skipping argument." << std::endl;

@@ -143,14 +143,14 @@ void refresh_stt_win() {
     wborder(stt_win, '|', ' ', ' ', ' ', '+', '+', '+', '+');
     // box(stt_win, 0, 0);
     // Print Native Uniforms (they carry functions) that are present on the shader
-    for (UniformFunctionsList::iterator it= uniforms->functions.begin(); it != uniforms->functions.end(); ++it)
+    for (UniformFunctionsMap::iterator it= uniforms->functions.begin(); it != uniforms->functions.end(); ++it)
         if (it->second.present && it->second.print)
             mvwprintw(stt_win, y++, stt_x, "%23s  %s", it->first.c_str(), it->second.print().c_str() );
 
-    for (TextureList::iterator it = uniforms->textures.begin(); it != uniforms->textures.end(); ++it)
+    for (ada::TexturesMap::iterator it = uniforms->textures.begin(); it != uniforms->textures.end(); ++it)
         mvwprintw(stt_win, y++, stt_x, "%23s  %.1f,%.1f", (it->first + "Resolution").c_str(), (float)it->second->getWidth(), (float)it->second->getHeight());
 
-    for (StreamsList::iterator it = uniforms->streams.begin(); it != uniforms->streams.end(); ++it) {
+    for (ada::TextureStreamsMap::iterator it = uniforms->streams.begin(); it != uniforms->streams.end(); ++it) {
         mvwprintw(stt_win, y++, stt_x, "%23s  %.3f", (it->first+"CurrentFrame").c_str(), it->second->getCurrentFrame() );
         mvwprintw(stt_win, y++, stt_x, "%23s  %.3f", (it->first+"TotalFrames").c_str(), it->second->getTotalFrames() );
         mvwprintw(stt_win, y++, stt_x, "%23s  %.3f", (it->first+"Time").c_str(), it->second->getTime() );
@@ -162,7 +162,7 @@ void refresh_stt_win() {
     if (have_colors) wattron(stt_win, COLOR_PAIR(2));
     uniforms_starts_at = y;
     int i = 0;
-    for (UniformDataList::iterator it= uniforms->data.begin(); it != uniforms->data.end(); ++it) {
+    for (UniformDataMap::iterator it= uniforms->data.begin(); it != uniforms->data.end(); ++it) {
         if (it->second.size > 4)
             continue;
 
@@ -412,7 +412,7 @@ bool console_getline(std::string& _cmd, CommandList& _commands, Sandbox& _sandbo
                     if ( ada::beginsWith(cmd, _commands[i].trigger) )
                         std::cout << "      " << std::left << std::setw(16) << _commands[i].formula << "   " << _commands[i].description << std::endl;
 
-                for (UniformDataList::iterator it = _sandbox.uniforms.data.begin(); it != _sandbox.uniforms.data.end(); ++it) {
+                for (UniformDataMap::iterator it = _sandbox.uniforms.data.begin(); it != _sandbox.uniforms.data.end(); ++it) {
                     if ( ada::beginsWith(cmd, it->first) ) {
                         std::cout << it->first;
 

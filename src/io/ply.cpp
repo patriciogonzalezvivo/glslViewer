@@ -14,7 +14,7 @@
 #include "tinyply/tinyply.h"
 
 
-bool loadPLY(Uniforms& _uniforms, WatchFileList& _files, ada::Materials& _materials, ada::Models& _models, int _index, bool _verbose) {
+bool loadPLY(WatchFileList& _files, int _index, ada::Scene& _scene, bool _verbose) {
     std::string filename = _files[_index].path;
 
     std::string name = filename.substr(0, filename.size()-4);
@@ -207,7 +207,7 @@ bool loadPLY(Uniforms& _uniforms, WatchFileList& _files, ada::Materials& _materi
 
         mesh.computeTangents();
 
-        _models.push_back( new ada::Model(name, mesh, default_material) );
+        _scene.setModel( name, new ada::Model(name, mesh, default_material) );
     }
 
     if (edge_indices.size() > 0) {
@@ -221,7 +221,7 @@ bool loadPLY(Uniforms& _uniforms, WatchFileList& _files, ada::Materials& _materi
 
         mesh.addIndices( edge_indices );
 
-        _models.push_back( new ada::Model(name + "_edges", mesh, default_material) );
+        _scene.setModel( name + "_edges", new ada::Model(name + "_edges", mesh, default_material) );
 
     }
 
@@ -233,7 +233,7 @@ bool loadPLY(Uniforms& _uniforms, WatchFileList& _files, ada::Materials& _materi
         mesh.addTexCoords(mesh_texcoords);
         mesh.addNormals( mesh_normals );
 
-        _models.push_back( new ada::Model(name + "_points", mesh, default_material) );
+        _scene.setModel( name + "_points", new ada::Model(name + "_points", mesh, default_material) );
     }
     
     return false;
@@ -241,9 +241,8 @@ bool loadPLY(Uniforms& _uniforms, WatchFileList& _files, ada::Materials& _materi
 
 #else
 
-bool loadPLY(Uniforms& _uniforms, WatchFileList& _files, ada::Materials& _materials, ada::Models& _models, int _index, bool _verbose) {
-    std::string filename = _files[_index].path;
-    std::fstream is(filename.c_str(), std::ios::in);
+bool loadPLY(const std::string& _filename, ada::Scene& _scene, bool _verbose) {
+    std::fstream is(_filename.c_str(), std::ios::in);
     if (is.is_open()) {
 
         ada::Material default_material;
@@ -370,7 +369,7 @@ bool loadPLY(Uniforms& _uniforms, WatchFileList& _files, ada::Materials& _materi
                     goto clean;
                 }
                 if (!vertices.size()) {
-                    std::cout << "ERROR glMesh, load(): mesh loaded from \"" << filename << "\" has no vertices" << std::endl;
+                    std::cout << "ERROR glMesh, load(): mesh loaded from \"" << _filename << "\" has no vertices" << std::endl;
                 }
                 if (orderVertices==-1) orderVertices=9999;
                 if (orderIndices==-1) orderIndices=9999;
@@ -493,7 +492,7 @@ bool loadPLY(Uniforms& _uniforms, WatchFileList& _files, ada::Materials& _materi
 
         mesh.computeTangents();
 
-        _materials[default_material.name] = default_material;
+        _scene.materials[default_material.name] = default_material;
 
         if (mesh.getDrawMode() == GL_POINTS)
             name = "points";
@@ -501,7 +500,7 @@ bool loadPLY(Uniforms& _uniforms, WatchFileList& _files, ada::Materials& _materi
             name = "lines";
         else
             name = "mesh";
-        _models.push_back( new ada::Model(name, mesh, default_material) );
+        _scene.setModel(name, new ada::Model(name, mesh, default_material) );
 
         return true;
 
@@ -512,7 +511,7 @@ bool loadPLY(Uniforms& _uniforms, WatchFileList& _files, ada::Materials& _materi
     }
 
     is.close();
-    std::cout << "ERROR glMesh, can not load  " << filename << std::endl;
+    std::cout << "ERROR glMesh, can not load  " << _filename << std::endl;
 
     return false;
 }
