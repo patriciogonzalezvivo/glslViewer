@@ -224,8 +224,3 @@ bool checkConvolutionPyramid(const std::string& _source) {
 
     return false;
 }
-
-std::string getUniformName(const std::string& _str) {
-    std::vector<std::string> values = ada::split(_str, '.');
-    return "u_" + ada::toLower( ada::toUnderscore( ada::purifyString( values[0] ) ) );
-}

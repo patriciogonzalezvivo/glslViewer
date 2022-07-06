@@ -16,10 +16,10 @@
 #include "ada/geom/meshes.h"
 #include "ada/shaders/defaultShaders.h"
 
-#include "io/ply.h"
-#include "io/obj.h"
-#include "io/gltf.h"
-#include "io/stl.h"
+#include "ada/io/ply.h"
+#include "ada/io/obj.h"
+#include "ada/io/gltf.h"
+#include "ada/io/stl.h"
 
 #include "tools/text.h"
 
@@ -205,12 +205,13 @@ void Scene::setup(CommandList& _commands, Uniforms& _uniforms) {
             std::string str_color = "vec4("+values[1]+","+values[2]+","+values[3]+",1.0)"; 
             addDefine("FLOOR_COLOR",str_color);
             
-            m_skybox.groundAlbedo = glm::vec3(ada::toFloat(values[1]), ada::toFloat(values[2]), ada::toFloat(values[3]));
-            setCubeMap(&m_skybox);
+            _uniforms.setGroundAlbedo( glm::vec3(ada::toFloat(values[1]), ada::toFloat(values[2]), ada::toFloat(values[3])) );
+            _uniforms.setActiveCubemap( "skybox" );
             return true;
         }
         else {
-            std::cout << m_skybox.groundAlbedo.x << ',' << m_skybox.groundAlbedo.y << ',' << m_skybox.groundAlbedo.z << std::endl;
+            glm::vec3 ground = _uniforms.getGroundAlbedo();
+            std::cout << ground.x << ',' << ground.y << ',' << ground.z << std::endl;
             return true;
         }
         return false;
@@ -221,22 +222,16 @@ void Scene::setup(CommandList& _commands, Uniforms& _uniforms) {
         std::vector<std::string> values = ada::split(_line,',');
         if (values.size() == 2) {
 
-            m_skybox.elevation = glm::radians( ada::toFloat(values[1]) );
-            setCubeMap(&m_skybox);
+            float elevation = glm::radians( ada::toFloat(values[1]) );
+            float azimuth = _uniforms.getSunAzimuth();
 
-            addDefine("SUN", "u_light");
-            ada::Light* sun = _uniforms.getLight("sun");
-            glm::vec3 p = glm::vec3(0.0f, 0.0f, glm::length( sun->getPosition() ) );
-            glm::quat lat = glm::angleAxis(-m_skybox.elevation, glm::vec3(1.0, 0.0, 0.0));
-            glm::quat lon = glm::angleAxis(m_skybox.azimuth, glm::vec3(0.0, 1.0, 0.0));
-            p = lat * p;
-            p = lon * p;
-            sun->setPosition(p);
-
+            _uniforms.addDefine("SUN", "u_light");
+            _uniforms.setSunPosition(azimuth, elevation);
+            _uniforms.setActiveCubemap("skybox");
             return true;
         }
         else {
-            std::cout << m_skybox.elevation << std::endl;
+            std::cout << _uniforms.getSunElevation() << std::endl;
             return true;
         }
         return false;
@@ -247,22 +242,17 @@ void Scene::setup(CommandList& _commands, Uniforms& _uniforms) {
         std::vector<std::string> values = ada::split(_line,',');
         if (values.size() == 2) {
 
-            m_skybox.azimuth = glm::radians( ada::toFloat(values[1]) );
-            setCubeMap(&m_skybox);
+            float elevation = _uniforms.getSunElevation();
+            float azimuth = glm::radians( ada::toFloat(values[1]) );
 
-            addDefine("SUN", "u_light");
-            ada::Light* sun = _uniforms.getLight("sun");
-            glm::vec3 p = glm::vec3(0.0f, 0.0f, glm::length( sun->getPosition() ) );
-            glm::quat lat = glm::angleAxis(-m_skybox.elevation, glm::vec3(1.0, 0.0, 0.0));
-            glm::quat lon = glm::angleAxis(m_skybox.azimuth, glm::vec3(0.0, 1.0, 0.0));
-            p = lat * p;
-            p = lon * p;
-            sun->setPosition(p);
+            _uniforms.addDefine("SUN", "u_light");
+            _uniforms.setSunPosition(azimuth, elevation);
+            _uniforms.setActiveCubemap("skybox");
 
             return true;
         }
         else {
-            std::cout << m_skybox.azimuth << std::endl;
+            std::cout << _uniforms.getSunAzimuth() << std::endl;
             return true;
         }
         return false;
@@ -272,12 +262,12 @@ void Scene::setup(CommandList& _commands, Uniforms& _uniforms) {
     _commands.push_back(Command("sky_turbidity", [&](const std::string& _line){ 
         std::vector<std::string> values = ada::split(_line,',');
         if (values.size() == 2) {
-            m_skybox.turbidity = ada::toFloat(values[1]);
-            setCubeMap(&m_skybox);
+            _uniforms.setSkyTurbidity( ada::toFloat(values[1]) );
+            _uniforms.setActiveCubemap("skybox");
             return true;
         }
         else {
-            std::cout << m_skybox.turbidity << std::endl;
+            std::cout << _uniforms.getSkyTurbidity() << std::endl;
             return true;
         }
         return false;
@@ -294,7 +284,7 @@ void Scene::setup(CommandList& _commands, Uniforms& _uniforms) {
             std::vector<std::string> values = ada::split(_line,',');
             if (values.size() == 2) {
                 if (values[1] == "on")
-                    setCubeMap(&m_skybox);
+                    _uniforms.setActiveCubemap("skybox");
                 showCubebox = values[1] == "on";
                 return true;
             }
@@ -434,23 +424,6 @@ void Scene::delDefine(const std::string& _define) {
     m_floor_shader.delDefine(_define);
 }
 
-void Scene::setSun(const glm::vec3& _v) {
-    m_skybox.elevation = atan2(_v.y, sqrt(_v.x * _v.x + _v.z * _v.z) );
-    m_skybox.azimuth = atan2(_v.x, _v.z);
-    if (m_cubemap_skybox == &m_skybox)
-            setCubeMap(&m_skybox);
-}
-
-void Scene::setCubeMap(ada::SkyData* _skybox ) { 
-    if (m_cubemap_skybox)
-        if (m_cubemap_skybox != _skybox)
-            delete m_cubemap_skybox;
-
-    m_cubemap_skybox = _skybox; 
-    m_cubemap_skybox->change = true;
-    flagChange();
-}
-
 void Scene::printDefines() {
     if (m_background) {
         std::cout << std::endl;
@@ -495,17 +468,13 @@ bool Scene::loadGeometry(Uniforms& _uniforms, const std::string& _filename, bool
 
     m_area = glm::max(0.5f, glm::max(glm::length(bbox.min), glm::length(bbox.max)));
     m_origin.setPosition( -bbox.getCenter() );
-    // ada::translate( -bbox.getCenter() );
     
     m_floor_height = bbox.min.y;
 
     // Setup light
     if (_uniforms.lights.size() == 0) {
-        glm::vec3 sun_position = glm::vec3(0.0,m_area*10.0,m_area*10.0);
-        ada::Light* sun = new ada::Light( sun_position, -1.0 );
+        ada::Light* sun = new ada::Light( glm::vec3(0.0,m_area*10.0,m_area*10.0), -1.0 );
         _uniforms.setLight("sun", sun);
-        // setSun( ada::toLat( sun_position ), 
-        //         ada::toLon( sun_position ) );
         ada::addLabel("u_light", sun, ada::LABEL_DOWN, 30.0f);
     }
 
@@ -515,7 +484,7 @@ bool Scene::loadGeometry(Uniforms& _uniforms, const std::string& _filename, bool
 bool Scene::loadShaders(Uniforms& _uniforms, const std::string& _fragmentShader, const std::string& _vertexShader, bool _verbose) {
     bool rta = true;
     for (ada::ModelsMap::iterator it = _uniforms.models.begin(); it != _uniforms.models.end(); ++it) 
-        if ( !it->second->loadShader( _fragmentShader, _vertexShader, _verbose) )
+        if ( !it->second->setShader( _fragmentShader, _vertexShader, _verbose) )
             rta = false;
 
 
@@ -645,16 +614,6 @@ void Scene::renderShadowMap(Uniforms& _uniforms) {
 }
 
 void Scene::renderBackground(Uniforms& _uniforms) {
-    // If there is a skybox and it had changes re generate
-    if (m_cubemap_skybox)
-        if (m_cubemap_skybox->change) {
-            if (!_uniforms.getActiveCubemap() )
-                _uniforms.setCubemap("skybox", new ada::TextureCube());
-            
-            _uniforms.getActiveCubemap()->load(m_cubemap_skybox);
-            m_cubemap_skybox->change = false;
-        }
-
     if (m_background) {
         TRACK_BEGIN("render:scene:background")
 
@@ -679,7 +638,6 @@ void Scene::renderBackground(Uniforms& _uniforms) {
             }
 
             m_cubemap_shader.use();
-
             m_cubemap_shader.setUniform("u_modelViewProjectionMatrix", _uniforms.getActiveCamera()->getProjectionMatrix() * glm::toMat4(_uniforms.getActiveCamera()->getOrientationQuat()) );
             m_cubemap_shader.setUniformTextureCube("u_cubeMap", _uniforms.getActiveCubemap(), 0);
 

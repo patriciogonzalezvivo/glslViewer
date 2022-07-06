@@ -18,5 +18,3 @@ bool checkFloor(const std::string& _source);
 bool checkBackground(const std::string& _source);
 
 bool checkPostprocessing(const std::string& _source);
-
-std::string getUniformName(const std::string& _str);

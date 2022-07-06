@@ -32,9 +32,6 @@ public:
     void            setCulling(ada::CullingMode _culling) { m_culling = _culling; }
     ada::CullingMode getCulling() { return m_culling; }
 
-    void            setCubeMap(ada::SkyData* _skybox );
-    void            setSun(const glm::vec3& _vec);
-
     void            flagChange();
     void            unflagChange();
     bool            haveChange() const;
@@ -46,7 +43,6 @@ public:
     void            renderGeometry(Uniforms& _uniforms);
     void            renderBackground(Uniforms& _uniforms);
     void            renderDebug(Uniforms& _uniforms);
-
     void            renderShadowMap(Uniforms& _uniforms);
 
     bool            showGrid;
@@ -77,9 +73,6 @@ protected:
     // CubeMap
     ada::Shader         m_cubemap_shader;
     ada::Vbo*           m_cubemap_vbo;
-    ada::SkyData*       m_cubemap_skybox;
-
-    ada::SkyData        m_skybox;
 
     ada::Shader         m_floor_shader;
     ada::Vbo*           m_floor_vbo;

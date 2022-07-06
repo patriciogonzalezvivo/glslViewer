@@ -488,11 +488,9 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         
         std::vector<std::string> values = ada::split(_line,',');
         if (values.size() == 4) {
-            if (uniforms.lights.size() > 0) {
-                ada::Light* sun = uniforms.getLight("sun");
-                sun->setPosition(glm::vec3(ada::toFloat(values[1]), ada::toFloat(values[2]), ada::toFloat(values[3])));
-                m_scene.setSun( sun->getPosition() );
-            }
+            if (uniforms.lights.size() == 1)
+                uniforms.setSunPosition(glm::vec3(ada::toFloat(values[1]), ada::toFloat(values[2]), ada::toFloat(values[3])));
+            
             return true;
         }
         // else if (values.size() == 5) {
@@ -621,14 +619,14 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         std::vector<std::string> values = ada::split(_line,',');
         if (values.size() == 2) {
             if (values[1] == "ortho")
-                uniforms.getActiveCamera()->setProjection(ada::Projection::ORTHO);
+                uniforms.getActiveCamera()->setProjection(ada::ProjectionType::ORTHO);
             else if (values[1] == "perspective")
-                uniforms.getActiveCamera()->setProjection(ada::Projection::PERSPECTIVE);
+                uniforms.getActiveCamera()->setProjection(ada::ProjectionType::PERSPECTIVE);
             return true;
         }
         else {
-            ada::Projection type = uniforms.getActiveCamera()->getType();
-            if (type == ada::Projection::ORTHO)
+            ada::ProjectionType type = uniforms.getActiveCamera()->getProjectionType();
+            if (type == ada::ProjectionType::ORTHO)
                 std::cout << "ortho" << std::endl;
             else
                 std::cout << "perspective" << std::endl;
@@ -866,7 +864,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         addDefine("QUILT_TOTALVIEWS", ada::toString( ada::getQuiltTotalViews() ));
 
         uniforms.getActiveCamera()->setFOV(glm::radians(14.0f));
-        uniforms.getActiveCamera()->setProjection(ada::Projection::PERSPECTIVE_VIRTUAL_OFFSET);
+        uniforms.getActiveCamera()->setProjection(ada::ProjectionType::PERSPECTIVE_VIRTUAL_OFFSET);
         // uniforms.getActiveCamera()->setClipping(0.01, 100.0);
 
         if (geom_index != -1)
