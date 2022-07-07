@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <regex>
 #include <cstring>
-#include "ada/string.h"
+#include "vera/string.h"
 
 // Quickly determine if a shader program contains the specified identifier.
 bool findId(const std::string& program, const char* id) {
@@ -14,7 +14,7 @@ bool findId(const std::string& program, const char* id) {
 // Count how many BUFFERS are in the shader
 int countBuffers(const std::string& _source) {
     // Split Source code in lines
-    std::vector<std::string> lines = ada::split(_source, '\n');
+    std::vector<std::string> lines = vera::split(_source, '\n');
 
     // Group results in a vector to check for duplicates
     std::vector<std::string> results;
@@ -59,12 +59,12 @@ bool getBufferSize(const std::string& _source, const std::string& _name, glm::ve
     std::smatch match;
 
     // Split Source code in lines
-    std::vector<std::string> lines = ada::split(_source, '\n');
+    std::vector<std::string> lines = vera::split(_source, '\n');
     for (unsigned int l = 0; l < lines.size(); l++) {
         if (std::regex_search(lines[l], match, re)) {
             if (match[1] == _name) {
-                _size.x = ada::toFloat(match[2]);
-                _size.y = ada::toFloat(match[3]);
+                _size.x = vera::toFloat(match[2]);
+                _size.y = vera::toFloat(match[3]);
                 return true;
             }
         }
@@ -77,7 +77,7 @@ bool getBufferSize(const std::string& _source, const std::string& _name, glm::ve
 // Count how many BUFFERS are in the shader
 int countDoubleBuffers(const std::string& _source) {
     // Split Source code in lines
-    std::vector<std::string> lines = ada::split(_source, '\n');
+    std::vector<std::string> lines = vera::split(_source, '\n');
 
     // Group results in a vector to check for duplicates
     std::vector<std::string> results;
@@ -123,7 +123,7 @@ bool checkBackground(const std::string& _source) {
     std::smatch match;
 
     // Split Source code in lines
-    std::vector<std::string> lines = ada::split(_source, '\n');
+    std::vector<std::string> lines = vera::split(_source, '\n');
     for (unsigned int l = 0; l < lines.size(); l++) {
         if (std::regex_search(lines[l], match, re)) {
             return true;
@@ -136,7 +136,7 @@ bool checkBackground(const std::string& _source) {
 // Count how many BUFFERS are in the shader
 bool checkFloor(const std::string& _source) {
     // Split Source code in lines
-    std::vector<std::string> lines = ada::split(_source, '\n');
+    std::vector<std::string> lines = vera::split(_source, '\n');
 
     std::regex re(R"((?:^\s*#if|^\s*#elif)(?:\s+)(defined\s*\(\s*FLOOR)(?:\s*\))|(?:^\s*#ifdef\s+FLOOR)|(?:^\s*#ifndef\s+FLOOR))");
     std::smatch match;
@@ -152,7 +152,7 @@ bool checkFloor(const std::string& _source) {
 
 bool checkPostprocessing(const std::string& _source) {
     // Split Source code in lines
-    std::vector<std::string> lines = ada::split(_source, '\n');
+    std::vector<std::string> lines = vera::split(_source, '\n');
 
     std::regex re(R"((?:^\s*#if|^\s*#elif)(?:\s+)(defined\s*\(\s*POSTPROCESSING)(?:\s*\))|(?:^\s*#ifdef\s+POSTPROCESSING)|(?:^\s*#ifndef\s+POSTPROCESSING))");
     std::smatch match;
@@ -169,7 +169,7 @@ bool checkPostprocessing(const std::string& _source) {
 // Count how many CONVOLUTION_PYRAMID_ are in the shader
 int countConvolutionPyramid(const std::string& _source) {
     // Split Source code in lines
-    std::vector<std::string> lines = ada::split(_source, '\n');
+    std::vector<std::string> lines = vera::split(_source, '\n');
 
     // Group results in a vector to check for duplicates
     std::vector<std::string> results;
@@ -211,7 +211,7 @@ int countConvolutionPyramid(const std::string& _source) {
 
 bool checkConvolutionPyramid(const std::string& _source) {
     // Split Source code in lines
-    std::vector<std::string> lines = ada::split(_source, '\n');
+    std::vector<std::string> lines = vera::split(_source, '\n');
 
     std::regex re(R"((?:^\s*#if|^\s*#elif)(?:\s+)(defined\s*\(\s*CONVOLUTION_PYRAMID_ALGORITHM)(?:\s*\))|(?:^\s*#ifdef\s+CONVOLUTION_PYRAMID_ALGORITHM)|(?:^\s*#ifndef\s+CONVOLUTION_PYRAMID_ALGORITHM))");
     std::smatch match;

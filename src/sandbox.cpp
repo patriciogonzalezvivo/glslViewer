@@ -12,15 +12,15 @@
 #include "tools/console.h"
 
 
-#include "ada/fs.h"
-#include "ada/window.h"
-#include "ada/draw.h"
-#include "ada/math.h"
-#include "ada/geom/meshes.h"
-#include "ada/string.h"
-#include "ada/pixel.h"
-#include "ada/devices/holoPlay.h"
-#include "ada/shaders/defaultShaders.h"
+#include "vera/fs.h"
+#include "vera/window.h"
+#include "vera/draw.h"
+#include "vera/math.h"
+#include "vera/geom/meshes.h"
+#include "vera/string.h"
+#include "vera/pixel.h"
+#include "vera/devices/holoPlay.h"
+#include "vera/shaders/defaultShaders.h"
 
 #include "glm/gtx/matrix_transform_2d.hpp"
 #include "glm/gtx/rotate_vector.hpp"
@@ -60,68 +60,68 @@ Sandbox::Sandbox():
     // Debug
     m_showTextures(false), m_showPasses(false)
 {
-    ada::setScene( (ada::Scene*)&uniforms );
+    vera::setScene( (vera::Scene*)&uniforms );
 
     // TIME UNIFORMS
     //
-    uniforms.functions["u_frame"] = UniformFunction( "int", [&](ada::Shader& _shader) {
+    uniforms.functions["u_frame"] = UniformFunction( "int", [&](vera::Shader& _shader) {
         if (isRecording()) _shader.setUniform("u_frame", getRecordingFrame());
         _shader.setUniform("u_frame", (int)m_frame);
     }, 
     [&]() { 
-        if (isRecording()) return ada::toString( getRecordingFrame() );
-        else return ada::toString(m_frame, 1); 
+        if (isRecording()) return vera::toString( getRecordingFrame() );
+        else return vera::toString(m_frame, 1); 
     } );
 
-    uniforms.functions["u_time"] = UniformFunction( "float", [&](ada::Shader& _shader) {
+    uniforms.functions["u_time"] = UniformFunction( "float", [&](vera::Shader& _shader) {
         if (isRecording()) _shader.setUniform("u_time", getRecordingTime());
-        else _shader.setUniform("u_time", float(ada::getTime()) - m_time_offset);
+        else _shader.setUniform("u_time", float(vera::getTime()) - m_time_offset);
     }, 
     [&]() {  
-        if (isRecording()) return ada::toString( getRecordingTime() );
-        else return ada::toString(ada::getTime() - m_time_offset); 
+        if (isRecording()) return vera::toString( getRecordingTime() );
+        else return vera::toString(vera::getTime() - m_time_offset); 
     } );
 
-    uniforms.functions["u_delta"] = UniformFunction("float", [&](ada::Shader& _shader) {
+    uniforms.functions["u_delta"] = UniformFunction("float", [&](vera::Shader& _shader) {
         if (isRecording()) _shader.setUniform("u_delta", getRecordingDelta());
-        else _shader.setUniform("u_delta", float(ada::getDelta()));
+        else _shader.setUniform("u_delta", float(vera::getDelta()));
     }, 
     [&]() { 
-        if (isRecording()) return ada::toString( getRecordingDelta() );
-        else return ada::toString(ada::getDelta());
+        if (isRecording()) return vera::toString( getRecordingDelta() );
+        else return vera::toString(vera::getDelta());
     });
 
-    uniforms.functions["u_date"] = UniformFunction("vec4", [](ada::Shader& _shader) {
-        _shader.setUniform("u_date", ada::getDate());
+    uniforms.functions["u_date"] = UniformFunction("vec4", [](vera::Shader& _shader) {
+        _shader.setUniform("u_date", vera::getDate());
     },
-    []() { return ada::toString(ada::getDate().x, 0) + "," + ada::toString(ada::getDate().y, 0) + "," + ada::toString(ada::getDate().z, 0) + "," + ada::toString(ada::getDate().w, 2); });
+    []() { return vera::toString(vera::getDate().x, 0) + "," + vera::toString(vera::getDate().y, 0) + "," + vera::toString(vera::getDate().z, 0) + "," + vera::toString(vera::getDate().w, 2); });
 
     // MOUSE
-    uniforms.functions["u_mouse"] = UniformFunction("vec2", [](ada::Shader& _shader) {
-        _shader.setUniform("u_mouse", float(ada::getMouseX()), float(ada::getMouseY()));
+    uniforms.functions["u_mouse"] = UniformFunction("vec2", [](vera::Shader& _shader) {
+        _shader.setUniform("u_mouse", float(vera::getMouseX()), float(vera::getMouseY()));
     },
-    []() { return ada::toString(ada::getMouseX(),1) + "," + ada::toString(ada::getMouseY(),1); } );
+    []() { return vera::toString(vera::getMouseX(),1) + "," + vera::toString(vera::getMouseY(),1); } );
 
     // VIEWPORT
-    uniforms.functions["u_resolution"]= UniformFunction("vec2", [](ada::Shader& _shader) {
-        _shader.setUniform("u_resolution", float(ada::getWindowWidth()), float(ada::getWindowHeight()));
+    uniforms.functions["u_resolution"]= UniformFunction("vec2", [](vera::Shader& _shader) {
+        _shader.setUniform("u_resolution", float(vera::getWindowWidth()), float(vera::getWindowHeight()));
     },
-    []() { return ada::toString((float)ada::getWindowWidth(),1) + "," + ada::toString((float)ada::getWindowHeight(),1); });
+    []() { return vera::toString((float)vera::getWindowWidth(),1) + "," + vera::toString((float)vera::getWindowHeight(),1); });
 
     // SCENE
-    uniforms.functions["u_scene"] = UniformFunction("sampler2D", [this](ada::Shader& _shader) {
+    uniforms.functions["u_scene"] = UniformFunction("sampler2D", [this](vera::Shader& _shader) {
         if (m_postprocessing && m_scene_fbo.getTextureId()) {
             _shader.setUniformTexture("u_scene", &m_scene_fbo, _shader.textureIndex++ );
         }
     });
 
-    uniforms.functions["u_sceneDepth"] = UniformFunction("sampler2D", [this](ada::Shader& _shader) {
+    uniforms.functions["u_sceneDepth"] = UniformFunction("sampler2D", [this](vera::Shader& _shader) {
         if (m_postprocessing && m_scene_fbo.getTextureId()) {
             _shader.setUniformDepthTexture("u_sceneDepth", &m_scene_fbo, _shader.textureIndex++ );
         }
     });
 
-    uniforms.functions["u_view2d"] = UniformFunction("mat3", [this](ada::Shader& _shader) {
+    uniforms.functions["u_view2d"] = UniformFunction("mat3", [this](vera::Shader& _shader) {
         _shader.setUniform("u_view2d", m_view2d);
     });
 
@@ -163,7 +163,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
             return true;
         }
         else {
-            std::vector<std::string> values = ada::split(_line,',');
+            std::vector<std::string> values = vera::split(_line,',');
             if (values.size() == 2) {
                 m_showPasses = (values[1] == "on");
                 m_showTextures = (values[1] == "on");
@@ -203,7 +203,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
             return true;
         }
         else {
-            std::vector<std::string> values = ada::split(_line,',');
+            std::vector<std::string> values = vera::split(_line,',');
             if (values.size() == 2) {
 
                 if ((values[1] == "on" || values[1] == "start" | values[1] == "begin") &&
@@ -226,7 +226,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
             else if (values.size() == 3) {
 
                 if (values[1] == "average" && 
-                    ada::haveExt(values[2],"csv") ) {
+                    vera::haveExt(values[2],"csv") ) {
                     std::ofstream out(values[2]);
                     out << uniforms.tracker.logAverage();
                     out.close();
@@ -236,7 +236,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
                     std::cout << uniforms.tracker.logAverage( values[2] );
 
                 else if (   values[1] == "samples" && 
-                            ada::haveExt(values[2],"csv") ) {
+                            vera::haveExt(values[2],"csv") ) {
                     std::ofstream out(values[2]);
                     out << "track,timeStampMs,durationMs\n";
                     out << uniforms.tracker.logSamples();
@@ -250,14 +250,14 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
             else if (values.size() == 4) {
 
                 if (values[1] == "average" && 
-                    ada::haveExt(values[3],"csv") ) {
+                    vera::haveExt(values[3],"csv") ) {
                     std::ofstream out( values[3] );
                     out << uniforms.tracker.logAverage( values[2] );
                     out.close();
                 }
 
                 else if (   values[1] == "samples" && 
-                    ada::haveExt(values[3],"csv") ) {
+                    vera::haveExt(values[3],"csv") ) {
                     std::ofstream out( values[3] );
                     out << uniforms.tracker.logSamples( values[2] );
                     out.close();
@@ -270,34 +270,32 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     },
     "track[,on|off|average|samples]", "start/stop tracking rendering time", false));
 
-    _commands.push_back(Command("reset", [&](const std::string& _line){
-        if (_line == "reset") {
-            m_time_offset = ada::getTime();
-            return true;
-        }
-        return false;
-    },
-    "reset", "reset timestamp back to zero", false));
-
-    _commands.push_back(Command("time", [&](const std::string& _line){ 
-        if (_line == "time") {
-            // Force the output in floats
-            std::cout << std::setprecision(6) << (ada::getTime() - m_time_offset) << std::endl;
-            return true;
-        }
-        return false;
-    },
-    "time", "return u_time, the elapsed time.", false));
-
     _commands.push_back(Command("glsl_version", [&](const std::string& _line){ 
         if (_line == "glsl_version") {
             // Force the output in floats
-            std::cout << ada::getVersion() << std::endl;
+            std::cout << vera::getVersion() << std::endl;
             return true;
         }
         return false;
     },
     "glsl_version", "return GLSL Version", false));
+
+    _commands.push_back(Command("error_screen", [&](const std::string& _line){ 
+        if (_line == "error_screen") {
+            std::string rta = m_error_screen ? "on" : "off";
+            std::cout << "error_screen," << rta << std::endl; 
+            return true;
+        }
+        else {
+            std::vector<std::string> values = vera::split(_line,',');
+            if (values.size() == 2) {
+                m_error_screen = (values[1] == "on");
+                return true;
+            }
+        }
+        return false;
+    },
+    "error_screen,on|off", "enable/disable magenta screen on errors", false));
 
     _commands.push_back(Command("plot", [&](const std::string& _line){
         if (_line == "plot") {
@@ -305,7 +303,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
             return true;
         }
         else {
-            std::vector<std::string> values = ada::split(_line,',');
+            std::vector<std::string> values = vera::split(_line,',');
             if (values[0] == "plot" && values.size() == 2) {
 
                 m_plot_shader.delDefine("PLOT_VALUE");
@@ -346,6 +344,25 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     },
     "plot[,off|luma|red|green|blue|rgb|fps|ms]", "show/hide a histogram or FPS plot on screen", false));
 
+    _commands.push_back(Command("reset", [&](const std::string& _line){
+        if (_line == "reset") {
+            m_time_offset = vera::getTime();
+            return true;
+        }
+        return false;
+    },
+    "reset", "reset timestamp back to zero", false));
+
+    _commands.push_back(Command("time", [&](const std::string& _line){ 
+        if (_line == "time") {
+            // Force the output in floats
+            std::cout << std::setprecision(6) << (vera::getTime() - m_time_offset) << std::endl;
+            return true;
+        }
+        return false;
+    },
+    "time", "return u_time, the elapsed time.", false));
+
     _commands.push_back(Command("defines", [&](const std::string& _line){ 
         if (_line == "defines") {
             if (geom_index == -1)
@@ -362,7 +379,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     "defines", "return a list of active defines", false));
     
     _commands.push_back(Command("uniforms", [&](const std::string& _line){ 
-        std::vector<std::string> values = ada::split(_line,',');
+        std::vector<std::string> values = vera::split(_line,',');
 
         if (values[0] != "uniforms")
             return false;
@@ -378,7 +395,9 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
             uniforms.printBuffers();
             uniforms.printTextures();
             uniforms.printStreams();
+            uniforms.printCubemaps();
             uniforms.printLights();
+            uniforms.printCameras();
             return true;
         }
         else if (values[1] == "active") {
@@ -404,6 +423,18 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
             uniforms.printStreams();
             return true;
         }
+        else if (values[1] == "cubemaps") {
+            uniforms.printCubemaps();
+            return true;
+        }
+        else if (values[1] == "cameras") {
+            uniforms.printCameras();
+            return true;
+        }
+        else if (values[1] == "lights") {
+            uniforms.printLights();
+            return true;
+        }
         else if (values[1] == "on" || values[1] == "off") { 
             console_uniforms( values[1] == "on" );
             return true; 
@@ -411,7 +442,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
 
         return false;
     },
-    "uniforms[,all|active|defined|textures|buffers|on|off]", "return a list of uniforms", false));
+    "uniforms[,all|active|defined|textures|buffers|cubemaps|lights|cameras|on|off]", "return a list of uniforms", false));
 
     _commands.push_back(Command("textures", [&](const std::string& _line){ 
         if (_line == "textures") {
@@ -420,7 +451,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
             return true;
         }
         else {
-            std::vector<std::string> values = ada::split(_line,',');
+            std::vector<std::string> values = vera::split(_line,',');
             if (values.size() == 2) {
                 m_showTextures = (values[1] == "on");
                 return true;
@@ -447,7 +478,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
             return false;
         }
         else {
-            std::vector<std::string> values = ada::split(_line,',');
+            std::vector<std::string> values = vera::split(_line,',');
             if (values.size() == 2) {
                 m_showPasses = (values[1] == "on");
                 return true;
@@ -457,22 +488,71 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     },
     "buffers[,on|off]", "return a list of buffers as their uniform name. Or show/hide buffer on viewport.", false));
 
-    _commands.push_back(Command("error_screen", [&](const std::string& _line){ 
-        if (_line == "error_screen") {
-            std::string rta = m_error_screen ? "on" : "off";
-            std::cout << "error_screen," << rta << std::endl; 
+    // CUBEMAPS
+    _commands.push_back(Command("cubemaps", [&](const std::string& _line){
+        if (_line == "cubemaps") {
+            uniforms.printCubemaps();
             return true;
-        }
-        else {
-            std::vector<std::string> values = ada::split(_line,',');
-            if (values.size() == 2) {
-                m_error_screen = (values[1] == "on");
-                return true;
-            }
         }
         return false;
     },
-    "error_screen,on|off", "enable/disable magenta screen on errors", false));
+    "cubemaps", "print all cubemaps"));
+
+    _commands.push_back(Command("sun_elevation", [&](const std::string& _line){ 
+        std::vector<std::string> values = vera::split(_line,',');
+        if (values.size() == 2) {
+
+            float elevation = glm::radians( vera::toFloat(values[1]) );
+            float azimuth = uniforms.getSunAzimuth();
+
+            uniforms.addDefine("SUN", "u_light");
+            uniforms.setSunPosition(azimuth, elevation);
+            uniforms.setActiveCubemap("skybox");
+            return true;
+        }
+        else {
+            std::cout << uniforms.getSunElevation() << std::endl;
+            return true;
+        }
+        return false;
+    },
+    "sun_elevation[,<degrees>]", "get or set the sun elevation in degrees (remember to skybox,on)."));
+
+    _commands.push_back(Command("sun_azimuth", [&](const std::string& _line){ 
+        std::vector<std::string> values = vera::split(_line,',');
+        if (values.size() == 2) {
+
+            float elevation = uniforms.getSunElevation();
+            float azimuth = glm::radians( vera::toFloat(values[1]) );
+
+            uniforms.addDefine("SUN", "u_light");
+            uniforms.setSunPosition(azimuth, elevation);
+            uniforms.setActiveCubemap("skybox");
+
+            return true;
+        }
+        else {
+            std::cout << uniforms.getSunAzimuth() << std::endl;
+            return true;
+        }
+        return false;
+    },
+    "sun_azimuth[,<degrees>]", "get or set the sun azimuth in degrees (remember to skybox,on)."));
+
+    _commands.push_back(Command("sky_turbidity", [&](const std::string& _line){ 
+        std::vector<std::string> values = vera::split(_line,',');
+        if (values.size() == 2) {
+            uniforms.setSkyTurbidity( vera::toFloat(values[1]) );
+            uniforms.setActiveCubemap("skybox");
+            return true;
+        }
+        else {
+            std::cout << uniforms.getSkyTurbidity() << std::endl;
+            return true;
+        }
+        return false;
+    },
+    "sky_turbidity[,<sky_turbidty>]", "get or set the sky turbidity."));
 
     // LIGTH
     _commands.push_back(Command("lights", [&](const std::string& _line){ 
@@ -486,23 +566,23 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
 
     _commands.push_back(Command("light_position", [&](const std::string& _line){ 
         
-        std::vector<std::string> values = ada::split(_line,',');
+        std::vector<std::string> values = vera::split(_line,',');
         if (values.size() == 4) {
             if (uniforms.lights.size() == 1)
-                uniforms.setSunPosition(glm::vec3(ada::toFloat(values[1]), ada::toFloat(values[2]), ada::toFloat(values[3])));
+                uniforms.setSunPosition( glm::vec3(vera::toFloat(values[1]), vera::toFloat(values[2]), vera::toFloat(values[3])) );
             
             return true;
         }
         // else if (values.size() == 5) {
-        //     size_t i = ada::toInt(values[1]);
+        //     size_t i = vera::toInt(values[1]);
         //     if (uniforms.lights.size() > i)
-        //         uniforms.lights[i].setPosition(glm::vec3(ada::toFloat(values[2]), ada::toFloat(values[3]), ada::toFloat(values[4])));
+        //         uniforms.lights[i].setPosition(glm::vec3(vera::toFloat(values[2]), vera::toFloat(values[3]), vera::toFloat(values[4])));
 
         //     return true;
         // }
         else {
             if (uniforms.lights.size() > 0) {
-                ada::Light* sun = uniforms.getLight("sun");
+                vera::Light* sun = uniforms.getLight("sun");
                 glm::vec3 pos = sun->getPosition();
                 std::cout << pos.x << ',' << pos.y << ',' << pos.z << std::endl;
             }
@@ -513,26 +593,26 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     "light_position[[,<index>],<x>,<y>,<z>]", "get or set the light position"));
 
     _commands.push_back(Command("light_color", [&](const std::string& _line){ 
-        std::vector<std::string> values = ada::split(_line,',');
+        std::vector<std::string> values = vera::split(_line,',');
         if (values.size() == 4) {
             if (uniforms.lights.size() > 0) {
-                ada::Light* sun = uniforms.getLight("sun");
-                sun->color = glm::vec3(ada::toFloat(values[1]), ada::toFloat(values[2]), ada::toFloat(values[3]));
+                vera::Light* sun = uniforms.getLight("sun");
+                sun->color = glm::vec3(vera::toFloat(values[1]), vera::toFloat(values[2]), vera::toFloat(values[3]));
                 sun->bChange = true;
             }
             return true;
         }
         // else if (values.size() == 5) {
-        //     size_t i = ada::toInt(values[1]);
+        //     size_t i = vera::toInt(values[1]);
         //     if (uniforms.lights.size() > i) {
-        //         uniforms.lights[i].color = glm::vec3(ada::toFloat(values[2]), ada::toFloat(values[3]), ada::toFloat(values[4]));
+        //         uniforms.lights[i].color = glm::vec3(vera::toFloat(values[2]), vera::toFloat(values[3]), vera::toFloat(values[4]));
         //         uniforms.lights[i].bChange = true;
         //     }
         //     return true;
         // }
         else {
             if (uniforms.lights.size() > 0) {
-                ada::Light* sun = uniforms.getLight("sun");
+                vera::Light* sun = uniforms.getLight("sun");
                 glm::vec3 color = sun->color;
                 std::cout << color.x << ',' << color.y << ',' << color.z << std::endl;
             }
@@ -543,26 +623,26 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     "light_color[,<r>,<g>,<b>]", "get or set the light color"));
 
     _commands.push_back(Command("light_falloff", [&](const std::string& _line){ 
-         std::vector<std::string> values = ada::split(_line,',');
+         std::vector<std::string> values = vera::split(_line,',');
         if (values.size() == 2) {
             if (uniforms.lights.size() > 0) {
-                ada::Light* sun = uniforms.getLight("sun");
-                sun->falloff = ada::toFloat(values[1]);
+                vera::Light* sun = uniforms.getLight("sun");
+                sun->falloff = vera::toFloat(values[1]);
                 sun->bChange = true;
             }
             return true;
         }
         // else if (values.size() == 5) {
-        //     size_t i = ada::toInt(values[1]);
+        //     size_t i = vera::toInt(values[1]);
         //     if (uniforms.lights.size() > i) {
-        //         uniforms.lights[i].falloff = ada::toFloat(values[2]);
+        //         uniforms.lights[i].falloff = vera::toFloat(values[2]);
         //         uniforms.lights[i].bChange = true;
         //     }
         //     return true;
         // }
         else {
             if (uniforms.lights.size() > 0) {
-                ada::Light* sun = uniforms.getLight("sun");
+                vera::Light* sun = uniforms.getLight("sun");
                 std::cout <<  sun->falloff << std::endl;
             }
             return true;
@@ -572,26 +652,26 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     "light_falloff[,<value>]", "get or set the light falloff distance"));
 
     _commands.push_back(Command("light_intensity", [&](const std::string& _line){ 
-         std::vector<std::string> values = ada::split(_line,',');
+         std::vector<std::string> values = vera::split(_line,',');
         if (values.size() == 2) {
             if (uniforms.lights.size() > 0) {
-                ada::Light* sun = uniforms.getLight("sun");
-                sun->intensity = ada::toFloat(values[1]);
+                vera::Light* sun = uniforms.getLight("sun");
+                sun->intensity = vera::toFloat(values[1]);
                 sun->bChange = true;
             }
             return true;
         }
         // else if (values.size() == 5) {
-        //     size_t i = ada::toInt(values[1]);
+        //     size_t i = vera::toInt(values[1]);
         //     if (uniforms.lights.size() > i) {
-        //         uniforms.lights[i].intensity = ada::toFloat(values[2]);
+        //         uniforms.lights[i].intensity = vera::toFloat(values[2]);
         //         uniforms.lights[i].bChange = true;
         //     }
         //     return true;
         // }
         else {
             if (uniforms.lights.size() > 0) {
-                ada::Light* sun = uniforms.getLight("sun");
+                vera::Light* sun = uniforms.getLight("sun");
                 std::cout <<  sun->intensity << std::endl;
             }
             return true;
@@ -602,9 +682,9 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
 
     // CAMERA
     _commands.push_back(Command("camera_distance", [&](const std::string& _line){ 
-        std::vector<std::string> values = ada::split(_line,',');
+        std::vector<std::string> values = vera::split(_line,',');
         if (values.size() == 2) {
-            uniforms.getActiveCamera()->setDistance(ada::toFloat(values[1]));
+            uniforms.getActiveCamera()->setDistance(vera::toFloat(values[1]));
             return true;
         }
         else {
@@ -616,17 +696,17 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     "camera_distance[,<dist>]", "get or set the camera distance to the target"));
 
     _commands.push_back(Command("camera_type", [&](const std::string& _line){ 
-        std::vector<std::string> values = ada::split(_line,',');
+        std::vector<std::string> values = vera::split(_line,',');
         if (values.size() == 2) {
             if (values[1] == "ortho")
-                uniforms.getActiveCamera()->setProjection(ada::ProjectionType::ORTHO);
+                uniforms.getActiveCamera()->setProjection(vera::ProjectionType::ORTHO);
             else if (values[1] == "perspective")
-                uniforms.getActiveCamera()->setProjection(ada::ProjectionType::PERSPECTIVE);
+                uniforms.getActiveCamera()->setProjection(vera::ProjectionType::PERSPECTIVE);
             return true;
         }
         else {
-            ada::ProjectionType type = uniforms.getActiveCamera()->getProjectionType();
-            if (type == ada::ProjectionType::ORTHO)
+            vera::ProjectionType type = uniforms.getActiveCamera()->getProjectionType();
+            if (type == vera::ProjectionType::ORTHO)
                 std::cout << "ortho" << std::endl;
             else
                 std::cout << "perspective" << std::endl;
@@ -637,9 +717,9 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     "camera_type[,<ortho|perspective>]", "get or set the camera type"));
 
     _commands.push_back(Command("camera_fov", [&](const std::string& _line){ 
-        std::vector<std::string> values = ada::split(_line,',');
+        std::vector<std::string> values = vera::split(_line,',');
         if (values.size() == 2) {
-            uniforms.getActiveCamera()->setFOV( ada::toFloat(values[1]) );
+            uniforms.getActiveCamera()->setFOV( vera::toFloat(values[1]) );
             return true;
         }
         else {
@@ -651,9 +731,9 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     "camera_fov[,<field_of_view>]", "get or set the camera field of view."));
 
     _commands.push_back(Command("camera_position", [&](const std::string& _line){ 
-        std::vector<std::string> values = ada::split(_line,',');
+        std::vector<std::string> values = vera::split(_line,',');
         if (values.size() == 4) {
-            uniforms.getActiveCamera()->setPosition( -glm::vec3(ada::toFloat(values[1]), ada::toFloat(values[2]), ada::toFloat(values[3])));
+            uniforms.getActiveCamera()->setPosition( -glm::vec3(vera::toFloat(values[1]), vera::toFloat(values[2]), vera::toFloat(values[3])));
             uniforms.getActiveCamera()->lookAt( uniforms.getActiveCamera()->getTarget() );
             glm::vec3 v = uniforms.getActiveCamera()->getPosition();
             m_camera_azimuth = glm::degrees( atan2(v.x, v.z) );
@@ -670,9 +750,9 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     "camera_position[,<x>,<y>,<z>]", "get or set the camera position."));
 
     _commands.push_back(Command("camera_exposure", [&](const std::string& _line){ 
-        std::vector<std::string> values = ada::split(_line,',');
+        std::vector<std::string> values = vera::split(_line,',');
         if (values.size() == 4) {
-            uniforms.getActiveCamera()->setExposure( ada::toFloat(values[1]), ada::toFloat(values[2]), ada::toFloat(values[3]));
+            uniforms.getActiveCamera()->setExposure( vera::toFloat(values[1]), vera::toFloat(values[2]), vera::toFloat(values[3]));
             return true;
         }
         else {
@@ -684,7 +764,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     "camera_exposure[,<aper.>,<shutter>,<sensit.>]", "get or set the camera exposure values."));
 
      _commands.push_back(Command("stream", [&](const std::string& _line){ 
-        std::vector<std::string> values = ada::split(_line,',');
+        std::vector<std::string> values = vera::split(_line,',');
 
         if (values.size() == 3) {
             if ( values[2] == "play") {
@@ -714,15 +794,15 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         }
         else if (values.size() == 4) {
             if ( values[2] == "speed") {
-                uniforms.setStreamSpeed( values[1], ada::toFloat(values[3]) );
+                uniforms.setStreamSpeed( values[1], vera::toFloat(values[3]) );
                 return true;
             }
             else if ( values[2] == "time") {
-                uniforms.setStreamTime( values[1], ada::toFloat(values[3]) );
+                uniforms.setStreamTime( values[1], vera::toFloat(values[3]) );
                 return true;
             }
             else if ( values[2] == "pct") {
-                uniforms.setStreamPct( values[1], ada::toFloat(values[3]) );
+                uniforms.setStreamPct( values[1], vera::toFloat(values[3]) );
                 return true;
             }
         }
@@ -732,7 +812,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     "stream,<uniform_name>,stop|play|speed|time[,<value>]", "play/stop or change speed or time of a specific stream"));
 
     _commands.push_back(Command("streams", [&](const std::string& _line){ 
-        std::vector<std::string> values = ada::split(_line,',');
+        std::vector<std::string> values = vera::split(_line,',');
 
         if (_line == "streams")
             uniforms.printStreams();
@@ -753,26 +833,26 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         }
         else if (values.size() == 3) {
             if ( values[1] == "speed") {
-                uniforms.setStreamsSpeed( ada::toFloat(values[2]) );
+                uniforms.setStreamsSpeed( vera::toFloat(values[2]) );
                 return true;
             }
             else if ( values[1] == "time") {
-                uniforms.setStreamsTime( ada::toFloat(values[2]) );
+                uniforms.setStreamsTime( vera::toFloat(values[2]) );
                 return true;
             }
             else if ( values[1] == "pct") {
-                uniforms.setStreamsPct( ada::toFloat(values[2]) );
+                uniforms.setStreamsPct( vera::toFloat(values[2]) );
                 return true;
             }
             else if ( values[1] == "prevs") {
-                int prevs = ada::toInt(values[2]);
+                int prevs = vera::toInt(values[2]);
 
                 if (prevs == 0) {
                     uniforms.setStreamsPrevs( 0 );
                     delDefine("STREAMS_PREVS");
                 }
                 else {
-                    uniforms.setStreamsPrevs( ada::toInt(values[2]) );
+                    uniforms.setStreamsPrevs( vera::toInt(values[2]) );
                     addDefine("STREAMS_PREVS", values[2]);
                 }
                 return true;
@@ -785,7 +865,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
 
     #if defined(SUPPORT_MULTITHREAD_RECORDING)
     _commands.push_back(Command("max_mem_in_queue", [&](const std::string & line) {
-        std::vector<std::string> values = ada::split(line,',');
+        std::vector<std::string> values = vera::split(line,',');
         if (values.size() == 2) {
             m_max_mem_in_queue = std::stoll(values[1]);
         }
@@ -803,17 +883,17 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         m_frag_source = "";
         m_frag_dependencies.clear();
 
-        if ( !ada::loadGlslFrom(_files[frag_index].path, &m_frag_source, include_folders, &m_frag_dependencies) )
+        if ( !vera::loadGlslFrom(_files[frag_index].path, &m_frag_source, include_folders, &m_frag_dependencies) )
             return;
 
-        ada::setVersionFromCode(m_frag_source);
+        vera::setVersionFromCode(m_frag_source);
     }
     else {
         // If there is no use the default one
         if (geom_index == -1)
-            m_frag_source = ada::getDefaultSrc(ada::FRAG_DEFAULT);
+            m_frag_source = vera::getDefaultSrc(vera::FRAG_DEFAULT);
         else
-            m_frag_source = ada::getDefaultSrc(ada::FRAG_DEFAULT_SCENE);
+            m_frag_source = vera::getDefaultSrc(vera::FRAG_DEFAULT_SCENE);
     }
 
     if (vert_index != -1) {
@@ -821,18 +901,18 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         m_vert_source = "";
         m_vert_dependencies.clear();
 
-        ada::loadGlslFrom(_files[vert_index].path, &m_vert_source, include_folders, &m_vert_dependencies);
+        vera::loadGlslFrom(_files[vert_index].path, &m_vert_source, include_folders, &m_vert_dependencies);
     }
     else {
         // If there is no use the default one
         if (geom_index == -1)
-            m_vert_source = ada::getDefaultSrc(ada::VERT_DEFAULT);
+            m_vert_source = vera::getDefaultSrc(vera::VERT_DEFAULT);
         else
-            m_vert_source = ada::getDefaultSrc(ada::VERT_DEFAULT_SCENE);
+            m_vert_source = vera::getDefaultSrc(vera::VERT_DEFAULT_SCENE);
     }
 
     // Init Scene elements
-    m_billboard_vbo = new ada::Vbo( ada::rectMesh(0.0,0.0,1.0,1.0) );
+    m_billboard_vbo = new vera::Vbo( vera::rectMesh(0.0,0.0,1.0,1.0) );
 
     // LOAD GEOMETRY
     // -----------------------------------------------
@@ -842,36 +922,36 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     }
     else {
         m_scene.setup( _commands, uniforms);
-        m_scene.loadGeometry( uniforms, _files[geom_index].path, verbose );
+        m_scene.loadScene( uniforms, _files[geom_index].path, verbose );
         uniforms.getActiveCamera()->orbit(m_camera_azimuth, m_camera_elevation, m_scene.getArea() * 2.0);
         uniforms.getActiveCamera()->lookAt( uniforms.getActiveCamera()->getTarget() );
     }
 
     // FINISH SCENE SETUP
     // -------------------------------------------------
-    uniforms.getActiveCamera()->setViewport(ada::getWindowWidth(), ada::getWindowHeight());
+    uniforms.getActiveCamera()->setViewport(vera::getWindowWidth(), vera::getWindowHeight());
 
     if (lenticular.size() > 0)
-        ada::setLenticularProperties(lenticular);
+        vera::setLenticularProperties(lenticular);
 
     if (quilt >= 0) {
-        ada::setQuiltProperties(quilt);
-        addDefine("QUILT", ada::toString(quilt));
-        addDefine("QUILT_WIDTH", ada::toString( ada::getQuiltWidth() ));
-        addDefine("QUILT_HEIGHT", ada::toString( ada::getQuiltHeight() ));
-        addDefine("QUILT_COLUMNS", ada::toString( ada::getQuiltColumns() ));
-        addDefine("QUILT_ROWS", ada::toString( ada::getQuiltRows() ));
-        addDefine("QUILT_TOTALVIEWS", ada::toString( ada::getQuiltTotalViews() ));
+        vera::setQuiltProperties(quilt);
+        addDefine("QUILT", vera::toString(quilt));
+        addDefine("QUILT_WIDTH", vera::toString( vera::getQuiltWidth() ));
+        addDefine("QUILT_HEIGHT", vera::toString( vera::getQuiltHeight() ));
+        addDefine("QUILT_COLUMNS", vera::toString( vera::getQuiltColumns() ));
+        addDefine("QUILT_ROWS", vera::toString( vera::getQuiltRows() ));
+        addDefine("QUILT_TOTALVIEWS", vera::toString( vera::getQuiltTotalViews() ));
 
         uniforms.getActiveCamera()->setFOV(glm::radians(14.0f));
-        uniforms.getActiveCamera()->setProjection(ada::ProjectionType::PERSPECTIVE_VIRTUAL_OFFSET);
+        uniforms.getActiveCamera()->setProjection(vera::ProjectionType::PERSPECTIVE_VIRTUAL_OFFSET);
         // uniforms.getActiveCamera()->setClipping(0.01, 100.0);
 
         if (geom_index != -1)
             uniforms.getActiveCamera()->orbit(m_camera_elevation, m_camera_azimuth, m_scene.getArea() * 8.5);
 
         if (lenticular.size() == 0)
-            ada::setWindowSize(ada::getQuiltWidth(), ada::getQuiltHeight());
+            vera::setWindowSize(vera::getQuiltWidth(), vera::getQuiltHeight());
     }
 
     // Prepare viewport
@@ -970,11 +1050,11 @@ const std::string& Sandbox::getSource(ShaderType _type) const {
 // ------------------------------------------------------------------------- RELOAD SHADER
 
 void Sandbox::_updateSceneBuffer(int _width, int _height) {
-    ada::FboType type = uniforms.functions["u_sceneDepth"].present ? ada::COLOR_DEPTH_TEXTURES : ada::COLOR_TEXTURE_DEPTH_BUFFER;
+    vera::FboType type = uniforms.functions["u_sceneDepth"].present ? vera::COLOR_DEPTH_TEXTURES : vera::COLOR_TEXTURE_DEPTH_BUFFER;
 
     if (quilt >= 0) {
-        _width = ada::getQuiltWidth();
-        _height= ada::getQuiltHeight();
+        _width = vera::getQuiltWidth();
+        _height= vera::getQuiltHeight();
     }
 
     if (!m_scene_fbo.isAllocated() ||
@@ -1013,7 +1093,7 @@ bool Sandbox::reloadShaders( WatchFileList &_files ) {
 
     // UPDATE shaders dependencies
     {
-        ada::StringList new_dependencies = ada::merge(m_frag_dependencies, m_vert_dependencies);
+        vera::StringList new_dependencies = vera::merge(m_frag_dependencies, m_vert_dependencies);
 
         // remove old dependencies
         for (int i = _files.size() - 1; i >= 0; i--)
@@ -1055,16 +1135,16 @@ bool Sandbox::reloadShaders( WatchFileList &_files ) {
     if (havePostprocessing) {
         // Specific defines for this buffer
         m_postprocessing_shader.addDefine("POSTPROCESSING");
-        m_postprocessing_shader.load(m_frag_source, ada::getDefaultSrc(ada::VERT_BILLBOARD), false);
+        m_postprocessing_shader.load(m_frag_source, vera::getDefaultSrc(vera::VERT_BILLBOARD), false);
         m_postprocessing = havePostprocessing;
     }
     else if (lenticular.size() > 0) {
-        m_postprocessing_shader.load(ada::getLenticularFragShader(ada::getVersion()), ada::getDefaultSrc(ada::VERT_BILLBOARD), false);
+        m_postprocessing_shader.load(vera::getLenticularFragShader(vera::getVersion()), vera::getDefaultSrc(vera::VERT_BILLBOARD), false);
         uniforms.functions["u_scene"].present = true;
         m_postprocessing = true;
     }
     else if (fxaa) {
-        m_postprocessing_shader.load(ada::getDefaultSrc(ada::FRAG_FXAA), ada::getDefaultSrc(ada::VERT_BILLBOARD), false);
+        m_postprocessing_shader.load(vera::getDefaultSrc(vera::FRAG_FXAA), vera::getDefaultSrc(vera::VERT_BILLBOARD), false);
         uniforms.functions["u_scene"].present = true;
         m_postprocessing = true;
     }
@@ -1072,7 +1152,7 @@ bool Sandbox::reloadShaders( WatchFileList &_files ) {
         m_postprocessing = false;
 
     if (m_postprocessing || m_plot == PLOT_RGB || m_plot == PLOT_RED || m_plot == PLOT_GREEN || m_plot == PLOT_BLUE || m_plot == PLOT_LUMA)
-        _updateSceneBuffer(ada::getWindowWidth(), ada::getWindowHeight());
+        _updateSceneBuffer(vera::getWindowWidth(), vera::getWindowHeight());
 
     console_refresh();
 
@@ -1091,24 +1171,24 @@ void Sandbox::_updateBuffers() {
 
         for (int i = 0; i < m_buffers_total; i++) {
             // New FBO
-            uniforms.buffers.push_back( ada::Fbo() );
+            uniforms.buffers.push_back( vera::Fbo() );
 
-            glm::vec2 size = glm::vec2(ada::getWindowWidth(), ada::getWindowHeight());
-            uniforms.buffers[i].fixed = getBufferSize(m_frag_source, "u_buffer" + ada::toString(i), size);
-            uniforms.buffers[i].allocate(size.x, size.y, ada::COLOR_FLOAT_TEXTURE);
+            glm::vec2 size = glm::vec2(vera::getWindowWidth(), vera::getWindowHeight());
+            uniforms.buffers[i].fixed = getBufferSize(m_frag_source, "u_buffer" + vera::toString(i), size);
+            uniforms.buffers[i].allocate(size.x, size.y, vera::COLOR_FLOAT_TEXTURE);
             
             // New Shader
-            m_buffers_shaders.push_back( ada::Shader() );
-            m_buffers_shaders[i].addDefine("BUFFER_" + ada::toString(i));
-            m_buffers_shaders[i].load(m_frag_source, ada::getDefaultSrc(ada::VERT_BILLBOARD), false);
+            m_buffers_shaders.push_back( vera::Shader() );
+            m_buffers_shaders[i].addDefine("BUFFER_" + vera::toString(i));
+            m_buffers_shaders[i].load(m_frag_source, vera::getDefaultSrc(vera::VERT_BILLBOARD), false);
         }
     }
     else {
         for (size_t i = 0; i < m_buffers_shaders.size(); i++) {
 
             // Reload shader code
-            m_buffers_shaders[i].addDefine("BUFFER_" + ada::toString(i));
-            m_buffers_shaders[i].load(m_frag_source, ada::getDefaultSrc(ada::VERT_BILLBOARD), false);
+            m_buffers_shaders[i].addDefine("BUFFER_" + vera::toString(i));
+            m_buffers_shaders[i].load(m_frag_source, vera::getDefaultSrc(vera::VERT_BILLBOARD), false);
         }
     }
 
@@ -1122,26 +1202,26 @@ void Sandbox::_updateBuffers() {
 
         for (int i = 0; i < m_doubleBuffers_total; i++) {
             // New FBO
-            uniforms.doubleBuffers.push_back( ada::PingPong() );
+            uniforms.doubleBuffers.push_back( vera::PingPong() );
 
-            glm::vec2 size = glm::vec2(ada::getWindowWidth(), ada::getWindowHeight());
-            bool fixed = getBufferSize(m_frag_source, "u_doubleBuffer" + ada::toString(i), size);
+            glm::vec2 size = glm::vec2(vera::getWindowWidth(), vera::getWindowHeight());
+            bool fixed = getBufferSize(m_frag_source, "u_doubleBuffer" + vera::toString(i), size);
             uniforms.doubleBuffers[i][0].fixed = fixed;
             uniforms.doubleBuffers[i][1].fixed = fixed;
-            uniforms.doubleBuffers[i].allocate(size.x, size.y, ada::COLOR_FLOAT_TEXTURE);
+            uniforms.doubleBuffers[i].allocate(size.x, size.y, vera::COLOR_FLOAT_TEXTURE);
             
             // New Shader
-            m_doubleBuffers_shaders.push_back( ada::Shader() );
-            m_doubleBuffers_shaders[i].addDefine("DOUBLE_BUFFER_" + ada::toString(i));
-            m_doubleBuffers_shaders[i].load(m_frag_source, ada::getDefaultSrc(ada::VERT_BILLBOARD), false);
+            m_doubleBuffers_shaders.push_back( vera::Shader() );
+            m_doubleBuffers_shaders[i].addDefine("DOUBLE_BUFFER_" + vera::toString(i));
+            m_doubleBuffers_shaders[i].load(m_frag_source, vera::getDefaultSrc(vera::VERT_BILLBOARD), false);
         }
     }
     else {
         for (size_t i = 0; i < m_doubleBuffers_shaders.size(); i++) {
 
             // Reload shader code
-            m_doubleBuffers_shaders[i].addDefine("DOUBLE_BUFFER_" + ada::toString(i));
-            m_doubleBuffers_shaders[i].load(m_frag_source, ada::getDefaultSrc(ada::VERT_BILLBOARD), false);
+            m_doubleBuffers_shaders[i].addDefine("DOUBLE_BUFFER_" + vera::toString(i));
+            m_doubleBuffers_shaders[i].load(m_frag_source, vera::getDefaultSrc(vera::VERT_BILLBOARD), false);
         }
     }
 
@@ -1154,13 +1234,13 @@ void Sandbox::_updateBuffers() {
         m_pyramid_fbos.clear();
         m_pyramid_subshaders.clear();
         for (int i = 0; i < m_pyramid_total; i++) {
-            glm::vec2 size = glm::vec2(ada::getWindowWidth(), ada::getWindowHeight());
-            bool fixed = getBufferSize(m_frag_source, "u_pyramid" + ada::toString(i), size);
+            glm::vec2 size = glm::vec2(vera::getWindowWidth(), vera::getWindowHeight());
+            bool fixed = getBufferSize(m_frag_source, "u_pyramid" + vera::toString(i), size);
             
-            uniforms.pyramids.push_back( ada::Pyramid() );
+            uniforms.pyramids.push_back( vera::Pyramid() );
             uniforms.pyramids[i].allocate(size.x, size.y);
             uniforms.pyramids[i].fixed = fixed;
-            uniforms.pyramids[i].pass = [this](ada::Fbo *_target, const ada::Fbo *_tex0, const ada::Fbo *_tex1, int _depth) {
+            uniforms.pyramids[i].pass = [this](vera::Fbo *_target, const vera::Fbo *_tex0, const vera::Fbo *_tex1, int _depth) {
                 _target->bind();
                 glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
                 glClear(GL_COLOR_BUFFER_BIT);
@@ -1182,23 +1262,23 @@ void Sandbox::_updateBuffers() {
                 m_billboard_vbo->render( &m_pyramid_shader );
                 _target->unbind();
             };
-            m_pyramid_fbos.push_back( ada::Fbo() );
-            m_pyramid_fbos[i].allocate(size.x, size.y, ada::COLOR_TEXTURE);
+            m_pyramid_fbos.push_back( vera::Fbo() );
+            m_pyramid_fbos[i].allocate(size.x, size.y, vera::COLOR_TEXTURE);
             m_pyramid_fbos[i].fixed = fixed;
-            m_pyramid_subshaders.push_back( ada::Shader() );
+            m_pyramid_subshaders.push_back( vera::Shader() );
         }
     }
     
     if ( checkConvolutionPyramid( getSource(FRAGMENT) ) ) {
         m_pyramid_shader.addDefine("CONVOLUTION_PYRAMID_ALGORITHM");
-        m_pyramid_shader.load(m_frag_source, ada::getDefaultSrc(ada::VERT_BILLBOARD), false);
+        m_pyramid_shader.load(m_frag_source, vera::getDefaultSrc(vera::VERT_BILLBOARD), false);
     }
     else
-        m_pyramid_shader.load(ada::getDefaultSrc(ada::FRAG_POISSON), ada::getDefaultSrc(ada::VERT_BILLBOARD), false);
+        m_pyramid_shader.load(vera::getDefaultSrc(vera::FRAG_POISSON), vera::getDefaultSrc(vera::VERT_BILLBOARD), false);
 
     for (size_t i = 0; i < m_pyramid_subshaders.size(); i++) {
-        m_pyramid_subshaders[i].addDefine("CONVOLUTION_PYRAMID_" + ada::toString(i));
-        m_pyramid_subshaders[i].load(m_frag_source, ada::getDefaultSrc(ada::VERT_BILLBOARD), false);
+        m_pyramid_subshaders[i].addDefine("CONVOLUTION_PYRAMID_" + vera::toString(i));
+        m_pyramid_subshaders[i].load(m_frag_source, vera::getDefaultSrc(vera::VERT_BILLBOARD), false);
     }
 }
 
@@ -1208,7 +1288,7 @@ void Sandbox::_renderBuffers() {
 
     bool reset_viewport = false;
     for (size_t i = 0; i < uniforms.buffers.size(); i++) {
-        TRACK_BEGIN("render:buffer" + ada::toString(i))
+        TRACK_BEGIN("render:buffer" + vera::toString(i))
 
         reset_viewport += uniforms.buffers[i].fixed;
 
@@ -1219,10 +1299,10 @@ void Sandbox::_renderBuffers() {
         // Pass textures for the other buffers
         for (size_t j = 0; j < uniforms.buffers.size(); j++)
             if (i != j)
-                m_buffers_shaders[i].setUniformTexture("u_buffer" + ada::toString(j), &uniforms.buffers[j] );
+                m_buffers_shaders[i].setUniformTexture("u_buffer" + vera::toString(j), &uniforms.buffers[j] );
 
         for (size_t j = 0; j < uniforms.doubleBuffers.size(); j++)
-                m_buffers_shaders[i].setUniformTexture("u_doubleBuffer" + ada::toString(j), uniforms.doubleBuffers[j].src );
+                m_buffers_shaders[i].setUniformTexture("u_doubleBuffer" + vera::toString(j), uniforms.doubleBuffers[j].src );
 
         // Update uniforms and textures
         uniforms.feedTo(m_buffers_shaders[i], true, false);
@@ -1231,11 +1311,11 @@ void Sandbox::_renderBuffers() {
         
         uniforms.buffers[i].unbind();
 
-        TRACK_END("render:buffer" + ada::toString(i))
+        TRACK_END("render:buffer" + vera::toString(i))
     }
 
     for (size_t i = 0; i < uniforms.doubleBuffers.size(); i++) {
-        TRACK_BEGIN("render:doubleBuffer" + ada::toString(i))
+        TRACK_BEGIN("render:doubleBuffer" + vera::toString(i))
 
         reset_viewport += uniforms.doubleBuffers[i].src->fixed;
 
@@ -1245,10 +1325,10 @@ void Sandbox::_renderBuffers() {
 
         // Pass textures for the other buffers
         for (size_t j = 0; j < uniforms.buffers.size(); j++)
-            m_doubleBuffers_shaders[i].setUniformTexture("u_buffer" + ada::toString(j), &uniforms.buffers[j] );
+            m_doubleBuffers_shaders[i].setUniformTexture("u_buffer" + vera::toString(j), &uniforms.buffers[j] );
 
         for (size_t j = 0; j < uniforms.doubleBuffers.size(); j++)
-            m_doubleBuffers_shaders[i].setUniformTexture("u_doubleBuffer" + ada::toString(j), uniforms.doubleBuffers[j].src );
+            m_doubleBuffers_shaders[i].setUniformTexture("u_doubleBuffer" + vera::toString(j), uniforms.doubleBuffers[j].src );
 
         // Update uniforms and textures
         uniforms.feedTo(m_doubleBuffers_shaders[i], true, false);
@@ -1258,14 +1338,14 @@ void Sandbox::_renderBuffers() {
         uniforms.doubleBuffers[i].dst->unbind();
         uniforms.doubleBuffers[i].swap();
 
-        TRACK_END("render:doubleBuffer" + ada::toString(i))
+        TRACK_END("render:doubleBuffer" + vera::toString(i))
     }
 
     // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_DST_ALPHA);
     // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     for (size_t i = 0; i < m_pyramid_subshaders.size(); i++) {
-        TRACK_BEGIN("render:convolution_pyramid" + ada::toString(i))
+        TRACK_BEGIN("render:convolution_pyramid" + vera::toString(i))
 
         reset_viewport += m_pyramid_fbos[i].fixed;
 
@@ -1286,16 +1366,16 @@ void Sandbox::_renderBuffers() {
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         uniforms.pyramids[i].process(&m_pyramid_fbos[i]);
 
-        TRACK_END("render:convolution_pyramid" + ada::toString(i))
+        TRACK_END("render:convolution_pyramid" + vera::toString(i))
     }
 
     #if defined(__EMSCRIPTEN__)
-    if (ada::getWebGLVersionNumber() == 1)
+    if (vera::getWebGLVersionNumber() == 1)
         reset_viewport = true;
     #endif
 
     if (reset_viewport)
-        glViewport(0.0f, 0.0f, ada::getWindowWidth(), ada::getWindowHeight());
+        glViewport(0.0f, 0.0f, vera::getWindowWidth(), vera::getWindowHeight());
     
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -1307,7 +1387,7 @@ void Sandbox::render() {
     // UPDATE STREAMING TEXTURES
     // -----------------------------------------------
     if (m_initialized)
-        uniforms.updateStreams(m_frame);
+        uniforms.update();
 
     // RENDER SHADOW MAP
     // -----------------------------------------------
@@ -1325,10 +1405,10 @@ void Sandbox::render() {
     // ----------------------------------------------- < main scene start
     if (screenshotFile != "" || isRecording() )
         if (!m_record_fbo.isAllocated())
-            m_record_fbo.allocate(ada::getWindowWidth(), ada::getWindowHeight(), ada::COLOR_TEXTURE_DEPTH_BUFFER);
+            m_record_fbo.allocate(vera::getWindowWidth(), vera::getWindowHeight(), vera::COLOR_TEXTURE_DEPTH_BUFFER);
 
     if (m_postprocessing || m_plot == PLOT_LUMA || m_plot == PLOT_RGB || m_plot == PLOT_RED || m_plot == PLOT_GREEN || m_plot == PLOT_BLUE ) {
-        _updateSceneBuffer(ada::getWindowWidth(), ada::getWindowHeight());
+        _updateSceneBuffer(vera::getWindowWidth(), vera::getWindowHeight());
         m_scene_fbo.bind();
     }
     else if (screenshotFile != "" || isRecording() )
@@ -1345,7 +1425,7 @@ void Sandbox::render() {
         m_canvas_shader.use();
 
         if (quilt >= 0) {
-            ada::renderQuilt([&](const ada::QuiltProperties& quilt, glm::vec4& viewport, int &viewIndex) {
+            vera::renderQuilt([&](const vera::QuiltProperties& quilt, glm::vec4& viewport, int &viewIndex) {
 
                 // set up the camera rotation and position for current view
                 uniforms.getActiveCamera()->setVirtualOffset(5.0, viewIndex, quilt.totalViews);
@@ -1376,7 +1456,7 @@ void Sandbox::render() {
     else {
         TRACK_BEGIN("render:scene")
         if (quilt >= 0) {
-            ada::renderQuilt([&](const ada::QuiltProperties& quilt, glm::vec4& viewport, int &viewIndex){
+            vera::renderQuilt([&](const vera::QuiltProperties& quilt, glm::vec4& viewport, int &viewIndex){
 
                 // set up the camera rotation and position for current view
                 uniforms.getActiveCamera()->setVirtualOffset(m_scene.getArea(), viewIndex, quilt.totalViews);
@@ -1428,7 +1508,7 @@ void Sandbox::render() {
             m_record_fbo.bind();
 
         if (!m_billboard_shader.isLoaded())
-            m_billboard_shader.load(ada::getDefaultSrc(ada::FRAG_DYNAMIC_BILLBOARD), ada::getDefaultSrc(ada::VERT_DYNAMIC_BILLBOARD), false);
+            m_billboard_shader.load(vera::getDefaultSrc(vera::FRAG_DYNAMIC_BILLBOARD), vera::getDefaultSrc(vera::VERT_DYNAMIC_BILLBOARD), false);
 
         m_billboard_shader.use();
         m_billboard_shader.setUniform("u_depth", 0.0f);
@@ -1443,7 +1523,7 @@ void Sandbox::render() {
         m_record_fbo.unbind();
 
         if (!m_billboard_shader.isLoaded())
-            m_billboard_shader.load(ada::getDefaultSrc(ada::FRAG_DYNAMIC_BILLBOARD), ada::getDefaultSrc(ada::VERT_DYNAMIC_BILLBOARD), false);
+            m_billboard_shader.load(vera::getDefaultSrc(vera::FRAG_DYNAMIC_BILLBOARD), vera::getDefaultSrc(vera::VERT_DYNAMIC_BILLBOARD), false);
 
         m_billboard_shader.use();
         m_billboard_shader.setUniform("u_depth", 0.0f);
@@ -1470,32 +1550,32 @@ void Sandbox::renderUI() {
         if (nTotal > 0) {
             glDisable(GL_DEPTH_TEST);
             // TRACK_BEGIN("textures")
-            float w = (float)(ada::getWindowWidth());
-            float h = (float)(ada::getWindowHeight());
+            float w = (float)(vera::getWindowWidth());
+            float h = (float)(vera::getWindowHeight());
             float scale = fmin(1.0f / (float)(nTotal), 0.25) * 0.5;
             float xStep = w * scale;
             float yStep = h * scale;
             float xOffset = xStep;
             float yOffset = h - yStep;
 
-            ada::textAngle(-HALF_PI);
-            ada::textAlign(ada::ALIGN_TOP);
-            ada::textAlign(ada::ALIGN_LEFT);
-            ada::textSize(yStep * 0.2f);
+            vera::textAngle(-HALF_PI);
+            vera::textAlign(vera::ALIGN_TOP);
+            vera::textAlign(vera::ALIGN_LEFT);
+            vera::textSize(yStep * 0.2f);
 
             if (!m_billboard_shader.isLoaded()) 
-                m_billboard_shader.load(ada::getDefaultSrc(ada::FRAG_DYNAMIC_BILLBOARD), ada::getDefaultSrc(ada::VERT_DYNAMIC_BILLBOARD), false);
+                m_billboard_shader.load(vera::getDefaultSrc(vera::FRAG_DYNAMIC_BILLBOARD), vera::getDefaultSrc(vera::VERT_DYNAMIC_BILLBOARD), false);
 
             m_billboard_shader.use();
 
-            for (std::map<std::string, ada::Texture*>::iterator it = uniforms.textures.begin(); it != uniforms.textures.end(); it++) {
+            for (std::map<std::string, vera::Texture*>::iterator it = uniforms.textures.begin(); it != uniforms.textures.end(); it++) {
                 m_billboard_shader.setUniform("u_scale", xStep, yStep);
                 m_billboard_shader.setUniform("u_translate", xOffset, yOffset);
-                m_billboard_shader.setUniform("u_modelViewProjectionMatrix", ada::getOrthoMatrix());
+                m_billboard_shader.setUniform("u_modelViewProjectionMatrix", vera::getOrthoMatrix());
                 m_billboard_shader.setUniformTexture("u_tex0", it->second, 0);
                 m_billboard_shader.setUniform("u_depth", 0.0f);
 
-                ada::TextureStreamsMap::const_iterator slit = uniforms.streams.find(it->first);
+                vera::TextureStreamsMap::const_iterator slit = uniforms.streams.find(it->first);
                 if ( slit != uniforms.streams.end() ) {
                         m_billboard_shader.setUniform("u_tex0CurrentFrame", slit->second->getCurrentFrame() );
                         m_billboard_shader.setUniform("u_tex0TotalFrames", slit->second->getTotalFrames() );
@@ -1507,7 +1587,7 @@ void Sandbox::renderUI() {
 
                 m_billboard_vbo->render(&m_billboard_shader);
 
-                ada::text(it->first, xOffset + xStep, ada::getWindowHeight() - yOffset + yStep);
+                vera::text(it->first, xOffset + xStep, vera::getWindowHeight() - yOffset + yStep);
 
                 yOffset -= yStep * 2.0;
             }
@@ -1532,21 +1612,21 @@ void Sandbox::renderUI() {
         nTotal += (geom_index != -1);
 
         if (nTotal > 0) {
-            float w = (float)(ada::getWindowWidth());
-            float h = (float)(ada::getWindowHeight());
+            float w = (float)(vera::getWindowWidth());
+            float h = (float)(vera::getWindowHeight());
             float scale = fmin(1.0f / (float)(nTotal), 0.25) * 0.5;
             float xStep = w * scale;
             float yStep = h * scale;
             float xOffset = w - xStep;
             float yOffset = h - yStep;
 
-            ada::textAngle(-HALF_PI);
-            ada::textSize(yStep * 0.2f);
-            ada::textAlign(ada::ALIGN_BOTTOM);
-            ada::textAlign(ada::ALIGN_LEFT);
+            vera::textAngle(-HALF_PI);
+            vera::textSize(yStep * 0.2f);
+            vera::textAlign(vera::ALIGN_BOTTOM);
+            vera::textAlign(vera::ALIGN_LEFT);
 
             if (!m_billboard_shader.isLoaded())
-                m_billboard_shader.load(ada::getDefaultSrc(ada::FRAG_DYNAMIC_BILLBOARD), ada::getDefaultSrc(ada::VERT_DYNAMIC_BILLBOARD), false);
+                m_billboard_shader.load(vera::getDefaultSrc(vera::FRAG_DYNAMIC_BILLBOARD), vera::getDefaultSrc(vera::VERT_DYNAMIC_BILLBOARD), false);
 
             m_billboard_shader.use();
 
@@ -1558,13 +1638,13 @@ void Sandbox::renderUI() {
                 m_billboard_shader.setUniform("u_depth", 0.0f);
                 m_billboard_shader.setUniform("u_scale", scale);
                 m_billboard_shader.setUniform("u_translate", offset);
-                m_billboard_shader.setUniform("u_modelViewProjectionMatrix", ada::getOrthoMatrix());
+                m_billboard_shader.setUniform("u_modelViewProjectionMatrix", vera::getOrthoMatrix());
                 m_billboard_shader.setUniformTexture("u_tex0", &uniforms.buffers[i]);
                 m_billboard_shader.setUniform("u_tex0CurrentFrame", 0.0f );
                 m_billboard_shader.setUniform("u_tex0TotalFrames", 0.0f );
                 m_billboard_vbo->render(&m_billboard_shader);
 
-                ada::text("u_buffer" + ada::toString(i), xOffset - scale.x, ada::getWindowHeight() - yOffset + yStep);
+                vera::text("u_buffer" + vera::toString(i), xOffset - scale.x, vera::getWindowHeight() - yOffset + yStep);
 
                 yOffset -= yStep * 2.0;
             }
@@ -1577,13 +1657,13 @@ void Sandbox::renderUI() {
                 m_billboard_shader.setUniform("u_depth", 0.0f);
                 m_billboard_shader.setUniform("u_scale", xStep, yStep);
                 m_billboard_shader.setUniform("u_translate", offset);
-                m_billboard_shader.setUniform("u_modelViewProjectionMatrix", ada::getOrthoMatrix());
+                m_billboard_shader.setUniform("u_modelViewProjectionMatrix", vera::getOrthoMatrix());
                 m_billboard_shader.setUniformTexture("u_tex0", uniforms.doubleBuffers[i].src);
                 m_billboard_shader.setUniform("u_tex0CurrentFrame", 0.0f );
                 m_billboard_shader.setUniform("u_tex0TotalFrames", 0.0f );
                 m_billboard_vbo->render(&m_billboard_shader);
 
-                ada::text("u_doubleBuffer" + ada::toString(i), xOffset - scale.x, ada::getWindowHeight() - yOffset + yStep);
+                vera::text("u_doubleBuffer" + vera::toString(i), xOffset - scale.x, vera::getWindowHeight() - yOffset + yStep);
                 yOffset -= yStep * 2.0;
             }
 
@@ -1600,7 +1680,7 @@ void Sandbox::renderUI() {
                         m_billboard_shader.setUniform("u_translate", offset);
                     else 
                         m_billboard_shader.setUniform("u_translate", offset.x + w * 2., offset.y);
-                    m_billboard_shader.setUniform("u_modelViewProjectionMatrix", ada::getOrthoMatrix());
+                    m_billboard_shader.setUniform("u_modelViewProjectionMatrix", vera::getOrthoMatrix());
                     m_billboard_shader.setUniformTexture("u_tex0", uniforms.pyramids[i].getResult(j), 0);
                     m_billboard_shader.setUniform("u_tex0CurrentFrame", 0.0f );
                     m_billboard_shader.setUniform("u_tex0TotalFrames", 0.0f );
@@ -1619,7 +1699,7 @@ void Sandbox::renderUI() {
 
                 }
 
-                // ada::text("u_pyramid0" + ada::toString(i), xOffset - scale.x * 2.0, ada::getWindowHeight() - yOffset + yStep);
+                // vera::text("u_pyramid0" + vera::toString(i), xOffset - scale.x * 2.0, vera::getWindowHeight() - yOffset + yStep);
                 yOffset -= yStep * 2.0;
 
             }
@@ -1629,13 +1709,13 @@ void Sandbox::renderUI() {
                     m_billboard_shader.setUniform("u_depth", 0.0f);
                     m_billboard_shader.setUniform("u_scale", xStep, yStep);
                     m_billboard_shader.setUniform("u_translate", xOffset, yOffset);
-                    m_billboard_shader.setUniform("u_modelViewProjectionMatrix", ada::getOrthoMatrix());
+                    m_billboard_shader.setUniform("u_modelViewProjectionMatrix", vera::getOrthoMatrix());
                     m_billboard_shader.setUniformTexture("u_tex0", &m_scene_fbo, 0);
                     m_billboard_shader.setUniform("u_tex0CurrentFrame", 0.0f );
                     m_billboard_shader.setUniform("u_tex0TotalFrames", 0.0f );
                     m_billboard_vbo->render(&m_billboard_shader);
 
-                    ada::text("u_scene", xOffset - xStep, ada::getWindowHeight() - yOffset + yStep);
+                    vera::text("u_scene", xOffset - xStep, vera::getWindowHeight() - yOffset + yStep);
                     yOffset -= yStep * 2.0;
                 }
 
@@ -1646,19 +1726,19 @@ void Sandbox::renderUI() {
                     uniforms.functions["u_cameraNearClip"].assign(m_billboard_shader);
                     uniforms.functions["u_cameraFarClip"].assign(m_billboard_shader);
                     uniforms.functions["u_cameraDistance"].assign(m_billboard_shader);
-                    m_billboard_shader.setUniform("u_modelViewProjectionMatrix", ada::getOrthoMatrix());
+                    m_billboard_shader.setUniform("u_modelViewProjectionMatrix", vera::getOrthoMatrix());
                     m_billboard_shader.setUniformDepthTexture("u_tex0", &m_scene_fbo);
                     m_billboard_shader.setUniform("u_tex0CurrentFrame", 0.0f );
                     m_billboard_shader.setUniform("u_tex0TotalFrames", 0.0f );
                     m_billboard_vbo->render(&m_billboard_shader);
 
-                    ada::text("u_sceneDepth", xOffset - xStep, ada::getWindowHeight() - yOffset + yStep);
+                    vera::text("u_sceneDepth", xOffset - xStep, vera::getWindowHeight() - yOffset + yStep);
                     yOffset -= yStep * 2.0;
                 }
             }
 
             if (geom_index != -1) {
-                for (ada::LightsMap::iterator it = uniforms.lights.begin(); it != uniforms.lights.end(); ++it ) {
+                for (vera::LightsMap::iterator it = uniforms.lights.begin(); it != uniforms.lights.end(); ++it ) {
                     if ( it->second->getShadowMap()->getDepthTextureId() ) {
                         m_billboard_shader.setUniform("u_scale", xStep, yStep);
                         m_billboard_shader.setUniform("u_translate", xOffset, yOffset);
@@ -1669,13 +1749,13 @@ void Sandbox::renderUI() {
                         m_billboard_shader.setUniform("u_cameraNearClip", 0.001f );
                         m_billboard_shader.setUniform("u_cameraFarClip", 100.0f);
                         m_billboard_shader.setUniform("u_cameraDistance", 0.0f );
-                        m_billboard_shader.setUniform("u_modelViewProjectionMatrix", ada::getOrthoMatrix());
+                        m_billboard_shader.setUniform("u_modelViewProjectionMatrix", vera::getOrthoMatrix());
                         m_billboard_shader.setUniformDepthTexture("u_tex0", it->second->getShadowMap());
                         m_billboard_shader.setUniform("u_tex0CurrentFrame", 0.0f );
                         m_billboard_shader.setUniform("u_tex0TotalFrames", 0.0f );
                         m_billboard_vbo->render(&m_billboard_shader);
 
-                        ada::text("u_lightShadowMap", xOffset - xStep, ada::getWindowHeight() - yOffset + yStep);
+                        vera::text("u_lightShadowMap", xOffset - xStep, vera::getWindowHeight() - yOffset + yStep);
                         yOffset -= yStep * 2.0;
                     }
                 }
@@ -1689,37 +1769,37 @@ void Sandbox::renderUI() {
         glDisable(GL_DEPTH_TEST);
         //TRACK_BEGIN("plot_data")
 
-        float p = ada::getPixelDensity();
+        float p = vera::getPixelDensity();
         float w = 100 * p;
         float h = 30 * p;
-        float x = (float)(ada::getWindowWidth()) * 0.5;
+        float x = (float)(vera::getWindowWidth()) * 0.5;
         float y = h + 10;
 
         if (!m_plot_shader.isLoaded())
-            m_plot_shader.load(ada::getDefaultSrc(ada::FRAG_PLOT), ada::getDefaultSrc(ada::VERT_DYNAMIC_BILLBOARD), false);
+            m_plot_shader.load(vera::getDefaultSrc(vera::FRAG_PLOT), vera::getDefaultSrc(vera::VERT_DYNAMIC_BILLBOARD), false);
 
         m_plot_shader.use();
         m_plot_shader.setUniform("u_scale", w, h);
         m_plot_shader.setUniform("u_translate", x, y);
-        m_plot_shader.setUniform("u_resolution", (float)ada::getWindowWidth(), (float)ada::getWindowHeight());
+        m_plot_shader.setUniform("u_resolution", (float)vera::getWindowWidth(), (float)vera::getWindowHeight());
         m_plot_shader.setUniform("u_viewport", w, h);
-        m_plot_shader.setUniform("u_modelViewProjectionMatrix", ada::getOrthoMatrix());
+        m_plot_shader.setUniform("u_modelViewProjectionMatrix", vera::getOrthoMatrix());
         m_plot_shader.setUniformTexture("u_plotData", m_plot_texture, 0);
         m_billboard_vbo->render(&m_plot_shader);
 
         // TRACK_END("plot_data")
     }
 
-    if (cursor && ada::getMouseEntered()) {
+    if (cursor && vera::getMouseEntered()) {
 
         // TRACK_BEGIN("cursor")
 
         if (m_cross_vbo == nullptr) 
-            m_cross_vbo = new ada::Vbo( ada::crossMesh( glm::vec3(0.0f, 0.0f, 0.0f), 10.0f) );
+            m_cross_vbo = new vera::Vbo( vera::crossMesh( glm::vec3(0.0f, 0.0f, 0.0f), 10.0f) );
 
-        ada::Shader* fill = ada::getFillShader();
+        vera::Shader* fill = vera::getFillShader();
         fill->use();
-        fill->setUniform("u_modelViewProjectionMatrix", glm::translate(ada::getOrthoMatrix(), glm::vec3(ada::getMouseX(), ada::getMouseY(), 0.0f) ) );
+        fill->setUniform("u_modelViewProjectionMatrix", glm::translate(vera::getOrthoMatrix(), glm::vec3(vera::getMouseX(), vera::getMouseY(), 0.0f) ) );
         fill->setUniform("u_color", glm::vec4(1.0f));
         m_cross_vbo->render(fill);
 
@@ -1734,7 +1814,7 @@ void Sandbox::renderDone() {
 
     // RECORD
     if (isRecording()) {
-        onScreenshot( ada::toString( getRecordingCount() , 0, 5, '0') + ".png");
+        onScreenshot( vera::toString( getRecordingCount() , 0, 5, '0') + ".png");
         recordingFrameAdded();
     }
     // SCREENSHOT 
@@ -1750,7 +1830,7 @@ void Sandbox::renderDone() {
 
     if (!m_initialized) {
         m_initialized = true;
-        ada::updateViewport();
+        vera::updateViewport();
         flagChange();
     }
     else {
@@ -1811,20 +1891,20 @@ void Sandbox::onFileChange(WatchFileList &_files, int index) {
     if (type == FRAG_SHADER) {
         m_frag_source = "";
         m_frag_dependencies.clear();
-        if ( ada::loadGlslFrom(filename, &m_frag_source, include_folders, &m_frag_dependencies) )
+        if ( vera::loadGlslFrom(filename, &m_frag_source, include_folders, &m_frag_dependencies) )
             reloadShaders(_files);
     }
     else if (type == VERT_SHADER) {
         m_vert_source = "";
         m_vert_dependencies.clear();
-        if ( ada::loadGlslFrom(filename, &m_vert_source, include_folders, &m_vert_dependencies) )
+        if ( vera::loadGlslFrom(filename, &m_vert_source, include_folders, &m_vert_dependencies) )
             reloadShaders(_files);
     }
     else if (type == GEOMETRY) {
         // TODO
     }
     else if (type == IMAGE) {
-        for (ada::TexturesMap::iterator it = uniforms.textures.begin(); it!=uniforms.textures.end(); it++) {
+        for (vera::TexturesMap::iterator it = uniforms.textures.begin(); it!=uniforms.textures.end(); it++) {
             if (filename == it->second->getFilePath()) {
                 std::cout << "Reloading" << filename << std::endl;
                 it->second->load(filename, _files[index].vFlip);
@@ -1833,7 +1913,7 @@ void Sandbox::onFileChange(WatchFileList &_files, int index) {
         }
     }
     else if (type == CUBEMAP) {
-        for (ada::TextureCubesMap::iterator it = uniforms.cubemaps.begin(); it!=uniforms.cubemaps.end(); it++) {
+        for (vera::TextureCubesMap::iterator it = uniforms.cubemaps.begin(); it!=uniforms.cubemaps.end(); it++) {
             if (filename == it->second->getFilePath()) {
                 std::cout << "Reloading" << filename << std::endl;
                 it->second->load(filename, _files[index].vFlip);
@@ -1854,7 +1934,7 @@ void Sandbox::onScroll(float _yoffset) {
 
         // zoom view2d
         glm::vec2 zoom = glm::vec2(z,z);
-        glm::vec2 origin = {ada::getWindowWidth()/2, ada::getWindowHeight()/2};
+        glm::vec2 origin = {vera::getWindowWidth()/2, vera::getWindowHeight()/2};
         m_view2d = glm::translate(m_view2d, origin);
         m_view2d = glm::scale(m_view2d, zoom);
         m_view2d = glm::translate(m_view2d, -origin);
@@ -1871,26 +1951,26 @@ void Sandbox::onMouseDrag(float _x, float _y, int _button) {
         //
         float x = _x;
         float y = _y;
-        float pd = ada::getPixelDensity();
+        float pd = vera::getPixelDensity();
 
-        if (x <= 0) x = ada::getWindowWidth() - 2;
-        else if (x >= ada::getWindowWidth()) x = 2; 
+        if (x <= 0) x = vera::getWindowWidth() - 2;
+        else if (x >= vera::getWindowWidth()) x = 2; 
 
-        if (y <= 0) y = ada::getWindowHeight() - 2;
-        else if (y >= ada::getWindowHeight()) y = 2;
+        if (y <= 0) y = vera::getWindowHeight() - 2;
+        else if (y >= vera::getWindowHeight()) y = 2;
 
-        if (x != _x || y != _y) ada::setMousePosition(x, y);
+        if (x != _x || y != _y) vera::setMousePosition(x, y);
     }
 
     if (_button == 1) {
         // Left-button drag is used to pan u_view2d.
-        m_view2d = glm::translate(m_view2d, glm::vec2(-ada::getMouseVelX(),-ada::getMouseVelY()) );
+        m_view2d = glm::translate(m_view2d, glm::vec2(-vera::getMouseVelX(),-vera::getMouseVelY()) );
 
         // Left-button drag is used to rotate geometry.
         float dist = uniforms.getActiveCamera()->getDistance();
 
-        float vel_x = ada::getMouseVelX();
-        float vel_y = ada::getMouseVelY();
+        float vel_x = vera::getMouseVelX();
+        float vel_y = vera::getMouseVelY();
 
         if (fabs(vel_x) < 50.0 && fabs(vel_y) < 50.0) {
             m_camera_azimuth -= vel_x;
@@ -1902,7 +1982,7 @@ void Sandbox::onMouseDrag(float _x, float _y, int _button) {
     else {
         // Right-button drag is used to zoom geometry.
         float dist = uniforms.getActiveCamera()->getDistance();
-        dist += (-.008f * ada::getMouseVelY());
+        dist += (-.008f * vera::getMouseVelY());
         if (dist > 0.0f) {
             uniforms.getActiveCamera()->orbit(m_camera_azimuth, m_camera_elevation, dist);
             uniforms.getActiveCamera()->lookAt(glm::vec3(0.0));
@@ -1915,19 +1995,19 @@ void Sandbox::onViewportResize(int _newWidth, int _newHeight) {
     
     for (size_t i = 0; i < uniforms.buffers.size(); i++) 
         if (!uniforms.buffers[i].fixed)
-            uniforms.buffers[i].allocate(_newWidth, _newHeight, ada::COLOR_TEXTURE);
+            uniforms.buffers[i].allocate(_newWidth, _newHeight, vera::COLOR_TEXTURE);
 
     for (size_t i = 0; i < uniforms.doubleBuffers.size(); i++) {
         if (!uniforms.doubleBuffers[i][0].fixed)
-            uniforms.doubleBuffers[i][0].allocate(_newWidth, _newHeight, ada::COLOR_TEXTURE);
+            uniforms.doubleBuffers[i][0].allocate(_newWidth, _newHeight, vera::COLOR_TEXTURE);
         if (!uniforms.doubleBuffers[i][1].fixed)
-            uniforms.doubleBuffers[i][1].allocate(_newWidth, _newHeight, ada::COLOR_TEXTURE);
+            uniforms.doubleBuffers[i][1].allocate(_newWidth, _newHeight, vera::COLOR_TEXTURE);
     }
 
     for (size_t i = 0; i < uniforms.pyramids.size(); i++) {
         if (!m_pyramid_fbos[i].fixed) {
-            m_pyramid_fbos[i].allocate(_newWidth, _newHeight, ada::COLOR_TEXTURE);
-            uniforms.pyramids[i].allocate(ada::getWindowWidth(), ada::getWindowHeight());
+            m_pyramid_fbos[i].allocate(_newWidth, _newHeight, vera::COLOR_TEXTURE);
+            uniforms.pyramids[i].allocate(vera::getWindowWidth(), vera::getWindowHeight());
         }
     }
 
@@ -1935,35 +2015,35 @@ void Sandbox::onViewportResize(int _newWidth, int _newHeight) {
         _updateSceneBuffer(_newWidth, _newHeight);
 
     if (screenshotFile != "" || isRecording())
-        m_record_fbo.allocate(_newWidth, _newHeight, ada::COLOR_TEXTURE_DEPTH_BUFFER);
+        m_record_fbo.allocate(_newWidth, _newHeight, vera::COLOR_TEXTURE_DEPTH_BUFFER);
 
     flagChange();
 }
 
 void Sandbox::onScreenshot(std::string _file) {
 
-    if (_file != "" && ada::isGL()) {
+    if (_file != "" && vera::isGL()) {
         // TRACK_BEGIN("screenshot")
 
         glBindFramebuffer(GL_FRAMEBUFFER, m_record_fbo.getId());
 
-        if (ada::getExt(_file) == "hdr") {
-            float* pixels = new float[ada::getWindowWidth() * ada::getWindowHeight()*4];
-            glReadPixels(0, 0, ada::getWindowWidth(), ada::getWindowHeight(), GL_RGBA, GL_FLOAT, pixels);
-            ada::savePixelsHDR(_file, pixels, ada::getWindowWidth(), ada::getWindowHeight());
+        if (vera::getExt(_file) == "hdr") {
+            float* pixels = new float[vera::getWindowWidth() * vera::getWindowHeight()*4];
+            glReadPixels(0, 0, vera::getWindowWidth(), vera::getWindowHeight(), GL_RGBA, GL_FLOAT, pixels);
+            vera::savePixelsHDR(_file, pixels, vera::getWindowWidth(), vera::getWindowHeight());
         }
         #if defined(SUPPORT_LIBAV) && !defined(PLATFORM_RPI)
         else if (recordingPipe()) {
-            int width = ada::getWindowWidth();
-            int height = ada::getWindowHeight();
+            int width = vera::getWindowWidth();
+            int height = vera::getWindowHeight();
             auto pixels = std::unique_ptr<unsigned char[]>(new unsigned char [width * height * 3]);
             glReadPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, pixels.get());
             recordingPipeFrame( std::move(pixels) );
         }
         #endif
         else {
-            int width = ada::getWindowWidth();
-            int height = ada::getWindowHeight();
+            int width = vera::getWindowWidth();
+            int height = vera::getWindowHeight();
             auto pixels = std::unique_ptr<unsigned char[]>(new unsigned char [width * height * 4]);
             glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixels.get());
 
@@ -1988,7 +2068,7 @@ void Sandbox::onScreenshot(std::string _file) {
             }
             #else
 
-            ada::savePixels(_file, pixels.get(), width, height);
+            vera::savePixels(_file, pixels.get(), width, height);
 
             #endif
         }
@@ -2003,7 +2083,7 @@ void Sandbox::onScreenshot(std::string _file) {
 }
 
 void Sandbox::onPlot() {
-    if ( !ada::isGL() )
+    if ( !vera::isGL() )
         return;
 
     if ( (m_plot == PLOT_LUMA || m_plot == PLOT_RGB || m_plot == PLOT_RED || m_plot == PLOT_GREEN || m_plot == PLOT_BLUE ) && haveChange() ) {
@@ -2012,8 +2092,8 @@ void Sandbox::onPlot() {
 
         // Extract pixels
         glBindFramebuffer(GL_FRAMEBUFFER, m_scene_fbo.getId());
-        int w = ada::getWindowWidth();
-        int h = ada::getWindowHeight();
+        int w = vera::getWindowWidth();
+        int h = vera::getWindowHeight();
         int c = 3;
         int total = w * h * c;
         unsigned char* pixels = new unsigned char[total];
@@ -2049,8 +2129,8 @@ void Sandbox::onPlot() {
             m_plot_values[i] = m_plot_values[i] / glm::vec4(max_rgb_freq, max_rgb_freq, max_rgb_freq, max_luma_freq);
 
         if (m_plot_texture == nullptr)
-            m_plot_texture = new ada::Texture();
-        m_plot_texture->load(256, 1, 4, 32, &m_plot_values[0], ada::NEAREST, ada::CLAMP);
+            m_plot_texture = new vera::Texture();
+        m_plot_texture->load(256, 1, 4, 32, &m_plot_values[0], vera::NEAREST, vera::CLAMP);
 
         uniforms.textures["u_histogram"] = m_plot_texture;
         uniforms.flagChange();
@@ -2061,14 +2141,14 @@ void Sandbox::onPlot() {
         // Push back values one position
         for (int i = 0; i < 255; i ++)
             m_plot_values[i] = m_plot_values[i+1];
-        m_plot_values[255] = glm::vec4( ada::getFps()/60.0f, 0.0f, 0.0f, 1.0f);
+        m_plot_values[255] = glm::vec4( vera::getFps()/60.0f, 0.0f, 0.0f, 1.0f);
 
         // TRACK_BEGIN("plot::fps")
 
         if (m_plot_texture == nullptr)
-            m_plot_texture = new ada::Texture();
+            m_plot_texture = new vera::Texture();
 
-        m_plot_texture->load(256, 1, 4, 32, &m_plot_values[0], ada::NEAREST, ada::CLAMP);
+        m_plot_texture->load(256, 1, 4, 32, &m_plot_values[0], vera::NEAREST, vera::CLAMP);
         // uniforms.textures["u_sceneFps"] = m_plot_texture;
 
         // TRACK_END("plot::fps")
@@ -2078,14 +2158,14 @@ void Sandbox::onPlot() {
         // Push back values one position
         for (int i = 0; i < 255; i ++)
             m_plot_values[i] = m_plot_values[i+1];
-        m_plot_values[255] = glm::vec4( ada::getDelta(), 0.0f, 0.0f, 1.0f);
+        m_plot_values[255] = glm::vec4( vera::getDelta(), 0.0f, 0.0f, 1.0f);
 
         // TRACK_BEGIN("plot::ms")
 
         if (m_plot_texture == nullptr)
-            m_plot_texture = new ada::Texture();
+            m_plot_texture = new vera::Texture();
 
-        m_plot_texture->load(256, 1, 4, 32, &m_plot_values[0], ada::NEAREST, ada::CLAMP);
+        m_plot_texture->load(256, 1, 4, 32, &m_plot_values[0], vera::NEAREST, vera::CLAMP);
 
         // uniforms.textures["u_sceneMs"] = m_plot_texture;
 

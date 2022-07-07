@@ -9,11 +9,11 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "tools/text.h"
-#include "ada/string.h"
+#include "vera/string.h"
 
 std::string UniformData::getType() {
     if (size == 1) return (bInt ? "int" : "float");
-    else return (bInt ? "ivec" : "vec") + ada::toString(size); 
+    else return (bInt ? "ivec" : "vec") + vera::toString(size); 
 }
 
 void UniformData::set(const UniformValue &_value, size_t _size, bool _int ) {
@@ -31,7 +31,7 @@ void UniformData::set(const UniformValue &_value, size_t _size, bool _int ) {
 void UniformData::parse(const std::vector<std::string>& _command, size_t _start) {;
     UniformValue candidate;
     for (size_t i = _start; i < _command.size() && i < 5; i++)
-        candidate[i-_start] = ada::toFloat(_command[i]);
+        candidate[i-_start] = vera::toFloat(_command[i]);
 
     set(candidate, _command.size() - _start, true);
 }
@@ -55,12 +55,12 @@ UniformFunction::UniformFunction(const std::string &_type) {
     type = _type;
 }
 
-UniformFunction::UniformFunction(const std::string &_type, std::function<void(ada::Shader&)> _assign) {
+UniformFunction::UniformFunction(const std::string &_type, std::function<void(vera::Shader&)> _assign) {
     type = _type;
     assign = _assign;
 }
 
-UniformFunction::UniformFunction(const std::string &_type, std::function<void(ada::Shader&)> _assign, std::function<std::string()> _print) {
+UniformFunction::UniformFunction(const std::string &_type, std::function<void(vera::Shader&)> _assign, std::function<std::string()> _print) {
     type = _type;
     assign = _assign;
     print = _print;
@@ -70,130 +70,130 @@ UniformFunction::UniformFunction(const std::string &_type, std::function<void(ad
 Uniforms::Uniforms() {
     // IBL
     //
-    functions["u_iblLuminance"] = UniformFunction("float", [this](ada::Shader& _shader) {
+    functions["u_iblLuminance"] = UniformFunction("float", [this](vera::Shader& _shader) {
         if (m_activeCamera)
             _shader.setUniform("u_iblLuminance", 30000.0f * m_activeCamera->getExposure());
     },
     [this]() { 
         if (m_activeCamera)
-            return ada::toString(30000.0f * m_activeCamera->getExposure());
+            return vera::toString(30000.0f * m_activeCamera->getExposure());
         return std::string("");
     });
     
     // CAMERA UNIFORMS
     //
-    functions["u_camera"] = UniformFunction("vec3", [this](ada::Shader& _shader) {
+    functions["u_camera"] = UniformFunction("vec3", [this](vera::Shader& _shader) {
         if (m_activeCamera)
             _shader.setUniform("u_camera", - (m_activeCamera->getPosition()) );
     },
     [this]() {
         if (m_activeCamera)
-            return ada::toString(-m_activeCamera->getPosition(), ',');
+            return vera::toString(-m_activeCamera->getPosition(), ',');
         return std::string("");
     });
 
-    functions["u_cameraDistance"] = UniformFunction("float", [this](ada::Shader& _shader) {
+    functions["u_cameraDistance"] = UniformFunction("float", [this](vera::Shader& _shader) {
         if (m_activeCamera)
             _shader.setUniform("u_cameraDistance", m_activeCamera->getDistance());
     },
     [this]() { 
         if (m_activeCamera)
-            return ada::toString(m_activeCamera->getDistance());
+            return vera::toString(m_activeCamera->getDistance());
         return std::string("");
     });
 
-    functions["u_cameraNearClip"] = UniformFunction("float", [this](ada::Shader& _shader) {
+    functions["u_cameraNearClip"] = UniformFunction("float", [this](vera::Shader& _shader) {
         if (m_activeCamera)
             _shader.setUniform("u_cameraNearClip", m_activeCamera->getNearClip());
     },
     [this]() { 
         if (m_activeCamera)
-            return ada::toString(m_activeCamera->getNearClip());
+            return vera::toString(m_activeCamera->getNearClip());
         return std::string("");
     });
 
-    functions["u_cameraFarClip"] = UniformFunction("float", [this](ada::Shader& _shader) {
+    functions["u_cameraFarClip"] = UniformFunction("float", [this](vera::Shader& _shader) {
         if (m_activeCamera)
             _shader.setUniform("u_cameraFarClip", m_activeCamera->getFarClip());
     },
     [this]() { 
         if (m_activeCamera)
-            return ada::toString(m_activeCamera->getFarClip()); 
+            return vera::toString(m_activeCamera->getFarClip()); 
         return std::string("");
     });
 
-    functions["u_cameraEv100"] = UniformFunction("float", [this](ada::Shader& _shader) {
+    functions["u_cameraEv100"] = UniformFunction("float", [this](vera::Shader& _shader) {
         if (m_activeCamera)
             _shader.setUniform("u_cameraEv100", m_activeCamera->getEv100());
     },
     [this]() {
         if (m_activeCamera)
-            return ada::toString(m_activeCamera->getEv100());
+            return vera::toString(m_activeCamera->getEv100());
         return std::string("");
     });
 
-    functions["u_cameraExposure"] = UniformFunction("float", [this](ada::Shader& _shader) {
+    functions["u_cameraExposure"] = UniformFunction("float", [this](vera::Shader& _shader) {
         if (m_activeCamera)
             _shader.setUniform("u_cameraExposure", m_activeCamera->getExposure());
     },
     [this]() { 
         if (m_activeCamera)
-            return ada::toString(m_activeCamera->getExposure());
+            return vera::toString(m_activeCamera->getExposure());
         return std::string("");
     });
 
-    functions["u_cameraAperture"] = UniformFunction("float", [this](ada::Shader& _shader) {
+    functions["u_cameraAperture"] = UniformFunction("float", [this](vera::Shader& _shader) {
         if (m_activeCamera)
             _shader.setUniform("u_cameraAperture", m_activeCamera->getAperture());
     },
     [this]() { 
         if (m_activeCamera)
-            return ada::toString(m_activeCamera->getAperture());
+            return vera::toString(m_activeCamera->getAperture());
         return std::string("");
     });
 
-    functions["u_cameraShutterSpeed"] = UniformFunction("float", [this](ada::Shader& _shader) {
+    functions["u_cameraShutterSpeed"] = UniformFunction("float", [this](vera::Shader& _shader) {
         if (m_activeCamera)
             _shader.setUniform("u_cameraShutterSpeed", m_activeCamera->getShutterSpeed());
     },
     [this]() { 
         if (m_activeCamera)
-            return ada::toString(m_activeCamera->getShutterSpeed());
+            return vera::toString(m_activeCamera->getShutterSpeed());
         return std::string("");
     });
 
-    functions["u_cameraSensitivity"] = UniformFunction("float", [this](ada::Shader& _shader) {
+    functions["u_cameraSensitivity"] = UniformFunction("float", [this](vera::Shader& _shader) {
         if (m_activeCamera)
             _shader.setUniform("u_cameraSensitivity", m_activeCamera->getSensitivity());
     },
     [this]() { 
         if (m_activeCamera)
-            return ada::toString(m_activeCamera->getSensitivity());
+            return vera::toString(m_activeCamera->getSensitivity());
         return std::string("");
     });
 
-    functions["u_cameraChange"] = UniformFunction("bool", [this](ada::Shader& _shader) {
+    functions["u_cameraChange"] = UniformFunction("bool", [this](vera::Shader& _shader) {
         if (m_activeCamera)
             _shader.setUniform("u_cameraChange", m_activeCamera->bChange);
     },
     [this]() { 
         if (m_activeCamera)
-            return ada::toString(m_activeCamera->getSensitivity());
+            return vera::toString(m_activeCamera->getSensitivity());
         return std::string("");
     });
     
-    functions["u_normalMatrix"] = UniformFunction("mat3", [this](ada::Shader& _shader) {
+    functions["u_normalMatrix"] = UniformFunction("mat3", [this](vera::Shader& _shader) {
         if (m_activeCamera)
             _shader.setUniform("u_normalMatrix", m_activeCamera->getNormalMatrix());
     });
 
     // CAMERA MATRIX UNIFORMS
-    functions["u_viewMatrix"] = UniformFunction("mat4", [this](ada::Shader& _shader) {
+    functions["u_viewMatrix"] = UniformFunction("mat4", [this](vera::Shader& _shader) {
         if (m_activeCamera)
             _shader.setUniform("u_viewMatrix", m_activeCamera->getViewMatrix());
     });
 
-    functions["u_projectionMatrix"] = UniformFunction("mat4", [this](ada::Shader& _shader) {
+    functions["u_projectionMatrix"] = UniformFunction("mat4", [this](vera::Shader& _shader) {
         if (m_activeCamera)
             _shader.setUniform("u_projectionMatrix", m_activeCamera->getProjectionMatrix());
     });
@@ -205,15 +205,15 @@ Uniforms::~Uniforms(){
 
 void Uniforms::clear() {
     clearUniforms();
-    ada::Scene::clear();
+    vera::Scene::clear();
 }
 
 
-bool Uniforms::feedTo(ada::Shader &_shader, bool _lights, bool _buffers ) {
+bool Uniforms::feedTo(vera::Shader &_shader, bool _lights, bool _buffers ) {
     return feedTo(&_shader, _lights, _buffers);
 }
 
-bool Uniforms::feedTo(ada::Shader *_shader, bool _lights, bool _buffers ) {
+bool Uniforms::feedTo(vera::Shader *_shader, bool _lights, bool _buffers ) {
     bool update = false;
 
     // Pass Native uniforms 
@@ -236,7 +236,7 @@ bool Uniforms::feedTo(ada::Shader *_shader, bool _lights, bool _buffers ) {
         }
     }
 
-    ada::Scene::feedTo(_shader, _lights, _buffers);
+    vera::Scene::feedTo(_shader, _lights, _buffers);
     return update;
 }
 
@@ -245,7 +245,7 @@ void Uniforms::flagChange() {
     for (UniformDataMap::iterator it = data.begin(); it != data.end(); ++it)
         it->second.change = true;
     
-    ada::Scene::flagChange();
+    vera::Scene::flagChange();
 }
 
 void Uniforms::unflagChange() {
@@ -257,7 +257,7 @@ void Uniforms::unflagChange() {
             m_change += it->second.check();
     }
 
-    ada::Scene::unflagChange();
+    vera::Scene::unflagChange();
 }
 
 bool Uniforms::haveChange() { 
@@ -267,7 +267,7 @@ bool Uniforms::haveChange() {
         functions["u_mouse"].present)
         return true;
 
-    return ada::Scene::haveChange();
+    return vera::Scene::haveChange();
 }
 
 
@@ -306,7 +306,7 @@ void Uniforms::set(const std::string& _name, float _x, float _y, float _z, float
 }
 
 bool Uniforms::parseLine( const std::string &_line ) {
-    std::vector<std::string> values = ada::split(_line,',');
+    std::vector<std::string> values = vera::split(_line,',');
     if (values.size() > 1) {
         data[ values[0] ].parse(values, 1);
         m_change = true;
@@ -374,7 +374,7 @@ void Uniforms::printDefinedUniforms(bool _csv){
 }
 
 void Uniforms::printBuffers() {
-    ada::Scene::printBuffers();
+    vera::Scene::printBuffers();
 
     if (functions["u_scene"].present)
         std::cout << "uniform sampler2D u_scene;" << std::endl;
@@ -411,12 +411,12 @@ bool Uniforms::addCameraPath( const std::string& _name ) {
                 continue;
 
             // parse through row spliting into commas
-            std::vector<std::string> params = ada::split(line, ',', true);
+            std::vector<std::string> params = vera::split(line, ',', true);
 
             CameraData frame;
-            float fL = ada::toFloat(params[0]);
-            float cx = ada::toFloat(params[1]);
-            float cy = ada::toFloat(params[2]);
+            float fL = vera::toFloat(params[0]);
+            float cx = vera::toFloat(params[1]);
+            float cy = vera::toFloat(params[2]);
 
             float near = 0.0f;
             float far = 1000.0;
@@ -454,10 +454,10 @@ bool Uniforms::addCameraPath( const std::string& _name ) {
             // );
 
             frame.transform = glm::mat4(
-                glm::vec4( ada::toFloat(params[3]), ada::toFloat(params[ 4]), ada::toFloat(params[ 5]), 0.0),
-                glm::vec4( ada::toFloat(params[6]), -ada::toFloat(params[ 7]), ada::toFloat(params[ 8]), 0.0),
-                glm::vec4( ada::toFloat(params[9]), ada::toFloat(params[10]), ada::toFloat(params[11]), 0.0),
-                glm::vec4( ada::toFloat(params[12]), ada::toFloat(params[13]), -ada::toFloat(params[14]), 1.0)
+                glm::vec4( vera::toFloat(params[3]), vera::toFloat(params[ 4]), vera::toFloat(params[ 5]), 0.0),
+                glm::vec4( vera::toFloat(params[6]), -vera::toFloat(params[ 7]), vera::toFloat(params[ 8]), 0.0),
+                glm::vec4( vera::toFloat(params[9]), vera::toFloat(params[10]), vera::toFloat(params[11]), 0.0),
+                glm::vec4( vera::toFloat(params[12]), vera::toFloat(params[13]), -vera::toFloat(params[14]), 1.0)
             );
 
             // position += frame.translation;

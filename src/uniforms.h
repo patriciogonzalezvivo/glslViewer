@@ -10,7 +10,7 @@
 #include "types/files.h"
 #include "tools/tracker.h"
 
-#include "ada/scene.h"
+#include "vera/scene.h"
 
 struct CameraData {
     glm::mat4   projection;
@@ -39,17 +39,17 @@ typedef std::map<std::string, UniformData>      UniformDataMap;
 struct UniformFunction {
     UniformFunction();
     UniformFunction(const std::string &_type);
-    UniformFunction(const std::string &_type, std::function<void(ada::Shader&)> _assign);
-    UniformFunction(const std::string &_type, std::function<void(ada::Shader&)> _assign, std::function<std::string()> _print);
+    UniformFunction(const std::string &_type, std::function<void(vera::Shader&)> _assign);
+    UniformFunction(const std::string &_type, std::function<void(vera::Shader&)> _assign, std::function<std::string()> _print);
 
-    std::function<void(ada::Shader&)>   assign;
+    std::function<void(vera::Shader&)>   assign;
     std::function<std::string()>        print;
     std::string                         type;
     bool                                present = false;
 };
 typedef std::map<std::string, UniformFunction>  UniformFunctionsMap;
 
-class Uniforms : public ada::Scene {
+class Uniforms : public vera::Scene {
 public:
     Uniforms();
     virtual ~Uniforms();
@@ -62,8 +62,8 @@ public:
     virtual bool        haveChange();
 
     // Feed uniforms to a specific shader
-    virtual bool        feedTo( ada::Shader &_shader, bool _lights = true, bool _buffers = true);
-    virtual bool        feedTo( ada::Shader *_shader, bool _lights = true, bool _buffers = true);
+    virtual bool        feedTo( vera::Shader &_shader, bool _lights = true, bool _buffers = true);
+    virtual bool        feedTo( vera::Shader *_shader, bool _lights = true, bool _buffers = true);
 
     virtual void        printBuffers();
 

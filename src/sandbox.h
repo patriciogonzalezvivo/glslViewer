@@ -7,7 +7,7 @@
 
 #include "scene.h"
 #include "types/files.h"
-#include "ada/string.h"
+#include "vera/string.h"
 
 enum ShaderType {
     FRAGMENT = 0,
@@ -22,8 +22,8 @@ enum PlotType {
 
 const std::string plot_options[] = { "off", "luma", "red", "green", "blue", "rgb", "fps", "ms" };
 
-typedef std::vector<ada::Fbo>       FboList;
-typedef std::vector<ada::Shader>    ShaderList;
+typedef std::vector<vera::Fbo>       FboList;
+typedef std::vector<vera::Shader>    ShaderList;
 
 class Sandbox {
 public:
@@ -66,7 +66,7 @@ public:
     void                onPlot();
    
     // Include folders
-    ada::StringList     include_folders;
+    vera::StringList     include_folders;
 
     // Uniforms
     Uniforms            uniforms;
@@ -96,8 +96,8 @@ private:
     std::string         m_vert_source;
 
     // Dependencies
-    ada::StringList     m_vert_dependencies;
-    ada::StringList     m_frag_dependencies;
+    vera::StringList     m_vert_dependencies;
+    vera::StringList     m_frag_dependencies;
 
     // Buffers
     ShaderList          m_buffers_shaders;
@@ -108,37 +108,37 @@ private:
     int                 m_doubleBuffers_total;
 
     // A. CANVAS
-    ada::Shader         m_canvas_shader;
+    vera::Shader         m_canvas_shader;
 
     // B. SCENE
     Scene               m_scene;
-    ada::Fbo            m_scene_fbo;
+    vera::Fbo            m_scene_fbo;
 
     // Pyramid Convolution
     FboList             m_pyramid_fbos;
     ShaderList          m_pyramid_subshaders;
-    ada::Shader         m_pyramid_shader;
+    vera::Shader         m_pyramid_shader;
     int                 m_pyramid_total;
 
     // Postprocessing
-    ada::Shader         m_postprocessing_shader;
+    vera::Shader         m_postprocessing_shader;
     bool                m_postprocessing;
 
     // Billboard
-    ada::Shader         m_billboard_shader;
-    ada::Vbo*           m_billboard_vbo;
+    vera::Shader         m_billboard_shader;
+    vera::Vbo*           m_billboard_vbo;
     
     // Cursor
-    ada::Vbo*           m_cross_vbo;
+    vera::Vbo*           m_cross_vbo;
 
     // debug plot texture and shader for histogram or fps plots
-    ada::Shader         m_plot_shader;
-    ada::Texture*       m_plot_texture;
+    vera::Shader         m_plot_shader;
+    vera::Texture*       m_plot_texture;
     glm::vec4           m_plot_values[256];
     PlotType            m_plot;
 
     // Recording
-    ada::Fbo            m_record_fbo;
+    vera::Fbo            m_record_fbo;
     #if defined(SUPPORT_MULTITHREAD_RECORDING)
     std::atomic<int>    m_task_count {0};
     std::atomic<long long>      m_max_mem_in_queue {0};

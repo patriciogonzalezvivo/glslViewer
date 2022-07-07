@@ -17,14 +17,14 @@
 #include <iostream>
 #include <fstream>
 
-#include "ada/window.h"
-#include "ada/gl/gl.h"
-#include "ada/fs.h"
-#include "ada/math.h"
-#include "ada/time.h"
-#include "ada/string.h"
-#include "ada/devices/holoPlay.h"
-#include "ada/shaders/defaultShaders.h"
+#include "vera/window.h"
+#include "vera/gl/gl.h"
+#include "vera/fs.h"
+#include "vera/math.h"
+#include "vera/time.h"
+#include "vera/string.h"
+#include "vera/devices/holoPlay.h"
+#include "vera/shaders/defaultShaders.h"
 
 #include "sandbox.h"
 #include "types/files.h"
@@ -40,7 +40,7 @@
 #define TRACK_BEGIN(A)      if (sandbox.uniforms.tracker.isRunning()) sandbox.uniforms.tracker.begin(A); 
 #define TRACK_END(A)        if (sandbox.uniforms.tracker.isRunning()) sandbox.uniforms.tracker.end(A); 
 
-std::string                 version = ada::toString(GLSLVIEWER_VERSION_MAJOR) + "." + ada::toString(GLSLVIEWER_VERSION_MINOR) + "." + ada::toString(GLSLVIEWER_VERSION_PATCH);
+std::string                 version = vera::toString(GLSLVIEWER_VERSION_MAJOR) + "." + vera::toString(GLSLVIEWER_VERSION_MINOR) + "." + vera::toString(GLSLVIEWER_VERSION_PATCH);
 std::string                 about   = "GlslViewer " + version + " by Patricio Gonzalez Vivo ( http://patriciogonzalezvivo.com )"; 
 
 // Here is where all the magic happens
@@ -120,14 +120,14 @@ EM_BOOL loop (double time, void* userData) {
 void loop() {
 #endif
     
-    ada::updateGL();
+    vera::updateGL();
 
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
     #ifndef __EMSCRIPTEN__
     if (!bTerminate && !fullFps && !sandbox.haveChange()) {
     // If nothing in the scene change skip the frame and try to keep it at 60fps
-        std::this_thread::sleep_for(std::chrono::milliseconds( ada::getRestMs() ));
+        std::this_thread::sleep_for(std::chrono::milliseconds( vera::getRestMs() ));
         return;
     }
     #else
@@ -157,7 +157,7 @@ void loop() {
 #endif
     
     // TRACK_BEGIN("renderSwap")
-    ada::renderGL();
+    vera::renderGL();
     // TRACK_END("renderSwap")
 
     #if defined(__EMSCRIPTEN__)
@@ -169,7 +169,7 @@ void loop() {
 //============================================================================
 int main(int argc, char **argv) {
 
-    ada::WindowProperties window_properties;
+    vera::WindowProperties window_properties;
 
     #if defined(DRIVER_GBM) 
     for (int i = 1; i < argc ; i++) {
@@ -190,33 +190,33 @@ int main(int argc, char **argv) {
         std::string argument = std::string(argv[i]);
         if (        std::string(argv[i]) == "-x" ) {
             if(++i < argc)
-                window_properties.screen_x = ada::toInt(std::string(argv[i]));
+                window_properties.screen_x = vera::toInt(std::string(argv[i]));
             else
                 std::cout << "Argument '" << argument << "' should be followed by a <pixels>. Skipping argument." << std::endl;
         }
         else if (   std::string(argv[i]) == "-y" ) {
             if(++i < argc)
-                window_properties.screen_y = ada::toInt(std::string(argv[i]));
+                window_properties.screen_y = vera::toInt(std::string(argv[i]));
             else
                 std::cout << "Argument '" << argument << "' should be followed by a <pixels>. Skipping argument." << std::endl;
         }
         else if (   std::string(argv[i]) == "-w" ||
                     std::string(argv[i]) == "--width" ) {
             if(++i < argc)
-                window_properties.screen_width = ada::toInt(std::string(argv[i]));
+                window_properties.screen_width = vera::toInt(std::string(argv[i]));
             else
                 std::cout << "Argument '" << argument << "' should be followed by a <pixels>. Skipping argument." << std::endl;
         }
         else if (   std::string(argv[i]) == "-h" ||
                     std::string(argv[i]) == "--height" ) {
             if(++i < argc)
-                window_properties.screen_height = ada::toInt(std::string(argv[i]));
+                window_properties.screen_height = vera::toInt(std::string(argv[i]));
             else
                 std::cout << "Argument '" << argument << "' should be followed by a <pixels>. Skipping argument." << std::endl;
         }
         else if (   std::string(argv[i]) == "--fps" ) {
             if(++i < argc)
-                ada::setFps( ada::toInt(std::string(argv[i])) );
+                vera::setFps( vera::toInt(std::string(argv[i])) );
             else
                 std::cout << "Argument '" << argument << "' should be followed by a <pixels>. Skipping argument." << std::endl;
         }
@@ -238,7 +238,7 @@ int main(int argc, char **argv) {
             commands_ncurses = false;
         }
         else if (   std::string(argv[i]) == "--headless" ) {
-            window_properties.style = ada::HEADLESS;
+            window_properties.style = vera::HEADLESS;
         }
         else if (   std::string(argv[i]) == "-l" ||
                     std::string(argv[i]) == "--life-coding" ){
@@ -246,28 +246,28 @@ int main(int argc, char **argv) {
                 window_properties.screen_x = window_properties.screen_width - 512;
                 window_properties.screen_width = window_properties.screen_height = 512;
             #else
-                if (window_properties.style == ada::UNDECORATED)
-                    window_properties.style = ada::UNDECORATED_ALLWAYS_ON_TOP;
+                if (window_properties.style == vera::UNDECORATED)
+                    window_properties.style = vera::UNDECORATED_ALLWAYS_ON_TOP;
                 else
-                    window_properties.style = ada::ALLWAYS_ON_TOP;
+                    window_properties.style = vera::ALLWAYS_ON_TOP;
             #endif
         }
         else if (   std::string(argv[i]) == "--undecorated" ) {
-            if (window_properties.style == ada::ALLWAYS_ON_TOP)
-                window_properties.style = ada::UNDECORATED_ALLWAYS_ON_TOP;
+            if (window_properties.style == vera::ALLWAYS_ON_TOP)
+                window_properties.style = vera::UNDECORATED_ALLWAYS_ON_TOP;
             else 
-                window_properties.style = ada::UNDECORATED;
+                window_properties.style = vera::UNDECORATED;
         }
         else if (   std::string(argv[i]) == "--lenticular") {
-            window_properties.style = ada::LENTICULAR;
+            window_properties.style = vera::LENTICULAR;
         }
         else if (   std::string(argv[i]) == "-f" ||
                     std::string(argv[i]) == "--fullscreen" ) {
-            window_properties.style = ada::FULLSCREEN;
+            window_properties.style = vera::FULLSCREEN;
         }
         else if (   std::string(argv[i]) == "-ss" ||
                     std::string(argv[i]) == "--screensaver") {
-            window_properties.style = ada::FULLSCREEN;
+            window_properties.style = vera::FULLSCREEN;
             screensaver = true;
         }
         else if (   std::string(argv[i]) == "--msaa") {
@@ -275,34 +275,34 @@ int main(int argc, char **argv) {
         }
         else if (   std::string(argv[i]) == "--major") {
             if (++i < argc)
-                window_properties.major = ada::toInt(std::string(argv[i]));
+                window_properties.major = vera::toInt(std::string(argv[i]));
             else
                 std::cout << "Argument '" << argument << "' should be followed by a the OPENGL MAJOR version. Skipping argument." << std::endl;
         }
         else if (   std::string(argv[i]) == "--minor") {
             if (++i < argc)
-                window_properties.minor = ada::toInt(std::string(argv[i]));
+                window_properties.minor = vera::toInt(std::string(argv[i]));
             else
                 std::cout << "Argument '" << argument << "' should be followed by a the OPENGL MINOR version. Skipping argument." << std::endl;
         }
-        else if ( ( ada::haveExt(argument,"ply") || ada::haveExt(argument,"PLY") ||
-                    ada::haveExt(argument,"obj") || ada::haveExt(argument,"OBJ") ||
-                    ada::haveExt(argument,"stl") || ada::haveExt(argument,"STL") ||
-                    ada::haveExt(argument,"glb") || ada::haveExt(argument,"GLB") ||
-                    ada::haveExt(argument,"gltf") || ada::haveExt(argument,"GLTF") ) ) {
+        else if ( ( vera::haveExt(argument,"ply") || vera::haveExt(argument,"PLY") ||
+                    vera::haveExt(argument,"obj") || vera::haveExt(argument,"OBJ") ||
+                    vera::haveExt(argument,"stl") || vera::haveExt(argument,"STL") ||
+                    vera::haveExt(argument,"glb") || vera::haveExt(argument,"GLB") ||
+                    vera::haveExt(argument,"gltf") || vera::haveExt(argument,"GLTF") ) ) {
             willLoadGeometry = true;
         }
-        else if (   ada::haveExt(argument,"hdr") || ada::haveExt(argument,"HDR") ||
-                    ada::haveExt(argument,"png") || ada::haveExt(argument,"PNG") ||
-                    ada::haveExt(argument,"tga") || ada::haveExt(argument,"TGA") ||
-                    ada::haveExt(argument,"psd") || ada::haveExt(argument,"PSD") ||
-                    ada::haveExt(argument,"gif") || ada::haveExt(argument,"GIF") ||
-                    ada::haveExt(argument,"bmp") || ada::haveExt(argument,"BMP") ||
-                    ada::haveExt(argument,"jpg") || ada::haveExt(argument,"JPG") ||
-                    ada::haveExt(argument,"jpeg") || ada::haveExt(argument,"JPEG") ||
-                    ada::haveExt(argument,"mov") || ada::haveExt(argument,"MOV") ||
-                    ada::haveExt(argument,"mp4") || ada::haveExt(argument,"MP4") ||
-                    ada::haveExt(argument,"mpeg") || ada::haveExt(argument,"MPEG") ||
+        else if (   vera::haveExt(argument,"hdr") || vera::haveExt(argument,"HDR") ||
+                    vera::haveExt(argument,"png") || vera::haveExt(argument,"PNG") ||
+                    vera::haveExt(argument,"tga") || vera::haveExt(argument,"TGA") ||
+                    vera::haveExt(argument,"psd") || vera::haveExt(argument,"PSD") ||
+                    vera::haveExt(argument,"gif") || vera::haveExt(argument,"GIF") ||
+                    vera::haveExt(argument,"bmp") || vera::haveExt(argument,"BMP") ||
+                    vera::haveExt(argument,"jpg") || vera::haveExt(argument,"JPG") ||
+                    vera::haveExt(argument,"jpeg") || vera::haveExt(argument,"JPEG") ||
+                    vera::haveExt(argument,"mov") || vera::haveExt(argument,"MOV") ||
+                    vera::haveExt(argument,"mp4") || vera::haveExt(argument,"MP4") ||
+                    vera::haveExt(argument,"mpeg") || vera::haveExt(argument,"MPEG") ||
                     argument.rfind("/dev/", 0) == 0 ||
                     argument.rfind("http://", 0) == 0 ||
                     argument.rfind("https://", 0) == 0 ||
@@ -312,7 +312,7 @@ int main(int argc, char **argv) {
         }
         else if ( argument == "-p" || argument == "--port" ) {
             if(++i < argc)
-                oscPort = ada::toInt(std::string(argv[i]));
+                oscPort = vera::toInt(std::string(argv[i]));
             else
         #if defined(SUPPORT_OSC)
                 std::cout << "Argument '" << argument << "' should be followed by an <osc_port>. Skipping argument." << std::endl;
@@ -333,9 +333,9 @@ int main(int argc, char **argv) {
     commandsInit();
 
     // Initialize openGL context
-    ada::initGL (window_properties);
+    vera::initGL (window_properties);
     #ifndef __EMSCRIPTEN__
-    ada::setWindowTitle("GlslViewer");
+    vera::setWindowTitle("GlslViewer");
     std::thread cinWatcher( &cinWatcherThread );
     #endif
 
@@ -392,19 +392,19 @@ int main(int argc, char **argv) {
         }
         else if (argument == "--fullFps" ) {
             fullFps = true;
-            ada::setFps(0);
+            vera::setFps(0);
         }
-        else if ( sandbox.frag_index == -1 && (ada::haveExt(argument,"frag") || ada::haveExt(argument,"fs") ) ) {
+        else if ( sandbox.frag_index == -1 && (vera::haveExt(argument,"frag") || vera::haveExt(argument,"fs") ) ) {
             if ( stat(argument.c_str(), &st) != 0 ) {
                 std::cout << "File " << argv[i] << " not founded. Creating a default fragment shader with that name"<< std::endl;
 
                 std::ofstream out(argv[i]);
                 if (willLoadGeometry)
-                    out << ada::getDefaultSrc(ada::FRAG_DEFAULT_SCENE);
+                    out << vera::getDefaultSrc(vera::FRAG_DEFAULT_SCENE);
                 else if (willLoadTextures)
-                    out << ada::getDefaultSrc(ada::FRAG_DEFAULT_TEXTURE);
+                    out << vera::getDefaultSrc(vera::FRAG_DEFAULT_TEXTURE);
                 else 
-                    out << ada::getDefaultSrc(ada::FRAG_DEFAULT);
+                    out << vera::getDefaultSrc(vera::FRAG_DEFAULT);
                 out.close();
             }
 
@@ -417,12 +417,12 @@ int main(int argc, char **argv) {
             sandbox.frag_index = files.size()-1;
 
         }
-        else if ( sandbox.vert_index == -1 && ( ada::haveExt(argument,"vert") || ada::haveExt(argument,"vs") ) ) {
+        else if ( sandbox.vert_index == -1 && ( vera::haveExt(argument,"vert") || vera::haveExt(argument,"vs") ) ) {
             if ( stat(argument.c_str(), &st) != 0 ) {
                 std::cout << "File " << argv[i] << " not founded. Creating a default vertex shader with that name"<< std::endl;
 
                 std::ofstream out(argv[i]);
-                out << ada::getDefaultSrc(ada::VERT_DEFAULT_SCENE);
+                out << vera::getDefaultSrc(vera::VERT_DEFAULT_SCENE);
                 out.close();
             }
 
@@ -434,11 +434,11 @@ int main(int argc, char **argv) {
 
             sandbox.vert_index = files.size()-1;
         }
-        else if ( sandbox.geom_index == -1 && ( ada::haveExt(argument,"ply") || ada::haveExt(argument,"PLY") ||
-                                                ada::haveExt(argument,"obj") || ada::haveExt(argument,"OBJ") ||
-                                                ada::haveExt(argument,"stl") || ada::haveExt(argument,"STL") ||
-                                                ada::haveExt(argument,"glb") || ada::haveExt(argument,"GLB") ||
-                                                ada::haveExt(argument,"gltf") || ada::haveExt(argument,"GLTF") ) ) {
+        else if ( sandbox.geom_index == -1 && ( vera::haveExt(argument,"ply") || vera::haveExt(argument,"PLY") ||
+                                                vera::haveExt(argument,"obj") || vera::haveExt(argument,"OBJ") ||
+                                                vera::haveExt(argument,"stl") || vera::haveExt(argument,"STL") ||
+                                                vera::haveExt(argument,"glb") || vera::haveExt(argument,"GLB") ||
+                                                vera::haveExt(argument,"gltf") || vera::haveExt(argument,"GLTF") ) ) {
             if ( stat(argument.c_str(), &st) != 0) {
                 std::cerr << "Error watching file " << argument << std::endl;
             }
@@ -455,47 +455,47 @@ int main(int argc, char **argv) {
                     argument == "--vFlip" ) {
             vFlip = false;
         }
-        else if (   ada::haveExt(argument,"hdr") || ada::haveExt(argument,"HDR") ||
-                    ada::haveExt(argument,"png") || ada::haveExt(argument,"PNG") ||
-                    ada::haveExt(argument,"tga") || ada::haveExt(argument,"TGA") ||
-                    ada::haveExt(argument,"psd") || ada::haveExt(argument,"PSD") ||
-                    ada::haveExt(argument,"gif") || ada::haveExt(argument,"GIF") ||
-                    ada::haveExt(argument,"bmp") || ada::haveExt(argument,"BMP") ||
-                    ada::haveExt(argument,"jpg") || ada::haveExt(argument,"JPG") ||
-                    ada::haveExt(argument,"jpeg") || ada::haveExt(argument,"JPEG")) {
+        else if (   vera::haveExt(argument,"hdr") || vera::haveExt(argument,"HDR") ||
+                    vera::haveExt(argument,"png") || vera::haveExt(argument,"PNG") ||
+                    vera::haveExt(argument,"tga") || vera::haveExt(argument,"TGA") ||
+                    vera::haveExt(argument,"psd") || vera::haveExt(argument,"PSD") ||
+                    vera::haveExt(argument,"gif") || vera::haveExt(argument,"GIF") ||
+                    vera::haveExt(argument,"bmp") || vera::haveExt(argument,"BMP") ||
+                    vera::haveExt(argument,"jpg") || vera::haveExt(argument,"JPG") ||
+                    vera::haveExt(argument,"jpeg") || vera::haveExt(argument,"JPEG")) {
 
-            if ( ada::haveWildcard(argument) ) {
-                if ( sandbox.uniforms.addStreamingTexture("u_tex" + ada::toString(textureCounter), argument, vFlip, false) )
+            if ( vera::haveWildcard(argument) ) {
+                if ( sandbox.uniforms.addStreamingTexture("u_tex" + vera::toString(textureCounter), argument, vFlip, false) )
                     textureCounter++;
             }
-            else if ( sandbox.uniforms.addTexture("u_tex" + ada::toString(textureCounter), argument, vFlip) )
+            else if ( sandbox.uniforms.addTexture("u_tex" + vera::toString(textureCounter), argument, vFlip) )
                 textureCounter++;
         } 
         else if ( argument == "--video" ) {
             if (++i < argc) {
                 argument = std::string(argv[i]);
-                if ( sandbox.uniforms.addStreamingTexture("u_tex" + ada::toString(textureCounter), argument, vFlip, true) )
+                if ( sandbox.uniforms.addStreamingTexture("u_tex" + vera::toString(textureCounter), argument, vFlip, true) )
                     textureCounter++;
             }
         }
-        else if (   ada::haveExt(argument,"mov") || ada::haveExt(argument,"MOV") ||
-                    ada::haveExt(argument,"mp4") || ada::haveExt(argument,"MP4") ||
-                    ada::haveExt(argument,"mkv") || ada::haveExt(argument,"MKV") ||
-                    ada::haveExt(argument,"mpg") || ada::haveExt(argument,"MPG") ||
-                    ada::haveExt(argument,"mpeg") || ada::haveExt(argument,"MPEG") ||
-                    ada::haveExt(argument,"h264") ||
+        else if (   vera::haveExt(argument,"mov") || vera::haveExt(argument,"MOV") ||
+                    vera::haveExt(argument,"mp4") || vera::haveExt(argument,"MP4") ||
+                    vera::haveExt(argument,"mkv") || vera::haveExt(argument,"MKV") ||
+                    vera::haveExt(argument,"mpg") || vera::haveExt(argument,"MPG") ||
+                    vera::haveExt(argument,"mpeg") || vera::haveExt(argument,"MPEG") ||
+                    vera::haveExt(argument,"h264") ||
                     argument.rfind("http://", 0) == 0 ||
                     argument.rfind("https://", 0) == 0 ||
                     argument.rfind("rtsp://", 0) == 0 ||
                     argument.rfind("rtmp://", 0) == 0) {
-            if ( sandbox.uniforms.addStreamingTexture("u_tex" + ada::toString(textureCounter), argument, vFlip, false) )
+            if ( sandbox.uniforms.addStreamingTexture("u_tex" + vera::toString(textureCounter), argument, vFlip, false) )
                 textureCounter++;
         }
         else if (   argument.rfind("/dev/", 0) == 0) {
-            if ( sandbox.uniforms.addStreamingTexture("u_tex" + ada::toString(textureCounter), argument, vFlip, true) )
+            if ( sandbox.uniforms.addStreamingTexture("u_tex" + vera::toString(textureCounter), argument, vFlip, true) )
                 textureCounter++;
         }
-        else if ( ada::haveExt(argument,"csv") || ada::haveExt(argument,"CSV") ) {
+        else if ( vera::haveExt(argument,"csv") || vera::haveExt(argument,"CSV") ) {
             sandbox.uniforms.addCameraPath(argument);
         }
         else if ( argument == "--audio" || argument == "-a" ) {
@@ -503,17 +503,17 @@ int main(int argc, char **argv) {
             // device_id is optional argument, not iterate yet
             if ((i + 1) < argc) {
                 argument = std::string(argv[i + 1]);
-                if (ada::isInt(argument)) {
+                if (vera::isInt(argument)) {
                     device_id = argument;
                     i++;
                 }
             }
-            if ( sandbox.uniforms.addStreamingAudioTexture("u_tex" + ada::toString(textureCounter), device_id, vFlip, true) )
+            if ( sandbox.uniforms.addStreamingAudioTexture("u_tex" + vera::toString(textureCounter), device_id, vFlip, true) )
                 textureCounter++;
         }
         else if ( argument == "--quilt" ) {
             if (++i < argc)
-                sandbox.quilt = ada::toInt(argv[i]);
+                sandbox.quilt = vera::toInt(argv[i]);
         }
         else if ( argument == "--lenticular" ) {
             if (++i < argc)
@@ -567,15 +567,15 @@ int main(int argc, char **argv) {
                 argument = std::string(argv[i]);
 
                 // If it's a video file, capture device, streaming url or Image sequence
-                if (ada::haveExt(argument,"mov") || ada::haveExt(argument,"MOV") ||
-                    ada::haveExt(argument,"mp4") || ada::haveExt(argument,"MP4") ||
-                    ada::haveExt(argument,"mpeg") || ada::haveExt(argument,"MPEG") ||
+                if (vera::haveExt(argument,"mov") || vera::haveExt(argument,"MOV") ||
+                    vera::haveExt(argument,"mp4") || vera::haveExt(argument,"MP4") ||
+                    vera::haveExt(argument,"mpeg") || vera::haveExt(argument,"MPEG") ||
                     argument.rfind("/dev/", 0) == 0 ||
                     argument.rfind("http://", 0) == 0 ||
                     argument.rfind("https://", 0) == 0 ||
                     argument.rfind("rtsp://", 0) == 0 ||
                     argument.rfind("rtmp://", 0) == 0 ||
-                    ada::haveWildcard(argument) ) {
+                    vera::haveWildcard(argument) ) {
                     sandbox.uniforms.addStreamingTexture(parameterPair, argument, vFlip, false);
                 }
                 // Else load it as a single texture
@@ -589,11 +589,11 @@ int main(int argc, char **argv) {
 
     if (sandbox.verbose) {
         std::cout << "Specs:\n" << std::endl;
-        std::cout << "  - Vendor: " <<  ada::getVendor() << std::endl;
-        std::cout << "  - Renderer: " <<  ada::getRenderer() << std::endl;
-        std::cout << "  - Version: " <<  ada::getGLVersion() << std::endl;
-        std::cout << "  - GLSL version: " <<  ada::getGLSLVersion() << std::endl;
-        std::cout << "  - Extensions: " <<  ada::getExtensions() << std::endl;
+        std::cout << "  - Vendor: " <<  vera::getVendor() << std::endl;
+        std::cout << "  - Renderer: " <<  vera::getRenderer() << std::endl;
+        std::cout << "  - Version: " <<  vera::getGLVersion() << std::endl;
+        std::cout << "  - GLSL version: " <<  vera::getGLSLVersion() << std::endl;
+        std::cout << "  - Extensions: " <<  vera::getExtensions() << std::endl;
 
         std::cout << "  - Implementation limits: " << std::endl;
         int param;
@@ -617,11 +617,11 @@ int main(int argc, char **argv) {
 
     double width,  height;
     emscripten_get_element_css_size("#canvas", &width, &height);
-    ada::setWindowSize(width, height);
+    vera::setWindowSize(width, height);
 
 #else
 
-    ada::setWindowVSync(true);
+    vera::setWindowVSync(true);
 
     // Start watchers
     fileChanged = -1;
@@ -635,7 +635,7 @@ int main(int argc, char **argv) {
     }, [](){});
     oscServer.add_method(0, 0, [](const char *path, lo::Message m) {
         std::string line;
-        std::vector<std::string> address = ada::split(std::string(path), '/');
+        std::vector<std::string> address = vera::split(std::string(path), '/');
         for (size_t i = 0; i < address.size(); i++)
             line +=  ((i != 0) ? "," : "") + address[i];
 
@@ -646,9 +646,9 @@ int main(int argc, char **argv) {
             if ( types[i] == 's')
                 line += "," + std::string( (const char*)argv[i] );
             else if (types[i] == 'i')
-                line += "," + ada::toString(argv[i]->i);
+                line += "," + vera::toString(argv[i]->i);
             else
-                line += "," + ada::toString(argv[i]->f);
+                line += "," + vera::toString(argv[i]->f);
         }
 
         if (sandbox.verbose)
@@ -664,11 +664,11 @@ int main(int argc, char **argv) {
 
     if (sandbox.verbose) {
         std::cout << "\nRunning on:\n" << std::endl;
-        std::cout << "  - Vendor:       " << ada::getVendor() << std::endl;
-        std::cout << "  - Version:      " << ada::getGLVersion() << std::endl;
-        std::cout << "  - Renderer:     " << ada::getRenderer() << std::endl;
-        std::cout << "  - GLSL version: " << ada::getGLSLVersion() << std::endl;
-        std::cout << "  - Extensions:   " << ada::getExtensions() << std::endl;
+        std::cout << "  - Vendor:       " << vera::getVendor() << std::endl;
+        std::cout << "  - Version:      " << vera::getGLVersion() << std::endl;
+        std::cout << "  - Renderer:     " << vera::getRenderer() << std::endl;
+        std::cout << "  - GLSL version: " << vera::getGLSLVersion() << std::endl;
+        std::cout << "  - Extensions:   " << vera::getExtensions() << std::endl;
 
         std::cout << "\nImplementation limits:\n" << std::endl;
         int param;
@@ -677,7 +677,7 @@ int main(int argc, char **argv) {
     }
     
     // Render Loop
-    while ( ada::isGL() && keepRunnig.load() ){
+    while ( vera::isGL() && keepRunnig.load() ){
         // Something change??
         if ( fileChanged != -1 ) {
             filesMutex.lock();
@@ -691,7 +691,7 @@ int main(int argc, char **argv) {
 
     
     // If is terminated by the windows manager, turn keepRunnig off so the fileWatcher can stop
-    if ( !ada::isGL() )
+    if ( !vera::isGL() )
         keepRunnig.store(false);
 
     onExit();
@@ -717,7 +717,7 @@ int main(int argc, char **argv) {
 
 // Events
 //============================================================================
-void ada::onKeyPress (int _key) {
+void vera::onKeyPress (int _key) {
     if (screensaver) {
         keepRunnig = false;
         keepRunnig.store(false);
@@ -730,7 +730,7 @@ void ada::onKeyPress (int _key) {
     }
 }
 
-void ada::onMouseMove(float _x, float _y) {
+void vera::onMouseMove(float _x, float _y) {
     if (screensaver) {
         if (sandbox.isReady()) {
             keepRunnig = false;
@@ -738,12 +738,12 @@ void ada::onMouseMove(float _x, float _y) {
         }
     }
 }
-void ada::onMousePress(float _x, float _y, int _button) { }
-void ada::onMouseRelease(float _x, float _y, int _button) { }
-void ada::onMouseDrag(float _x, float _y, int _button) { sandbox.onMouseDrag(_x, _y, _button); }
+void vera::onMousePress(float _x, float _y, int _button) { }
+void vera::onMouseRelease(float _x, float _y, int _button) { }
+void vera::onMouseDrag(float _x, float _y, int _button) { sandbox.onMouseDrag(_x, _y, _button); }
 
-void ada::onScroll(float _yoffset) { sandbox.onScroll(_yoffset); }
-void ada::onViewportResize(int _newWidth, int _newHeight) { sandbox.onViewportResize(_newWidth, _newHeight); }
+void vera::onScroll(float _yoffset) { sandbox.onScroll(_yoffset); }
+void vera::onViewportResize(int _newWidth, int _newHeight) { sandbox.onViewportResize(_newWidth, _newHeight); }
 
 void commandsRun(const std::string &_cmd) { commandsRun(_cmd, commandsMutex); }
 void commandsRun(const std::string &_cmd, std::mutex &_mutex) {
@@ -751,7 +751,7 @@ void commandsRun(const std::string &_cmd, std::mutex &_mutex) {
 
     // Check if _cmd is present in the list of commands
     for (size_t i = 0; i < commands.size(); i++) {
-        if (ada::beginsWith(_cmd, commands[i].trigger)) {
+        if (vera::beginsWith(_cmd, commands[i].trigger)) {
             // Do require mutex the thread?
             if (commands[i].mutex) _mutex.lock();
 
@@ -787,7 +787,7 @@ void commandsInit() {
             return true;
         }
         else {
-            std::vector<std::string> values = ada::split(_line,',');
+            std::vector<std::string> values = vera::split(_line,',');
             if (values.size() == 2) {
                 for (size_t i = 0; i < commands.size(); i++) {
                     if (commands[i].trigger == values[1]) {
@@ -821,7 +821,7 @@ void commandsInit() {
 
     commands.push_back(Command("window_width", [&](const std::string& _line){ 
         if (_line == "window_width") {
-            std::cout << ada::getWindowWidth() << std::endl;
+            std::cout << vera::getWindowWidth() << std::endl;
             return true;
         }
         return false;
@@ -830,7 +830,7 @@ void commandsInit() {
 
     commands.push_back(Command("window_height", [&](const std::string& _line){ 
         if (_line == "window_height") {
-            std::cout << ada::getWindowHeight() << std::endl;
+            std::cout << vera::getWindowHeight() << std::endl;
             return true;
         }
         return false;
@@ -839,7 +839,7 @@ void commandsInit() {
 
     commands.push_back(Command("pixel_density", [&](const std::string& _line){ 
         if (_line == "pixel_density") {
-            std::cout << ada::getPixelDensity() << std::endl;
+            std::cout << vera::getPixelDensity() << std::endl;
             return true;
         }
         return false;
@@ -848,7 +848,7 @@ void commandsInit() {
 
     commands.push_back(Command("screen_size", [&](const std::string& _line){ 
         if (_line == "screen_size") {
-            std::cout << ada::getScreenWidth() << ',' << ada::getScreenHeight()<< std::endl;
+            std::cout << vera::getScreenWidth() << ',' << vera::getScreenHeight()<< std::endl;
             return true;
         }
         return false;
@@ -857,7 +857,7 @@ void commandsInit() {
 
     commands.push_back(Command("viewport", [&](const std::string& _line){ 
         if (_line == "viewport") {
-            glm::ivec4 viewport = ada::getViewport();
+            glm::ivec4 viewport = vera::getViewport();
             std::cout << viewport.x << ',' << viewport.y << ',' << viewport.z << ',' << viewport.w << std::endl;
             return true;
         }
@@ -866,9 +866,9 @@ void commandsInit() {
     "viewport", "return the viewport size", false));
 
     commands.push_back(Command("mouse", [&](const std::string& _line) { 
-        std::vector<std::string> values = ada::split(_line,',');
+        std::vector<std::string> values = vera::split(_line,',');
         if (_line == "mouse") {
-            std::cout << ada::getMouseX() << "," << ada::getMouseY() << std::endl;
+            std::cout << vera::getMouseX() << "," << vera::getMouseY() << std::endl;
             return true;
         }
         else if (values[1] == "capture") {
@@ -880,16 +880,16 @@ void commandsInit() {
     "mouse", "return the mouse position", false));
     
     commands.push_back(Command("fps", [&](const std::string& _line){
-        std::vector<std::string> values = ada::split(_line,',');
+        std::vector<std::string> values = vera::split(_line,',');
         if (values.size() == 2) {
             commandsMutex.lock();
-            ada::setFps( ada::toInt(values[1]) );
+            vera::setFps( vera::toInt(values[1]) );
             commandsMutex.unlock();
             return true;
         }
         else {
             // Force the output in floats
-            std::cout << std::setprecision(6) << ada::getFps() << std::endl;
+            std::cout << std::setprecision(6) << vera::getFps() << std::endl;
             return true;
         }
         return false;
@@ -899,7 +899,7 @@ void commandsInit() {
     commands.push_back(Command("delta", [&](const std::string& _line){ 
         if (_line == "delta") {
             // Force the output in floats
-            std::cout << std::setprecision(6) << ada::getDelta() << std::endl;
+            std::cout << std::setprecision(6) << vera::getDelta() << std::endl;
             return true;
         }
         return false;
@@ -909,7 +909,7 @@ void commandsInit() {
     commands.push_back(Command("date", [&](const std::string& _line){ 
         if (_line == "date") {
             // Force the output in floats
-            glm::vec4 date = ada::getDate();
+            glm::vec4 date = vera::getDate();
             std::cout << date.x << ',' << date.y << ',' << date.z << ',' << date.w << std::endl;
             return true;
         }
@@ -920,7 +920,7 @@ void commandsInit() {
     commands.push_back(Command("files", [&](const std::string& _line){ 
         if (_line == "files") {
             for (size_t i = 0; i < files.size(); i++) { 
-                std::cout << std::setw(2) << i << "," << std::setw(12) << ada::toString(files[i].type) << "," << files[i].path << std::endl;
+                std::cout << std::setw(2) << i << "," << std::setw(12) << vera::toString(files[i].type) << "," << files[i].path << std::endl;
             }
             return true;
         }
@@ -929,10 +929,10 @@ void commandsInit() {
     "files", "return a list of files", false));
 
     commands.push_back( Command("define", [&](const std::string& _line){ 
-        std::vector<std::string> values = ada::split(_line,',');
+        std::vector<std::string> values = vera::split(_line,',');
         bool change = false;
         if (values.size() == 2) {
-            std::vector<std::string> v = ada::split(values[1],' ');
+            std::vector<std::string> v = vera::split(values[1],' ');
             if (v.size() > 1)
                 sandbox.addDefine( v[0], v[1] );
             else
@@ -952,7 +952,7 @@ void commandsInit() {
                         filesMutex.lock();
                         fileChanged = i;
                         filesMutex.unlock();
-                        std::this_thread::sleep_for(std::chrono::milliseconds( ada::getRestMs() ));
+                        std::this_thread::sleep_for(std::chrono::milliseconds( vera::getRestMs() ));
                 }
             }
             fullFps = false;
@@ -962,7 +962,7 @@ void commandsInit() {
     "define,<KEYWORD>[,<VALUE>]", "add a define to the shader", false));
 
     commands.push_back( Command("undefine", [&](const std::string& _line){ 
-        std::vector<std::string> values = ada::split(_line,',');
+        std::vector<std::string> values = vera::split(_line,',');
         if (values.size() == 2) {
             sandbox.delDefine( values[1] );
             fullFps = true;
@@ -972,7 +972,7 @@ void commandsInit() {
                         filesMutex.lock();
                         fileChanged = i;
                         filesMutex.unlock();
-                        std::this_thread::sleep_for(std::chrono::milliseconds( ada::getRestMs() ));
+                        std::this_thread::sleep_for(std::chrono::milliseconds( vera::getRestMs() ));
                 }
             }
             fullFps = false;
@@ -989,13 +989,13 @@ void commandsInit() {
                 filesMutex.lock();
                 fileChanged = i;
                 filesMutex.unlock();
-                std::this_thread::sleep_for(std::chrono::milliseconds( ada::getRestMs() ));
+                std::this_thread::sleep_for(std::chrono::milliseconds( vera::getRestMs() ));
             }
             fullFps = false;
             return true;
         }
         else {
-            std::vector<std::string> values = ada::split(_line,',');
+            std::vector<std::string> values = vera::split(_line,',');
             if (values.size() == 2 && values[0] == "reload") {
                 for (size_t i = 0; i < files.size(); i++) {
                     if (files[i].path == values[1]) {
@@ -1017,12 +1017,12 @@ void commandsInit() {
             return true;
         }
         else {
-            std::vector<std::string> values = ada::split(_line,',');
+            std::vector<std::string> values = vera::split(_line,',');
             if (values.size() == 2) {
-                if (ada::isDigit(values[1])) {
+                if (vera::isDigit(values[1])) {
                     // Line number
-                    size_t lineNumber = ada::toInt(values[1]) - 1;
-                    std::vector<std::string> lines = ada::split(sandbox.getSource(FRAGMENT),'\n', true);
+                    size_t lineNumber = vera::toInt(values[1]) - 1;
+                    std::vector<std::string> lines = vera::split(sandbox.getSource(FRAGMENT),'\n', true);
                     if (lineNumber < lines.size()) {
                         std::cout << lineNumber + 1 << " " << lines[lineNumber] << std::endl; 
                     }
@@ -1037,9 +1037,9 @@ void commandsInit() {
                 return true;
             }
             else if (values.size() > 2) {
-                std::vector<std::string> lines = ada::split(sandbox.getSource(FRAGMENT),'\n', true);
+                std::vector<std::string> lines = vera::split(sandbox.getSource(FRAGMENT),'\n', true);
                 for (size_t i = 1; i < values.size(); i++) {
-                    size_t lineNumber = ada::toInt(values[i]) - 1;
+                    size_t lineNumber = vera::toInt(values[i]) - 1;
                     if (lineNumber < lines.size()) {
                         std::cout << lineNumber + 1 << " " << lines[lineNumber] << std::endl; 
                     }
@@ -1056,12 +1056,12 @@ void commandsInit() {
             return true;
         }
         else {
-            std::vector<std::string> values = ada::split(_line,',');
+            std::vector<std::string> values = vera::split(_line,',');
             if (values.size() == 2) {
-                if (ada::isDigit(values[1])) {
+                if (vera::isDigit(values[1])) {
                     // Line number
-                    size_t lineNumber = ada::toInt(values[1]) - 1;
-                    std::vector<std::string> lines = ada::split(sandbox.getSource(VERTEX),'\n', true);
+                    size_t lineNumber = vera::toInt(values[1]) - 1;
+                    std::vector<std::string> lines = vera::split(sandbox.getSource(VERTEX),'\n', true);
                     if (lineNumber < lines.size()) {
                         std::cout << lineNumber + 1 << " " << lines[lineNumber] << std::endl; 
                     }
@@ -1076,9 +1076,9 @@ void commandsInit() {
                 return true;
             }
             else if (values.size() > 2) {
-                std::vector<std::string> lines = ada::split(sandbox.getSource(VERTEX),'\n', true);
+                std::vector<std::string> lines = vera::split(sandbox.getSource(VERTEX),'\n', true);
                 for (size_t i = 1; i < values.size(); i++) {
-                    size_t lineNumber = ada::toInt(values[i]) - 1;
+                    size_t lineNumber = vera::toInt(values[i]) - 1;
                     if (lineNumber < lines.size()) {
                         std::cout << lineNumber + 1 << " " << lines[lineNumber] << std::endl; 
                     }
@@ -1119,16 +1119,16 @@ void commandsInit() {
     "update", "force all uniforms to be updated", false));
 
     commands.push_back(Command("wait", [&](const std::string& _line){ 
-        std::vector<std::string> values = ada::split(_line,',');
+        std::vector<std::string> values = vera::split(_line,',');
         if (values.size() == 2) {
             if (values[0] == "wait_sec")
-                std::this_thread::sleep_for(std::chrono::seconds( ada::toInt(values[1])) );
+                std::this_thread::sleep_for(std::chrono::seconds( vera::toInt(values[1])) );
             else if (values[0] == "wait_ms")
-                std::this_thread::sleep_for(std::chrono::milliseconds( ada::toInt(values[1])) );
+                std::this_thread::sleep_for(std::chrono::milliseconds( vera::toInt(values[1])) );
             else if (values[0] == "wait_us")
-                std::this_thread::sleep_for(std::chrono::microseconds( ada::toInt(values[1])) );
+                std::this_thread::sleep_for(std::chrono::microseconds( vera::toInt(values[1])) );
             else
-                std::this_thread::sleep_for(std::chrono::microseconds( (int)(ada::toFloat(values[1]) * 1000000) ));
+                std::this_thread::sleep_for(std::chrono::microseconds( (int)(vera::toFloat(values[1]) * 1000000) ));
             return true;
         }
         return false;
@@ -1142,11 +1142,11 @@ void commandsInit() {
             return true;
         }
         else {
-            std::vector<std::string> values = ada::split(_line,',');
+            std::vector<std::string> values = vera::split(_line,',');
             if (values.size() == 2) {
                 commandsMutex.lock();
                 fullFps = (values[1] == "on");
-                ada::setFps(0);
+                vera::setFps(0);
                 commandsMutex.unlock();
             }
         }
@@ -1161,7 +1161,7 @@ void commandsInit() {
             return true;
         }
         else {
-            std::vector<std::string> values = ada::split(_line,',');
+            std::vector<std::string> values = vera::split(_line,',');
             if (values.size() == 2) {
                 commandsMutex.lock();
                 sandbox.cursor = (values[1] == "on");
@@ -1173,7 +1173,7 @@ void commandsInit() {
     "cursor[,on|off]", "show/hide cursor", false));
 
     commands.push_back(Command("screenshot", [&](const std::string& _line){ 
-        std::vector<std::string> values = ada::split(_line,',');
+        std::vector<std::string> values = vera::split(_line,',');
         if (values.size() == 2) {
             commandsMutex.lock();
             sandbox.screenshotFile = values[1];
@@ -1185,14 +1185,14 @@ void commandsInit() {
     "screenshot[,<filename>]", "saves a screenshot to a filename", false));
 
     commands.push_back(Command("sequence", [&](const std::string& _line){ 
-        std::vector<std::string> values = ada::split(_line,',');
+        std::vector<std::string> values = vera::split(_line,',');
         if (values.size() >= 3) {
-            float from = ada::toFloat(values[1]);
-            float to = ada::toFloat(values[2]);
+            float from = vera::toFloat(values[1]);
+            float to = vera::toFloat(values[2]);
             float fps = 24.0;
 
             if (values.size() == 4)
-                fps = ada::toFloat(values[3]);
+                fps = vera::toFloat(values[3]);
 
             if (from >= to) {
                 from = 0.0;
@@ -1211,7 +1211,7 @@ void commandsInit() {
 
                 console_draw_pct(pct);
 
-                std::this_thread::sleep_for(std::chrono::milliseconds( ada::getRestMs() ));
+                std::this_thread::sleep_for(std::chrono::milliseconds( vera::getRestMs() ));
             }
             return true;
         }
@@ -1220,14 +1220,14 @@ void commandsInit() {
     "sequence,<from_sec>,<to_sec>[,<fps>]","save a PNG sequence <from_sec> <to_sec> at <fps> (default: 24)",false));
 
     commands.push_back(Command("secs", [&](const std::string& _line){ 
-        std::vector<std::string> values = ada::split(_line,',');
+        std::vector<std::string> values = vera::split(_line,',');
         if (values.size() >= 3) {
-            float from = ada::toFloat(values[1]);
-            float to = ada::toFloat(values[2]);
+            float from = vera::toFloat(values[1]);
+            float to = vera::toFloat(values[2]);
             float fps = 24.0;
 
             if (values.size() == 4)
-                fps = ada::toFloat(values[3]);
+                fps = vera::toFloat(values[3]);
 
             if (from >= to) {
                 from = 0;
@@ -1246,7 +1246,7 @@ void commandsInit() {
 
                 console_draw_pct(pct);
 
-                std::this_thread::sleep_for(std::chrono::milliseconds( ada::getRestMs() ));
+                std::this_thread::sleep_for(std::chrono::milliseconds( vera::getRestMs() ));
             }
             return true;
         }
@@ -1255,14 +1255,14 @@ void commandsInit() {
     "secs,<A>,<B>[,<fps>]","saves a sequence of images from second A to second B at <fps> (default: 24)", false));
 
     commands.push_back(Command("frames", [&](const std::string& _line){ 
-        std::vector<std::string> values = ada::split(_line,',');
+        std::vector<std::string> values = vera::split(_line,',');
         if (values.size() >= 3) {
-            int from = ada::toInt(values[1]);
-            int to = ada::toInt(values[2]);
+            int from = vera::toInt(values[1]);
+            int to = vera::toInt(values[2]);
             float fps = 24.0;
 
             if (values.size() == 4)
-                fps = ada::toFloat(values[3]);
+                fps = vera::toFloat(values[3]);
 
             if (from >= to)
                 from = 0.0;
@@ -1281,7 +1281,7 @@ void commandsInit() {
                 
                 console_draw_pct(pct);
 
-                std::this_thread::sleep_for(std::chrono::milliseconds( ada::getRestMs() ));
+                std::this_thread::sleep_for(std::chrono::milliseconds( vera::getRestMs() ));
             }
             return true;
         }
@@ -1291,25 +1291,25 @@ void commandsInit() {
 
     #if defined(SUPPORT_LIBAV) && !defined(PLATFORM_RPI)
     commands.push_back(Command("record", [&](const std::string& _line){ 
-        std::vector<std::string> values = ada::split(_line,',');
+        std::vector<std::string> values = vera::split(_line,',');
         if (values.size() >= 3) {
             RecordingSettings settings;
-            settings.src_width = ada::getWindowWidth();
-            settings.src_height = ada::getWindowHeight();
-            settings.src_fps = ada::getFps();
-            float pd = ada::getPixelDensity();
+            settings.src_width = vera::getWindowWidth();
+            settings.src_height = vera::getWindowHeight();
+            settings.src_fps = vera::getFps();
+            float pd = vera::getPixelDensity();
 
             settings.trg_path = values[1];
             float from = 0;
             float to = 0.0;
             
             if (values.size() > 2)
-                from = ada::toFloat(values[2]);
+                from = vera::toFloat(values[2]);
 
             if (values.size() > 3)
-                to = ada::toFloat(values[3]);
+                to = vera::toFloat(values[3]);
             else
-                to = ada::toFloat(values[2]);
+                to = vera::toFloat(values[2]);
 
             if (from >= to)
                 from = 0.0;
@@ -1319,37 +1319,37 @@ void commandsInit() {
 
             settings.trg_fps = 24.0f;
             if (values.size() > 4)
-                settings.trg_fps = ada::toFloat(values[4]);
+                settings.trg_fps = vera::toFloat(values[4]);
 
             settings.trg_width = (int)(settings.src_width);
             settings.trg_height = (int)(settings.src_height);
 
             bool valid = false;
-            if (ada::haveExt(values[1], "mp4") || ada::haveExt(values[1], "MP4") ) {
-                settings.trg_width = ada::roundTo( settings.trg_width, 2);
-                settings.trg_height = ada::roundTo( settings.trg_height , 2);
+            if (vera::haveExt(values[1], "mp4") || vera::haveExt(values[1], "MP4") ) {
+                settings.trg_width = vera::roundTo( settings.trg_width, 2);
+                settings.trg_height = vera::roundTo( settings.trg_height , 2);
 
                 valid = true;
-                settings.trg_args = "-r " + ada::toString( settings.trg_fps );
+                settings.trg_args = "-r " + vera::toString( settings.trg_fps );
                 settings.trg_args += " -c:v libx264";
                 settings.trg_args += " -b:v 20000k";
-                settings.trg_args += " -vf \"vflip,fps=" + ada::toString(settings.trg_fps);
+                settings.trg_args += " -vf \"vflip,fps=" + vera::toString(settings.trg_fps);
                 if (pd > 1)
-                    settings.trg_args += ",scale=" + ada::toString(settings.trg_width,0) + ":" + ada::toString(settings.trg_height,0) + ":flags=lanczos";
+                    settings.trg_args += ",scale=" + vera::toString(settings.trg_width,0) + ":" + vera::toString(settings.trg_height,0) + ":flags=lanczos";
                 settings.trg_args += "\"";
                 settings.trg_args += " -crf 18 ";
                 settings.trg_args += " -pix_fmt yuv420p";
                 settings.trg_args += " -vsync 1";
                 settings.trg_args += " -g 1";
             }
-            else if (ada::haveExt(values[1], "gif") || ada::haveExt(values[1], "GIF") ) {;
-                settings.trg_width = ada::roundTo( (int)((settings.trg_width/pd)/2), 2);
-                settings.trg_height = ada::roundTo( (int)((settings.trg_width/pd)/2), 2);
+            else if (vera::haveExt(values[1], "gif") || vera::haveExt(values[1], "GIF") ) {;
+                settings.trg_width = vera::roundTo( (int)((settings.trg_width/pd)/2), 2);
+                settings.trg_height = vera::roundTo( (int)((settings.trg_width/pd)/2), 2);
 
                 valid = true;
-                settings.trg_args = " -vf \"vflip,fps=" + ada::toString(settings.trg_fps);
+                settings.trg_args = " -vf \"vflip,fps=" + vera::toString(settings.trg_fps);
                 if (pd > 1)
-                    settings.trg_args += ",scale=" + ada::toString((float)settings.trg_width,0) + ":" + ada::toString((float)settings.trg_height,0) + ":flags=lanczos";
+                    settings.trg_args += ",scale=" + vera::toString((float)settings.trg_width,0) + ":" + vera::toString((float)settings.trg_height,0) + ":flags=lanczos";
                 settings.trg_args += ",split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse\"";
                 settings.trg_args += " -loop 0";
             }
@@ -1367,7 +1367,7 @@ void commandsInit() {
 
                     console_draw_pct(pct);
 
-                    std::this_thread::sleep_for(std::chrono::milliseconds( ada::getRestMs() ));
+                    std::this_thread::sleep_for(std::chrono::milliseconds( vera::getRestMs() ));
                 }
             }
 
@@ -1464,7 +1464,7 @@ void onExit() {
     sandbox.clear();
 
     // close openGL instance
-    ada::closeGL();
+    vera::closeGL();
 }
 
 //  Watching Thread
@@ -1501,8 +1501,8 @@ void cinWatcherThread() {
     #endif
 
     while (!sandbox.isReady()) {
-        ada::sleep_ms( ada::getRestSec() * 1000000 );
-        std::this_thread::sleep_for(std::chrono::milliseconds( ada::getRestMs() ));
+        vera::sleep_ms( vera::getRestSec() * 1000000 );
+        std::this_thread::sleep_for(std::chrono::milliseconds( vera::getRestMs() ));
     }
 
     // Argument commands to execute comming from -e or -E

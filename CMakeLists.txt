@@ -13,7 +13,7 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# The compiled ADA 
+# The compiled vera 
 add_subdirectory(deps)
 
 if(MSVC)
@@ -40,7 +40,7 @@ add_executable(glslViewer ${ROOT_SOURCE})
 
 include_directories(deps/liblo)
 target_include_directories(glslViewer PRIVATE deps)
-target_link_libraries(glslViewer PRIVATE ada)
+target_link_libraries(glslViewer PRIVATE vera)
 target_compile_definitions(glslViewer PRIVATE GLSLVIEWER_VERSION_MAJOR=${VERSION_MAJOR})
 target_compile_definitions(glslViewer PRIVATE GLSLVIEWER_VERSION_MINOR=${VERSION_MINOR})
 target_compile_definitions(glslViewer PRIVATE GLSLVIEWER_VERSION_PATCH=${VERSION_PATCH})
