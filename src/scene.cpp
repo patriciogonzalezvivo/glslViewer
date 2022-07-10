@@ -201,7 +201,7 @@ void Scene::setup(CommandList& _commands, Uniforms& _uniforms) {
             addDefine("FLOOR_COLOR",str_color);
             
             _uniforms.setGroundAlbedo( glm::vec3(vera::toFloat(values[1]), vera::toFloat(values[2]), vera::toFloat(values[3])) );
-            _uniforms.setActiveCubemap( "skybox" );
+            _uniforms.activeCubemap = _uniforms.cubemaps["skybox"];
             return true;
         }
         else {
@@ -258,7 +258,7 @@ void Scene::setup(CommandList& _commands, Uniforms& _uniforms) {
             std::vector<std::string> values = vera::split(_line,',');
             if (values.size() == 2) {
                 if (values[1] == "on")
-                    _uniforms.setActiveCubemap("skybox");
+                    _uniforms.activeCubemap = _uniforms.cubemaps["skybox"];
 
                 showCubebox = values[1] == "on";
                 return true;
@@ -402,7 +402,7 @@ bool Scene::loadScene(Uniforms& _uniforms, const std::string& _filename, bool _v
     // Setup light
     if (_uniforms.lights.size() == 0) {
         vera::Light* sun = new vera::Light( glm::vec3(0.0,m_area*10.0,m_area*10.0), -1.0 );
-        _uniforms.setLight("sun", sun);
+        _uniforms.lights["sun"] = sun;
         vera::addLabel("u_light", sun, vera::LABEL_DOWN, 30.0f);
     }
 
@@ -449,8 +449,8 @@ void Scene::render(Uniforms& _uniforms) {
 
     vera::blendMode(m_blend);
 
-    if (_uniforms.getActiveCamera()->bChange || m_origin.bChange) {
-        vera::setCamera( _uniforms.getActiveCamera() );
+    if (_uniforms.activeCamera->bChange || m_origin.bChange) {
+        vera::setCamera( _uniforms.activeCamera );
         vera::applyMatrix( m_origin.getTransformMatrix() );
     }
 
@@ -549,16 +549,16 @@ void Scene::renderBackground(Uniforms& _uniforms) {
         TRACK_END("render:scene:background")
     }
 
-    else if (_uniforms.getActiveCubemap()) {
-        if (showCubebox && _uniforms.getActiveCubemap()->isLoaded()) {
+    else if (_uniforms.activeCubemap) {
+        if (showCubebox && _uniforms.activeCubemap->isLoaded()) {
             if (!m_cubemap_vbo) {
                 m_cubemap_vbo = new vera::Vbo( vera::cubeMesh(1.0f) );
                 m_cubemap_shader.load(vera::getDefaultSrc(vera::FRAG_CUBEMAP), vera::getDefaultSrc(vera::VERT_CUBEMAP), false);
             }
 
             m_cubemap_shader.use();
-            m_cubemap_shader.setUniform("u_modelViewProjectionMatrix", _uniforms.getActiveCamera()->getProjectionMatrix() * glm::toMat4(_uniforms.getActiveCamera()->getOrientationQuat()) );
-            m_cubemap_shader.setUniformTextureCube("u_cubeMap", _uniforms.getActiveCubemap(), 0);
+            m_cubemap_shader.setUniform("u_modelViewProjectionMatrix", _uniforms.activeCamera->getProjectionMatrix() * glm::toMat4(_uniforms.activeCamera->getOrientationQuat()) );
+            m_cubemap_shader.setUniformTextureCube("u_cubeMap", _uniforms.activeCubemap, 0);
 
             m_cubemap_vbo->render(&m_cubemap_shader);
         }
@@ -631,7 +631,7 @@ void Scene::renderDebug(Uniforms& _uniforms) {
     // Axis
     if (showAxis) {
         if (m_axis_vbo == nullptr)
-            m_axis_vbo = new vera::Vbo( vera::axisMesh(_uniforms.getActiveCamera()->getFarClip(), m_floor_height) );
+            m_axis_vbo = new vera::Vbo( vera::axisMesh(_uniforms.activeCamera->getFarClip(), m_floor_height) );
 
         vera::strokeWeight(2.0f);
         vera::stroke( glm::vec4(1.0f) );
@@ -641,7 +641,7 @@ void Scene::renderDebug(Uniforms& _uniforms) {
     // Grid
     if (showGrid) {
         if (m_grid_vbo == nullptr)
-            m_grid_vbo = new vera::Vbo( vera::gridMesh(_uniforms.getActiveCamera()->getFarClip(), _uniforms.getActiveCamera()->getFarClip() / 20.0, m_floor_height) );
+            m_grid_vbo = new vera::Vbo( vera::gridMesh(_uniforms.activeCamera->getFarClip(), _uniforms.activeCamera->getFarClip() / 20.0, m_floor_height) );
 
         vera::strokeWeight(1.0f);
         vera::stroke( glm::vec4(0.5f) );
@@ -658,7 +658,7 @@ void Scene::renderDebug(Uniforms& _uniforms) {
 
         m_lightUI_shader.use();
         m_lightUI_shader.setUniform("u_scale", 24.0f, 24.0f);
-        m_lightUI_shader.setUniform("u_viewMatrix", _uniforms.getActiveCamera()->getViewMatrix());
+        m_lightUI_shader.setUniform("u_viewMatrix", _uniforms.activeCamera->getViewMatrix());
         m_lightUI_shader.setUniform("u_modelViewProjectionMatrix", vera::getProjectionViewWorldMatrix() );
 
         for (vera::LightsMap::iterator it = _uniforms.lights.begin(); it != _uniforms.lights.end(); ++it) {

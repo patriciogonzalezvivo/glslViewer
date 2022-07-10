@@ -507,7 +507,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
 
             uniforms.addDefine("SUN", "u_light");
             uniforms.setSunPosition(azimuth, elevation);
-            uniforms.setActiveCubemap("skybox");
+            uniforms.activeCubemap = uniforms.cubemaps["skybox"];
             return true;
         }
         else {
@@ -527,7 +527,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
 
             uniforms.addDefine("SUN", "u_light");
             uniforms.setSunPosition(azimuth, elevation);
-            uniforms.setActiveCubemap("skybox");
+            uniforms.activeCubemap = uniforms.cubemaps["skybox"];
 
             return true;
         }
@@ -543,7 +543,9 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         std::vector<std::string> values = vera::split(_line,',');
         if (values.size() == 2) {
             uniforms.setSkyTurbidity( vera::toFloat(values[1]) );
-            uniforms.setActiveCubemap("skybox");
+            vera::TextureCubesMap::iterator it = uniforms.cubemaps.find("skybox");
+            if (it != uniforms.cubemaps.end())
+                uniforms.activeCubemap = uniforms.cubemaps["skybox"];
             return true;
         }
         else {
@@ -582,9 +584,11 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         // }
         else {
             if (uniforms.lights.size() > 0) {
-                vera::Light* sun = uniforms.getLight("sun");
-                glm::vec3 pos = sun->getPosition();
-                std::cout << pos.x << ',' << pos.y << ',' << pos.z << std::endl;
+                vera::LightsMap::iterator it = uniforms.lights.find("sun");
+                if (it != uniforms.lights.end()) {
+                    glm::vec3 pos = it->second->getPosition();
+                    std::cout << pos.x << ',' << pos.y << ',' << pos.z << std::endl;
+                }
             }
             return true;
         }
@@ -596,9 +600,12 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         std::vector<std::string> values = vera::split(_line,',');
         if (values.size() == 4) {
             if (uniforms.lights.size() > 0) {
-                vera::Light* sun = uniforms.getLight("sun");
-                sun->color = glm::vec3(vera::toFloat(values[1]), vera::toFloat(values[2]), vera::toFloat(values[3]));
-                sun->bChange = true;
+                vera::LightsMap::iterator it = uniforms.lights.find("sun");
+                if (it != uniforms.lights.end()) {
+                    vera::Light* sun = it->second;
+                    sun->color = glm::vec3(vera::toFloat(values[1]), vera::toFloat(values[2]), vera::toFloat(values[3]));
+                    sun->bChange = true;
+                }
             }
             return true;
         }
@@ -612,9 +619,11 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         // }
         else {
             if (uniforms.lights.size() > 0) {
-                vera::Light* sun = uniforms.getLight("sun");
-                glm::vec3 color = sun->color;
-                std::cout << color.x << ',' << color.y << ',' << color.z << std::endl;
+                vera::LightsMap::iterator it = uniforms.lights.find("sun");
+                if (it != uniforms.lights.end()) {
+                    glm::vec3 color = it->second->color;
+                    std::cout << color.x << ',' << color.y << ',' << color.z << std::endl;
+                }
             }
             return true;
         }
@@ -626,9 +635,12 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
          std::vector<std::string> values = vera::split(_line,',');
         if (values.size() == 2) {
             if (uniforms.lights.size() > 0) {
-                vera::Light* sun = uniforms.getLight("sun");
-                sun->falloff = vera::toFloat(values[1]);
-                sun->bChange = true;
+                vera::LightsMap::iterator it = uniforms.lights.find("sun");
+                if (it != uniforms.lights.end()) {
+                    vera::Light* sun = it->second;
+                    sun->falloff = vera::toFloat(values[1]);
+                    sun->bChange = true;
+                }
             }
             return true;
         }
@@ -642,8 +654,9 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         // }
         else {
             if (uniforms.lights.size() > 0) {
-                vera::Light* sun = uniforms.getLight("sun");
-                std::cout <<  sun->falloff << std::endl;
+                vera::LightsMap::iterator it = uniforms.lights.find("sun");
+                if (it != uniforms.lights.end())
+                    std::cout << it->second->falloff << std::endl;
             }
             return true;
         }
@@ -655,9 +668,12 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
          std::vector<std::string> values = vera::split(_line,',');
         if (values.size() == 2) {
             if (uniforms.lights.size() > 0) {
-                vera::Light* sun = uniforms.getLight("sun");
-                sun->intensity = vera::toFloat(values[1]);
-                sun->bChange = true;
+                vera::LightsMap::iterator it = uniforms.lights.find("sun");
+                if (it != uniforms.lights.end()) {
+                    vera::Light* sun = it->second;
+                    sun->intensity = vera::toFloat(values[1]);
+                    sun->bChange = true;
+                }
             }
             return true;
         }
@@ -671,8 +687,9 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         // }
         else {
             if (uniforms.lights.size() > 0) {
-                vera::Light* sun = uniforms.getLight("sun");
-                std::cout <<  sun->intensity << std::endl;
+                vera::LightsMap::iterator it = uniforms.lights.find("sun");
+                if (it != uniforms.lights.end())
+                    std::cout <<  it->second->intensity << std::endl;
             }
             return true;
         }
@@ -682,13 +699,17 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
 
     // CAMERA
     _commands.push_back(Command("camera_distance", [&](const std::string& _line){ 
+        if (!uniforms.activeCamera) 
+            return false;
+
         std::vector<std::string> values = vera::split(_line,',');
         if (values.size() == 2) {
-            uniforms.getActiveCamera()->setDistance(vera::toFloat(values[1]));
+            uniforms.activeCamera->setDistance(vera::toFloat(values[1]));
             return true;
         }
         else {
-            std::cout << uniforms.getActiveCamera()->getDistance() << std::endl;
+            
+            std::cout << uniforms.activeCamera->getDistance() << std::endl;
             return true;
         }
         return false;
@@ -696,20 +717,24 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     "camera_distance[,<dist>]", "get or set the camera distance to the target"));
 
     _commands.push_back(Command("camera_type", [&](const std::string& _line){ 
+        if (!uniforms.activeCamera) 
+            return false;
+
         std::vector<std::string> values = vera::split(_line,',');
         if (values.size() == 2) {
             if (values[1] == "ortho")
-                uniforms.getActiveCamera()->setProjection(vera::ProjectionType::ORTHO);
+                uniforms.activeCamera->setProjection(vera::ProjectionType::ORTHO);
             else if (values[1] == "perspective")
-                uniforms.getActiveCamera()->setProjection(vera::ProjectionType::PERSPECTIVE);
+                uniforms.activeCamera->setProjection(vera::ProjectionType::PERSPECTIVE);
             return true;
         }
         else {
-            vera::ProjectionType type = uniforms.getActiveCamera()->getProjectionType();
+            vera::ProjectionType type = uniforms.activeCamera->getProjectionType();
             if (type == vera::ProjectionType::ORTHO)
                 std::cout << "ortho" << std::endl;
             else
                 std::cout << "perspective" << std::endl;
+            
             return true;
         }
         return false;
@@ -717,31 +742,37 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     "camera_type[,<ortho|perspective>]", "get or set the camera type"));
 
     _commands.push_back(Command("camera_fov", [&](const std::string& _line){ 
+        if (!uniforms.activeCamera) 
+            return false;
+
         std::vector<std::string> values = vera::split(_line,',');
         if (values.size() == 2) {
-            uniforms.getActiveCamera()->setFOV( vera::toFloat(values[1]) );
+            uniforms.activeCamera->setFOV( vera::toFloat(values[1]) );
             return true;
         }
         else {
-            std::cout << uniforms.getActiveCamera()->getFOV() << std::endl;
+            std::cout << uniforms.activeCamera->getFOV() << std::endl;
             return true;
         }
         return false;
     },
     "camera_fov[,<field_of_view>]", "get or set the camera field of view."));
 
-    _commands.push_back(Command("camera_position", [&](const std::string& _line){ 
+    _commands.push_back(Command("camera_position", [&](const std::string& _line) {
+        if (!uniforms.activeCamera) 
+            return false;
+
         std::vector<std::string> values = vera::split(_line,',');
         if (values.size() == 4) {
-            uniforms.getActiveCamera()->setPosition( -glm::vec3(vera::toFloat(values[1]), vera::toFloat(values[2]), vera::toFloat(values[3])));
-            uniforms.getActiveCamera()->lookAt( uniforms.getActiveCamera()->getTarget() );
-            glm::vec3 v = uniforms.getActiveCamera()->getPosition();
+            uniforms.activeCamera->setPosition( -glm::vec3(vera::toFloat(values[1]), vera::toFloat(values[2]), vera::toFloat(values[3])));
+            uniforms.activeCamera->lookAt( uniforms.activeCamera->getTarget() );
+            glm::vec3 v = uniforms.activeCamera->getPosition();
             m_camera_azimuth = glm::degrees( atan2(v.x, v.z) );
             m_camera_elevation = glm::degrees( atan2(-v.y, sqrt(v.x * v.x + v.z * v.z)) );
             return true;
         }
         else {
-            glm::vec3 pos = -uniforms.getActiveCamera()->getPosition();
+            glm::vec3 pos = -uniforms.activeCamera->getPosition();
             std::cout << pos.x << ',' << pos.y << ',' << pos.z << std::endl;
             return true;
         }
@@ -749,14 +780,17 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     },
     "camera_position[,<x>,<y>,<z>]", "get or set the camera position."));
 
-    _commands.push_back(Command("camera_exposure", [&](const std::string& _line){ 
+    _commands.push_back(Command("camera_exposure", [&](const std::string& _line) { 
+        if (!uniforms.activeCamera) 
+            return false;
+
         std::vector<std::string> values = vera::split(_line,',');
         if (values.size() == 4) {
-            uniforms.getActiveCamera()->setExposure( vera::toFloat(values[1]), vera::toFloat(values[2]), vera::toFloat(values[3]));
+            uniforms.activeCamera->setExposure( vera::toFloat(values[1]), vera::toFloat(values[2]), vera::toFloat(values[3]));
             return true;
         }
         else {
-            std::cout << uniforms.getActiveCamera()->getExposure() << std::endl;
+            std::cout << uniforms.activeCamera->getExposure() << std::endl;
             return true;
         }
         return false;
@@ -918,18 +952,18 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     // -----------------------------------------------
     if (geom_index == -1) {
         m_canvas_shader.addDefine("MODEL_VERTEX_TEXCOORD", "v_texcoord");
-        uniforms.getActiveCamera()->orbit(m_camera_azimuth, m_camera_elevation, 2.0);
+        uniforms.activeCamera->orbit(m_camera_azimuth, m_camera_elevation, 2.0);
     }
     else {
         m_scene.setup( _commands, uniforms);
         m_scene.loadScene( uniforms, _files[geom_index].path, verbose );
-        uniforms.getActiveCamera()->orbit(m_camera_azimuth, m_camera_elevation, m_scene.getArea() * 2.0);
-        uniforms.getActiveCamera()->lookAt( uniforms.getActiveCamera()->getTarget() );
+        uniforms.activeCamera->orbit(m_camera_azimuth, m_camera_elevation, m_scene.getArea() * 2.0);
+        uniforms.activeCamera->lookAt( uniforms.activeCamera->getTarget() );
     }
 
     // FINISH SCENE SETUP
     // -------------------------------------------------
-    uniforms.getActiveCamera()->setViewport(vera::getWindowWidth(), vera::getWindowHeight());
+    uniforms.activeCamera->setViewport(vera::getWindowWidth(), vera::getWindowHeight());
 
     if (lenticular.size() > 0)
         vera::setLenticularProperties(lenticular);
@@ -943,12 +977,12 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         addDefine("QUILT_ROWS", vera::toString( vera::getQuiltRows() ));
         addDefine("QUILT_TOTALVIEWS", vera::toString( vera::getQuiltTotalViews() ));
 
-        uniforms.getActiveCamera()->setFOV(glm::radians(14.0f));
-        uniforms.getActiveCamera()->setProjection(vera::ProjectionType::PERSPECTIVE_VIRTUAL_OFFSET);
-        // uniforms.getActiveCamera()->setClipping(0.01, 100.0);
+        uniforms.activeCamera->setFOV(glm::radians(14.0f));
+        uniforms.activeCamera->setProjection(vera::ProjectionType::PERSPECTIVE_VIRTUAL_OFFSET);
+        // uniforms.activeCamera->setClipping(0.01, 100.0);
 
         if (geom_index != -1)
-            uniforms.getActiveCamera()->orbit(m_camera_elevation, m_camera_azimuth, m_scene.getArea() * 8.5);
+            uniforms.activeCamera->orbit(m_camera_elevation, m_camera_azimuth, m_scene.getArea() * 8.5);
 
         if (lenticular.size() == 0)
             vera::setWindowSize(vera::getQuiltWidth(), vera::getQuiltHeight());
@@ -1119,7 +1153,7 @@ bool Sandbox::reloadShaders( WatchFileList &_files ) {
     uniforms.checkUniforms(m_vert_source, m_frag_source); // Check active native uniforms
     uniforms.flagChange();                                  // Flag all user defined uniforms as changed
 
-    if ( uniforms.getActiveCubemap() != nullptr ) {
+    if ( uniforms.activeCubemap != nullptr ) {
         addDefine("SCENE_SH_ARRAY", "u_SH");
         addDefine("SCENE_CUBEMAP", "u_cubeMap");
     }
@@ -1428,7 +1462,7 @@ void Sandbox::render() {
             vera::renderQuilt([&](const vera::QuiltProperties& quilt, glm::vec4& viewport, int &viewIndex) {
 
                 // set up the camera rotation and position for current view
-                uniforms.getActiveCamera()->setVirtualOffset(5.0, viewIndex, quilt.totalViews);
+                uniforms.activeCamera->setVirtualOffset(5.0, viewIndex, quilt.totalViews);
                 uniforms.set("u_tile", float(quilt.columns), float(quilt.rows), float(quilt.totalViews));
                 uniforms.set("u_viewport", float(viewport.x), float(viewport.y), float(viewport.z), float(viewport.w));
 
@@ -1459,7 +1493,7 @@ void Sandbox::render() {
             vera::renderQuilt([&](const vera::QuiltProperties& quilt, glm::vec4& viewport, int &viewIndex){
 
                 // set up the camera rotation and position for current view
-                uniforms.getActiveCamera()->setVirtualOffset(m_scene.getArea(), viewIndex, quilt.totalViews);
+                uniforms.activeCamera->setVirtualOffset(m_scene.getArea(), viewIndex, quilt.totalViews);
                 uniforms.set("u_tile", float(quilt.columns), float(quilt.rows), float(quilt.totalViews));
                 uniforms.set("u_viewport", float(viewport.x), float(viewport.y), float(viewport.z), float(viewport.w));
 
@@ -1944,6 +1978,8 @@ void Sandbox::onScroll(float _yoffset) {
 }
 
 void Sandbox::onMouseDrag(float _x, float _y, int _button) {
+    if (uniforms.activeCamera == nullptr)
+        return;
 
     if (quilt < 0) {
         // If it's not playing on the HOLOPLAY
@@ -1967,7 +2003,7 @@ void Sandbox::onMouseDrag(float _x, float _y, int _button) {
         m_view2d = glm::translate(m_view2d, glm::vec2(-vera::getMouseVelX(),-vera::getMouseVelY()) );
 
         // Left-button drag is used to rotate geometry.
-        float dist = uniforms.getActiveCamera()->getDistance();
+        float dist = uniforms.activeCamera->getDistance();
 
         float vel_x = vera::getMouseVelX();
         float vel_y = vera::getMouseVelY();
@@ -1975,23 +2011,24 @@ void Sandbox::onMouseDrag(float _x, float _y, int _button) {
         if (fabs(vel_x) < 50.0 && fabs(vel_y) < 50.0) {
             m_camera_azimuth -= vel_x;
             m_camera_elevation -= vel_y * 0.5;
-            uniforms.getActiveCamera()->orbit(m_camera_azimuth, m_camera_elevation, dist);
-            uniforms.getActiveCamera()->lookAt(glm::vec3(0.0));
+            uniforms.activeCamera->orbit(m_camera_azimuth, m_camera_elevation, dist);
+            uniforms.activeCamera->lookAt(glm::vec3(0.0));
         }
     } 
     else {
         // Right-button drag is used to zoom geometry.
-        float dist = uniforms.getActiveCamera()->getDistance();
+        float dist = uniforms.activeCamera->getDistance();
         dist += (-.008f * vera::getMouseVelY());
         if (dist > 0.0f) {
-            uniforms.getActiveCamera()->orbit(m_camera_azimuth, m_camera_elevation, dist);
-            uniforms.getActiveCamera()->lookAt(glm::vec3(0.0));
+            uniforms.activeCamera->orbit(m_camera_azimuth, m_camera_elevation, dist);
+            uniforms.activeCamera->lookAt(glm::vec3(0.0));
         }
     }
 }
 
 void Sandbox::onViewportResize(int _newWidth, int _newHeight) {
-    uniforms.getActiveCamera()->setViewport(_newWidth, _newHeight);
+    if (uniforms.activeCamera)
+        uniforms.activeCamera->setViewport(_newWidth, _newHeight);
     
     for (size_t i = 0; i < uniforms.buffers.size(); i++) 
         if (!uniforms.buffers[i].fixed)

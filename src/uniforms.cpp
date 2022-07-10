@@ -67,135 +67,135 @@ UniformFunction::UniformFunction(const std::string &_type, std::function<void(ve
 }
 
 
-Uniforms::Uniforms() {
+Uniforms::Uniforms() : m_change(false) {
     // IBL
     //
     functions["u_iblLuminance"] = UniformFunction("float", [this](vera::Shader& _shader) {
-        if (m_activeCamera)
-            _shader.setUniform("u_iblLuminance", 30000.0f * m_activeCamera->getExposure());
+        if (activeCamera)
+            _shader.setUniform("u_iblLuminance", 30000.0f * activeCamera->getExposure());
     },
     [this]() { 
-        if (m_activeCamera)
-            return vera::toString(30000.0f * m_activeCamera->getExposure());
+        if (activeCamera)
+            return vera::toString(30000.0f * activeCamera->getExposure());
         return std::string("");
     });
     
     // CAMERA UNIFORMS
     //
     functions["u_camera"] = UniformFunction("vec3", [this](vera::Shader& _shader) {
-        if (m_activeCamera)
-            _shader.setUniform("u_camera", - (m_activeCamera->getPosition()) );
+        if (activeCamera)
+            _shader.setUniform("u_camera", - (activeCamera->getPosition()) );
     },
     [this]() {
-        if (m_activeCamera)
-            return vera::toString(-m_activeCamera->getPosition(), ',');
+        if (activeCamera)
+            return vera::toString(-activeCamera->getPosition(), ',');
         return std::string("");
     });
 
     functions["u_cameraDistance"] = UniformFunction("float", [this](vera::Shader& _shader) {
-        if (m_activeCamera)
-            _shader.setUniform("u_cameraDistance", m_activeCamera->getDistance());
+        if (activeCamera)
+            _shader.setUniform("u_cameraDistance", activeCamera->getDistance());
     },
     [this]() { 
-        if (m_activeCamera)
-            return vera::toString(m_activeCamera->getDistance());
+        if (activeCamera)
+            return vera::toString(activeCamera->getDistance());
         return std::string("");
     });
 
     functions["u_cameraNearClip"] = UniformFunction("float", [this](vera::Shader& _shader) {
-        if (m_activeCamera)
-            _shader.setUniform("u_cameraNearClip", m_activeCamera->getNearClip());
+        if (activeCamera)
+            _shader.setUniform("u_cameraNearClip", activeCamera->getNearClip());
     },
     [this]() { 
-        if (m_activeCamera)
-            return vera::toString(m_activeCamera->getNearClip());
+        if (activeCamera)
+            return vera::toString(activeCamera->getNearClip());
         return std::string("");
     });
 
     functions["u_cameraFarClip"] = UniformFunction("float", [this](vera::Shader& _shader) {
-        if (m_activeCamera)
-            _shader.setUniform("u_cameraFarClip", m_activeCamera->getFarClip());
+        if (activeCamera)
+            _shader.setUniform("u_cameraFarClip", activeCamera->getFarClip());
     },
     [this]() { 
-        if (m_activeCamera)
-            return vera::toString(m_activeCamera->getFarClip()); 
+        if (activeCamera)
+            return vera::toString(activeCamera->getFarClip()); 
         return std::string("");
     });
 
     functions["u_cameraEv100"] = UniformFunction("float", [this](vera::Shader& _shader) {
-        if (m_activeCamera)
-            _shader.setUniform("u_cameraEv100", m_activeCamera->getEv100());
+        if (activeCamera)
+            _shader.setUniform("u_cameraEv100", activeCamera->getEv100());
     },
     [this]() {
-        if (m_activeCamera)
-            return vera::toString(m_activeCamera->getEv100());
+        if (activeCamera)
+            return vera::toString(activeCamera->getEv100());
         return std::string("");
     });
 
     functions["u_cameraExposure"] = UniformFunction("float", [this](vera::Shader& _shader) {
-        if (m_activeCamera)
-            _shader.setUniform("u_cameraExposure", m_activeCamera->getExposure());
+        if (activeCamera)
+            _shader.setUniform("u_cameraExposure", activeCamera->getExposure());
     },
     [this]() { 
-        if (m_activeCamera)
-            return vera::toString(m_activeCamera->getExposure());
+        if (activeCamera)
+            return vera::toString(activeCamera->getExposure());
         return std::string("");
     });
 
     functions["u_cameraAperture"] = UniformFunction("float", [this](vera::Shader& _shader) {
-        if (m_activeCamera)
-            _shader.setUniform("u_cameraAperture", m_activeCamera->getAperture());
+        if (activeCamera)
+            _shader.setUniform("u_cameraAperture", activeCamera->getAperture());
     },
     [this]() { 
-        if (m_activeCamera)
-            return vera::toString(m_activeCamera->getAperture());
+        if (activeCamera)
+            return vera::toString(activeCamera->getAperture());
         return std::string("");
     });
 
     functions["u_cameraShutterSpeed"] = UniformFunction("float", [this](vera::Shader& _shader) {
-        if (m_activeCamera)
-            _shader.setUniform("u_cameraShutterSpeed", m_activeCamera->getShutterSpeed());
+        if (activeCamera)
+            _shader.setUniform("u_cameraShutterSpeed", activeCamera->getShutterSpeed());
     },
     [this]() { 
-        if (m_activeCamera)
-            return vera::toString(m_activeCamera->getShutterSpeed());
+        if (activeCamera)
+            return vera::toString(activeCamera->getShutterSpeed());
         return std::string("");
     });
 
     functions["u_cameraSensitivity"] = UniformFunction("float", [this](vera::Shader& _shader) {
-        if (m_activeCamera)
-            _shader.setUniform("u_cameraSensitivity", m_activeCamera->getSensitivity());
+        if (activeCamera)
+            _shader.setUniform("u_cameraSensitivity", activeCamera->getSensitivity());
     },
     [this]() { 
-        if (m_activeCamera)
-            return vera::toString(m_activeCamera->getSensitivity());
+        if (activeCamera)
+            return vera::toString(activeCamera->getSensitivity());
         return std::string("");
     });
 
     functions["u_cameraChange"] = UniformFunction("bool", [this](vera::Shader& _shader) {
-        if (m_activeCamera)
-            _shader.setUniform("u_cameraChange", m_activeCamera->bChange);
+        if (activeCamera)
+            _shader.setUniform("u_cameraChange", activeCamera->bChange);
     },
     [this]() { 
-        if (m_activeCamera)
-            return vera::toString(m_activeCamera->getSensitivity());
+        if (activeCamera)
+            return vera::toString(activeCamera->getSensitivity());
         return std::string("");
     });
     
     functions["u_normalMatrix"] = UniformFunction("mat3", [this](vera::Shader& _shader) {
-        if (m_activeCamera)
-            _shader.setUniform("u_normalMatrix", m_activeCamera->getNormalMatrix());
+        if (activeCamera)
+            _shader.setUniform("u_normalMatrix", activeCamera->getNormalMatrix());
     });
 
     // CAMERA MATRIX UNIFORMS
     functions["u_viewMatrix"] = UniformFunction("mat4", [this](vera::Shader& _shader) {
-        if (m_activeCamera)
-            _shader.setUniform("u_viewMatrix", m_activeCamera->getViewMatrix());
+        if (activeCamera)
+            _shader.setUniform("u_viewMatrix", activeCamera->getViewMatrix());
     });
 
     functions["u_projectionMatrix"] = UniformFunction("mat4", [this](vera::Shader& _shader) {
-        if (m_activeCamera)
-            _shader.setUniform("u_projectionMatrix", m_activeCamera->getProjectionMatrix());
+        if (activeCamera)
+            _shader.setUniform("u_projectionMatrix", activeCamera->getProjectionMatrix());
     });
 }
 
@@ -236,16 +236,90 @@ bool Uniforms::feedTo(vera::Shader *_shader, bool _lights, bool _buffers ) {
         }
     }
 
-    vera::Scene::feedTo(_shader, _lights, _buffers);
+    // Pass Textures Uniforms
+    for (vera::TexturesMap::iterator it = textures.begin(); it != textures.end(); ++it) {
+        _shader->setUniformTexture(it->first, it->second, _shader->textureIndex++ );
+        _shader->setUniform(it->first+"Resolution", float(it->second->getWidth()), float(it->second->getHeight()));
+    }
+
+    for (vera::TextureStreamsMap::iterator it = streams.begin(); it != streams.end(); ++it) {
+        for (size_t i = 0; i < it->second->getPrevTexturesTotal(); i++)
+            _shader->setUniformTexture(it->first+"Prev["+vera::toString(i)+"]", it->second->getPrevTextureId(i), _shader->textureIndex++);
+
+        _shader->setUniform(it->first+"Time", float(it->second->getTime()));
+        _shader->setUniform(it->first+"Fps", float(it->second->getFps()));
+        _shader->setUniform(it->first+"Duration", float(it->second->getDuration()));
+        _shader->setUniform(it->first+"CurrentFrame", float(it->second->getCurrentFrame()));
+        _shader->setUniform(it->first+"TotalFrames", float(it->second->getTotalFrames()));
+    }
+
+    // Pass Buffers Texture
+    if (_buffers) {
+        for (size_t i = 0; i < buffers.size(); i++)
+            _shader->setUniformTexture("u_buffer" + vera::toString(i), &buffers[i], _shader->textureIndex++ );
+
+        for (size_t i = 0; i < doubleBuffers.size(); i++)
+            _shader->setUniformTexture("u_doubleBuffer" + vera::toString(i), doubleBuffers[i].src, _shader->textureIndex++ );
+    }
+
+    // Pass Convolution Piramids resultant Texture
+    for (size_t i = 0; i < pyramids.size(); i++)
+        _shader->setUniformTexture("u_pyramid" + vera::toString(i), pyramids[i].getResult(), _shader->textureIndex++ );
+    
+    if (_lights) {
+        // Pass Light Uniforms
+        if (lights.size() == 1) {
+            vera::LightsMap::iterator it = lights.begin();
+
+            _shader->setUniform("u_lightColor", it->second->color);
+            _shader->setUniform("u_lightIntensity", it->second->intensity);
+            if (it->second->getLightType() != vera::LIGHT_DIRECTIONAL)
+                _shader->setUniform("u_light", it->second->getPosition());
+            if (it->second->getLightType() == vera::LIGHT_DIRECTIONAL || it->second->getLightType() == vera::LIGHT_SPOT)
+                _shader->setUniform("u_lightDirection", it->second->direction);
+            if (it->second->falloff > 0)
+                _shader->setUniform("u_lightFalloff", it->second->falloff);
+            _shader->setUniform("u_lightMatrix", it->second->getBiasMVPMatrix() );
+            _shader->setUniformDepthTexture("u_lightShadowMap", it->second->getShadowMap(), _shader->textureIndex++ );
+        }
+        else {
+            // TODO:
+            //      - Lights should be pass as structs?? 
+
+            for (vera::LightsMap::iterator it = lights.begin(); it != lights.end(); ++it) {
+                std::string name = "u_" + it->first;
+
+                _shader->setUniform(name + "Color", it->second->color);
+                _shader->setUniform(name + "Intensity", it->second->intensity);
+                if (it->second->getLightType() != vera::LIGHT_DIRECTIONAL)
+                    _shader->setUniform(name, it->second->getPosition());
+                if (it->second->getLightType() == vera::LIGHT_DIRECTIONAL || it->second->getLightType() == vera::LIGHT_SPOT)
+                    _shader->setUniform(name + "Direction", it->second->direction);
+                if (it->second->falloff > 0)
+                    _shader->setUniform(name +"Falloff", it->second->falloff);
+
+                _shader->setUniform(name + "Matrix", it->second->getBiasMVPMatrix() );
+                _shader->setUniformDepthTexture(name + "ShadowMap", it->second->getShadowMap(), _shader->textureIndex++ );
+            }
+        }
+        
+        if (activeCubemap) {
+            _shader->setUniformTextureCube("u_cubeMap", (vera::TextureCube*)activeCubemap);
+            _shader->setUniform("u_SH", activeCubemap->SH, 9);
+        }
+    }
     return update;
 }
 
 void Uniforms::flagChange() {
+    m_change = true;
+
+    if (activeCamera)
+        activeCamera->bChange = true;
+
     // Flag all user uniforms as changed
     for (UniformDataMap::iterator it = data.begin(); it != data.end(); ++it)
         it->second.change = true;
-    
-    vera::Scene::flagChange();
 }
 
 void Uniforms::unflagChange() {
@@ -257,17 +331,32 @@ void Uniforms::unflagChange() {
             m_change += it->second.check();
     }
 
-    vera::Scene::unflagChange();
+    for (vera::LightsMap::iterator it = lights.begin(); it != lights.end(); ++it)
+        it->second->bChange = false;
+
+    if (activeCamera)
+        activeCamera->bChange = false;
 }
 
 bool Uniforms::haveChange() { 
+    if (activeCamera)
+        if (activeCamera->bChange)
+            return true;
+            
     if (functions["u_time"].present || 
         functions["u_date"].present ||
         functions["u_delta"].present ||
         functions["u_mouse"].present)
         return true;
 
-    return vera::Scene::haveChange();
+    for (vera::LightsMap::const_iterator it = lights.begin(); it != lights.end(); ++it)
+        if (it->second->bChange)
+            return true;
+
+    if (m_change || streams.size() > 0)
+        return true;
+
+    return false;
 }
 
 
@@ -373,6 +462,26 @@ void Uniforms::printDefinedUniforms(bool _csv){
     }    
 }
 
+void Uniforms::addDefine(const std::string& _define, const std::string& _value) {
+    for (vera::ModelsMap::iterator it = models.begin(); it != models.end(); ++it)
+        it->second->addDefine(_define, _value);
+}
+
+void Uniforms::delDefine(const std::string& _define) {
+    for (vera::ModelsMap::iterator it = models.begin(); it != models.end(); ++it)
+        it->second->delDefine(_define);
+}
+
+void Uniforms::printDefines() {
+    for (vera::ModelsMap::iterator it = models.begin(); it != models.end(); ++it) {
+        std::cout << std::endl;
+        std::cout << it->second->getName() << std::endl;
+        std::cout << "-------------- " << std::endl;
+        it->second->printDefines();
+    }
+}
+
+
 void Uniforms::printBuffers() {
     vera::Scene::printBuffers();
 
@@ -421,9 +530,9 @@ bool Uniforms::addCameraPath( const std::string& _name ) {
             float near = 0.0f;
             float far = 1000.0;
 
-            if (m_activeCamera) {
-                near = m_activeCamera->getNearClip();
-                far = m_activeCamera->getFarClip();
+            if (activeCamera) {
+                near = activeCamera->getNearClip();
+                far = activeCamera->getFarClip();
             }
 
             float delta = far-near;

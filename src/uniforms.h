@@ -65,6 +65,11 @@ public:
     virtual bool        feedTo( vera::Shader &_shader, bool _lights = true, bool _buffers = true);
     virtual bool        feedTo( vera::Shader *_shader, bool _lights = true, bool _buffers = true);
 
+    // defines
+    virtual void        addDefine(const std::string& _define, const std::string& _value);
+    virtual void        delDefine(const std::string& _define);
+    virtual void        printDefines();
+
     virtual void        printBuffers();
 
     // Ingest new uniforms
@@ -86,6 +91,9 @@ public:
     virtual bool        addCameraPath( const std::string& _name );
 
     Tracker             tracker;
+
+protected:
+    bool                m_change;
 
 };
 
