@@ -506,8 +506,8 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
             float azimuth = uniforms.getSunAzimuth();
 
             uniforms.addDefine("SUN", "u_light");
-            uniforms.setSunPosition(azimuth, elevation);
-            uniforms.activeCubemap = uniforms.cubemaps["skybox"];
+            uniforms.setSunPosition(azimuth, elevation, glm::length( uniforms.lights["default"]->getPosition() ));
+            uniforms.activeCubemap = uniforms.cubemaps["default"];
             return true;
         }
         else {
@@ -526,8 +526,8 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
             float azimuth = glm::radians( vera::toFloat(values[1]) );
 
             uniforms.addDefine("SUN", "u_light");
-            uniforms.setSunPosition(azimuth, elevation);
-            uniforms.activeCubemap = uniforms.cubemaps["skybox"];
+            uniforms.setSunPosition(azimuth, elevation, glm::length( uniforms.lights["default"]->getPosition() ) );
+            uniforms.activeCubemap = uniforms.cubemaps["default"];
 
             return true;
         }
@@ -545,7 +545,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
             uniforms.setSkyTurbidity( vera::toFloat(values[1]) );
             vera::TextureCubesMap::iterator it = uniforms.cubemaps.find("skybox");
             if (it != uniforms.cubemaps.end())
-                uniforms.activeCubemap = uniforms.cubemaps["skybox"];
+                uniforms.activeCubemap = uniforms.cubemaps["default"];
             return true;
         }
         else {
@@ -583,13 +583,8 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         //     return true;
         // }
         else {
-            if (uniforms.lights.size() > 0) {
-                vera::LightsMap::iterator it = uniforms.lights.find("sun");
-                if (it != uniforms.lights.end()) {
-                    glm::vec3 pos = it->second->getPosition();
-                    std::cout << pos.x << ',' << pos.y << ',' << pos.z << std::endl;
-                }
-            }
+            glm::vec3 pos = uniforms.lights["default"]->getPosition();
+            std::cout << pos.x << ',' << pos.y << ',' << pos.z << std::endl;
             return true;
         }
         return false;
@@ -599,14 +594,9 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     _commands.push_back(Command("light_color", [&](const std::string& _line){ 
         std::vector<std::string> values = vera::split(_line,',');
         if (values.size() == 4) {
-            if (uniforms.lights.size() > 0) {
-                vera::LightsMap::iterator it = uniforms.lights.find("sun");
-                if (it != uniforms.lights.end()) {
-                    vera::Light* sun = it->second;
-                    sun->color = glm::vec3(vera::toFloat(values[1]), vera::toFloat(values[2]), vera::toFloat(values[3]));
-                    sun->bChange = true;
-                }
-            }
+            vera::Light* sun = uniforms.lights["default"];
+            sun->color = glm::vec3(vera::toFloat(values[1]), vera::toFloat(values[2]), vera::toFloat(values[3]));
+            sun->bChange = true;
             return true;
         }
         // else if (values.size() == 5) {
@@ -618,13 +608,8 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         //     return true;
         // }
         else {
-            if (uniforms.lights.size() > 0) {
-                vera::LightsMap::iterator it = uniforms.lights.find("sun");
-                if (it != uniforms.lights.end()) {
-                    glm::vec3 color = it->second->color;
-                    std::cout << color.x << ',' << color.y << ',' << color.z << std::endl;
-                }
-            }
+            glm::vec3 color = uniforms.lights["default"]->color;
+            std::cout << color.x << ',' << color.y << ',' << color.z << std::endl;
             return true;
         }
         return false;
@@ -634,14 +619,9 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     _commands.push_back(Command("light_falloff", [&](const std::string& _line){ 
          std::vector<std::string> values = vera::split(_line,',');
         if (values.size() == 2) {
-            if (uniforms.lights.size() > 0) {
-                vera::LightsMap::iterator it = uniforms.lights.find("sun");
-                if (it != uniforms.lights.end()) {
-                    vera::Light* sun = it->second;
-                    sun->falloff = vera::toFloat(values[1]);
-                    sun->bChange = true;
-                }
-            }
+            vera::Light* sun = uniforms.lights["default"];
+            sun->falloff = vera::toFloat(values[1]);
+            sun->bChange = true;
             return true;
         }
         // else if (values.size() == 5) {
@@ -653,11 +633,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         //     return true;
         // }
         else {
-            if (uniforms.lights.size() > 0) {
-                vera::LightsMap::iterator it = uniforms.lights.find("sun");
-                if (it != uniforms.lights.end())
-                    std::cout << it->second->falloff << std::endl;
-            }
+            std::cout << uniforms.lights["default"]->falloff << std::endl;
             return true;
         }
         return false;
@@ -667,14 +643,9 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     _commands.push_back(Command("light_intensity", [&](const std::string& _line){ 
          std::vector<std::string> values = vera::split(_line,',');
         if (values.size() == 2) {
-            if (uniforms.lights.size() > 0) {
-                vera::LightsMap::iterator it = uniforms.lights.find("sun");
-                if (it != uniforms.lights.end()) {
-                    vera::Light* sun = it->second;
-                    sun->intensity = vera::toFloat(values[1]);
-                    sun->bChange = true;
-                }
-            }
+            vera::Light* sun = uniforms.lights["default"];
+            sun->intensity = vera::toFloat(values[1]);
+            sun->bChange = true;
             return true;
         }
         // else if (values.size() == 5) {
@@ -686,11 +657,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         //     return true;
         // }
         else {
-            if (uniforms.lights.size() > 0) {
-                vera::LightsMap::iterator it = uniforms.lights.find("sun");
-                if (it != uniforms.lights.end())
-                    std::cout <<  it->second->intensity << std::endl;
-            }
+            std::cout <<  uniforms.lights["default"]->intensity << std::endl;
             return true;
         }
         return false;

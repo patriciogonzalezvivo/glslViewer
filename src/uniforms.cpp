@@ -68,6 +68,7 @@ UniformFunction::UniformFunction(const std::string &_type, std::function<void(ve
 
 
 Uniforms::Uniforms() : m_change(false) {
+
     // IBL
     //
     functions["u_iblLuminance"] = UniformFunction("float", [this](vera::Shader& _shader) {

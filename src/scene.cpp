@@ -201,7 +201,7 @@ void Scene::setup(CommandList& _commands, Uniforms& _uniforms) {
             addDefine("FLOOR_COLOR",str_color);
             
             _uniforms.setGroundAlbedo( glm::vec3(vera::toFloat(values[1]), vera::toFloat(values[2]), vera::toFloat(values[3])) );
-            _uniforms.activeCubemap = _uniforms.cubemaps["skybox"];
+            _uniforms.activeCubemap = _uniforms.cubemaps["default"];
             return true;
         }
         else {
@@ -258,7 +258,7 @@ void Scene::setup(CommandList& _commands, Uniforms& _uniforms) {
             std::vector<std::string> values = vera::split(_line,',');
             if (values.size() == 2) {
                 if (values[1] == "on")
-                    _uniforms.activeCubemap = _uniforms.cubemaps["skybox"];
+                    _uniforms.activeCubemap = _uniforms.cubemaps["default"];
 
                 showCubebox = values[1] == "on";
                 return true;
@@ -267,7 +267,6 @@ void Scene::setup(CommandList& _commands, Uniforms& _uniforms) {
         return false;
     },
     "sky[,on|off]", "show/hide skybox"));
-
 
     _commands.push_back(Command("floor", [&](const std::string& _line) {
         std::vector<std::string> values = vera::split(_line,',');
@@ -400,11 +399,8 @@ bool Scene::loadScene(Uniforms& _uniforms, const std::string& _filename, bool _v
     m_floor_height = bbox.min.y;
 
     // Setup light
-    if (_uniforms.lights.size() == 0) {
-        vera::Light* sun = new vera::Light( glm::vec3(0.0,m_area*10.0,m_area*10.0), -1.0 );
-        _uniforms.lights["sun"] = sun;
-        vera::addLabel("u_light", sun, vera::LABEL_DOWN, 30.0f);
-    }
+    _uniforms.setSunPosition( glm::vec3(0.0,m_area*10.0,m_area*10.0) );
+    vera::addLabel("u_light", _uniforms.lights["default"], vera::LABEL_DOWN, 30.0f);
 
     return true;
 }
