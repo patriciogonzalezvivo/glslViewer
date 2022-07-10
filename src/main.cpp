@@ -529,7 +529,7 @@ int main(int argc, char **argv) {
                 argument = std::string(argv[i]);
                 sandbox.uniforms.addCubemap("enviroment", argument);
                 sandbox.uniforms.activeCubemap = sandbox.uniforms.cubemaps["enviroment"];
-                sandbox.getScene().showCubebox = false;
+                sandbox.getSceneRender().showCubebox = false;
             }
             else
                 std::cout << "Argument '" << argument << "' should be followed by a <environmental_map>. Skipping argument." << std::endl;
@@ -540,7 +540,7 @@ int main(int argc, char **argv) {
                 argument = std::string(argv[i]);
                 sandbox.uniforms.addCubemap("enviroment", argument);
                 sandbox.uniforms.activeCubemap = sandbox.uniforms.cubemaps["enviroment"];
-                sandbox.getScene().showCubebox = true;
+                sandbox.getSceneRender().showCubebox = true;
             }
             else
                 std::cout << "Argument '" << argument << "' should be followed by a <environmental_map>. Skipping argument." << std::endl;

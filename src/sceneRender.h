@@ -10,16 +10,16 @@
 #include "vera/gl/textureCube.h"
 #include "vera/scene/model.h"
 
-class Scene {
+class SceneRender {
 public:
 
-    Scene();
-    virtual ~Scene();
+    SceneRender();
+    virtual ~SceneRender();
 
     void            setup(CommandList& _commands, Uniforms& _uniforms);
     void            clear();
 
-    bool            loadScene(Uniforms& _uniforms, const std::string& _filename, bool _verbose);
+    bool            loadScene(Uniforms& _uniforms);
     bool            loadShaders(Uniforms& _uniforms, const std::string& _fragmentShader, const std::string& _vertexShader, bool _verbose);
 
     void            addDefine(const std::string& _define, const std::string& _value);

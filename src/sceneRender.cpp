@@ -1,5 +1,5 @@
 
-#include "scene.h"
+#include "sceneRender.h"
 
 #ifndef PLATFORM_WINDOWS
 #include <unistd.h>
@@ -21,7 +21,7 @@
 #define TRACK_BEGIN(A) if (_uniforms.tracker.isRunning()) _uniforms.tracker.begin(A); 
 #define TRACK_END(A) if (_uniforms.tracker.isRunning()) _uniforms.tracker.end(A); 
 
-Scene::Scene(): 
+SceneRender::SceneRender(): 
     // Debug State
     showGrid(false), showAxis(false), showBBoxes(false), showCubebox(false), 
     // Camera.
@@ -37,11 +37,11 @@ Scene::Scene():
     {
 }
 
-Scene::~Scene(){
+SceneRender::~SceneRender(){
     clear();
 }
 
-void Scene::clear() {
+void SceneRender::clear() {
     if (m_lightUI_vbo) {
         delete m_lightUI_vbo;
         m_lightUI_vbo = nullptr;
@@ -63,7 +63,7 @@ void Scene::clear() {
     }
 }
 
-void Scene::setup(CommandList& _commands, Uniforms& _uniforms) {
+void SceneRender::setup(CommandList& _commands, Uniforms& _uniforms) {
     // ADD COMMANDS
     // ----------------------------------------- 
     _commands.push_back(Command("model", [&](const std::string& _line){ 
@@ -357,17 +357,17 @@ void Scene::setup(CommandList& _commands, Uniforms& _uniforms) {
     
 }
 
-void Scene::addDefine(const std::string& _define, const std::string& _value) {
+void SceneRender::addDefine(const std::string& _define, const std::string& _value) {
     m_background_shader.addDefine(_define, _value);
     m_floor_shader.addDefine(_define, _value);
 }
 
-void Scene::delDefine(const std::string& _define) {
+void SceneRender::delDefine(const std::string& _define) {
     m_background_shader.delDefine(_define);
     m_floor_shader.delDefine(_define);
 }
 
-void Scene::printDefines() {
+void SceneRender::printDefines() {
     if (m_background) {
         std::cout << std::endl;
         std::cout << "BACKGROUND" << std::endl;
@@ -383,9 +383,7 @@ void Scene::printDefines() {
     }
 }
 
-bool Scene::loadScene(Uniforms& _uniforms, const std::string& _filename, bool _verbose) {
-    _uniforms.load(_filename, _verbose);
-
+bool SceneRender::loadScene(Uniforms& _uniforms) {
     // Calculate the total area
     vera::BoundingBox bbox;
     for (vera::ModelsMap::iterator it = _uniforms.models.begin(); it != _uniforms.models.end(); ++it) {
@@ -405,7 +403,7 @@ bool Scene::loadScene(Uniforms& _uniforms, const std::string& _filename, bool _v
     return true;
 }
 
-bool Scene::loadShaders(Uniforms& _uniforms, const std::string& _fragmentShader, const std::string& _vertexShader, bool _verbose) {
+bool SceneRender::loadShaders(Uniforms& _uniforms, const std::string& _fragmentShader, const std::string& _vertexShader, bool _verbose) {
     bool rta = true;
     for (vera::ModelsMap::iterator it = _uniforms.models.begin(); it != _uniforms.models.end(); ++it) 
         if ( !it->second->setShader( _fragmentShader, _vertexShader, _verbose) )
@@ -431,11 +429,11 @@ bool Scene::loadShaders(Uniforms& _uniforms, const std::string& _fragmentShader,
     return rta;
 }
 
-void Scene::flagChange() { m_origin.bChange = true; }
-bool Scene::haveChange() const { return  m_origin.bChange; }
-void Scene::unflagChange() {  m_origin.bChange = false; }
+void SceneRender::flagChange() { m_origin.bChange = true; }
+bool SceneRender::haveChange() const { return  m_origin.bChange; }
+void SceneRender::unflagChange() {  m_origin.bChange = false; }
 
-void Scene::render(Uniforms& _uniforms) {
+void SceneRender::render(Uniforms& _uniforms) {
     // Render Background
     renderBackground(_uniforms);
 
@@ -484,7 +482,7 @@ void Scene::render(Uniforms& _uniforms) {
         glDisable(GL_CULL_FACE);
 }
 
-void Scene::renderShadowMap(Uniforms& _uniforms) {
+void SceneRender::renderShadowMap(Uniforms& _uniforms) {
     if (!m_shadows)
         return;
 
@@ -529,7 +527,7 @@ void Scene::renderShadowMap(Uniforms& _uniforms) {
     // TRACK_END("shadowmap")
 }
 
-void Scene::renderBackground(Uniforms& _uniforms) {
+void SceneRender::renderBackground(Uniforms& _uniforms) {
     if (m_background) {
         TRACK_BEGIN("render:scene:background")
 
@@ -561,7 +559,7 @@ void Scene::renderBackground(Uniforms& _uniforms) {
     }
 }
 
-void Scene::renderFloor(Uniforms& _uniforms, const glm::mat4& _mvp, bool _lights) {
+void SceneRender::renderFloor(Uniforms& _uniforms, const glm::mat4& _mvp, bool _lights) {
     if (m_floor_subd_target >= 0) {
 
         //  Floor
@@ -605,7 +603,7 @@ void Scene::renderFloor(Uniforms& _uniforms, const glm::mat4& _mvp, bool _lights
 }
 
 
-void Scene::renderDebug(Uniforms& _uniforms) {
+void SceneRender::renderDebug(Uniforms& _uniforms) {
     glEnable(GL_DEPTH_TEST);
     vera::blendMode(vera::BLEND_ALPHA);
 

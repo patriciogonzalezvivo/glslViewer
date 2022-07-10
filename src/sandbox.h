@@ -5,7 +5,7 @@
 #include "thread_pool/thread_pool.hpp"
 #endif
 
-#include "scene.h"
+#include "sceneRender.h"
 #include "tools/files.h"
 #include "vera/string.h"
 
@@ -53,7 +53,7 @@ public:
 
     // Getting some data out of Sandbox
     const std::string&  getSource( ShaderType _type ) const;
-    Scene&              getScene() { return m_scene; }
+    SceneRender&        getSceneRender() { return m_sceneRender; }
 
     void                printDependencies( ShaderType _type ) const;
     
@@ -96,8 +96,8 @@ private:
     std::string         m_vert_source;
 
     // Dependencies
-    vera::StringList     m_vert_dependencies;
-    vera::StringList     m_frag_dependencies;
+    vera::StringList    m_vert_dependencies;
+    vera::StringList    m_frag_dependencies;
 
     // Buffers
     ShaderList          m_buffers_shaders;
@@ -108,37 +108,37 @@ private:
     int                 m_doubleBuffers_total;
 
     // A. CANVAS
-    vera::Shader         m_canvas_shader;
+    vera::Shader        m_canvas_shader;
 
     // B. SCENE
-    Scene               m_scene;
-    vera::Fbo            m_scene_fbo;
+    SceneRender         m_sceneRender;
+    vera::Fbo           m_sceneRender_fbo;
 
     // Pyramid Convolution
     FboList             m_pyramid_fbos;
     ShaderList          m_pyramid_subshaders;
-    vera::Shader         m_pyramid_shader;
+    vera::Shader        m_pyramid_shader;
     int                 m_pyramid_total;
 
     // Postprocessing
-    vera::Shader         m_postprocessing_shader;
+    vera::Shader        m_postprocessing_shader;
     bool                m_postprocessing;
 
     // Billboard
-    vera::Shader         m_billboard_shader;
-    vera::Vbo*           m_billboard_vbo;
+    vera::Shader        m_billboard_shader;
+    vera::Vbo*          m_billboard_vbo;
     
     // Cursor
-    vera::Vbo*           m_cross_vbo;
+    vera::Vbo*          m_cross_vbo;
 
     // debug plot texture and shader for histogram or fps plots
-    vera::Shader         m_plot_shader;
-    vera::Texture*       m_plot_texture;
+    vera::Shader        m_plot_shader;
+    vera::Texture*      m_plot_texture;
     glm::vec4           m_plot_values[256];
     PlotType            m_plot;
 
     // Recording
-    vera::Fbo            m_record_fbo;
+    vera::Fbo           m_record_fbo;
     #if defined(SUPPORT_MULTITHREAD_RECORDING)
     std::atomic<int>    m_task_count {0};
     std::atomic<long long>      m_max_mem_in_queue {0};

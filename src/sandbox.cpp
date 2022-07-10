@@ -110,14 +110,14 @@ Sandbox::Sandbox():
 
     // SCENE
     uniforms.functions["u_scene"] = UniformFunction("sampler2D", [this](vera::Shader& _shader) {
-        if (m_postprocessing && m_scene_fbo.getTextureId()) {
-            _shader.setUniformTexture("u_scene", &m_scene_fbo, _shader.textureIndex++ );
+        if (m_postprocessing && m_sceneRender_fbo.getTextureId()) {
+            _shader.setUniformTexture("u_scene", &m_sceneRender_fbo, _shader.textureIndex++ );
         }
     });
 
     uniforms.functions["u_sceneDepth"] = UniformFunction("sampler2D", [this](vera::Shader& _shader) {
-        if (m_postprocessing && m_scene_fbo.getTextureId()) {
-            _shader.setUniformDepthTexture("u_sceneDepth", &m_scene_fbo, _shader.textureIndex++ );
+        if (m_postprocessing && m_sceneRender_fbo.getTextureId()) {
+            _shader.setUniformDepthTexture("u_sceneDepth", &m_sceneRender_fbo, _shader.textureIndex++ );
         }
     });
 
@@ -151,13 +151,13 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
             std::string rta = m_showPasses ? "on" : "off";
             std::cout << "buffers," << rta << std::endl; 
             rta = m_showTextures ? "on" : "off";
-            std::cout << "textures," << rta << std::endl; 
-            if (geom_index != -1) {
-                rta = m_scene.showGrid ? "on" : "off";
+            std::cout << "textures," << rta << std::endl;
+            if (uniforms.models.size() > 0) {
+                rta = m_sceneRender.showGrid ? "on" : "off";
                 std::cout << "grid," << rta << std::endl; 
-                rta = m_scene.showAxis ? "on" : "off";
+                rta = m_sceneRender.showAxis ? "on" : "off";
                 std::cout << "axis," << rta << std::endl; 
-                rta = m_scene.showBBoxes ? "on" : "off";
+                rta = m_sceneRender.showBBoxes ? "on" : "off";
                 std::cout << "bboxes," << rta << std::endl;
             }
             return true;
@@ -169,16 +169,16 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
                 m_showTextures = (values[1] == "on");
                 console_uniforms( values[1] == "on" );
                 // m_plot = (values[1] == "on")? 1 : 0;
-                if (geom_index != -1) {
-                    m_scene.showGrid = (values[1] == "on");
-                    m_scene.showAxis = (values[1] == "on");
-                    m_scene.showBBoxes = (values[1] == "on");
+                if (uniforms.models.size() > 0) {
+                    m_sceneRender.showGrid = (values[1] == "on");
+                    m_sceneRender.showAxis = (values[1] == "on");
+                    m_sceneRender.showBBoxes = (values[1] == "on");
                     if (values[1] == "on") {
-                        m_scene.addDefine("DEBUG", values[1]);
+                        m_sceneRender.addDefine("DEBUG", values[1]);
                         uniforms.addDefine("DEBUG", values[1]);
                     }
                     else {
-                        m_scene.delDefine("DEBUG");
+                        m_sceneRender.delDefine("DEBUG");
                         uniforms.delDefine("DEBUG");
                     }
                 }
@@ -365,12 +365,12 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
 
     _commands.push_back(Command("defines", [&](const std::string& _line){ 
         if (_line == "defines") {
-            if (geom_index == -1)
-                m_canvas_shader.printDefines();
-            else {
-                m_scene.printDefines();
+            if (uniforms.models.size() > 0) {
+                m_sceneRender.printDefines();
                 uniforms.printDefines();
             }
+            else
+                m_canvas_shader.printDefines();
             
             return true;
         }
@@ -913,18 +913,22 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     // Init Scene elements
     m_billboard_vbo = new vera::Vbo( vera::rectMesh(0.0,0.0,1.0,1.0) );
 
+    if (vert_index != -1 || geom_index != -1)
+        m_sceneRender.setup( _commands, uniforms);
+
     // LOAD GEOMETRY
     // -----------------------------------------------
-    if (geom_index == -1) {
+    if (geom_index != -1) {
+        uniforms.load(_files[geom_index].path, verbose);
+        m_sceneRender.loadScene(uniforms);
+        uniforms.activeCamera->orbit(m_camera_azimuth, m_camera_elevation, m_sceneRender.getArea() * 2.0);
+    }
+    else {
         m_canvas_shader.addDefine("MODEL_VERTEX_TEXCOORD", "v_texcoord");
         uniforms.activeCamera->orbit(m_camera_azimuth, m_camera_elevation, 2.0);
     }
-    else {
-        m_scene.setup( _commands, uniforms);
-        m_scene.loadScene( uniforms, _files[geom_index].path, verbose );
-        uniforms.activeCamera->orbit(m_camera_azimuth, m_camera_elevation, m_scene.getArea() * 2.0);
-        uniforms.activeCamera->lookAt( uniforms.activeCamera->getTarget() );
-    }
+
+    uniforms.activeCamera->lookAt( uniforms.activeCamera->getTarget() );
 
     // FINISH SCENE SETUP
     // -------------------------------------------------
@@ -947,7 +951,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         // uniforms.activeCamera->setClipping(0.01, 100.0);
 
         if (geom_index != -1)
-            uniforms.activeCamera->orbit(m_camera_elevation, m_camera_azimuth, m_scene.getArea() * 8.5);
+            uniforms.activeCamera->orbit(m_camera_elevation, m_camera_azimuth, m_sceneRender.getArea() * 8.5);
 
         if (lenticular.size() == 0)
             vera::setWindowSize(vera::getQuiltWidth(), vera::getQuiltHeight());
@@ -988,10 +992,10 @@ void Sandbox::addDefine(const std::string &_define, const std::string &_value) {
     for (int i = 0; i < m_doubleBuffers_total; i++)
         m_doubleBuffers_shaders[i].addDefine(_define, _value);
 
-    // if (geom_index == -1)
+    if (uniforms.models.size() > 0)
+        m_sceneRender.addDefine(_define, _value);
+    else
         m_canvas_shader.addDefine(_define, _value);
-    // else
-        m_scene.addDefine(_define, _value);
 
     m_postprocessing_shader.addDefine(_define, _value);
 }
@@ -1003,10 +1007,10 @@ void Sandbox::delDefine(const std::string &_define) {
     for (int i = 0; i < m_doubleBuffers_total; i++)
         m_doubleBuffers_shaders[i].delDefine(_define);
 
-    // if (geom_index == -1)
+    if (uniforms.models.size() > 0)
+        m_sceneRender.delDefine(_define);
+    else
         m_canvas_shader.delDefine(_define);
-    // else
-        m_scene.delDefine(_define);
 
     m_postprocessing_shader.delDefine(_define);
 }
@@ -1023,7 +1027,7 @@ void Sandbox::flagChange() {
 
 void Sandbox::unflagChange() {
     m_change = false;
-    m_scene.unflagChange();
+    m_sceneRender.unflagChange();
     uniforms.unflagChange();
 }
 
@@ -1031,14 +1035,14 @@ bool Sandbox::haveChange() {
 
     // std::cout << "CHANGE " << m_change << std::endl;
     // std::cout << "RECORDING " << isRecording() << std::endl;
-    // std::cout << "SCENE " << m_scene.haveChange() << std::endl;
+    // std::cout << "SCENE " << m_sceneRender.haveChange() << std::endl;
     // std::cout << "UNIFORMS " << uniforms.haveChange() << std::endl;
     // std::cout << std::endl;
 
     return  m_change ||
             isRecording() ||
             screenshotFile != "" ||
-            m_scene.haveChange() ||
+            m_sceneRender.haveChange() ||
             uniforms.haveChange();
 }
 
@@ -1056,11 +1060,11 @@ void Sandbox::_updateSceneBuffer(int _width, int _height) {
         _height= vera::getQuiltHeight();
     }
 
-    if (!m_scene_fbo.isAllocated() ||
-        m_scene_fbo.getType() != type || 
-        m_scene_fbo.getWidth() != _width || 
-        m_scene_fbo.getHeight() != _height )
-        m_scene_fbo.allocate(_width, _height, type);
+    if (!m_sceneRender_fbo.isAllocated() ||
+        m_sceneRender_fbo.getType() != type || 
+        m_sceneRender_fbo.getWidth() != _width || 
+        m_sceneRender_fbo.getHeight() != _height )
+        m_sceneRender_fbo.allocate(_width, _height, type);
 }
 
 bool Sandbox::setSource(ShaderType _type, const std::string& _source) {
@@ -1074,20 +1078,19 @@ bool Sandbox::reloadShaders( WatchFileList &_files ) {
     flagChange();
 
     // UPDATE scene shaders of models (materials)
-    if (geom_index == -1) {
+    if (uniforms.models.size() > 0) {
+        if (verbose)
+            std::cout << "Reload 3D scene shaders" << std::endl;
 
+        m_sceneRender.loadShaders(uniforms, m_frag_source, m_vert_source, verbose);
+    }
+    else {
         if (verbose)
             std::cout << "Reload 2D shaders" << std::endl;
 
         // Reload the shader
         m_canvas_shader.detach(GL_FRAGMENT_SHADER | GL_VERTEX_SHADER);
         m_canvas_shader.load(m_frag_source, m_vert_source, verbose, m_error_screen);
-    }
-    else {
-        if (verbose)
-            std::cout << "Reload 3D scene shaders" << std::endl;
-
-        m_scene.loadShaders(uniforms, m_frag_source, m_vert_source, verbose);
     }
 
     // UPDATE shaders dependencies
@@ -1251,7 +1254,7 @@ void Sandbox::_updateBuffers() {
                 m_pyramid_shader.setUniform("u_pyramidTotalDepth", (int)uniforms.pyramids[0].getDepth());
                 m_pyramid_shader.setUniform("u_pyramidUpscaling", _tex1 != NULL);
 
-                m_pyramid_shader.textureIndex = geom_index == -1 ? 1 : 0;
+                m_pyramid_shader.textureIndex = (uniforms.models.size() == 0) ? 1 : 0;
                 m_pyramid_shader.setUniformTexture("u_pyramidTex0", _tex0);
                 if (_tex1 != NULL)
                     m_pyramid_shader.setUniformTexture("u_pyramidTex1", _tex1);
@@ -1390,8 +1393,8 @@ void Sandbox::render() {
 
     // RENDER SHADOW MAP
     // -----------------------------------------------
-    if (geom_index != -1)
-        m_scene.renderShadowMap(uniforms);
+    if (uniforms.models.size() > 0)
+        m_sceneRender.renderShadowMap(uniforms);
     
     // BUFFERS
     // -----------------------------------------------
@@ -1408,7 +1411,7 @@ void Sandbox::render() {
 
     if (m_postprocessing || m_plot == PLOT_LUMA || m_plot == PLOT_RGB || m_plot == PLOT_RED || m_plot == PLOT_GREEN || m_plot == PLOT_BLUE ) {
         _updateSceneBuffer(vera::getWindowWidth(), vera::getWindowHeight());
-        m_scene_fbo.bind();
+        m_sceneRender_fbo.bind();
     }
     else if (screenshotFile != "" || isRecording() )
         m_record_fbo.bind();
@@ -1417,7 +1420,7 @@ void Sandbox::render() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // RENDER CONTENT
-    if (geom_index == -1) {
+    if (uniforms.models.size() == 0) {
         TRACK_BEGIN("render:billboard")
 
         // Load main shader
@@ -1458,21 +1461,21 @@ void Sandbox::render() {
             vera::renderQuilt([&](const vera::QuiltProperties& quilt, glm::vec4& viewport, int &viewIndex){
 
                 // set up the camera rotation and position for current view
-                uniforms.activeCamera->setVirtualOffset(m_scene.getArea(), viewIndex, quilt.totalViews);
+                uniforms.activeCamera->setVirtualOffset(m_sceneRender.getArea(), viewIndex, quilt.totalViews);
                 uniforms.set("u_tile", float(quilt.columns), float(quilt.rows), float(quilt.totalViews));
                 uniforms.set("u_viewport", float(viewport.x), float(viewport.y), float(viewport.z), float(viewport.w));
 
-                m_scene.render(uniforms);
+                m_sceneRender.render(uniforms);
 
-                if (m_scene.showGrid || m_scene.showAxis || m_scene.showBBoxes)
-                    m_scene.renderDebug(uniforms);
+                if (m_sceneRender.showGrid || m_sceneRender.showAxis || m_sceneRender.showBBoxes)
+                    m_sceneRender.renderDebug(uniforms);
             });
         }
 
         else {
-            m_scene.render(uniforms);
-            if (m_scene.showGrid || m_scene.showAxis || m_scene.showBBoxes)
-                m_scene.renderDebug(uniforms);
+            m_sceneRender.render(uniforms);
+            if (m_sceneRender.showGrid || m_sceneRender.showAxis || m_sceneRender.showBBoxes)
+                m_sceneRender.renderDebug(uniforms);
         }
         TRACK_END("render:scene")
     }
@@ -1483,7 +1486,7 @@ void Sandbox::render() {
     if (m_postprocessing) {
         TRACK_BEGIN("render:postprocessing")
 
-        m_scene_fbo.unbind();
+        m_sceneRender_fbo.unbind();
 
         if (screenshotFile != "" || isRecording())
             m_record_fbo.bind();
@@ -1501,7 +1504,7 @@ void Sandbox::render() {
         TRACK_END("render:postprocessing")
     }
     else if (m_plot == PLOT_RGB || m_plot == PLOT_RED || m_plot == PLOT_GREEN || m_plot == PLOT_BLUE || m_plot == PLOT_LUMA) {
-        m_scene_fbo.unbind();
+        m_sceneRender_fbo.unbind();
 
         if (screenshotFile != "" || isRecording())
             m_record_fbo.bind();
@@ -1514,7 +1517,7 @@ void Sandbox::render() {
         m_billboard_shader.setUniform("u_scale", 1.0f, 1.0f);
         m_billboard_shader.setUniform("u_translate", 0.0f, 0.0f);
         m_billboard_shader.setUniform("u_modelViewProjectionMatrix", glm::mat4(1.0) );
-        m_billboard_shader.setUniformTexture("u_tex0", &m_scene_fbo, 0);
+        m_billboard_shader.setUniformTexture("u_tex0", &m_sceneRender_fbo, 0);
         m_billboard_vbo->render( &m_billboard_shader );
     }
     
@@ -1608,7 +1611,7 @@ void Sandbox::renderUI() {
             nTotal += uniforms.pyramids.size();
         nTotal += uniforms.functions["u_scene"].present;
         nTotal += uniforms.functions["u_sceneDepth"].present;
-        nTotal += (geom_index != -1);
+        nTotal += (uniforms.models.size() > 0);
 
         if (nTotal > 0) {
             float w = (float)(vera::getWindowWidth());
@@ -1709,7 +1712,7 @@ void Sandbox::renderUI() {
                     m_billboard_shader.setUniform("u_scale", xStep, yStep);
                     m_billboard_shader.setUniform("u_translate", xOffset, yOffset);
                     m_billboard_shader.setUniform("u_modelViewProjectionMatrix", vera::getOrthoMatrix());
-                    m_billboard_shader.setUniformTexture("u_tex0", &m_scene_fbo, 0);
+                    m_billboard_shader.setUniformTexture("u_tex0", &m_sceneRender_fbo, 0);
                     m_billboard_shader.setUniform("u_tex0CurrentFrame", 0.0f );
                     m_billboard_shader.setUniform("u_tex0TotalFrames", 0.0f );
                     m_billboard_vbo->render(&m_billboard_shader);
@@ -1726,7 +1729,7 @@ void Sandbox::renderUI() {
                     uniforms.functions["u_cameraFarClip"].assign(m_billboard_shader);
                     uniforms.functions["u_cameraDistance"].assign(m_billboard_shader);
                     m_billboard_shader.setUniform("u_modelViewProjectionMatrix", vera::getOrthoMatrix());
-                    m_billboard_shader.setUniformDepthTexture("u_tex0", &m_scene_fbo);
+                    m_billboard_shader.setUniformDepthTexture("u_tex0", &m_sceneRender_fbo);
                     m_billboard_shader.setUniform("u_tex0CurrentFrame", 0.0f );
                     m_billboard_shader.setUniform("u_tex0TotalFrames", 0.0f );
                     m_billboard_vbo->render(&m_billboard_shader);
@@ -1736,7 +1739,7 @@ void Sandbox::renderUI() {
                 }
             }
 
-            if (geom_index != -1) {
+            if (uniforms.models.size() > 0) {
                 for (vera::LightsMap::iterator it = uniforms.lights.begin(); it != uniforms.lights.end(); ++it ) {
                     if ( it->second->getShadowMap()->getDepthTextureId() ) {
                         m_billboard_shader.setUniform("u_scale", xStep, yStep);
@@ -1844,8 +1847,8 @@ void Sandbox::renderDone() {
 void Sandbox::clear() {
     uniforms.clear();
 
-    if (geom_index != -1)
-        m_scene.clear();
+    if (uniforms.models.size() > 0)
+        m_sceneRender.clear();
 
     if (m_billboard_vbo)
         delete m_billboard_vbo;
@@ -2093,7 +2096,7 @@ void Sandbox::onPlot() {
         // TRACK_BEGIN("plot::histogram")
 
         // Extract pixels
-        glBindFramebuffer(GL_FRAMEBUFFER, m_scene_fbo.getId());
+        glBindFramebuffer(GL_FRAMEBUFFER, m_sceneRender_fbo.getId());
         int w = vera::getWindowWidth();
         int h = vera::getWindowHeight();
         int c = 3;
