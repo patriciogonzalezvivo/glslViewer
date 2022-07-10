@@ -6,7 +6,7 @@
 #endif
 
 #include "scene.h"
-#include "types/files.h"
+#include "tools/files.h"
 #include "vera/string.h"
 
 enum ShaderType {

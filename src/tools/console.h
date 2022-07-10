@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string>
-#include "../types/command.h"
+#include "../tools/command.h"
 #include "../sandbox.h"
 
 void console_init(int _osc_port);

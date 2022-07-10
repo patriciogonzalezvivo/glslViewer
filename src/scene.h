@@ -2,7 +2,7 @@
 
 
 #include "uniforms.h"
-#include "types/command.h"
+#include "tools/command.h"
 
 #include "vera/gl/gl.h"
 #include "vera/gl/vbo.h"

@@ -27,7 +27,7 @@ endif()
 file(GLOB ROOT_SOURCE 
     "${PROJECT_SOURCE_DIR}/src/*.cpp"
     "${PROJECT_SOURCE_DIR}/src/gl/*.cpp"
-    "${PROJECT_SOURCE_DIR}/src/types/*.cpp"
+    "${PROJECT_SOURCE_DIR}/src/tools/*.cpp"
     "${PROJECT_SOURCE_DIR}/src/tools/*.cpp"
 )
 

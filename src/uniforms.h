@@ -7,7 +7,7 @@
 #include <string>
 #include <functional>
 
-#include "types/files.h"
+#include "tools/files.h"
 #include "tools/tracker.h"
 
 #include "vera/scene.h"
