@@ -543,9 +543,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         std::vector<std::string> values = vera::split(_line,',');
         if (values.size() == 2) {
             uniforms.setSkyTurbidity( vera::toFloat(values[1]) );
-            vera::TextureCubesMap::iterator it = uniforms.cubemaps.find("skybox");
-            if (it != uniforms.cubemaps.end())
-                uniforms.activeCubemap = uniforms.cubemaps["default"];
+            uniforms.activeCubemap = uniforms.cubemaps["default"];
             return true;
         }
         else {
