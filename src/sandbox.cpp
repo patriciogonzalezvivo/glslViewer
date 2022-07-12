@@ -875,6 +875,44 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     }, "max_mem_in_queue[,<bytes>]", "set the maximum amount of memory used by a queue to export images to disk"));
     #endif
 
+    _commands.push_back(Command("pcl_plane", [&](const std::string & line) {
+        std::vector<std::string> values = vera::split(line,',');
+        int size_i = 512;
+
+        if (values.size() > 1)
+            size_i  = vera::toInt(values[1]);
+
+        float size_f = size_i;
+        vera::Mesh pcl;
+        pcl.setDrawMode(vera::POINTS);
+        for (int y = 0; y < size_i; y++) 
+            for (int x = 0; x < size_i; x++)
+                pcl.addVertex(glm::vec3(x/size_f, y/size_f, 0.0f));
+            
+        if (uniforms.models.size() == 0)
+            m_sceneRender.setup( _commands, uniforms);
+
+        // Add Model with pcl mesh
+        uniforms.models["pcl_plane"] = new vera::Model("pcl_plane", pcl);
+        m_sceneRender.loadScene(uniforms);
+        uniforms.activeCamera->orbit(m_camera_azimuth, m_camera_elevation, m_sceneRender.getArea() * 2.0);
+        uniforms.activeCamera->lookAt(uniforms.activeCamera->getTarget());
+
+        #ifdef __EMSCRIPTEN__
+        // Commands are parse in the main GL loop in EMSCRIPTEN
+        m_sceneRender.loadShaders(uniforms, m_frag_source, m_vert_source, false);
+
+        #else
+        // Commands are intepreted on a different thread on non-EMSCRIPTEN 
+        //  so need to trigger a reload by changing the timestamps of files
+        for (size_t i = 0; i < _files.size(); i++)
+            _files[i].lastChange = 0;
+        
+        #endif
+
+        return true;
+    }, "pcl_plane[,<RESOLUTION>]", "add a pointcloud plane"));
+
     // LOAD SHACER 
     // -----------------------------------------------
     if (frag_index != -1) {
@@ -1032,13 +1070,6 @@ void Sandbox::unflagChange() {
 }
 
 bool Sandbox::haveChange() { 
-
-    // std::cout << "CHANGE " << m_change << std::endl;
-    // std::cout << "RECORDING " << isRecording() << std::endl;
-    // std::cout << "SCENE " << m_sceneRender.haveChange() << std::endl;
-    // std::cout << "UNIFORMS " << uniforms.haveChange() << std::endl;
-    // std::cout << std::endl;
-
     return  m_change ||
             isRecording() ||
             screenshotFile != "" ||
@@ -1342,9 +1373,6 @@ void Sandbox::_renderBuffers() {
 
         TRACK_END("render:doubleBuffer" + vera::toString(i))
     }
-
-    // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_DST_ALPHA);
-    // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     for (size_t i = 0; i < m_pyramid_subshaders.size(); i++) {
         TRACK_BEGIN("render:convolution_pyramid" + vera::toString(i))

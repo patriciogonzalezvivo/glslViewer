@@ -14,8 +14,11 @@ precision mediump float;
 // of your educational material. If these conditions are too restrictive
 // please contact me and we'll definitely work it out.
 
-uniform sampler2D   u_doubleBuffer0;  // pos
-uniform sampler2D   u_doubleBuffer1;  // vel 
+// Position
+uniform sampler2D   u_doubleBuffer0;  // 512x512
+
+// Velocity
+uniform sampler2D   u_doubleBuffer1;  // 512x512
 
 uniform mat4        u_modelMatrix;
 uniform mat4        u_viewMatrix;

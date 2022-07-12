@@ -1472,7 +1472,7 @@ void onExit() {
 void fileWatcherThread() {
     struct stat st;
     while ( keepRunnig.load() ) {
-        for ( uint32_t i = 0; i < files.size(); i++ ) {
+        for (size_t i = 0; i < files.size(); i++) {
             if ( fileChanged == -1 ) {
                 stat( files[i].path.c_str(), &st );
                 int date = st.st_mtime;

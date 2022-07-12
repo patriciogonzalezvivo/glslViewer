@@ -409,7 +409,6 @@ bool SceneRender::loadShaders(Uniforms& _uniforms, const std::string& _fragmentS
         if ( !it->second->setShader( _fragmentShader, _vertexShader, _verbose) )
             rta = false;
 
-
     m_background = checkBackground(_fragmentShader);
     if (m_background) {
         // Specific defines for this buffer
