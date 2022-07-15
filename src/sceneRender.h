@@ -8,7 +8,7 @@
 #include "vera/gl/vbo.h"
 #include "vera/gl/shader.h"
 #include "vera/gl/textureCube.h"
-#include "vera/scene/model.h"
+#include "vera/types/model.h"
 
 class SceneRender {
 public:
@@ -51,36 +51,35 @@ public:
     bool            showCubebox;
 
 protected:
-    vera::Node           m_origin;
+    vera::Node          m_origin;
     float               m_area;
 
     // Camera
-    vera::BlendMode      m_blend;
-    vera::CullingMode    m_culling;
+    vera::BlendMode     m_blend;
+    vera::CullingMode   m_culling;
     bool                m_depth_test;
     
     // Ligth
-    vera::Vbo*           m_lightUI_vbo;
-    vera::Shader         m_lightUI_shader;
+    vera::Vbo*          m_lightUI_vbo;
+    vera::Shader        m_lightUI_shader;
     bool                m_dynamicShadows;
     bool                m_shadows;
 
     // Background
-    vera::Shader         m_background_shader;
-    vera::Vbo*           m_background_vbo;
+    vera::Shader        m_background_shader;
     bool                m_background;
 
     // CubeMap
-    vera::Shader         m_cubemap_shader;
-    vera::Vbo*           m_cubemap_vbo;
+    vera::Shader        m_cubemap_shader;
+    vera::Vbo*          m_cubemap_vbo;
 
-    vera::Shader         m_floor_shader;
-    vera::Vbo*           m_floor_vbo;
+    vera::Shader        m_floor_shader;
+    vera::Vbo*          m_floor_vbo;
     float               m_floor_height;
     int                 m_floor_subd_target;
     int                 m_floor_subd;
 
     // UI Grid
-    vera::Vbo*           m_grid_vbo;
-    vera::Vbo*           m_axis_vbo;
+    vera::Vbo*          m_grid_vbo;
+    vera::Vbo*          m_axis_vbo;
 };

@@ -8,8 +8,8 @@
 #include <thread>
 #include <chrono>
 
-#include "vera/fs.h"
-#include "vera/string.h"
+#include "vera/ops/fs.h"
+#include "vera/ops/string.h"
 
 #include "lockFreeQueue.h"
 #include "console.h"

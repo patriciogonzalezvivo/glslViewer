@@ -19,10 +19,10 @@
 
 #include "vera/window.h"
 #include "vera/gl/gl.h"
-#include "vera/fs.h"
-#include "vera/math.h"
-#include "vera/time.h"
-#include "vera/string.h"
+#include "vera/ops/fs.h"
+#include "vera/ops/math.h"
+#include "vera/ops/time.h"
+#include "vera/ops/string.h"
 #include "vera/devices/holoPlay.h"
 #include "vera/shaders/defaultShaders.h"
 

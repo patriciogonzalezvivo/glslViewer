@@ -9,7 +9,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "tools/text.h"
-#include "vera/string.h"
+#include "vera/ops/string.h"
 
 std::string UniformData::getType() {
     if (size == 1) return (bInt ? "int" : "float");

@@ -11,7 +11,7 @@
 #include <vector>
 
 #include <ncurses.h>
-#include "vera/string.h"
+#include "vera/ops/string.h"
 
 bool have_colors = false;
 

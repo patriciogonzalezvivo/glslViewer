@@ -7,13 +7,13 @@
 
 #include <sys/stat.h>
 
-#include "vera/fs.h"
-#include "vera/draw.h"
-#include "vera/math.h"
+#include "vera/ops/fs.h"
+#include "vera/ops/draw.h"
+#include "vera/ops/math.h"
 #include "vera/window.h"
-#include "vera/string.h"
-#include "vera/geom/ops.h"
-#include "vera/geom/meshes.h"
+#include "vera/ops/string.h"
+#include "vera/ops/geom.h"
+#include "vera/ops/meshes.h"
 #include "vera/shaders/defaultShaders.h"
 
 #include "tools/text.h"
@@ -29,7 +29,7 @@ SceneRender::SceneRender():
     // Light
     m_lightUI_vbo(nullptr), m_dynamicShadows(false), m_shadows(false),
     // Background
-    m_background_vbo(nullptr), m_background(false), 
+    m_background(false), 
     // Floor
     m_floor_vbo(nullptr), m_floor_height(0.0), m_floor_subd_target(-1), m_floor_subd(-1), 
     // UI
@@ -45,11 +45,6 @@ void SceneRender::clear() {
     if (m_lightUI_vbo) {
         delete m_lightUI_vbo;
         m_lightUI_vbo = nullptr;
-    }
-
-    if (!m_background_vbo) {
-        delete m_background_vbo;
-        m_background_vbo = nullptr;
     }
 
     if (m_grid_vbo) {
@@ -535,9 +530,7 @@ void SceneRender::renderBackground(Uniforms& _uniforms) {
         // Update Uniforms and textures
         _uniforms.feedTo( m_background_shader );
 
-        if (!m_background_vbo)
-            m_background_vbo = new vera::Vbo( vera::rectMesh(0.0,0.0,1.0,1.0) );
-        m_background_vbo->render( &m_background_shader );
+        vera::getBillboard()->render( &m_background_shader );
 
         TRACK_END("render:scene:background")
     }
@@ -650,7 +643,7 @@ void SceneRender::renderDebug(Uniforms& _uniforms) {
             m_lightUI_vbo = new vera::Vbo( vera::rectMesh(0.0,0.0,0.0,0.0) );
 
         m_lightUI_shader.use();
-        m_lightUI_shader.setUniform("u_scale", 24.0f, 24.0f);
+        m_lightUI_shader.setUniform("u_scale", 12.0f, 12.0f);
         m_lightUI_shader.setUniform("u_viewMatrix", _uniforms.activeCamera->getViewMatrix());
         m_lightUI_shader.setUniform("u_modelViewProjectionMatrix", vera::getProjectionViewWorldMatrix() );
 

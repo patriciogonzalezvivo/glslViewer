@@ -12,13 +12,13 @@
 #include "tools/console.h"
 
 
-#include "vera/fs.h"
+#include "vera/ops/fs.h"
 #include "vera/window.h"
-#include "vera/draw.h"
-#include "vera/math.h"
-#include "vera/geom/meshes.h"
-#include "vera/string.h"
-#include "vera/pixel.h"
+#include "vera/ops/draw.h"
+#include "vera/ops/math.h"
+#include "vera/ops/meshes.h"
+#include "vera/ops/string.h"
+#include "vera/ops/pixel.h"
 #include "vera/devices/holoPlay.h"
 #include "vera/shaders/defaultShaders.h"
 
@@ -42,7 +42,7 @@ Sandbox::Sandbox():
     // PostProcessing
     m_postprocessing(false),
     // Geometry helpers
-    m_billboard_vbo(nullptr), m_cross_vbo(nullptr),
+    m_cross_vbo(nullptr),
     // Plot helpers
     m_plot_texture(nullptr), m_plot(PLOT_OFF),
 
@@ -948,9 +948,6 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
             m_vert_source = vera::getDefaultSrc(vera::VERT_DEFAULT_SCENE);
     }
 
-    // Init Scene elements
-    m_billboard_vbo = new vera::Vbo( vera::rectMesh(0.0,0.0,1.0,1.0) );
-
     if (vert_index != -1 || geom_index != -1)
         m_sceneRender.setup( _commands, uniforms);
 
@@ -1292,7 +1289,7 @@ void Sandbox::_updateBuffers() {
                 m_pyramid_shader.setUniform("u_resolution", ((float)_target->getWidth()), ((float)_target->getHeight()));
                 m_pyramid_shader.setUniform("u_pixel", 1.0f/((float)_target->getWidth()), 1.0f/((float)_target->getHeight()));
 
-                m_billboard_vbo->render( &m_pyramid_shader );
+                vera::getBillboard()->render( &m_pyramid_shader );
                 _target->unbind();
             };
             m_pyramid_fbos.push_back( vera::Fbo() );
@@ -1340,7 +1337,7 @@ void Sandbox::_renderBuffers() {
         // Update uniforms and textures
         uniforms.feedTo(m_buffers_shaders[i], true, false);
 
-        m_billboard_vbo->render( &m_buffers_shaders[i] );
+        vera::getBillboard()->render( &m_buffers_shaders[i] );
         
         uniforms.buffers[i].unbind();
 
@@ -1366,7 +1363,7 @@ void Sandbox::_renderBuffers() {
         // Update uniforms and textures
         uniforms.feedTo(m_doubleBuffers_shaders[i], true, false);
 
-        m_billboard_vbo->render( &m_doubleBuffers_shaders[i] );
+        vera::getBillboard()->render( &m_doubleBuffers_shaders[i] );
         
         uniforms.doubleBuffers[i].dst->unbind();
         uniforms.doubleBuffers[i].swap();
@@ -1388,7 +1385,7 @@ void Sandbox::_renderBuffers() {
 
         // Update uniforms and textures
         uniforms.feedTo( m_pyramid_subshaders[i] );
-        m_billboard_vbo->render( &m_pyramid_subshaders[i] );
+        vera::getBillboard()->render( &m_pyramid_subshaders[i] );
 
         m_pyramid_fbos[i].unbind();
 
@@ -1467,7 +1464,7 @@ void Sandbox::render() {
 
                 // Pass special uniforms
                 m_canvas_shader.setUniform("u_modelViewProjectionMatrix", glm::mat4(1.));
-                m_billboard_vbo->render( &m_canvas_shader );
+                vera::getBillboard()->render( &m_canvas_shader );
             });
         }
 
@@ -1477,7 +1474,7 @@ void Sandbox::render() {
 
             // Pass special uniforms
             m_canvas_shader.setUniform("u_modelViewProjectionMatrix", glm::mat4(1.));
-            m_billboard_vbo->render( &m_canvas_shader );
+            vera::getBillboard()->render( &m_canvas_shader );
         }
 
         TRACK_END("render:billboard")
@@ -1527,7 +1524,7 @@ void Sandbox::render() {
         if (lenticular.size() > 0)
             feedLenticularUniforms(m_postprocessing_shader);
 
-        m_billboard_vbo->render( &m_postprocessing_shader );
+        vera::getBillboard()->render( &m_postprocessing_shader );
 
         TRACK_END("render:postprocessing")
     }
@@ -1537,31 +1534,13 @@ void Sandbox::render() {
         if (screenshotFile != "" || isRecording())
             m_record_fbo.bind();
 
-        if (!m_billboard_shader.isLoaded())
-            m_billboard_shader.load(vera::getDefaultSrc(vera::FRAG_DYNAMIC_BILLBOARD), vera::getDefaultSrc(vera::VERT_DYNAMIC_BILLBOARD), false);
-
-        m_billboard_shader.use();
-        m_billboard_shader.setUniform("u_depth", 0.0f);
-        m_billboard_shader.setUniform("u_scale", 1.0f, 1.0f);
-        m_billboard_shader.setUniform("u_translate", 0.0f, 0.0f);
-        m_billboard_shader.setUniform("u_modelViewProjectionMatrix", glm::mat4(1.0) );
-        m_billboard_shader.setUniformTexture("u_tex0", &m_sceneRender_fbo, 0);
-        m_billboard_vbo->render( &m_billboard_shader );
+        vera::image(m_sceneRender_fbo);
     }
     
     if (screenshotFile != "" || isRecording()) {
         m_record_fbo.unbind();
 
-        if (!m_billboard_shader.isLoaded())
-            m_billboard_shader.load(vera::getDefaultSrc(vera::FRAG_DYNAMIC_BILLBOARD), vera::getDefaultSrc(vera::VERT_DYNAMIC_BILLBOARD), false);
-
-        m_billboard_shader.use();
-        m_billboard_shader.setUniform("u_depth", 0.0f);
-        m_billboard_shader.setUniform("u_scale", 1.0f, 1.0f);
-        m_billboard_shader.setUniform("u_translate", 0.0f, 0.0f);
-        m_billboard_shader.setUniform("u_modelViewProjectionMatrix", glm::mat4(1.0) );
-        m_billboard_shader.setUniformTexture("u_tex0", &m_record_fbo, 0);
-        m_billboard_vbo->render( &m_billboard_shader );
+        vera::image(m_record_fbo);
     }
 
     TRACK_END("render")
@@ -1573,7 +1552,7 @@ void Sandbox::render() {
 void Sandbox::renderUI() {
     // TRACK_BEGIN("renderUI")
 
-    // IN PUT TEXTURES
+    // // IN PUT TEXTURES
     if (m_showTextures) {      
 
         int nTotal = uniforms.textures.size();
@@ -1593,35 +1572,18 @@ void Sandbox::renderUI() {
             vera::textAlign(vera::ALIGN_LEFT);
             vera::textSize(yStep * 0.2f);
 
-            if (!m_billboard_shader.isLoaded()) 
-                m_billboard_shader.load(vera::getDefaultSrc(vera::FRAG_DYNAMIC_BILLBOARD), vera::getDefaultSrc(vera::VERT_DYNAMIC_BILLBOARD), false);
-
-            m_billboard_shader.use();
-
-            for (std::map<std::string, vera::Texture*>::iterator it = uniforms.textures.begin(); it != uniforms.textures.end(); it++) {
-                m_billboard_shader.setUniform("u_scale", xStep, yStep);
-                m_billboard_shader.setUniform("u_translate", xOffset, yOffset);
-                m_billboard_shader.setUniform("u_modelViewProjectionMatrix", vera::getOrthoMatrix());
-                m_billboard_shader.setUniformTexture("u_tex0", it->second, 0);
-                m_billboard_shader.setUniform("u_depth", 0.0f);
-
+            for (vera::TexturesMap::iterator it = uniforms.textures.begin(); it != uniforms.textures.end(); it++) {
                 vera::TextureStreamsMap::const_iterator slit = uniforms.streams.find(it->first);
-                if ( slit != uniforms.streams.end() ) {
-                        m_billboard_shader.setUniform("u_tex0CurrentFrame", slit->second->getCurrentFrame() );
-                        m_billboard_shader.setUniform("u_tex0TotalFrames", slit->second->getTotalFrames() );
-                }
-                else {
-                    m_billboard_shader.setUniform("u_tex0CurrentFrame", 0.0f );
-                    m_billboard_shader.setUniform("u_tex0TotalFrames", 0.0f );
-                }
-
-                m_billboard_vbo->render(&m_billboard_shader);
+                if ( slit != uniforms.streams.end() )
+                    vera::image((vera::TextureStream*)slit->second, xOffset, yOffset, xStep, yStep, true);
+                else 
+                    vera::image(it->second, xOffset, yOffset, xStep, yStep);
 
                 vera::text(it->first, xOffset + xStep, vera::getWindowHeight() - yOffset + yStep);
 
                 yOffset -= yStep * 2.0;
             }
-            // TRACK_END("textures")
+    //         // TRACK_END("textures")
         }
     }
 
@@ -1655,25 +1617,13 @@ void Sandbox::renderUI() {
             vera::textAlign(vera::ALIGN_BOTTOM);
             vera::textAlign(vera::ALIGN_LEFT);
 
-            if (!m_billboard_shader.isLoaded())
-                m_billboard_shader.load(vera::getDefaultSrc(vera::FRAG_DYNAMIC_BILLBOARD), vera::getDefaultSrc(vera::VERT_DYNAMIC_BILLBOARD), false);
-
-            m_billboard_shader.use();
-
             for (size_t i = 0; i < uniforms.buffers.size(); i++) {
                 glm::vec2 offset = glm::vec2(xOffset, yOffset);
                 glm::vec2 scale = glm::vec2(yStep);
                 scale.x *= ((float)uniforms.buffers[i].getWidth()/(float)uniforms.buffers[i].getHeight());
                 offset.x += xStep - scale.x;
-                m_billboard_shader.setUniform("u_depth", 0.0f);
-                m_billboard_shader.setUniform("u_scale", scale);
-                m_billboard_shader.setUniform("u_translate", offset);
-                m_billboard_shader.setUniform("u_modelViewProjectionMatrix", vera::getOrthoMatrix());
-                m_billboard_shader.setUniformTexture("u_tex0", &uniforms.buffers[i]);
-                m_billboard_shader.setUniform("u_tex0CurrentFrame", 0.0f );
-                m_billboard_shader.setUniform("u_tex0TotalFrames", 0.0f );
-                m_billboard_vbo->render(&m_billboard_shader);
 
+                vera::image(uniforms.buffers[i], offset.x, offset.y, scale.x, scale.y);
                 vera::text("u_buffer" + vera::toString(i), xOffset - scale.x, vera::getWindowHeight() - yOffset + yStep);
 
                 yOffset -= yStep * 2.0;
@@ -1684,16 +1634,10 @@ void Sandbox::renderUI() {
                 glm::vec2 scale = glm::vec2(yStep);
                 scale.x *= ((float)uniforms.doubleBuffers[i].src->getWidth()/(float)uniforms.doubleBuffers[i].src->getHeight());
                 offset.x += xStep - scale.x;
-                m_billboard_shader.setUniform("u_depth", 0.0f);
-                m_billboard_shader.setUniform("u_scale", xStep, yStep);
-                m_billboard_shader.setUniform("u_translate", offset);
-                m_billboard_shader.setUniform("u_modelViewProjectionMatrix", vera::getOrthoMatrix());
-                m_billboard_shader.setUniformTexture("u_tex0", uniforms.doubleBuffers[i].src);
-                m_billboard_shader.setUniform("u_tex0CurrentFrame", 0.0f );
-                m_billboard_shader.setUniform("u_tex0TotalFrames", 0.0f );
-                m_billboard_vbo->render(&m_billboard_shader);
 
+                vera::image(uniforms.doubleBuffers[i].src, offset.x, offset.y, scale.x, scale.y);
                 vera::text("u_doubleBuffer" + vera::toString(i), xOffset - scale.x, vera::getWindowHeight() - yOffset + yStep);
+
                 yOffset -= yStep * 2.0;
             }
 
@@ -1704,17 +1648,11 @@ void Sandbox::renderUI() {
                 float w = scale.x;
                 offset.x += xStep - w;
                 for (size_t j = 0; j < uniforms.pyramids[i].getDepth() * 2; j++ ) {
-                    m_billboard_shader.setUniform("u_depth", 0.0f);
-                    m_billboard_shader.setUniform("u_scale", scale);
+
                     if (j < uniforms.pyramids[i].getDepth())
-                        m_billboard_shader.setUniform("u_translate", offset);
+                        vera::image(uniforms.pyramids[i].getResult(j), offset.x, offset.y, scale.x, scale.y);
                     else 
-                        m_billboard_shader.setUniform("u_translate", offset.x + w * 2., offset.y);
-                    m_billboard_shader.setUniform("u_modelViewProjectionMatrix", vera::getOrthoMatrix());
-                    m_billboard_shader.setUniformTexture("u_tex0", uniforms.pyramids[i].getResult(j), 0);
-                    m_billboard_shader.setUniform("u_tex0CurrentFrame", 0.0f );
-                    m_billboard_shader.setUniform("u_tex0TotalFrames", 0.0f );
-                    m_billboard_vbo->render(&m_billboard_shader);
+                        vera::image(uniforms.pyramids[i].getResult(j), offset.x + w * 2.0f, offset.y, scale.x, scale.y);
 
                     offset.x -= scale.x;
                     if (j < uniforms.pyramids[i].getDepth()) {
@@ -1736,32 +1674,14 @@ void Sandbox::renderUI() {
 
             if (m_postprocessing) {
                 if (uniforms.functions["u_scene"].present) {
-                    m_billboard_shader.setUniform("u_depth", 0.0f);
-                    m_billboard_shader.setUniform("u_scale", xStep, yStep);
-                    m_billboard_shader.setUniform("u_translate", xOffset, yOffset);
-                    m_billboard_shader.setUniform("u_modelViewProjectionMatrix", vera::getOrthoMatrix());
-                    m_billboard_shader.setUniformTexture("u_tex0", &m_sceneRender_fbo, 0);
-                    m_billboard_shader.setUniform("u_tex0CurrentFrame", 0.0f );
-                    m_billboard_shader.setUniform("u_tex0TotalFrames", 0.0f );
-                    m_billboard_vbo->render(&m_billboard_shader);
-
+                    vera::image(&m_sceneRender_fbo, xOffset, yOffset, xStep, yStep);
                     vera::text("u_scene", xOffset - xStep, vera::getWindowHeight() - yOffset + yStep);
                     yOffset -= yStep * 2.0;
                 }
 
                 if (uniforms.functions["u_sceneDepth"].present) {
-                    m_billboard_shader.setUniform("u_scale", xStep, yStep);
-                    m_billboard_shader.setUniform("u_translate", xOffset, yOffset);
-                    m_billboard_shader.setUniform("u_depth", 1.0f);
-                    uniforms.functions["u_cameraNearClip"].assign(m_billboard_shader);
-                    uniforms.functions["u_cameraFarClip"].assign(m_billboard_shader);
-                    uniforms.functions["u_cameraDistance"].assign(m_billboard_shader);
-                    m_billboard_shader.setUniform("u_modelViewProjectionMatrix", vera::getOrthoMatrix());
-                    m_billboard_shader.setUniformDepthTexture("u_tex0", &m_sceneRender_fbo);
-                    m_billboard_shader.setUniform("u_tex0CurrentFrame", 0.0f );
-                    m_billboard_shader.setUniform("u_tex0TotalFrames", 0.0f );
-                    m_billboard_vbo->render(&m_billboard_shader);
-
+                    if (uniforms.activeCamera)
+                        vera::imageDepth(&m_sceneRender_fbo, xOffset, yOffset, xStep, yStep, uniforms.activeCamera);
                     vera::text("u_sceneDepth", xOffset - xStep, vera::getWindowHeight() - yOffset + yStep);
                     yOffset -= yStep * 2.0;
                 }
@@ -1770,20 +1690,7 @@ void Sandbox::renderUI() {
             if (uniforms.models.size() > 0) {
                 for (vera::LightsMap::iterator it = uniforms.lights.begin(); it != uniforms.lights.end(); ++it ) {
                     if ( it->second->getShadowMap()->getDepthTextureId() ) {
-                        m_billboard_shader.setUniform("u_scale", xStep, yStep);
-                        m_billboard_shader.setUniform("u_translate", xOffset, yOffset);
-                        m_billboard_shader.setUniform("u_depth", 1.0f);
-                        // m_billboard_shader.setUniform("u_cameraNearClip", it->second->getShadowMapNear() );
-                        // m_billboard_shader.setUniform("u_cameraFarClip", it->second->getShadowMapNear() );
-                        // m_billboard_shader.setUniform("u_cameraDistance", glm::length( it->second->getPosition() ) );
-                        m_billboard_shader.setUniform("u_cameraNearClip", 0.001f );
-                        m_billboard_shader.setUniform("u_cameraFarClip", 100.0f);
-                        m_billboard_shader.setUniform("u_cameraDistance", 0.0f );
-                        m_billboard_shader.setUniform("u_modelViewProjectionMatrix", vera::getOrthoMatrix());
-                        m_billboard_shader.setUniformDepthTexture("u_tex0", it->second->getShadowMap());
-                        m_billboard_shader.setUniform("u_tex0CurrentFrame", 0.0f );
-                        m_billboard_shader.setUniform("u_tex0TotalFrames", 0.0f );
-                        m_billboard_vbo->render(&m_billboard_shader);
+                        vera::imageDepth(it->second->getShadowMap(), xOffset, yOffset, xStep, yStep);
 
                         vera::text("u_lightShadowMap", xOffset - xStep, vera::getWindowHeight() - yOffset + yStep);
                         yOffset -= yStep * 2.0;
@@ -1795,7 +1702,6 @@ void Sandbox::renderUI() {
     }
 
     if (m_plot != PLOT_OFF && m_plot_texture ) {
-        
         glDisable(GL_DEPTH_TEST);
         //TRACK_BEGIN("plot_data")
 
@@ -1815,15 +1721,12 @@ void Sandbox::renderUI() {
         m_plot_shader.setUniform("u_viewport", w, h);
         m_plot_shader.setUniform("u_modelViewProjectionMatrix", vera::getOrthoMatrix());
         m_plot_shader.setUniformTexture("u_plotData", m_plot_texture, 0);
-        m_billboard_vbo->render(&m_plot_shader);
-
+        vera::getBillboard()->render(&m_plot_shader);
         // TRACK_END("plot_data")
     }
 
     if (cursor && vera::getMouseEntered()) {
-
         // TRACK_BEGIN("cursor")
-
         if (m_cross_vbo == nullptr) 
             m_cross_vbo = new vera::Vbo( vera::crossMesh( glm::vec3(0.0f, 0.0f, 0.0f), 10.0f) );
 
@@ -1832,7 +1735,6 @@ void Sandbox::renderUI() {
         fill->setUniform("u_modelViewProjectionMatrix", glm::translate(vera::getOrthoMatrix(), glm::vec3(vera::getMouseX(), vera::getMouseY(), 0.0f) ) );
         fill->setUniform("u_color", glm::vec4(1.0f));
         m_cross_vbo->render(fill);
-
         // TRACK_END("cursor")
     }
 
@@ -1877,9 +1779,6 @@ void Sandbox::clear() {
 
     if (uniforms.models.size() > 0)
         m_sceneRender.clear();
-
-    if (m_billboard_vbo)
-        delete m_billboard_vbo;
 
     if (m_cross_vbo)
         delete m_cross_vbo;

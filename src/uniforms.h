@@ -10,7 +10,7 @@
 #include "tools/files.h"
 #include "tools/tracker.h"
 
-#include "vera/scene.h"
+#include "vera/types/scene.h"
 
 struct CameraData {
     glm::mat4   projection;

@@ -7,7 +7,7 @@
 
 #include "sceneRender.h"
 #include "tools/files.h"
-#include "vera/string.h"
+#include "vera/ops/string.h"
 
 enum ShaderType {
     FRAGMENT = 0,
@@ -123,10 +123,6 @@ private:
     // Postprocessing
     vera::Shader        m_postprocessing_shader;
     bool                m_postprocessing;
-
-    // Billboard
-    vera::Shader        m_billboard_shader;
-    vera::Vbo*          m_billboard_vbo;
     
     // Cursor
     vera::Vbo*          m_cross_vbo;
