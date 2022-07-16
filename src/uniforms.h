@@ -34,7 +34,6 @@ struct UniformData {
     bool                                bInt    = false;
     bool                                change  = false;
 };
-typedef std::map<std::string, UniformData>      UniformDataMap;
 
 struct UniformFunction {
     UniformFunction();
@@ -47,7 +46,15 @@ struct UniformFunction {
     std::string                         type;
     bool                                present = false;
 };
+
+// Uniforms values types (float, vecs and functions)
+typedef std::map<std::string, UniformData>      UniformDataMap;
 typedef std::map<std::string, UniformFunction>  UniformFunctionsMap;
+
+// Buffers types
+typedef std::vector<vera::Fbo>                  BuffersList;
+typedef std::vector<vera::PingPong>             DoubleBuffersList;
+typedef std::vector<vera::Pyramid>              PyramidsList;
 
 class Uniforms : public vera::Scene {
 public:
@@ -70,7 +77,12 @@ public:
     virtual void        delDefine(const std::string& _define);
     virtual void        printDefines();
 
+    // Buffers
+    BuffersList         buffers;
+    DoubleBuffersList   doubleBuffers;
+    PyramidsList        pyramids;
     virtual void        printBuffers();
+    virtual void        clearBuffers();
 
     // Ingest new uniforms
     // float, vec2, vec3, vec4 and functions (u_time, u_data, etc.)

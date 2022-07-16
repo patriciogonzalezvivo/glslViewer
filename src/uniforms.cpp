@@ -482,15 +482,27 @@ void Uniforms::printDefines() {
     }
 }
 
-
 void Uniforms::printBuffers() {
-    vera::Scene::printBuffers();
+    for (size_t i = 0; i < buffers.size(); i++)
+        std::cout << "uniform sampler2D u_buffer" << i << ";" << std::endl;
+
+    for (size_t i = 0; i < doubleBuffers.size(); i++)
+        std::cout << "uniform sampler2D u_doubleBuffer" << i << ";" << std::endl;
+
+    for (size_t i = 0; i < pyramids.size(); i++)
+        std::cout << "uniform sampler2D u_pyramid" << i << ";" << std::endl;  
 
     if (functions["u_scene"].present)
         std::cout << "uniform sampler2D u_scene;" << std::endl;
 
     if (functions["u_sceneDepth"].present)
         std::cout << "uniform sampler2D u_sceneDepth;" << std::endl;
+}
+
+void Uniforms::clearBuffers() {
+    buffers.clear();
+    doubleBuffers.clear();
+    pyramids.clear();
 }
 
 void Uniforms::clearUniforms() {
