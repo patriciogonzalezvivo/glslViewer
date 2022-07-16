@@ -23,8 +23,8 @@
 #include "vera/ops/math.h"
 #include "vera/ops/time.h"
 #include "vera/ops/string.h"
-#include "vera/devices/holoPlay.h"
 #include "vera/shaders/defaultShaders.h"
+#include "vera/xr/holoPlay.h"
 
 #include "sandbox.h"
 #include "tools/files.h"
@@ -1441,7 +1441,7 @@ void printUsage(char * executableName) {
     std::cerr << "      --fps <fps>                 # fix the max FPS" << std::endl;
     std::cerr << "      --fxaa                      # set FXAA as postprocess filter" << std::endl;
     std::cerr << "      --quilt <0-7>               # quilt render (HoloPlay)" << std::endl;
-    std::cerr << "      --lenticular [visual.json]  # lenticular calubration file, Looking Glass Model (HoloPlay)" << std::endl;
+    std::cerr << "      --lenticular <visual.json>  # lenticular calubration file, Looking Glass Model (HoloPlay)" << std::endl;
     std::cerr << "      -I<include_folder>          # add an include folder to default for #include files" << std::endl;
     std::cerr << "      -D<define>                  # add system #defines directly from the console argument" << std::endl;
     std::cerr << "      -p <OSC_port>               # open OSC listening port" << std::endl;

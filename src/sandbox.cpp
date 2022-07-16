@@ -19,8 +19,8 @@
 #include "vera/ops/meshes.h"
 #include "vera/ops/string.h"
 #include "vera/ops/pixel.h"
-#include "vera/devices/holoPlay.h"
 #include "vera/shaders/defaultShaders.h"
+#include "vera/xr/holoPlay.h"
 
 #include "glm/gtx/matrix_transform_2d.hpp"
 #include "glm/gtx/rotate_vector.hpp"
