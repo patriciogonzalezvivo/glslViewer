@@ -40,7 +40,9 @@ public:
     void                unflagChange(); 
     bool                haveChange();
 
+    void                renderPrep();
     void                render();
+    void                renderPost();
     void                renderUI();
     void                renderDone();
 

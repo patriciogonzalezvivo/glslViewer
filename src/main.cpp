@@ -25,6 +25,7 @@
 #include "vera/ops/string.h"
 #include "vera/shaders/defaultShaders.h"
 #include "vera/xr/holoPlay.h"
+#include "vera/xr/xr.h"
 
 #include "sandbox.h"
 #include "tools/files.h"
@@ -119,7 +120,6 @@ EM_BOOL loop (double time, void* userData) {
 #else
 void loop() {
 #endif
-    
     vera::updateGL();
 
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
@@ -131,18 +131,22 @@ void loop() {
         return;
     }
     #else
-
     if (sandbox.isReady() && commandsArgs.size() > 0) {
         for (size_t i = 0; i < commandsArgs.size(); i++)
             commandsRun(commandsArgs[i]);
         
         commandsArgs.clear();
     }
-
     #endif
+
+    // Prepare Render
+    sandbox.renderPrep();
 
     // Draw Scene
     sandbox.render();
+
+    // render Post
+    sandbox.renderPost();
 
     // Draw Cursor and 2D Debug elements
     sandbox.renderUI();
@@ -161,7 +165,7 @@ void loop() {
     // TRACK_END("renderSwap")
 
     #if defined(__EMSCRIPTEN__)
-    return true;
+    return (vera::getXR() == vera::NONE_XR_MODE);
     #endif
 }
 
@@ -612,12 +616,138 @@ int main(int argc, char **argv) {
 
     sandbox.setup(files, commands);
 
+    vera::setKeyPressCallback( [&](int _key) { 
+        if (screensaver) {
+            keepRunnig = false;
+            keepRunnig.store(false);
+        }
+        else {
+            if (_key == 'q' || _key == 'Q') {
+                keepRunnig = false;
+                keepRunnig.store(false);
+            }
+        }
+    } );
+
+    vera::setMouseMoveCallback( [&](float _x, float _y) { 
+        if (screensaver) {
+            if (sandbox.isReady()) {
+                keepRunnig = false;
+                keepRunnig.store(false);
+            }
+        }
+    } );
+
+    vera::setMouseDragCallback( [&](float _x, float _y, int _button) {
+        sandbox.onMouseDrag(_x, _y, _button);
+    } );
+
+    vera::setScrollCallback( [&](float _yOffset) { 
+        sandbox.onScroll(_yOffset);
+    } );
+
+    vera::setViewportResizeCallback( [&](int _newWidth, int _newHeight) { 
+        sandbox.onViewportResize(_newWidth, _newHeight);
+    } );
+
 #if defined(__EMSCRIPTEN__)
     emscripten_request_animation_frame_loop(loop, 0);
 
     double width,  height;
     emscripten_get_element_css_size("#canvas", &width, &height);
     vera::setWindowSize(width, height);
+
+    webxr_init(
+        /* Frame callback */
+        [](void* _userData, int, WebXRRigidTransform* _headPose, WebXRView* _views, int _viewCount) {
+            Sandbox* sbox = (Sandbox*)_userData;
+
+            vera::updateGL();
+
+            glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+
+            if (sbox->isReady() && commandsArgs.size() > 0) {
+                for (size_t i = 0; i < commandsArgs.size(); i++)
+                    commandsRun(commandsArgs[i]);
+                
+                commandsArgs.clear();
+            }
+
+            vera::Camera* cam = sbox->uniforms.activeCamera;
+            if (cam == nullptr)
+                return;
+
+            webxr_set_projection_params(cam->getNearClip(), cam->getFarClip());
+            sbox->renderPrep();
+
+            glm::vec3 cam_pos = cam->getPosition();
+            glm::vec3 head_pos = glm::make_vec3(_headPose->position);
+
+            for(int viewIndex = 0; viewIndex < _viewCount; viewIndex++) {
+
+                WebXRView view = _views[ viewIndex];
+                glViewport( view.viewport[0], view.viewport[1], view.viewport[2], view.viewport[3] );
+                cam->setViewport(view.viewport[2], view.viewport[3]);
+                glm::mat4 t = glm::translate(glm::mat4(1.), glm::make_vec3(view.viewPose.position) + head_pos );
+                glm::mat4 r = glm::toMat4( glm::quat(view.viewPose.orientation[3], view.viewPose.orientation[0], view.viewPose.orientation[1], view.viewPose.orientation[2]) );
+                // cam->setTransformMatrix( glm::translate( glm::inverse(t * r), cam_pos) );
+                cam->setTransformMatrix( glm::inverse(t * r) );
+                cam->setProjection( glm::make_mat4(view.projectionMatrix) );
+
+                sbox->render();
+                // sbox->renderUI();
+            } 
+
+            sbox->renderPost();
+
+            sbox->renderDone();
+            vera::renderGL();
+
+            cam->setPosition(cam_pos);
+        },
+        /* Session start callback */
+        [](void* _userData, int _mode) {
+            std::cout << "Session START callback" << std::endl;
+            vera::setXR((vera::XrMode)_mode);
+
+            Sandbox* sbox = (Sandbox*)_userData;
+            sbox->addDefine("PLATFORM_WEBXR", vera::toString(_mode));
+
+            // // TODO: select START/END callbacks
+            // webxr_set_select_start_callback([](WebXRInputSource *_inputSource, void *_userData) { 
+            //     printf("select_start_callback\n"); 
+            // }, _userData);
+
+            // webxr_set_select_end_callback([](WebXRInputSource *_inputSource, void *_userData) { 
+            //     printf("select_end_callback\n");
+            // }, _userData);
+        },
+        /* Session end callback */
+        [](void* _userData, int _mode) {
+            std::cout << "Session END callback" << std::endl;
+            vera::setXR(vera::NONE_XR_MODE);
+            emscripten_request_animation_frame_loop(loop, _userData);    
+        },
+        /* Error callback */
+        [](void* _userData, int _error) {
+            switch (_error){
+                case WEBXR_ERR_API_UNSUPPORTED:
+                    std::cout << "WebXR unsupported in this browser." << std::endl;
+                    break;
+                case WEBXR_ERR_GL_INCAPABLE:
+                    std::cout << "GL context cannot be used to render to WebXR" << std::endl;
+                    break;
+                case WEBXR_ERR_SESSION_UNSUPPORTED:
+                    std::cout << "VR not supported on this device" << std::endl;
+                    break;
+                default:
+                    std::cout << "Unknown WebXR error with code" << std::endl;
+                }
+        },
+        /* userData */
+        &sandbox);
+
+        vera::requestXR(vera::VR_MODE);
 
 #else
 
@@ -717,34 +847,6 @@ int main(int argc, char **argv) {
 
 // Events
 //============================================================================
-void vera::onKeyPress (int _key) {
-    if (screensaver) {
-        keepRunnig = false;
-        keepRunnig.store(false);
-    }
-    else {
-        if (_key == 'q' || _key == 'Q') {
-            keepRunnig = false;
-            keepRunnig.store(false);
-        }
-    }
-}
-
-void vera::onMouseMove(float _x, float _y) {
-    if (screensaver) {
-        if (sandbox.isReady()) {
-            keepRunnig = false;
-            keepRunnig.store(false);
-        }
-    }
-}
-void vera::onMousePress(float _x, float _y, int _button) { }
-void vera::onMouseRelease(float _x, float _y, int _button) { }
-void vera::onMouseDrag(float _x, float _y, int _button) { sandbox.onMouseDrag(_x, _y, _button); }
-
-void vera::onScroll(float _yoffset) { sandbox.onScroll(_yoffset); }
-void vera::onViewportResize(int _newWidth, int _newHeight) { sandbox.onViewportResize(_newWidth, _newHeight); }
-
 void commandsRun(const std::string &_cmd) { commandsRun(_cmd, commandsMutex); }
 void commandsRun(const std::string &_cmd, std::mutex &_mutex) {
     bool resolve = false;

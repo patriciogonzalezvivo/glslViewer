@@ -10,6 +10,7 @@
 
 #include "tools/text.h"
 #include "vera/ops/string.h"
+#include "vera/xr/xr.h"
 
 std::string UniformData::getType() {
     if (size == 1) return (bInt ? "int" : "float");
@@ -209,10 +210,9 @@ void Uniforms::clear() {
     vera::Scene::clear();
 }
 
-
-bool Uniforms::feedTo(vera::Shader &_shader, bool _lights, bool _buffers ) {
-    return feedTo(&_shader, _lights, _buffers);
-}
+// bool Uniforms::feedTo(vera::Shader &_shader, bool _lights, bool _buffers ) {
+//     return feedTo(&_shader, _lights, _buffers);
+// }
 
 bool Uniforms::feedTo(vera::Shader *_shader, bool _lights, bool _buffers ) {
     bool update = false;
@@ -271,7 +271,6 @@ bool Uniforms::feedTo(vera::Shader *_shader, bool _lights, bool _buffers ) {
         // Pass Light Uniforms
         if (lights.size() == 1) {
             vera::LightsMap::iterator it = lights.begin();
-
             _shader->setUniform("u_lightColor", it->second->color);
             _shader->setUniform("u_lightIntensity", it->second->intensity);
             if (it->second->getLightType() != vera::LIGHT_DIRECTIONAL)

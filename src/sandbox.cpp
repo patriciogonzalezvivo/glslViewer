@@ -1276,7 +1276,7 @@ void Sandbox::_updateBuffers() {
                 glClear(GL_COLOR_BUFFER_BIT);
                 m_pyramid_shader.use();
 
-                uniforms.feedTo( m_pyramid_shader);
+                uniforms.feedTo( &m_pyramid_shader);
 
                 m_pyramid_shader.setUniform("u_pyramidDepth", _depth);
                 m_pyramid_shader.setUniform("u_pyramidTotalDepth", (int)uniforms.pyramids[0].getDepth());
@@ -1335,7 +1335,7 @@ void Sandbox::_renderBuffers() {
                 m_buffers_shaders[i].setUniformTexture("u_doubleBuffer" + vera::toString(j), uniforms.doubleBuffers[j].src );
 
         // Update uniforms and textures
-        uniforms.feedTo(m_buffers_shaders[i], true, false);
+        uniforms.feedTo( &m_buffers_shaders[i], true, false);
 
         vera::getBillboard()->render( &m_buffers_shaders[i] );
         
@@ -1361,7 +1361,7 @@ void Sandbox::_renderBuffers() {
             m_doubleBuffers_shaders[i].setUniformTexture("u_doubleBuffer" + vera::toString(j), uniforms.doubleBuffers[j].src );
 
         // Update uniforms and textures
-        uniforms.feedTo(m_doubleBuffers_shaders[i], true, false);
+        uniforms.feedTo( &m_doubleBuffers_shaders[i], true, false);
 
         vera::getBillboard()->render( &m_doubleBuffers_shaders[i] );
         
@@ -1384,7 +1384,7 @@ void Sandbox::_renderBuffers() {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Update uniforms and textures
-        uniforms.feedTo( m_pyramid_subshaders[i] );
+        uniforms.feedTo( &m_pyramid_subshaders[i] );
         vera::getBillboard()->render( &m_pyramid_subshaders[i] );
 
         m_pyramid_fbos[i].unbind();
@@ -1408,7 +1408,7 @@ void Sandbox::_renderBuffers() {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
-void Sandbox::render() {
+void Sandbox::renderPrep() {
     TRACK_BEGIN("render")
 
     // UPDATE STREAMING TEXTURES
@@ -1443,7 +1443,9 @@ void Sandbox::render() {
 
     // Clear the background
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+}
 
+void Sandbox::render() {
     // RENDER CONTENT
     if (uniforms.models.size() == 0) {
         TRACK_BEGIN("render:billboard")
@@ -1460,7 +1462,7 @@ void Sandbox::render() {
                 uniforms.set("u_viewport", float(viewport.x), float(viewport.y), float(viewport.z), float(viewport.w));
 
                 // Update Uniforms and textures variables
-                uniforms.feedTo( m_canvas_shader );
+                uniforms.feedTo( &m_canvas_shader );
 
                 // Pass special uniforms
                 m_canvas_shader.setUniform("u_modelViewProjectionMatrix", glm::mat4(1.));
@@ -1470,7 +1472,7 @@ void Sandbox::render() {
 
         else {
             // Update Uniforms and textures variables
-            uniforms.feedTo( m_canvas_shader );
+            uniforms.feedTo( &m_canvas_shader );
 
             // Pass special uniforms
             m_canvas_shader.setUniform("u_modelViewProjectionMatrix", glm::mat4(1.));
@@ -1504,8 +1506,9 @@ void Sandbox::render() {
         }
         TRACK_END("render:scene")
     }
-    
-    // ----------------------------------------------- < main scene end
+}
+
+void Sandbox::renderPost() {
 
     // POST PROCESSING
     if (m_postprocessing) {
@@ -1519,7 +1522,7 @@ void Sandbox::render() {
         m_postprocessing_shader.use();
 
         // Update uniforms and textures
-        uniforms.feedTo( m_postprocessing_shader );
+        uniforms.feedTo( &m_postprocessing_shader );
 
         if (lenticular.size() > 0)
             feedLenticularUniforms(m_postprocessing_shader);
@@ -1544,7 +1547,6 @@ void Sandbox::render() {
     }
 
     TRACK_END("render")
-
     console_uniforms_refresh();
 }
 

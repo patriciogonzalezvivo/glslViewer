@@ -15,6 +15,7 @@
 #include "vera/ops/geom.h"
 #include "vera/ops/meshes.h"
 #include "vera/shaders/defaultShaders.h"
+#include "vera/xr/xr.h"
 
 #include "tools/text.h"
 
@@ -449,17 +450,17 @@ void SceneRender::render(Uniforms& _uniforms) {
     vera::cullingMode(m_culling);
 
     for (vera::ModelsMap::iterator it = _uniforms.models.begin(); it != _uniforms.models.end(); ++it) {
-        if (it->second->getShader()->isLoaded() ) {
+        if (it->second->getShadeShader()->isLoaded() ) {
             TRACK_BEGIN("render:scene:" + it->second->getName() )
 
             // bind the shader
-            it->second->getShader()->use();
+            it->second->getShadeShader()->use();
 
             // Update Uniforms and textures variables to the shader
-            _uniforms.feedTo( it->second->getShader() );
+            _uniforms.feedTo( it->second->getShadeShader() );
 
             // Pass special uniforms
-            it->second->getShader()->setUniform( "u_modelViewProjectionMatrix", vera::getProjectionViewWorldMatrix() );
+            it->second->getShadeShader()->setUniform( "u_modelViewProjectionMatrix", vera::getProjectionViewWorldMatrix() );
             it->second->render();
 
             TRACK_END("render:scene:" + it->second->getName() )
@@ -490,24 +491,22 @@ void SceneRender::renderShadowMap(Uniforms& _uniforms) {
 
             // Temporally move the MVP matrix from the view of the light 
             glm::mat4 mvp = lit->second->getMVPMatrix( m_origin.getTransformMatrix(), m_area );
-            // glm::mat4 mvp = lit->second->getMVPMatrix( vera::getWorldMatrix(), m_area );
+            
             lit->second->bindShadowMap();
             
-            // renderFloor(_uniforms, mvp, false);
             dirty += _uniforms.models.size() == 0;
             for (vera::ModelsMap::iterator mit = _uniforms.models.begin(); mit != _uniforms.models.end(); ++mit) {
-                // m_models[i]->render(_uniforms, mvp);
-                if (mit->second->getShader()->isLoaded() ) {
+                if (mit->second->getShadowShader()->isLoaded() ) {
 
                     // bind the shader
-                    mit->second->getShader()->use();
+                    mit->second->getShadowShader()->use();
 
                     // Update Uniforms and textures variables to the shader
-                    _uniforms.feedTo( mit->second->getShader(), false );
+                    _uniforms.feedTo( mit->second->getShadowShader(), false );
 
                     // Pass special uniforms
-                    mit->second->getShader()->setUniform( "u_modelViewProjectionMatrix", mvp );
-                    mit->second->render();
+                    mit->second->getShadowShader()->setUniform( "u_modelViewProjectionMatrix", mvp );
+                    mit->second->renderShadow();
                 }
                 else
                     dirty += true;
@@ -528,7 +527,7 @@ void SceneRender::renderBackground(Uniforms& _uniforms) {
         m_background_shader.use();
 
         // Update Uniforms and textures
-        _uniforms.feedTo( m_background_shader );
+        _uniforms.feedTo( &m_background_shader );
 
         vera::getBillboard()->render( &m_background_shader );
 
@@ -542,8 +541,15 @@ void SceneRender::renderBackground(Uniforms& _uniforms) {
                 m_cubemap_shader.load(vera::getDefaultSrc(vera::FRAG_CUBEMAP), vera::getDefaultSrc(vera::VERT_CUBEMAP), false);
             }
 
+            glm::mat4 ori = _uniforms.activeCamera->getOrientationMatrix();
+
+            #if defined(__EMSCRIPTEN__)
+            if (vera::getXR() == vera::VR_MODE)
+                ori = glm::inverse(ori);
+            #endif
+
             m_cubemap_shader.use();
-            m_cubemap_shader.setUniform("u_modelViewProjectionMatrix", _uniforms.activeCamera->getProjectionMatrix() * glm::toMat4(_uniforms.activeCamera->getOrientationQuat()) );
+            m_cubemap_shader.setUniform("u_modelViewProjectionMatrix", _uniforms.activeCamera->getProjectionMatrix() * ori );
             m_cubemap_shader.setUniformTextureCube("u_cubeMap", _uniforms.activeCubemap, 0);
 
             m_cubemap_vbo->render(&m_cubemap_shader);
@@ -586,14 +592,13 @@ void SceneRender::renderFloor(Uniforms& _uniforms, const glm::mat4& _mvp, bool _
 
         if (m_floor_vbo) {
             m_floor_shader.use();
-            _uniforms.feedTo( m_floor_shader, _lights );
+            _uniforms.feedTo( &m_floor_shader, _lights );
             m_floor_shader.setUniform("u_modelViewProjectionMatrix", _mvp );
             m_floor_vbo->render( &m_floor_shader );
         }
 
     }
 }
-
 
 void SceneRender::renderDebug(Uniforms& _uniforms) {
     glEnable(GL_DEPTH_TEST);
