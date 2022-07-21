@@ -24,6 +24,15 @@ std::regex make_regex(T1 regex_pattern_check, T2 listings_keyword) {
     return std::regex{create_regex_term(regex_pattern_check, std::get<1>(listings_keyword))};
 };
 
+std::tuple<bool, std::smatch> does_any_of_the_regex_exist(const std::string& _source, std::regex re) {
+    // Split Source code in lines
+    const auto lines = vera::split(_source, '\n');
+    std::smatch match;
+    const auto match_found = std::any_of(std::begin(lines), std::end(lines)
+                                         , [&](const std::string& line) { return std::regex_search(line, match, re); });
+    return { match_found, match };
+}
+
 using regex_stringdata_t = const char * const;
 
 template<typename T1>
@@ -51,14 +60,8 @@ bool generic_search_check(const std::string& _source, regex_check_t keyword_id )
         , R"()|(?:^\s*#ifndef\s+)"
         , R"())"
     };
-    // Split Source code in lines
-    const auto lines = vera::split(_source, '\n');
     const auto re = make_regex(regex_pattern_check, valid_check_keyword_ids[static_cast<int>(keyword_id)]);
-    std::smatch match;
-    return std::any_of(std::begin(lines), std::end(lines)
-                       , [&](const std::string& abc) {
-        return std::regex_search(abc, match, re);
-    });
+    return std::get<0>(does_any_of_the_regex_exist(_source, re));   //return only the "result" boolean.
 }
 
 enum class regex_count_t {
@@ -123,16 +126,14 @@ const auto valid_get_keyword_ids = std::array<regex_get_string_t, static_cast<in
 }};
 
 bool generic_search_get(const std::string& _source, const std::string& _name, glm::vec2& _size, regex_get_t keyword_id ) {
-    // Split Source code in lines
-    const auto lines = vera::split(_source, '\n');
-    const auto re = std::regex{std::get<1>(valid_get_keyword_ids[static_cast<int>(keyword_id)])};
+    bool result;
     std::smatch match;
-    const auto pred = [&](const std::string& line){ return std::regex_search(line, match, re); };
-    auto result = std::any_of(std::begin(lines), std::end(lines), pred);
+    const auto re = std::regex{std::get<1>(valid_get_keyword_ids[static_cast<int>(keyword_id)])};
+    std::tie(result, match) = does_any_of_the_regex_exist(_source, re); // capture both the "result" and the "match" info.
     if(result) {
-        std::tie(result, _size) = (match[1] == _name)
-                                  ? std::tuple<bool,glm::vec2>{true, {vera::toFloat(match[2]), vera::toFloat(match[3])}}
-                                  : std::tuple<bool,glm::vec2>{false, _size};
+        if (match[1] == _name) {    // regex-match result data is valid to spec.
+            _size = {vera::toFloat(match[2]), vera::toFloat(match[3])};
+        }
     }
     return result;
 }
