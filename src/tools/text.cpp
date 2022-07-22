@@ -9,6 +9,11 @@
 
 namespace {
 
+template<typename T1> // Helper operator shorthand: [enum_t] -> [size_t].
+constexpr size_t operator+(T1 some_enum) {
+    return static_cast<size_t>(some_enum);
+}
+
 template<typename T1>
 std::string create_regex_term(T1 regex_piece, const std::string& keyword) {
     std::ostringstream os;
@@ -46,7 +51,7 @@ enum class regex_check_t {
     MAX_KEYWORDS_CHECK_IDS
 };
 using regex_check_string_t = regex_string_t<regex_check_t>;
-const auto valid_check_keyword_ids = std::array<regex_check_string_t, static_cast<int>(regex_check_t::MAX_KEYWORDS_CHECK_IDS)> {{
+const auto valid_check_keyword_ids = std::array<regex_check_string_t, +(regex_check_t::MAX_KEYWORDS_CHECK_IDS)> {{
     {regex_check_t::Convolution_Pyramid, "CONVOLUTION_PYRAMID_ALGORITHM"}
     , {regex_check_t::Floor,"FLOOR"}
     , {regex_check_t::Background, "BACKGROUND"}
@@ -60,7 +65,7 @@ bool generic_search_check(const std::string& _source, regex_check_t keyword_id )
         , R"()|(?:^\s*#ifndef\s+)"
         , R"())"
     };
-    const auto re = make_regex(regex_pattern_check, valid_check_keyword_ids[static_cast<int>(keyword_id)]);
+    const auto re = make_regex(regex_pattern_check, valid_check_keyword_ids[+(keyword_id)]);
     return std::get<0>(does_any_of_the_regex_exist(_source, re));   //return only the "result" boolean.
 }
 
@@ -71,7 +76,7 @@ enum class regex_count_t {
     MAX_KEYWORDS_COUNT_IDS
 };
 using regex_count_string_t = regex_string_t<regex_count_t>;
-const auto valid_count_keyword_ids = std::array<regex_count_string_t, static_cast<int>(regex_count_t::MAX_KEYWORDS_COUNT_IDS)> {{
+const auto valid_count_keyword_ids = std::array<regex_count_string_t, +(regex_count_t::MAX_KEYWORDS_COUNT_IDS)> {{
     {regex_count_t::Buffers, "BUFFER"}
     , {regex_count_t::Double_Buffers, "DOUBLE_BUFFER"}
     , {regex_count_t::Convolution_Pyramid, "CONVOLUTION_PYRAMID"}
@@ -105,7 +110,7 @@ int generic_search_count(const std::string& _source, regex_count_t keyword_id ) 
     // Split Source code in lines
     const auto lines = vera::split(_source, '\n');
     // Regext to search for #ifdef BUFFER_[NUMBER], #if defined( BUFFER_[NUMBER] ) and #elif defined( BUFFER_[NUMBER] ) occurences
-    const auto re = make_regex(regex_pattern_count, valid_count_keyword_ids[static_cast<int>(keyword_id)]);
+    const auto re = make_regex(regex_pattern_count, valid_count_keyword_ids[+(keyword_id)]);
     std::smatch match;
     // Group results in a vector to check for duplicates
     std::vector<std::string> results;
@@ -121,14 +126,14 @@ enum class regex_get_t {
 };
 
 using regex_get_string_t = regex_string_t<regex_get_t>;
-const auto valid_get_keyword_ids = std::array<regex_get_string_t, static_cast<int>(regex_get_t::MAX_KEYWORDS_GET_IDS)> {{
+const auto valid_get_keyword_ids = std::array<regex_get_string_t, +(regex_get_t::MAX_KEYWORDS_GET_IDS)> {{
     {regex_get_t::BufferSize, R"(uniform\s*sampler2D\s*(\w*)\;\s*\/\/*\s(\d+)x(\d+))"}
 }};
 
 bool generic_search_get(const std::string& _source, const std::string& _name, glm::vec2& _size, regex_get_t keyword_id ) {
     bool result;
     std::smatch match;
-    const auto re = std::regex{std::get<1>(valid_get_keyword_ids[static_cast<int>(keyword_id)])};
+    const auto re = std::regex{std::get<1>(valid_get_keyword_ids[+(keyword_id)])};
     std::tie(result, match) = does_any_of_the_regex_exist(_source, re); // capture both the "result" and the "match" info.
     if(result) {
         if (match[1] == _name) {    // regex-match result data is valid to spec.
