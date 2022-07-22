@@ -1683,7 +1683,7 @@ void Sandbox::renderUI() {
 
                 if (uniforms.functions["u_sceneDepth"].present) {
                     if (uniforms.activeCamera)
-                        vera::imageDepth(&m_sceneRender_fbo, xOffset, yOffset, xStep, yStep, uniforms.activeCamera);
+                        vera::imageDepth(&m_sceneRender_fbo, xOffset, yOffset, xStep, yStep, uniforms.activeCamera->getFarClip(), uniforms.activeCamera->getNearClip());
                     vera::text("u_sceneDepth", xOffset - xStep, vera::getWindowHeight() - yOffset + yStep);
                     yOffset -= yStep * 2.0;
                 }
@@ -1692,8 +1692,8 @@ void Sandbox::renderUI() {
             if (uniforms.models.size() > 0) {
                 for (vera::LightsMap::iterator it = uniforms.lights.begin(); it != uniforms.lights.end(); ++it ) {
                     if ( it->second->getShadowMap()->getDepthTextureId() ) {
-                        vera::imageDepth(it->second->getShadowMap(), xOffset, yOffset, xStep, yStep);
-
+                        vera::imageDepth(it->second->getShadowMap(), xOffset, yOffset, xStep, yStep, it->second->getShadowMapFar(), it->second->getShadowMapNear());
+                        // vera::image(it->second->getShadowMap(), xOffset, yOffset, xStep, yStep);
                         vera::text("u_lightShadowMap", xOffset - xStep, vera::getWindowHeight() - yOffset + yStep);
                         yOffset -= yStep * 2.0;
                     }

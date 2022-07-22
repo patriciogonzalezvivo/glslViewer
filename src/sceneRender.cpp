@@ -482,19 +482,21 @@ void SceneRender::renderShadowMap(Uniforms& _uniforms) {
         return;
 
     // TRACK_BEGIN("shadowmap")
-    bool dirty = false;
+    // bool dirty = false;
     for (vera::LightsMap::iterator lit = _uniforms.lights.begin(); lit != _uniforms.lights.end(); ++lit) {
-        if (m_dynamicShadows || 
-            lit->second->bChange || 
-            lit->second->bUpdateShadowMap || 
-            haveChange() ) {
+        if (m_dynamicShadows ||  lit->second->bChange || haveChange() 
+            // || lit->second->bUpdateShadowMap
+            ) {
 
             // Temporally move the MVP matrix from the view of the light 
-            glm::mat4 mvp = lit->second->getMVPMatrix( m_origin.getTransformMatrix(), m_area );
+            glm::mat4 m = m_origin.getTransformMatrix();
+            glm::mat4 mvp = lit->second->getMVPMatrix( m, m_area );
+            glm::mat4 p = lit->second->getProjectionMatrix();
+            glm::mat4 v = lit->second->getViewMatrix();
             
             lit->second->bindShadowMap();
-            
-            dirty += _uniforms.models.size() == 0;
+
+            // dirty += _uniforms.models.size() == 0;
             for (vera::ModelsMap::iterator mit = _uniforms.models.begin(); mit != _uniforms.models.end(); ++mit) {
                 if (mit->second->getShadowShader()->isLoaded() ) {
 
@@ -506,16 +508,19 @@ void SceneRender::renderShadowMap(Uniforms& _uniforms) {
 
                     // Pass special uniforms
                     mit->second->getShadowShader()->setUniform( "u_modelViewProjectionMatrix", mvp );
+                    mit->second->getShadowShader()->setUniform( "u_projectionMatrix", p );
+                    mit->second->getShadowShader()->setUniform( "u_viewMatrix", v );
+                    mit->second->getShadowShader()->setUniform( "u_modelMatrix", m );
                     mit->second->renderShadow();
                 }
-                else
-                    dirty += true;
+                // else
+                //     dirty += true;
             }
 
             lit->second->unbindShadowMap();
         }
 
-        lit->second->bUpdateShadowMap += dirty;
+        // lit->second->bUpdateShadowMap += dirty;
     }
     // TRACK_END("shadowmap")
 }
@@ -586,7 +591,7 @@ void SceneRender::renderFloor(Uniforms& _uniforms, const glm::mat4& _mvp, bool _
             #if defined(PLATFORM_RPI)
                 m_floor_shader.addDefine("LIGHT_SHADOWMAP_SIZE", "512.0");
             #else
-                m_floor_shader.addDefine("LIGHT_SHADOWMAP_SIZE", "1024.0");
+                m_floor_shader.addDefine("LIGHT_SHADOWMAP_SIZE", "2048.0");
             #endif
         }
 
