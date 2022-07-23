@@ -409,12 +409,12 @@ bool SceneRender::loadShaders(Uniforms& _uniforms, const std::string& _fragmentS
     if (m_background) {
         // Specific defines for this buffer
         m_background_shader.addDefine("BACKGROUND");
-        m_background_shader.load(_fragmentShader, vera::getDefaultSrc(vera::VERT_BILLBOARD), false);
+        m_background_shader.load(_fragmentShader, vera::getDefaultSrc(vera::VERT_BILLBOARD), vera::SHOW_MAGENTA_SHADER, false);
     }
 
     bool thereIsFloorDefine = checkFloor(_fragmentShader) || checkFloor(_vertexShader);
     if (thereIsFloorDefine) {
-        m_floor_shader.load(_fragmentShader, _vertexShader, false);
+        m_floor_shader.load(_fragmentShader, _vertexShader, vera::SHOW_MAGENTA_SHADER, false);
         if (m_floor_subd == -1)
             m_floor_subd_target = 0;
     }
@@ -450,7 +450,7 @@ void SceneRender::render(Uniforms& _uniforms) {
     vera::cullingMode(m_culling);
 
     for (vera::ModelsMap::iterator it = _uniforms.models.begin(); it != _uniforms.models.end(); ++it) {
-        if (it->second->getShadeShader()->isLoaded() ) {
+        if (it->second->getShadeShader()->loaded() ) {
             TRACK_BEGIN("render:scene:" + it->second->getName() )
 
             // bind the shader
@@ -498,7 +498,7 @@ void SceneRender::renderShadowMap(Uniforms& _uniforms) {
 
             // dirty += _uniforms.models.size() == 0;
             for (vera::ModelsMap::iterator mit = _uniforms.models.begin(); mit != _uniforms.models.end(); ++mit) {
-                if (mit->second->getShadowShader()->isLoaded() ) {
+                if (mit->second->getShadowShader()->loaded() ) {
 
                     // bind the shader
                     mit->second->getShadowShader()->use();
@@ -540,10 +540,10 @@ void SceneRender::renderBackground(Uniforms& _uniforms) {
     }
 
     else if (_uniforms.activeCubemap) {
-        if (showCubebox && _uniforms.activeCubemap->isLoaded()) {
+        if (showCubebox && _uniforms.activeCubemap->loaded()) {
             if (!m_cubemap_vbo) {
                 m_cubemap_vbo = new vera::Vbo( vera::cubeMesh(1.0f) );
-                m_cubemap_shader.load(vera::getDefaultSrc(vera::FRAG_CUBEMAP), vera::getDefaultSrc(vera::VERT_CUBEMAP), false);
+                m_cubemap_shader.load(vera::getDefaultSrc(vera::FRAG_CUBEMAP), vera::getDefaultSrc(vera::VERT_CUBEMAP), vera::SHOW_MAGENTA_SHADER, false);
             }
 
             glm::mat4 ori = _uniforms.activeCamera->getOrientationMatrix();
@@ -574,8 +574,8 @@ void SceneRender::renderFloor(Uniforms& _uniforms, const glm::mat4& _mvp, bool _
             m_floor_vbo = new vera::Vbo( vera::floorMesh(m_area * 10.0f, m_floor_subd_target, m_floor_height) );
             m_floor_subd = m_floor_subd_target;
 
-            if (!m_floor_shader.isLoaded()) 
-                m_floor_shader.load(vera::getDefaultSrc(vera::FRAG_DEFAULT_SCENE), vera::getDefaultSrc(vera::VERT_DEFAULT_SCENE), false);
+            if (!m_floor_shader.loaded()) 
+                m_floor_shader.load(vera::getDefaultSrc(vera::FRAG_DEFAULT_SCENE), vera::getDefaultSrc(vera::VERT_DEFAULT_SCENE), vera::SHOW_MAGENTA_SHADER, false);
 
             m_floor_shader.addDefine("FLOOR");
             m_floor_shader.addDefine("FLOOR_SUBD", m_floor_subd);
@@ -646,8 +646,8 @@ void SceneRender::renderDebug(Uniforms& _uniforms) {
 
     // Light
     {
-        if (!m_lightUI_shader.isLoaded())
-            m_lightUI_shader.load(vera::getDefaultSrc(vera::FRAG_LIGHT), vera::getDefaultSrc(vera::VERT_LIGHT), false);
+        if (!m_lightUI_shader.loaded())
+            m_lightUI_shader.load(vera::getDefaultSrc(vera::FRAG_LIGHT), vera::getDefaultSrc(vera::VERT_LIGHT), vera::SHOW_MAGENTA_SHADER, false);
 
         if (m_lightUI_vbo == nullptr)
             m_lightUI_vbo = new vera::Vbo( vera::rectMesh(0.0,0.0,0.0,0.0) );

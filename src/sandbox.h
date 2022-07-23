@@ -149,9 +149,9 @@ private:
     float               m_camera_azimuth;
     float               m_camera_elevation;
     size_t              m_frame;
+    vera::ShaderErrorResolve    m_error_screen;
     bool                m_change;
     bool                m_initialized;
-    bool                m_error_screen;
 
     //  Debug
     bool                m_showTextures;

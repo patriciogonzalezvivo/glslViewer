@@ -55,7 +55,7 @@ Sandbox::Sandbox():
     #endif
 
     // Scene
-    m_view2d(1.0), m_time_offset(0.0), m_camera_elevation(1.0), m_camera_azimuth(180.0), m_frame(0), m_change(true), m_initialized(false), m_error_screen(true),
+    m_view2d(1.0), m_time_offset(0.0), m_camera_elevation(1.0), m_camera_azimuth(180.0), m_frame(0), m_error_screen(vera::SHOW_MAGENTA_SHADER), m_change(true), m_initialized(false), 
 
     // Debug
     m_showTextures(false), m_showPasses(false)
@@ -282,14 +282,14 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
 
     _commands.push_back(Command("error_screen", [&](const std::string& _line){ 
         if (_line == "error_screen") {
-            std::string rta = m_error_screen ? "on" : "off";
+            std::string rta = (m_error_screen == vera::SHOW_MAGENTA_SHADER) ? "on" : "off";
             std::cout << "error_screen," << rta << std::endl; 
             return true;
         }
         else {
             std::vector<std::string> values = vera::split(_line,',');
             if (values.size() == 2) {
-                m_error_screen = (values[1] == "on");
+                m_error_screen = (values[1] == "on")? vera::SHOW_MAGENTA_SHADER : vera::REVERT_TO_PREVIOUS_SHADER;
                 return true;
             }
         }
@@ -1118,7 +1118,7 @@ bool Sandbox::reloadShaders( WatchFileList &_files ) {
 
         // Reload the shader
         m_canvas_shader.detach(GL_FRAGMENT_SHADER | GL_VERTEX_SHADER);
-        m_canvas_shader.load(m_frag_source, m_vert_source, verbose, m_error_screen);
+        m_canvas_shader.load(m_frag_source, m_vert_source, m_error_screen, verbose);
     }
 
     // UPDATE shaders dependencies
@@ -1165,16 +1165,16 @@ bool Sandbox::reloadShaders( WatchFileList &_files ) {
     if (havePostprocessing) {
         // Specific defines for this buffer
         m_postprocessing_shader.addDefine("POSTPROCESSING");
-        m_postprocessing_shader.load(m_frag_source, vera::getDefaultSrc(vera::VERT_BILLBOARD), false);
+        m_postprocessing_shader.load(m_frag_source, vera::getDefaultSrc(vera::VERT_BILLBOARD), vera::SHOW_MAGENTA_SHADER, false);
         m_postprocessing = havePostprocessing;
     }
     else if (lenticular.size() > 0) {
-        m_postprocessing_shader.load(vera::getLenticularFragShader(vera::getVersion()), vera::getDefaultSrc(vera::VERT_BILLBOARD), false);
+        m_postprocessing_shader.load(vera::getLenticularFragShader(vera::getVersion()), vera::getDefaultSrc(vera::VERT_BILLBOARD), vera::SHOW_MAGENTA_SHADER, false);
         uniforms.functions["u_scene"].present = true;
         m_postprocessing = true;
     }
     else if (fxaa) {
-        m_postprocessing_shader.load(vera::getDefaultSrc(vera::FRAG_FXAA), vera::getDefaultSrc(vera::VERT_BILLBOARD), false);
+        m_postprocessing_shader.load(vera::getDefaultSrc(vera::FRAG_FXAA), vera::getDefaultSrc(vera::VERT_BILLBOARD), vera::SHOW_MAGENTA_SHADER, false);
         uniforms.functions["u_scene"].present = true;
         m_postprocessing = true;
     }
@@ -1210,7 +1210,7 @@ void Sandbox::_updateBuffers() {
             // New Shader
             m_buffers_shaders.push_back( vera::Shader() );
             m_buffers_shaders[i].addDefine("BUFFER_" + vera::toString(i));
-            m_buffers_shaders[i].load(m_frag_source, vera::getDefaultSrc(vera::VERT_BILLBOARD), false);
+            m_buffers_shaders[i].load(m_frag_source, vera::getDefaultSrc(vera::VERT_BILLBOARD), vera::SHOW_MAGENTA_SHADER, false);
         }
     }
     else {
@@ -1218,7 +1218,7 @@ void Sandbox::_updateBuffers() {
 
             // Reload shader code
             m_buffers_shaders[i].addDefine("BUFFER_" + vera::toString(i));
-            m_buffers_shaders[i].load(m_frag_source, vera::getDefaultSrc(vera::VERT_BILLBOARD), false);
+            m_buffers_shaders[i].load(m_frag_source, vera::getDefaultSrc(vera::VERT_BILLBOARD), vera::SHOW_MAGENTA_SHADER, false);
         }
     }
 
@@ -1243,7 +1243,7 @@ void Sandbox::_updateBuffers() {
             // New Shader
             m_doubleBuffers_shaders.push_back( vera::Shader() );
             m_doubleBuffers_shaders[i].addDefine("DOUBLE_BUFFER_" + vera::toString(i));
-            m_doubleBuffers_shaders[i].load(m_frag_source, vera::getDefaultSrc(vera::VERT_BILLBOARD), false);
+            m_doubleBuffers_shaders[i].load(m_frag_source, vera::getDefaultSrc(vera::VERT_BILLBOARD), vera::SHOW_MAGENTA_SHADER, false);
         }
     }
     else {
@@ -1251,7 +1251,7 @@ void Sandbox::_updateBuffers() {
 
             // Reload shader code
             m_doubleBuffers_shaders[i].addDefine("DOUBLE_BUFFER_" + vera::toString(i));
-            m_doubleBuffers_shaders[i].load(m_frag_source, vera::getDefaultSrc(vera::VERT_BILLBOARD), false);
+            m_doubleBuffers_shaders[i].load(m_frag_source, vera::getDefaultSrc(vera::VERT_BILLBOARD), vera::SHOW_MAGENTA_SHADER, false);
         }
     }
 
@@ -1301,14 +1301,14 @@ void Sandbox::_updateBuffers() {
     
     if ( checkConvolutionPyramid( getSource(FRAGMENT) ) ) {
         m_pyramid_shader.addDefine("CONVOLUTION_PYRAMID_ALGORITHM");
-        m_pyramid_shader.load(m_frag_source, vera::getDefaultSrc(vera::VERT_BILLBOARD), false);
+        m_pyramid_shader.load(m_frag_source, vera::getDefaultSrc(vera::VERT_BILLBOARD), vera::SHOW_MAGENTA_SHADER, false);
     }
     else
-        m_pyramid_shader.load(vera::getDefaultSrc(vera::FRAG_POISSON), vera::getDefaultSrc(vera::VERT_BILLBOARD), false);
+        m_pyramid_shader.load(vera::getDefaultSrc(vera::FRAG_POISSON), vera::getDefaultSrc(vera::VERT_BILLBOARD), vera::SHOW_MAGENTA_SHADER, false);
 
     for (size_t i = 0; i < m_pyramid_subshaders.size(); i++) {
         m_pyramid_subshaders[i].addDefine("CONVOLUTION_PYRAMID_" + vera::toString(i));
-        m_pyramid_subshaders[i].load(m_frag_source, vera::getDefaultSrc(vera::VERT_BILLBOARD), false);
+        m_pyramid_subshaders[i].load(m_frag_source, vera::getDefaultSrc(vera::VERT_BILLBOARD), vera::SHOW_MAGENTA_SHADER, false);
     }
 }
 
@@ -1713,8 +1713,8 @@ void Sandbox::renderUI() {
         float x = (float)(vera::getWindowWidth()) * 0.5;
         float y = h + 10;
 
-        if (!m_plot_shader.isLoaded())
-            m_plot_shader.load(vera::getDefaultSrc(vera::FRAG_PLOT), vera::getDefaultSrc(vera::VERT_DYNAMIC_BILLBOARD), false);
+        if (!m_plot_shader.loaded())
+            m_plot_shader.load(vera::getDefaultSrc(vera::FRAG_PLOT), vera::getDefaultSrc(vera::VERT_DYNAMIC_BILLBOARD), vera::SHOW_MAGENTA_SHADER, false);
 
         m_plot_shader.use();
         m_plot_shader.setUniform("u_scale", w, h);
