@@ -34,7 +34,12 @@
         -webkit-touch-callout: none;
       }
 
-      .emscripten { padding-right: 0; margin-left: auto; margin-right: auto; display: block; }
+      .emscripten { 
+        padding-right: 0; 
+        margin-left: auto; 
+        margin-right: auto; 
+        display: block; 
+      }
       div.emscripten { text-align: center; }
       canvas.emscripten {
         position: absolute;
@@ -57,6 +62,22 @@
         transform: translate(-50%,-50%);
         width: 100%;
         height: 100%;
+
+        position: absolute;
+        top: 0px;
+        left: 0px;
+        margin: 0px;
+        border: 0;
+        overflow: hidden;
+        display: block;
+        image-rendering: optimizeSpeed;
+        image-rendering: -moz-crisp-edges;
+        image-rendering: -o-crisp-edges;
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: optimize-contrast;
+        image-rendering: crisp-edges;
+        image-rendering: pixelated;
+        -ms-interpolation-mode: nearest-neighbor;
       }
 
       #spinner {
@@ -172,7 +193,7 @@
       // arguments: ["examples/3D/03_models/duck.glb", "examples/3D/01_lighting/00_gooch.frag", "-e", "buffers,on"],
       // arguments: ["examples/3D/03_models/duck.glb", "examples/3D/01_lighting/01_shadows.frag", "-e", "buffers,on"],
       // arguments: ["examples/3D/03_models/duck.glb", "examples/3D/01_lighting/04_fresnel.vert", "examples/3D/01_lighting/04_fresnel.frag", "-C", "examples/3D/01_lighting/uffizi_cross.jpg"],
-      arguments: ["examples/3D/03_models/duck.glb", "-e", "debug,on", "-e", "axis,off", "-C", "examples/3D/01_lighting/uffizi_cross.jpg"],
+      arguments: ["examples/3D/03_models/duck.glb"],
       // arguments: ["examples/3D/03_models/duck.glb", "--fxaa", "-e", "buffers,on"],
       // arguments: ["examples/3D/03_models/duck.glb", "--msaa", "--fxaa", "-e", "buffers,on"],
       // arguments: ["examples/3D/04_vertex/pcl.ply", "examples/3D/04_vertex/stars.vert", "examples/3D/04_vertex/pcl.frag"],
