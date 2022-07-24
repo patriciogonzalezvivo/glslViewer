@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <array>
+#include <functional>
 #include <regex>
 #include <tuple>
 #include <cstring>
@@ -82,24 +83,29 @@ const auto valid_count_keyword_ids = std::array<regex_count_string_t, +(regex_co
     , {regex_count_t::Convolution_Pyramid, "CONVOLUTION_PYRAMID"}
 }};
 
-bool is_not_duplicate_number_predicate(const std::string &line, std::smatch &match, const std::regex &re, std::vector<std::string> &results) {
-    // if there are matches
-    if (std::regex_search(line, match, re)) {
-        // Depending the case can be in the 2nd or 3rd group
-        const auto case_group = [&](size_t index){return std::ssub_match(match[index]).str();};
-        const auto number = (case_group(2).size() == 0)
-                ? case_group(3)
-                : case_group(2);
-        // Check if it's already defined
-        // If it's not add it
-        if (!std::any_of(std::begin(results), std::end(results)
-                         , [&](const std::string& index){ return index == number; })) {
-            results.push_back(number);
-            return true;
+struct is_not_duplicate_number_predicate {
+    // Group results in a vector to check for duplicates
+    std::vector<std::string> results = {};
+    bool operator()(const std::string &line, const std::regex &re) {
+        std::smatch match = {};
+        // if there are matches
+        if (std::regex_search(line, match, re)) {
+            // Depending the case can be in the 2nd or 3rd group
+            const auto case_group = [&](size_t index){return std::ssub_match(match[index]).str();};
+            const auto number = (case_group(2).size() == 0)
+                    ? case_group(3)
+                    : case_group(2);
+            // Check if it's already defined
+            // If it's not add it
+            if (!std::any_of(std::begin(results), std::end(results)
+                             , [&](const std::string& index){ return index == number; })) {
+                results.push_back(number);
+                return true;
+            }
         }
+        return false;
     }
-    return false;
-}
+};
 
 int generic_search_count(const std::string& _source, regex_count_t keyword_id ) {
     const auto regex_pattern_count  = {
@@ -111,12 +117,10 @@ int generic_search_count(const std::string& _source, regex_count_t keyword_id ) 
     const auto lines = ada::split(_source, '\n');
     // Regext to search for #ifdef BUFFER_[NUMBER], #if defined( BUFFER_[NUMBER] ) and #elif defined( BUFFER_[NUMBER] ) occurences
     const auto re = make_regex(regex_pattern_count, valid_count_keyword_ids[+(keyword_id)]);
-    std::smatch match;
-    // Group results in a vector to check for duplicates
-    std::vector<std::string> results;
     // return the number of results
+    auto predicate_op = is_not_duplicate_number_predicate{};
     return std::count_if(std::begin(lines), std::end(lines), [&](const std::string& line) {
-        return is_not_duplicate_number_predicate(line, match, re, results);
+        return std::ref(predicate_op)(line, re);
     });
 }
 
