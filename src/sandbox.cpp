@@ -1457,7 +1457,7 @@ void Sandbox::render() {
             vera::renderQuilt([&](const vera::QuiltProperties& quilt, glm::vec4& viewport, int &viewIndex) {
 
                 // set up the camera rotation and position for current view
-                uniforms.activeCamera->setVirtualOffset(5.0, viewIndex, quilt.totalViews);
+                uniforms.activeCamera->setVirtualOffset(5.0f, viewIndex, quilt.totalViews);
                 uniforms.set("u_tile", float(quilt.columns), float(quilt.rows), float(quilt.totalViews));
                 uniforms.set("u_viewport", float(viewport.x), float(viewport.y), float(viewport.z), float(viewport.w));
 
@@ -1467,7 +1467,7 @@ void Sandbox::render() {
                 // Pass special uniforms
                 m_canvas_shader.setUniform("u_modelViewProjectionMatrix", glm::mat4(1.));
                 vera::getBillboard()->render( &m_canvas_shader );
-            });
+            }, true);
         }
 
         else {
@@ -1488,7 +1488,10 @@ void Sandbox::render() {
             vera::renderQuilt([&](const vera::QuiltProperties& quilt, glm::vec4& viewport, int &viewIndex){
 
                 // set up the camera rotation and position for current view
-                uniforms.activeCamera->setVirtualOffset(m_sceneRender.getArea(), viewIndex, quilt.totalViews);
+                uniforms.activeCamera->setVirtualOffset(m_sceneRender.getArea() * 0.75, viewIndex, quilt.totalViews);
+                // uniforms.activeCamera->setVirtualOffset(5.0f, viewIndex, quilt.totalViews);
+                // uniforms.activeCamera->setVirtualOffset(10.0f, viewIndex, quilt.totalViews);
+
                 uniforms.set("u_tile", float(quilt.columns), float(quilt.rows), float(quilt.totalViews));
                 uniforms.set("u_viewport", float(viewport.x), float(viewport.y), float(viewport.z), float(viewport.w));
 
@@ -1496,7 +1499,7 @@ void Sandbox::render() {
 
                 if (m_sceneRender.showGrid || m_sceneRender.showAxis || m_sceneRender.showBBoxes)
                     m_sceneRender.renderDebug(uniforms);
-            });
+            }, true);
         }
 
         else {
