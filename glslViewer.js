@@ -130,6 +130,7 @@ var REMOTE_PACKAGE_SIZE = metadata['remote_package_size'];
       }
 Module['FS_createPath']("/", "examples", true, true);
 Module['FS_createPath']("/examples", "3D", true, true);
+Module['FS_createPath']("/examples/3D", "00_pipeline", true, true);
 Module['FS_createPath']("/examples/3D", "01_lighting", true, true);
 Module['FS_createPath']("/examples/3D", "03_models", true, true);
 
@@ -199,7 +200,7 @@ Module['FS_createPath']("/examples/3D", "03_models", true, true);
     }
 
     }
-    loadPackage({"files": [{"filename": "/examples/3D/01_lighting/uffizi_cross.jpg", "start": 0, "end": 364844}, {"filename": "/examples/3D/03_models/duck.glb", "start": 364844, "end": 485328}], "remote_package_size": 485328});
+    loadPackage({"files": [{"filename": "/examples/3D/00_pipeline/00_background.frag", "start": 0, "end": 1908}, {"filename": "/examples/3D/00_pipeline/01_postprocessing.frag", "start": 1908, "end": 4826}, {"filename": "/examples/3D/01_lighting/00_gooch.frag", "start": 4826, "end": 6555}, {"filename": "/examples/3D/01_lighting/01_shadows.frag", "start": 6555, "end": 7883}, {"filename": "/examples/3D/01_lighting/02_cubemap.frag", "start": 7883, "end": 8856}, {"filename": "/examples/3D/01_lighting/04_fresnel.vert", "start": 8856, "end": 10475}, {"filename": "/examples/3D/01_lighting/04_fresnel.frag", "start": 10475, "end": 11431}, {"filename": "/examples/3D/01_lighting/uffizi_cross.jpg", "start": 11431, "end": 376275}, {"filename": "/examples/3D/03_models/duck.glb", "start": 376275, "end": 496759}], "remote_package_size": 496759});
 
   })();
 
