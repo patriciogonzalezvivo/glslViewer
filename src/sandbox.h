@@ -126,7 +126,7 @@ private:
     ada::Vbo*           m_billboard_vbo;
     
     // Cursor
-    ada::Vbo*           m_cross_vbo;
+    std::unique_ptr<ada::Vbo>          m_cross_vbo;
 
     // debug plot texture and shader for histogram or fps plots
     ada::Shader         m_plot_shader;

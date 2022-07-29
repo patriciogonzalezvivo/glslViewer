@@ -40,7 +40,7 @@ Sandbox::Sandbox():
     // PostProcessing
     m_postprocessing(false),
     // Geometry helpers
-    m_billboard_vbo(nullptr), m_cross_vbo(nullptr),
+    m_billboard_vbo(nullptr),
     // Plot helpers
     m_plot_texture(nullptr), m_plot(PLOT_OFF),
 
@@ -1700,8 +1700,8 @@ void Sandbox::renderUI() {
 
         // TRACK_BEGIN("cursor")
 
-        if (m_cross_vbo == nullptr) 
-            m_cross_vbo = new ada::Vbo( ada::crossMesh( glm::vec3(0.0f, 0.0f, 0.0f), 10.0f) );
+        if (m_cross_vbo == nullptr)
+            m_cross_vbo = std::unique_ptr<ada::Vbo>(new ada::Vbo( ada::crossMesh( glm::vec3(0.0f, 0.0f, 0.0f), 10.0f) ));
 
         ada::Shader* fill = ada::getFillShader();
         fill->use();
@@ -1757,8 +1757,6 @@ void Sandbox::clear() {
     if (m_billboard_vbo)
         delete m_billboard_vbo;
 
-    if (m_cross_vbo)
-        delete m_cross_vbo;
 }
 
 void Sandbox::printDependencies(ShaderType _type) const {
