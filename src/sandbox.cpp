@@ -41,8 +41,6 @@ Sandbox::Sandbox():
     m_pyramid_total(0),
     // PostProcessing
     m_postprocessing(false),
-    // Geometry helpers
-    m_cross_vbo(nullptr),
     // Plot helpers
     m_plot_texture(nullptr), m_plot(PLOT_OFF),
 
@@ -1732,8 +1730,8 @@ void Sandbox::renderUI() {
 
     if (cursor && vera::getMouseEntered()) {
         // TRACK_BEGIN("cursor")
-        if (m_cross_vbo == nullptr) 
-            m_cross_vbo = new vera::Vbo( vera::crossMesh( glm::vec3(0.0f, 0.0f, 0.0f), 10.0f) );
+        if (m_cross_vbo == nullptr)
+            m_cross_vbo = std::unique_ptr<vera::Vbo>(new vera::Vbo( vera::crossMesh( glm::vec3(0.0f, 0.0f, 0.0f), 10.0f) ));
 
         vera::Shader* fill = vera::getFillShader();
         fill->use();
@@ -1784,9 +1782,6 @@ void Sandbox::clear() {
 
     if (uniforms.models.size() > 0)
         m_sceneRender.clear();
-
-    if (m_cross_vbo)
-        delete m_cross_vbo;
 }
 
 void Sandbox::printDependencies(ShaderType _type) const {
