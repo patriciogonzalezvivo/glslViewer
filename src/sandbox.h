@@ -130,7 +130,7 @@ private:
 
     // debug plot texture and shader for histogram or fps plots
     ada::Shader         m_plot_shader;
-    ada::Texture*       m_plot_texture;
+    std::unique_ptr<ada::Texture>      m_plot_texture;
     glm::vec4           m_plot_values[256];
     PlotType            m_plot;
 
