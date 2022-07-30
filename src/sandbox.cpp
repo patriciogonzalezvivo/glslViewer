@@ -42,7 +42,7 @@ Sandbox::Sandbox():
     // PostProcessing
     m_postprocessing(false),
     // Plot helpers
-    m_plot_texture(nullptr), m_plot(PLOT_OFF),
+    m_plot(PLOT_OFF),
 
     // Record
     #if defined(SUPPORT_MULTITHREAD_RECORDING)
@@ -1723,7 +1723,7 @@ void Sandbox::renderUI() {
         m_plot_shader.setUniform("u_resolution", (float)vera::getWindowWidth(), (float)vera::getWindowHeight());
         m_plot_shader.setUniform("u_viewport", w, h);
         m_plot_shader.setUniform("u_modelViewProjectionMatrix", vera::getOrthoMatrix());
-        m_plot_shader.setUniformTexture("u_plotData", m_plot_texture, 0);
+        m_plot_shader.setUniformTexture("u_plotData", m_plot_texture.get(), 0);
         vera::getBillboard()->render(&m_plot_shader);
         // TRACK_END("plot_data")
     }
@@ -2061,10 +2061,10 @@ void Sandbox::onPlot() {
             m_plot_values[i] = m_plot_values[i] / glm::vec4(max_rgb_freq, max_rgb_freq, max_rgb_freq, max_luma_freq);
 
         if (m_plot_texture == nullptr)
-            m_plot_texture = new vera::Texture();
+            m_plot_texture = std::unique_ptr<vera::Texture>(new vera::Texture());
         m_plot_texture->load(256, 1, 4, 32, &m_plot_values[0], vera::NEAREST, vera::CLAMP);
 
-        uniforms.textures["u_histogram"] = m_plot_texture;
+        uniforms.textures["u_histogram"] = m_plot_texture.get();
         uniforms.flagChange();
         // TRACK_END("plot::histogram")
     }
@@ -2078,7 +2078,7 @@ void Sandbox::onPlot() {
         // TRACK_BEGIN("plot::fps")
 
         if (m_plot_texture == nullptr)
-            m_plot_texture = new vera::Texture();
+            m_plot_texture = std::unique_ptr<vera::Texture>(new vera::Texture());
 
         m_plot_texture->load(256, 1, 4, 32, &m_plot_values[0], vera::NEAREST, vera::CLAMP);
         // uniforms.textures["u_sceneFps"] = m_plot_texture;
@@ -2095,7 +2095,7 @@ void Sandbox::onPlot() {
         // TRACK_BEGIN("plot::ms")
 
         if (m_plot_texture == nullptr)
-            m_plot_texture = new vera::Texture();
+            m_plot_texture = std::unique_ptr<vera::Texture>(new vera::Texture());
 
         m_plot_texture->load(256, 1, 4, 32, &m_plot_values[0], vera::NEAREST, vera::CLAMP);
 
