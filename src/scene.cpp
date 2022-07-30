@@ -42,7 +42,7 @@ Scene::Scene():
     // Floor
     m_floor_vbo(nullptr), m_floor_height(0.0), m_floor_subd_target(-1), m_floor_subd(-1), 
     // UI
-    m_grid_vbo(nullptr), m_axis_vbo(nullptr) 
+    m_axis_vbo(nullptr)
     {
 }
 
@@ -64,11 +64,6 @@ void Scene::clear() {
     if (!m_background_vbo) {
         delete m_background_vbo;
         m_background_vbo = nullptr;
-    }
-
-    if (m_grid_vbo) {
-        delete m_grid_vbo;
-        m_grid_vbo = nullptr;
     }
 
     if (m_axis_vbo) {
@@ -801,12 +796,12 @@ void Scene::renderDebug(Uniforms& _uniforms) {
     // Grid
     if (showGrid) {
         if (m_grid_vbo == nullptr)
-            m_grid_vbo = new ada::Vbo( ada::gridMesh(_uniforms.getCamera().getFarClip(), _uniforms.getCamera().getFarClip() / 20.0, m_floor_height) );
+            m_grid_vbo = std::unique_ptr<ada::Vbo>(new ada::Vbo( ada::gridMesh(_uniforms.getCamera().getFarClip(), _uniforms.getCamera().getFarClip() / 20.0, m_floor_height) ));
 
         ada::strokeWeight(1.0f);
         #if defined(USE_ADA)
         ada::stroke( glm::vec4(0.5f) );
-        ada::model( m_grid_vbo );
+        ada::model( m_grid_vbo.get() );
         #else
         fill->use();
         fill->setUniform("u_modelViewProjectionMatrix", ada::getProjectionViewWorldMatrix() );

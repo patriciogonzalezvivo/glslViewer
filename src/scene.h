@@ -1,6 +1,6 @@
 #pragma once
 
-
+#include <memory>
 #include "uniforms.h"
 #include "types/command.h"
 
@@ -92,6 +92,6 @@ protected:
     int                 m_floor_subd;
 
     // UI Grid
-    ada::Vbo*           m_grid_vbo;
+    std::unique_ptr<ada::Vbo>          m_grid_vbo;
     ada::Vbo*           m_axis_vbo;
 };
