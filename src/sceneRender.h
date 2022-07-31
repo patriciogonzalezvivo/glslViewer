@@ -81,5 +81,5 @@ protected:
 
     // UI Grid
     std::unique_ptr<vera::Vbo>          m_grid_vbo;
-    vera::Vbo*          m_axis_vbo;
+    std::unique_ptr<vera::Vbo>          m_axis_vbo;
 };
