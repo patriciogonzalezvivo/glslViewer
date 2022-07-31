@@ -40,9 +40,7 @@ Scene::Scene():
     // CubeMap
     m_cubemap_vbo(nullptr), m_cubemap_skybox(nullptr),
     // Floor
-    m_floor_vbo(nullptr), m_floor_height(0.0), m_floor_subd_target(-1), m_floor_subd(-1), 
-    // UI
-    m_axis_vbo(nullptr)
+    m_floor_vbo(nullptr), m_floor_height(0.0), m_floor_subd_target(-1), m_floor_subd(-1)
     {
 }
 
@@ -64,11 +62,6 @@ void Scene::clear() {
     if (!m_background_vbo) {
         delete m_background_vbo;
         m_background_vbo = nullptr;
-    }
-
-    if (m_axis_vbo) {
-        delete m_axis_vbo;
-        m_axis_vbo = nullptr;
     }
 }
 
@@ -779,12 +772,12 @@ void Scene::renderDebug(Uniforms& _uniforms) {
     // Axis
     if (showAxis) {
         if (m_axis_vbo == nullptr)
-            m_axis_vbo = new ada::Vbo( ada::axisMesh(_uniforms.getCamera().getFarClip(), m_floor_height) );
+            m_axis_vbo = std::unique_ptr<ada::Vbo>(new ada::Vbo( ada::axisMesh(_uniforms.getCamera().getFarClip(), m_floor_height) ));
 
         ada::strokeWeight(2.0f);
     #if defined(USE_ADA)
         ada::stroke( glm::vec4(1.0f) );
-        ada::model( m_axis_vbo );
+        ada::model( m_axis_vbo.get() );
     #else
         fill->use();
         fill->setUniform("u_modelViewProjectionMatrix", ada::getProjectionViewWorldMatrix() );

@@ -93,5 +93,5 @@ protected:
 
     // UI Grid
     std::unique_ptr<ada::Vbo>          m_grid_vbo;
-    ada::Vbo*           m_axis_vbo;
+    std::unique_ptr<ada::Vbo>          m_axis_vbo;
 };
