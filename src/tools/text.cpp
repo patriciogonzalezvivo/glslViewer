@@ -87,7 +87,7 @@ struct is_not_duplicate_number_predicate {
     // Group results in a vector to check for duplicates
     std::vector<std::string> results = {};
     bool operator()(const std::string &line, const std::regex &re) {
-        std::smatch match = {};
+        std::smatch match;
         // if there are matches
         if (std::regex_search(line, match, re)) {
             // Depending the case can be in the 2nd or 3rd group
