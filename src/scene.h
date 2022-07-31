@@ -80,7 +80,7 @@ protected:
 
     // CubeMap
     ada::Shader         m_cubemap_shader;
-    ada::Vbo*           m_cubemap_vbo;
+    std::unique_ptr<ada::Vbo>          m_cubemap_vbo;
     ada::SkyData*       m_cubemap_skybox;
 
     ada::SkyData        m_skybox;

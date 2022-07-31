@@ -38,7 +38,7 @@ Scene::Scene():
     // Background
     m_background_vbo(nullptr), m_background(false), 
     // CubeMap
-    m_cubemap_vbo(nullptr), m_cubemap_skybox(nullptr),
+    m_cubemap_skybox(nullptr),
     // Floor
     m_floor_height(0.0), m_floor_subd_target(-1), m_floor_subd(-1)
     {
@@ -678,7 +678,7 @@ void Scene::renderBackground(Uniforms& _uniforms) {
 
         if (_uniforms.cubemap->isLoaded()) {
             if (!m_cubemap_vbo) {
-                m_cubemap_vbo = new ada::Vbo( ada::cubeMesh(1.0f) );
+                m_cubemap_vbo = std::unique_ptr<ada::Vbo>(new ada::Vbo( ada::cubeMesh(1.0f) ));
                 m_cubemap_shader.load(ada::getDefaultSrc(ada::FRAG_CUBEMAP), ada::getDefaultSrc(ada::VERT_CUBEMAP), false);
             }
 
