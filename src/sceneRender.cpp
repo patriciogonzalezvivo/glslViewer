@@ -28,7 +28,7 @@ SceneRender::SceneRender():
     // Camera.
     m_blend(vera::BLEND_ALPHA), m_culling(vera::CULL_NONE), m_depth_test(true),
     // Light
-    m_lightUI_vbo(nullptr), m_dynamicShadows(false), m_shadows(false),
+    m_dynamicShadows(false), m_shadows(false),
     // Background
     m_background(false), 
     // Floor
@@ -41,10 +41,6 @@ SceneRender::~SceneRender(){
 }
 
 void SceneRender::clear() {
-    if (m_lightUI_vbo) {
-        delete m_lightUI_vbo;
-        m_lightUI_vbo = nullptr;
-    }
 }
 
 void SceneRender::setup(CommandList& _commands, Uniforms& _uniforms) {
@@ -635,7 +631,7 @@ void SceneRender::renderDebug(Uniforms& _uniforms) {
             m_lightUI_shader.load(vera::getDefaultSrc(vera::FRAG_LIGHT), vera::getDefaultSrc(vera::VERT_LIGHT), vera::SHOW_MAGENTA_SHADER, false);
 
         if (m_lightUI_vbo == nullptr)
-            m_lightUI_vbo = new vera::Vbo( vera::rectMesh(0.0,0.0,0.0,0.0) );
+            m_lightUI_vbo = std::unique_ptr<vera::Vbo>(new vera::Vbo( vera::rectMesh(0.0,0.0,0.0,0.0) ));
 
         m_lightUI_shader.use();
         m_lightUI_shader.setUniform("u_scale", 12.0f, 12.0f);

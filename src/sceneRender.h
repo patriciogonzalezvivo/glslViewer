@@ -59,8 +59,8 @@ protected:
     vera::CullingMode   m_culling;
     bool                m_depth_test;
     
-    // Ligth
-    vera::Vbo*          m_lightUI_vbo;
+    // Light
+    std::unique_ptr<vera::Vbo>          m_lightUI_vbo;
     vera::Shader        m_lightUI_shader;
     bool                m_dynamicShadows;
     bool                m_shadows;
