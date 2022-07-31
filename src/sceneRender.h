@@ -74,7 +74,7 @@ protected:
     vera::Vbo*          m_cubemap_vbo;
 
     vera::Shader        m_floor_shader;
-    vera::Vbo*          m_floor_vbo;
+    std::unique_ptr<vera::Vbo>          m_floor_vbo;
     float               m_floor_height;
     int                 m_floor_subd_target;
     int                 m_floor_subd;
