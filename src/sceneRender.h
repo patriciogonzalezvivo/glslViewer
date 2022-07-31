@@ -1,6 +1,6 @@
 #pragma once
 
-
+#include <memory>
 #include "uniforms.h"
 #include "tools/command.h"
 
@@ -80,6 +80,6 @@ protected:
     int                 m_floor_subd;
 
     // UI Grid
-    vera::Vbo*          m_grid_vbo;
+    std::unique_ptr<vera::Vbo>          m_grid_vbo;
     vera::Vbo*          m_axis_vbo;
 };

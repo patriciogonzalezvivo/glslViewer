@@ -34,7 +34,7 @@ SceneRender::SceneRender():
     // Floor
     m_floor_vbo(nullptr), m_floor_height(0.0), m_floor_subd_target(-1), m_floor_subd(-1), 
     // UI
-    m_grid_vbo(nullptr), m_axis_vbo(nullptr) 
+    m_axis_vbo(nullptr)
     {
 }
 
@@ -46,11 +46,6 @@ void SceneRender::clear() {
     if (m_lightUI_vbo) {
         delete m_lightUI_vbo;
         m_lightUI_vbo = nullptr;
-    }
-
-    if (m_grid_vbo) {
-        delete m_grid_vbo;
-        m_grid_vbo = nullptr;
     }
 
     if (m_axis_vbo) {
@@ -637,11 +632,11 @@ void SceneRender::renderDebug(Uniforms& _uniforms) {
     // Grid
     if (showGrid) {
         if (m_grid_vbo == nullptr)
-            m_grid_vbo = new vera::Vbo( vera::gridMesh(_uniforms.activeCamera->getFarClip(), _uniforms.activeCamera->getFarClip() / 20.0, m_floor_height) );
+            m_grid_vbo = std::unique_ptr<vera::Vbo>(new vera::Vbo( vera::gridMesh(_uniforms.activeCamera->getFarClip(), _uniforms.activeCamera->getFarClip() / 20.0, m_floor_height) ));
 
         vera::strokeWeight(1.0f);
         vera::stroke( glm::vec4(0.5f) );
-        vera::model( m_grid_vbo );
+        vera::model( m_grid_vbo.get() );
     }
 
     // Light
