@@ -526,7 +526,7 @@ void SceneRender::renderBackground(Uniforms& _uniforms) {
     else if (_uniforms.activeCubemap) {
         if (showCubebox && _uniforms.activeCubemap->loaded()) {
             if (!m_cubemap_vbo) {
-                m_cubemap_vbo = new vera::Vbo( vera::cubeMesh(1.0f) );
+                m_cubemap_vbo = std::unique_ptr<vera::Vbo>(new vera::Vbo( vera::cubeMesh(1.0f) ));
                 m_cubemap_shader.load(vera::getDefaultSrc(vera::FRAG_CUBEMAP), vera::getDefaultSrc(vera::VERT_CUBEMAP), vera::SHOW_MAGENTA_SHADER, false);
             }
 

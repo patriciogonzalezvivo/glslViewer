@@ -71,7 +71,7 @@ protected:
 
     // CubeMap
     vera::Shader        m_cubemap_shader;
-    vera::Vbo*          m_cubemap_vbo;
+    std::unique_ptr<vera::Vbo>          m_cubemap_vbo;
 
     vera::Shader        m_floor_shader;
     std::unique_ptr<vera::Vbo>          m_floor_vbo;
