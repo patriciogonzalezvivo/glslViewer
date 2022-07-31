@@ -34,7 +34,7 @@ Scene::Scene():
     // Camera.
     m_blend(ada::BLEND_ALPHA), m_culling(ada::CULL_NONE), m_depth_test(true),
     // Light
-    m_lightUI_vbo(nullptr), m_dynamicShadows(false), m_shadows(false),
+    m_dynamicShadows(false), m_shadows(false),
     // Background
     m_background_vbo(nullptr), m_background(false), 
     // CubeMap
@@ -53,11 +53,6 @@ void Scene::clear() {
         delete m_models[i];
 
     m_models.clear();
-
-    if (m_lightUI_vbo) {
-        delete m_lightUI_vbo;
-        m_lightUI_vbo = nullptr;
-    }
 
     if (!m_background_vbo) {
         delete m_background_vbo;
@@ -806,7 +801,7 @@ void Scene::renderDebug(Uniforms& _uniforms) {
             m_lightUI_shader.load(ada::getDefaultSrc(ada::FRAG_LIGHT), ada::getDefaultSrc(ada::VERT_LIGHT), false);
 
         if (m_lightUI_vbo == nullptr)
-            m_lightUI_vbo = new ada::Vbo( ada::rectMesh(0.0,0.0,0.0,0.0) );
+            m_lightUI_vbo = std::unique_ptr<ada::Vbo>(new ada::Vbo( ada::rectMesh(0.0,0.0,0.0,0.0) ));
 
         m_lightUI_shader.use();
         m_lightUI_shader.setUniform("u_scale", 24.0f, 24.0f);

@@ -67,8 +67,8 @@ protected:
     ada::CullingMode    m_culling;
     bool                m_depth_test;
     
-    // Ligth
-    ada::Vbo*           m_lightUI_vbo;
+    // Light
+    std::unique_ptr<ada::Vbo>          m_lightUI_vbo;
     ada::Shader         m_lightUI_shader;
     bool                m_dynamicShadows;
     bool                m_shadows;
