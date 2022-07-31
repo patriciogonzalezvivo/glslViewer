@@ -86,7 +86,7 @@ protected:
     ada::SkyData        m_skybox;
 
     ada::Shader         m_floor_shader;
-    ada::Vbo*           m_floor_vbo;
+    std::unique_ptr<ada::Vbo>          m_floor_vbo;
     float               m_floor_height;
     int                 m_floor_subd_target;
     int                 m_floor_subd;

@@ -40,7 +40,7 @@ Scene::Scene():
     // CubeMap
     m_cubemap_vbo(nullptr), m_cubemap_skybox(nullptr),
     // Floor
-    m_floor_vbo(nullptr), m_floor_height(0.0), m_floor_subd_target(-1), m_floor_subd(-1)
+    m_floor_height(0.0), m_floor_subd_target(-1), m_floor_subd(-1)
     {
 }
 
@@ -703,10 +703,7 @@ void Scene::renderFloor(Uniforms& _uniforms, const glm::mat4& _mvp, bool _lights
         //  Floor
         if (m_floor_subd_target != m_floor_subd) {
 
-            if (m_floor_vbo)
-                delete m_floor_vbo;
-
-            m_floor_vbo = new ada::Vbo( ada::floorMesh(m_area * 10.0f, m_floor_subd_target, m_floor_height) );
+            m_floor_vbo = std::unique_ptr<ada::Vbo>(new ada::Vbo( ada::floorMesh(m_area * 10.0f, m_floor_subd_target, m_floor_height) ));
             m_floor_subd = m_floor_subd_target;
 
             if (!m_floor_shader.isLoaded()) 
