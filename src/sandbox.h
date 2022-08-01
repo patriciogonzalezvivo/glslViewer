@@ -127,13 +127,13 @@ private:
     bool                m_postprocessing;
     
     // Cursor
-    std::unique_ptr<vera::Vbo>          m_cross_vbo;
+    std::unique_ptr<vera::Vbo>  m_cross_vbo;
 
     // debug plot texture and shader for histogram or fps plots
-    vera::Shader        m_plot_shader;
-    std::unique_ptr<vera::Texture>      m_plot_texture;
-    glm::vec4           m_plot_values[256];
-    PlotType            m_plot;
+    vera::Shader                    m_plot_shader;
+    std::unique_ptr<vera::Texture>  m_plot_texture;
+    glm::vec4                       m_plot_values[256];
+    PlotType                        m_plot;
 
     // Recording
     vera::Fbo           m_record_fbo;

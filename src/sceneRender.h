@@ -27,7 +27,7 @@ public:
     void            printDefines();
 
     void            setBlend(vera::BlendMode _blend) { m_blend = _blend; }
-    vera::BlendMode  getBlend() { return m_blend; }
+    vera::BlendMode getBlend() { return m_blend; }
 
     void            setCulling(vera::CullingMode _culling) { m_culling = _culling; }
     vera::CullingMode getCulling() { return m_culling; }
@@ -55,31 +55,31 @@ protected:
     float               m_area;
 
     // Camera
-    vera::BlendMode     m_blend;
-    vera::CullingMode   m_culling;
-    bool                m_depth_test;
+    vera::BlendMode             m_blend;
+    vera::CullingMode           m_culling;
+    bool                        m_depth_test;
     
     // Light
-    std::unique_ptr<vera::Vbo>          m_lightUI_vbo;
-    vera::Shader        m_lightUI_shader;
-    bool                m_dynamicShadows;
-    bool                m_shadows;
+    std::unique_ptr<vera::Vbo>  m_lightUI_vbo;
+    vera::Shader                m_lightUI_shader;
+    bool                        m_dynamicShadows;
+    bool                        m_shadows;
 
     // Background
-    vera::Shader        m_background_shader;
-    bool                m_background;
+    vera::Shader                m_background_shader;
+    bool                        m_background;
 
     // CubeMap
-    vera::Shader        m_cubemap_shader;
-    std::unique_ptr<vera::Vbo>          m_cubemap_vbo;
+    vera::Shader                m_cubemap_shader;
+    std::unique_ptr<vera::Vbo>  m_cubemap_vbo;
 
-    vera::Shader        m_floor_shader;
-    std::unique_ptr<vera::Vbo>          m_floor_vbo;
-    float               m_floor_height;
-    int                 m_floor_subd_target;
-    int                 m_floor_subd;
+    vera::Shader                m_floor_shader;
+    std::unique_ptr<vera::Vbo>  m_floor_vbo;
+    float                       m_floor_height;
+    int                         m_floor_subd_target;
+    int                         m_floor_subd;
 
     // UI Grid
-    std::unique_ptr<vera::Vbo>          m_grid_vbo;
-    std::unique_ptr<vera::Vbo>          m_axis_vbo;
+    std::unique_ptr<vera::Vbo>  m_grid_vbo;
+    std::unique_ptr<vera::Vbo>  m_axis_vbo;
 };
