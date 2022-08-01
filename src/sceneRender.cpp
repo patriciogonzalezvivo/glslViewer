@@ -28,13 +28,11 @@ SceneRender::SceneRender():
     // Camera.
     m_blend(vera::BLEND_ALPHA), m_culling(vera::CULL_NONE), m_depth_test(true),
     // Light
-    m_lightUI_vbo(nullptr), m_dynamicShadows(false), m_shadows(false),
+    m_dynamicShadows(false), m_shadows(false),
     // Background
     m_background(false), 
     // Floor
-    m_floor_vbo(nullptr), m_floor_height(0.0), m_floor_subd_target(-1), m_floor_subd(-1), 
-    // UI
-    m_grid_vbo(nullptr), m_axis_vbo(nullptr) 
+    m_floor_height(0.0), m_floor_subd_target(-1), m_floor_subd(-1)
     {
 }
 
@@ -43,20 +41,6 @@ SceneRender::~SceneRender(){
 }
 
 void SceneRender::clear() {
-    if (m_lightUI_vbo) {
-        delete m_lightUI_vbo;
-        m_lightUI_vbo = nullptr;
-    }
-
-    if (m_grid_vbo) {
-        delete m_grid_vbo;
-        m_grid_vbo = nullptr;
-    }
-
-    if (m_axis_vbo) {
-        delete m_axis_vbo;
-        m_axis_vbo = nullptr;
-    }
 }
 
 void SceneRender::setup(CommandList& _commands, Uniforms& _uniforms) {
@@ -542,7 +526,7 @@ void SceneRender::renderBackground(Uniforms& _uniforms) {
     else if (_uniforms.activeCubemap) {
         if (showCubebox && _uniforms.activeCubemap->loaded()) {
             if (!m_cubemap_vbo) {
-                m_cubemap_vbo = new vera::Vbo( vera::cubeMesh(1.0f) );
+                m_cubemap_vbo = std::unique_ptr<vera::Vbo>(new vera::Vbo( vera::cubeMesh(1.0f) ));
                 m_cubemap_shader.load(vera::getDefaultSrc(vera::FRAG_CUBEMAP), vera::getDefaultSrc(vera::VERT_CUBEMAP), vera::SHOW_MAGENTA_SHADER, false);
             }
 
@@ -568,10 +552,7 @@ void SceneRender::renderFloor(Uniforms& _uniforms, const glm::mat4& _mvp, bool _
         //  Floor
         if (m_floor_subd_target != m_floor_subd) {
 
-            if (m_floor_vbo)
-                delete m_floor_vbo;
-
-            m_floor_vbo = new vera::Vbo( vera::floorMesh(m_area * 10.0f, m_floor_subd_target, m_floor_height) );
+            m_floor_vbo = std::unique_ptr<vera::Vbo>(new vera::Vbo( vera::floorMesh(m_area * 10.0f, m_floor_subd_target, m_floor_height) ));
             m_floor_subd = m_floor_subd_target;
 
             if (!m_floor_shader.loaded()) 
@@ -627,21 +608,21 @@ void SceneRender::renderDebug(Uniforms& _uniforms) {
     // Axis
     if (showAxis) {
         if (m_axis_vbo == nullptr)
-            m_axis_vbo = new vera::Vbo( vera::axisMesh(_uniforms.activeCamera->getFarClip(), m_floor_height) );
+            m_axis_vbo = std::unique_ptr<vera::Vbo>(new vera::Vbo( vera::axisMesh(_uniforms.activeCamera->getFarClip(), m_floor_height) ));
 
         vera::strokeWeight(2.0f);
         vera::stroke( glm::vec4(1.0f) );
-        vera::model( m_axis_vbo );
+        vera::model( m_axis_vbo.get() );
     }
     
     // Grid
     if (showGrid) {
         if (m_grid_vbo == nullptr)
-            m_grid_vbo = new vera::Vbo( vera::gridMesh(_uniforms.activeCamera->getFarClip(), _uniforms.activeCamera->getFarClip() / 20.0, m_floor_height) );
+            m_grid_vbo = std::unique_ptr<vera::Vbo>(new vera::Vbo( vera::gridMesh(_uniforms.activeCamera->getFarClip(), _uniforms.activeCamera->getFarClip() / 20.0, m_floor_height) ));
 
         vera::strokeWeight(1.0f);
         vera::stroke( glm::vec4(0.5f) );
-        vera::model( m_grid_vbo );
+        vera::model( m_grid_vbo.get() );
     }
 
     // Light
@@ -650,7 +631,7 @@ void SceneRender::renderDebug(Uniforms& _uniforms) {
             m_lightUI_shader.load(vera::getDefaultSrc(vera::FRAG_LIGHT), vera::getDefaultSrc(vera::VERT_LIGHT), vera::SHOW_MAGENTA_SHADER, false);
 
         if (m_lightUI_vbo == nullptr)
-            m_lightUI_vbo = new vera::Vbo( vera::rectMesh(0.0,0.0,0.0,0.0) );
+            m_lightUI_vbo = std::unique_ptr<vera::Vbo>(new vera::Vbo( vera::rectMesh(0.0,0.0,0.0,0.0) ));
 
         m_lightUI_shader.use();
         m_lightUI_shader.setUniform("u_scale", 12.0f, 12.0f);

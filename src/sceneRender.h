@@ -1,6 +1,6 @@
 #pragma once
 
-
+#include <memory>
 #include "uniforms.h"
 #include "tools/command.h"
 
@@ -59,8 +59,8 @@ protected:
     vera::CullingMode   m_culling;
     bool                m_depth_test;
     
-    // Ligth
-    vera::Vbo*          m_lightUI_vbo;
+    // Light
+    std::unique_ptr<vera::Vbo>          m_lightUI_vbo;
     vera::Shader        m_lightUI_shader;
     bool                m_dynamicShadows;
     bool                m_shadows;
@@ -71,15 +71,15 @@ protected:
 
     // CubeMap
     vera::Shader        m_cubemap_shader;
-    vera::Vbo*          m_cubemap_vbo;
+    std::unique_ptr<vera::Vbo>          m_cubemap_vbo;
 
     vera::Shader        m_floor_shader;
-    vera::Vbo*          m_floor_vbo;
+    std::unique_ptr<vera::Vbo>          m_floor_vbo;
     float               m_floor_height;
     int                 m_floor_subd_target;
     int                 m_floor_subd;
 
     // UI Grid
-    vera::Vbo*          m_grid_vbo;
-    vera::Vbo*          m_axis_vbo;
+    std::unique_ptr<vera::Vbo>          m_grid_vbo;
+    std::unique_ptr<vera::Vbo>          m_axis_vbo;
 };
