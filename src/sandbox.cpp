@@ -1575,7 +1575,7 @@ void Sandbox::renderUI() {
             vera::textAngle(-HALF_PI);
             vera::textAlign(vera::ALIGN_TOP);
             vera::textAlign(vera::ALIGN_LEFT);
-            vera::textSize(yStep * 0.2f);
+            vera::textSize(yStep * 0.2f / vera::getPixelDensity(false));
 
             for (vera::TexturesMap::iterator it = uniforms.textures.begin(); it != uniforms.textures.end(); it++) {
                 vera::TextureStreamsMap::const_iterator slit = uniforms.streams.find(it->first);
@@ -1618,7 +1618,7 @@ void Sandbox::renderUI() {
             float yOffset = h - yStep;
 
             vera::textAngle(-HALF_PI);
-            vera::textSize(yStep * 0.2f);
+            vera::textSize(yStep * 0.2f / vera::getPixelDensity(false));
             vera::textAlign(vera::ALIGN_BOTTOM);
             vera::textAlign(vera::ALIGN_LEFT);
 
