@@ -11,4 +11,4 @@ Icon=/usr/share/pixmaps/glslViewer.png
 Terminal=true
 MimeType=model/mesh;model/x-ply;model/x-obj;model/x-glb;model/x-gltf;
 Categories=Graphics;3DGraphics;Viewer;
-NoDisplay=false
+NoDisplay=true
