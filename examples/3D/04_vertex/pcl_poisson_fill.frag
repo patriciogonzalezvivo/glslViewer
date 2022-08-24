@@ -26,10 +26,10 @@ uniform sampler2D   u_buffer1;
 uniform sampler2D   u_buffer2;
 uniform sampler2D   u_buffer3;
 
-uniform sampler2D   u_convolutionPyramid0;
-uniform sampler2D   u_convolutionPyramidTex0;
-uniform sampler2D   u_convolutionPyramidTex1;
-uniform bool        u_convolutionPyramidUpscaling;
+uniform sampler2D   u_pyramid0;
+uniform sampler2D   u_pyramidTex0;
+uniform sampler2D   u_pyramidTex1;
+uniform bool        u_pyramidUpscaling;
 
 uniform vec2        u_resolution;
 uniform float       u_cameraFarClip;
@@ -84,13 +84,13 @@ void main(void) {
 #elif defined(CONVOLUTION_PYRAMID_ALGORITHM)
 // Buy default CONVOLUTION_PYRAMID_ALGORITHM looks like this:
 
-    if (!u_convolutionPyramidUpscaling) {
+    if (!u_pyramidUpscaling) {
         for (int dy = -2; dy <= 2; dy++) {
             for (int dx = -2; dx <= 2; dx++) {
                 vec2 uv = st + vec2(float(dx), float(dy)) * pixel * 0.25;
                 if (uv.x <= 0.0 || uv.x >= 1.0 || uv.y <= 0.0 || uv.y >= 1.0)
                     continue;
-                color += texture2D(u_convolutionPyramidTex0, saturate(uv)) * h1[ absi(dx) ] * h1[ absi(dy) ];
+                color += texture2D(u_pyramidTex0, saturate(uv)) * h1[ absi(dx) ] * h1[ absi(dy) ];
             }
         }
     }
@@ -98,7 +98,7 @@ void main(void) {
         for (int dy = -1; dy <= 1; dy++) {
             for (int dx = -1; dx <= 1; dx++) {
                 vec2 uv = st + vec2(float(dx), float(dy)) * pixel;
-                color += texture2D(u_convolutionPyramidTex0, saturate(uv)) * g[ absi(dx) ] * g[ absi(dy) ];
+                color += texture2D(u_pyramidTex0, saturate(uv)) * g[ absi(dx) ] * g[ absi(dy) ];
             }
         }
 
@@ -107,7 +107,7 @@ void main(void) {
                 vec2 uv = st + vec2(float(dx), float(dy)) * pixel * 4.0;
                 if (uv.x <= 0.0 || uv.x >= 1.0 || uv.y <= 0.0 || uv.y >= 1.0)
                     continue;
-                color += texture2D(u_convolutionPyramidTex1, saturate(uv)) * h2 * h1[ absi(dx) ] * h1[ absi(dy) ];
+                color += texture2D(u_pyramidTex1, saturate(uv)) * h2 * h1[ absi(dx) ] * h1[ absi(dy) ];
             }
         }
     }
@@ -117,7 +117,7 @@ void main(void) {
 
 
 #elif defined(POSTPROCESSING)
-    color = texture2D(u_convolutionPyramid0, st) * 1.;
+    color = texture2D(u_pyramid0, st) * 1.;
     vec4 scene = texture2D(u_scene, st);
     float luma = rgb2luma(scene.rgb);
     color = mix(color * 0.9, scene, smoothstep(0.5,.9,luma));

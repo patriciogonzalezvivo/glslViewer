@@ -1,19 +1,19 @@
 cmake_minimum_required(VERSION 3.2)
 
-set(VERSION_MAJOR 2)
-set(VERSION_MINOR 1)
-set(VERSION_PATCH 2)
+set(VERSION_MAJOR 3)
+set(VERSION_MINOR 0)
+set(VERSION_PATCH 0)
 set(VERSION "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}")
 
 project(glslViewer 
-            VERSION ${VERSION}
-            LANGUAGES CXX )
+        VERSION ${VERSION}
+        LANGUAGES CXX )
 
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# The compiled ADA 
+# The compiled vera 
 add_subdirectory(deps)
 
 if(MSVC)
@@ -26,22 +26,14 @@ endif()
 
 file(GLOB ROOT_SOURCE 
     "${PROJECT_SOURCE_DIR}/src/*.cpp"
-    "${PROJECT_SOURCE_DIR}/src/gl/*.cpp"
-    "${PROJECT_SOURCE_DIR}/src/io/*.cpp"
-    "${PROJECT_SOURCE_DIR}/src/types/*.cpp"
     "${PROJECT_SOURCE_DIR}/src/tools/*.cpp"
 )
 
 add_executable(glslViewer ${ROOT_SOURCE})
 
-# set_target_properties(glslViewer PROPERTIES
-#     CXX_STANDARD 11
-#     CXX_STANDARD_REQUIRED ON
-# )
-
 include_directories(deps/liblo)
 target_include_directories(glslViewer PRIVATE deps)
-target_link_libraries(glslViewer PRIVATE ada phonedepth)
+target_link_libraries(glslViewer PRIVATE vera)
 target_compile_definitions(glslViewer PRIVATE GLSLVIEWER_VERSION_MAJOR=${VERSION_MAJOR})
 target_compile_definitions(glslViewer PRIVATE GLSLVIEWER_VERSION_MINOR=${VERSION_MINOR})
 target_compile_definitions(glslViewer PRIVATE GLSLVIEWER_VERSION_PATCH=${VERSION_PATCH})
@@ -60,6 +52,7 @@ if (EMSCRIPTEN)
 
     set(LFLAGS "${LFLAGS} -s ALLOW_MEMORY_GROWTH=1")
     set(LFLAGS "${LFLAGS} -s NO_DYNAMIC_EXECUTION=1")
+    # set(LFLAGS "${LFLAGS} -s NO_DISABLE_EXCEPTION_CATCHING")
 
     # Copy the default index.html 
     file(COPY   assets/index.html DESTINATION ${CMAKE_CURRENT_BINARY_DIR} )
@@ -78,7 +71,6 @@ if (EMSCRIPTEN)
     set(LFLAGS "${LFLAGS} --preload-file examples/3D/01_lighting/04_fresnel.vert")
     set(LFLAGS "${LFLAGS} --preload-file examples/3D/01_lighting/04_fresnel.frag")
     set(LFLAGS "${LFLAGS} --preload-file examples/3D/01_lighting/uffizi_cross.jpg")
-    set(LFLAGS "${LFLAGS} --preload-file examples/3D/01_lighting/uffizi_latlong.jpg")
     set(LFLAGS "${LFLAGS} --preload-file examples/3D/03_models/duck.glb")
     # set(LFLAGS "${LFLAGS} --preload-file examples/3D/03_models/default.mtl")
     # set(LFLAGS "${LFLAGS} --preload-file examples/3D/03_models/default.png")
@@ -92,9 +84,11 @@ if (EMSCRIPTEN)
     # set(LFLAGS "${LFLAGS} --preload-file examples/3D/04_vertex/physarum.vert")
     # set(LFLAGS "${LFLAGS} --preload-file examples/3D/04_vertex/spin.vert")
     # set(LFLAGS "${LFLAGS} --preload-file examples/3D/04_vertex/stars.vert")
+    # set(LFLAGS "${LFLAGS} --preload-file examples/3D/04_vertex/gpgpu.frag")
+    # set(LFLAGS "${LFLAGS} --preload-file examples/3D/04_vertex/gpgpu.vert")
     
     set_target_properties(glslViewer PROPERTIES LINK_FLAGS "${LFLAGS}")
-    target_link_libraries(glslViewer PRIVATE glfw)
+    target_link_libraries(glslViewer PRIVATE glfw webxr)
     
 else()
     find_package(Curses)

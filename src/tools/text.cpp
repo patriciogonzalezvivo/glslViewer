@@ -6,7 +6,8 @@
 #include <regex>
 #include <tuple>
 #include <cstring>
-#include "ada/string.h"
+
+#include "vera/ops/string.h"
 
 namespace {
 
@@ -32,7 +33,7 @@ std::regex make_regex(T1 regex_pattern_check, T2 listings_keyword) {
 
 std::tuple<bool, std::smatch> does_any_of_the_regex_exist(const std::string& _source, std::regex re) {
     // Split Source code in lines
-    const auto lines = ada::split(_source, '\n');
+    const auto lines = vera::split(_source, '\n');
     std::smatch match;
     const auto match_found = std::any_of(std::begin(lines), std::end(lines)
                                          , [&](const std::string& line) { return std::regex_search(line, match, re); });
@@ -114,7 +115,7 @@ int generic_search_count(const std::string& _source, regex_count_t keyword_id ) 
         , R"(_)(\d+))"
     };
     // Split Source code in lines
-    const auto lines = ada::split(_source, '\n');
+    const auto lines = vera::split(_source, '\n');
     // Regext to search for #ifdef BUFFER_[NUMBER], #if defined( BUFFER_[NUMBER] ) and #elif defined( BUFFER_[NUMBER] ) occurences
     const auto re = make_regex(regex_pattern_count, valid_count_keyword_ids[+(keyword_id)]);
     // return the number of results
@@ -141,7 +142,7 @@ bool generic_search_get(const std::string& _source, const std::string& _name, gl
     std::tie(result, match) = does_any_of_the_regex_exist(_source, re); // capture both the "result" and the "match" info.
     if(result) {
         if (match[1] == _name) {    // regex-match result data is valid to spec.
-            _size = {ada::toFloat(match[2]), ada::toFloat(match[3])};
+            _size = {vera::toFloat(match[2]), vera::toFloat(match[3])};
         }
     }
     return result;
@@ -191,8 +192,8 @@ bool checkConvolutionPyramid(const std::string& _source) {
 }
 
 std::string getUniformName(const std::string& _str) {
-    std::vector<std::string> values = ada::split(_str, '.');
-    return "u_" + ada::toLower( ada::toUnderscore( ada::purifyString( values[0] ) ) );
+    std::vector<std::string> values = vera::split(_str, '.');
+    return "u_" + vera::toLower( vera::toUnderscore( vera::purifyString( values[0] ) ) );
 }
 
 bool checkPattern(const std::string& _str) {

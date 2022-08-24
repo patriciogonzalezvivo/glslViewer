@@ -1,6 +1,6 @@
 #include "tracker.h"
 
-#include "ada/string.h"
+#include "vera/ops/string.h"
 
 Tracker::Tracker() {
 
@@ -70,8 +70,8 @@ double  Tracker::getFramerate() {
 }
 
 std::string Tracker::logFramerate() {
-    return  "framerate," + ada::toString(getFramerate()) + "\n";// +
-            // "fps," + ada::toString( (1./getFramerate()) * 1000.0 ) ;
+    return  "framerate," + vera::toString(getFramerate()) + "\n";// +
+            // "fps," + vera::toString( (1./getFramerate()) * 1000.0 ) ;
 }
 
 std::string Tracker::logSamples() {
@@ -94,8 +94,8 @@ std::string Tracker::logSamples(const std::string& _track) {
     
     for (size_t i = 0; i < it->second.samples.size(); i++)
         log +=  track_name + "," + 
-                ada::toString(it->second.samples[i].startMs) + "," + 
-                ada::toString(it->second.samples[i].durationMs) + "\n";
+                vera::toString(it->second.samples[i].startMs) + "," + 
+                vera::toString(it->second.samples[i].durationMs) + "\n";
 
     return log;
 }
@@ -130,7 +130,7 @@ std::string Tracker::logAverage(const std::string& _track) {
     delta /= (double)it->second.samples.size() - 1.0;
     it->second.durationAverage = average;
     
-    log += track_name + "," + ada::toString(average) + "," + ada::toString( (average/delta) * 100.0) + "," + ada::toString(delta) +  "\n";
+    log += track_name + "," + vera::toString(average) + "," + vera::toString( (average/delta) * 100.0) + "," + vera::toString(delta) +  "\n";
 
     return log;
 }

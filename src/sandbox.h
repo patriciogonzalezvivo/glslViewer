@@ -5,9 +5,9 @@
 #include "thread_pool/thread_pool.hpp"
 #endif
 
-#include "scene.h"
-#include "types/files.h"
-#include "ada/string.h"
+#include "sceneRender.h"
+#include "tools/files.h"
+#include "vera/ops/string.h"
 
 enum ShaderType {
     FRAGMENT = 0,
@@ -21,6 +21,9 @@ enum PlotType {
 };
 
 const std::string plot_options[] = { "off", "luma", "red", "green", "blue", "rgb", "fps", "ms" };
+
+typedef std::vector<vera::Fbo>       FboList;
+typedef std::vector<vera::Shader>    ShaderList;
 
 class Sandbox {
 public:
@@ -37,7 +40,9 @@ public:
     void                unflagChange(); 
     bool                haveChange();
 
+    void                renderPrep();
     void                render();
+    void                renderPost();
     void                renderUI();
     void                renderDone();
 
@@ -50,7 +55,7 @@ public:
 
     // Getting some data out of Sandbox
     const std::string&  getSource( ShaderType _type ) const;
-    Scene&              getScene() { return m_scene; }
+    SceneRender&        getSceneRender() { return m_sceneRender; }
 
     void                printDependencies( ShaderType _type ) const;
     
@@ -63,7 +68,7 @@ public:
     void                onPlot();
    
     // Include folders
-    ada::StringList     include_folders;
+    vera::StringList     include_folders;
 
     // Uniforms
     Uniforms            uniforms;
@@ -93,53 +98,49 @@ private:
     std::string         m_vert_source;
 
     // Dependencies
-    ada::StringList     m_vert_dependencies;
-    ada::StringList     m_frag_dependencies;
+    vera::StringList    m_vert_dependencies;
+    vera::StringList    m_frag_dependencies;
 
     // Buffers
-    std::vector<ada::Shader>    m_buffers_shaders;
-    int                         m_buffers_total;
+    ShaderList          m_buffers_shaders;
+    int                 m_buffers_total;
 
     // Buffers
-    std::vector<ada::Shader>    m_doubleBuffers_shaders;
-    int                         m_doubleBuffers_total;
+    ShaderList          m_doubleBuffers_shaders;
+    int                 m_doubleBuffers_total;
 
     // A. CANVAS
-    ada::Shader         m_canvas_shader;
+    vera::Shader        m_canvas_shader;
 
     // B. SCENE
-    Scene               m_scene;
-    ada::Fbo            m_scene_fbo;
+    SceneRender         m_sceneRender;
+    vera::Fbo           m_sceneRender_fbo;
 
     // Pyramid Convolution
-    std::vector<ada::Fbo>       m_convolution_pyramid_fbos;
-    std::vector<ada::Shader>    m_convolution_pyramid_subshaders;
-    ada::Shader                 m_convolution_pyramid_shader;
-    int                         m_convolution_pyramid_total;
+    FboList             m_pyramid_fbos;
+    ShaderList          m_pyramid_subshaders;
+    vera::Shader        m_pyramid_shader;
+    int                 m_pyramid_total;
 
     // Postprocessing
-    ada::Shader         m_postprocessing_shader;
+    vera::Shader        m_postprocessing_shader;
     bool                m_postprocessing;
-
-    // Billboard
-    ada::Shader         m_billboard_shader;
-    ada::Vbo*           m_billboard_vbo;
     
     // Cursor
-    ada::Vbo*           m_cross_vbo;
+    std::unique_ptr<vera::Vbo>  m_cross_vbo;
 
     // debug plot texture and shader for histogram or fps plots
-    ada::Shader         m_plot_shader;
-    ada::Texture*       m_plot_texture;
-    glm::vec4           m_plot_values[256];
-    PlotType            m_plot;
+    vera::Shader                    m_plot_shader;
+    std::unique_ptr<vera::Texture>  m_plot_texture;
+    glm::vec4                       m_plot_values[256];
+    PlotType                        m_plot;
 
     // Recording
-    ada::Fbo            m_record_fbo;
+    vera::Fbo           m_record_fbo;
     #if defined(SUPPORT_MULTITHREAD_RECORDING)
-    std::atomic<int>        m_task_count {0};
-    std::atomic<long long>  m_max_mem_in_queue {0};
-    thread_pool::ThreadPool m_save_threads;
+    std::atomic<int>    m_task_count {0};
+    std::atomic<long long>      m_max_mem_in_queue {0};
+    thread_pool::ThreadPool     m_save_threads;
     #endif
 
     // Other state properties
@@ -148,12 +149,11 @@ private:
     float               m_camera_azimuth;
     float               m_camera_elevation;
     size_t              m_frame;
+    vera::ShaderErrorResolve    m_error_screen;
     bool                m_change;
     bool                m_initialized;
-    bool                m_error_screen;
 
     //  Debug
     bool                m_showTextures;
     bool                m_showPasses;
-    
 };

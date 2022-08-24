@@ -33,6 +33,7 @@ premake5.exe
 build/
 build_wasm/
 
+.vscode/*.log
 
 CMakeFiles
 cmake_install.cmake

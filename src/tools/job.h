@@ -5,7 +5,7 @@
 #include <string>
 #include <utility>
 
-#include "ada/pixel.h"
+#include "vera/ops/pixel.h"
 
 /** Just a small helper that captures all the relevant data to save an image **/
 class Job {
@@ -30,7 +30,7 @@ public:
     /** the function that is being invoked when the task is done **/
     void operator()() {
         if (m_pixels) {
-            ada::savePixels(m_filename, m_pixels.get(), m_width, m_height);
+            vera::savePixels(m_filename, m_pixels.get(), m_width, m_height);
             m_pixels = nullptr;
             (*m_task_count)--;
             (*m_max_mem_in_queue) += mem_consumed_by_pixels();

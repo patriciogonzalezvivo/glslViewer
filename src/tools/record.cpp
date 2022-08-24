@@ -8,8 +8,8 @@
 #include <thread>
 #include <chrono>
 
-#include "ada/fs.h"
-#include "ada/string.h"
+#include "vera/ops/fs.h"
+#include "vera/ops/string.h"
 
 #include "lockFreeQueue.h"
 #include "console.h"
@@ -73,15 +73,15 @@ bool recordingPipeOpen(const RecordingSettings& _settings, float _start, float _
         return false;
     }
 
-    if (ada::urlExists(pipe_settings.trg_path)) {
+    if (vera::urlExists(pipe_settings.trg_path)) {
         console_clear();
         std::cout << "That file " << pipe_settings.trg_path << " already exists.";
 
         int file_copy = 0;
-        std::string extension = ada::getExt(pipe_settings.trg_path); 
+        std::string extension = vera::getExt(pipe_settings.trg_path); 
         std::string basename = pipe_settings.trg_path.substr(0,pipe_settings.trg_path.size() - extension.size() - 1 );
-        while ( ada::urlExists(pipe_settings.trg_path) ) {
-            pipe_settings.trg_path = basename + "_" + ada::toString(file_copy, 0, 3, '0') + '.' + extension;
+        while ( vera::urlExists(pipe_settings.trg_path) ) {
+            pipe_settings.trg_path = basename + "_" + vera::toString(file_copy, 0, 3, '0') + '.' + extension;
             file_copy++;
         }
 
@@ -110,7 +110,7 @@ bool recordingPipeOpen(const RecordingSettings& _settings, float _start, float _
         #endif
 
         // input
-        "-r " + ada::toString( pipe_settings.src_fps ),         // input frame rate
+        "-r " + vera::toString( pipe_settings.src_fps ),         // input frame rate
         "-s " + std::to_string( pipe_settings.src_width ) +     // input resolution width
             "x" + std::to_string( pipe_settings.src_height ),   // input resolution height
         "-f rawvideo",                                          // input codec
