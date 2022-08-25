@@ -9,7 +9,7 @@ project(glslViewer
         VERSION ${VERSION}
         LANGUAGES CXX )
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -21,7 +21,7 @@ if(MSVC)
 endif()
 
 if (NO_X11 OR FORCE_GBM)
-    add_compile_options(-std=c++14 -DGLM_FORCE_CXX14 -fpermissive -Wno-psabi -lpthread)
+    add_compile_options(-std=c++17 -DGLM_FORCE_CXX17 -fpermissive -Wno-psabi -lpthread)
 endif()
 
 file(GLOB ROOT_SOURCE 
