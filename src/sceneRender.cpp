@@ -331,6 +331,11 @@ void SceneRender::setup(CommandList& _commands, Uniforms& _uniforms) {
     },
     [this]() { return vera::toString(m_origin.getPosition(), ','); });
 
+    _uniforms.functions["u_area"] = UniformFunction("float", [this](vera::Shader& _shader) {
+        _shader.setUniform("u_area", m_area);
+    },
+    [this]() { return vera::toString(m_area); });
+
     _uniforms.functions["u_modelMatrix"] = UniformFunction("mat4", [this](vera::Shader& _shader) {
         _shader.setUniform("u_modelMatrix", m_origin.getTransformMatrix() );
     });    

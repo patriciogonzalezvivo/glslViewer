@@ -42,3 +42,6 @@
 
 04_fresnel_lenticular:
 	glslViewer 04_fresnel.vert 04_fresnel.frag head.ply -C uffizi_cross.hdr --lenticular
+
+05_ssao:
+	glslViewer 05_ssao.frag head.ply -l

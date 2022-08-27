@@ -46,9 +46,7 @@ void main (void) {
 #elif defined(CONVOLUTION_PYRAMID_0)
     st = (floor(gl_FragCoord.xy)/u_resolution);
     color.rgb = laplacian(u_tex0, st, pixel, 1.0) * 0.5;
-
     color *= 1.0-texture2D(u_buffer0, st).r;
-
     color.rgb = color.xyz * 0.5 + 0.5;
 
 #elif defined(CONVOLUTION_PYRAMID_ALGORITHM)
@@ -97,6 +95,8 @@ void main (void) {
     color.rgb = texture2D(u_pyramid0, st).rgb;
 
 #endif
+
+    color.rgb = clamp(color.rgb, 0.0, 1.0);
 
     gl_FragColor = color;
 }

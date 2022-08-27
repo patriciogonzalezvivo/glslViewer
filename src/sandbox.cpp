@@ -142,8 +142,10 @@ Sandbox::Sandbox():
         glm::vec3 sample(   randomFloats(generator) * 2.0 - 1.0, 
                             randomFloats(generator) * 2.0 - 1.0, 
                             randomFloats(generator) );
+
+        sample = glm::normalize(sample);
         float scale = (float)i / 64.0;
-        scale   = glm::mix(0.1f, 1.0f, scale * scale);
+        scale   = vera::lerp(0.1f, 1.0f, scale * scale);
         sample *= scale;
         m_ssaoSamples[i] = sample;
     }
@@ -1141,7 +1143,7 @@ void Sandbox::_updateSceneBuffer(int _width, int _height) {
         (   !m_scenePosition_fbo.isAllocated() || 
             m_scenePosition_fbo.getWidth() != _width || 
             m_scenePosition_fbo.getHeight() != _height ) ) {
-        m_scenePosition_fbo.allocate(_width, _height, vera::COLOR_TEXTURE_DEPTH_BUFFER);
+        m_scenePosition_fbo.allocate(_width, _height, vera::POSITION_TEXTURE);
     }
 }
 
