@@ -69,7 +69,6 @@ public:
     virtual bool        haveChange();
 
     // Feed uniforms to a specific shader
-    // virtual bool        feedTo( vera::Shader &_shader, bool _lights = true, bool _buffers = true);
     virtual bool        feedTo( vera::Shader *_shader, bool _lights = true, bool _buffers = true);
 
     // defines

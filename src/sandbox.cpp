@@ -5,12 +5,12 @@
 #include <fstream>
 #include <math.h>
 #include <memory>
+#include <random>
 
 #include "tools/job.h"
 #include "tools/text.h"
 #include "tools/record.h"
 #include "tools/console.h"
-
 
 #include "vera/ops/fs.h"
 #include "vera/window.h"
@@ -107,23 +107,61 @@ Sandbox::Sandbox():
     []() { return vera::toString((float)vera::getWindowWidth(),1) + "," + vera::toString((float)vera::getWindowHeight(),1); });
 
     // SCENE
-    uniforms.functions["u_scene"] = UniformFunction("sampler2D", [this](vera::Shader& _shader) {
-        if (m_postprocessing && m_sceneRender_fbo.getTextureId()) {
-            _shader.setUniformTexture("u_scene", &m_sceneRender_fbo, _shader.textureIndex++ );
-        }
-    });
-
-    uniforms.functions["u_sceneDepth"] = UniformFunction("sampler2D", [this](vera::Shader& _shader) {
-        if (m_postprocessing && m_sceneRender_fbo.getTextureId()) {
-            _shader.setUniformDepthTexture("u_sceneDepth", &m_sceneRender_fbo, _shader.textureIndex++ );
-        }
-    });
-
     uniforms.functions["u_view2d"] = UniformFunction("mat3", [this](vera::Shader& _shader) {
         _shader.setUniform("u_view2d", m_view2d);
     });
 
     uniforms.functions["u_modelViewProjectionMatrix"] = UniformFunction("mat4");
+
+    uniforms.functions["u_scene"] = UniformFunction("sampler2D", [this](vera::Shader& _shader) {
+        if (m_sceneRender_fbo.getTextureId())
+            _shader.setUniformTexture("u_scene", &m_sceneRender_fbo, _shader.textureIndex++ );
+    });
+
+    uniforms.functions["u_sceneDepth"] = UniformFunction("sampler2D", [this](vera::Shader& _shader) {
+        if (m_sceneRender_fbo.getTextureId())
+            _shader.setUniformDepthTexture("u_sceneDepth", &m_sceneRender_fbo, _shader.textureIndex++ );
+    });
+
+    uniforms.functions["u_sceneNormal"] = UniformFunction("sampler2D", [this](vera::Shader& _shader) {
+        if (m_sceneNormal_fbo.getTextureId())
+            _shader.setUniformTexture("u_sceneNormal", &m_sceneNormal_fbo, _shader.textureIndex++ );
+    });
+
+    uniforms.functions["u_scenePosition"] = UniformFunction("sampler2D", [this](vera::Shader& _shader) {
+        if (m_scenePosition_fbo.getTextureId())
+            _shader.setUniformTexture("u_scenePosition", &m_scenePosition_fbo, _shader.textureIndex++ );
+    });
+    
+    // SSAO data (https://learnopengl.com/Advanced-Lighting/SSAO)
+    //
+    std::uniform_real_distribution<float> randomFloats(0.0, 1.0); // random floats between [0.0, 1.0]
+    std::default_random_engine generator;
+
+    for (size_t i = 0; i < 64; ++i) {
+        glm::vec3 sample(   randomFloats(generator) * 2.0 - 1.0, 
+                            randomFloats(generator) * 2.0 - 1.0, 
+                            randomFloats(generator) );
+        float scale = (float)i / 64.0;
+        scale   = glm::mix(0.1f, 1.0f, scale * scale);
+        sample *= scale;
+        m_ssaoSamples[i] = sample;
+    }
+
+    uniforms.functions["u_ssaoSamples"] = UniformFunction("vec3", [this](vera::Shader& _shader) {
+        _shader.setUniform("u_ssaoSamples", m_ssaoSamples, 64 );
+    });
+
+    for (size_t i = 0; i < 16; i++) {
+        m_ssaoNoise[i] = glm::vec3( randomFloats(generator) * 2.0 - 1.0, 
+                                    randomFloats(generator) * 2.0 - 1.0, 
+                                    0.0f );
+    }
+
+    uniforms.functions["u_ssaoNoise"] = UniformFunction("vec3", [this](vera::Shader& _shader) {
+        _shader.setUniform("u_ssaoNoise", m_ssaoNoise, 16 );
+    });
+
 }
 
 Sandbox::~Sandbox() {
@@ -1091,6 +1129,20 @@ void Sandbox::_updateSceneBuffer(int _width, int _height) {
         m_sceneRender_fbo.getWidth() != _width || 
         m_sceneRender_fbo.getHeight() != _height )
         m_sceneRender_fbo.allocate(_width, _height, type);
+
+    if (uniforms.functions["u_sceneNormal"].present && 
+        (   !m_sceneNormal_fbo.isAllocated() || 
+            m_sceneNormal_fbo.getWidth() != _width || 
+            m_sceneNormal_fbo.getHeight() != _height ) ) {
+        m_sceneNormal_fbo.allocate(_width, _height, vera::COLOR_TEXTURE_DEPTH_BUFFER);
+    }
+
+    if (uniforms.functions["u_scenePosition"].present && 
+        (   !m_scenePosition_fbo.isAllocated() || 
+            m_scenePosition_fbo.getWidth() != _width || 
+            m_scenePosition_fbo.getHeight() != _height ) ) {
+        m_scenePosition_fbo.allocate(_width, _height, vera::COLOR_TEXTURE_DEPTH_BUFFER);
+    }
 }
 
 bool Sandbox::setSource(ShaderType _type, const std::string& _source) {
@@ -1432,8 +1484,22 @@ void Sandbox::renderPrep() {
         if (!m_record_fbo.isAllocated())
             m_record_fbo.allocate(vera::getWindowWidth(), vera::getWindowHeight(), vera::COLOR_TEXTURE_DEPTH_BUFFER);
 
+
     if (m_postprocessing || m_plot == PLOT_LUMA || m_plot == PLOT_RGB || m_plot == PLOT_RED || m_plot == PLOT_GREEN || m_plot == PLOT_BLUE ) {
         _updateSceneBuffer(vera::getWindowWidth(), vera::getWindowHeight());
+
+        if (uniforms.functions["u_sceneNormal"].present) {
+            m_sceneNormal_fbo.bind();
+            m_sceneRender.renderNormalBuffer(uniforms);
+            m_sceneNormal_fbo.unbind();
+        }
+
+        if (uniforms.functions["u_scenePosition"].present) {
+            m_scenePosition_fbo.bind();
+            m_sceneRender.renderPositionBuffer(uniforms);
+            m_scenePosition_fbo.unbind();
+        }
+
         m_sceneRender_fbo.bind();
     }
     else if (screenshotFile != "" || isRecording() )
@@ -1604,6 +1670,8 @@ void Sandbox::renderUI() {
             nTotal += uniforms.pyramids.size();
         nTotal += uniforms.functions["u_scene"].present;
         nTotal += uniforms.functions["u_sceneDepth"].present;
+        nTotal += uniforms.functions["u_sceneNormal"].present;
+        nTotal += uniforms.functions["u_scenePosition"].present;
         nTotal += (uniforms.models.size() > 0);
 
         if (nTotal > 0) {
@@ -1675,7 +1743,8 @@ void Sandbox::renderUI() {
 
             }
 
-            if (m_postprocessing) {
+            if (m_postprocessing) 
+            {
                 if (uniforms.functions["u_scene"].present) {
                     vera::image(&m_sceneRender_fbo, xOffset, yOffset, xStep, yStep);
                     vera::text("u_scene", xOffset - xStep, vera::getWindowHeight() - yOffset + yStep);
@@ -1686,6 +1755,20 @@ void Sandbox::renderUI() {
                     if (uniforms.activeCamera)
                         vera::imageDepth(&m_sceneRender_fbo, xOffset, yOffset, xStep, yStep, uniforms.activeCamera->getFarClip(), uniforms.activeCamera->getNearClip());
                     vera::text("u_sceneDepth", xOffset - xStep, vera::getWindowHeight() - yOffset + yStep);
+                    yOffset -= yStep * 2.0;
+                }
+
+                if (uniforms.functions["u_scenePosition"].present) {
+                    if (uniforms.activeCamera)
+                        vera::image(&m_scenePosition_fbo, xOffset, yOffset, xStep, yStep);
+                    vera::text("u_scenePosition", xOffset - xStep, vera::getWindowHeight() - yOffset + yStep);
+                    yOffset -= yStep * 2.0;
+                }
+
+                if (uniforms.functions["u_sceneNormal"].present) {
+                    if (uniforms.activeCamera)
+                        vera::image(&m_sceneNormal_fbo, xOffset, yOffset, xStep, yStep);
+                    vera::text("u_sceneNormal", xOffset - xStep, vera::getWindowHeight() - yOffset + yStep);
                     yOffset -= yStep * 2.0;
                 }
             }

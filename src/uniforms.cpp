@@ -210,16 +210,12 @@ void Uniforms::clear() {
     vera::Scene::clear();
 }
 
-// bool Uniforms::feedTo(vera::Shader &_shader, bool _lights, bool _buffers ) {
-//     return feedTo(&_shader, _lights, _buffers);
-// }
-
 bool Uniforms::feedTo(vera::Shader *_shader, bool _lights, bool _buffers ) {
     bool update = false;
 
     // Pass Native uniforms 
     for (UniformFunctionsMap::iterator it = functions.begin(); it != functions.end(); ++it) {
-        if (!_lights && ( it->first == "u_scene" || "u_sceneDepth") )
+        if (!_lights && ( it->first == "u_scene" || it->first == "u_sceneDepth" || it->first == "u_sceneNormal" || it->first == "u_scenePosition") )
             continue;
 
         if (it->second.present)
@@ -408,8 +404,9 @@ void Uniforms::checkUniforms( const std::string &_vert_src, const std::string &_
     // Check active native uniforms
     for (UniformFunctionsMap::iterator it = functions.begin(); it != functions.end(); ++it) {
         std::string name = it->first + ";";
-        bool present = ( findId(_vert_src, name.c_str()) || findId(_frag_src, name.c_str()) );
-        if ( it->second.present != present) {
+        std::string arrayName = it->first + "[";
+        bool present = ( findId(_vert_src, name.c_str()) || findId(_frag_src, name.c_str()) || findId(_frag_src, arrayName.c_str()) );
+        if ( it->second.present != present ) {
             it->second.present = present;
             m_change = true;
         } 

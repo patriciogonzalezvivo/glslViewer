@@ -333,18 +333,17 @@ void SceneRender::setup(CommandList& _commands, Uniforms& _uniforms) {
 
     _uniforms.functions["u_modelMatrix"] = UniformFunction("mat4", [this](vera::Shader& _shader) {
         _shader.setUniform("u_modelMatrix", m_origin.getTransformMatrix() );
-    });
-    
+    });    
 }
 
 void SceneRender::addDefine(const std::string& _define, const std::string& _value) {
     m_background_shader.addDefine(_define, _value);
-    m_floor_shader.addDefine(_define, _value);
+    m_floor.addDefine(_define, _value);
 }
 
 void SceneRender::delDefine(const std::string& _define) {
     m_background_shader.delDefine(_define);
-    m_floor_shader.delDefine(_define);
+    m_floor.delDefine(_define);
 }
 
 void SceneRender::printDefines() {
@@ -359,7 +358,7 @@ void SceneRender::printDefines() {
         std::cout << std::endl;
         std::cout << "FLOOR" << std::endl;
         std::cout << "-------------- " << std::endl;
-        m_floor_shader.printDefines();
+        m_floor.getShadeShader()->printDefines();
     }
 }
 
@@ -398,7 +397,7 @@ bool SceneRender::loadShaders(Uniforms& _uniforms, const std::string& _fragmentS
 
     bool thereIsFloorDefine = checkFloor(_fragmentShader) || checkFloor(_vertexShader);
     if (thereIsFloorDefine) {
-        m_floor_shader.load(_fragmentShader, _vertexShader, vera::SHOW_MAGENTA_SHADER, false);
+        m_floor.setShader(_fragmentShader, _vertexShader, false);
         if (m_floor_subd == -1)
             m_floor_subd_target = 0;
     }
@@ -456,6 +455,98 @@ void SceneRender::render(Uniforms& _uniforms) {
 
     if (m_blend != 0)
         vera::blendMode(vera::BLEND_ALPHA);
+
+    if (m_culling != 0)
+        glDisable(GL_CULL_FACE);
+}
+
+void SceneRender::renderNormalBuffer(Uniforms& _uniforms) {
+    // Begining of DEPTH for 3D 
+    if (m_depth_test)
+        glEnable(GL_DEPTH_TEST);
+
+    if (_uniforms.activeCamera->bChange || m_origin.bChange) {
+        vera::setCamera( _uniforms.activeCamera );
+        vera::applyMatrix( m_origin.getTransformMatrix() );
+    }
+
+    if (m_floor_subd_target >= 0) {
+        TRACK_BEGIN("render:sceneNormal:floor")
+        m_floor.getNormalShader()->use();
+        _uniforms.feedTo( m_floor.getNormalShader(), false );
+        m_floor.getNormalShader()->setUniform( "u_modelViewProjectionMatrix", vera::getProjectionViewWorldMatrix() );
+        m_floor.renderNormal();
+        TRACK_END("render:sceneNormal:floor")
+    }
+
+    vera::cullingMode(m_culling);
+
+    for (vera::ModelsMap::iterator it = _uniforms.models.begin(); it != _uniforms.models.end(); ++it) {
+        if (it->second->getNormalShader()->loaded() ) {
+            TRACK_BEGIN("render:sceneNormal:" + it->second->getName() )
+
+            // bind the shader
+            it->second->getNormalShader()->use();
+
+            // Update Uniforms and textures variables to the shader
+            _uniforms.feedTo( it->second->getNormalShader(), false );
+
+            // Pass special uniforms
+            it->second->getNormalShader()->setUniform( "u_modelViewProjectionMatrix", vera::getProjectionViewWorldMatrix() );
+            it->second->renderNormal();
+
+            TRACK_END("render:sceneNormal:" + it->second->getName() )
+        }
+    }
+
+    if (m_depth_test)
+        glDisable(GL_DEPTH_TEST);
+
+    if (m_culling != 0)
+        glDisable(GL_CULL_FACE);
+}
+
+void SceneRender::renderPositionBuffer(Uniforms& _uniforms) {
+    // Begining of DEPTH for 3D 
+    if (m_depth_test)
+        glEnable(GL_DEPTH_TEST);
+
+    if (_uniforms.activeCamera->bChange || m_origin.bChange) {
+        vera::setCamera( _uniforms.activeCamera );
+        vera::applyMatrix( m_origin.getTransformMatrix() );
+    }
+
+    if (m_floor_subd_target >= 0) {
+        TRACK_BEGIN("render:scenePosition:floor")
+        m_floor.getPositionShader()->use();
+        _uniforms.feedTo( m_floor.getPositionShader(), false );
+        m_floor.getPositionShader()->setUniform( "u_modelViewProjectionMatrix", vera::getProjectionViewWorldMatrix() );
+        m_floor.renderPosition();
+        TRACK_END("render:scenePosition:floor")
+    }
+
+    vera::cullingMode(m_culling);
+
+    for (vera::ModelsMap::iterator it = _uniforms.models.begin(); it != _uniforms.models.end(); ++it) {
+        if (it->second->getPositionShader()->loaded() ) {
+            TRACK_BEGIN("render:scenePosition:" + it->second->getName() )
+
+            // bind the shader
+            it->second->getPositionShader()->use();
+
+            // Update Uniforms and textures variables to the shader
+            _uniforms.feedTo( it->second->getPositionShader(), false );
+
+            // Pass special uniforms
+            it->second->getPositionShader()->setUniform( "u_modelViewProjectionMatrix", vera::getProjectionViewWorldMatrix() );
+            it->second->renderPosition();
+
+            TRACK_END("render:scenePosition:" + it->second->getName() )
+        }
+    }
+
+    if (m_depth_test)
+        glDisable(GL_DEPTH_TEST);
 
     if (m_culling != 0)
         glDisable(GL_CULL_FACE);
@@ -551,36 +642,36 @@ void SceneRender::renderFloor(Uniforms& _uniforms, const glm::mat4& _mvp, bool _
 
         //  Floor
         if (m_floor_subd_target != m_floor_subd) {
-
-            m_floor_vbo = std::unique_ptr<vera::Vbo>(new vera::Vbo( vera::floorMesh(m_area * 10.0f, m_floor_subd_target, m_floor_height) ));
+            m_floor.setGeom( vera::floorMesh(m_area * 10.0f, m_floor_subd_target, m_floor_height) );
             m_floor_subd = m_floor_subd_target;
 
-            if (!m_floor_shader.loaded()) 
-                m_floor_shader.load(vera::getDefaultSrc(vera::FRAG_DEFAULT_SCENE), vera::getDefaultSrc(vera::VERT_DEFAULT_SCENE), vera::SHOW_MAGENTA_SHADER, false);
 
-            m_floor_shader.addDefine("FLOOR");
-            m_floor_shader.addDefine("FLOOR_SUBD", m_floor_subd);
-            m_floor_shader.addDefine("FLOOR_AREA", m_area * 10.0f);
-            m_floor_shader.addDefine("FLOOR_HEIGHT", m_floor_height);
+            m_floor.addDefine("FLOOR");
+            m_floor.addDefine("FLOOR_SUBD", vera::toString(m_floor_subd) );
+            m_floor.addDefine("FLOOR_AREA", vera::toString(m_area * 10.0f) );
+            m_floor.addDefine("FLOOR_HEIGHT", vera::toString(m_floor_height) );
 
-            m_floor_shader.addDefine("MODEL_VERTEX_COLOR", "v_color");
-            m_floor_shader.addDefine("MODEL_VERTEX_NORMAL", "v_normal");
-            m_floor_shader.addDefine("MODEL_VERTEX_TEXCOORD","v_texcoord");
+            m_floor.addDefine("MODEL_VERTEX_COLOR", "v_color");
+            m_floor.addDefine("MODEL_VERTEX_NORMAL", "v_normal");
+            m_floor.addDefine("MODEL_VERTEX_TEXCOORD","v_texcoord");
             
-            m_floor_shader.addDefine("LIGHT_SHADOWMAP", "u_lightShadowMap");
+            m_floor.addDefine("LIGHT_SHADOWMAP", "u_lightShadowMap");
             
             #if defined(PLATFORM_RPI)
-                m_floor_shader.addDefine("LIGHT_SHADOWMAP_SIZE", "512.0");
+                m_floor.addDefine("LIGHT_SHADOWMAP_SIZE", "512.0");
             #else
-                m_floor_shader.addDefine("LIGHT_SHADOWMAP_SIZE", "2048.0");
+                m_floor.addDefine("LIGHT_SHADOWMAP_SIZE", "2048.0");
             #endif
+            
+            if (!m_floor.getShadeShader()->loaded())
+                m_floor.setShader(vera::getDefaultSrc(vera::FRAG_DEFAULT_SCENE), vera::getDefaultSrc(vera::VERT_DEFAULT_SCENE), false);
         }
 
-        if (m_floor_vbo) {
-            m_floor_shader.use();
-            _uniforms.feedTo( &m_floor_shader, _lights );
-            m_floor_shader.setUniform("u_modelViewProjectionMatrix", _mvp );
-            m_floor_vbo->render( &m_floor_shader );
+        if (m_floor.getVbo()) {
+            m_floor.getShadeShader()->use();
+            _uniforms.feedTo( m_floor.getShadeShader(), _lights );
+            m_floor.getShadeShader()->setUniform("u_modelViewProjectionMatrix", _mvp );
+            m_floor.render();
         }
 
     }

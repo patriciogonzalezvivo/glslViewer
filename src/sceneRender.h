@@ -40,10 +40,11 @@ public:
 
     void            render(Uniforms& _uniforms);
     void            renderFloor(Uniforms& _uniforms, const glm::mat4& _mvp, bool _lights = true);
-    void            renderGeometry(Uniforms& _uniforms);
     void            renderBackground(Uniforms& _uniforms);
     void            renderDebug(Uniforms& _uniforms);
     void            renderShadowMap(Uniforms& _uniforms);
+    void            renderNormalBuffer(Uniforms& _uniforms);
+    void            renderPositionBuffer(Uniforms& _uniforms);
 
     bool            showGrid;
     bool            showAxis;
@@ -73,8 +74,7 @@ protected:
     vera::Shader                m_cubemap_shader;
     std::unique_ptr<vera::Vbo>  m_cubemap_vbo;
 
-    vera::Shader                m_floor_shader;
-    std::unique_ptr<vera::Vbo>  m_floor_vbo;
+    vera::Model                 m_floor;
     float                       m_floor_height;
     int                         m_floor_subd_target;
     int                         m_floor_subd;

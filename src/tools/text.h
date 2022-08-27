@@ -16,5 +16,7 @@ bool checkConvolutionPyramid(const std::string& _source);
 
 bool checkFloor(const std::string& _source);
 bool checkBackground(const std::string& _source);
-
 bool checkPostprocessing(const std::string& _source);
+
+bool checkPositionBuffer(const std::string& _source);
+bool checkNormalBuffer(const std::string& _source);
