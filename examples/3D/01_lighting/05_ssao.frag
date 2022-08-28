@@ -93,7 +93,7 @@ void main(void) {
     vec3 l = normalize(u_light);
     vec3 v = normalize(u_camera - v_position.xyz);
 
-    // color.rgb *= (dot(n, l) + 1.0 ) * 0.5;
+    color.rgb *= (dot(n, l) + 1.0 ) * 0.5;
     #endif
 
 #endif

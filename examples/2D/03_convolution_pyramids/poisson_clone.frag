@@ -32,11 +32,11 @@ void main (void) {
     float msk = texture2D(u_source_mask, saturate(src_uv)).r;
 
 #if defined(CONVOLUTION_PYRAMID_0)
-    color.xyz = (trg.rgb - src.rgb) * 0.5 + 0.5;
+    color.xyz = (trg.rgb - src.rgb);
     color *= 1.0-msk;
 
 #else
-    vec3 er = texture2D(u_pyramid0, st).xyz * 2.0 - 1.0;
+    vec3 er = texture2D(u_pyramid0, st).xyz;
     color.rgb = er.rgb + src.rgb;
 
 #endif
