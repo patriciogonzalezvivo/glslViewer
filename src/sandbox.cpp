@@ -1136,14 +1136,14 @@ void Sandbox::_updateSceneBuffer(int _width, int _height) {
         (   !m_sceneNormal_fbo.isAllocated() || 
             m_sceneNormal_fbo.getWidth() != _width || 
             m_sceneNormal_fbo.getHeight() != _height ) ) {
-        m_sceneNormal_fbo.allocate(_width, _height, vera::COLOR_TEXTURE_DEPTH_BUFFER);
+        m_sceneNormal_fbo.allocate(_width, _height, vera::GBUFFER_TEXTURE);
     }
 
     if (uniforms.functions["u_scenePosition"].present && 
         (   !m_scenePosition_fbo.isAllocated() || 
             m_scenePosition_fbo.getWidth() != _width || 
             m_scenePosition_fbo.getHeight() != _height ) ) {
-        m_scenePosition_fbo.allocate(_width, _height, vera::POSITION_TEXTURE);
+        m_scenePosition_fbo.allocate(_width, _height, vera::GBUFFER_TEXTURE);
     }
 }
 
@@ -1345,7 +1345,7 @@ void Sandbox::_updateBuffers() {
                 _target->unbind();
             };
             m_pyramid_fbos.push_back( vera::Fbo() );
-            m_pyramid_fbos[i].allocate(size.x, size.y, vera::COLOR_TEXTURE);
+            m_pyramid_fbos[i].allocate(size.x, size.y, vera::COLOR_FLOAT_TEXTURE);
             m_pyramid_fbos[i].fixed = fixed;
             m_pyramid_subshaders.push_back( vera::Shader() );
         }
@@ -2012,18 +2012,18 @@ void Sandbox::onViewportResize(int _newWidth, int _newHeight) {
     
     for (size_t i = 0; i < uniforms.buffers.size(); i++) 
         if (!uniforms.buffers[i].fixed)
-            uniforms.buffers[i].allocate(_newWidth, _newHeight, vera::COLOR_TEXTURE);
+            uniforms.buffers[i].allocate(_newWidth, _newHeight, vera::COLOR_FLOAT_TEXTURE);
 
     for (size_t i = 0; i < uniforms.doubleBuffers.size(); i++) {
         if (!uniforms.doubleBuffers[i][0].fixed)
-            uniforms.doubleBuffers[i][0].allocate(_newWidth, _newHeight, vera::COLOR_TEXTURE);
+            uniforms.doubleBuffers[i][0].allocate(_newWidth, _newHeight, vera::COLOR_FLOAT_TEXTURE);
         if (!uniforms.doubleBuffers[i][1].fixed)
-            uniforms.doubleBuffers[i][1].allocate(_newWidth, _newHeight, vera::COLOR_TEXTURE);
+            uniforms.doubleBuffers[i][1].allocate(_newWidth, _newHeight, vera::COLOR_FLOAT_TEXTURE);
     }
 
     for (size_t i = 0; i < uniforms.pyramids.size(); i++) {
         if (!m_pyramid_fbos[i].fixed) {
-            m_pyramid_fbos[i].allocate(_newWidth, _newHeight, vera::COLOR_TEXTURE);
+            m_pyramid_fbos[i].allocate(_newWidth, _newHeight, vera::COLOR_FLOAT_TEXTURE);
             uniforms.pyramids[i].allocate(vera::getWindowWidth(), vera::getWindowHeight());
         }
     }

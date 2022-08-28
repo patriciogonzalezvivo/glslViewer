@@ -45,10 +45,10 @@ void main(void) {
     v_texcoord      = uv;
 
     v_position      = a_position;    
-    v_position.xyz  = texture2D(u_doubleBuffer0, uv).xyz * 2.0 - 1.0;
+    v_position.xyz  = texture2D(u_doubleBuffer0, uv).xyz;// * 2.0 - 1.0;
     v_position.xyz  *= 10.0;
 
-    v_color.rgb     = texture2D(u_doubleBuffer1, uv).xyz * 2.0 - 1.0;
+    v_color.rgb     = texture2D(u_doubleBuffer1, uv).xyz;// * 2.0 - 1.0;
     v_color.rgb     = normalize(v_color.xyz) * 0.5 + 0.5;
     v_color.a       = 1.0;
         

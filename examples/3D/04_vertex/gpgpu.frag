@@ -49,8 +49,8 @@ void main(void) {
 
     vec4  buff0 = texture2D(u_doubleBuffer0, uv);
     vec4  buff1 = texture2D(u_doubleBuffer1, uv);
-    vec3  pos = buff0.xyz * 2.0 - 1.0;
-    vec3  vel = buff1.xyz * 2.0 - 1.0;
+    vec3  pos = buff0.xyz;// * 2.0 - 1.0;
+    vec3  vel = buff1.xyz;// * 2.0 - 1.0;
     float life = buff0.a * 100.0;
 
     pos = u_frame < 1 ? random3(st) * 0.01 : pos;
@@ -61,21 +61,21 @@ void main(void) {
     pos += vel;
     life -= 0.003;
 
-    if ( length( pos ) > .75 )
-        pos = random3(pos + vec3(st, u_time));
+    if ( length( pos ) > .75 || life <= 0.0)
+        pos = random3(pos + u_time);
 
     if (life <= 0.0) {
-        pos = pos * 0.1;
+        // pos = pos * 0.1;
         life = 100.0;
     }
 
-    pos = pos * 0.5 + 0.5;
+    // pos = pos * 0.5 + 0.5;
     color.rgb = pos;
     color.a = life * 0.01;
 
 #elif defined(DOUBLE_BUFFER_1)
     vel *= 0.5;
-    vel += curlNoise( pos + u_time * 0.01) * 0.25;
+    vel += curlNoise( pos + u_time * 0.1) * 0.3;
 
     float dist = length( pos );
 
@@ -85,7 +85,7 @@ void main(void) {
     // Atraction to the center of the space conform the leave
     vel += -normalize(pos) * 0.5 * pow(dist, 2.0);
     
-    color.rgb = clamp(vel * u_delta, -0.99, 0.99) * 0.5 + 0.5;
+    color.rgb = clamp(vel * u_delta, -0.999, 0.999);// * 0.5 + 0.5;
     color.a = 1.0;
 
 #else
