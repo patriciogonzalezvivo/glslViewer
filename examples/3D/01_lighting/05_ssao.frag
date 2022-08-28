@@ -10,7 +10,7 @@ uniform mat4        u_viewMatrix;
 uniform mat4        u_projectionMatrix;
 uniform mat3        u_normalMatrix;
 
-#define NUM_SAMPLES 8
+#define NUM_SAMPLES 16
 #define NUM_NOISE   4
 
 uniform vec3        u_ssaoSamples[NUM_SAMPLES];
@@ -42,8 +42,8 @@ void main(void) {
 #if defined(POSTPROCESSING)
     color = texture2D(u_scene, st);
 
-    float radius    = 0.2;
-    float bias      = 0.005;
+    float radius    = 1.;
+    float bias      = 0.05;
     float magnitude = 1.1;
     float contrast  = 1.1;
 
@@ -93,7 +93,7 @@ void main(void) {
     vec3 l = normalize(u_light);
     vec3 v = normalize(u_camera - v_position.xyz);
 
-    color.rgb *= (dot(n, l) + 1.0 ) * 0.5;
+    // color.rgb *= (dot(n, l) + 1.0 ) * 0.5;
     #endif
 
 #endif

@@ -9,3 +9,6 @@
 	
 01_postprocessing:
 	glslViewer 01_postprocessing.frag head.ply -l
+
+02_depth:
+	glslViewer 02_depth.frag head.ply -e debug,on -l
