@@ -37,9 +37,9 @@ varying vec2        v_texcoord;
 
 #define TAU 6.2831853071795864769252867665590
 float   maxSpeed = 0.5;
-float   sensorAngle = radians(15.0);
-float   sensorDistance = 20.5;
-float   decayRate = 0.875;
+float   sensorAngle = radians(25.0);
+float   sensorDistance = 17.5;
+float   decayRate = 0.9875;
 
 vec2    rotate(vec2 v, float a);
 float   random(vec2 st);
@@ -63,10 +63,10 @@ void main(void) {
 #if defined(DOUBLE_BUFFER_0)
 
     // Initial parameters
-    vec2 pos = data.xy * 2.0 - 1.0;
+    vec2 pos = data.xy;
     pos = u_frame < 1 ? random2(st) * 0.2 - 0.01: pos;
 
-    vec2 dir = data.zw * 2.0 - 1.0;
+    vec2 dir = data.zw;
     dir = u_frame < 1 ? random2(st) * 2.0 - 1.0: dir;
 
     float speed = 0.01 + random(st) * maxSpeed;
@@ -94,10 +94,10 @@ void main(void) {
 
     pos += speed * newDir * u_delta;
 
-    if ( abs(pos.x) >= 0.999 || abs(pos.y) >= 0.999 )
+    if ( abs(pos.x) >= 0.95 || abs(pos.y) >= 0.95 )
         pos = random2(st + pos) * 2.0 - 1.0;
 
-    color = vec4( fract(pos * 0.5 + 0.5), newDir * 0.5 + 0.5);
+    color = vec4(pos, newDir);
 
 // TRAIL PINGPONG
 #elif defined(DOUBLE_BUFFER_1)

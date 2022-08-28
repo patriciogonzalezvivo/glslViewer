@@ -39,7 +39,6 @@ void main(void) {
     v_position = a_position;
     v_texcoord = a_position.xy;
 
-
     vec2 uv = v_texcoord;
 
     vec2 buffRes = vec2(512.0);
@@ -48,10 +47,10 @@ void main(void) {
     v_texcoord = uv;
 
     vec4 data = texture2D(u_doubleBuffer0, uv);
-    v_position.xy = data.xy * 2.0 - 1.0;
+    v_position.xy = data.xy;
 
     float visible = step(a_position.z, population);
-    v_color = vec4(visible, data.z, data.w, 1.0);
+    v_color = vec4(data.z, visible, data.w, 1.0);
     // gl_PointSize = visible;
     
     

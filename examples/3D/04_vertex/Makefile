@@ -1,8 +1,8 @@
 pcl:
-	glslViewer pcl.ply pcl.vert pcl.frag iphone_depth.jpeg -e camera_position,0.8877,-0.228562,-1.34835 -l
+	glslViewer pcl.vert pcl.frag iphone_depth.jpeg -e pcl_plane -e camera_position,-0.625535,0.167038,1.78034 -l
 
 pcl_poisson_fill:
-	glslViewer pcl.ply pcl.vert pcl_poisson_fill.frag iphone_depth.jpeg -e camera_position,0.8877,-0.228562,-1.34835 -l
+	glslViewer pcl.vert pcl_poisson_fill.frag iphone_depth.jpeg -e pcl_plane -e camera_position,-0.625535,0.167038,1.78034 -l
 
 stars:
 	glslViewer pcl.ply stars.vert pcl.frag -l 
@@ -11,7 +11,7 @@ stars_trail:
 	glslViewer pcl.ply stars.vert pcl_trail.frag -l 
 
 gpgpu:
-	glslViewer pcl.ply gpgpu.vert gpgpu.frag -e buffers,on -e camera_position,-3.54947,-0.200495,-10.9241 -l 
+	glslViewer gpgpu.vert gpgpu.frag -e pcl_plane -e buffers,on -e camera_position,-3.54947,-0.200495,-10.9241 -l 
 
 physarum:
-	glslViewer pcl.ply physarum.vert physarum.frag -l 
+	glslViewer physarum.vert physarum.frag -e pcl_plane -l 
