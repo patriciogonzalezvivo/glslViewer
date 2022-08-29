@@ -532,6 +532,53 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     },
     "cubemaps", "print all cubemaps"));
 
+    _commands.push_back(Command("cubemap", [&](const std::string& _line){
+        if (_line == "cubemaps") {
+            uniforms.printCubemaps();
+            return true;
+        } else if (_line == "cubemap") {
+            std::string rta = m_sceneRender.showCubebox ? "on" : "off";
+            std::cout << rta << std::endl; 
+            return true;
+        }
+        else {
+            std::vector<std::string> values = vera::split(_line,',');
+            if (values.size() == 2) {
+                m_sceneRender.showCubebox = values[1] == "on";
+                if (values[1] == "on") {
+                    addDefine("SCENE_SH_ARRAY", "u_SH");
+                    addDefine("SCENE_CUBEMAP", "u_cubeMap");
+                }
+                return true;
+            }
+        }
+        return false;
+    },
+    "cubemap[,on|off]", "show/hide cubemap"));
+
+    _commands.push_back(Command("sky", [&](const std::string& _line){
+        if (_line == "sky") {
+            std::string rta = m_sceneRender.showCubebox ? "on" : "off";
+            std::cout << rta << std::endl; 
+            return true;
+        }
+        else {
+            std::vector<std::string> values = vera::split(_line,',');
+            if (values.size() == 2) {
+                m_sceneRender.showCubebox = values[1] == "on";
+                if (values[1] == "on") {
+                    uniforms.activeCubemap = uniforms.cubemaps["default"];
+                    addDefine("SCENE_SH_ARRAY", "u_SH");
+                    addDefine("SCENE_CUBEMAP", "u_cubeMap");
+                }
+
+                return true;
+            }
+        }
+        return false;
+    },
+    "sky[,on|off]", "show/hide skybox"));
+
     _commands.push_back(Command("sun_elevation", [&](const std::string& _line){ 
         std::vector<std::string> values = vera::split(_line,',');
         if (values.size() == 2) {

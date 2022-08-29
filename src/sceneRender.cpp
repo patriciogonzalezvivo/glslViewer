@@ -208,57 +208,6 @@ void SceneRender::setup(CommandList& _commands, Uniforms& _uniforms) {
     },
     "model_position[,<x>,<y>,<z>]", "get or set the model position."));
 
-    _commands.push_back(Command("cubemap", [&](const std::string& _line){
-        if (_line == "cubemaps") {
-            _uniforms.printCubemaps();
-            return true;
-        } else if (_line == "cubemap") {
-            std::string rta = showCubebox ? "on" : "off";
-            std::cout << rta << std::endl; 
-            return true;
-        }
-        else {
-            std::vector<std::string> values = vera::split(_line,',');
-            if (values.size() == 2) {
-                showCubebox = values[1] == "on";
-                if (values[1] == "on") {
-                    _uniforms.addDefine("SCENE_SH_ARRAY", "u_SH");
-                    _uniforms.addDefine("SCENE_CUBEMAP", "u_cubeMap");
-                    addDefine("SCENE_SH_ARRAY", "u_SH");
-                    addDefine("SCENE_CUBEMAP", "u_cubeMap");
-                }
-                return true;
-            }
-        }
-        return false;
-    },
-    "cubemap[,on|off]", "show/hide cubemap"));
-
-    _commands.push_back(Command("sky", [&](const std::string& _line){
-        if (_line == "sky") {
-            std::string rta = showCubebox ? "on" : "off";
-            std::cout << rta << std::endl; 
-            return true;
-        }
-        else {
-            std::vector<std::string> values = vera::split(_line,',');
-            if (values.size() == 2) {
-                if (values[1] == "on") {
-                    _uniforms.activeCubemap = _uniforms.cubemaps["default"];
-                    _uniforms.addDefine("SCENE_SH_ARRAY", "u_SH");
-                    _uniforms.addDefine("SCENE_CUBEMAP", "u_cubeMap");
-                    addDefine("SCENE_SH_ARRAY", "u_SH");
-                    addDefine("SCENE_CUBEMAP", "u_cubeMap");
-                }
-
-                showCubebox = values[1] == "on";
-                return true;
-            }
-        }
-        return false;
-    },
-    "sky[,on|off]", "show/hide skybox"));
-
     _commands.push_back(Command("floor", [&](const std::string& _line) {
         std::vector<std::string> values = vera::split(_line,',');
 
