@@ -533,6 +533,8 @@ int main(int argc, char **argv) {
                 argument = std::string(argv[i]);
                 sandbox.uniforms.addCubemap("enviroment", argument);
                 sandbox.uniforms.activeCubemap = sandbox.uniforms.cubemaps["enviroment"];
+                commandsArgs.push_back("cubemap,on");
+                commandsArgs.push_back("cubemap,off");
                 sandbox.getSceneRender().showCubebox = false;
             }
             else
@@ -544,6 +546,7 @@ int main(int argc, char **argv) {
                 argument = std::string(argv[i]);
                 sandbox.uniforms.addCubemap("enviroment", argument);
                 sandbox.uniforms.activeCubemap = sandbox.uniforms.cubemaps["enviroment"];
+                commandsArgs.push_back("cubemap,on");
                 sandbox.getSceneRender().showCubebox = true;
             }
             else

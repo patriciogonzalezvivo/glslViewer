@@ -211,14 +211,10 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
                     m_sceneRender.showGrid = (values[1] == "on");
                     m_sceneRender.showAxis = (values[1] == "on");
                     m_sceneRender.showBBoxes = (values[1] == "on");
-                    if (values[1] == "on") {
-                        m_sceneRender.addDefine("DEBUG", values[1]);
-                        uniforms.addDefine("DEBUG", values[1]);
-                    }
-                    else {
-                        m_sceneRender.delDefine("DEBUG");
-                        uniforms.delDefine("DEBUG");
-                    }
+                    if (values[1] == "on")
+                        addDefine("DEBUG", values[1]);
+                    else
+                        delDefine("DEBUG");
                 }
                 // if (values[1] == "on") {
                 //     m_plot = PLOT_FPS;
@@ -543,7 +539,9 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
             float elevation = glm::radians( vera::toFloat(values[1]) );
             float azimuth = uniforms.getSunAzimuth();
 
-            uniforms.addDefine("SUN", "u_light");
+            addDefine("SCENE_SH_ARRAY", "u_SH");
+            addDefine("SCENE_CUBEMAP", "u_cubeMap");
+            addDefine("SUN", "u_light");
             uniforms.setSunPosition(azimuth, elevation, glm::length( uniforms.lights["default"]->getPosition() ));
             uniforms.activeCubemap = uniforms.cubemaps["default"];
             return true;
@@ -563,7 +561,9 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
             float elevation = uniforms.getSunElevation();
             float azimuth = glm::radians( vera::toFloat(values[1]) );
 
-            uniforms.addDefine("SUN", "u_light");
+            addDefine("SUN", "u_light");
+            addDefine("SCENE_SH_ARRAY", "u_SH");
+            addDefine("SCENE_CUBEMAP", "u_cubeMap");
             uniforms.setSunPosition(azimuth, elevation, glm::length( uniforms.lights["default"]->getPosition() ) );
             uniforms.activeCubemap = uniforms.cubemaps["default"];
 
@@ -1065,8 +1065,10 @@ void Sandbox::addDefine(const std::string &_define, const std::string &_value) {
     for (int i = 0; i < m_doubleBuffers_total; i++)
         m_doubleBuffers_shaders[i].addDefine(_define, _value);
 
-    if (uniforms.models.size() > 0)
+    if (uniforms.models.size() > 0) {
+        uniforms.addDefine(_define, _value);
         m_sceneRender.addDefine(_define, _value);
+    }
     else
         m_canvas_shader.addDefine(_define, _value);
 
@@ -1080,12 +1082,15 @@ void Sandbox::delDefine(const std::string &_define) {
     for (int i = 0; i < m_doubleBuffers_total; i++)
         m_doubleBuffers_shaders[i].delDefine(_define);
 
-    if (uniforms.models.size() > 0)
+    if (uniforms.models.size() > 0) {
+        uniforms.delDefine(_define);
         m_sceneRender.delDefine(_define);
+    }
     else
         m_canvas_shader.delDefine(_define);
 
     m_postprocessing_shader.delDefine(_define);
+
 }
 
 // ------------------------------------------------------------------------- GET
@@ -1199,12 +1204,7 @@ bool Sandbox::reloadShaders( WatchFileList &_files ) {
 
     // UPDATE uniforms
     uniforms.checkUniforms(m_vert_source, m_frag_source); // Check active native uniforms
-    uniforms.flagChange();                                  // Flag all user defined uniforms as changed
-
-    if ( uniforms.activeCubemap != nullptr ) {
-        addDefine("SCENE_SH_ARRAY", "u_SH");
-        addDefine("SCENE_CUBEMAP", "u_cubeMap");
-    }
+    uniforms.flagChange();                                // Flag all user defined uniforms as changed
 
     // UPDATE Buffers
     m_buffers_total = countBuffers(m_frag_source);

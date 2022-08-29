@@ -221,6 +221,12 @@ void SceneRender::setup(CommandList& _commands, Uniforms& _uniforms) {
             std::vector<std::string> values = vera::split(_line,',');
             if (values.size() == 2) {
                 showCubebox = values[1] == "on";
+                if (values[1] == "on") {
+                    _uniforms.addDefine("SCENE_SH_ARRAY", "u_SH");
+                    _uniforms.addDefine("SCENE_CUBEMAP", "u_cubeMap");
+                    addDefine("SCENE_SH_ARRAY", "u_SH");
+                    addDefine("SCENE_CUBEMAP", "u_cubeMap");
+                }
                 return true;
             }
         }
@@ -237,8 +243,13 @@ void SceneRender::setup(CommandList& _commands, Uniforms& _uniforms) {
         else {
             std::vector<std::string> values = vera::split(_line,',');
             if (values.size() == 2) {
-                if (values[1] == "on")
+                if (values[1] == "on") {
                     _uniforms.activeCubemap = _uniforms.cubemaps["default"];
+                    _uniforms.addDefine("SCENE_SH_ARRAY", "u_SH");
+                    _uniforms.addDefine("SCENE_CUBEMAP", "u_cubeMap");
+                    addDefine("SCENE_SH_ARRAY", "u_SH");
+                    addDefine("SCENE_CUBEMAP", "u_cubeMap");
+                }
 
                 showCubebox = values[1] == "on";
                 return true;
