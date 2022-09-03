@@ -1137,7 +1137,6 @@ void Sandbox::delDefine(const std::string &_define) {
         m_canvas_shader.delDefine(_define);
 
     m_postprocessing_shader.delDefine(_define);
-
 }
 
 // ------------------------------------------------------------------------- GET
@@ -1215,6 +1214,13 @@ bool Sandbox::reloadShaders( WatchFileList &_files ) {
             std::cout << "Reload 3D scene shaders" << std::endl;
 
         m_sceneRender.loadShaders(uniforms, m_frag_source, m_vert_source, verbose);
+
+        addDefine("LIGHT_SHADOWMAP", "u_lightShadowMap");
+        #if defined(PLATFORM_RPI)
+        addDefine("LIGHT_SHADOWMAP_SIZE", "512.0");
+        #else
+        addDefine("LIGHT_SHADOWMAP_SIZE", "2048.0");
+        #endif
     }
     else {
         if (verbose)
@@ -1483,7 +1489,7 @@ void Sandbox::_renderBuffers() {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Update uniforms and textures
-        uniforms.feedTo( &m_pyramid_subshaders[i] );
+        uniforms.feedTo( &m_pyramid_subshaders[i], true, true );
         vera::getBillboard()->render( &m_pyramid_subshaders[i] );
 
         m_pyramid_fbos[i].unbind();
@@ -1638,7 +1644,7 @@ void Sandbox::renderPost() {
         m_postprocessing_shader.use();
 
         // Update uniforms and textures
-        uniforms.feedTo( &m_postprocessing_shader );
+        uniforms.feedTo( &m_postprocessing_shader, true, true );
 
         if (lenticular.size() > 0)
             feedLenticularUniforms(m_postprocessing_shader);

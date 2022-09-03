@@ -195,9 +195,19 @@ Uniforms::Uniforms() : m_change(false) {
             _shader.setUniform("u_viewMatrix", activeCamera->getViewMatrix());
     });
 
+    functions["u_inverseViewMatrix"] = UniformFunction("mat4", [this](vera::Shader& _shader) {
+        if (activeCamera)
+            _shader.setUniform("u_inverseViewMatrix", activeCamera->getInverseViewMatrix());
+    });
+
     functions["u_projectionMatrix"] = UniformFunction("mat4", [this](vera::Shader& _shader) {
         if (activeCamera)
             _shader.setUniform("u_projectionMatrix", activeCamera->getProjectionMatrix());
+    });
+
+    functions["u_inverseProjectionMatrix"] = UniformFunction("mat4", [this](vera::Shader& _shader) {
+        if (activeCamera)
+            _shader.setUniform("u_inverseProjectionMatrix", activeCamera->getInverseProjectionMatrix());
     });
 }
 

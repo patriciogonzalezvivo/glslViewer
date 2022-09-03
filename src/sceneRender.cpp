@@ -620,13 +620,12 @@ void SceneRender::renderFloor(Uniforms& _uniforms, const glm::mat4& _mvp, bool _
             m_floor.addDefine("MODEL_VERTEX_NORMAL", "v_normal");
             m_floor.addDefine("MODEL_VERTEX_TEXCOORD","v_texcoord");
             
-            m_floor.addDefine("LIGHT_SHADOWMAP", "u_lightShadowMap");
-            
-            #if defined(PLATFORM_RPI)
-                m_floor.addDefine("LIGHT_SHADOWMAP_SIZE", "512.0");
-            #else
-                m_floor.addDefine("LIGHT_SHADOWMAP_SIZE", "2048.0");
-            #endif
+            // m_floor.addDefine("LIGHT_SHADOWMAP", "u_lightShadowMap");
+            // #if defined(PLATFORM_RPI)
+            //     m_floor.addDefine("LIGHT_SHADOWMAP_SIZE", "512.0");
+            // #else
+            //     m_floor.addDefine("LIGHT_SHADOWMAP_SIZE", "2048.0");
+            // #endif
             
             if (!m_floor.getShadeShader()->loaded())
                 m_floor.setShader(vera::getDefaultSrc(vera::FRAG_DEFAULT_SCENE), vera::getDefaultSrc(vera::VERT_DEFAULT_SCENE), false);
