@@ -1936,59 +1936,63 @@ void Sandbox::printDependencies(ShaderType _type) const {
 }
 
 // ------------------------------------------------------------------------- EVENTS
+namespace {
+template<typename uniform_list_t>
+void reload_uniforms(uniform_list_t& unforms_list, std::string filename, const WatchFile &_file){
+    using uniform_t = typename uniform_list_t::value_type;
+    auto uniform_iterator = std::find_if(std::begin(unforms_list), std::end(unforms_list)
+                           , [&](uniform_t uniform){return filename == uniform.second->getFilePath();});
+    if(uniform_iterator != std::end(unforms_list)) {
+        std::cout << "Reloading" << filename << std::endl;
+        uniform_iterator->second->load(filename, _file.vFlip);
+    }
+}
+}
 
 void Sandbox::onFileChange(WatchFileList &_files, int index) {
     console_clear();
-    
     FileType type = _files[index].type;
     std::string filename = _files[index].path;
 
+    const auto reload_shaders = [&](std::string& source, vera::StringList& dependencies){
+        source = "";
+        dependencies.clear();
+        if ( vera::loadGlslFrom(filename, &source, include_folders, &dependencies) )
+            reloadShaders(_files);
+    };
+
+    const auto dependency_matches_filename = [&](const vera::StringList& dependencies) {
+        return std::any_of(std::begin(dependencies), std::end(dependencies), [&](const std::string& dependency){ return dependency == filename; });
+    };
+
     // IF the change is on a dependency file, re route to the correct shader that need to be reload
     if (type == GLSL_DEPENDENCY) {
-        if (std::find(m_frag_dependencies.begin(), m_frag_dependencies.end(), filename) != m_frag_dependencies.end()) {
-            type = FRAG_SHADER;
-            filename = _files[frag_index].path;
-        }
-        else if(std::find(m_vert_dependencies.begin(), m_vert_dependencies.end(), filename) != m_vert_dependencies.end()) {
-            type = VERT_SHADER;
-            filename = _files[vert_index].path;
+        using kv = std::tuple<FileType, std::string>;
+        if (dependency_matches_filename(m_frag_dependencies)){
+            std::tie(type, filename) = kv{FRAG_SHADER, _files[frag_index].path};
+        } else if (dependency_matches_filename(m_vert_dependencies)){
+            std::tie(type, filename) = kv{VERT_SHADER, _files[vert_index].path};
         }
     }
-    
-    if (type == FRAG_SHADER) {
-        m_frag_source = "";
-        m_frag_dependencies.clear();
-        if ( vera::loadGlslFrom(filename, &m_frag_source, include_folders, &m_frag_dependencies) )
-            reloadShaders(_files);
-    }
-    else if (type == VERT_SHADER) {
-        m_vert_source = "";
-        m_vert_dependencies.clear();
-        if ( vera::loadGlslFrom(filename, &m_vert_source, include_folders, &m_vert_dependencies) )
-            reloadShaders(_files);
-    }
-    else if (type == GEOMETRY) {
+    switch(type) {
+    case FRAG_SHADER:
+        reload_shaders(m_frag_source, m_frag_dependencies);
+        break;
+    case VERT_SHADER:
+        reload_shaders(m_vert_source, m_vert_dependencies);
+        break;
+    case GEOMETRY:
         // TODO
+        break;
+    case IMAGE:
+        reload_uniforms(uniforms.textures, filename, _files[index]);
+        break;
+    case CUBEMAP:
+        reload_uniforms(uniforms.cubemaps, filename, _files[index]);
+        break;
+    default: //'GLSL_DEPENDENCY' and 'IMAGE_BUMPMAP' not handled in switch
+        break;
     }
-    else if (type == IMAGE) {
-        for (vera::TexturesMap::iterator it = uniforms.textures.begin(); it!=uniforms.textures.end(); it++) {
-            if (filename == it->second->getFilePath()) {
-                std::cout << "Reloading" << filename << std::endl;
-                it->second->load(filename, _files[index].vFlip);
-                break;
-            }
-        }
-    }
-    else if (type == CUBEMAP) {
-        for (vera::TextureCubesMap::iterator it = uniforms.cubemaps.begin(); it!=uniforms.cubemaps.end(); it++) {
-            if (filename == it->second->getFilePath()) {
-                std::cout << "Reloading" << filename << std::endl;
-                it->second->load(filename, _files[index].vFlip);
-                break;
-            }
-        }
-    }
-
     flagChange();
 }
 
