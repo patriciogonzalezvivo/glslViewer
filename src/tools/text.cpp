@@ -75,13 +75,15 @@ enum class regex_count_t {
     Buffers,
     Double_Buffers,
     Convolution_Pyramid,
+    Scene_Buffers,
     MAX_KEYWORDS_COUNT_IDS
 };
 using regex_count_string_t = regex_string_t<regex_count_t>;
 const auto valid_count_keyword_ids = std::array<regex_count_string_t, +(regex_count_t::MAX_KEYWORDS_COUNT_IDS)> {{
-    {regex_count_t::Buffers, "BUFFER"}
-    , {regex_count_t::Double_Buffers, "DOUBLE_BUFFER"}
-    , {regex_count_t::Convolution_Pyramid, "CONVOLUTION_PYRAMID"}
+    {regex_count_t::Buffers, "BUFFER"},
+    {regex_count_t::Double_Buffers, "DOUBLE_BUFFER"},
+    {regex_count_t::Convolution_Pyramid, "CONVOLUTION_PYRAMID"},
+    {regex_count_t::Scene_Buffers, "SCENE_BUFFER"}
 }};
 
 struct is_not_duplicate_number_predicate {
@@ -189,6 +191,10 @@ int countConvolutionPyramid(const std::string& _source) {
 
 bool checkConvolutionPyramid(const std::string& _source) {
     return generic_search_check(_source, regex_check_t::Convolution_Pyramid);
+}
+
+int countSceneBuffers(const std::string& _source) {
+    return generic_search_count(_source, regex_count_t::Scene_Buffers);
 }
 
 std::string getUniformName(const std::string& _str) {

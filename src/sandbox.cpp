@@ -5,7 +5,6 @@
 #include <fstream>
 #include <math.h>
 #include <memory>
-#include <random>
 
 #include "tools/job.h"
 #include "tools/text.h"
@@ -112,58 +111,6 @@ Sandbox::Sandbox():
     });
 
     uniforms.functions["u_modelViewProjectionMatrix"] = UniformFunction("mat4");
-
-    uniforms.functions["u_scene"] = UniformFunction("sampler2D", [this](vera::Shader& _shader) {
-        if (m_sceneRender_fbo.getTextureId())
-            _shader.setUniformTexture("u_scene", &m_sceneRender_fbo, _shader.textureIndex++ );
-    });
-
-    uniforms.functions["u_sceneDepth"] = UniformFunction("sampler2D", [this](vera::Shader& _shader) {
-        if (m_sceneRender_fbo.getTextureId())
-            _shader.setUniformDepthTexture("u_sceneDepth", &m_sceneRender_fbo, _shader.textureIndex++ );
-    });
-
-    uniforms.functions["u_sceneNormal"] = UniformFunction("sampler2D", [this](vera::Shader& _shader) {
-        if (m_sceneNormal_fbo.getTextureId())
-            _shader.setUniformTexture("u_sceneNormal", &m_sceneNormal_fbo, _shader.textureIndex++ );
-    });
-
-    uniforms.functions["u_scenePosition"] = UniformFunction("sampler2D", [this](vera::Shader& _shader) {
-        if (m_scenePosition_fbo.getTextureId())
-            _shader.setUniformTexture("u_scenePosition", &m_scenePosition_fbo, _shader.textureIndex++ );
-    });
-    
-    // SSAO data (https://learnopengl.com/Advanced-Lighting/SSAO)
-    //
-    std::uniform_real_distribution<float> randomFloats(0.0, 1.0); // random floats between [0.0, 1.0]
-    std::default_random_engine generator;
-
-    for (size_t i = 0; i < 64; ++i) {
-        glm::vec3 sample(   randomFloats(generator) * 2.0 - 1.0, 
-                            randomFloats(generator) * 2.0 - 1.0, 
-                            randomFloats(generator) );
-
-        sample = glm::normalize(sample);
-        float scale = (float)i / 64.0;
-        scale   = vera::lerp(0.1f, 1.0f, scale * scale);
-        sample *= scale;
-        m_ssaoSamples[i] = sample;
-    }
-
-    uniforms.functions["u_ssaoSamples"] = UniformFunction("vec3", [this](vera::Shader& _shader) {
-        _shader.setUniform("u_ssaoSamples", m_ssaoSamples, 64 );
-    });
-
-    for (size_t i = 0; i < 16; i++) {
-        m_ssaoNoise[i] = glm::vec3( randomFloats(generator) * 2.0 - 1.0, 
-                                    randomFloats(generator) * 2.0 - 1.0, 
-                                    0.0f );
-    }
-
-    uniforms.functions["u_ssaoNoise"] = UniformFunction("vec3", [this](vera::Shader& _shader) {
-        _shader.setUniform("u_ssaoNoise", m_ssaoNoise, 16 );
-    });
-
 }
 
 Sandbox::~Sandbox() {
@@ -432,6 +379,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
             uniforms.printCubemaps();
             uniforms.printLights();
             uniforms.printCameras();
+            m_sceneRender.printBuffers();
             return true;
         }
         else if (values[1] == "active") {
@@ -446,11 +394,13 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         else if (values[1] == "textures") {
             uniforms.printTextures();
             uniforms.printBuffers();
+            m_sceneRender.printBuffers();
             uniforms.printStreams();
             return true;
         }
         else if (values[1] == "buffers") {
             uniforms.printBuffers();
+            m_sceneRender.printBuffers();
             return true;
         }
         else if (values[1] == "streams") {
@@ -498,6 +448,7 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     _commands.push_back(Command("buffers", [&](const std::string& _line){ 
         if (_line == "buffers") {
             uniforms.printBuffers();
+            m_sceneRender.printBuffers();
             if (m_postprocessing) {
                 if (lenticular.size() > 0)
                     std::cout << "LENTICULAR";
@@ -1169,35 +1120,6 @@ const std::string& Sandbox::getSource(ShaderType _type) const {
 
 // ------------------------------------------------------------------------- RELOAD SHADER
 
-void Sandbox::_updateSceneBuffer(int _width, int _height) {
-    vera::FboType type = uniforms.functions["u_sceneDepth"].present ? vera::COLOR_DEPTH_TEXTURES : vera::COLOR_TEXTURE_DEPTH_BUFFER;
-
-    if (quilt >= 0) {
-        _width = vera::getQuiltWidth();
-        _height= vera::getQuiltHeight();
-    }
-
-    if (!m_sceneRender_fbo.isAllocated() ||
-        m_sceneRender_fbo.getType() != type || 
-        m_sceneRender_fbo.getWidth() != _width || 
-        m_sceneRender_fbo.getHeight() != _height )
-        m_sceneRender_fbo.allocate(_width, _height, type);
-
-    if (uniforms.functions["u_sceneNormal"].present && 
-        (   !m_sceneNormal_fbo.isAllocated() || 
-            m_sceneNormal_fbo.getWidth() != _width || 
-            m_sceneNormal_fbo.getHeight() != _height ) ) {
-        m_sceneNormal_fbo.allocate(_width, _height, vera::GBUFFER_TEXTURE);
-    }
-
-    if (uniforms.functions["u_scenePosition"].present && 
-        (   !m_scenePosition_fbo.isAllocated() || 
-            m_scenePosition_fbo.getWidth() != _width || 
-            m_scenePosition_fbo.getHeight() != _height ) ) {
-        m_scenePosition_fbo.allocate(_width, _height, vera::GBUFFER_TEXTURE);
-    }
-}
-
 bool Sandbox::setSource(ShaderType _type, const std::string& _source) {
     if (_type == FRAGMENT) m_frag_source = _source;
     else  m_vert_source = _source;
@@ -1286,8 +1208,13 @@ bool Sandbox::reloadShaders( WatchFileList &_files ) {
     else 
         m_postprocessing = false;
 
-    if (m_postprocessing || m_plot == PLOT_RGB || m_plot == PLOT_RED || m_plot == PLOT_GREEN || m_plot == PLOT_BLUE || m_plot == PLOT_LUMA)
-        _updateSceneBuffer(vera::getWindowWidth(), vera::getWindowHeight());
+    if (m_postprocessing || m_plot == PLOT_RGB || m_plot == PLOT_RED || m_plot == PLOT_GREEN || m_plot == PLOT_BLUE || m_plot == PLOT_LUMA) {
+        if (quilt >= 0)
+            m_sceneRender.updateBuffers(uniforms, vera::getQuiltWidth(), vera::getQuiltHeight());
+        else 
+            m_sceneRender.updateBuffers(uniforms, vera::getWindowWidth(), vera::getWindowHeight());
+    }
+
 
     console_refresh();
 
@@ -1300,6 +1227,10 @@ void Sandbox::_updateBuffers() {
 
         if (verbose)
             std::cout << "Creating/Removing " << uniforms.buffers.size() << " buffers to " << m_buffers_total << std::endl;
+
+        for (size_t i = 0; i < m_buffers_shaders.size(); i++)
+            if (m_buffers_shaders[i].loaded())
+                m_buffers_shaders[i].detach(GL_FRAGMENT_SHADER | GL_VERTEX_SHADER);
 
         uniforms.buffers.clear();
         m_buffers_shaders.clear();
@@ -1318,19 +1249,18 @@ void Sandbox::_updateBuffers() {
             m_buffers_shaders[i].load(m_frag_source, vera::getDefaultSrc(vera::VERT_BILLBOARD), vera::SHOW_MAGENTA_SHADER, false);
         }
     }
-    else {
-        for (size_t i = 0; i < m_buffers_shaders.size(); i++) {
-
-            // Reload shader code
-            m_buffers_shaders[i].addDefine("BUFFER_" + vera::toString(i));
+    else
+        for (size_t i = 0; i < m_buffers_shaders.size(); i++)
             m_buffers_shaders[i].load(m_frag_source, vera::getDefaultSrc(vera::VERT_BILLBOARD), vera::SHOW_MAGENTA_SHADER, false);
-        }
-    }
 
     if ( m_doubleBuffers_total != int(uniforms.doubleBuffers.size()) ) {
 
         if (verbose)
             std::cout << "Creating/Removing " << uniforms.doubleBuffers.size() << " double buffers to " << m_doubleBuffers_total << std::endl;
+
+        for (size_t i = 0; i < m_doubleBuffers_shaders.size(); i++)
+            if (m_doubleBuffers_shaders[i].loaded())
+                m_doubleBuffers_shaders[i].detach(GL_FRAGMENT_SHADER | GL_VERTEX_SHADER);
 
         uniforms.doubleBuffers.clear();
         m_doubleBuffers_shaders.clear();
@@ -1351,19 +1281,18 @@ void Sandbox::_updateBuffers() {
             m_doubleBuffers_shaders[i].load(m_frag_source, vera::getDefaultSrc(vera::VERT_BILLBOARD), vera::SHOW_MAGENTA_SHADER, false);
         }
     }
-    else {
-        for (size_t i = 0; i < m_doubleBuffers_shaders.size(); i++) {
-
-            // Reload shader code
-            m_doubleBuffers_shaders[i].addDefine("DOUBLE_BUFFER_" + vera::toString(i));
+    else 
+        for (size_t i = 0; i < m_doubleBuffers_shaders.size(); i++)
             m_doubleBuffers_shaders[i].load(m_frag_source, vera::getDefaultSrc(vera::VERT_BILLBOARD), vera::SHOW_MAGENTA_SHADER, false);
-        }
-    }
 
     if ( m_pyramid_total != int(uniforms.pyramids.size()) ) {
 
         if (verbose)
             std::cout << "Removing " << uniforms.pyramids.size() << " convolution pyramids to create  " << m_pyramid_total << std::endl;
+
+        for (size_t i = 0; i < m_pyramid_subshaders.size(); i++)
+            if (m_pyramid_subshaders[i].loaded())
+                m_pyramid_subshaders[i].detach(GL_FRAGMENT_SHADER | GL_VERTEX_SHADER);        
 
         uniforms.pyramids.clear();
         m_pyramid_fbos.clear();
@@ -1404,17 +1333,20 @@ void Sandbox::_updateBuffers() {
         }
     }
     
-    if ( checkConvolutionPyramid( getSource(FRAGMENT) ) ) {
-        m_pyramid_shader.addDefine("CONVOLUTION_PYRAMID_ALGORITHM");
-        m_pyramid_shader.load(m_frag_source, vera::getDefaultSrc(vera::VERT_BILLBOARD), vera::SHOW_MAGENTA_SHADER, false);
-    }
-    else
-        m_pyramid_shader.load(vera::getDefaultSrc(vera::FRAG_POISSON), vera::getDefaultSrc(vera::VERT_BILLBOARD), vera::SHOW_MAGENTA_SHADER, false);
-
     for (size_t i = 0; i < m_pyramid_subshaders.size(); i++) {
         m_pyramid_subshaders[i].addDefine("CONVOLUTION_PYRAMID_" + vera::toString(i));
         m_pyramid_subshaders[i].load(m_frag_source, vera::getDefaultSrc(vera::VERT_BILLBOARD), vera::SHOW_MAGENTA_SHADER, false);
     }
+
+    if (m_pyramid_total > 0 ) {
+        if ( checkConvolutionPyramid( getSource(FRAGMENT) ) ) {
+            m_pyramid_shader.addDefine("CONVOLUTION_PYRAMID_ALGORITHM");
+            m_pyramid_shader.load(m_frag_source, vera::getDefaultSrc(vera::VERT_BILLBOARD), vera::SHOW_MAGENTA_SHADER, false);
+        }
+        else
+            m_pyramid_shader.load(vera::getDefaultSrc(vera::FRAG_POISSON), vera::getDefaultSrc(vera::VERT_BILLBOARD), vera::SHOW_MAGENTA_SHADER, false);
+    }
+
 }
 
 // ------------------------------------------------------------------------- DRAW
@@ -1521,17 +1453,17 @@ void Sandbox::renderPrep() {
     if (m_initialized)
         uniforms.update();
 
-    // RENDER SHADOW MAP
-    // -----------------------------------------------
-    if (uniforms.models.size() > 0)
-        m_sceneRender.renderShadowMap(uniforms);
-    
     // BUFFERS
     // -----------------------------------------------
     if (uniforms.buffers.size() > 0 || 
         uniforms.doubleBuffers.size() > 0 ||
         m_pyramid_total > 0)
         _renderBuffers();
+
+    // RENDER SHADOW MAP
+    // -----------------------------------------------
+    if (uniforms.models.size() > 0)
+        m_sceneRender.renderShadowMap(uniforms);
     
     // MAIN SCENE
     // ----------------------------------------------- < main scene start
@@ -1539,23 +1471,16 @@ void Sandbox::renderPrep() {
         if (!m_record_fbo.isAllocated())
             m_record_fbo.allocate(vera::getWindowWidth(), vera::getWindowHeight(), vera::COLOR_TEXTURE_DEPTH_BUFFER);
 
-
     if (m_postprocessing || m_plot == PLOT_LUMA || m_plot == PLOT_RGB || m_plot == PLOT_RED || m_plot == PLOT_GREEN || m_plot == PLOT_BLUE ) {
-        _updateSceneBuffer(vera::getWindowWidth(), vera::getWindowHeight());
-
-        if (uniforms.functions["u_sceneNormal"].present) {
-            m_sceneNormal_fbo.bind();
+        if (uniforms.functions["u_sceneNormal"].present)
             m_sceneRender.renderNormalBuffer(uniforms);
-            m_sceneNormal_fbo.unbind();
-        }
 
-        if (uniforms.functions["u_scenePosition"].present) {
-            m_scenePosition_fbo.bind();
+        if (uniforms.functions["u_scenePosition"].present)
             m_sceneRender.renderPositionBuffer(uniforms);
-            m_scenePosition_fbo.unbind();
-        }
 
-        m_sceneRender_fbo.bind();
+        m_sceneRender.renderBuffers(uniforms);
+
+        m_sceneRender.renderFbo.bind();
     }
     else if (screenshotFile != "" || isRecording() )
         m_record_fbo.bind();
@@ -1636,7 +1561,7 @@ void Sandbox::renderPost() {
     if (m_postprocessing) {
         TRACK_BEGIN("render:postprocessing")
 
-        m_sceneRender_fbo.unbind();
+        m_sceneRender.renderFbo.unbind();
 
         if (screenshotFile != "" || isRecording())
             m_record_fbo.bind();
@@ -1646,6 +1571,9 @@ void Sandbox::renderPost() {
         // Update uniforms and textures
         uniforms.feedTo( &m_postprocessing_shader, true, true );
 
+        for (size_t i = 0; i < m_sceneRender.buffersFbo.size(); i++)
+            m_postprocessing_shader.setUniformTexture("u_sceneBuffer" + vera::toString(i), &(m_sceneRender.buffersFbo[i]), m_postprocessing_shader.textureIndex++);
+
         if (lenticular.size() > 0)
             feedLenticularUniforms(m_postprocessing_shader);
 
@@ -1654,12 +1582,12 @@ void Sandbox::renderPost() {
         TRACK_END("render:postprocessing")
     }
     else if (m_plot == PLOT_RGB || m_plot == PLOT_RED || m_plot == PLOT_GREEN || m_plot == PLOT_BLUE || m_plot == PLOT_LUMA) {
-        m_sceneRender_fbo.unbind();
+        m_sceneRender.renderFbo.unbind();
 
         if (screenshotFile != "" || isRecording())
             m_record_fbo.bind();
 
-        vera::image(m_sceneRender_fbo);
+        vera::image(m_sceneRender.renderFbo);
     }
     
     if (screenshotFile != "" || isRecording()) {
@@ -1719,15 +1647,16 @@ void Sandbox::renderUI() {
 
         // DEBUG BUFFERS
         int nTotal = uniforms.buffers.size();
-        if (m_doubleBuffers_total > 0)
-            nTotal += uniforms.doubleBuffers.size();
-        if (m_pyramid_total > 0)
-            nTotal += uniforms.pyramids.size();
-        nTotal += uniforms.functions["u_scene"].present;
-        nTotal += uniforms.functions["u_sceneDepth"].present;
-        nTotal += uniforms.functions["u_sceneNormal"].present;
-        nTotal += uniforms.functions["u_scenePosition"].present;
-        nTotal += (uniforms.models.size() > 0);
+        nTotal += uniforms.doubleBuffers.size();
+        nTotal += uniforms.pyramids.size();
+        if (m_postprocessing && uniforms.models.size() > 0 ) {
+            nTotal += 1;
+            nTotal += uniforms.functions["u_scene"].present;
+            nTotal += uniforms.functions["u_sceneDepth"].present;
+            nTotal += uniforms.functions["u_sceneNormal"].present;
+            nTotal += uniforms.functions["u_scenePosition"].present;
+            nTotal += m_sceneRender.buffersFbo.size();
+        }
 
         if (nTotal > 0) {
             float w = (float)(vera::getWindowWidth());
@@ -1798,36 +1727,6 @@ void Sandbox::renderUI() {
 
             }
 
-            if (m_postprocessing) 
-            {
-                if (uniforms.functions["u_scene"].present) {
-                    vera::image(&m_sceneRender_fbo, xOffset, yOffset, xStep, yStep);
-                    vera::text("u_scene", xOffset - xStep, vera::getWindowHeight() - yOffset + yStep);
-                    yOffset -= yStep * 2.0;
-                }
-
-                if (uniforms.functions["u_sceneDepth"].present) {
-                    if (uniforms.activeCamera)
-                        vera::imageDepth(&m_sceneRender_fbo, xOffset, yOffset, xStep, yStep, uniforms.activeCamera->getFarClip(), uniforms.activeCamera->getNearClip());
-                    vera::text("u_sceneDepth", xOffset - xStep, vera::getWindowHeight() - yOffset + yStep);
-                    yOffset -= yStep * 2.0;
-                }
-
-                if (uniforms.functions["u_scenePosition"].present) {
-                    if (uniforms.activeCamera)
-                        vera::image(&m_scenePosition_fbo, xOffset, yOffset, xStep, yStep);
-                    vera::text("u_scenePosition", xOffset - xStep, vera::getWindowHeight() - yOffset + yStep);
-                    yOffset -= yStep * 2.0;
-                }
-
-                if (uniforms.functions["u_sceneNormal"].present) {
-                    if (uniforms.activeCamera)
-                        vera::image(&m_sceneNormal_fbo, xOffset, yOffset, xStep, yStep);
-                    vera::text("u_sceneNormal", xOffset - xStep, vera::getWindowHeight() - yOffset + yStep);
-                    yOffset -= yStep * 2.0;
-                }
-            }
-
             if (uniforms.models.size() > 0) {
                 for (vera::LightsMap::iterator it = uniforms.lights.begin(); it != uniforms.lights.end(); ++it ) {
                     if ( it->second->getShadowMap()->getDepthTextureId() ) {
@@ -1838,6 +1737,41 @@ void Sandbox::renderUI() {
                     }
                 }
             }
+
+            if (m_postprocessing) 
+            {
+                if (uniforms.functions["u_scenePosition"].present) {
+                    vera::image(&m_sceneRender.positionFbo, xOffset, yOffset, xStep, yStep);
+                    vera::text("u_scenePosition", xOffset - xStep, vera::getWindowHeight() - yOffset + yStep);
+                    yOffset -= yStep * 2.0;
+                }
+
+                if (uniforms.functions["u_sceneNormal"].present) {
+                    vera::image(&m_sceneRender.normalFbo, xOffset, yOffset, xStep, yStep);
+                    vera::text("u_sceneNormal", xOffset - xStep, vera::getWindowHeight() - yOffset + yStep);
+                    yOffset -= yStep * 2.0;
+                }
+
+                for (size_t i = 0; i < m_sceneRender.buffersFbo.size(); i++) {
+                    vera::image(&(m_sceneRender.buffersFbo[i]), xOffset, yOffset, xStep, yStep);
+                    vera::text("u_sceneBuffer" + vera::toString(i), xOffset - xStep, vera::getWindowHeight() - yOffset + yStep);
+                    yOffset -= yStep * 2.0;
+                }
+
+                if (uniforms.functions["u_scene"].present) {
+                    vera::image(&m_sceneRender.renderFbo, xOffset, yOffset, xStep, yStep);
+                    vera::text("u_scene", xOffset - xStep, vera::getWindowHeight() - yOffset + yStep);
+                    yOffset -= yStep * 2.0;
+                }
+
+                if (uniforms.functions["u_sceneDepth"].present) {
+                    if (uniforms.activeCamera)
+                        vera::imageDepth(&m_sceneRender.renderFbo, xOffset, yOffset, xStep, yStep, uniforms.activeCamera->getFarClip(), uniforms.activeCamera->getNearClip());
+                    vera::text("u_sceneDepth", xOffset - xStep, vera::getWindowHeight() - yOffset + yStep);
+                    yOffset -= yStep * 2.0;
+                }
+            }
+
         }
         // TRACK_END("buffers")
     }
@@ -1924,14 +1858,12 @@ void Sandbox::clear() {
 
 void Sandbox::printDependencies(ShaderType _type) const {
     if (_type == FRAGMENT) {
-        for (size_t i = 0; i < m_frag_dependencies.size(); i++) {
+        for (size_t i = 0; i < m_frag_dependencies.size(); i++)
             std::cout << m_frag_dependencies[i] << std::endl;
-        }
     }
     else {
-        for (size_t i = 0; i < m_vert_dependencies.size(); i++) {
+        for (size_t i = 0; i < m_vert_dependencies.size(); i++)
             std::cout << m_vert_dependencies[i] << std::endl;
-        }
     }
 }
 
@@ -2077,12 +2009,16 @@ void Sandbox::onViewportResize(int _newWidth, int _newHeight) {
     for (size_t i = 0; i < uniforms.pyramids.size(); i++) {
         if (!m_pyramid_fbos[i].fixed) {
             m_pyramid_fbos[i].allocate(_newWidth, _newHeight, vera::COLOR_FLOAT_TEXTURE);
-            uniforms.pyramids[i].allocate(vera::getWindowWidth(), vera::getWindowHeight());
+            uniforms.pyramids[i].allocate(_newWidth, _newHeight);
         }
     }
 
-    if (m_postprocessing || m_plot == PLOT_LUMA || m_plot == PLOT_RGB || m_plot == PLOT_RED || m_plot == PLOT_GREEN || m_plot == PLOT_BLUE )
-        _updateSceneBuffer(_newWidth, _newHeight);
+    if (m_postprocessing || m_plot == PLOT_LUMA || m_plot == PLOT_RGB || m_plot == PLOT_RED || m_plot == PLOT_GREEN || m_plot == PLOT_BLUE ) {
+        if (quilt >= 0)
+            m_sceneRender.updateBuffers(uniforms, vera::getQuiltWidth(), vera::getQuiltHeight());
+        else 
+            m_sceneRender.updateBuffers(uniforms, _newWidth, _newHeight);
+    }
 
     if (screenshotFile != "" || isRecording())
         m_record_fbo.allocate(_newWidth, _newHeight, vera::COLOR_TEXTURE_DEPTH_BUFFER);
@@ -2161,7 +2097,7 @@ void Sandbox::onPlot() {
         // TRACK_BEGIN("plot::histogram")
 
         // Extract pixels
-        glBindFramebuffer(GL_FRAMEBUFFER, m_sceneRender_fbo.getId());
+        glBindFramebuffer(GL_FRAMEBUFFER, m_sceneRender.renderFbo.getId());
         int w = vera::getWindowWidth();
         int h = vera::getWindowHeight();
         int c = 3;

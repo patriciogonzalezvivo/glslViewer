@@ -6,6 +6,7 @@
 #endif
 
 #include <sys/stat.h>
+#include <random>
 
 #include "vera/ops/fs.h"
 #include "vera/ops/draw.h"
@@ -298,7 +299,58 @@ void SceneRender::setup(CommandList& _commands, Uniforms& _uniforms) {
 
     _uniforms.functions["u_modelMatrix"] = UniformFunction("mat4", [this](vera::Shader& _shader) {
         _shader.setUniform("u_modelMatrix", m_origin.getTransformMatrix() );
-    });    
+    });
+
+    _uniforms.functions["u_scene"] = UniformFunction("sampler2D", [this](vera::Shader& _shader) {
+        if (renderFbo.getTextureId())
+            _shader.setUniformTexture("u_scene", &renderFbo, _shader.textureIndex++ );
+    });
+
+    _uniforms.functions["u_sceneDepth"] = UniformFunction("sampler2D", [this](vera::Shader& _shader) {
+        if (renderFbo.getTextureId())
+            _shader.setUniformDepthTexture("u_sceneDepth", &renderFbo, _shader.textureIndex++ );
+    });
+
+    _uniforms.functions["u_sceneNormal"] = UniformFunction("sampler2D", [this](vera::Shader& _shader) {
+        if (normalFbo.getTextureId())
+            _shader.setUniformTexture("u_sceneNormal", &normalFbo, _shader.textureIndex++ );
+    });
+
+    _uniforms.functions["u_scenePosition"] = UniformFunction("sampler2D", [this](vera::Shader& _shader) {
+        if (positionFbo.getTextureId())
+            _shader.setUniformTexture("u_scenePosition", &positionFbo, _shader.textureIndex++ );
+    });
+
+    // SSAO data (https://learnopengl.com/Advanced-Lighting/SSAO)
+    //
+    std::uniform_real_distribution<float> randomFloats(0.0, 1.0); // random floats between [0.0, 1.0]
+    std::default_random_engine generator;
+
+    for (size_t i = 0; i < 64; ++i) {
+        glm::vec3 sample(   randomFloats(generator) * 2.0 - 1.0, 
+                            randomFloats(generator) * 2.0 - 1.0, 
+                            randomFloats(generator) );
+
+        sample = glm::normalize(sample);
+        float scale = (float)i / 64.0;
+        scale   = vera::lerp(0.1f, 1.0f, scale * scale);
+        sample *= scale;
+        m_ssaoSamples[i] = sample;
+    }
+
+    _uniforms.functions["u_ssaoSamples"] = UniformFunction("vec3", [this](vera::Shader& _shader) {
+        _shader.setUniform("u_ssaoSamples", m_ssaoSamples, 64 );
+    });
+
+    for (size_t i = 0; i < 16; i++) {
+        m_ssaoNoise[i] = glm::vec3( randomFloats(generator) * 2.0 - 1.0, 
+                                    randomFloats(generator) * 2.0 - 1.0, 
+                                    0.0f );
+    }
+
+    _uniforms.functions["u_ssaoNoise"] = UniformFunction("vec3", [this](vera::Shader& _shader) {
+        _shader.setUniform("u_ssaoNoise", m_ssaoNoise, 16 );
+    });
 }
 
 void SceneRender::addDefine(const std::string& _define, const std::string& _value) {
@@ -323,7 +375,7 @@ void SceneRender::printDefines() {
         std::cout << std::endl;
         std::cout << "FLOOR" << std::endl;
         std::cout << "-------------- " << std::endl;
-        m_floor.getShadeShader()->printDefines();
+        m_floor.getShader()->printDefines();
     }
 }
 
@@ -369,12 +421,55 @@ bool SceneRender::loadShaders(Uniforms& _uniforms, const std::string& _fragmentS
 
     m_shadows = findId(_fragmentShader, "u_lightShadowMap;");
 
+    int buffers_total = std::max(   countSceneBuffers(_vertexShader), 
+                                    countSceneBuffers(_fragmentShader));
+    if ( buffers_total != int(buffersFbo.size()) ) {
+        buffersFbo.clear();
+        
+        for (int i = 0; i < buffers_total; i++) {
+            buffersFbo.push_back( vera::Fbo() );
+
+            glm::vec2 size = glm::vec2(vera::getWindowWidth(), vera::getWindowHeight());
+            buffersFbo[i].fixed = getBufferSize(_fragmentShader, "u_sceneBuffer" + vera::toString(i), size);
+            buffersFbo[i].allocate(size.x, size.y, vera::GBUFFER_TEXTURE);
+        }
+    }
+
     return rta;
 }
 
 void SceneRender::flagChange() { m_origin.bChange = true; }
 bool SceneRender::haveChange() const { return  m_origin.bChange; }
 void SceneRender::unflagChange() {  m_origin.bChange = false; }
+
+void SceneRender::updateBuffers(Uniforms& _uniforms, int _width, int _height) {
+    vera::FboType type = _uniforms.functions["u_sceneDepth"].present ? vera::COLOR_DEPTH_TEXTURES : vera::COLOR_TEXTURE_DEPTH_BUFFER;
+
+    if (!renderFbo.isAllocated() ||
+        renderFbo.getType() != type || 
+        renderFbo.getWidth() != _width || renderFbo.getHeight() != _height )
+        renderFbo.allocate(_width, _height, type);
+
+    if (_uniforms.functions["u_sceneNormal"].present && 
+        (   !normalFbo.isAllocated() || 
+            normalFbo.getWidth() != _width || normalFbo.getHeight() != _height ) )
+            normalFbo.allocate(_width, _height, vera::GBUFFER_TEXTURE);
+
+    if (_uniforms.functions["u_scenePosition"].present && 
+        (   !positionFbo.isAllocated() || 
+            positionFbo.getWidth() != _width || positionFbo.getHeight() != _height ) )
+            positionFbo.allocate(_width, _height, vera::GBUFFER_TEXTURE);
+
+    for (size_t i = 0; i < buffersFbo.size(); i++)
+        if (buffersFbo[i].isAllocated() ||
+            buffersFbo[i].getWidth() != _width || buffersFbo[i].getHeight() ) 
+            buffersFbo[i].allocate(_width, _height, vera::GBUFFER_TEXTURE);
+}
+
+void SceneRender::printBuffers() {
+    for (size_t i = 0; i < buffersFbo.size(); i++)
+        std::cout << "uniform sampler2D u_sceneBuffer" << i << ";" << std::endl;
+}
 
 void SceneRender::render(Uniforms& _uniforms) {
     // Render Background
@@ -398,17 +493,17 @@ void SceneRender::render(Uniforms& _uniforms) {
     vera::cullingMode(m_culling);
 
     for (vera::ModelsMap::iterator it = _uniforms.models.begin(); it != _uniforms.models.end(); ++it) {
-        if (it->second->getShadeShader()->loaded() ) {
+        if (it->second->getShader()->loaded() ) {
             TRACK_BEGIN("render:scene:" + it->second->getName() )
 
             // bind the shader
-            it->second->getShadeShader()->use();
+            it->second->getShader()->use();
 
             // Update Uniforms and textures variables to the shader
-            _uniforms.feedTo( it->second->getShadeShader() );
+            _uniforms.feedTo( it->second->getShader() );
 
             // Pass special uniforms
-            it->second->getShadeShader()->setUniform( "u_modelViewProjectionMatrix", vera::getProjectionViewWorldMatrix() );
+            it->second->getShader()->setUniform( "u_modelViewProjectionMatrix", vera::getProjectionViewWorldMatrix() );
             it->second->render();
 
             TRACK_END("render:scene:" + it->second->getName() )
@@ -426,6 +521,11 @@ void SceneRender::render(Uniforms& _uniforms) {
 }
 
 void SceneRender::renderNormalBuffer(Uniforms& _uniforms) {
+    if (!normalFbo.isAllocated())
+        return;
+
+    normalFbo.bind();
+
     // Begining of DEPTH for 3D 
     if (m_depth_test)
         glEnable(GL_DEPTH_TEST);
@@ -469,9 +569,16 @@ void SceneRender::renderNormalBuffer(Uniforms& _uniforms) {
 
     if (m_culling != 0)
         glDisable(GL_CULL_FACE);
+
+    normalFbo.unbind();
 }
 
 void SceneRender::renderPositionBuffer(Uniforms& _uniforms) {
+    if (!positionFbo.isAllocated())
+        return;
+
+    positionFbo.bind();
+
     // Begining of DEPTH for 3D 
     if (m_depth_test)
         glEnable(GL_DEPTH_TEST);
@@ -515,6 +622,61 @@ void SceneRender::renderPositionBuffer(Uniforms& _uniforms) {
 
     if (m_culling != 0)
         glDisable(GL_CULL_FACE);
+
+    positionFbo.unbind();
+}
+
+void SceneRender::renderBuffers(Uniforms& _uniforms) {
+    for (size_t i = 0; i < buffersFbo.size(); i++) {
+        if (!buffersFbo[i].isAllocated())
+            continue;;
+
+        buffersFbo[i].bind();
+
+        // Begining of DEPTH for 3D 
+        if (m_depth_test)
+            glEnable(GL_DEPTH_TEST);
+
+        if (_uniforms.activeCamera->bChange || m_origin.bChange) {
+            vera::setCamera( _uniforms.activeCamera );
+            vera::applyMatrix( m_origin.getTransformMatrix() );
+        }
+
+        if (m_floor_subd_target >= 0 && i < m_floor.getTotalBufferShaders()) {
+            m_floor.getBufferShader(i)->use();
+            _uniforms.feedTo( m_floor.getBufferShader(i), false );
+            m_floor.getBufferShader(i)->setUniform( "u_modelViewProjectionMatrix", vera::getProjectionViewWorldMatrix() );
+            m_floor.renderBuffer(i);
+        }
+
+        vera::cullingMode(m_culling);
+
+        for (vera::ModelsMap::iterator it = _uniforms.models.begin(); it != _uniforms.models.end(); ++it) {
+            if (i >= it->second->getTotalBufferShaders())
+                continue;
+
+            if (it->second->getBufferShader(i)->loaded() ) {
+
+                // bind the shader
+                it->second->getBufferShader(i)->use();
+
+                // Update Uniforms and textures variables to the shader
+                _uniforms.feedTo( it->second->getBufferShader(i), false );
+
+                // Pass special uniforms
+                it->second->getBufferShader(i)->setUniform( "u_modelViewProjectionMatrix", vera::getProjectionViewWorldMatrix() );
+                it->second->renderBuffer(i);
+            }
+        }
+
+        if (m_depth_test)
+            glDisable(GL_DEPTH_TEST);
+
+        if (m_culling != 0)
+            glDisable(GL_CULL_FACE);
+
+        buffersFbo[i].unbind();
+    }
 }
 
 void SceneRender::renderShadowMap(Uniforms& _uniforms) {
@@ -535,6 +697,16 @@ void SceneRender::renderShadowMap(Uniforms& _uniforms) {
             glm::mat4 v = lit->second->getViewMatrix();
             
             lit->second->bindShadowMap();
+
+            if (m_floor.getVbo()) {
+                m_floor.getShadowShader()->use();
+                _uniforms.feedTo( m_floor.getShadowShader(), false );
+                m_floor.getShadowShader()->setUniform( "u_modelViewProjectionMatrix", mvp );
+                m_floor.getShadowShader()->setUniform( "u_projectionMatrix", p );
+                m_floor.getShadowShader()->setUniform( "u_viewMatrix", v );
+                m_floor.getShadowShader()->setUniform( "u_modelMatrix", m );
+                m_floor.renderShadow();
+            }
 
             // dirty += _uniforms.models.size() == 0;
             for (vera::ModelsMap::iterator mit = _uniforms.models.begin(); mit != _uniforms.models.end(); ++mit) {
@@ -627,14 +799,14 @@ void SceneRender::renderFloor(Uniforms& _uniforms, const glm::mat4& _mvp, bool _
             //     m_floor.addDefine("LIGHT_SHADOWMAP_SIZE", "2048.0");
             // #endif
             
-            if (!m_floor.getShadeShader()->loaded())
+            if (!m_floor.getShader()->loaded())
                 m_floor.setShader(vera::getDefaultSrc(vera::FRAG_DEFAULT_SCENE), vera::getDefaultSrc(vera::VERT_DEFAULT_SCENE), false);
         }
 
         if (m_floor.getVbo()) {
-            m_floor.getShadeShader()->use();
-            _uniforms.feedTo( m_floor.getShadeShader(), _lights );
-            m_floor.getShadeShader()->setUniform("u_modelViewProjectionMatrix", _mvp );
+            m_floor.getShader()->use();
+            _uniforms.feedTo( m_floor.getShader(), _lights );
+            m_floor.getShader()->setUniform("u_modelViewProjectionMatrix", _mvp );
             m_floor.render();
         }
 

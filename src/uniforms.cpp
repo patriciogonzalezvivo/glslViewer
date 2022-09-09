@@ -503,6 +503,12 @@ void Uniforms::printBuffers() {
 
     if (functions["u_sceneDepth"].present)
         std::cout << "uniform sampler2D u_sceneDepth;" << std::endl;
+
+    if (functions["u_scenePosition"].present)
+        std::cout << "uniform sampler2D u_scenePosition;" << std::endl;
+
+    if (functions["u_sceneNormal"].present)
+        std::cout << "uniform sampler2D u_sceneNormal;" << std::endl;
 }
 
 void Uniforms::clearBuffers() {

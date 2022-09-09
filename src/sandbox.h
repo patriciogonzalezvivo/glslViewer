@@ -89,7 +89,6 @@ public:
     bool                fxaa;
 
 private:
-    void                _updateSceneBuffer(int _width, int _height);
     void                _updateBuffers();
     void                _renderBuffers();
 
@@ -114,12 +113,7 @@ private:
 
     // B. SCENE
     SceneRender         m_sceneRender;
-    vera::Fbo           m_sceneRender_fbo;
-    vera::Fbo           m_sceneNormal_fbo;
-    vera::Fbo           m_scenePosition_fbo;
-    glm::vec3           m_ssaoSamples[64];
-    glm::vec3           m_ssaoNoise[16];
-
+    
     // Pyramid Convolution
     FboList             m_pyramid_fbos;
     ShaderList          m_pyramid_subshaders;
