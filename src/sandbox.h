@@ -31,7 +31,9 @@ public:
     virtual ~Sandbox();
     
     // Main stages
-    void                setup(WatchFileList &_files, CommandList &_commands);
+    void                loadAssets(WatchFileList &_files);
+    void                loadModel(vera::Model* _model);
+    void                commandsInit(CommandList &_commands);
 
     bool                setSource(ShaderType _type, const std::string& _source);
     bool                reloadShaders(WatchFileList &_files);
@@ -46,8 +48,6 @@ public:
     void                renderUI();
     void                renderDone();
 
-    void                clear();
-    
     bool                isReady();
 
     void                addDefine( const std::string &_define, const std::string &_value = "");
@@ -68,7 +68,7 @@ public:
     void                onPlot();
    
     // Include folders
-    vera::StringList     include_folders;
+    vera::StringList    include_folders;
 
     // Uniforms
     Uniforms            uniforms;
@@ -76,14 +76,14 @@ public:
     // Screenshot file
     std::string         screenshotFile;
 
+    // Quilt/Lenticular
+    std::string         lenticular;
+    int                 quilt;
+
     // States
     int                 frag_index;
     int                 vert_index;
     int                 geom_index;
-
-    std::string         lenticular;
-    int                 quilt;
-    
     bool                verbose;
     bool                cursor;
     bool                fxaa;

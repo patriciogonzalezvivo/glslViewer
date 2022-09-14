@@ -20,8 +20,18 @@
 
 #include "tools/text.h"
 
+
+#if defined(DEBUG)
+
 #define TRACK_BEGIN(A) if (_uniforms.tracker.isRunning()) _uniforms.tracker.begin(A); 
 #define TRACK_END(A) if (_uniforms.tracker.isRunning()) _uniforms.tracker.end(A); 
+
+#else 
+
+#define TRACK_BEGIN(A) 
+#define TRACK_END(A)
+
+#endif
 
 SceneRender::SceneRender(): 
     // Debug State
@@ -38,13 +48,9 @@ SceneRender::SceneRender():
 }
 
 SceneRender::~SceneRender(){
-    clear();
 }
 
-void SceneRender::clear() {
-}
-
-void SceneRender::setup(CommandList& _commands, Uniforms& _uniforms) {
+void SceneRender::commandsInit(CommandList& _commands, Uniforms& _uniforms) {
     // ADD COMMANDS
     // ----------------------------------------- 
     _commands.push_back(Command("model", [&](const std::string& _line){ 
@@ -521,9 +527,9 @@ void SceneRender::render(Uniforms& _uniforms) {
         vera::applyMatrix( m_origin.getTransformMatrix() );
     }
 
-    // TRACK_BEGIN("render:scene:floor")
+    TRACK_BEGIN("render:scene:floor")
     renderFloor(_uniforms, vera::getProjectionViewWorldMatrix() );
-    // TRACK_END("render:scene:floor")
+    TRACK_END("render:scene:floor")
 
     vera::cullingMode(m_culling);
 
@@ -572,16 +578,16 @@ void SceneRender::renderNormalBuffer(Uniforms& _uniforms) {
 
     vera::Shader* normalShader = nullptr;
     if (m_floor_subd_target >= 0) {
-        TRACK_BEGIN("render:sceneNormal:floor")
         normalShader = m_floor.getBufferShader("normal");
         if (normalShader != nullptr) 
             if (normalShader->loaded()) {
+                TRACK_BEGIN("render:sceneNormal:floor")
                 normalShader->use();
                 _uniforms.feedTo( normalShader, false );
                 normalShader->setUniform("u_modelViewProjectionMatrix", vera::getProjectionViewWorldMatrix() );
                 m_floor.render(normalShader);
+                TRACK_END("render:sceneNormal:floor")
             } 
-        TRACK_END("render:sceneNormal:floor")
     }
 
     vera::cullingMode(m_culling);
@@ -632,15 +638,16 @@ void SceneRender::renderPositionBuffer(Uniforms& _uniforms) {
 
     vera::Shader* positionShader = nullptr;
     if (m_floor_subd_target >= 0) {
-        TRACK_BEGIN("render:scenePosition:floor")
         positionShader = m_floor.getBufferShader("position");
-        if (positionShader != nullptr) {
-            positionShader->use();
-            _uniforms.feedTo( positionShader, false );
-            positionShader->setUniform("u_modelViewProjectionMatrix", vera::getProjectionViewWorldMatrix() );
-            m_floor.render(positionShader);
-        } 
-        TRACK_END("render:scenePosition:floor")
+        if (positionShader != nullptr) 
+            if (positionShader->loaded()) {
+                TRACK_BEGIN("render:scenePosition:floor")
+                positionShader->use();
+                _uniforms.feedTo( positionShader, false );
+                positionShader->setUniform("u_modelViewProjectionMatrix", vera::getProjectionViewWorldMatrix() );
+                m_floor.render(positionShader);
+                TRACK_END("render:scenePosition:floor")
+            } 
     }
 
     vera::cullingMode(m_culling);
@@ -681,6 +688,7 @@ void SceneRender::renderBuffers(Uniforms& _uniforms) {
             continue;;
 
         buffersFbo[i].bind();
+        std::string bufferName = "u_sceneBuffer" + vera::toString(i);
 
         // Begining of DEPTH for 3D 
         if (m_depth_test)
@@ -692,25 +700,26 @@ void SceneRender::renderBuffers(Uniforms& _uniforms) {
         }
 
         if (m_floor_subd_target >= 0) {
-            std::string bufferName = "u_sceneBuffer" + vera::toString(i);
             bufferShader = m_floor.getBufferShader(bufferName);
             if (bufferShader != nullptr) 
                 if (bufferShader->loaded()) {
+                    TRACK_BEGIN("render:"+bufferName+":floor")
                     bufferShader->use();
                     _uniforms.feedTo( bufferShader, false );
                     bufferShader->setUniform( "u_modelViewProjectionMatrix", vera::getProjectionViewWorldMatrix() );
                     m_floor.render(bufferShader);
+                    TRACK_END("render:"+bufferName+":floor")
                 }
         }
 
         vera::cullingMode(m_culling);
 
         for (vera::ModelsMap::iterator it = _uniforms.models.begin(); it != _uniforms.models.end(); ++it) {
-            std::string bufferName = "u_sceneBuffer" + vera::toString(i);
             bufferShader = m_floor.getBufferShader(bufferName);
 
             if (bufferShader != nullptr) 
                 if (bufferShader->loaded()) {
+                    TRACK_BEGIN("render:" + bufferName + ":" + it->second->getName())
 
                     // bind the shader
                     bufferShader->use();
@@ -721,6 +730,8 @@ void SceneRender::renderBuffers(Uniforms& _uniforms) {
                     // Pass special uniforms
                     bufferShader->setUniform( "u_modelViewProjectionMatrix", vera::getProjectionViewWorldMatrix() );
                     it->second->render(bufferShader);
+
+                    TRACK_END("render:" + bufferName + ":" + it->second->getName())
                 }
         }
 
@@ -738,11 +749,10 @@ void SceneRender::renderShadowMap(Uniforms& _uniforms) {
     if (!m_shadows)
         return;
 
-    // TRACK_BEGIN("shadowmap")
+    TRACK_BEGIN("render:scene:shadowmap")
     vera::Shader* shadowShader = nullptr;
     for (vera::LightsMap::iterator lit = _uniforms.lights.begin(); lit != _uniforms.lights.end(); ++lit) {
         if (m_dynamicShadows ||  lit->second->bChange || haveChange() ) {
-
             // Temporally move the MVP matrix from the view of the light 
             glm::mat4 m = m_origin.getTransformMatrix();
             glm::mat4 mvp = lit->second->getMVPMatrix( m, m_area );
@@ -752,39 +762,46 @@ void SceneRender::renderShadowMap(Uniforms& _uniforms) {
             lit->second->bindShadowMap();
 
             shadowShader = m_floor.getBufferShader("shadow");
-            if (m_floor.getVbo() && shadowShader != nullptr) {
-                shadowShader->use();
-                _uniforms.feedTo( shadowShader, false );
-                shadowShader->setUniform( "u_modelViewProjectionMatrix", mvp );
-                shadowShader->setUniform( "u_projectionMatrix", p );
-                shadowShader->setUniform( "u_viewMatrix", v );
-                shadowShader->setUniform( "u_modelMatrix", m );
-                m_floor.render(shadowShader);
-            }
-
-            for (vera::ModelsMap::iterator mit = _uniforms.models.begin(); mit != _uniforms.models.end(); ++mit) {
-                shadowShader = mit->second->getBufferShader("shadow");
-                if (shadowShader != nullptr) {
-
-                    // bind the shader
+            if (m_floor.getVbo() && shadowShader != nullptr) 
+                if (shadowShader->loaded()) {
+                    TRACK_BEGIN("render:scene:shadowmap:floor")
                     shadowShader->use();
-
-                    // Update Uniforms and textures variables to the shader
                     _uniforms.feedTo( shadowShader, false );
-
-                    // Pass special uniforms
                     shadowShader->setUniform( "u_modelViewProjectionMatrix", mvp );
                     shadowShader->setUniform( "u_projectionMatrix", p );
                     shadowShader->setUniform( "u_viewMatrix", v );
                     shadowShader->setUniform( "u_modelMatrix", m );
-                    mit->second->render(shadowShader);
+                    m_floor.render(shadowShader);
+                    TRACK_END("render:scene:shadowmap:floor")
                 }
+
+            for (vera::ModelsMap::iterator mit = _uniforms.models.begin(); mit != _uniforms.models.end(); ++mit) {
+                shadowShader = mit->second->getBufferShader("shadow");
+                if (shadowShader != nullptr) 
+                    if (shadowShader->loaded()) {
+                        TRACK_BEGIN("render:scene:shadowmap:" + mit->second->getName())
+
+                        // bind the shader
+                        shadowShader->use();
+
+                        // Update Uniforms and textures variables to the shader
+                        _uniforms.feedTo( shadowShader, false );
+
+                        // Pass special uniforms
+                        shadowShader->setUniform( "u_modelViewProjectionMatrix", mvp );
+                        shadowShader->setUniform( "u_projectionMatrix", p );
+                        shadowShader->setUniform( "u_viewMatrix", v );
+                        shadowShader->setUniform( "u_modelMatrix", m );
+                        mit->second->render(shadowShader);
+
+                        TRACK_END("render:scene:shadowmap:" + mit->second->getName())
+                    }
             }
 
             lit->second->unbindShadowMap();
         }
     }
-    // TRACK_END("shadowmap")
+    TRACK_END("shadowmap")
 }
 
 void SceneRender::renderBackground(Uniforms& _uniforms) {
@@ -808,6 +825,7 @@ void SceneRender::renderBackground(Uniforms& _uniforms) {
                 m_cubemap_shader.load(vera::getDefaultSrc(vera::FRAG_CUBEMAP), vera::getDefaultSrc(vera::VERT_CUBEMAP), vera::SHOW_MAGENTA_SHADER, false);
             }
 
+            TRACK_BEGIN("render:scene:cubemap")
             glm::mat4 ori = _uniforms.activeCamera->getOrientationMatrix();
 
             #if defined(__EMSCRIPTEN__)
@@ -820,6 +838,7 @@ void SceneRender::renderBackground(Uniforms& _uniforms) {
             m_cubemap_shader.setUniformTextureCube("u_cubeMap", _uniforms.activeCubemap, 0);
 
             m_cubemap_vbo->render(&m_cubemap_shader);
+            TRACK_END("render:scene:cubemap")
         }
     }
 }

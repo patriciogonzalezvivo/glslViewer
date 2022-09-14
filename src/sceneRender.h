@@ -16,8 +16,7 @@ public:
     SceneRender();
     virtual ~SceneRender();
 
-    void            setup(CommandList& _commands, Uniforms& _uniforms);
-    void            clear();
+    void            commandsInit(CommandList& _commands, Uniforms& _uniforms);
 
     bool            loadScene(Uniforms& _uniforms);
     bool            loadShaders(Uniforms& _uniforms, const std::string& _fragmentShader, const std::string& _vertexShader, bool _verbose);

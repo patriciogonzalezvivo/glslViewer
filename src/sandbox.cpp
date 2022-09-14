@@ -24,13 +24,22 @@
 #include "glm/gtx/matrix_transform_2d.hpp"
 #include "glm/gtx/rotate_vector.hpp"
 
+#if defined(DEBUG)
+
 #define TRACK_BEGIN(A) if (uniforms.tracker.isRunning()) uniforms.tracker.begin(A); 
 #define TRACK_END(A) if (uniforms.tracker.isRunning()) uniforms.tracker.end(A); 
 
+#else 
+
+#define TRACK_BEGIN(A)
+#define TRACK_END(A) 
+
+#endif
+
 // ------------------------------------------------------------------------- CONTRUCTOR
 Sandbox::Sandbox(): 
+    screenshotFile(""), lenticular(""), quilt(-1), 
     frag_index(-1), vert_index(-1), geom_index(-1), 
-    lenticular(""), quilt(-1), 
     verbose(false), cursor(true), fxaa(false),
     // Main Vert/Frag/Geom
     m_frag_source(""), m_vert_source(""),
@@ -127,7 +136,7 @@ Sandbox::~Sandbox() {
 
 // ------------------------------------------------------------------------- SET
 
-void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
+void Sandbox::commandsInit(CommandList &_commands ) {
 
     // Add Sandbox Commands
     // ----------------------------------------
@@ -911,43 +920,11 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     }, "max_mem_in_queue[,<bytes>]", "set the maximum amount of memory used by a queue to export images to disk"));
     #endif
 
-    _commands.push_back(Command("pcl_plane", [&](const std::string & line) {
-        std::vector<std::string> values = vera::split(line,',');
-        int size_i = 512;
+    if (vert_index != -1 || geom_index != -1)
+        m_sceneRender.commandsInit( _commands, uniforms);
+}
 
-        if (values.size() > 1)
-            size_i  = vera::toInt(values[1]);
-
-        float size_f = size_i;
-        vera::Mesh pcl;
-        pcl.setDrawMode(vera::POINTS);
-        for (int y = 0; y < size_i; y++) 
-            for (int x = 0; x < size_i; x++)
-                pcl.addVertex(glm::vec3(x/size_f, y/size_f, 0.0f));
-            
-        if (uniforms.models.size() == 0)
-            m_sceneRender.setup( _commands, uniforms);
-
-        // Add Model with pcl mesh
-        uniforms.models["pcl_plane"] = new vera::Model("pcl_plane", pcl);
-        m_sceneRender.loadScene(uniforms);
-        uniforms.activeCamera->orbit(m_camera_azimuth, m_camera_elevation, m_sceneRender.getArea() * 2.0);
-        uniforms.activeCamera->lookAt(uniforms.activeCamera->getTarget());
-
-        #ifdef __EMSCRIPTEN__
-        // Commands are parse in the main GL loop in EMSCRIPTEN
-        m_sceneRender.loadShaders(uniforms, m_frag_source, m_vert_source, false);
-
-        #else
-        // Commands are intepreted on a different thread on non-EMSCRIPTEN 
-        //  so need to trigger a reload by changing the timestamps of files
-        for (size_t i = 0; i < _files.size(); i++)
-            _files[i].lastChange = 0;
-        
-        #endif
-
-        return true;
-    }, "pcl_plane[,<RESOLUTION>]", "add a pointcloud plane"));
+void Sandbox::loadAssets(WatchFileList &_files) {
 
     // LOAD SHACER 
     // -----------------------------------------------
@@ -983,9 +960,6 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
         else
             m_vert_source = vera::getDefaultSrc(vera::VERT_DEFAULT_SCENE);
     }
-
-    if (vert_index != -1 || geom_index != -1)
-        m_sceneRender.setup( _commands, uniforms);
 
     // LOAD GEOMETRY
     // -----------------------------------------------
@@ -1054,6 +1028,13 @@ void Sandbox::setup( WatchFileList &_files, CommandList &_commands ) {
     _updateBuffers();
 
     flagChange();
+}
+
+void Sandbox::loadModel(vera::Model* _model) {
+    uniforms.models[_model->getName()] = _model;
+    m_sceneRender.loadScene(uniforms);
+    uniforms.activeCamera->orbit(m_camera_azimuth, m_camera_elevation, m_sceneRender.getArea() * 2.0);
+    uniforms.activeCamera->lookAt(uniforms.activeCamera->getTarget());
 }
 
 void Sandbox::addDefine(const std::string &_define, const std::string &_value) {
@@ -1214,7 +1195,6 @@ bool Sandbox::reloadShaders( WatchFileList &_files ) {
         else 
             m_sceneRender.updateBuffers(uniforms, vera::getWindowWidth(), vera::getWindowHeight());
     }
-
 
     console_refresh();
 
@@ -1492,7 +1472,7 @@ void Sandbox::renderPrep() {
 void Sandbox::render() {
     // RENDER CONTENT
     if (uniforms.models.size() == 0) {
-        TRACK_BEGIN("render:billboard")
+        TRACK_BEGIN("render:2D_scene")
 
         // Load main shader
         m_canvas_shader.use();
@@ -1523,11 +1503,11 @@ void Sandbox::render() {
             vera::getBillboard()->render( &m_canvas_shader );
         }
 
-        TRACK_END("render:billboard")
+        TRACK_END("render:2D_scene")
     }
 
     else {
-        TRACK_BEGIN("render:scene")
+        TRACK_BEGIN("render:3D_scene")
         if (quilt >= 0) {
             vera::renderQuilt([&](const vera::QuiltProperties& quilt, glm::vec4& viewport, int &viewIndex){
 
@@ -1551,7 +1531,7 @@ void Sandbox::render() {
             if (m_sceneRender.showGrid || m_sceneRender.showAxis || m_sceneRender.showBBoxes)
                 m_sceneRender.renderDebug(uniforms);
         }
-        TRACK_END("render:scene")
+        TRACK_END("render:3D_scene")
     }
 }
 
@@ -1602,7 +1582,7 @@ void Sandbox::renderPost() {
 
 
 void Sandbox::renderUI() {
-    // TRACK_BEGIN("renderUI")
+    TRACK_BEGIN("renderUI")
 
     // // IN PUT TEXTURES
     if (m_showTextures) {      
@@ -1610,7 +1590,7 @@ void Sandbox::renderUI() {
         int nTotal = uniforms.textures.size();
         if (nTotal > 0) {
             glDisable(GL_DEPTH_TEST);
-            // TRACK_BEGIN("textures")
+            TRACK_BEGIN("renderUI:textures")
             float w = (float)(vera::getWindowWidth());
             float h = (float)(vera::getWindowHeight());
             float scale = fmin(1.0f / (float)(nTotal), 0.25) * 0.5;
@@ -1635,7 +1615,7 @@ void Sandbox::renderUI() {
 
                 yOffset -= yStep * 2.0;
             }
-    //         // TRACK_END("textures")
+            TRACK_END("renderUI:textures")
         }
     }
 
@@ -1643,7 +1623,7 @@ void Sandbox::renderUI() {
     if (m_showPasses) {        
 
         glDisable(GL_DEPTH_TEST);
-        // TRACK_BEGIN("buffers")
+        TRACK_BEGIN("renderUI:buffers")
 
         // DEBUG BUFFERS
         int nTotal = uniforms.buffers.size();
@@ -1773,12 +1753,12 @@ void Sandbox::renderUI() {
             }
 
         }
-        // TRACK_END("buffers")
+        TRACK_END("renderUI:buffers")
     }
 
     if (m_plot != PLOT_OFF && m_plot_texture ) {
         glDisable(GL_DEPTH_TEST);
-        //TRACK_BEGIN("plot_data")
+        TRACK_BEGIN("renderUI:plot_data")
 
         float p = vera::getPixelDensity();
         float w = 100 * p;
@@ -1797,11 +1777,11 @@ void Sandbox::renderUI() {
         m_plot_shader.setUniform("u_modelViewProjectionMatrix", vera::getOrthoMatrix());
         m_plot_shader.setUniformTexture("u_plotData", m_plot_texture.get(), 0);
         vera::getBillboard()->render(&m_plot_shader);
-        // TRACK_END("plot_data")
+        TRACK_END("renderUI:plot_data")
     }
 
     if (cursor && vera::getMouseEntered()) {
-        // TRACK_BEGIN("cursor")
+        TRACK_BEGIN("renderUI:cursor")
         if (m_cross_vbo == nullptr)
             m_cross_vbo = std::unique_ptr<vera::Vbo>(new vera::Vbo( vera::crossMesh( glm::vec3(0.0f, 0.0f, 0.0f), 10.0f) ));
 
@@ -1810,14 +1790,14 @@ void Sandbox::renderUI() {
         fill->setUniform("u_modelViewProjectionMatrix", glm::translate(vera::getOrthoMatrix(), glm::vec3(vera::getMouseX(), vera::getMouseY(), 0.0f) ) );
         fill->setUniform("u_color", glm::vec4(1.0f));
         m_cross_vbo->render(fill);
-        // TRACK_END("cursor")
+        TRACK_END("renderUI:cursor")
     }
 
-    // TRACK_END("renderUI")
+    TRACK_END("renderUI")
 }
 
 void Sandbox::renderDone() {
-    // TRACK_BEGIN("update:post_render")
+    TRACK_BEGIN("update:post_render")
 
     // RECORD
     if (isRecording()) {
@@ -1840,45 +1820,35 @@ void Sandbox::renderDone() {
         vera::updateViewport();
         flagChange();
     }
-    else {
+    else
         m_frame++;
-    }
 
-    // TRACK_END("update:post_render")
+    TRACK_END("update:post_render")
 }
 
 // ------------------------------------------------------------------------- ACTIONS
-
-void Sandbox::clear() {
-    uniforms.clear();
-
-    if (uniforms.models.size() > 0)
-        m_sceneRender.clear();
-}
-
 void Sandbox::printDependencies(ShaderType _type) const {
-    if (_type == FRAGMENT) {
+    if (_type == FRAGMENT)
         for (size_t i = 0; i < m_frag_dependencies.size(); i++)
             std::cout << m_frag_dependencies[i] << std::endl;
-    }
-    else {
+    
+    else 
         for (size_t i = 0; i < m_vert_dependencies.size(); i++)
             std::cout << m_vert_dependencies[i] << std::endl;
-    }
 }
 
 // ------------------------------------------------------------------------- EVENTS
 namespace {
-template<typename uniform_list_t>
-void reload_uniforms(uniform_list_t& unforms_list, std::string filename, const WatchFile &_file){
-    using uniform_t = typename uniform_list_t::value_type;
-    auto uniform_iterator = std::find_if(std::begin(unforms_list), std::end(unforms_list)
-                           , [&](uniform_t uniform){return filename == uniform.second->getFilePath();});
-    if(uniform_iterator != std::end(unforms_list)) {
-        std::cout << "Reloading" << filename << std::endl;
-        uniform_iterator->second->load(filename, _file.vFlip);
+    template<typename uniform_list_t>
+    void reload_uniforms(uniform_list_t& unforms_list, std::string filename, const WatchFile &_file) {
+        using uniform_t = typename uniform_list_t::value_type;
+        auto uniform_iterator = std::find_if(std::begin(unforms_list), std::end(unforms_list)
+                            , [&](uniform_t uniform){return filename == uniform.second->getFilePath();});
+        if(uniform_iterator != std::end(unforms_list)) {
+            std::cout << "Reloading" << filename << std::endl;
+            uniform_iterator->second->load(filename, _file.vFlip);
+        }
     }
-}
 }
 
 void Sandbox::onFileChange(WatchFileList &_files, int index) {
@@ -2033,7 +2003,7 @@ void Sandbox::onViewportResize(int _newWidth, int _newHeight) {
 void Sandbox::onScreenshot(std::string _file) {
 
     if (_file != "" && vera::isGL()) {
-        // TRACK_BEGIN("screenshot")
+        TRACK_BEGIN("screenshot")
 
         glBindFramebuffer(GL_FRAMEBUFFER, m_record_fbo.getId());
 
@@ -2088,7 +2058,7 @@ void Sandbox::onScreenshot(std::string _file) {
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-        // TRACK_END("screenshot")
+        TRACK_END("screenshot")
     }
 }
 
@@ -2097,8 +2067,7 @@ void Sandbox::onPlot() {
         return;
 
     if ( (m_plot == PLOT_LUMA || m_plot == PLOT_RGB || m_plot == PLOT_RED || m_plot == PLOT_GREEN || m_plot == PLOT_BLUE ) && haveChange() ) {
-
-        // TRACK_BEGIN("plot::histogram")
+        TRACK_BEGIN("plot::histogram")
 
         // Extract pixels
         glBindFramebuffer(GL_FRAMEBUFFER, m_sceneRender.renderFbo.getId());
@@ -2144,16 +2113,16 @@ void Sandbox::onPlot() {
 
         uniforms.textures["u_histogram"] = m_plot_texture.get();
         uniforms.flagChange();
-        // TRACK_END("plot::histogram")
+        TRACK_END("plot::histogram")
     }
 
     else if (m_plot == PLOT_FPS ) {
+        TRACK_BEGIN("plot::fps")
+
         // Push back values one position
         for (int i = 0; i < 255; i ++)
             m_plot_values[i] = m_plot_values[i+1];
         m_plot_values[255] = glm::vec4( vera::getFps()/60.0f, 0.0f, 0.0f, 1.0f);
-
-        // TRACK_BEGIN("plot::fps")
 
         if (m_plot_texture == nullptr)
             m_plot_texture = std::unique_ptr<vera::Texture>(new vera::Texture());
@@ -2161,16 +2130,16 @@ void Sandbox::onPlot() {
         m_plot_texture->load(256, 1, 4, 32, &m_plot_values[0], vera::NEAREST, vera::CLAMP);
         // uniforms.textures["u_sceneFps"] = m_plot_texture;
 
-        // TRACK_END("plot::fps")
+        TRACK_END("plot::fps")
     }
 
     else if (m_plot == PLOT_MS ) {
+        TRACK_BEGIN("plot::ms")
+
         // Push back values one position
         for (int i = 0; i < 255; i ++)
             m_plot_values[i] = m_plot_values[i+1];
         m_plot_values[255] = glm::vec4( vera::getDelta(), 0.0f, 0.0f, 1.0f);
-
-        // TRACK_BEGIN("plot::ms")
 
         if (m_plot_texture == nullptr)
             m_plot_texture = std::unique_ptr<vera::Texture>(new vera::Texture());
@@ -2179,6 +2148,6 @@ void Sandbox::onPlot() {
 
         // uniforms.textures["u_sceneMs"] = m_plot_texture;
 
-        // TRACK_END("plot::ms")
+        TRACK_END("plot::ms")
     }
 }

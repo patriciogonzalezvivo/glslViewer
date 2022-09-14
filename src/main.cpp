@@ -38,21 +38,48 @@
 #include <signal.h>
 #endif
 
+#if defined(DEBUG)
+
 #define TRACK_BEGIN(A)      if (sandbox.uniforms.tracker.isRunning()) sandbox.uniforms.tracker.begin(A); 
 #define TRACK_END(A)        if (sandbox.uniforms.tracker.isRunning()) sandbox.uniforms.tracker.end(A); 
 
+#else 
+
+#define TRACK_BEGIN(A)
+#define TRACK_END(A)
+
+#endif
+
+// Global state variables/functions
 std::string                 version = vera::toString(GLSLVIEWER_VERSION_MAJOR) + "." + vera::toString(GLSLVIEWER_VERSION_MINOR) + "." + vera::toString(GLSLVIEWER_VERSION_PATCH);
 std::string                 about   = "GlslViewer " + version + " by Patricio Gonzalez Vivo ( http://patriciogonzalezvivo.com )"; 
+std::atomic<bool>           bKeepRunnig(true);
+bool                        bScreensaverMode = false;
+bool                        bRunAtFullFps = false;
+bool                        bTerminate = false;
+#if !defined(__EMSCRIPTEN__)
+void                        printUsage(char * executableName);
+void                        onExit();
+#endif
 
-// Here is where all the magic happens
+// The sandbox holds:
+//  - the main shader (in 2D)
+//  - the scene (when 3D geometry or vertex shaders are loaded)
+//  - uniforms (all data pass to the shaders)
 Sandbox                     sandbox;
 
-//  List of FILES to watch and the variable to communicate that between process
+//  List of FILES to watch (code, images/video or geometry). 
+// This will be use by the sandbox to hot reload or keep track of assets
 WatchFileList               files;
 std::mutex                  filesMutex;
 int                         fileChanged;
+#if !defined(__EMSCRIPTEN__)
+void                        fileWatcherThread();
+#endif
 
-// Commands variables
+
+// Console COMMAND interface. A way to change the state of internal variables. 
+// Note: the OSC listener reuse it to process events
 CommandList                 commands;
 std::mutex                  commandsMutex;
 std::vector<std::string>    commandsArgs;    // Execute commands
@@ -62,24 +89,15 @@ bool                        commands_ncurses = true;
 #else
 bool                        commands_ncurses = false;
 #endif
-
-std::atomic<bool>           keepRunnig(true);
-bool                        screensaver = false;
-bool                        bTerminate = false;
-bool                        fullFps = false;
-
 void                        commandsRun(const std::string &_cmd);
 void                        commandsRun(const std::string &_cmd, std::mutex &_mutex);
 void                        commandsInit();
-
 #if !defined(__EMSCRIPTEN__)
-void                        printUsage(char * executableName);
-void                        fileWatcherThread();
+// Console IN thread
 void                        cinWatcherThread();
-void                        onExit();
-
 #else
-
+// In WASM / EMSCRIPTEN projects there is nothreads, so instead of a Console IN rutine
+// we expose a command function for the client, and commands are excecute in the main loop
 extern "C"  {
     
 void command(char* c) {
@@ -105,7 +123,6 @@ char* getVert() {
 }
 
 }
-
 #endif
 
 // Open Sound Control
@@ -115,54 +132,71 @@ std::mutex                  oscMutex;
 #endif
 int                         oscPort = 0;
 
+// MAIN LOOP
 #if defined(__EMSCRIPTEN__)
 EM_BOOL loop (double time, void* userData) {
 #else
 void loop() {
 #endif
-    vera::updateGL();
 
+    // update time/delta/date and input events
+    vera::updateGL();
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
     #ifndef __EMSCRIPTEN__
-    if (!bTerminate && !fullFps && !sandbox.haveChange()) {
     // If nothing in the scene change skip the frame and try to keep it at 60fps
+    if (!bTerminate && !bRunAtFullFps && !sandbox.haveChange()) {
         std::this_thread::sleep_for(std::chrono::milliseconds( vera::getRestMs() ));
         return;
     }
     #else
+    // Excecute commands in the main loop in WASM/EMSCRIPTEN project because there is no multiple threads
     if (sandbox.isReady() && commandsArgs.size() > 0) {
         for (size_t i = 0; i < commandsArgs.size(); i++)
             commandsRun(commandsArgs[i]);
-        
         commandsArgs.clear();
     }
     #endif
 
-    // Prepare Render
+    // PREP for main render:
+    //  - update uniforms
+    //  - render buffers, double buffers and pyramid convolutions
+    //  - render lighmaps (3D scenes only)
+    //  - render normal/possition/extra g buffers (3D scenes only)
+    //  - start the recording FBO (when recording)
     sandbox.renderPrep();
 
-    // Draw Scene
+    // Render the main 2D Shader on a billboard or 3D Scene when there is geometry models
+    // Note: if the render require multiple views of the render (for quilts or VR) it happens here.
     sandbox.render();
 
-    // render Post
+    // POST render:
+    //  - post-processing render pass
+    //  - close recording FBO (when recording)
     sandbox.renderPost();
 
-    // Draw Cursor and 2D Debug elements
+    // UI render pass:
+    //  - draw textures (debug)
+    //  - draw render passes/buffers (debug)
+    //  - draw plot widget (debug)
+    //  - draw cursor
     sandbox.renderUI();
 
-    // Finish drawing
+    // Finish rendering triggering some events like
+    //  - save image/frame if it's needed
+    //  - anouncing the first pass have been made
     sandbox.renderDone();
 
 #ifndef __EMSCRIPTEN__
     if ( bTerminate && sandbox.screenshotFile == "" )
-        keepRunnig.store(false);
+        bKeepRunnig.store(false);
     else
 #endif
     
-    // TRACK_BEGIN("renderSwap")
-    vera::renderGL();
-    // TRACK_END("renderSwap")
+    // Swap GL buffer
+    TRACK_BEGIN("render:swap")
+    vera::renderGL();    
+    TRACK_END("render:swap")
 
     #if defined(__EMSCRIPTEN__)
     return (vera::getXR() == vera::NONE_XR_MODE);
@@ -173,79 +207,59 @@ void loop() {
 //============================================================================
 int main(int argc, char **argv) {
 
+    // FIRST parsing pass through arguments to understand what kind of 
+    // WINDOW PROPERTIES and general enviroment set up needs to be created.
     vera::WindowProperties window_properties;
+    bool willLoadGeometry = false;
+    bool willLoadTextures = false;
 
-    #if defined(DRIVER_GBM) 
     for (int i = 1; i < argc ; i++) {
         std::string argument = std::string(argv[i]);
-        if ( std::string(argv[i]) == "-d" || std::string(argv[i]) == "--display") {
+        if (        argument == "-x" ) {
             if (++i < argc)
-                window_properties.display = std::string(argv[i]);
+                window_properties.screen_x = vera::toInt(argument);
+            else
+                std::cout << "Argument '" << argument << "' should be followed by a <pixels>. Skipping argument." << std::endl;
+        }
+        else if (   argument == "-y" ) {
+            if(++i < argc)
+                window_properties.screen_y = vera::toInt(argument);
+            else
+                std::cout << "Argument '" << argument << "' should be followed by a <pixels>. Skipping argument." << std::endl;
+        }
+        else if (   argument == "-w"    || argument == "-width"         || argument == "--width" ) {
+            if(++i < argc)
+                window_properties.screen_width = vera::toInt(argument);
+            else
+                std::cout << "Argument '" << argument << "' should be followed by a <pixels>. Skipping argument." << std::endl;
+        }
+        else if (   argument == "-h"    || argument == "-height"        || argument == "--height" ) {
+            if(++i < argc)
+                window_properties.screen_height = vera::toInt(argument);
+            else
+                std::cout << "Argument '" << argument << "' should be followed by a <pixels>. Skipping argument." << std::endl;
+        }
+        #if defined(DRIVER_GBM) 
+        else if (   argument == "-d"    || argument == "-display"       || argument == "--display") {
+            if (++i < argc)
+                window_properties.display = argument;
             else
                 std::cout << "Argument '" << argument << "' should be followed by a the display address. Skipping argument." << std::endl;
         }
-    }
-    #endif
-
-    bool displayHelp = false;
-    bool willLoadGeometry = false;
-    bool willLoadTextures = false;
-    for (int i = 1; i < argc ; i++) {
-        std::string argument = std::string(argv[i]);
-        if (        std::string(argv[i]) == "-x" ) {
-            if(++i < argc)
-                window_properties.screen_x = vera::toInt(std::string(argv[i]));
-            else
-                std::cout << "Argument '" << argument << "' should be followed by a <pixels>. Skipping argument." << std::endl;
-        }
-        else if (   std::string(argv[i]) == "-y" ) {
-            if(++i < argc)
-                window_properties.screen_y = vera::toInt(std::string(argv[i]));
-            else
-                std::cout << "Argument '" << argument << "' should be followed by a <pixels>. Skipping argument." << std::endl;
-        }
-        else if (   std::string(argv[i]) == "-w" ||
-                    std::string(argv[i]) == "--width" ) {
-            if(++i < argc)
-                window_properties.screen_width = vera::toInt(std::string(argv[i]));
-            else
-                std::cout << "Argument '" << argument << "' should be followed by a <pixels>. Skipping argument." << std::endl;
-        }
-        else if (   std::string(argv[i]) == "-h" ||
-                    std::string(argv[i]) == "--height" ) {
-            if(++i < argc)
-                window_properties.screen_height = vera::toInt(std::string(argv[i]));
-            else
-                std::cout << "Argument '" << argument << "' should be followed by a <pixels>. Skipping argument." << std::endl;
-        }
-        else if (   std::string(argv[i]) == "--fps" ) {
-            if(++i < argc)
-                vera::setFps( vera::toInt(std::string(argv[i])) );
-            else
-                std::cout << "Argument '" << argument << "' should be followed by a <pixels>. Skipping argument." << std::endl;
-        }
-        else if (   std::string(argv[i]) == "--help" ) {
-            displayHelp = true;
-        }
+        #endif
         #if !defined(DRIVER_GLFW)
-        else if (   std::string(argv[i]) == "--mouse") {
+        else if (   argument == "-mouse"    || argument == "--mouse") {
             if (++i < argc)
-                window_properties.mouse = std::string(argv[i]);
+                window_properties.mouse = argument;
             else
                 std::cout << "Argument '" << argument << "' should be followed by a the mouse address. Skipping argument." << std::endl;
         }
         #endif
-        else if (   std::string(argv[i]) == "--nocursor" ) {
-            commandsArgs.push_back("cursor,off");
+        else if (   argument == "-help"     || argument == "--help" ) {
+            printUsage( argv[0] );
+            exit(0);
         }
-        else if ( argument == "--noncurses" ) {
-            commands_ncurses = false;
-        }
-        else if (   std::string(argv[i]) == "--headless" ) {
-            window_properties.style = vera::HEADLESS;
-        }
-        else if (   std::string(argv[i]) == "-l" ||
-                    std::string(argv[i]) == "--life-coding" ){
+        else if (   argument == "-l"        || argument == "-life-coding"   || argument == "--life-coding" ){
             #if defined(DRIVER_BROADCOM) || defined(DRIVER_GBM) 
                 window_properties.screen_x = window_properties.screen_width - 512;
                 window_properties.screen_width = window_properties.screen_height = 512;
@@ -256,36 +270,29 @@ int main(int argc, char **argv) {
                     window_properties.style = vera::ALLWAYS_ON_TOP;
             #endif
         }
-        else if (   std::string(argv[i]) == "--undecorated" ) {
+        else if (   argument == "-undecorated"  ||  argument == "--undecorated" ) {
             if (window_properties.style == vera::ALLWAYS_ON_TOP)
                 window_properties.style = vera::UNDECORATED_ALLWAYS_ON_TOP;
             else 
                 window_properties.style = vera::UNDECORATED;
         }
-        else if (   std::string(argv[i]) == "--lenticular") {
-            window_properties.style = vera::LENTICULAR;
-        }
-        else if (   std::string(argv[i]) == "-f" ||
-                    std::string(argv[i]) == "--fullscreen" ) {
+        else if (   argument == "-headless"     || argument == "--headless" )                                   window_properties.style = vera::HEADLESS;
+        else if (   argument == "-lenticular"   || argument == "--lenticular")                                  window_properties.style = vera::LENTICULAR;
+        else if (   argument == "-f"            || argument == "-fullscreen"    || argument == "--fullscreen")  window_properties.style = vera::FULLSCREEN;
+        else if (   argument == "-msaa"         || argument == "--msaa")                                        window_properties.msaa = 4;
+        else if (   argument == "-ss"           || argument == "-screensaver"   || argument == "--screensaver") {
             window_properties.style = vera::FULLSCREEN;
+            bScreensaverMode = true;
         }
-        else if (   std::string(argv[i]) == "-ss" ||
-                    std::string(argv[i]) == "--screensaver") {
-            window_properties.style = vera::FULLSCREEN;
-            screensaver = true;
-        }
-        else if (   std::string(argv[i]) == "--msaa") {
-            window_properties.msaa = 4;
-        }
-        else if (   std::string(argv[i]) == "--major") {
+        else if (   argument == "-major"        || argument == "--major" ) {
             if (++i < argc)
-                window_properties.major = vera::toInt(std::string(argv[i]));
+                window_properties.major = vera::toInt(argument);
             else
                 std::cout << "Argument '" << argument << "' should be followed by a the OPENGL MAJOR version. Skipping argument." << std::endl;
         }
-        else if (   std::string(argv[i]) == "--minor") {
+        else if (   argument == "-minor"        || argument == "--minor" ) {
             if (++i < argc)
-                window_properties.minor = vera::toInt(std::string(argv[i]));
+                window_properties.minor = vera::toInt(argument);
             else
                 std::cout << "Argument '" << argument << "' should be followed by a the OPENGL MINOR version. Skipping argument." << std::endl;
         }
@@ -314,7 +321,123 @@ int main(int argc, char **argv) {
                     argument.rfind("rtmp://", 0) == 0 ) {
             willLoadTextures = true;
         }
-        else if ( argument == "-p" || argument == "--port" ) {
+    }
+
+    // Declare global level commands
+    commandsInit();
+
+    // Initialize openGL context
+    vera::initGL (window_properties);
+    #ifndef __EMSCRIPTEN__
+    vera::setWindowTitle("GlslViewer");
+
+    // Start Console IN listener thread
+    std::thread cinWatcher( &cinWatcherThread );
+    #endif
+
+    struct stat st;                         // for files to watch
+    int         textureCounter  = 0;        // number of textures to load
+    bool        vFlip           = true;     // texture flip state 
+
+    // SECOND parsing pass of arguments focus on the SANDBOX, 
+    // by loading assets, setting up properties and excecuting commands
+    for (int i = 1; i < argc ; i++){
+        std::string argument = std::string(argv[i]);
+
+        // Avoid parsing twice through windows properties arguments with values
+        if (        argument == "-x"        || argument == "-y"             ||
+                    argument == "-w"        || argument == "-width"         || argument == "--width"    ||
+                    argument == "-h"        || argument == "-height"        || argument == "--height"   ||
+                #if defined(DRIVER_GBM) 
+                    argument == "-d"        || argument == "-display"       || argument == "--display"  ||
+                #endif
+                #if !defined(DRIVER_GLFW)
+                    argument == "-mouse"    || argument == "--mouse"        ||
+                #endif
+                    argument == "--major"   || argument == "--major"        || 
+                    argument == "--minor"   || argument == "--minor"    ) {
+            i++;
+        }
+        
+        // Avoid parsing twice through windows properties arguments without values
+        else if (   argument == "-l"        || argument == "-life-coding"   || argument == "--life-coding"  ||
+                    argument == "-f"        || argument == "-fullscreen"    || argument == "--fullscreen"   ||
+                    argument == "-ss"       || argument == "-screensaver"   || argument == "--screensaver"  ||
+                    argument == "-headless" || argument == "--headless"     || 
+                    argument == "-help"     || argument == "--help"         ||
+                    argument == "-msaa"     || argument == "--msaa"         || 
+                    argument == "-undecorated"  || argument == "--undecorated" || 
+                    argument == "-lenticular"   || argument == "--lenticular") {
+        }
+
+
+        // Change internal states with no second parameter
+        else if (   argument == "-v"        || argument == "-version"       || argument == "--version" ) std::cout << version << std::endl;
+        else if (   argument == "-verbose"  || argument == "--verbose"      )   sandbox.verbose = true;
+        else if (   argument == "-noncurses"|| argument == "--noncurses"    )   commands_ncurses = false;
+        else if (   argument == "-nocursor" || argument == "--nocursor"     )   sandbox.cursor = false;
+        else if (   argument == "-fxaa"     || argument == "--fxaa"         )   sandbox.fxaa = true;
+        else if (   argument == "-vFlip"    || argument == "--vFlip"        )   vFlip = false;
+        else if (   argument == "-fullFps"  || argument == "--fullFps"      ) {
+            bRunAtFullFps = true;
+            vera::setFps(0);
+        }
+        // add define GCC style
+        else if (   argument != "-D"        && argument.find("-D") == 0 ) {
+            std::string define = std::string("define,") + argument.substr(2);
+            commandsArgs.push_back(define);
+        }
+        // add include folder GCC style
+        else if ( argument != "-I"          && argument.find("-I") == 0 ) {
+            std::string include = argument.substr(2);
+            sandbox.include_folders.push_back(include);
+        }
+
+        // Change internal states with using a second parameter
+        // add define GCC style
+        else if (   argument == "-D"        || argument == "-define"    || argument == "--define") {
+            if (++i < argc) {
+                std::string define = std::string("define,") + std::string(argv[i]);
+                commandsArgs.push_back(define);
+            }
+            else 
+                std::cout << "Argument '" << argument << "' should be followed by a define tag" << std::endl;
+        }
+        // add include folder GCC style
+        else if (   argument == "-I"        || argument == "-include"   || argument == "--include") {
+            if (++i < argc) {
+                std::string include = argument.substr(2);
+                sandbox.include_folders.push_back(include);
+            }
+            else 
+                std::cout << "Argument '" << argument << "' should be followed by a include path" << std::endl;
+        }
+        else if (   argument == "-r"        || argument == "-fps"  || argument == "--fps" ) {
+            if(++i < argc)
+                vera::setFps( vera::toInt(std::string(argv[i])) );
+            else
+                std::cout << "Argument '" << argument << "' should be followed by a <pixels>. Skipping argument." << std::endl;
+        }
+        else if (   argument == "-quilt"    || argument == "--quilt" ) {
+            if (++i < argc)
+                sandbox.quilt = vera::toInt(argv[i]);
+            else
+                std::cout << "Argument '" << argument << "' should be followed by a <quilt index type>" << std::endl;
+        }
+        else if (   argument == "-lenticular"   || argument == "--lenticular" ) {
+            std::string calibration_file = "default";
+            if (i+1 < argc) {
+                calibration_file = std::string(argv[i+1]);
+                if (vera::urlExists(calibration_file) && vera::haveExt(calibration_file,"json")) i++;
+                else calibration_file = "default";
+            } else
+                std::cout << "Argument '" << argument << "' should be followed by a path to calibration JSON file" << std::endl;
+            sandbox.lenticular = calibration_file;
+            if (sandbox.quilt == -1) 
+                sandbox.quilt = 0;
+        }
+        
+        else if (   argument == "-p"        || argument == "-port"  || argument == "--port" ) {
             if(++i < argc)
                 oscPort = vera::toInt(std::string(argv[i]));
             else
@@ -324,69 +447,15 @@ int main(int argc, char **argv) {
                 std::cout << "This version of GlslViewer wasn't compiled with OSC support" << std::endl;
         #endif
         }
-    }
 
-    #ifndef __EMSCRIPTEN__
-    if (displayHelp) {
-        printUsage( argv[0] );
-        exit(0);
-    }
-    #endif
-
-    // Declare commands
-    commandsInit();
-
-    // Initialize openGL context
-    vera::initGL (window_properties);
-    #ifndef __EMSCRIPTEN__
-    vera::setWindowTitle("GlslViewer");
-    std::thread cinWatcher( &cinWatcherThread );
-    #endif
-
-    struct stat st;                         // for files to watch
-    int         textureCounter  = 0;        // Number of textures to load
-    bool        vFlip           = true;     // Flip state
-
-    //Load the the resources (textures)
-    for (int i = 1; i < argc ; i++){
-        std::string argument = std::string(argv[i]);
-
-        if (    argument == "-x" || argument == "-y" ||
-                argument == "-w" || argument == "--width" ||
-                argument == "-h" || argument == "--height" ||
-                argument == "-d" || argument == "--display" ||
-                argument == "--major" || argument == "--minor" ||
-                argument == "--mouse" || argument == "--fps" ||
-                argument == "-p" || argument == "--port" ) {
-            i++;
-        }
-        else if (   argument == "-l" || argument == "--headless" ||
-                    argument == "--undecorated" || 
-                    argument == "--msaa" ) {
-        }
-        else if (   std::string(argv[i]) == "-f" ||
-                    std::string(argv[i]) == "--fullscreen" ) {
-        }
-        else if (   argument == "--verbose" ) {
-            sandbox.verbose = true;
-        }
-        else if ( argument == "--noncurses" ) {
-            commands_ncurses = false;
-        }
-        else if ( argument == "--nocursor" ) {
-            sandbox.cursor = false;
-        }
-        else if ( argument == "--fxaa" ) {
-            sandbox.fxaa = true;
-        }
-        
-        else if ( argument == "-e" ) {
-            if(++i < argc)         
+        // Excecute COMMANDS
+        else if (   argument == "-e" ) {
+            if (++i < argc)         
                 commandsArgs.push_back(std::string(argv[i]));
             else
                 std::cout << "Argument '" << argument << "' should be followed by a <command>. Skipping argument." << std::endl;
         }
-        else if ( argument == "-E" ) {
+        else if (   argument == "-E" ) {
             if(++i < argc) {
                 commandsArgs.push_back(std::string(argv[i]));
                 commandsExit = true;
@@ -394,10 +463,11 @@ int main(int argc, char **argv) {
             else
                 std::cout << "Argument '" << argument << "' should be followed by a <command>. Skipping argument." << std::endl;
         }
-        else if (argument == "--fullFps" ) {
-            fullFps = true;
-            vera::setFps(0);
-        }
+
+        // LOAD ASSETS
+        //
+
+        //  load fragment shader 
         else if ( sandbox.frag_index == -1 && (vera::haveExt(argument,"frag") || vera::haveExt(argument,"fs") ) ) {
             if ( stat(argument.c_str(), &st) != 0 ) {
                 std::cout << "File " << argv[i] << " not founded. Creating a default fragment shader with that name"<< std::endl;
@@ -421,6 +491,8 @@ int main(int argc, char **argv) {
             sandbox.frag_index = files.size()-1;
 
         }
+
+        // load vertex shader
         else if ( sandbox.vert_index == -1 && ( vera::haveExt(argument,"vert") || vera::haveExt(argument,"vs") ) ) {
             if ( stat(argument.c_str(), &st) != 0 ) {
                 std::cout << "File " << argv[i] << " not founded. Creating a default vertex shader with that name"<< std::endl;
@@ -438,6 +510,8 @@ int main(int argc, char **argv) {
 
             sandbox.vert_index = files.size()-1;
         }
+
+        // load geometry
         else if ( sandbox.geom_index == -1 && ( vera::haveExt(argument,"ply") || vera::haveExt(argument,"PLY") ||
                                                 vera::haveExt(argument,"obj") || vera::haveExt(argument,"OBJ") ||
                                                 vera::haveExt(argument,"stl") || vera::haveExt(argument,"STL") ||
@@ -455,10 +529,8 @@ int main(int argc, char **argv) {
                 sandbox.geom_index = files.size()-1;
             }
         }
-        else if (   argument == "-vFlip" ||
-                    argument == "--vFlip" ) {
-            vFlip = false;
-        }
+
+        // load image 
         else if (   vera::haveExt(argument,"hdr") || vera::haveExt(argument,"HDR") ||
                     vera::haveExt(argument,"png") || vera::haveExt(argument,"PNG") ||
                     vera::haveExt(argument,"tga") || vera::haveExt(argument,"TGA") ||
@@ -475,13 +547,47 @@ int main(int argc, char **argv) {
             else if ( sandbox.uniforms.addTexture("u_tex" + vera::toString(textureCounter), argument, vFlip) )
                 textureCounter++;
         } 
-        else if ( argument == "--video" ) {
+        // load cubemap image as enviroment lighting map but not display it
+        else if ( argument == "-c" || argument == "-sh" ) {
+            if(++i < argc) {
+                argument = std::string(argv[i]);
+                sandbox.uniforms.addCubemap("enviroment", argument);
+                sandbox.uniforms.activeCubemap = sandbox.uniforms.cubemaps["enviroment"];
+                commandsArgs.push_back("cubemap,on");
+                commandsArgs.push_back("cubemap,off");
+                sandbox.getSceneRender().showCubebox = false;
+            }
+            else
+                std::cout << "Argument '" << argument << "' should be followed by a <environmental_map>. Skipping argument." << std::endl;
+        }
+        // load cubemap image and display it
+        else if ( argument == "-C" ) {
+            if(++i < argc)
+            {
+                argument = std::string(argv[i]);
+                sandbox.uniforms.addCubemap("enviroment", argument);
+                sandbox.uniforms.activeCubemap = sandbox.uniforms.cubemaps["enviroment"];
+                commandsArgs.push_back("cubemap,on");
+                sandbox.getSceneRender().showCubebox = true;
+            }
+            else
+                std::cout << "Argument '" << argument << "' should be followed by a <environmental_map>. Skipping argument." << std::endl;
+        }
+
+        // load video device
+        else if ( argument == "-video"  || argument == "--video" ) {
             if (++i < argc) {
                 argument = std::string(argv[i]);
                 if ( sandbox.uniforms.addStreamingTexture("u_tex" + vera::toString(textureCounter), argument, vFlip, true) )
                     textureCounter++;
             }
         }
+        else if (   argument.rfind("/dev/", 0) == 0) {
+            if ( sandbox.uniforms.addStreamingTexture("u_tex" + vera::toString(textureCounter), argument, vFlip, true) )
+                textureCounter++;
+        }
+
+        // load video file
         else if (   vera::haveExt(argument,"mov") || vera::haveExt(argument,"MOV") ||
                     vera::haveExt(argument,"mp4") || vera::haveExt(argument,"MP4") ||
                     vera::haveExt(argument,"mkv") || vera::haveExt(argument,"MKV") ||
@@ -495,14 +601,8 @@ int main(int argc, char **argv) {
             if ( sandbox.uniforms.addStreamingTexture("u_tex" + vera::toString(textureCounter), argument, vFlip, false) )
                 textureCounter++;
         }
-        else if (   argument.rfind("/dev/", 0) == 0) {
-            if ( sandbox.uniforms.addStreamingTexture("u_tex" + vera::toString(textureCounter), argument, vFlip, true) )
-                textureCounter++;
-        }
-        else if ( vera::haveExt(argument,"csv") || vera::haveExt(argument,"CSV") ) {
-            sandbox.uniforms.addCameraPath(argument);
-        }
-        else if ( argument == "--audio" || argument == "-a" ) {
+        
+        else if ( argument == "-a"  || argument == "-audio"     || argument == "--audio") {
             std::string device_id = "-1"; //default device id
             // device_id is optional argument, not iterate yet
             if ((i + 1) < argc) {
@@ -515,59 +615,13 @@ int main(int argc, char **argv) {
             if ( sandbox.uniforms.addStreamingAudioTexture("u_tex" + vera::toString(textureCounter), device_id, vFlip, true) )
                 textureCounter++;
         }
-        else if ( argument == "--quilt" ) {
-            if (++i < argc)
-                sandbox.quilt = vera::toInt(argv[i]);
-        }
-        else if ( argument == "--lenticular" ) {
-            if (++i < argc)
-                sandbox.lenticular = std::string( argv[i] );
-            else 
-                sandbox.lenticular = "default";
 
-            if (sandbox.quilt == -1) 
-                sandbox.quilt = 0;
+        // load CSV data for camera path 
+        else if ( vera::haveExt(argument,"csv") || vera::haveExt(argument,"CSV") ) {
+            sandbox.uniforms.addCameraPath(argument);
         }
-        else if ( argument == "-c" || argument == "-sh" ) {
-            if(++i < argc) {
-                argument = std::string(argv[i]);
-                sandbox.uniforms.addCubemap("enviroment", argument);
-                sandbox.uniforms.activeCubemap = sandbox.uniforms.cubemaps["enviroment"];
-                commandsArgs.push_back("cubemap,on");
-                commandsArgs.push_back("cubemap,off");
-                sandbox.getSceneRender().showCubebox = false;
-            }
-            else
-                std::cout << "Argument '" << argument << "' should be followed by a <environmental_map>. Skipping argument." << std::endl;
-        }
-        else if ( argument == "-C" ) {
-            if(++i < argc)
-            {
-                argument = std::string(argv[i]);
-                sandbox.uniforms.addCubemap("enviroment", argument);
-                sandbox.uniforms.activeCubemap = sandbox.uniforms.cubemaps["enviroment"];
-                commandsArgs.push_back("cubemap,on");
-                sandbox.getSceneRender().showCubebox = true;
-            }
-            else
-                std::cout << "Argument '" << argument << "' should be followed by a <environmental_map>. Skipping argument." << std::endl;
-        }
-        else if ( argument.find("-D") == 0 ) {
-            // Defines are added/remove once existing shaders
-            // On multiple meshes files like OBJ, there can be multiple 
-            // variations of meshes, that only get created after loading the sece
-            // to work around that defines are add post-loading as argument commands
-            std::string define = std::string("define,") + argument.substr(2);
-            commandsArgs.push_back(define);
-        }
-        else if ( argument.find("-I") == 0 ) {
-            std::string include = argument.substr(2);
-            sandbox.include_folders.push_back(include);
-        }
-        else if (   argument == "-v" || 
-                    argument == "--version") {
-            std::cout << version << std::endl;
-        }
+        
+        // load specific textures image/video but with a custom name
         else if ( argument.find("-") == 0 ) {
             std::string parameterPair = argument.substr( argument.find_last_of('-') + 1 );
             if(++i < argc) {
@@ -594,6 +648,7 @@ int main(int argc, char **argv) {
         }
     }
 
+    // Verbose GL context creation
     if (sandbox.verbose) {
         std::cout << "Specs:\n" << std::endl;
         std::cout << "  - Vendor: " <<  vera::getVendor() << std::endl;
@@ -608,8 +663,8 @@ int main(int argc, char **argv) {
         std::cout << "      + GL_MAX_TEXTURE_SIZE = " << param << std::endl;
     }
 
-    // If no shader
     #ifndef __EMSCRIPTEN__
+    // If there is no shader nor geometry, exit
     if ( sandbox.frag_index == -1 && sandbox.vert_index == -1 && sandbox.geom_index == -1 ) {
         printUsage(argv[0]);
         onExit();
@@ -617,49 +672,50 @@ int main(int argc, char **argv) {
     }
     #endif
 
-    sandbox.setup(files, commands);
+    // let sandbox load commands
+    sandbox.commandsInit(commands);
 
-    vera::setKeyPressCallback( [&](int _key) { 
-        if (screensaver) {
-            keepRunnig = false;
-            keepRunnig.store(false);
+    // Load files to sandbox
+    sandbox.loadAssets(files);
+
+    // EVENTs callbacks
+    //
+    vera::setMouseDragCallback(         [&](float _x, float _y, int _button) {  sandbox.onMouseDrag(_x, _y, _button); } );
+    vera::setScrollCallback(            [&](float _yOffset) {                   sandbox.onScroll(_yOffset); } );
+    vera::setViewportResizeCallback(    [&](int _newWidth, int _newHeight) {    sandbox.onViewportResize(_newWidth, _newHeight); } );
+    vera::setMouseMoveCallback(         [&](float _x, float _y) { 
+        if (bScreensaverMode) {
+            if (sandbox.isReady()) {
+                bKeepRunnig = false;
+                bKeepRunnig.store(false);
+            }
+        }
+    } );
+    vera::setKeyPressCallback(          [&](int _key) { 
+        if (bScreensaverMode) {
+            bKeepRunnig = false;
+            bKeepRunnig.store(false);
         }
         else {
             if (_key == 'q' || _key == 'Q') {
-                keepRunnig = false;
-                keepRunnig.store(false);
+                bKeepRunnig = false;
+                bKeepRunnig.store(false);
             }
         }
-    } );
-
-    vera::setMouseMoveCallback( [&](float _x, float _y) { 
-        if (screensaver) {
-            if (sandbox.isReady()) {
-                keepRunnig = false;
-                keepRunnig.store(false);
-            }
-        }
-    } );
-
-    vera::setMouseDragCallback( [&](float _x, float _y, int _button) {
-        sandbox.onMouseDrag(_x, _y, _button);
-    } );
-
-    vera::setScrollCallback( [&](float _yOffset) { 
-        sandbox.onScroll(_yOffset);
-    } );
-
-    vera::setViewportResizeCallback( [&](int _newWidth, int _newHeight) { 
-        sandbox.onViewportResize(_newWidth, _newHeight);
     } );
 
 #if defined(__EMSCRIPTEN__)
+    // On the browser (WASM/EMSCRIPTEN)
+
+    //  - Request animation loop on browser
     emscripten_request_animation_frame_loop(loop, 0);
 
+    //  - Make sure it's at the right canvas size
     double width,  height;
     emscripten_get_element_css_size("#canvas", &width, &height);
     vera::setWindowSize(width, height);
 
+    //  - init WebXR
     webxr_init(
         /* Frame callback */
         [](void* _userData, int, WebXRRigidTransform* _headPose, WebXRView* _views, int _viewCount) {
@@ -702,12 +758,12 @@ int main(int argc, char **argv) {
             } 
 
             sbox->renderPost();
-
             sbox->renderDone();
             vera::renderGL();
 
             cam->setPosition(cam_pos);
         },
+
         /* Session start callback */
         [](void* _userData, int _mode) {
             std::cout << "Session START callback" << std::endl;
@@ -725,12 +781,14 @@ int main(int argc, char **argv) {
             //     printf("select_end_callback\n");
             // }, _userData);
         },
+
         /* Session end callback */
         [](void* _userData, int _mode) {
             std::cout << "Session END callback" << std::endl;
             vera::setXR(vera::NONE_XR_MODE);
             emscripten_request_animation_frame_loop(loop, _userData);    
         },
+
         /* Error callback */
         [](void* _userData, int _error) {
             switch (_error){
@@ -754,7 +812,11 @@ int main(int argc, char **argv) {
 
 #else
 
+    #if defined(PLATFORM_RPI)
+    vera::setWindowVSync(false);
+    #else
     vera::setWindowVSync(true);
+    #endif
 
     // Start watchers
     fileChanged = -1;
@@ -810,7 +872,7 @@ int main(int argc, char **argv) {
     }
     
     // Render Loop
-    while ( vera::isGL() && keepRunnig.load() ){
+    while ( vera::isGL() && bKeepRunnig.load() ){
         // Something change??
         if ( fileChanged != -1 ) {
             filesMutex.lock();
@@ -823,9 +885,9 @@ int main(int argc, char **argv) {
     }
 
     
-    // If is terminated by the windows manager, turn keepRunnig off so the fileWatcher can stop
+    // If is terminated by the windows manager, turn bKeepRunnig off so the fileWatcher can stop
     if ( !vera::isGL() )
-        keepRunnig.store(false);
+        bKeepRunnig.store(false);
 
     onExit();
     
@@ -879,6 +941,8 @@ void commandsRun(const std::string &_cmd, std::mutex &_mutex) {
 }
 
 void commandsInit() {
+    // GET only commands
+    //
     commands.push_back(Command("help", [&](const std::string& _line){
         if (_line == "help") {
             std::cout << "Use:\n        help,<one_of_the_following_commands>" << std::endl;
@@ -942,15 +1006,6 @@ void commandsInit() {
     },
     "window_height", "return the height of the windows", false));
 
-    commands.push_back(Command("pixel_density", [&](const std::string& _line){ 
-        if (_line == "pixel_density") {
-            std::cout << vera::getPixelDensity() << std::endl;
-            return true;
-        }
-        return false;
-    },
-    "pixel_density", "return the pixel density", false));
-
     commands.push_back(Command("screen_size", [&](const std::string& _line){ 
         if (_line == "screen_size") {
             std::cout << vera::getScreenWidth() << ',' << vera::getScreenHeight()<< std::endl;
@@ -983,23 +1038,6 @@ void commandsInit() {
         return false;
     },
     "mouse", "return the mouse position", false));
-    
-    commands.push_back(Command("fps", [&](const std::string& _line){
-        std::vector<std::string> values = vera::split(_line,',');
-        if (values.size() == 2) {
-            commandsMutex.lock();
-            vera::setFps( vera::toInt(values[1]) );
-            commandsMutex.unlock();
-            return true;
-        }
-        else {
-            // Force the output in floats
-            std::cout << std::setprecision(6) << vera::getFps() << std::endl;
-            return true;
-        }
-        return false;
-    },
-    "fps", "return or set the amount of frames per second", false));
 
     commands.push_back(Command("delta", [&](const std::string& _line){ 
         if (_line == "delta") {
@@ -1033,89 +1071,29 @@ void commandsInit() {
     },
     "files", "return a list of files", false));
 
-    commands.push_back( Command("define", [&](const std::string& _line){ 
-        std::vector<std::string> values = vera::split(_line,',');
-        bool change = false;
-        if (values.size() == 2) {
-            std::vector<std::string> v = vera::split(values[1],' ');
-            if (v.size() > 1)
-                sandbox.addDefine( v[0], v[1] );
-            else
-                sandbox.addDefine( v[0] );
-            change = true;
-        }
-        else if (values.size() == 3) {
-            sandbox.addDefine( values[1], values[2] );
-            change = true;
-        }
-
-        if (change) {
-            fullFps = true;
-            for (size_t i = 0; i < files.size(); i++) {
-                if (files[i].type == FRAG_SHADER ||
-                    files[i].type == VERT_SHADER ) {
-                        filesMutex.lock();
-                        fileChanged = i;
-                        filesMutex.unlock();
-                        std::this_thread::sleep_for(std::chrono::milliseconds( vera::getRestMs() ));
-                }
+    commands.push_back( Command("dependencies", [&](const std::string& _line){ 
+        if (_line == "dependencies") {
+            for (size_t i = 0; i < files.size(); i++) { 
+                if (files[i].type == GLSL_DEPENDENCY) {
+                    std::cout << files[i].path << std::endl;
+                }   
             }
-            fullFps = false;
+            return true;
         }
-        return change;
-    },
-    "define,<KEYWORD>[,<VALUE>]", "add a define to the shader", false));
-
-    commands.push_back( Command("undefine", [&](const std::string& _line){ 
-        std::vector<std::string> values = vera::split(_line,',');
-        if (values.size() == 2) {
-            sandbox.delDefine( values[1] );
-            fullFps = true;
-            for (size_t i = 0; i < files.size(); i++) {
-                if (files[i].type == FRAG_SHADER ||
-                    files[i].type == VERT_SHADER ) {
-                        filesMutex.lock();
-                        fileChanged = i;
-                        filesMutex.unlock();
-                        std::this_thread::sleep_for(std::chrono::milliseconds( vera::getRestMs() ));
-                }
-            }
-            fullFps = false;
+        else if (_line == "dependencies,frag") {
+            sandbox.printDependencies(FRAGMENT);
+            return true;
+        }
+        else if (_line == "dependencies,vert") {
+            sandbox.printDependencies(VERTEX);
             return true;
         }
         return false;
     },
-    "undefine,<KEYWORD>", "remove a define on the shader", false));
+    "dependencies[,<vert|frag>]", "returns all the dependencies of the vertex o fragment shader or both", false));
 
-    commands.push_back(Command("reload", [&](const std::string& _line){ 
-        if (_line == "reload" || _line == "reload,all") {
-            fullFps = true;
-            for (size_t i = 0; i < files.size(); i++) {
-                filesMutex.lock();
-                fileChanged = i;
-                filesMutex.unlock();
-                std::this_thread::sleep_for(std::chrono::milliseconds( vera::getRestMs() ));
-            }
-            fullFps = false;
-            return true;
-        }
-        else {
-            std::vector<std::string> values = vera::split(_line,',');
-            if (values.size() == 2 && values[0] == "reload") {
-                for (size_t i = 0; i < files.size(); i++) {
-                    if (files[i].path == values[1]) {
-                        filesMutex.lock();
-                        fileChanged = i;
-                        filesMutex.unlock();
-                        return true;
-                    } 
-                }
-            }
-        }
-        return false;
-    },
-    "reload[,<filename>]", "reload one or all files", false));
-
+    // GET / EXPORT commands
+    //
     commands.push_back(Command("frag", [&](const std::string& _line){ 
         if (_line == "frag") {
             std::cout << sandbox.getSource(FRAGMENT) << std::endl;
@@ -1193,89 +1171,6 @@ void commandsInit() {
         return false;
     },
     "vert[,<filename>]", "returns or save the vertex shader source code", false));
-
-    commands.push_back( Command("dependencies", [&](const std::string& _line){ 
-        if (_line == "dependencies") {
-            for (size_t i = 0; i < files.size(); i++) { 
-                if (files[i].type == GLSL_DEPENDENCY) {
-                    std::cout << files[i].path << std::endl;
-                }   
-            }
-            return true;
-        }
-        else if (_line == "dependencies,frag") {
-            sandbox.printDependencies(FRAGMENT);
-            return true;
-        }
-        else if (_line == "dependencies,vert") {
-            sandbox.printDependencies(VERTEX);
-            return true;
-        }
-        return false;
-    },
-    "dependencies[,<vert|frag>]", "returns all the dependencies of the vertex o fragment shader or both", false));
-
-    commands.push_back(Command("update", [&](const std::string& _line){ 
-        if (_line == "update") {
-            sandbox.flagChange();
-        }
-        return false;
-    },
-    "update", "force all uniforms to be updated", false));
-
-    commands.push_back(Command("wait", [&](const std::string& _line){ 
-        std::vector<std::string> values = vera::split(_line,',');
-        if (values.size() == 2) {
-            if (values[0] == "wait_sec")
-                std::this_thread::sleep_for(std::chrono::seconds( vera::toInt(values[1])) );
-            else if (values[0] == "wait_ms")
-                std::this_thread::sleep_for(std::chrono::milliseconds( vera::toInt(values[1])) );
-            else if (values[0] == "wait_us")
-                std::this_thread::sleep_for(std::chrono::microseconds( vera::toInt(values[1])) );
-            else
-                std::this_thread::sleep_for(std::chrono::microseconds( (int)(vera::toFloat(values[1]) * 1000000) ));
-            return true;
-        }
-        return false;
-    },
-    "wait,<seconds>", "wait for X <seconds> before excecuting another command", false));
-
-    commands.push_back(Command("fullFps", [&](const std::string& _line){
-        if (_line == "fullFps") {
-            std::string rta = fullFps ? "on" : "off";
-            std::cout <<  rta << std::endl; 
-            return true;
-        }
-        else {
-            std::vector<std::string> values = vera::split(_line,',');
-            if (values.size() == 2) {
-                commandsMutex.lock();
-                fullFps = (values[1] == "on");
-                vera::setFps(0);
-                commandsMutex.unlock();
-            }
-        }
-        return false;
-    },
-    "fullFps[,on|off]", "go to full FPS or not", false));
-
-    commands.push_back(Command("cursor", [&](const std::string& _line){
-        if (_line == "cursor") {
-            std::string rta = sandbox.cursor ? "on" : "off";
-            std::cout <<  rta << std::endl; 
-            return true;
-        }
-        else {
-            std::vector<std::string> values = vera::split(_line,',');
-            if (values.size() == 2) {
-                commandsMutex.lock();
-                sandbox.cursor = (values[1] == "on");
-                commandsMutex.unlock();
-            }
-        }
-        return false;
-    },
-    "cursor[,on|off]", "show/hide cursor", false));
 
     commands.push_back(Command("screenshot", [&](const std::string& _line){ 
         std::vector<std::string> values = vera::split(_line,',');
@@ -1483,34 +1378,266 @@ void commandsInit() {
     "record,<file>,<A>,<B>[,<fps>]","record a video from second <A> to second <B> at <fps> (default: 24.0f)", false));
     #endif
 
-    commands.push_back(Command("q", [&](const std::string& _line){ 
-        if (_line == "q") {
-            keepRunnig.store(false);
+    // GET / SET commands
+    //
+    commands.push_back(Command("fullFps", [&](const std::string& _line){
+        if (_line == "fullFps") {
+            std::string rta = bRunAtFullFps ? "on" : "off";
+            std::cout <<  rta << std::endl; 
+            return true;
+        }
+        else {
+            std::vector<std::string> values = vera::split(_line,',');
+            if (values.size() == 2) {
+                commandsMutex.lock();
+                bRunAtFullFps = (values[1] == "on");
+                vera::setFps(0);
+                commandsMutex.unlock();
+            }
+        }
+        return false;
+    },
+    "fullFps[,on|off]", "go to full FPS or not", false));
+
+    commands.push_back(Command("fps", [&](const std::string& _line){
+        std::vector<std::string> values = vera::split(_line,',');
+        if (values.size() == 2) {
+            commandsMutex.lock();
+            vera::setFps( vera::toInt(values[1]) );
+            commandsMutex.unlock();
+            return true;
+        }
+        else {
+            // Force the output in floats
+            std::cout << std::setprecision(6) << vera::getFps() << std::endl;
             return true;
         }
         return false;
     },
-    "q", "close glslViewer", false));
+    "fps", "return or set the amount of frames per second", false));
+
+    commands.push_back(Command("vsync", [&](const std::string& _line){
+        std::vector<std::string> values = vera::split(_line,',');
+        if (values.size() == 2) {
+            commandsMutex.lock();
+            vera::setWindowVSync(values[1] == "on");
+            commandsMutex.unlock();
+        }
+        return false;
+    },
+    "vsync[,on|off]", "set VSync on/off. It's on by default.", false));
+
+    commands.push_back(Command("cursor", [&](const std::string& _line){
+        if (_line == "cursor") {
+            std::string rta = sandbox.cursor ? "on" : "off";
+            std::cout <<  rta << std::endl; 
+            return true;
+        }
+        else {
+            std::vector<std::string> values = vera::split(_line,',');
+            if (values.size() == 2) {
+                commandsMutex.lock();
+                sandbox.cursor = (values[1] == "on");
+                commandsMutex.unlock();
+            }
+        }
+        return false;
+    },
+    "cursor[,on|off]", "show/hide cursor", false));
+
+    commands.push_back(Command("pixel_density", [&](const std::string& _line){ 
+        if (_line == "pixel_density") {
+            std::cout << vera::getPixelDensity() << std::endl;
+            return true;
+        }
+        else {
+            std::vector<std::string> values = vera::split(_line,',');
+            if (values.size() == 2) {
+                commandsMutex.lock();
+                vera::setPixelDensity( vera::toFloat(values[1]) );
+                commandsMutex.unlock();
+                return true;
+            }
+        }
+        return false;
+    },
+    "pixel_density[,<pixel_density>]", "return or set pixel density", false));
+
+    // SET only commands
+    //
+    commands.push_back( Command("define", [&](const std::string& _line){ 
+        std::vector<std::string> values = vera::split(_line,',');
+        bool change = false;
+        if (values.size() == 2) {
+            std::vector<std::string> v = vera::split(values[1],' ');
+            if (v.size() > 1)
+                sandbox.addDefine( v[0], v[1] );
+            else
+                sandbox.addDefine( v[0] );
+            change = true;
+        }
+        else if (values.size() == 3) {
+            sandbox.addDefine( values[1], values[2] );
+            change = true;
+        }
+
+        if (change) {
+            bRunAtFullFps = true;
+            for (size_t i = 0; i < files.size(); i++) {
+                if (files[i].type == FRAG_SHADER ||
+                    files[i].type == VERT_SHADER ) {
+                        filesMutex.lock();
+                        fileChanged = i;
+                        filesMutex.unlock();
+                        std::this_thread::sleep_for(std::chrono::milliseconds( vera::getRestMs() ));
+                }
+            }
+            bRunAtFullFps = false;
+        }
+        return change;
+    },
+    "define,<KEYWORD>[,<VALUE>]", "add a define to the shader", false));
+
+    commands.push_back( Command("undefine", [&](const std::string& _line){ 
+        std::vector<std::string> values = vera::split(_line,',');
+        if (values.size() == 2) {
+            sandbox.delDefine( values[1] );
+            bRunAtFullFps = true;
+            for (size_t i = 0; i < files.size(); i++) {
+                if (files[i].type == FRAG_SHADER ||
+                    files[i].type == VERT_SHADER ) {
+                        filesMutex.lock();
+                        fileChanged = i;
+                        filesMutex.unlock();
+                        std::this_thread::sleep_for(std::chrono::milliseconds( vera::getRestMs() ));
+                }
+            }
+            bRunAtFullFps = false;
+            return true;
+        }
+        return false;
+    },
+    "undefine,<KEYWORD>", "remove a define on the shader", false));
+
+
+    // ACTIONS commands
+    //
+    commands.push_back(Command("reload", [&](const std::string& _line){ 
+        if (_line == "reload" || _line == "reload,all") {
+            bRunAtFullFps = true;
+            for (size_t i = 0; i < files.size(); i++) {
+                filesMutex.lock();
+                fileChanged = i;
+                filesMutex.unlock();
+                std::this_thread::sleep_for(std::chrono::milliseconds( vera::getRestMs() ));
+            }
+            bRunAtFullFps = false;
+            return true;
+        }
+        else {
+            std::vector<std::string> values = vera::split(_line,',');
+            if (values.size() == 2 && values[0] == "reload") {
+                for (size_t i = 0; i < files.size(); i++) {
+                    if (files[i].path == values[1]) {
+                        filesMutex.lock();
+                        fileChanged = i;
+                        filesMutex.unlock();
+                        return true;
+                    } 
+                }
+            }
+        }
+        return false;
+    },
+    "reload[,<filename>]", "reload one or all files", false));
+
+    commands.push_back(Command("update", [&](const std::string& _line){ 
+        if (_line == "update") {
+            sandbox.flagChange();
+            return true;
+        }
+        return false;
+    },
+    "update", "force all uniforms to be updated", false));
+
+    commands.push_back(Command("pcl_plane", [&](const std::string & line) {
+        std::vector<std::string> values = vera::split(line,',');
+        int size_i = 512;
+
+        if (values.size() > 1)
+            size_i  = vera::toInt(values[1]);
+
+        float size_f = size_i;
+        vera::Mesh pcl;
+        pcl.setDrawMode(vera::POINTS);
+        for (int y = 0; y < size_i; y++) 
+            for (int x = 0; x < size_i; x++)
+                pcl.addVertex(glm::vec3(x/size_f, y/size_f, 0.0f));
+            
+        // Add Model with pcl mesh
+        sandbox.loadModel( new vera::Model("point_cloud_plane", pcl) );
+
+        #if defined(__EMSCRIPTEN__)
+        // Commands are parse in the main GL loop in EMSCRIPTEN,
+        // there is no risk to reload shaders outside main GL thread
+        sandbox.reloadShaders(files);
+        #else
+        // Reloading shaders can't be done directly on multi-thread (event thread)
+        // to solve that, we trigger reloading by flagging changes on all files
+        // witch signal the main GL thread to reload assets
+        for (size_t i = 0; i < files.size(); i++)
+            files[i].lastChange = 0;
+        #endif
+
+        return true;
+    }, "pcl_plane[,<RESOLUTION>]", "add a pointcloud plane"));
+
+    commands.push_back(Command("wait", [&](const std::string& _line){ 
+        std::vector<std::string> values = vera::split(_line,',');
+        if (values.size() == 2) {
+            if (values[0] == "wait_sec")
+                std::this_thread::sleep_for(std::chrono::seconds( vera::toInt(values[1])) );
+            else if (values[0] == "wait_ms")
+                std::this_thread::sleep_for(std::chrono::milliseconds( vera::toInt(values[1])) );
+            else if (values[0] == "wait_us")
+                std::this_thread::sleep_for(std::chrono::microseconds( vera::toInt(values[1])) );
+            else
+                std::this_thread::sleep_for(std::chrono::microseconds( (int)(vera::toFloat(values[1]) * 1000000) ));
+            return true;
+        }
+        return false;
+    },
+    "wait,<seconds>", "wait for X <seconds> before excecuting another command", false));
+
+    commands.push_back(Command("exit", [&](const std::string& _line){ 
+        if (_line == "exit") {
+            bTerminate = true;
+            // bKeepRunnig.store(false);
+            return true;
+        }
+        return false;
+    },
+    "exit", "close glslViewer", false));
 
     commands.push_back(Command("quit", [&](const std::string& _line){ 
         if (_line == "quit") {
             bTerminate = true;
-            // keepRunnig.store(false);
+            // bKeepRunnig.store(false);
             return true;
         }
         return false;
     },
     "quit", "close glslViewer", false));
 
-    commands.push_back(Command("exit", [&](const std::string& _line){ 
-        if (_line == "exit") {
+    commands.push_back(Command("q", [&](const std::string& _line){ 
+        if (_line == "q") {
             bTerminate = true;
-            // keepRunnig.store(false);
+            // bKeepRunnig.store(false);
             return true;
         }
         return false;
     },
-    "exit", "close glslViewer", false));
+    "q", "close glslViewer", false));
 }
 
 #ifndef __EMSCRIPTEN__
@@ -1565,8 +1692,8 @@ void onExit() {
     // clear screen
     glClear( GL_COLOR_BUFFER_BIT );
 
-    // Delete the resources of Sandbox
-    sandbox.clear();
+    // Delete the dynamic resources
+    sandbox.uniforms.clear();
 
     // close openGL instance
     vera::closeGL();
@@ -1576,7 +1703,7 @@ void onExit() {
 //============================================================================
 void fileWatcherThread() {
     struct stat st;
-    while ( keepRunnig.load() ) {
+    while ( bKeepRunnig.load() ) {
         for (size_t i = 0; i < files.size(); i++) {
             if ( fileChanged == -1 ) {
                 stat( files[i].path.c_str(), &st );
@@ -1623,13 +1750,13 @@ void cinWatcherThread() {
         // If it's using -E exit after executing all commands
         if (commandsExit) {
             bTerminate = true;
-            // keepRunnig.store(false);
+            // bKeepRunnig.store(false);
         }
     }
 
     #if defined(SUPPORT_NCURSES)
     if (commands_ncurses) {
-        while ( keepRunnig.load() ) {
+        while ( bKeepRunnig.load() ) {
             std::string cmd;
             if (console_getline(cmd, commands, sandbox))
                 if (cmd.size() > 0)
