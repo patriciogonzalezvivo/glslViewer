@@ -61,12 +61,17 @@ Sandbox::Sandbox():
     #endif
 
     // Scene
-    m_view2d(1.0), m_time_offset(0.0), m_camera_elevation(1.0), m_camera_azimuth(180.0), m_frame(0), m_error_screen(vera::SHOW_MAGENTA_SHADER), m_change(true), m_initialized(false), 
+    m_view2d(1.0), m_time_offset(0.0), m_camera_elevation(1.0), m_camera_azimuth(180.0), m_frame(0), m_error_screen(vera::SHOW_MAGENTA_SHADER), 
+    m_change(true), m_update_buffers(true), m_initialized(false), 
 
     // Debug
     m_showTextures(false), m_showPasses(false)
 {
+    // set vera scene values to uniforms
     vera::setScene( (vera::Scene*)&uniforms );
+
+    // Set basic shaders
+    m_plot_shader.setSource(vera::getDefaultSrc(vera::FRAG_PLOT), vera::getDefaultSrc(vera::VERT_DYNAMIC_BILLBOARD));
 
     // TIME UNIFORMS
     //
@@ -1017,7 +1022,7 @@ void Sandbox::loadAssets(WatchFileList &_files) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // LOAD SHADERS
-    reloadShaders( _files );
+    resetShaders( _files );
 
     // TODO:
     //      - this seams to solve the problem of buffers not properly initialize
@@ -1101,22 +1106,20 @@ const std::string& Sandbox::getSource(ShaderType _type) const {
 
 // ------------------------------------------------------------------------- RELOAD SHADER
 
-bool Sandbox::setSource(ShaderType _type, const std::string& _source) {
+void Sandbox::setSource(ShaderType _type, const std::string& _source) {
     if (_type == FRAGMENT) m_frag_source = _source;
     else  m_vert_source = _source;
-
-    return true;
 };
 
-bool Sandbox::reloadShaders( WatchFileList &_files ) {
+void Sandbox::resetShaders( WatchFileList &_files ) {
     flagChange();
 
     // UPDATE scene shaders of models (materials)
     if (uniforms.models.size() > 0) {
         if (verbose)
-            std::cout << "Reload 3D scene shaders" << std::endl;
+            std::cout << "Reset 3D scene shaders" << std::endl;
 
-        m_sceneRender.loadShaders(uniforms, m_frag_source, m_vert_source, verbose);
+        m_sceneRender.setShaders(uniforms, m_frag_source, m_vert_source);
 
         addDefine("LIGHT_SHADOWMAP", "u_lightShadowMap");
         #if defined(PLATFORM_RPI)
@@ -1127,11 +1130,11 @@ bool Sandbox::reloadShaders( WatchFileList &_files ) {
     }
     else {
         if (verbose)
-            std::cout << "Reload 2D shaders" << std::endl;
+            std::cout << "Reset 2D shaders" << std::endl;
 
         // Reload the shader
-        m_canvas_shader.detach(GL_FRAGMENT_SHADER | GL_VERTEX_SHADER);
-        m_canvas_shader.load(m_frag_source, m_vert_source, m_error_screen, verbose);
+        m_canvas_shader.setDefaultErrorBehaviour(m_error_screen);
+        m_canvas_shader.setSource(m_frag_source, m_vert_source);
     }
 
     // UPDATE shaders dependencies
@@ -1166,39 +1169,32 @@ bool Sandbox::reloadShaders( WatchFileList &_files ) {
     m_buffers_total = countBuffers(m_frag_source);
     m_doubleBuffers_total = countDoubleBuffers(m_frag_source);
     m_pyramid_total = countConvolutionPyramid( getSource(FRAGMENT) );
-    _updateBuffers();
     
     // UPDATE Postprocessing
     bool havePostprocessing = checkPostprocessing( getSource(FRAGMENT) );
     if (havePostprocessing) {
         // Specific defines for this buffer
         m_postprocessing_shader.addDefine("POSTPROCESSING");
-        m_postprocessing_shader.load(m_frag_source, vera::getDefaultSrc(vera::VERT_BILLBOARD), vera::SHOW_MAGENTA_SHADER, false);
+        m_postprocessing_shader.setSource(m_frag_source, vera::getDefaultSrc(vera::VERT_BILLBOARD));
         m_postprocessing = havePostprocessing;
     }
     else if (lenticular.size() > 0) {
-        m_postprocessing_shader.load(vera::getLenticularFragShader(vera::getVersion()), vera::getDefaultSrc(vera::VERT_BILLBOARD), vera::SHOW_MAGENTA_SHADER, false);
+        m_postprocessing_shader.setSource(vera::getLenticularFragShader(vera::getVersion()), vera::getDefaultSrc(vera::VERT_BILLBOARD));
         uniforms.functions["u_scene"].present = true;
         m_postprocessing = true;
     }
     else if (fxaa) {
-        m_postprocessing_shader.load(vera::getDefaultSrc(vera::FRAG_FXAA), vera::getDefaultSrc(vera::VERT_BILLBOARD), vera::SHOW_MAGENTA_SHADER, false);
+        m_postprocessing_shader.setSource(vera::getDefaultSrc(vera::FRAG_FXAA), vera::getDefaultSrc(vera::VERT_BILLBOARD));
         uniforms.functions["u_scene"].present = true;
         m_postprocessing = true;
     }
     else 
         m_postprocessing = false;
 
-    if (m_postprocessing || m_plot == PLOT_RGB || m_plot == PLOT_RED || m_plot == PLOT_GREEN || m_plot == PLOT_BLUE || m_plot == PLOT_LUMA) {
-        if (quilt >= 0)
-            m_sceneRender.updateBuffers(uniforms, vera::getQuiltWidth(), vera::getQuiltHeight());
-        else 
-            m_sceneRender.updateBuffers(uniforms, vera::getWindowWidth(), vera::getWindowHeight());
-    }
-
     console_refresh();
 
-    return true;
+    // Make sure this runs in main loop
+    m_update_buffers = true;
 }
 
 // ------------------------------------------------------------------------- UPDATE
@@ -1226,12 +1222,12 @@ void Sandbox::_updateBuffers() {
             // New Shader
             m_buffers_shaders.push_back( vera::Shader() );
             m_buffers_shaders[i].addDefine("BUFFER_" + vera::toString(i));
-            m_buffers_shaders[i].load(m_frag_source, vera::getDefaultSrc(vera::VERT_BILLBOARD), vera::SHOW_MAGENTA_SHADER, false);
+            m_buffers_shaders[i].setSource(m_frag_source, vera::getDefaultSrc(vera::VERT_BILLBOARD));
         }
     }
     else
         for (size_t i = 0; i < m_buffers_shaders.size(); i++)
-            m_buffers_shaders[i].load(m_frag_source, vera::getDefaultSrc(vera::VERT_BILLBOARD), vera::SHOW_MAGENTA_SHADER, false);
+            m_buffers_shaders[i].setSource(m_frag_source, vera::getDefaultSrc(vera::VERT_BILLBOARD));
 
     if ( m_doubleBuffers_total != int(uniforms.doubleBuffers.size()) ) {
 
@@ -1258,12 +1254,12 @@ void Sandbox::_updateBuffers() {
             // New Shader
             m_doubleBuffers_shaders.push_back( vera::Shader() );
             m_doubleBuffers_shaders[i].addDefine("DOUBLE_BUFFER_" + vera::toString(i));
-            m_doubleBuffers_shaders[i].load(m_frag_source, vera::getDefaultSrc(vera::VERT_BILLBOARD), vera::SHOW_MAGENTA_SHADER, false);
+            m_doubleBuffers_shaders[i].setSource(m_frag_source, vera::getDefaultSrc(vera::VERT_BILLBOARD));
         }
     }
     else 
         for (size_t i = 0; i < m_doubleBuffers_shaders.size(); i++)
-            m_doubleBuffers_shaders[i].load(m_frag_source, vera::getDefaultSrc(vera::VERT_BILLBOARD), vera::SHOW_MAGENTA_SHADER, false);
+            m_doubleBuffers_shaders[i].setSource(m_frag_source, vera::getDefaultSrc(vera::VERT_BILLBOARD));
 
     if ( m_pyramid_total != int(uniforms.pyramids.size()) ) {
 
@@ -1315,18 +1311,26 @@ void Sandbox::_updateBuffers() {
     
     for (size_t i = 0; i < m_pyramid_subshaders.size(); i++) {
         m_pyramid_subshaders[i].addDefine("CONVOLUTION_PYRAMID_" + vera::toString(i));
-        m_pyramid_subshaders[i].load(m_frag_source, vera::getDefaultSrc(vera::VERT_BILLBOARD), vera::SHOW_MAGENTA_SHADER, false);
+        m_pyramid_subshaders[i].setSource(m_frag_source, vera::getDefaultSrc(vera::VERT_BILLBOARD));
     }
 
     if (m_pyramid_total > 0 ) {
         if ( checkConvolutionPyramid( getSource(FRAGMENT) ) ) {
             m_pyramid_shader.addDefine("CONVOLUTION_PYRAMID_ALGORITHM");
-            m_pyramid_shader.load(m_frag_source, vera::getDefaultSrc(vera::VERT_BILLBOARD), vera::SHOW_MAGENTA_SHADER, false);
+            m_pyramid_shader.setSource(m_frag_source, vera::getDefaultSrc(vera::VERT_BILLBOARD));
         }
         else
-            m_pyramid_shader.load(vera::getDefaultSrc(vera::FRAG_POISSON), vera::getDefaultSrc(vera::VERT_BILLBOARD), vera::SHOW_MAGENTA_SHADER, false);
+            m_pyramid_shader.setSource(vera::getDefaultSrc(vera::FRAG_POISSON), vera::getDefaultSrc(vera::VERT_BILLBOARD));
     }
 
+    if (m_postprocessing || m_plot == PLOT_RGB || m_plot == PLOT_RED || m_plot == PLOT_GREEN || m_plot == PLOT_BLUE || m_plot == PLOT_LUMA) {
+        if (quilt >= 0)
+            m_sceneRender.updateBuffers(uniforms, vera::getQuiltWidth(), vera::getQuiltHeight());
+        else 
+            m_sceneRender.updateBuffers(uniforms, vera::getWindowWidth(), vera::getWindowHeight());
+    }
+
+    m_update_buffers = false;
 }
 
 // ------------------------------------------------------------------------- DRAW
@@ -1435,6 +1439,9 @@ void Sandbox::renderPrep() {
 
     // BUFFERS
     // -----------------------------------------------
+    if (m_update_buffers);
+        _updateBuffers();
+
     if (uniforms.buffers.size() > 0 || 
         uniforms.doubleBuffers.size() > 0 ||
         m_pyramid_total > 0)
@@ -1766,9 +1773,6 @@ void Sandbox::renderUI() {
         float x = (float)(vera::getWindowWidth()) * 0.5;
         float y = h + 10;
 
-        if (!m_plot_shader.loaded())
-            m_plot_shader.load(vera::getDefaultSrc(vera::FRAG_PLOT), vera::getDefaultSrc(vera::VERT_DYNAMIC_BILLBOARD), vera::SHOW_MAGENTA_SHADER, false);
-
         m_plot_shader.use();
         m_plot_shader.setUniform("u_scale", w, h);
         m_plot_shader.setUniform("u_translate", x, y);
@@ -1856,11 +1860,11 @@ void Sandbox::onFileChange(WatchFileList &_files, int index) {
     FileType type = _files[index].type;
     std::string filename = _files[index].path;
 
-    const auto reload_shaders = [&](std::string& source, vera::StringList& dependencies){
+    const auto reset_shaders = [&](std::string& source, vera::StringList& dependencies){
         source = "";
         dependencies.clear();
         if ( vera::loadGlslFrom(filename, &source, include_folders, &dependencies) )
-            reloadShaders(_files);
+            resetShaders(_files);
     };
 
     const auto dependency_matches_filename = [&](const vera::StringList& dependencies) {
@@ -1878,10 +1882,10 @@ void Sandbox::onFileChange(WatchFileList &_files, int index) {
     }
     switch(type) {
     case FRAG_SHADER:
-        reload_shaders(m_frag_source, m_frag_dependencies);
+        reset_shaders(m_frag_source, m_frag_dependencies);
         break;
     case VERT_SHADER:
-        reload_shaders(m_vert_source, m_vert_dependencies);
+        reset_shaders(m_vert_source, m_vert_dependencies);
         break;
     case GEOMETRY:
         // TODO

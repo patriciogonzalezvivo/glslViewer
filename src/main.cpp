@@ -72,7 +72,6 @@ Sandbox                     sandbox;
 // This will be use by the sandbox to hot reload or keep track of assets
 WatchFileList               files;
 std::mutex                  filesMutex;
-int                         fileChanged;
 #if !defined(__EMSCRIPTEN__)
 void                        fileWatcherThread();
 #endif
@@ -217,32 +216,32 @@ int main(int argc, char **argv) {
         std::string argument = std::string(argv[i]);
         if (        argument == "-x" ) {
             if (++i < argc)
-                window_properties.screen_x = vera::toInt(argument);
+                window_properties.screen_x = vera::toInt( std::string(argv[i]) );
             else
                 std::cout << "Argument '" << argument << "' should be followed by a <pixels>. Skipping argument." << std::endl;
         }
         else if (   argument == "-y" ) {
             if(++i < argc)
-                window_properties.screen_y = vera::toInt(argument);
+                window_properties.screen_y = vera::toInt( std::string(argv[i]) );
             else
                 std::cout << "Argument '" << argument << "' should be followed by a <pixels>. Skipping argument." << std::endl;
         }
         else if (   argument == "-w"    || argument == "-width"         || argument == "--width" ) {
             if(++i < argc)
-                window_properties.screen_width = vera::toInt(argument);
+                window_properties.screen_width = vera::toInt( std::string(argv[i]) );
             else
                 std::cout << "Argument '" << argument << "' should be followed by a <pixels>. Skipping argument." << std::endl;
         }
         else if (   argument == "-h"    || argument == "-height"        || argument == "--height" ) {
             if(++i < argc)
-                window_properties.screen_height = vera::toInt(argument);
+                window_properties.screen_height = vera::toInt( std::string(argv[i]) );
             else
                 std::cout << "Argument '" << argument << "' should be followed by a <pixels>. Skipping argument." << std::endl;
         }
         #if defined(DRIVER_GBM) 
         else if (   argument == "-d"    || argument == "-display"       || argument == "--display") {
             if (++i < argc)
-                window_properties.display = argument;
+                window_properties.display = std::string(argv[i]);
             else
                 std::cout << "Argument '" << argument << "' should be followed by a the display address. Skipping argument." << std::endl;
         }
@@ -250,7 +249,7 @@ int main(int argc, char **argv) {
         #if !defined(DRIVER_GLFW)
         else if (   argument == "-mouse"    || argument == "--mouse") {
             if (++i < argc)
-                window_properties.mouse = argument;
+                window_properties.mouse = std::string(argv[i]);
             else
                 std::cout << "Argument '" << argument << "' should be followed by a the mouse address. Skipping argument." << std::endl;
         }
@@ -286,13 +285,13 @@ int main(int argc, char **argv) {
         }
         else if (   argument == "-major"        || argument == "--major" ) {
             if (++i < argc)
-                window_properties.major = vera::toInt(argument);
+                window_properties.major = vera::toInt(std::string(argv[i]));
             else
                 std::cout << "Argument '" << argument << "' should be followed by a the OPENGL MAJOR version. Skipping argument." << std::endl;
         }
         else if (   argument == "-minor"        || argument == "--minor" ) {
             if (++i < argc)
-                window_properties.minor = vera::toInt(argument);
+                window_properties.minor = vera::toInt(std::string(argv[i]));
             else
                 std::cout << "Argument '" << argument << "' should be followed by a the OPENGL MINOR version. Skipping argument." << std::endl;
         }
@@ -406,7 +405,7 @@ int main(int argc, char **argv) {
         // add include folder GCC style
         else if (   argument == "-I"        || argument == "-include"   || argument == "--include") {
             if (++i < argc) {
-                std::string include = argument.substr(2);
+                std::string include = std::string(argv[i]);
                 sandbox.include_folders.push_back(include);
             }
             else 
@@ -819,7 +818,6 @@ int main(int argc, char **argv) {
     #endif
 
     // Start watchers
-    fileChanged = -1;
     std::thread fileWatcher( &fileWatcherThread );
 
     // OSC
@@ -872,19 +870,9 @@ int main(int argc, char **argv) {
     }
     
     // Render Loop
-    while ( vera::isGL() && bKeepRunnig.load() ){
-        // Something change??
-        if ( fileChanged != -1 ) {
-            filesMutex.lock();
-            sandbox.onFileChange( files, fileChanged );
-            fileChanged = -1;
-            filesMutex.unlock();
-        }
-
+    while (vera::isGL() && bKeepRunnig.load())
         loop();
-    }
 
-    
     // If is terminated by the windows manager, turn bKeepRunnig off so the fileWatcher can stop
     if ( !vera::isGL() )
         bKeepRunnig.store(false);
@@ -1467,34 +1455,19 @@ void commandsInit() {
     //
     commands.push_back( Command("define", [&](const std::string& _line){ 
         std::vector<std::string> values = vera::split(_line,',');
-        bool change = false;
         if (values.size() == 2) {
             std::vector<std::string> v = vera::split(values[1],' ');
             if (v.size() > 1)
                 sandbox.addDefine( v[0], v[1] );
             else
                 sandbox.addDefine( v[0] );
-            change = true;
+            return true;
         }
         else if (values.size() == 3) {
             sandbox.addDefine( values[1], values[2] );
-            change = true;
+            return true;
         }
-
-        if (change) {
-            bRunAtFullFps = true;
-            for (size_t i = 0; i < files.size(); i++) {
-                if (files[i].type == FRAG_SHADER ||
-                    files[i].type == VERT_SHADER ) {
-                        filesMutex.lock();
-                        fileChanged = i;
-                        filesMutex.unlock();
-                        std::this_thread::sleep_for(std::chrono::milliseconds( vera::getRestMs() ));
-                }
-            }
-            bRunAtFullFps = false;
-        }
-        return change;
+        return false;
     },
     "define,<KEYWORD>[,<VALUE>]", "add a define to the shader", false));
 
@@ -1502,17 +1475,6 @@ void commandsInit() {
         std::vector<std::string> values = vera::split(_line,',');
         if (values.size() == 2) {
             sandbox.delDefine( values[1] );
-            bRunAtFullFps = true;
-            for (size_t i = 0; i < files.size(); i++) {
-                if (files[i].type == FRAG_SHADER ||
-                    files[i].type == VERT_SHADER ) {
-                        filesMutex.lock();
-                        fileChanged = i;
-                        filesMutex.unlock();
-                        std::this_thread::sleep_for(std::chrono::milliseconds( vera::getRestMs() ));
-                }
-            }
-            bRunAtFullFps = false;
             return true;
         }
         return false;
@@ -1524,14 +1486,8 @@ void commandsInit() {
     //
     commands.push_back(Command("reload", [&](const std::string& _line){ 
         if (_line == "reload" || _line == "reload,all") {
-            bRunAtFullFps = true;
-            for (size_t i = 0; i < files.size(); i++) {
-                filesMutex.lock();
-                fileChanged = i;
-                filesMutex.unlock();
-                std::this_thread::sleep_for(std::chrono::milliseconds( vera::getRestMs() ));
-            }
-            bRunAtFullFps = false;
+            for (size_t i = 0; i < files.size(); i++) 
+                sandbox.onFileChange( files, i );
             return true;
         }
         else {
@@ -1539,9 +1495,7 @@ void commandsInit() {
             if (values.size() == 2 && values[0] == "reload") {
                 for (size_t i = 0; i < files.size(); i++) {
                     if (files[i].path == values[1]) {
-                        filesMutex.lock();
-                        fileChanged = i;
-                        filesMutex.unlock();
+                        sandbox.onFileChange( files, i );
                         return true;
                     } 
                 }
@@ -1705,15 +1659,13 @@ void fileWatcherThread() {
     struct stat st;
     while ( bKeepRunnig.load() ) {
         for (size_t i = 0; i < files.size(); i++) {
-            if ( fileChanged == -1 ) {
-                stat( files[i].path.c_str(), &st );
-                int date = st.st_mtime;
-                if ( date != files[i].lastChange ) {
-                    filesMutex.lock();
-                    files[i].lastChange = date;
-                    fileChanged = i;
-                    filesMutex.unlock();
-                }
+            stat( files[i].path.c_str(), &st );
+            int date = st.st_mtime;
+            if ( date != files[i].lastChange ) {
+                filesMutex.lock();
+                files[i].lastChange = date;
+                sandbox.onFileChange( files, i );
+                filesMutex.unlock();
             }
         }
         std::this_thread::sleep_for(std::chrono::milliseconds( 500 ));

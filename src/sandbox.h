@@ -35,8 +35,8 @@ public:
     void                loadModel(vera::Model* _model);
     void                commandsInit(CommandList &_commands);
 
-    bool                setSource(ShaderType _type, const std::string& _source);
-    bool                reloadShaders(WatchFileList &_files);
+    void                setSource(ShaderType _type, const std::string& _source);
+    void                resetShaders(WatchFileList &_files);
 
     void                flagChange();
     void                unflagChange(); 
@@ -149,6 +149,7 @@ private:
     size_t              m_frame;
     vera::ShaderErrorResolve    m_error_screen;
     bool                m_change;
+    bool                m_update_buffers;
     bool                m_initialized;
 
     //  Debug

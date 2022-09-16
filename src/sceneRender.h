@@ -19,7 +19,7 @@ public:
     void            commandsInit(CommandList& _commands, Uniforms& _uniforms);
 
     bool            loadScene(Uniforms& _uniforms);
-    bool            loadShaders(Uniforms& _uniforms, const std::string& _fragmentShader, const std::string& _vertexShader, bool _verbose);
+    void            setShaders(Uniforms& _uniforms, const std::string& _fragmentShader, const std::string& _vertexShader);
 
     void            addDefine(const std::string& _define, const std::string& _value);
     void            delDefine(const std::string& _define);
@@ -94,4 +94,6 @@ protected:
 
     glm::vec3                   m_ssaoSamples[64];
     glm::vec3                   m_ssaoNoise[16];
+
+    int                         m_buffers_total;
 };
