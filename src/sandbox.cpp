@@ -70,9 +70,6 @@ Sandbox::Sandbox():
     // set vera scene values to uniforms
     vera::setScene( (vera::Scene*)&uniforms );
 
-    // Set basic shaders
-    m_plot_shader.setSource(vera::getDefaultSrc(vera::FRAG_PLOT), vera::getDefaultSrc(vera::VERT_DYNAMIC_BILLBOARD));
-
     // TIME UNIFORMS
     //
     uniforms.functions["u_frame"] = UniformFunction( "int", [&](vera::Shader& _shader) {
@@ -332,6 +329,7 @@ void Sandbox::commandsInit(CommandList &_commands ) {
                     m_plot = PLOT_MS;
                     m_plot_shader.addDefine("PLOT_VALUE", "color.rgb += digits(uv * 0.1 + vec2(0.105, -0.01), value.r * 60.0, 1.0); color += stroke(fract(st.y * 3.0), 0.5, 0.05) * 0.1;");
                 }
+                m_plot_shader.setSource(vera::getDefaultSrc(vera::FRAG_PLOT), vera::getDefaultSrc(vera::VERT_DYNAMIC_BILLBOARD));
                 return true;
             }
         }

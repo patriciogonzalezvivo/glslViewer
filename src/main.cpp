@@ -302,6 +302,7 @@ int main(int argc, char **argv) {
                     vera::haveExt(argument,"gltf") || vera::haveExt(argument,"GLTF") ) ) {
             willLoadGeometry = true;
         }
+        else if (   argument == "-noncurses"|| argument == "--noncurses"    )   commands_ncurses = false;
         else if (   vera::haveExt(argument,"hdr") || vera::haveExt(argument,"HDR") ||
                     vera::haveExt(argument,"png") || vera::haveExt(argument,"PNG") ||
                     vera::haveExt(argument,"tga") || vera::haveExt(argument,"TGA") ||
