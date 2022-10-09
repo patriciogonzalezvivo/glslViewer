@@ -130,7 +130,6 @@ char* getVert() {
 std::mutex                  oscMutex;
 #endif
 int                         oscPort = 0;
-
 // MAIN LOOP
 #if defined(__EMSCRIPTEN__)
 EM_BOOL loop (double time, void* userData) {
@@ -779,6 +778,7 @@ int main(int argc, char **argv) {
 
             // webxr_set_select_end_callback([](WebXRInputSource *_inputSource, void *_userData) { 
             //     printf("select_end_callback\n");
+
             // }, _userData);
         },
 
@@ -869,7 +869,7 @@ int main(int argc, char **argv) {
         glGetIntegerv(GL_MAX_TEXTURE_SIZE, &param);
         std::cout << "  - GL_MAX_TEXTURE_SIZE = " << param << std::endl;
     }
-    
+
     // Render Loop
     while (vera::isGL() && bKeepRunnig.load())
         loop();

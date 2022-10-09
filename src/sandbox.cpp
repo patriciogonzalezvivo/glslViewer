@@ -1167,7 +1167,8 @@ void Sandbox::resetShaders( WatchFileList &_files ) {
     m_buffers_total = countBuffers(m_frag_source);
     m_doubleBuffers_total = countDoubleBuffers(m_frag_source);
     m_pyramid_total = countConvolutionPyramid( getSource(FRAGMENT) );
-    
+    _updateBuffers();
+
     // UPDATE Postprocessing
     bool havePostprocessing = checkPostprocessing( getSource(FRAGMENT) );
     if (havePostprocessing) {
