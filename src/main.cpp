@@ -208,8 +208,12 @@ int main(int argc, char **argv) {
     // FIRST parsing pass through arguments to understand what kind of 
     // WINDOW PROPERTIES and general enviroment set up needs to be created.
     vera::WindowProperties window_properties;
-    bool willLoadGeometry = false;
-    bool willLoadTextures = false;
+
+    bool displayHelp = false;
+    bool haveVertexShader = false;
+    bool haveFragmentShader = false;
+    bool haveGeometry = false;
+    bool haveTextures = false;
 
     for (int i = 1; i < argc ; i++) {
         std::string argument = std::string(argv[i]);
@@ -254,8 +258,10 @@ int main(int argc, char **argv) {
         }
         #endif
         else if (   argument == "-help"     || argument == "--help" ) {
-            printUsage( argv[0] );
-            exit(0);
+            displayHelp = true;
+        }
+        else if (   argument == "-v"        || argument == "-version"       || argument == "--version" ) {
+            std::cout << version << std::endl;
         }
         else if (   argument == "-l"        || argument == "-life-coding"   || argument == "--life-coding" ){
             #if defined(DRIVER_BROADCOM) || defined(DRIVER_GBM) 
@@ -294,12 +300,18 @@ int main(int argc, char **argv) {
             else
                 std::cout << "Argument '" << argument << "' should be followed by a the OPENGL MINOR version. Skipping argument." << std::endl;
         }
+        else if ( vera::haveExt(argument,"vert") || vera::haveExt(argument,"vs") ) {
+            haveVertexShader = true;
+        }
+        else if ( vera::haveExt(argument,"frag") || vera::haveExt(argument,"fs") ) {
+            haveFragmentShader = true;
+        }
         else if ( ( vera::haveExt(argument,"ply") || vera::haveExt(argument,"PLY") ||
                     vera::haveExt(argument,"obj") || vera::haveExt(argument,"OBJ") ||
                     vera::haveExt(argument,"stl") || vera::haveExt(argument,"STL") ||
                     vera::haveExt(argument,"glb") || vera::haveExt(argument,"GLB") ||
                     vera::haveExt(argument,"gltf") || vera::haveExt(argument,"GLTF") ) ) {
-            willLoadGeometry = true;
+            haveGeometry = true;
         }
         else if (   argument == "-noncurses"|| argument == "--noncurses"    )   commands_ncurses = false;
         else if (   vera::haveExt(argument,"hdr") || vera::haveExt(argument,"HDR") ||
@@ -318,9 +330,16 @@ int main(int argc, char **argv) {
                     argument.rfind("https://", 0) == 0 ||
                     argument.rfind("rtsp://", 0) == 0 ||
                     argument.rfind("rtmp://", 0) == 0 ) {
-            willLoadTextures = true;
+            haveTextures = true;
         }
     }
+
+    #ifndef __EMSCRIPTEN__
+    if (displayHelp || (!haveVertexShader && !haveFragmentShader && !haveGeometry && !haveTextures)) {
+        printUsage( argv[0] );
+        exit(0);
+    }
+    #endif
 
     // Declare global level commands
     commandsInit();
@@ -362,6 +381,7 @@ int main(int argc, char **argv) {
         else if (   argument == "-l"        || argument == "-life-coding"   || argument == "--life-coding"  ||
                     argument == "-f"        || argument == "-fullscreen"    || argument == "--fullscreen"   ||
                     argument == "-ss"       || argument == "-screensaver"   || argument == "--screensaver"  ||
+                    argument == "-v"        || argument == "-version"       || argument == "--version" || 
                     argument == "-headless" || argument == "--headless"     || 
                     argument == "-help"     || argument == "--help"         ||
                     argument == "-msaa"     || argument == "--msaa"         || 
@@ -371,7 +391,6 @@ int main(int argc, char **argv) {
 
 
         // Change internal states with no second parameter
-        else if (   argument == "-v"        || argument == "-version"       || argument == "--version" ) std::cout << version << std::endl;
         else if (   argument == "-verbose"  || argument == "--verbose"      )   sandbox.verbose = true;
         else if (   argument == "-noncurses"|| argument == "--noncurses"    )   commands_ncurses = false;
         else if (   argument == "-nocursor" || argument == "--nocursor"     )   sandbox.cursor = false;
@@ -472,9 +491,9 @@ int main(int argc, char **argv) {
                 std::cout << "File " << argv[i] << " not founded. Creating a default fragment shader with that name"<< std::endl;
 
                 std::ofstream out(argv[i]);
-                if (willLoadGeometry)
+                if (haveGeometry)
                     out << vera::getDefaultSrc(vera::FRAG_DEFAULT_SCENE);
-                else if (willLoadTextures)
+                else if (haveTextures)
                     out << vera::getDefaultSrc(vera::FRAG_DEFAULT_TEXTURE);
                 else 
                     out << vera::getDefaultSrc(vera::FRAG_DEFAULT);
