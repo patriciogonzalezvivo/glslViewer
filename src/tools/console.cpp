@@ -289,15 +289,15 @@ void console_init(int _osc_port) {
         start_color();
         use_default_colors();
 
-        init_color(COLOR_MAGENTA, 1000, 100, 100);
-        init_color(COLOR_YELLOW, 800, 800, 800);
-        init_color(COLOR_GREEN, 600, 600, 600);
-        init_color(COLOR_BLUE, 400, 400, 400);
-        init_pair(1, COLOR_WHITE, -1);
-        init_pair(2, COLOR_YELLOW, -1);
-        init_pair(3, COLOR_MAGENTA, -1);
-        init_pair(4, COLOR_GREEN, -1);
-        init_pair(5, COLOR_BLUE, -1);
+        // init_color(COLOR_MAGENTA, 1000, 100, 100);
+        // init_color(COLOR_YELLOW, 800, 800, 800);
+        // init_color(COLOR_GREEN, 600, 600, 600);
+        // init_color(COLOR_BLUE, 400, 400, 400);
+        // init_pair(1, COLOR_WHITE, -1);
+        // init_pair(2, COLOR_YELLOW, -1);
+        // init_pair(3, COLOR_MAGENTA, -1);
+        // init_pair(4, COLOR_GREEN, -1);
+        // init_pair(5, COLOR_BLUE, -1);
 
         have_colors = true;
     }
@@ -308,11 +308,11 @@ void console_init(int _osc_port) {
     stt_win = newwin(LINES, stt_width, 0, COLS - stt_width);
 
     raw();
-    // crmode();
+    crmode();
     cbreak();
     noecho();
-    // scrollok(out_win, true);
-    // idlok(out_win, false);
+    scrollok(out_win, true);
+    idlok(out_win, false);
 
     //  // mouse capture
     // captureMouse(true);
