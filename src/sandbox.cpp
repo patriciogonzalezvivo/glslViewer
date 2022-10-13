@@ -1438,7 +1438,7 @@ void Sandbox::renderPrep() {
 
     // BUFFERS
     // -----------------------------------------------
-    if (m_update_buffers);
+    if (m_update_buffers)
         _updateBuffers();
 
     if (uniforms.buffers.size() > 0 || 
