@@ -436,8 +436,8 @@ void SceneRender::setShaders(Uniforms& _uniforms, const std::string& _fragmentSh
     m_shadows = findId(_fragmentShader, "u_lightShadowMap;");
     bool position_buffer = findId(_fragmentShader, "u_scenePosition;");// _uniforms.functions["u_scenePosition"].present;
     bool normal_buffer = findId(_fragmentShader, "u_sceneNormal;"); //_uniforms.functions["u_sceneNormal"].present; 
-    m_buffers_total = std::max(   countSceneBuffers(_vertexShader), 
-                                    countSceneBuffers(_fragmentShader) );
+    m_buffers_total = std::max( countSceneBuffers(_vertexShader), 
+                                countSceneBuffers(_fragmentShader) );
 
     for (vera::ModelsMap::iterator it = _uniforms.models.begin(); it != _uniforms.models.end(); ++it) {
         it->second->setShader( _fragmentShader, _vertexShader);
