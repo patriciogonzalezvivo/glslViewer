@@ -89,19 +89,19 @@ void print_out(const std::string& _str, int _x, int _y) {
 void refresh_out_win() {
     werase(out_win);
 
-    // if (have_colors) wattron(out_win, COLOR_PAIR(5));
+    // if (have_colors) wattron(out_win, COLOR_PAIR(1));
     // box(out_win, 0, 0);
-    // if (have_colors) wattron(out_win, COLOR_PAIR(5));
+    // if (have_colors) wattron(out_win, COLOR_PAIR(1));
 
     if (buffer_cerr.str().size() > 0) {
-        if (have_colors) wattron(out_win, COLOR_PAIR(3));
+        if (have_colors) wattron(out_win, COLOR_PAIR(2));
         print_out(buffer_cerr.str(), 0, 0);
-        if (have_colors) wattroff(out_win, COLOR_PAIR(3));
+        if (have_colors) wattroff(out_win, COLOR_PAIR(2));
     }
     else {
-        if (have_colors) wattron(out_win, COLOR_PAIR(2));
+        if (have_colors) wattron(out_win, COLOR_PAIR(1));
         print_out(buffer_cout.str(), 0, 0);
-        if (have_colors) wattroff(out_win, COLOR_PAIR(2));
+        if (have_colors) wattroff(out_win, COLOR_PAIR(1));
     } 
 
     wrefresh(out_win);
@@ -115,18 +115,20 @@ void refresh_cmd_win() {
     // wborder(cmd_win, ' ', ' ', ' ', '-', ' ', ' ', '-', '-');
 
     if (cmd_prompt.size() > 0) {
-        if (have_colors) wattron(cmd_win, COLOR_PAIR(5));
+        if (have_colors) wattron(cmd_win, COLOR_PAIR(1));
         mvwprintw(cmd_win, cmd_y, cmd_x, "%s", cmd_prompt.c_str() );
-        if (have_colors)wattroff(cmd_win, COLOR_PAIR(5));
+        if (have_colors)wattroff(cmd_win, COLOR_PAIR(1));
     }
 
     if (cmd_suggested.size()) {
-        if (have_colors) wattron(cmd_win, COLOR_PAIR(5));
+        if (have_colors) wattron(cmd_win, COLOR_PAIR(3));
         mvwprintw(cmd_win, cmd_y, cmd_x + cmd_prompt.size() + 2, "%s", cmd_suggested.c_str() );
-        if (have_colors) wattroff(cmd_win, COLOR_PAIR(5));
+        if (have_colors) wattroff(cmd_win, COLOR_PAIR(3));
     }
 
+    if (have_colors) wattron(cmd_win, COLOR_PAIR(1));
     mvwprintw(cmd_win, cmd_y, cmd_x + cmd_prompt.size(), "> %s", cmd.c_str() );
+    if (have_colors) wattroff(cmd_win, COLOR_PAIR(1));
 
     refresh_cursor();
 };
@@ -139,7 +141,7 @@ void refresh_stt_win() {
 
     size_t y = stt_y;
 
-    if (have_colors) wattron(stt_win, COLOR_PAIR(4));
+    if (have_colors) wattron(stt_win, COLOR_PAIR(1));
     wborder(stt_win, '|', ' ', ' ', ' ', '+', '+', '+', '+');
     // box(stt_win, 0, 0);
     // Print Native Uniforms (they carry functions) that are present on the shader
@@ -157,7 +159,7 @@ void refresh_stt_win() {
         mvwprintw(stt_win, y++, stt_x, "%23s  %.3f", (it->first+"Duration").c_str(), it->second->getDuration() );
         mvwprintw(stt_win, y++, stt_x, "%23s  %.3f", (it->first+"Fps").c_str(), it->second->getFps() );
     }
-    if (have_colors) wattroff(stt_win, COLOR_PAIR(4));
+    if (have_colors) wattroff(stt_win, COLOR_PAIR(1));
 
     if (have_colors) wattron(stt_win, COLOR_PAIR(2));
     uniforms_starts_at = y;
@@ -179,9 +181,9 @@ void refresh_stt_win() {
 
         for (size_t j = 0 ; j < it->second.size && j < 4; j++) {
             if (i == mouse_at && j == mouse_at_index)
-                if (have_colors) wattron(stt_win, COLOR_PAIR(3));
+                if (have_colors) wattron(stt_win, COLOR_PAIR(2));
             mvwprintw(stt_win, y, stt_values_col + cell_width * j, "%.3f",it->second.value[j]);
-            if (have_colors) wattroff(stt_win, COLOR_PAIR(3));
+            if (have_colors) wattroff(stt_win, COLOR_PAIR(2));
         }
         y++;
         i++;
@@ -298,6 +300,10 @@ void console_init(int _osc_port) {
         // init_pair(3, COLOR_MAGENTA, -1);
         // init_pair(4, COLOR_GREEN, -1);
         // init_pair(5, COLOR_BLUE, -1);
+
+        init_pair(1, COLOR_WHITE, -1);
+        init_pair(2, COLOR_RED, -1);
+        init_pair(3, COLOR_CYAN, -1);
 
         have_colors = true;
     }
@@ -608,10 +614,10 @@ void console_draw_pct(float _pct) {
         // wborder(cmd_win, '|', '|', '-', '-', '+', '+', '+', '+');
 
         size_t l = (cols-4) * _pct;
-        wattron(cmd_win, COLOR_PAIR(3));
+        wattron(cmd_win, COLOR_PAIR(2));
         for (size_t i = 0; i < cols-4; i++)
             mvwprintw(cmd_win, 1, 2 + i, "%s", (i < l )? "#" : ".");
-        wattroff(cmd_win, COLOR_PAIR(3));
+        wattroff(cmd_win, COLOR_PAIR(2));
 
         wrefresh(cmd_win);
     } else 

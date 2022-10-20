@@ -1724,40 +1724,36 @@ void Sandbox::renderUI() {
                 }
             }
 
-            if (m_postprocessing) 
-            {
-                if (uniforms.functions["u_scenePosition"].present) {
-                    vera::image(&m_sceneRender.positionFbo, xOffset, yOffset, xStep, yStep);
-                    vera::text("u_scenePosition", xOffset - xStep, vera::getWindowHeight() - yOffset + yStep);
-                    yOffset -= yStep * 2.0;
-                }
-
-                if (uniforms.functions["u_sceneNormal"].present) {
-                    vera::image(&m_sceneRender.normalFbo, xOffset, yOffset, xStep, yStep);
-                    vera::text("u_sceneNormal", xOffset - xStep, vera::getWindowHeight() - yOffset + yStep);
-                    yOffset -= yStep * 2.0;
-                }
-
-                for (size_t i = 0; i < m_sceneRender.buffersFbo.size(); i++) {
-                    vera::image(&(m_sceneRender.buffersFbo[i]), xOffset, yOffset, xStep, yStep);
-                    vera::text("u_sceneBuffer" + vera::toString(i), xOffset - xStep, vera::getWindowHeight() - yOffset + yStep);
-                    yOffset -= yStep * 2.0;
-                }
-
-                if (uniforms.functions["u_scene"].present) {
-                    vera::image(&m_sceneRender.renderFbo, xOffset, yOffset, xStep, yStep);
-                    vera::text("u_scene", xOffset - xStep, vera::getWindowHeight() - yOffset + yStep);
-                    yOffset -= yStep * 2.0;
-                }
-
-                if (uniforms.functions["u_sceneDepth"].present) {
-                    if (uniforms.activeCamera)
-                        vera::imageDepth(&m_sceneRender.renderFbo, xOffset, yOffset, xStep, yStep, uniforms.activeCamera->getFarClip(), uniforms.activeCamera->getNearClip());
-                    vera::text("u_sceneDepth", xOffset - xStep, vera::getWindowHeight() - yOffset + yStep);
-                    yOffset -= yStep * 2.0;
-                }
+            if (uniforms.functions["u_scenePosition"].present) {
+                vera::image(&m_sceneRender.positionFbo, xOffset, yOffset, xStep, yStep);
+                vera::text("u_scenePosition", xOffset - xStep, vera::getWindowHeight() - yOffset + yStep);
+                yOffset -= yStep * 2.0;
             }
 
+            if (uniforms.functions["u_sceneNormal"].present) {
+                vera::image(&m_sceneRender.normalFbo, xOffset, yOffset, xStep, yStep);
+                vera::text("u_sceneNormal", xOffset - xStep, vera::getWindowHeight() - yOffset + yStep);
+                yOffset -= yStep * 2.0;
+            }
+
+            for (size_t i = 0; i < m_sceneRender.buffersFbo.size(); i++) {
+                vera::image(&(m_sceneRender.buffersFbo[i]), xOffset, yOffset, xStep, yStep);
+                vera::text("u_sceneBuffer" + vera::toString(i), xOffset - xStep, vera::getWindowHeight() - yOffset + yStep);
+                yOffset -= yStep * 2.0;
+            }
+
+            if (uniforms.functions["u_scene"].present) {
+                vera::image(&m_sceneRender.renderFbo, xOffset, yOffset, xStep, yStep);
+                vera::text("u_scene", xOffset - xStep, vera::getWindowHeight() - yOffset + yStep);
+                yOffset -= yStep * 2.0;
+            }
+
+            if (uniforms.functions["u_sceneDepth"].present) {
+                if (uniforms.activeCamera)
+                    vera::imageDepth(&m_sceneRender.renderFbo, xOffset, yOffset, xStep, yStep, uniforms.activeCamera->getFarClip(), uniforms.activeCamera->getNearClip());
+                vera::text("u_sceneDepth", xOffset - xStep, vera::getWindowHeight() - yOffset + yStep);
+                yOffset -= yStep * 2.0;
+            }
         }
         TRACK_END("renderUI:buffers")
     }
