@@ -47,24 +47,24 @@ jobs:
         if: matrix.os == 'windows-latest'
         uses: ilammy/msvc-dev-cmd@v1
 
-      # - name: Install dependencies (Windows)
-      #   if: matrix.os == 'windows-latest'
-      #   run: |
-      #     $FfmpegUri = 'https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-n4.4-latest-win64-lgpl-shared-4.4.zip'
-      #     $FfmpegZipPath = "$Env:GITHUB_WORKSPACE\ffmpeg.zip"
-      #     $ZlibUri = 'https://sourceforge.net/projects/gnuwin32/files/zlib/1.2.3/zlib-1.2.3-lib.zip/download'
-      #     $ZlibZipPath = "$Env:GITHUB_WORKSPACE\zlib.zip"
+      - name: Install dependencies (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          $FfmpegUri = 'https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-n4.4-latest-win64-lgpl-shared-4.4.zip'
+          $FfmpegZipPath = "$Env:GITHUB_WORKSPACE\ffmpeg.zip"
+          $ZlibUri = 'https://sourceforge.net/projects/gnuwin32/files/zlib/1.2.3/zlib-1.2.3-lib.zip/download'
+          $ZlibZipPath = "$Env:GITHUB_WORKSPACE\zlib.zip"
 
-      #     $FfmpegPath = "$Env:GITHUB_WORKSPACE\ffmpeg"
+          $FfmpegPath = "$Env:GITHUB_WORKSPACE\ffmpeg"
 
-      #     Start-BitsTransfer -Source "$FfmpegUri","$ZlibUri" -Destination "$FfmpegZipPath","$ZlibZipPath"
+          Start-BitsTransfer -Source "$FfmpegUri","$ZlibUri" -Destination "$FfmpegZipPath","$ZlibZipPath"
 
-      #     Expand-Archive -Path "$FfmpegZipPath" -DestinationPath "$FfmpegPath"
-      #     Move-Item -Path "$FfmpegPath\ffmpeg-*\*" -Destination "$FfmpegPath"
+          Expand-Archive -Path "$FfmpegZipPath" -DestinationPath "$FfmpegPath"
+          Move-Item -Path "$FfmpegPath\ffmpeg-*\*" -Destination "$FfmpegPath"
 
-      #     Expand-Archive -Path "$ZlibZipPath" -DestinationPath "$FfmpegPath"
+          Expand-Archive -Path "$ZlibZipPath" -DestinationPath "$FfmpegPath"
 
-      #     echo "CMAKE_PREFIX_PATH=$FfmpegPath" >>$Env:GITHUB_ENV
+          echo "CMAKE_PREFIX_PATH=$FfmpegPath" >>$Env:GITHUB_ENV
 
       - name: Build
         run: ${{ matrix.build_command }}
