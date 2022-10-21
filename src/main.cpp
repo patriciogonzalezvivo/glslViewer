@@ -1352,7 +1352,7 @@ void commandsInit() {
             }
             else if (vera::haveExt(values[1], "gif") || vera::haveExt(values[1], "GIF") ) {;
                 settings.trg_width = vera::roundTo( (int)((settings.trg_width/pd)/2), 2);
-                settings.trg_height = vera::roundTo( (int)((settings.trg_width/pd)/2), 2);
+                settings.trg_height = vera::roundTo( (int)((settings.trg_height/pd)/2), 2);
 
                 valid = true;
                 settings.trg_args = " -vf \"vflip,fps=" + vera::toString(settings.trg_fps);
