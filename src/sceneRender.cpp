@@ -496,16 +496,17 @@ void SceneRender::updateBuffers(Uniforms& _uniforms, int _width, int _height) {
     if (_uniforms.functions["u_sceneNormal"].present && 
         (   !normalFbo.isAllocated() || 
             normalFbo.getWidth() != _width || normalFbo.getHeight() != _height ) )
-            normalFbo.allocate(_width, _height, vera::GBUFFER_TEXTURE);
+        normalFbo.allocate(_width, _height, vera::GBUFFER_TEXTURE);
 
+    
     if (_uniforms.functions["u_scenePosition"].present && 
         (   !positionFbo.isAllocated() || 
             positionFbo.getWidth() != _width || positionFbo.getHeight() != _height ) )
-            positionFbo.allocate(_width, _height, vera::GBUFFER_TEXTURE);
+        positionFbo.allocate(_width, _height, vera::GBUFFER_TEXTURE);
 
     for (size_t i = 0; i < buffersFbo.size(); i++)
         if (buffersFbo[i].isAllocated() ||
-            buffersFbo[i].getWidth() != _width || buffersFbo[i].getHeight() ) 
+            buffersFbo[i].getWidth() != _width || buffersFbo[i].getHeight() )
             buffersFbo[i].allocate(_width, _height, vera::GBUFFER_TEXTURE);
 }
 
@@ -620,7 +621,7 @@ void SceneRender::renderNormalBuffer(Uniforms& _uniforms) {
 }
 
 void SceneRender::renderPositionBuffer(Uniforms& _uniforms) {
-    if (!normalFbo.isAllocated())
+    if (!positionFbo.isAllocated())
         return;
 
     positionFbo.bind();
