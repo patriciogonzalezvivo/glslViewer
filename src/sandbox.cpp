@@ -297,7 +297,7 @@ void Sandbox::commandsInit(CommandList &_commands ) {
         else {
             std::vector<std::string> values = vera::split(_line,',');
             if (values[0] == "plot" && values.size() == 2) {
-
+                m_plot_shader.setSource(vera::getDefaultSrc(vera::FRAG_PLOT), vera::getDefaultSrc(vera::VERT_DYNAMIC_BILLBOARD));
                 m_plot_shader.delDefine("PLOT_VALUE");
                 if (values[1] == "off") 
                     m_plot = PLOT_OFF;
@@ -329,7 +329,7 @@ void Sandbox::commandsInit(CommandList &_commands ) {
                     m_plot = PLOT_MS;
                     m_plot_shader.addDefine("PLOT_VALUE", "color.rgb += digits(uv * 0.1 + vec2(0.105, -0.01), value.r * 60.0, 1.0); color += stroke(fract(st.y * 3.0), 0.5, 0.05) * 0.1;");
                 }
-                m_plot_shader.setSource(vera::getDefaultSrc(vera::FRAG_PLOT), vera::getDefaultSrc(vera::VERT_DYNAMIC_BILLBOARD));
+                m_update_buffers = true;
                 return true;
             }
         }
@@ -1774,7 +1774,8 @@ void Sandbox::renderUI() {
         m_plot_shader.setUniform("u_resolution", (float)vera::getWindowWidth(), (float)vera::getWindowHeight());
         m_plot_shader.setUniform("u_viewport", w, h);
         m_plot_shader.setUniform("u_modelViewProjectionMatrix", vera::getOrthoMatrix());
-        m_plot_shader.setUniformTexture("u_plotData", m_plot_texture.get(), 0);
+        m_plot_shader.setUniformTexture("u_plotData", m_plot_texture, 0);
+        
         vera::getBillboard()->render(&m_plot_shader);
         TRACK_END("renderUI:plot_data")
     }
@@ -2107,10 +2108,10 @@ void Sandbox::onPlot() {
             m_plot_values[i] = m_plot_values[i] / glm::vec4(max_rgb_freq, max_rgb_freq, max_rgb_freq, max_luma_freq);
 
         if (m_plot_texture == nullptr)
-            m_plot_texture = std::unique_ptr<vera::Texture>(new vera::Texture());
+            m_plot_texture = new vera::Texture();
         m_plot_texture->load(256, 1, 4, 32, &m_plot_values[0], vera::NEAREST, vera::CLAMP);
 
-        uniforms.textures["u_histogram"] = m_plot_texture.get();
+        uniforms.textures["u_histogram"] = m_plot_texture;
         uniforms.flagChange();
         TRACK_END("plot::histogram")
     }
@@ -2124,7 +2125,7 @@ void Sandbox::onPlot() {
         m_plot_values[255] = glm::vec4( vera::getFps()/60.0f, 0.0f, 0.0f, 1.0f);
 
         if (m_plot_texture == nullptr)
-            m_plot_texture = std::unique_ptr<vera::Texture>(new vera::Texture());
+            m_plot_texture = new vera::Texture();
 
         m_plot_texture->load(256, 1, 4, 32, &m_plot_values[0], vera::NEAREST, vera::CLAMP);
         // uniforms.textures["u_sceneFps"] = m_plot_texture;
@@ -2141,7 +2142,7 @@ void Sandbox::onPlot() {
         m_plot_values[255] = glm::vec4( vera::getDelta(), 0.0f, 0.0f, 1.0f);
 
         if (m_plot_texture == nullptr)
-            m_plot_texture = std::unique_ptr<vera::Texture>(new vera::Texture());
+            m_plot_texture = new vera::Texture();
 
         m_plot_texture->load(256, 1, 4, 32, &m_plot_values[0], vera::NEAREST, vera::CLAMP);
 
