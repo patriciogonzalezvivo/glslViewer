@@ -45,7 +45,7 @@ Sandbox::Sandbox():
     m_frag_source(""), m_vert_source(""),
     // Buffers
     m_buffers_total(0),
-    // Poisson Fill
+    m_doubleBuffers_total(0),
     m_pyramid_total(0),
     // PostProcessing
     m_postprocessing(false),
@@ -1026,9 +1026,7 @@ void Sandbox::loadAssets(WatchFileList &_files) {
     //      - this seams to solve the problem of buffers not properly initialize
     //      - digg deeper
     //
-    uniforms.buffers.clear();
-    uniforms.doubleBuffers.clear();
-    _updateBuffers();
+    // m_update_buffers = true;
 
     flagChange();
 }
@@ -1197,10 +1195,11 @@ void Sandbox::resetShaders( WatchFileList &_files ) {
 
 // ------------------------------------------------------------------------- UPDATE
 void Sandbox::_updateBuffers() {
-    if ( m_buffers_total != int(uniforms.buffers.size()) ) {
+
+    if ( m_buffers_total != int(uniforms.buffers.size())) {
 
         if (verbose)
-            std::cout << "Creating/Removing " << uniforms.buffers.size() << " buffers to " << m_buffers_total << std::endl;
+            std::cout << "Creating/removing " << uniforms.buffers.size() << " buffers to match " << m_buffers_total << std::endl;
 
         for (size_t i = 0; i < m_buffers_shaders.size(); i++)
             if (m_buffers_shaders[i].loaded())
@@ -1230,24 +1229,27 @@ void Sandbox::_updateBuffers() {
     if ( m_doubleBuffers_total != int(uniforms.doubleBuffers.size()) ) {
 
         if (verbose)
-            std::cout << "Creating/Removing " << uniforms.doubleBuffers.size() << " double buffers to " << m_doubleBuffers_total << std::endl;
+            std::cout << "Creating/removing " << uniforms.doubleBuffers.size() << " double buffers to match " << m_doubleBuffers_total << std::endl;
 
         for (size_t i = 0; i < m_doubleBuffers_shaders.size(); i++)
             if (m_doubleBuffers_shaders[i].loaded())
                 m_doubleBuffers_shaders[i].detach(GL_FRAGMENT_SHADER | GL_VERTEX_SHADER);
+
+        for (size_t i = 0; i < uniforms.doubleBuffers.size(); i++)
+            delete uniforms.doubleBuffers[i];
 
         uniforms.doubleBuffers.clear();
         m_doubleBuffers_shaders.clear();
 
         for (int i = 0; i < m_doubleBuffers_total; i++) {
             // New FBO
-            uniforms.doubleBuffers.push_back( vera::PingPong() );
+            uniforms.doubleBuffers.push_back( new vera::PingPong() );
 
             glm::vec2 size = glm::vec2(vera::getWindowWidth(), vera::getWindowHeight());
             bool fixed = getBufferSize(m_frag_source, "u_doubleBuffer" + vera::toString(i), size);
-            uniforms.doubleBuffers[i][0].fixed = fixed;
-            uniforms.doubleBuffers[i][1].fixed = fixed;
-            uniforms.doubleBuffers[i].allocate(size.x, size.y, vera::COLOR_FLOAT_TEXTURE);
+            uniforms.doubleBuffers[i]->buffer(0).fixed = fixed;
+            uniforms.doubleBuffers[i]->buffer(1).fixed = fixed;
+            uniforms.doubleBuffers[i]->allocate(size.x, size.y, vera::COLOR_FLOAT_TEXTURE);
             
             // New Shader
             m_doubleBuffers_shaders.push_back( vera::Shader() );
@@ -1351,7 +1353,7 @@ void Sandbox::_renderBuffers() {
                 m_buffers_shaders[i].setUniformTexture("u_buffer" + vera::toString(j), &uniforms.buffers[j] );
 
         for (size_t j = 0; j < uniforms.doubleBuffers.size(); j++)
-                m_buffers_shaders[i].setUniformTexture("u_doubleBuffer" + vera::toString(j), uniforms.doubleBuffers[j].src );
+            m_buffers_shaders[i].setUniformTexture("u_doubleBuffer" + vera::toString(j), uniforms.doubleBuffers[j]->src );
 
         // Update uniforms and textures
         uniforms.feedTo( &m_buffers_shaders[i], true, false);
@@ -1366,9 +1368,9 @@ void Sandbox::_renderBuffers() {
     for (size_t i = 0; i < uniforms.doubleBuffers.size(); i++) {
         TRACK_BEGIN("render:doubleBuffer" + vera::toString(i))
 
-        reset_viewport += uniforms.doubleBuffers[i].src->fixed;
+        reset_viewport += uniforms.doubleBuffers[i]->src->fixed;
 
-        uniforms.doubleBuffers[i].dst->bind();
+        uniforms.doubleBuffers[i]->dst->bind();
 
         m_doubleBuffers_shaders[i].use();
 
@@ -1377,15 +1379,15 @@ void Sandbox::_renderBuffers() {
             m_doubleBuffers_shaders[i].setUniformTexture("u_buffer" + vera::toString(j), &uniforms.buffers[j] );
 
         for (size_t j = 0; j < uniforms.doubleBuffers.size(); j++)
-            m_doubleBuffers_shaders[i].setUniformTexture("u_doubleBuffer" + vera::toString(j), uniforms.doubleBuffers[j].src );
+            m_doubleBuffers_shaders[i].setUniformTexture("u_doubleBuffer" + vera::toString(j), uniforms.doubleBuffers[j]->src );
 
         // Update uniforms and textures
         uniforms.feedTo( &m_doubleBuffers_shaders[i], true, false);
 
         vera::getBillboard()->render( &m_doubleBuffers_shaders[i] );
         
-        uniforms.doubleBuffers[i].dst->unbind();
-        uniforms.doubleBuffers[i].swap();
+        uniforms.doubleBuffers[i]->dst->unbind();
+        uniforms.doubleBuffers[i]->swap();
 
         TRACK_END("render:doubleBuffer" + vera::toString(i))
     }
@@ -1437,9 +1439,11 @@ void Sandbox::renderPrep() {
 
     // BUFFERS
     // -----------------------------------------------
-    if (m_update_buffers)
+    if (m_update_buffers ||
+        m_buffers_total != int(uniforms.buffers.size()) ||
+        m_doubleBuffers_total != int(uniforms.doubleBuffers.size()) )
         _updateBuffers();
-
+    
     if (uniforms.buffers.size() > 0 || 
         uniforms.doubleBuffers.size() > 0 ||
         m_pyramid_total > 0)
@@ -1672,10 +1676,10 @@ void Sandbox::renderUI() {
             for (size_t i = 0; i < uniforms.doubleBuffers.size(); i++) {
                 glm::vec2 offset = glm::vec2(xOffset, yOffset);
                 glm::vec2 scale = glm::vec2(yStep);
-                scale.x *= ((float)uniforms.doubleBuffers[i].src->getWidth()/(float)uniforms.doubleBuffers[i].src->getHeight());
+                scale.x *= ((float)uniforms.doubleBuffers[i]->src->getWidth()/(float)uniforms.doubleBuffers[i]->src->getHeight());
                 offset.x += xStep - scale.x;
 
-                vera::image(uniforms.doubleBuffers[i].src, offset.x, offset.y, scale.x, scale.y);
+                vera::image(uniforms.doubleBuffers[i]->src, offset.x, offset.y, scale.x, scale.y);
                 vera::text("u_doubleBuffer" + vera::toString(i), xOffset - scale.x, vera::getWindowHeight() - yOffset + yStep);
 
                 yOffset -= yStep * 2.0;
@@ -1973,10 +1977,10 @@ void Sandbox::onViewportResize(int _newWidth, int _newHeight) {
             uniforms.buffers[i].allocate(_newWidth, _newHeight, vera::COLOR_FLOAT_TEXTURE);
 
     for (size_t i = 0; i < uniforms.doubleBuffers.size(); i++) {
-        if (!uniforms.doubleBuffers[i][0].fixed)
-            uniforms.doubleBuffers[i][0].allocate(_newWidth, _newHeight, vera::COLOR_FLOAT_TEXTURE);
-        if (!uniforms.doubleBuffers[i][1].fixed)
-            uniforms.doubleBuffers[i][1].allocate(_newWidth, _newHeight, vera::COLOR_FLOAT_TEXTURE);
+        if (!uniforms.doubleBuffers[i]->buffer(0).fixed)
+            uniforms.doubleBuffers[i]->buffer(0).allocate(_newWidth, _newHeight, vera::COLOR_FLOAT_TEXTURE);
+        if (!uniforms.doubleBuffers[i]->buffer(1).fixed)
+            uniforms.doubleBuffers[i]->buffer(1).allocate(_newWidth, _newHeight, vera::COLOR_FLOAT_TEXTURE);
     }
 
     for (size_t i = 0; i < uniforms.pyramids.size(); i++) {

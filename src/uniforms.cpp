@@ -266,7 +266,7 @@ bool Uniforms::feedTo(vera::Shader *_shader, bool _lights, bool _buffers ) {
             _shader->setUniformTexture("u_buffer" + vera::toString(i), &buffers[i], _shader->textureIndex++ );
 
         for (size_t i = 0; i < doubleBuffers.size(); i++)
-            _shader->setUniformTexture("u_doubleBuffer" + vera::toString(i), doubleBuffers[i].src, _shader->textureIndex++ );
+            _shader->setUniformTexture("u_doubleBuffer" + vera::toString(i), doubleBuffers[i]->src, _shader->textureIndex++ );
     }
 
     // Pass Convolution Piramids resultant Texture

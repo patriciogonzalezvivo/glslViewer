@@ -53,7 +53,7 @@ typedef std::map<std::string, UniformFunction>  UniformFunctionsMap;
 
 // Buffers types
 typedef std::vector<vera::Fbo>                  BuffersList;
-typedef std::vector<vera::PingPong>             DoubleBuffersList;
+typedef std::vector<vera::PingPong*>            DoubleBuffersList;
 typedef std::vector<vera::Pyramid>              PyramidsList;
 
 class Uniforms : public vera::Scene {
