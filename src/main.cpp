@@ -690,11 +690,15 @@ int main(int argc, char **argv) {
     }
     #endif
 
+    // Add GLSLVIEWER <VERSION> define
+    commandsArgs.push_back( "define,GLSLVIEWER," + vera::toString(GLSLVIEWER_VERSION_MAJOR) + vera::toString(GLSLVIEWER_VERSION_MINOR) + vera::toString(GLSLVIEWER_VERSION_PATCH) );
+
     // let sandbox load commands
     sandbox.commandsInit(commands);
 
     // Load files to sandbox
     sandbox.loadAssets(files);
+    
 
     // EVENTs callbacks
     //
