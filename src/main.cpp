@@ -39,15 +39,11 @@
 #endif
 
 #if defined(DEBUG)
-
 #define TRACK_BEGIN(A)      if (sandbox.uniforms.tracker.isRunning()) sandbox.uniforms.tracker.begin(A); 
 #define TRACK_END(A)        if (sandbox.uniforms.tracker.isRunning()) sandbox.uniforms.tracker.end(A); 
-
 #else 
-
 #define TRACK_BEGIN(A)
 #define TRACK_END(A)
-
 #endif
 
 // Global state variables/functions
