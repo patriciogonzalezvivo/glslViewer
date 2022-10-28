@@ -28,6 +28,15 @@ jobs:
               cpack -C CPackConfig.cmake -V
               dir
             build_artifact: glslViewer-*-win64-AMD64.zip
+          - os: macos-latest
+            build_command: |
+              mkdir build
+              cd build
+              cmake -DCPACK_GENERATOR=ZIP ..
+              cmake --build .
+              cpack -C CPackConfig.cmake -V
+              ls -l
+            build_artifact: glslViewer-*-x86_64.zip
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
@@ -42,6 +51,11 @@ jobs:
             cmake xorg-dev libglu1-mesa-dev libavcodec-dev libavfilter-dev \
             libavdevice-dev libavformat-dev libavutil-dev libswscale-dev \
             libv4l-dev libjpeg-dev libpng-dev libtiff-dev
+
+      - name: Install dependencies (macOS)
+        if: matrix.os == 'macos-latest'
+        run: |
+          conda install ffmpeg
 
       - name: Set up MSVC environment (Windows)
         if: matrix.os == 'windows-latest'
@@ -92,6 +106,7 @@ jobs:
           files: |
             glslViewer-ubuntu-latest-build/*
             glslViewer-windows-latest-build/*
+            glslViewer-macos-latest-build/*
           generate_release_notes: true
           body: |
             To use the Windows build, please download [FFmpeg 4.4][ffmpeg] and copy `bin\*.dll` alongside `glslViewer.exe`.
