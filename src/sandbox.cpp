@@ -1019,10 +1019,10 @@ void Sandbox::loadAssets(WatchFileList &_files) {
     // Clear the background
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    addDefine("GLSLVIEWER", vera::toString(GLSLVIEWER_VERSION_MAJOR) + vera::toString(GLSLVIEWER_VERSION_MINOR) + vera::toString(GLSLVIEWER_VERSION_PATCH) );
+
     // LOAD SHADERS
     resetShaders( _files );
-
-    addDefine("GLSLVIEWER", vera::toString(GLSLVIEWER_VERSION_MAJOR) + vera::toString(GLSLVIEWER_VERSION_MINOR) + vera::toString(GLSLVIEWER_VERSION_PATCH) );
 
     // TODO:
     //      - this seams to solve the problem of buffers not properly initialize
@@ -1358,6 +1358,9 @@ void Sandbox::_renderBuffers() {
         for (size_t j = 0; j < uniforms.doubleBuffers.size(); j++)
             m_buffers_shaders[i].setUniformTexture("u_doubleBuffer" + vera::toString(j), uniforms.doubleBuffers[j]->src );
 
+        for (size_t j = 0; j < m_sceneRender.buffersFbo.size(); j++)
+            m_buffers_shaders[i].setUniformTexture("u_sceneBuffer" + vera::toString(j), &(m_sceneRender.buffersFbo[j]) );
+
         // Update uniforms and textures
         uniforms.feedTo( &m_buffers_shaders[i], true, false);
 
@@ -1383,6 +1386,9 @@ void Sandbox::_renderBuffers() {
 
         for (size_t j = 0; j < uniforms.doubleBuffers.size(); j++)
             m_doubleBuffers_shaders[i].setUniformTexture("u_doubleBuffer" + vera::toString(j), uniforms.doubleBuffers[j]->src );
+
+        for (size_t j = 0; j < m_sceneRender.buffersFbo.size(); j++)
+            m_doubleBuffers_shaders[i].setUniformTexture("u_sceneBuffer" + vera::toString(j), &(m_sceneRender.buffersFbo[j]) );
 
         // Update uniforms and textures
         uniforms.feedTo( &m_doubleBuffers_shaders[i], true, false);

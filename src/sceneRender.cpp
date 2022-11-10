@@ -480,7 +480,7 @@ void SceneRender::setShaders(Uniforms& _uniforms, const std::string& _fragmentSh
         for (int i = 0; i < m_buffers_total; i++) {
             std::string bufferName = "u_sceneBuffer" + vera::toString(i);
             m_floor.setBufferShader(bufferName, _fragmentShader, _vertexShader);
-            // m_floor.getBufferShader(bufferName)->addDefine("FLOOR");
+            m_floor.getBufferShader(bufferName)->addDefine("FLOOR");
             m_floor.getBufferShader(bufferName)->addDefine("SCENE_BUFFER_" + vera::toString(i));
         }
     }
