@@ -1022,6 +1022,8 @@ void Sandbox::loadAssets(WatchFileList &_files) {
     // LOAD SHADERS
     resetShaders( _files );
 
+    addDefine("GLSLVIEWER", vera::toString(GLSLVIEWER_VERSION_MAJOR) + vera::toString(GLSLVIEWER_VERSION_MINOR) + vera::toString(GLSLVIEWER_VERSION_PATCH) );
+
     // TODO:
     //      - this seams to solve the problem of buffers not properly initialize
     //      - digg deeper
@@ -1108,6 +1110,7 @@ void Sandbox::setSource(ShaderType _type, const std::string& _source) {
 };
 
 void Sandbox::resetShaders( WatchFileList &_files ) {
+    console_clear();
     flagChange();
 
     // UPDATE scene shaders of models (materials)
@@ -1855,7 +1858,6 @@ namespace {
 }
 
 void Sandbox::onFileChange(WatchFileList &_files, int index) {
-    console_clear();
     FileType type = _files[index].type;
     std::string filename = _files[index].path;
 

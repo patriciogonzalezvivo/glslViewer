@@ -694,7 +694,6 @@ int main(int argc, char **argv) {
 
     // Load files to sandbox
     sandbox.loadAssets(files);
-    
 
     // EVENTs callbacks
     //

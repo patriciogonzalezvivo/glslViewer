@@ -431,6 +431,7 @@ void SceneRender::setShaders(Uniforms& _uniforms, const std::string& _fragmentSh
         // Specific defines for this buffer
         m_background_shader.addDefine("BACKGROUND");
         m_background_shader.setSource(_fragmentShader, vera::getDefaultSrc(vera::VERT_BILLBOARD));
+        m_background_shader.addDefine("GLSLVIEWER", vera::toString(GLSLVIEWER_VERSION_MAJOR) + vera::toString(GLSLVIEWER_VERSION_MINOR) + vera::toString(GLSLVIEWER_VERSION_PATCH) );
     }
 
     m_shadows = findId(_fragmentShader, "u_lightShadowMap;");
@@ -442,7 +443,7 @@ void SceneRender::setShaders(Uniforms& _uniforms, const std::string& _fragmentSh
     for (vera::ModelsMap::iterator it = _uniforms.models.begin(); it != _uniforms.models.end(); ++it) {
         it->second->setShader( _fragmentShader, _vertexShader);
 
-        if (m_shadows) 
+        if (m_shadows) {}
             it->second->setBufferShader("shadow", vera::getDefaultSrc(vera::FRAG_ERROR), _vertexShader);
 
         if (position_buffer)
@@ -454,6 +455,7 @@ void SceneRender::setShaders(Uniforms& _uniforms, const std::string& _fragmentSh
         for (int i = 0; i < m_buffers_total; i++) {
             std::string bufferName = "u_sceneBuffer" + vera::toString(i);
             it->second->setBufferShader(bufferName, _fragmentShader, _vertexShader);
+            it->second->getBufferShader(bufferName)->delDefine("FLOOR");
             it->second->getBufferShader(bufferName)->addDefine("SCENE_BUFFER_" + vera::toString(i));
         }
     }
@@ -478,6 +480,7 @@ void SceneRender::setShaders(Uniforms& _uniforms, const std::string& _fragmentSh
         for (int i = 0; i < m_buffers_total; i++) {
             std::string bufferName = "u_sceneBuffer" + vera::toString(i);
             m_floor.setBufferShader(bufferName, _fragmentShader, _vertexShader);
+            // m_floor.getBufferShader(bufferName)->addDefine("FLOOR");
             m_floor.getBufferShader(bufferName)->addDefine("SCENE_BUFFER_" + vera::toString(i));
         }
     }
@@ -723,7 +726,7 @@ void SceneRender::renderBuffers(Uniforms& _uniforms) {
         vera::cullingMode(m_culling);
 
         for (vera::ModelsMap::iterator it = _uniforms.models.begin(); it != _uniforms.models.end(); ++it) {
-            bufferShader = m_floor.getBufferShader(bufferName);
+            bufferShader = it->second->getBufferShader(bufferName);
 
             if (bufferShader != nullptr) {
                 TRACK_BEGIN("render:" + bufferName + ":" + it->second->getName())
@@ -854,7 +857,6 @@ void SceneRender::renderFloor(Uniforms& _uniforms, const glm::mat4& _mvp, bool _
         if (m_floor_subd_target != m_floor_subd) {
             m_floor.setGeom( vera::floorMesh(m_area * 10.0f, m_floor_subd_target, m_floor_height) );
             m_floor_subd = m_floor_subd_target;
-
             m_floor.addDefine("FLOOR_SUBD", vera::toString(m_floor_subd) );
             m_floor.addDefine("FLOOR_AREA", vera::toString(m_area * 10.0f) );
             m_floor.addDefine("FLOOR_HEIGHT", vera::toString(m_floor_height) );
