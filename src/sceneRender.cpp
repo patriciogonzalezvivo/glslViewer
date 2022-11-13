@@ -452,7 +452,7 @@ void SceneRender::setShaders(Uniforms& _uniforms, const std::string& _fragmentSh
         if (normal_buffer)
             it->second->setBufferShader("normal", vera::getDefaultSrc(vera::FRAG_NORMAL), _vertexShader);
 
-        for (int i = 0; i < m_buffers_total; i++) {
+        for (size_t i = 0; i < m_buffers_total; i++) {
             std::string bufferName = "u_sceneBuffer" + vera::toString(i);
             it->second->setBufferShader(bufferName, _fragmentShader, _vertexShader);
             it->second->getBufferShader(bufferName)->delDefine("FLOOR");
@@ -477,7 +477,7 @@ void SceneRender::setShaders(Uniforms& _uniforms, const std::string& _fragmentSh
         if (normal_buffer)
             m_floor.setBufferShader("normal", vera::getDefaultSrc(vera::FRAG_NORMAL), _vertexShader);
 
-        for (int i = 0; i < m_buffers_total; i++) {
+        for (size_t i = 0; i < m_buffers_total; i++) {
             std::string bufferName = "u_sceneBuffer" + vera::toString(i);
             m_floor.setBufferShader(bufferName, _fragmentShader, _vertexShader);
             m_floor.getBufferShader(bufferName)->addDefine("FLOOR");
@@ -550,6 +550,9 @@ void SceneRender::render(Uniforms& _uniforms) {
 
         // Pass special uniforms
         it->second->getShader()->setUniform( "u_modelViewProjectionMatrix", vera::getProjectionViewWorldMatrix() );
+        for (size_t i = 0; i < buffersFbo.size(); i++)
+            it->second->getShader()->setUniformTexture("u_sceneBuffer" + vera::toString(i), &(buffersFbo[i]), it->second->getShader()->textureIndex++);
+
         it->second->render();
 
         TRACK_END("render:scene:" + it->second->getName() )
@@ -682,10 +685,10 @@ void SceneRender::renderPositionBuffer(Uniforms& _uniforms) {
 }
 
 void SceneRender::renderBuffers(Uniforms& _uniforms) {
-    if ( m_buffers_total != int(buffersFbo.size()) ) {
+    if ( m_buffers_total != buffersFbo.size() ) {
         buffersFbo.clear();
         
-        for (int i = 0; i < m_buffers_total; i++) {
+        for (size_t i = 0; i < m_buffers_total; i++) {
             buffersFbo.push_back( vera::Fbo() );
 
             // glm::vec2 size = glm::vec2(vera::getWindowWidth(), vera::getWindowHeight());
@@ -865,7 +868,11 @@ void SceneRender::renderFloor(Uniforms& _uniforms, const glm::mat4& _mvp, bool _
         if (m_floor.getVbo()) {
             m_floor.getShader()->use();
             _uniforms.feedTo( m_floor.getShader(), _lights );
+
             m_floor.getShader()->setUniform("u_modelViewProjectionMatrix", _mvp );
+            // for (size_t i = 0; i < buffersFbo.size(); i++)
+            //     m_floor.getShader()->setUniformTexture("u_sceneBuffer" + vera::toString(i), &(buffersFbo[i]), m_floor.getShader()->textureIndex++);
+            
             m_floor.render();
         }
 

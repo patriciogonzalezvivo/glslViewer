@@ -1469,15 +1469,16 @@ void Sandbox::renderPrep() {
         if (!m_record_fbo.isAllocated())
             m_record_fbo.allocate(vera::getWindowWidth(), vera::getWindowHeight(), vera::COLOR_TEXTURE_DEPTH_BUFFER);
 
-    if (m_postprocessing || m_plot == PLOT_LUMA || m_plot == PLOT_RGB || m_plot == PLOT_RED || m_plot == PLOT_GREEN || m_plot == PLOT_BLUE ) {
-        if (uniforms.functions["u_sceneNormal"].present)
-            m_sceneRender.renderNormalBuffer(uniforms);
+    if (uniforms.functions["u_sceneNormal"].present)
+        m_sceneRender.renderNormalBuffer(uniforms);
 
-        if (uniforms.functions["u_scenePosition"].present)
-            m_sceneRender.renderPositionBuffer(uniforms);
+    if (uniforms.functions["u_scenePosition"].present)
+        m_sceneRender.renderPositionBuffer(uniforms);
 
+    if (m_sceneRender.getBuffersTotal() != 0)
         m_sceneRender.renderBuffers(uniforms);
 
+    if (m_postprocessing || m_plot == PLOT_LUMA || m_plot == PLOT_RGB || m_plot == PLOT_RED || m_plot == PLOT_GREEN || m_plot == PLOT_BLUE ) {
         m_sceneRender.renderFbo.bind();
     }
     else if (screenshotFile != "" || isRecording() )
@@ -1651,11 +1652,11 @@ void Sandbox::renderUI() {
             nTotal += 1;
             nTotal += uniforms.functions["u_scene"].present;
             nTotal += uniforms.functions["u_sceneDepth"].present;
-            nTotal += uniforms.functions["u_sceneNormal"].present;
-            nTotal += uniforms.functions["u_scenePosition"].present;
-            nTotal += m_sceneRender.buffersFbo.size();
         }
-
+        nTotal += uniforms.functions["u_sceneNormal"].present;
+        nTotal += uniforms.functions["u_scenePosition"].present;
+        nTotal += m_sceneRender.getBuffersTotal();
+        
         if (nTotal > 0) {
             float w = (float)(vera::getWindowWidth());
             float h = (float)(vera::getWindowHeight());

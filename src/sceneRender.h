@@ -37,6 +37,7 @@ public:
     void            unflagChange();
     bool            haveChange() const;
     
+    size_t          getBuffersTotal() const { return m_buffers_total; }
     void            updateBuffers(Uniforms& _uniforms, int _width, int _height);
     void            printBuffers();
 
@@ -95,5 +96,5 @@ protected:
     glm::vec3                   m_ssaoSamples[64];
     glm::vec3                   m_ssaoNoise[16];
 
-    int                         m_buffers_total;
+    size_t                      m_buffers_total;
 };
