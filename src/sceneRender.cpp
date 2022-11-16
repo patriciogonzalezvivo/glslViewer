@@ -508,9 +508,9 @@ void SceneRender::updateBuffers(Uniforms& _uniforms, int _width, int _height) {
         positionFbo.allocate(_width, _height, vera::GBUFFER_TEXTURE);
 
     for (size_t i = 0; i < buffersFbo.size(); i++)
-        if (buffersFbo[i].isAllocated() ||
-            buffersFbo[i].getWidth() != _width || buffersFbo[i].getHeight() )
-            buffersFbo[i].allocate(_width, _height, vera::GBUFFER_TEXTURE);
+        if (buffersFbo[i]->isAllocated() ||
+            buffersFbo[i]->getWidth() != _width || buffersFbo[i]->getHeight() )
+            buffersFbo[i]->allocate(_width, _height, vera::GBUFFER_TEXTURE);
 }
 
 void SceneRender::printBuffers() {
@@ -551,7 +551,7 @@ void SceneRender::render(Uniforms& _uniforms) {
         // Pass special uniforms
         it->second->getShader()->setUniform( "u_modelViewProjectionMatrix", vera::getProjectionViewWorldMatrix() );
         for (size_t i = 0; i < buffersFbo.size(); i++)
-            it->second->getShader()->setUniformTexture("u_sceneBuffer" + vera::toString(i), &(buffersFbo[i]), it->second->getShader()->textureIndex++);
+            it->second->getShader()->setUniformTexture("u_sceneBuffer" + vera::toString(i), buffersFbo[i], it->second->getShader()->textureIndex++);
 
         it->second->render();
 
@@ -686,23 +686,25 @@ void SceneRender::renderPositionBuffer(Uniforms& _uniforms) {
 
 void SceneRender::renderBuffers(Uniforms& _uniforms) {
     if ( m_buffers_total != buffersFbo.size() ) {
+        for (size_t i = 0; i < buffersFbo.size(); i++)
+            delete buffersFbo[i];
         buffersFbo.clear();
         
         for (size_t i = 0; i < m_buffers_total; i++) {
-            buffersFbo.push_back( vera::Fbo() );
+            buffersFbo.push_back( new vera::Fbo() );
 
             // glm::vec2 size = glm::vec2(vera::getWindowWidth(), vera::getWindowHeight());
             // buffersFbo[i].fixed = getBufferSize(_fragmentShader, "u_sceneBuffer" + vera::toString(i), size);
-            buffersFbo[i].allocate(vera::getWindowWidth(), vera::getWindowHeight(), vera::GBUFFER_TEXTURE);
+            buffersFbo[i]->allocate(vera::getWindowWidth(), vera::getWindowHeight(), vera::GBUFFER_TEXTURE);
         }
     }
 
     vera::Shader* bufferShader = nullptr;
     for (size_t i = 0; i < buffersFbo.size(); i++) {
-        if (!buffersFbo[i].isAllocated())
+        if (!buffersFbo[i]->isAllocated())
             continue;;
 
-        buffersFbo[i].bind();
+        buffersFbo[i]->bind();
         std::string bufferName = "u_sceneBuffer" + vera::toString(i);
 
         // Begining of DEPTH for 3D 
@@ -754,7 +756,7 @@ void SceneRender::renderBuffers(Uniforms& _uniforms) {
         if (m_culling != 0)
             glDisable(GL_CULL_FACE);
 
-        buffersFbo[i].unbind();
+        buffersFbo[i]->unbind();
     }
 }
 

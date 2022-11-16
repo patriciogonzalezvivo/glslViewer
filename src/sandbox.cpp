@@ -1208,16 +1208,19 @@ void Sandbox::_updateBuffers() {
             if (m_buffers_shaders[i].loaded())
                 m_buffers_shaders[i].detach(GL_FRAGMENT_SHADER | GL_VERTEX_SHADER);
 
+        for (size_t i = 0; i < uniforms.buffers.size(); i++)
+            delete uniforms.buffers[i];
+
         uniforms.buffers.clear();
         m_buffers_shaders.clear();
 
         for (int i = 0; i < m_buffers_total; i++) {
             // New FBO
-            uniforms.buffers.push_back( vera::Fbo() );
+            uniforms.buffers.push_back( new vera::Fbo() );
 
             glm::vec2 size = glm::vec2(vera::getWindowWidth(), vera::getWindowHeight());
-            uniforms.buffers[i].fixed = getBufferSize(m_frag_source, "u_buffer" + vera::toString(i), size);
-            uniforms.buffers[i].allocate(size.x, size.y, vera::COLOR_FLOAT_TEXTURE);
+            uniforms.buffers[i]->fixed = getBufferSize(m_frag_source, "u_buffer" + vera::toString(i), size);
+            uniforms.buffers[i]->allocate(size.x, size.y, vera::COLOR_FLOAT_TEXTURE);
             
             // New Shader
             m_buffers_shaders.push_back( vera::Shader() );
@@ -1344,29 +1347,29 @@ void Sandbox::_renderBuffers() {
     for (size_t i = 0; i < uniforms.buffers.size(); i++) {
         TRACK_BEGIN("render:buffer" + vera::toString(i))
 
-        reset_viewport += uniforms.buffers[i].fixed;
+        reset_viewport += uniforms.buffers[i]->fixed;
 
-        uniforms.buffers[i].bind();
+        uniforms.buffers[i]->bind();
 
         m_buffers_shaders[i].use();
 
         // Pass textures for the other buffers
         for (size_t j = 0; j < uniforms.buffers.size(); j++)
             if (i != j)
-                m_buffers_shaders[i].setUniformTexture("u_buffer" + vera::toString(j), &uniforms.buffers[j] );
+                m_buffers_shaders[i].setUniformTexture("u_buffer" + vera::toString(j), uniforms.buffers[j]  );
 
         for (size_t j = 0; j < uniforms.doubleBuffers.size(); j++)
             m_buffers_shaders[i].setUniformTexture("u_doubleBuffer" + vera::toString(j), uniforms.doubleBuffers[j]->src );
 
         for (size_t j = 0; j < m_sceneRender.buffersFbo.size(); j++)
-            m_buffers_shaders[i].setUniformTexture("u_sceneBuffer" + vera::toString(j), &(m_sceneRender.buffersFbo[j]) );
+            m_buffers_shaders[i].setUniformTexture("u_sceneBuffer" + vera::toString(j), m_sceneRender.buffersFbo[j] );
 
         // Update uniforms and textures
         uniforms.feedTo( &m_buffers_shaders[i], true, false);
 
         vera::getBillboard()->render( &m_buffers_shaders[i] );
         
-        uniforms.buffers[i].unbind();
+        uniforms.buffers[i]->unbind();
 
         TRACK_END("render:buffer" + vera::toString(i))
     }
@@ -1382,13 +1385,13 @@ void Sandbox::_renderBuffers() {
 
         // Pass textures for the other buffers
         for (size_t j = 0; j < uniforms.buffers.size(); j++)
-            m_doubleBuffers_shaders[i].setUniformTexture("u_buffer" + vera::toString(j), &uniforms.buffers[j] );
+            m_doubleBuffers_shaders[i].setUniformTexture("u_buffer" + vera::toString(j), uniforms.buffers[j] );
 
         for (size_t j = 0; j < uniforms.doubleBuffers.size(); j++)
             m_doubleBuffers_shaders[i].setUniformTexture("u_doubleBuffer" + vera::toString(j), uniforms.doubleBuffers[j]->src );
 
         for (size_t j = 0; j < m_sceneRender.buffersFbo.size(); j++)
-            m_doubleBuffers_shaders[i].setUniformTexture("u_sceneBuffer" + vera::toString(j), &(m_sceneRender.buffersFbo[j]) );
+            m_doubleBuffers_shaders[i].setUniformTexture("u_sceneBuffer" + vera::toString(j), m_sceneRender.buffersFbo[j] );
 
         // Update uniforms and textures
         uniforms.feedTo( &m_doubleBuffers_shaders[i], true, false);
@@ -1571,7 +1574,7 @@ void Sandbox::renderPost() {
         uniforms.feedTo( &m_postprocessing_shader, true, true );
 
         for (size_t i = 0; i < m_sceneRender.buffersFbo.size(); i++)
-            m_postprocessing_shader.setUniformTexture("u_sceneBuffer" + vera::toString(i), &(m_sceneRender.buffersFbo[i]), m_postprocessing_shader.textureIndex++);
+            m_postprocessing_shader.setUniformTexture("u_sceneBuffer" + vera::toString(i), m_sceneRender.buffersFbo[i]);//, m_postprocessing_shader.textureIndex++);
 
         if (lenticular.size() > 0)
             feedLenticularUniforms(m_postprocessing_shader);
@@ -1674,7 +1677,7 @@ void Sandbox::renderUI() {
             for (size_t i = 0; i < uniforms.buffers.size(); i++) {
                 glm::vec2 offset = glm::vec2(xOffset, yOffset);
                 glm::vec2 scale = glm::vec2(yStep);
-                scale.x *= ((float)uniforms.buffers[i].getWidth()/(float)uniforms.buffers[i].getHeight());
+                scale.x *= ((float)uniforms.buffers[i]->getWidth()/(float)uniforms.buffers[i]->getHeight());
                 offset.x += xStep - scale.x;
 
                 vera::image(uniforms.buffers[i], offset.x, offset.y, scale.x, scale.y);
@@ -1750,7 +1753,7 @@ void Sandbox::renderUI() {
             }
 
             for (size_t i = 0; i < m_sceneRender.buffersFbo.size(); i++) {
-                vera::image(&(m_sceneRender.buffersFbo[i]), xOffset, yOffset, xStep, yStep);
+                vera::image(m_sceneRender.buffersFbo[i], xOffset, yOffset, xStep, yStep);
                 vera::text("u_sceneBuffer" + vera::toString(i), xOffset - xStep, vera::getWindowHeight() - yOffset + yStep);
                 yOffset -= yStep * 2.0;
             }
@@ -1982,8 +1985,8 @@ void Sandbox::onViewportResize(int _newWidth, int _newHeight) {
         uniforms.activeCamera->setViewport(_newWidth, _newHeight);
     
     for (size_t i = 0; i < uniforms.buffers.size(); i++) 
-        if (!uniforms.buffers[i].fixed)
-            uniforms.buffers[i].allocate(_newWidth, _newHeight, vera::COLOR_FLOAT_TEXTURE);
+        if (!uniforms.buffers[i]->fixed)
+            uniforms.buffers[i]->allocate(_newWidth, _newHeight, vera::COLOR_FLOAT_TEXTURE);
 
     for (size_t i = 0; i < uniforms.doubleBuffers.size(); i++) {
         if (!uniforms.doubleBuffers[i]->buffer(0).fixed)

@@ -263,7 +263,7 @@ bool Uniforms::feedTo(vera::Shader *_shader, bool _lights, bool _buffers ) {
     // Pass Buffers Texture
     if (_buffers) {
         for (size_t i = 0; i < buffers.size(); i++)
-            _shader->setUniformTexture("u_buffer" + vera::toString(i), &buffers[i], _shader->textureIndex++ );
+            _shader->setUniformTexture("u_buffer" + vera::toString(i), buffers[i], _shader->textureIndex++ );
 
         for (size_t i = 0; i < doubleBuffers.size(); i++)
             _shader->setUniformTexture("u_doubleBuffer" + vera::toString(i), doubleBuffers[i]->src, _shader->textureIndex++ );
