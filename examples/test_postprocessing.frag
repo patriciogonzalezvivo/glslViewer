@@ -43,11 +43,6 @@ vec2 ratio(in vec2 st, in vec2 s) {
                 step(s.x,s.y));
 }
 
-float stroke(float x, float size, float w) {
-    float d = step(size, x + w * 0.5) - step(size, x - w * 0.5);
-    return clamp(d, 0.0, 1.0);
-}
-
 float linearizeDepth(float depth) {
     depth = 2.0 * depth - 1.0;
     return (2.0 * u_cameraNearClip) / (u_cameraFarClip + u_cameraNearClip - depth * (u_cameraFarClip - u_cameraNearClip));
@@ -88,7 +83,6 @@ void main(void) {
     float diffuse = (dot(n, l) + 1.0 ) * 0.5;
 
     color *= diffuse;
-    color *= step(fract((st.x + st.y) * 70.), diffuse);
 #endif
 
     gl_FragColor = vec4(color, 1.0);
