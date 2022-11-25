@@ -227,16 +227,17 @@ void SceneRender::commandsInit(CommandList& _commands, Uniforms& _uniforms) {
         }
         else {
             if (values.size() == 2) {
-                if (values[1] == "off") {
+                if (values[1] == "toggle")
+                    values[1] = m_floor_subd_target >= 0 ? "off" : "on";
+
+                if (values[1] == "off")
                     m_floor_subd_target = -1;
-                }
                 else if (values[1] == "on") {
                     if (m_floor_subd_target == -1)
                         m_floor_subd_target = 0;
                 }
-                else {
+                else
                     m_floor_subd_target = vera::toInt(values[1]);
-                }
                 return true;
             }
         }
@@ -253,6 +254,9 @@ void SceneRender::commandsInit(CommandList& _commands, Uniforms& _uniforms) {
         else {
             std::vector<std::string> values = vera::split(_line,',');
             if (values.size() == 2) {
+                if (values[1] == "toggle")
+                    values[1] = showGrid ? "off" : "on";
+
                 showGrid = values[1] == "on";
                 return true;
             }
@@ -270,6 +274,9 @@ void SceneRender::commandsInit(CommandList& _commands, Uniforms& _uniforms) {
         else {
             std::vector<std::string> values = vera::split(_line,',');
             if (values.size() == 2) {
+                if (values[1] == "toggle")
+                    values[1] = showAxis ? "off" : "on";
+
                 showAxis = values[1] == "on";
                 return true;
             }
@@ -287,6 +294,9 @@ void SceneRender::commandsInit(CommandList& _commands, Uniforms& _uniforms) {
         else {
             std::vector<std::string> values = vera::split(_line,',');
             if (values.size() == 2) {
+                if (values[1] == "toggle")
+                    values[1] = showBBoxes ? "off" : "on";
+
                 showBBoxes = values[1] == "on";
                 return true;
             }
@@ -857,7 +867,6 @@ void SceneRender::renderBackground(Uniforms& _uniforms) {
 
 void SceneRender::renderFloor(Uniforms& _uniforms, const glm::mat4& _mvp, bool _lights) {
     if (m_floor_subd_target >= 0) {
-
         //  Floor
         if (m_floor_subd_target != m_floor_subd) {
             m_floor.setGeom( vera::floorMesh(m_area * 10.0f, m_floor_subd_target, m_floor_height) );
@@ -877,7 +886,6 @@ void SceneRender::renderFloor(Uniforms& _uniforms, const glm::mat4& _mvp, bool _
             
             m_floor.render();
         }
-
     }
 }
 

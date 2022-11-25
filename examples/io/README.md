@@ -1,6 +1,38 @@
-## Scripts 
+# ORCA
 
-### Temp (Raspberry Pi only)
+Example made by Johan Ismael of how to connect [ORCA](https://100r.co/pages/orca.html), Ableton (MIDI) and glslViewer (OSC).Open `orca.orca` file on [ORCA](https://100r.co/pages/orca.html) and then:
+
+```
+make orca
+```
+
+# Chataigne 
+
+Example on how to send animated values in [Chataigne](http://benjamin.kuperberg.fr/chataigne/en) to glslViewer through OSC. Open `chatainge.noisette` file on  [Chataigne](http://benjamin.kuperberg.fr/chataigne/en) and then:
+
+```
+make chataigne
+```
+
+# TouchOSC
+
+Example on how to send values from [Touch OSC](https://hexler.net/products/touchosc) to glslViewer through OSC. Open Touch OSC and then:
+
+```
+make touchOSC
+```
+
+# Ossia Score
+
+Example on how to send animated values from [Ossia Score](https://ossia.io/) to glslViewer through OSC. Open `ossia.score` file with [Ossia](https://ossia.io/) and then:
+
+```
+make ossia
+```
+
+# Scripts 
+
+## Temp (Raspberry Pi only)
 
 Bash script witch feed a single uniform `u_temp` to glslViewer with the CPU temperature over console IN in csv format
 
@@ -9,7 +41,7 @@ Bash script witch feed a single uniform `u_temp` to glslViewer with the CPU temp
 ```
 
 
-### TimeWarp
+## TimeWarp
 
 Python script that for every PNG in `frames/` folder creates an OpticalFlow image, then it use it to displace each single pixel.
 

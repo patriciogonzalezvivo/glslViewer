@@ -8,6 +8,7 @@
 
 #ifndef PLATFORM_WINDOWS
 #include <unistd.h>
+#include <stdlib.h>
 #endif
 
 #include <map>
@@ -717,6 +718,128 @@ int main(int argc, char **argv) {
             if (_key == 'q' || _key == 'Q') {
                 bKeepRunnig = false;
                 bKeepRunnig.store(false);
+            }
+            else if (_key == 'a' || _key == 'A') {
+                commandsRun("axis,toggle");
+                commandsRun("update");
+            }
+            else if (_key == 'b' || _key == 'B') {
+                commandsRun("buffers,toggle");
+                commandsRun("update");
+            }
+            else if (_key == 'f' || _key == 'F') {
+                commandsRun("floor,toggle");
+                commandsRun("update");
+            }
+            else if (_key == 'g' || _key == 'G') {
+                commandsRun("grid,toggle");
+                commandsRun("update");
+            }
+            else if (_key == 'h' || _key == 'H')
+                commandsRun("help");
+            #ifndef PLATFORM_WINDOWS
+            else if (_key == 'o' || _key == 'O') {
+                if (sandbox.frag_index != -1) {
+                    std::string cmd = "open " + files[sandbox.frag_index].path;
+                    system( cmd.c_str() );
+                }
+
+                if (sandbox.vert_index != -1) {
+                    std::string cmd = "open " + files[sandbox.vert_index].path;
+                    system( cmd.c_str() );
+                }
+            }
+            #endif
+            else if (_key == 's' || _key == 'S') {
+                commandsRun("sky,toggle");
+                commandsRun("update");
+            }
+            else if (_key == 't' || _key == 'T') {
+                commandsRun("textures,toggle");
+                commandsRun("update");
+            }
+            else if (_key == 'x' || _key == 'X') {
+                commandsRun("bboxes,toggle");
+                commandsRun("update");
+            }
+        }
+    } );
+    vera::setDropCallback(    [&](int _count, const char** _paths) {    
+        for (int i = 0;  i < _count;  i++) {
+            std::string path = std::string( _paths[i] ); 
+
+            if ( vera::haveExt(path,"frag") || vera::haveExt(path,"fs")  ) {
+                if (sandbox.frag_index == -1) {
+                    WatchFile file;
+                    file.type = FRAG_SHADER;
+                    file.path = path;
+                    file.lastChange = 0;
+                    files.push_back(file);
+                    sandbox.frag_index = files.size()-1;
+                }
+                else {
+                    files[sandbox.frag_index].path = path;
+                    files[sandbox.frag_index].lastChange = 0;
+                }
+            }
+            // load vertex shader
+            else if (   vera::haveExt(path,"vert") || vera::haveExt(path,"vs") ) {
+                if (sandbox.vert_index == -1) {
+                    WatchFile file;
+                    file.type = VERT_SHADER;
+                    file.path = path;
+                    file.lastChange = 0;
+                    files.push_back(file);
+                    sandbox.vert_index = files.size()-1;
+                }
+                else {
+                    files[sandbox.vert_index].path = path;
+                    files[sandbox.vert_index].lastChange = 0;
+                }
+            }
+            // load geometry
+            else if (   vera::haveExt(path,"ply") || vera::haveExt(path,"PLY") ||
+                        vera::haveExt(path,"obj") || vera::haveExt(path,"OBJ") ||
+                        vera::haveExt(path,"stl") || vera::haveExt(path,"STL") ||
+                        vera::haveExt(path,"glb") || vera::haveExt(path,"GLB") ||
+                        vera::haveExt(path,"gltf") || vera::haveExt(path,"GLTF") ) {
+
+                if (sandbox.geom_index == -1) {
+                    WatchFile file;
+                    file.type = GEOMETRY;
+                    file.path = path;
+                    file.lastChange = 0;
+                    files.push_back(file); 
+                    sandbox.geom_index = files.size()-1;
+                }
+                else {
+                    files[sandbox.geom_index].path = path;
+                    files[sandbox.geom_index].lastChange = 0;
+                }
+            }
+
+            // load image 
+            else if (   vera::haveExt(path,"hdr") || vera::haveExt(path,"HDR") ||
+                        vera::haveExt(path,"png") || vera::haveExt(path,"PNG") ||
+                        vera::haveExt(path,"tga") || vera::haveExt(path,"TGA") ||
+                        vera::haveExt(path,"psd") || vera::haveExt(path,"PSD") ||
+                        vera::haveExt(path,"gif") || vera::haveExt(path,"GIF") ||
+                        vera::haveExt(path,"bmp") || vera::haveExt(path,"BMP") ||
+                        vera::haveExt(path,"jpg") || vera::haveExt(path,"JPG") ||
+                        vera::haveExt(path,"jpeg") || vera::haveExt(path,"JPEG")) {
+
+                if ( sandbox.uniforms.addTexture("u_tex" + vera::toString(textureCounter), path, vFlip) )
+                    textureCounter++;
+            }
+            // load video file
+            else if (   vera::haveExt(path,"mov") || vera::haveExt(path,"MOV") ||
+                        vera::haveExt(path,"mp4") || vera::haveExt(path,"MP4") ||
+                        vera::haveExt(path,"mkv") || vera::haveExt(path,"MKV") ||
+                        vera::haveExt(path,"mpg") || vera::haveExt(path,"MPG") ||
+                        vera::haveExt(path,"mpeg") || vera::haveExt(path,"MPEG") ||
+                        vera::haveExt(path,"h264") ) {
+                if ( sandbox.uniforms.addStreamingTexture("u_tex" + vera::toString(textureCounter), path, vFlip, false) )
+                    textureCounter++;
             }
         }
     } );

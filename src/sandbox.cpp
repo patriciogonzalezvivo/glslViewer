@@ -449,6 +449,9 @@ void Sandbox::commandsInit(CommandList &_commands ) {
         else {
             std::vector<std::string> values = vera::split(_line,',');
             if (values.size() == 2) {
+                if (values[1] == "toggle")
+                    values[1] = m_showTextures ? "off" : "on";
+
                 m_showTextures = (values[1] == "on");
                 return true;
             }
@@ -477,6 +480,9 @@ void Sandbox::commandsInit(CommandList &_commands ) {
         else {
             std::vector<std::string> values = vera::split(_line,',');
             if (values.size() == 2) {
+                if (values[1] == "toggle")
+                    values[1] = m_showPasses ? "off" : "on";
+
                 m_showPasses = (values[1] == "on");
                 return true;
             }
@@ -507,10 +513,17 @@ void Sandbox::commandsInit(CommandList &_commands ) {
         else {
             std::vector<std::string> values = vera::split(_line,',');
             if (values.size() == 2) {
+                if (values[1] == "toggle")
+                    values[1] = m_sceneRender.showCubebox ? "off" : "on";
+
                 m_sceneRender.showCubebox = values[1] == "on";
                 if (values[1] == "on") {
                     addDefine("SCENE_SH_ARRAY", "u_SH");
                     addDefine("SCENE_CUBEMAP", "u_cubeMap");
+                }
+                else if (values[1] == "off") {
+                    delDefine("SCENE_SH_ARRAY");
+                    delDefine("SCENE_CUBEMAP");
                 }
                 return true;
             }
@@ -528,13 +541,19 @@ void Sandbox::commandsInit(CommandList &_commands ) {
         else {
             std::vector<std::string> values = vera::split(_line,',');
             if (values.size() == 2) {
+                if (values[1] == "toggle")
+                    values[1] = m_sceneRender.showCubebox ? "off" : "on";
+
                 m_sceneRender.showCubebox = values[1] == "on";
                 if (values[1] == "on") {
                     uniforms.activeCubemap = uniforms.cubemaps["default"];
                     addDefine("SCENE_SH_ARRAY", "u_SH");
                     addDefine("SCENE_CUBEMAP", "u_cubeMap");
                 }
-
+                else if (values[1] == "off") {
+                    delDefine("SCENE_SH_ARRAY");
+                    delDefine("SCENE_CUBEMAP");
+                }
                 return true;
             }
         }
