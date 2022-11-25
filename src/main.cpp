@@ -54,6 +54,7 @@ std::atomic<bool>           bKeepRunnig(true);
 bool                        bScreensaverMode = false;
 bool                        bRunAtFullFps = false;
 bool                        bTerminate = false;
+bool                        bStreamsPlaying = true;
 #if !defined(__EMSCRIPTEN__)
 void                        printUsage(char * executableName);
 void                        onExit();
@@ -724,7 +725,7 @@ int main(int argc, char **argv) {
                 commandsRun("update");
             }
             else if (_key == 'b' || _key == 'B') {
-                commandsRun("buffers,toggle");
+                commandsRun("bboxes,toggle");
                 commandsRun("update");
             }
             else if (_key == 'f' || _key == 'F') {
@@ -750,6 +751,10 @@ int main(int argc, char **argv) {
                 }
             }
             #endif
+            else if (_key == 'p' || _key == 'P') {
+                commandsRun("buffers,toggle");
+                commandsRun("update");
+            }
             else if (_key == 's' || _key == 'S') {
                 commandsRun("sky,toggle");
                 commandsRun("update");
@@ -758,9 +763,9 @@ int main(int argc, char **argv) {
                 commandsRun("textures,toggle");
                 commandsRun("update");
             }
-            else if (_key == 'x' || _key == 'X') {
-                commandsRun("bboxes,toggle");
-                commandsRun("update");
+            else if (_key == 32) {
+                std::string cmd = "streams," + ( bStreamsPlaying ? "off" : "on" );
+                commandsRun(cmd);
             }
         }
     } );
