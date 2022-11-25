@@ -299,6 +299,27 @@ void Sandbox::commandsInit(CommandList &_commands ) {
             if (values[0] == "plot" && values.size() == 2) {
                 m_plot_shader.setSource(vera::getDefaultSrc(vera::FRAG_PLOT), vera::getDefaultSrc(vera::VERT_DYNAMIC_BILLBOARD));
                 m_plot_shader.delDefine("PLOT_VALUE");
+
+                if (values[1] == "toggle") {
+                    
+                    if (m_plot == PLOT_OFF)
+                        values[1] = "luma";
+                    else if (m_plot == PLOT_LUMA)
+                        values[1] = "red";
+                    else if (m_plot == PLOT_RED)
+                        values[1] = "green";
+                    else if (m_plot == PLOT_GREEN)
+                        values[1] = "blue";
+                    else if (m_plot == PLOT_BLUE)
+                        values[1] = "rgb";
+                    else if (m_plot == PLOT_RGB)
+                        values[1] = "fps";
+                    else if (m_plot == PLOT_FPS)
+                        values[1] = "ms";
+                    else if (m_plot == PLOT_MS)
+                        values[1] = "off";
+                }
+
                 if (values[1] == "off") 
                     m_plot = PLOT_OFF;
                 else if (values[1] == "luma") {
@@ -829,7 +850,7 @@ void Sandbox::commandsInit(CommandList &_commands ) {
     },
     "camera_exposure[,<aper.>,<shutter>,<sensit.>]", "get or set the camera exposure values."));
 
-     _commands.push_back(Command("stream", [&](const std::string& _line){ 
+     _commands.push_back(Command("stream", [&](const std::string& _line) { 
         std::vector<std::string> values = vera::split(_line,',');
 
         if (values.size() == 3) {
@@ -925,6 +946,24 @@ void Sandbox::commandsInit(CommandList &_commands ) {
             }
         }
 
+        return false;
+    },
+    "streams[,stop|play|restart|speed|prevs[,<value>]]", "print all streams or get/set streams speed and previous frames"));
+
+    _commands.push_back(Command("models", [&](const std::string& _line){ 
+        std::vector<std::string> values = vera::split(_line,',');
+
+        if (_line == "models") {
+            uniforms.printModels();
+            return true;
+        }
+        else if (values.size() == 2) {
+            if ( values[1] == "clear") {
+                uniforms.clearModels();
+                return true;
+            }
+        }
+        
         return false;
     },
     "streams[,stop|play|restart|speed|prevs[,<value>]]", "print all streams or get/set streams speed and previous frames"));

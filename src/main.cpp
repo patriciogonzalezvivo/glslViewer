@@ -736,8 +736,10 @@ int main(int argc, char **argv) {
                 commandsRun("grid,toggle");
                 commandsRun("update");
             }
-            else if (_key == 'h' || _key == 'H')
-                commandsRun("help");
+            else if (_key == 'i' || _key == 'I') {
+                commandsRun("plot,toggle");
+                commandsRun("update");
+            }
             #ifndef PLATFORM_WINDOWS
             else if (_key == 'o' || _key == 'O') {
                 if (sandbox.frag_index != -1) {
@@ -821,9 +823,12 @@ int main(int argc, char **argv) {
                     sandbox.geom_index = files.size()-1;
                 }
                 else {
+                    commandsRun("models,clear");
                     files[sandbox.geom_index].path = path;
                     files[sandbox.geom_index].lastChange = 0;
                 }
+                sandbox.loadAssets(files);
+                commandsRun("update");
             }
             // load cubemap
             else if (   vera::haveExt(path,"hdr") || vera::haveExt(path,"HDR") ) {
