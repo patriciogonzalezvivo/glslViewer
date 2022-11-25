@@ -755,6 +755,9 @@ int main(int argc, char **argv) {
                 commandsRun("buffers,toggle");
                 commandsRun("update");
             }
+            else if (_key == 'r' || _key == 'R') {
+                commandsRun("streams,restart");
+            }
             else if (_key == 's' || _key == 'S') {
                 commandsRun("sky,toggle");
                 commandsRun("update");
@@ -764,8 +767,8 @@ int main(int argc, char **argv) {
                 commandsRun("update");
             }
             else if (_key == 32) {
-                std::string cmd = "streams," + ( bStreamsPlaying ? "off" : "on" );
-                commandsRun(cmd);
+                commandsRun(std::string("streams,") + std::string( bStreamsPlaying ? "stop" : "play" ));
+                bStreamsPlaying = !bStreamsPlaying;
             }
         }
     } );
@@ -822,10 +825,16 @@ int main(int argc, char **argv) {
                     files[sandbox.geom_index].lastChange = 0;
                 }
             }
-
+            // load cubemap
+            else if (   vera::haveExt(path,"hdr") || vera::haveExt(path,"HDR") ) {
+                sandbox.uniforms.addCubemap("enviroment", path);
+                sandbox.uniforms.activeCubemap = sandbox.uniforms.cubemaps["enviroment"];
+                sandbox.getSceneRender().showCubebox = true;
+                commandsRun("cubemap,on");
+                commandsRun("update");
+            }
             // load image 
-            else if (   vera::haveExt(path,"hdr") || vera::haveExt(path,"HDR") ||
-                        vera::haveExt(path,"png") || vera::haveExt(path,"PNG") ||
+            else if (   vera::haveExt(path,"png") || vera::haveExt(path,"PNG") ||
                         vera::haveExt(path,"tga") || vera::haveExt(path,"TGA") ||
                         vera::haveExt(path,"psd") || vera::haveExt(path,"PSD") ||
                         vera::haveExt(path,"gif") || vera::haveExt(path,"GIF") ||
@@ -835,6 +844,8 @@ int main(int argc, char **argv) {
 
                 if ( sandbox.uniforms.addTexture("u_tex" + vera::toString(textureCounter), path, vFlip) )
                     textureCounter++;
+
+                commandsRun("update");
             }
             // load video file
             else if (   vera::haveExt(path,"mov") || vera::haveExt(path,"MOV") ||
@@ -845,6 +856,8 @@ int main(int argc, char **argv) {
                         vera::haveExt(path,"h264") ) {
                 if ( sandbox.uniforms.addStreamingTexture("u_tex" + vera::toString(textureCounter), path, vFlip, false) )
                     textureCounter++;
+
+                commandsRun("update");
             }
         }
     } );
