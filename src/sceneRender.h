@@ -19,6 +19,7 @@ public:
     void            commandsInit(CommandList& _commands, Uniforms& _uniforms);
 
     bool            loadScene(Uniforms& _uniforms);
+    bool            clearScene();
     void            setShaders(Uniforms& _uniforms, const std::string& _fragmentShader, const std::string& _vertexShader);
 
     void            addDefine(const std::string& _define, const std::string& _value);

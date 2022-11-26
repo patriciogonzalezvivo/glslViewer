@@ -701,7 +701,9 @@ int main(int argc, char **argv) {
     //
     vera::setMouseDragCallback(         [&](float _x, float _y, int _button) {  sandbox.onMouseDrag(_x, _y, _button); } );
     vera::setScrollCallback(            [&](float _yOffset) {                   sandbox.onScroll(_yOffset); } );
-    vera::setViewportResizeCallback(    [&](int _newWidth, int _newHeight) {    sandbox.onViewportResize(_newWidth, _newHeight); } );
+    vera::setViewportResizeCallback(    [&](int _newWidth, int _newHeight) { 
+        sandbox.onViewportResize(_newWidth, _newHeight);
+    } );
     vera::setMouseMoveCallback(         [&](float _x, float _y) { 
         if (bScreensaverMode) {
             if (sandbox.isReady()) {

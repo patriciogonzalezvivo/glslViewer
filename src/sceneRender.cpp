@@ -387,16 +387,16 @@ void SceneRender::unflagChange() {  m_origin.bChange = false; }
 
 void SceneRender::printDefines() {
     if (m_background) {
-        std::cout << std::endl;
-        std::cout << "BACKGROUND" << std::endl;
-        std::cout << "-------------- " << std::endl;
+        std::cout << "." << std::endl;
+        std::cout << "| BACKGROUND" << std::endl;
+        std::cout << "+------------- " << std::endl;
         m_background_shader.printDefines();
     }
 
     if (m_floor_subd >= 0) {
-        std::cout << std::endl;
-        std::cout << "FLOOR" << std::endl;
-        std::cout << "-------------- " << std::endl;
+        std::cout << "." << std::endl;
+        std::cout << "| FLOOR" << std::endl;
+        std::cout << "+------------- " << std::endl;
         m_floor.getShader()->printDefines();
     }
 }
@@ -429,6 +429,14 @@ bool SceneRender::loadScene(Uniforms& _uniforms) {
     vera::addLabel("u_light", _uniforms.lights["default"], vera::LABEL_DOWN, 30.0f);
     m_lightUI_shader.setSource(vera::getDefaultSrc(vera::FRAG_LIGHT), vera::getDefaultSrc(vera::VERT_LIGHT));
 
+    return true;
+}
+
+bool SceneRender::clearScene() {
+    m_floor.clear();
+    m_floor_subd = -1;
+    m_floor_height = 0.0;
+    m_origin.setPosition(glm::vec3(0.0f, 0.0f, 0.0f));
     return true;
 }
 

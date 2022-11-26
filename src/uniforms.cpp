@@ -70,6 +70,8 @@ UniformFunction::UniformFunction(const std::string &_type, std::function<void(ve
 
 Uniforms::Uniforms() : m_change(false) {
 
+    activeCubemap = nullptr;
+
     // IBL
     //
     functions["u_iblLuminance"] = UniformFunction("float", [this](vera::Shader& _shader) {
@@ -481,9 +483,9 @@ void Uniforms::delDefine(const std::string& _define) {
 
 void Uniforms::printDefines() {
     for (vera::ModelsMap::iterator it = models.begin(); it != models.end(); ++it) {
-        std::cout << std::endl;
-        std::cout << it->second->getName() << std::endl;
-        std::cout << "-------------- " << std::endl;
+        std::cout << ". \n" << std::endl;
+        std::cout << "| " << it->second->getName() << std::endl;
+        std::cout << "+------------- " << std::endl;
         it->second->printDefines();
     }
 }

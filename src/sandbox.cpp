@@ -301,22 +301,13 @@ void Sandbox::commandsInit(CommandList &_commands ) {
                 m_plot_shader.delDefine("PLOT_VALUE");
 
                 if (values[1] == "toggle") {
-                    
                     if (m_plot == PLOT_OFF)
                         values[1] = "luma";
                     else if (m_plot == PLOT_LUMA)
-                        values[1] = "red";
-                    else if (m_plot == PLOT_RED)
-                        values[1] = "green";
-                    else if (m_plot == PLOT_GREEN)
-                        values[1] = "blue";
-                    else if (m_plot == PLOT_BLUE)
                         values[1] = "rgb";
                     else if (m_plot == PLOT_RGB)
                         values[1] = "fps";
-                    else if (m_plot == PLOT_FPS)
-                        values[1] = "ms";
-                    else if (m_plot == PLOT_MS)
+                    else
                         values[1] = "off";
                 }
 
@@ -960,6 +951,7 @@ void Sandbox::commandsInit(CommandList &_commands ) {
         else if (values.size() == 2) {
             if ( values[1] == "clear") {
                 uniforms.clearModels();
+                m_sceneRender.clearScene();
                 return true;
             }
         }
@@ -1078,6 +1070,11 @@ void Sandbox::loadAssets(WatchFileList &_files) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     addDefine("GLSLVIEWER", vera::toString(GLSLVIEWER_VERSION_MAJOR) + vera::toString(GLSLVIEWER_VERSION_MINOR) + vera::toString(GLSLVIEWER_VERSION_PATCH) );
+    if (uniforms.activeCubemap) {
+        addDefine("SCENE_SH_ARRAY", "u_SH");
+        addDefine("SCENE_CUBEMAP", "u_cubeMap");
+    }
+
 
     // LOAD SHADERS
     resetShaders( _files );
