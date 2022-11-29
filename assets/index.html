@@ -178,29 +178,6 @@
         Module.getFrag =  Module.cwrap('getFrag', 'string', []);
         Module.getVert =  Module.cwrap('getVert', 'string', []);
       },
-      // Here you add the arguments just like you load them on the console but as an array of strings. One per word argument.
-      // arguments: ["examples/2D/01_buffers/00_ripples.frag"],
-      // arguments: ["examples/2D/01_buffers/01_grayscott.frag"],
-      // arguments: ["examples/2D/01_buffers/02_conway.frag"],
-      // arguments: ["examples/2D/01_buffers/03_cfd.frag"],
-      // arguments: ["examples/2D/02_convolution_pyramids/poisson_fake_light.frag"],
-      // arguments: ["examples/2D/02_convolution_pyramids/poisson_fill.frag", "examples/2D/02_convolution_pyramids/flower.png"],
-      // arguments: ["examples/2D/02_convolution_pyramids/poisson_fill_visualize.frag", "examples/2D/02_convolution_pyramids/flower.png"],
-      // arguments: ["examples/2D/02_convolution_pyramids/laplacian_integrator.frag", "examples/2D/02_convolution_pyramids/chart.png"],
-      // arguments: ["examples/2D/02_convolution_pyramids/laplacian_remove.frag", "examples/2D/02_convolution_pyramids/house.jpg"],
-      // arguments: ["examples/2D/02_convolution_pyramids/poisson_blend.frag", "--u_target", "examples/2D/02_convolution_pyramids/target.png", "--u_source" ,"examples/2D/02_convolution_pyramids/source.jpg", "--u_source_mask", "examples/2D/02_convolution_pyramids/source_mask.png" ],
-      // arguments: ["examples/2D/02_convolution_pyramids/poisson_clone.frag", "--u_target", "examples/2D/02_convolution_pyramids/target.png", "--u_source" ,"examples/2D/02_convolution_pyramids/source.jpg", "--u_source_mask", "examples/2D/08_convolution_pyramids/source_mask.png" ],
-      // arguments: ["examples/3D/03_models/duck.glb", "examples/3D/00_pipeline/00_background.frag", "-e", "buffers,on"],
-      // arguments: ["examples/3D/03_models/duck.glb", "examples/3D/00_pipeline/01_postprocessing.frag", "-e", "buffers,on"],
-      // arguments: ["examples/3D/03_models/duck.glb", "examples/3D/01_lighting/00_gooch.frag", "-e", "buffers,on"],
-      // arguments: ["examples/3D/03_models/duck.glb", "examples/3D/01_lighting/01_shadows.frag", "-e", "buffers,on"],
-      // arguments: ["examples/3D/03_models/duck.glb", "examples/3D/01_lighting/04_fresnel.vert", "examples/3D/01_lighting/04_fresnel.frag", "-C", "examples/3D/01_lighting/uffizi_cross.jpg"],
-      // arguments: ["examples/3D/03_models/duck.glb", "-e", "debug,on", "-e", "axis,off", "--msaa"],
-      arguments: ["examples/3D/03_models/duck.glb", "--fxaa"],
-      // arguments: ["examples/3D/03_models/duck.glb", "--msaa", "--fxaa", "-e", "buffers,on"],
-      // arguments: ["examples/3D/04_vertex/pcl.ply", "examples/3D/04_vertex/stars.vert", "examples/3D/04_vertex/pcl.frag"],
-      // arguments: ["examples/3D/04_vertex/pcl.ply", "examples/3D/04_vertex/stars.vert", "examples/3D/04_vertex/pcl_trail.frag"],
-      // arguments: ["examples/3D/04_vertex/pcl.ply", "examples/3D/04_vertex/physarum.vert", "examples/3D/04_vertex/physarum.frag"],
     
       print: (function() {
         var element = document.getElementById('output');
