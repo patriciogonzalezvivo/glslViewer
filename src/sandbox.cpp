@@ -1539,7 +1539,14 @@ void Sandbox::renderPrep() {
     if (m_postprocessing || m_plot == PLOT_LUMA || m_plot == PLOT_RGB || m_plot == PLOT_RED || m_plot == PLOT_GREEN || m_plot == PLOT_BLUE ) {
         m_sceneRender.renderFbo.bind();
     }
-    else if (screenshotFile != "" || isRecording() )
+    else if (screenshotFile != "") {
+        if (vera::haveExt(screenshotFile, "png")) {
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+        }
+        m_record_fbo.bind();
+    }
+    else if (isRecording())
         m_record_fbo.bind();
 
     // Clear the background
@@ -1620,7 +1627,14 @@ void Sandbox::renderPost() {
 
         m_sceneRender.renderFbo.unbind();
 
-        if (screenshotFile != "" || isRecording())
+        if (screenshotFile != "") {
+            if (vera::haveExt(screenshotFile, "png")) {
+                glEnable(GL_BLEND);
+                glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+            }
+            m_record_fbo.bind();
+        }
+        else if (isRecording())
             m_record_fbo.bind();
     
         m_postprocessing_shader.use();
@@ -1641,7 +1655,14 @@ void Sandbox::renderPost() {
     else if (m_plot == PLOT_RGB || m_plot == PLOT_RED || m_plot == PLOT_GREEN || m_plot == PLOT_BLUE || m_plot == PLOT_LUMA) {
         m_sceneRender.renderFbo.unbind();
 
-        if (screenshotFile != "" || isRecording())
+        if (screenshotFile != "") {
+            if (vera::haveExt(screenshotFile, "png")) {
+                glEnable(GL_BLEND);
+                glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+            }
+            m_record_fbo.bind();
+        }
+        else if (isRecording())
             m_record_fbo.bind();
 
         vera::image(m_sceneRender.renderFbo);
@@ -1649,6 +1670,9 @@ void Sandbox::renderPost() {
     
     if (screenshotFile != "" || isRecording()) {
         m_record_fbo.unbind();
+
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_DST_ALPHA);
 
         vera::image(m_record_fbo);
     }
@@ -2129,6 +2153,9 @@ void Sandbox::onScreenshot(std::string _file) {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
         TRACK_END("screenshot")
+
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_DST_ALPHA);
     }
 }
 
