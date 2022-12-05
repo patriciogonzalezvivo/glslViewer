@@ -11,6 +11,7 @@
 #include "tools/tracker.h"
 
 #include "vera/types/scene.h"
+#include "vera/types/image.h"
 
 struct CameraData {
     glm::mat4   projection;
@@ -56,6 +57,8 @@ typedef std::vector<vera::Fbo*>                 BuffersList;
 typedef std::vector<vera::PingPong*>            DoubleBuffersList;
 typedef std::vector<vera::Pyramid>              PyramidsList;
 
+typedef std::map<std::string, vera::Image>      ImagesMap;
+
 class Uniforms : public vera::Scene {
 public:
     Uniforms();
@@ -82,6 +85,8 @@ public:
     PyramidsList        pyramids;
     virtual void        printBuffers();
     virtual void        clearBuffers();
+
+    ImagesMap           loadQueue;
 
     // Ingest new uniforms
     // float, vec2, vec3, vec4 and functions (u_time, u_data, etc.)

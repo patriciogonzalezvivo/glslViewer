@@ -6,18 +6,20 @@
 #include <math.h>
 #include <memory>
 
+#include "vera/window.h"
+
 #include "tools/job.h"
 #include "tools/text.h"
 #include "tools/record.h"
 #include "tools/console.h"
 
 #include "vera/ops/fs.h"
-#include "vera/window.h"
 #include "vera/ops/draw.h"
 #include "vera/ops/math.h"
+#include "vera/ops/image.h"
+#include "vera/ops/pixel.h"
 #include "vera/ops/meshes.h"
 #include "vera/ops/string.h"
-#include "vera/ops/pixel.h"
 #include "vera/shaders/defaultShaders.h"
 #include "vera/xr/holoPlay.h"
 
@@ -958,7 +960,41 @@ void Sandbox::commandsInit(CommandList &_commands ) {
         
         return false;
     },
-    "streams[,stop|play|restart|speed|prevs[,<value>]]", "print all streams or get/set streams speed and previous frames"));
+    "models[,clear]", "print all or clear all loaded models."));
+
+    _commands.push_back(Command("generate_sdf", [&](const std::string& _line) { 
+        if (geom_index != -1) {
+            std::vector<std::string> values = vera::split(_line,',');
+            float padding = 0.01f;
+            int resolution = 6;
+
+            if (values.size() > 1)
+                padding = vera::toFloat(values[1]);
+
+            if (values.size() > 2)
+                resolution = vera::toInt(values[2]);
+
+            int cells_per_side = std::sqrt(std::pow(2, resolution));
+            
+            for (vera::ModelsMap::iterator it = uniforms.models.begin(); it != uniforms.models.end(); ++it) {
+                std::string name = "u_" + it->first + "Sdf";
+                uniforms.loadQueue[ name ] = vera::toSdf( it->second->mesh, padding, resolution);
+                vera::BoundingBox bbox  = it->second->getBoundingBox();
+                float area = bbox.getArea();
+                glm::vec3   bdiagonal   = bbox.getDiagonal();
+                float       max_dist    = glm::length(bdiagonal);
+                bbox.expand( (max_dist*max_dist) * padding );
+                it->second->addDefine("MODEL_SDF_TEXTURE", name );
+                it->second->addDefine("MODEL_SDF_SCALE", vera::toString(2.0f-bbox.getArea()/area) );
+            }
+            addDefine("SDF_CELLS_PER_SIDE", vera::toString(cells_per_side) );
+
+            return true;
+        }
+        return false;
+    },
+    "generate_sdf[,padding[,resolution]]", "create an 3D SDF texture of loaded models, default padding = 0.01, resolution = 6"));
+
 
     #if defined(SUPPORT_MULTITHREAD_RECORDING)
     _commands.push_back(Command("max_mem_in_queue", [&](const std::string & line) {
@@ -978,7 +1014,6 @@ void Sandbox::commandsInit(CommandList &_commands ) {
 }
 
 void Sandbox::loadAssets(WatchFileList &_files) {
-
     // LOAD SHACER 
     // -----------------------------------------------
     if (frag_index != -1) {
@@ -1501,8 +1536,15 @@ void Sandbox::renderPrep() {
 
     // UPDATE STREAMING TEXTURES
     // -----------------------------------------------
-    if (m_initialized)
+    if (m_initialized) {
         uniforms.update();
+        if (uniforms.loadQueue.size() > 0) {
+            for (ImagesMap::iterator it = uniforms.loadQueue.begin(); it != uniforms.loadQueue.end(); ++it) {
+                uniforms.addTexture( it->first, it->second );
+            }
+            uniforms.loadQueue.clear();
+        }
+    }
 
     // BUFFERS
     // -----------------------------------------------
