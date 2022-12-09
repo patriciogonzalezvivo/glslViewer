@@ -86,6 +86,7 @@ public:
     int                 geom_index;
     bool                verbose;
     bool                cursor;
+    bool                help;
     bool                fxaa;
 
 private:

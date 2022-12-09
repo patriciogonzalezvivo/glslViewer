@@ -176,6 +176,7 @@ void loop() {
     //  - draw render passes/buffers (debug)
     //  - draw plot widget (debug)
     //  - draw cursor
+    //  - draw help prompt
     sandbox.renderUI();
 
     // Finish rendering triggering some events like
@@ -335,7 +336,7 @@ int main(int argc, char **argv) {
     #ifndef __EMSCRIPTEN__
     if (displayHelp || (!haveVertexShader && !haveFragmentShader && !haveGeometry && !haveTextures)) {
         printUsage( argv[0] );
-        exit(0);
+        // exit(0);
     }
     #endif
 
@@ -386,7 +387,6 @@ int main(int argc, char **argv) {
                     argument == "-undecorated"  || argument == "--undecorated" || 
                     argument == "-lenticular"   || argument == "--lenticular") {
         }
-
 
         // Change internal states with no second parameter
         else if (   argument == "-verbose"  || argument == "--verbose"      )   sandbox.verbose = true;
@@ -683,8 +683,8 @@ int main(int argc, char **argv) {
     // If there is no shader nor geometry, exit
     if ( sandbox.frag_index == -1 && sandbox.vert_index == -1 && sandbox.geom_index == -1 ) {
         printUsage(argv[0]);
-        onExit();
-        exit(EXIT_FAILURE);
+        // onExit();
+        // exit(EXIT_FAILURE);
     }
     #endif
 
@@ -730,6 +730,11 @@ int main(int argc, char **argv) {
                 commandsRun("bboxes,toggle");
                 commandsRun("update");
             }
+            else if (_key == 'c' || _key == 'C') {
+                sandbox.cursor = !sandbox.cursor;
+                vera::setMouseVisibility(sandbox.cursor);
+                commandsRun("update");
+            }
             else if (_key == 'f' || _key == 'F') {
                 commandsRun("floor,toggle");
                 commandsRun("update");
@@ -738,11 +743,15 @@ int main(int argc, char **argv) {
                 commandsRun("grid,toggle");
                 commandsRun("update");
             }
+            else if (_key == 'h' || _key == 'H') {
+                sandbox.help = !sandbox.help;
+                commandsRun("update");
+            }
             else if (_key == 'i' || _key == 'I') {
                 commandsRun("plot,toggle");
                 commandsRun("update");
             }
-            #ifndef PLATFORM_WINDOWS
+            #if !defined(PLATFORM_WINDOWS) || !defined(DRIVER_GLFW)
             else if (_key == 'o' || _key == 'O') {
                 if (sandbox.frag_index != -1) {
                     std::string cmd = "open " + files[sandbox.frag_index].path;
@@ -768,6 +777,14 @@ int main(int argc, char **argv) {
             }
             else if (_key == 't' || _key == 'T') {
                 commandsRun("textures,toggle");
+                commandsRun("update");
+            }
+            else if (_key == 'v' || _key == 'V') {
+                sandbox.verbose = !sandbox.verbose;
+                commandsRun("update");
+            }
+            else if (_key == 'x' || _key == 'X') {
+                sandbox.fxaa = !sandbox.fxaa;
                 commandsRun("update");
             }
             else if (_key == 32) {

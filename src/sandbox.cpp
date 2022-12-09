@@ -42,7 +42,7 @@
 Sandbox::Sandbox(): 
     screenshotFile(""), lenticular(""), quilt(-1), 
     frag_index(-1), vert_index(-1), geom_index(-1), 
-    verbose(false), cursor(true), fxaa(false),
+    verbose(false), cursor(true), help(false), fxaa(false),
     // Main Vert/Frag/Geom
     m_frag_source(""), m_vert_source(""),
     // Buffers
@@ -1928,6 +1928,112 @@ void Sandbox::renderUI() {
         fill->setUniform("u_color", glm::vec4(1.0f));
         m_cross_vbo->render(fill);
         TRACK_END("renderUI:cursor")
+    }
+
+    if (frag_index == -1 && vert_index == -1 && geom_index == -1) {
+        float w = (float)(vera::getWindowWidth());
+        float h = (float)(vera::getWindowHeight());
+        float xStep = w * 0.05;
+        float yStep = h * 0.05;
+        float x = xStep * 2.0f;
+        float y = yStep * 3.0f;
+
+        vera::Camera *cam = vera::getCamera();
+        vera::resetCamera();
+
+        vera::fill(0.0f, 0.0f, 0.0f, 0.75f);
+        vera::noStroke();
+        vera::rect(glm::vec2(w * 0.5f, h * 0.5f), glm::vec2(w - xStep * 2.0f, h - yStep * 2.0f));
+
+        vera::fill(1.0f);
+        vera::textAlign(vera::ALIGN_MIDDLE);
+        vera::textAlign(vera::ALIGN_CENTER);
+        vera::textAngle(0.0f);
+
+        vera::textSize(38.0f);
+        vera::text("Drag & Drop", w * 0.5f, h * 0.45f);
+
+        vera::textSize(22.0f);
+        vera::text(".vert .frag .ply .lst .obj .gltf .glb", w * 0.5f, h * 0.55f);
+
+        vera::setCamera(cam);
+    }
+
+    if (help) {
+
+        float w = (float)(vera::getWindowWidth());
+        float h = (float)(vera::getWindowHeight());
+        float xStep = w * 0.05;
+        float yStep = h * 0.05;
+        float x = xStep * 2.0f;
+        float y = yStep * 3.0f;
+
+        vera::Camera *cam = vera::getCamera();
+        vera::resetCamera();
+
+        vera::fill(0.0f, 0.0f, 0.0f, 0.75f);
+        vera::noStroke();
+        vera::rect(glm::vec2(w * 0.5f, h * 0.5f), glm::vec2(w - xStep * 2.0f, h - yStep * 2.0f));
+
+        vera::fill(1.0f);
+        vera::textAlign(vera::ALIGN_MIDDLE);
+        vera::textAlign(vera::ALIGN_LEFT);
+        vera::textAngle(0.0f);
+        vera::textSize(22.0f);
+        yStep = vera::getFontHeight() * 1.5f;
+
+        if (geom_index != -1) {
+            vera::text("a - hide/show axis", x, y);
+            y += yStep;
+            vera::text("b - hide/show bounding boxes",x, y);
+            y += yStep;
+        }
+
+        vera::text("c - hide/show cursor", x, y);
+        y += yStep;
+
+        if (geom_index != -1) {
+            vera::text("f - hide/show floor", x, y);
+            y += yStep;
+            vera::text("g - hide/show grid", x, y);
+            y += yStep;
+        }
+
+        vera::text("h - hide/show help", x, y);
+        y += yStep;
+        vera::text("i - hide/show extra info", x, y);
+        y += yStep;
+        vera::text("o - open shaders on default editor", x, y);
+        y += yStep;
+        vera::text("p - hide/show render passes/buffers", x, y);
+        y += yStep;
+
+        if (uniforms.streams.size() > 0) {
+            vera::text("r - restart stream textures", x, y);
+            y += yStep;
+        }
+
+        if (geom_index != -1) {
+            vera::text("s - hide/show sky", x, y);
+            y += yStep;
+        }
+
+        vera::text("t - hide/show loaded textures", x, y);
+        y += yStep;
+        vera::text("v - enable/dissable verbose", x, y);
+        y += yStep;
+
+        if (!m_postprocessing || fxaa) {
+            vera::text("x - enable/dissable fxaa", x, y);
+            y += yStep;
+        }
+
+        if (uniforms.streams.size() > 0) {
+            vera::text("space - start/stop stream textures", x, y);
+            y += yStep;
+        }
+        
+        vera::setCamera(cam);
     }
 
     TRACK_END("renderUI")
