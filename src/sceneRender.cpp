@@ -39,7 +39,7 @@ SceneRender::SceneRender():
     // Camera.
     m_blend(vera::BLEND_ALPHA), m_culling(vera::CULL_NONE), m_depth_test(true),
     // Light
-    m_dynamicShadows(false), m_shadows(false),
+    dynamicShadows(false), m_shadows(false),
     // Background
     m_background(false), 
     // Floor
@@ -168,14 +168,14 @@ void SceneRender::commandsInit(CommandList& _commands, Uniforms& _uniforms) {
     
     _commands.push_back(Command("dynamic_shadows", [&](const std::string& _line){ 
         if (_line == "dynamic_shadows") {
-            std::string rta = m_dynamicShadows ? "on" : "off";
+            std::string rta = dynamicShadows ? "on" : "off";
             std::cout <<  rta << std::endl; 
             return true;
         }
         else {
             std::vector<std::string> values = vera::split(_line,',');
             if (values.size() == 2) {
-                m_dynamicShadows = (values[1] == "on");
+                dynamicShadows = (values[1] == "on");
                 return true;
             }
         }
@@ -785,7 +785,7 @@ void SceneRender::renderShadowMap(Uniforms& _uniforms) {
     TRACK_BEGIN("render:scene:shadowmap")
     vera::Shader* shadowShader = nullptr;
     for (vera::LightsMap::iterator lit = _uniforms.lights.begin(); lit != _uniforms.lights.end(); ++lit) {
-        if (m_dynamicShadows ||  lit->second->bChange || haveChange() ) {
+        if (dynamicShadows ||  lit->second->bChange || haveChange() ) {
             // Temporally move the MVP matrix from the view of the light 
             glm::mat4 m = m_origin.getTransformMatrix();
             glm::mat4 mvp = lit->second->getMVPMatrix( m, m_area );

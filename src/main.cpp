@@ -735,6 +735,10 @@ int main(int argc, char **argv) {
                 vera::setMouseVisibility(sandbox.cursor);
                 commandsRun("update");
             }
+            else if (_key == 'd' || _key == 'D') {
+                sandbox.getSceneRender().dynamicShadows = !sandbox.getSceneRender().dynamicShadows;
+                commandsRun("update");
+            }
             else if (_key == 'f' || _key == 'F') {
                 commandsRun("floor,toggle");
                 commandsRun("update");

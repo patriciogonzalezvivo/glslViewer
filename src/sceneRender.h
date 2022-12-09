@@ -61,6 +61,8 @@ public:
     vera::Fbo       positionFbo;
     BuffersList     buffersFbo;
 
+    bool            dynamicShadows;
+
 protected:
     vera::Node                  m_origin;
     float                       m_area;
@@ -73,7 +75,6 @@ protected:
     // Light
     std::unique_ptr<vera::Vbo>  m_lightUI_vbo;
     vera::Shader                m_lightUI_shader;
-    bool                        m_dynamicShadows;
     bool                        m_shadows;
 
     // Background

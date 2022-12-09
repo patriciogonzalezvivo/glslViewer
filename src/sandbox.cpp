@@ -1983,9 +1983,9 @@ void Sandbox::renderUI() {
         yStep = vera::getFontHeight() * 1.5f;
 
         if (geom_index != -1) {
-            vera::text("a - hide/show axis", x, y);
+            vera::text("a - " + std::string( m_sceneRender.showAxis? "hide" : "show" ) + " axis", x, y);
             y += yStep;
-            vera::text("b - hide/show bounding boxes",x, y);
+            vera::text("b - " + std::string( m_sceneRender.showBBoxes? "hide" : "show" ) + " bounding boxes", x, y);
             y += yStep;
         }
 
@@ -1993,13 +1993,15 @@ void Sandbox::renderUI() {
         y += yStep;
 
         if (geom_index != -1) {
+            vera::text("d - " + std::string( m_sceneRender.dynamicShadows? "disable" : "enable" ) + " dynamic shadows", x, y);
+            y += yStep;
             vera::text("f - hide/show floor", x, y);
             y += yStep;
-            vera::text("g - hide/show grid", x, y);
+            vera::text("g - " + std::string( m_sceneRender.showGrid? "hide" : "show" ) + " grid", x, y);
             y += yStep;
         }
 
-        vera::text("h - hide/show help", x, y);
+        vera::text("h - " + std::string( help? "hide" : "show" ) + " help", x, y);
         y += yStep;
         vera::text("i - hide/show extra info", x, y);
         y += yStep;
@@ -2020,11 +2022,11 @@ void Sandbox::renderUI() {
 
         vera::text("t - hide/show loaded textures", x, y);
         y += yStep;
-        vera::text("v - enable/dissable verbose", x, y);
+        vera::text("v - " + std::string( verbose? "disable" : "enable" ) + " verbose", x, y);
         y += yStep;
 
         if (!m_postprocessing || fxaa) {
-            vera::text("x - enable/dissable fxaa", x, y);
+            vera::text("x - " + std::string( fxaa? "disable" : "enable" ) + " fxaa", x, y);
             y += yStep;
         }
 
@@ -2034,6 +2036,7 @@ void Sandbox::renderUI() {
         }
         
         vera::setCamera(cam);
+        glDisable(GL_DEPTH_TEST);
     }
 
     TRACK_END("renderUI")
