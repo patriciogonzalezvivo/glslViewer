@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
+
+    <!-- Non standard: Common practice -->
+    <mime-type type="text/x-frag">
+        <comment>Fragment shader</comment>
+        <acronym>FS</acronym>
+        <expanded-acronym>Fragment Shader</expanded-acronym>
+        <generic-icon name="text-x-generic"/>
+        <sub-class-of type="text/plain"/>
+        <glob pattern="*.frag"/>
+        <glob pattern="*.fs"/>
+    </mime-type>
+
+    <!-- Non standard: Common practice -->
+    <mime-type type="text/x-vert">
+        <comment>Vertex shader</comment>
+        <acronym>VS</acronym>
+        <expanded-acronym>Vertex Shader</expanded-acronym>
+        <generic-icon name="text-x-generic"/>
+        <sub-class-of type="text/plain"/>
+        <glob pattern="*.vert"/>
+        <glob pattern="*.vs"/>
+    </mime-type>
+
+    <!-- Non standard: Common practice -->
+    <mime-type type="text/x-glsl">
+        <comment>GLSL shader</comment>
+        <acronym>GLSL</acronym>
+        <expanded-acronym>Graphic Library Shading Language</expanded-acronym>
+        <generic-icon name="text-x-generic"/>
+        <sub-class-of type="text/plain"/>
+        <glob pattern="*.glsl"/>
+    </mime-type>
+
+    <!-- Non standard: Common practice -->
+    <mime-type type="model/lst">
+        <comment>LST 3D Model format</comment>
+        <acronym>LST</acronym>
+        <generic-icon name="image-x-generic"/>
+        <sub-class-of type="text/plain"/>
+        <glob pattern="*.lst"/>
+    </mime-type>
+
+    <!-- Non standard: Common practice -->
+    <mime-type type="model/ply">
+        <comment>PLY 3D Model format</comment>
+        <acronym>PLY</acronym>
+        <generic-icon name="image-x-generic"/>
+        <sub-class-of type="text/plain"/>
+        <glob pattern="*.ply"/>
+    </mime-type>
+
+    <!--  Defined in: https://www.iana.org/assignments/media-types/media-types.xhtml#model -->
+    <mime-type type="model/obj">
+        <comment>Wavefront 3D Model format</comment>
+        <acronym>OBJ</acronym>
+        <generic-icon name="image-x-generic"/>
+        <sub-class-of type="text/plain"/>
+        <magic priority="100">
+            <match type="string" value="%TGIF" offset="0"/>
+        </magic>
+        <glob pattern="*.obj"/>
+    </mime-type>
+
+    <!--  Defined in: https://www.iana.org/assignments/media-types/media-types.xhtml#model -->
+    <mime-type type="model/gltf-binary">
+        <comment>GLTF binary for 3D scenes format</comment>
+        <acronym>GLB</acronym>
+        <generic-icon name="image-x-generic"/>
+        <glob pattern="*.glb"/>
+    </mime-type>
+
+    <!--  Defined in: https://www.iana.org/assignments/media-types/media-types.xhtml#model -->
+    <mime-type type="model/gltf+json">
+        <comment>GLTF + JSON for 3D scenes format</comment>
+        <acronym>GLTF</acronym>
+        <generic-icon name="image-x-generic"/>
+        <glob pattern="*.gltf"/>
+    </mime-type>
+
+</mime-info>

@@ -1,0 +1,19 @@
+shaders:
+    clock_analog:
+        fragment: ~/.glslScreenSaver/clock_analog.frag
+
+    defrag:
+        fragment: ~/.glslScreenSaver/defrag.frag
+
+    grayscot:
+        fragment: ~/.glslScreenSaver/grayscot.frag
+
+    ikeda:
+        fragment: ~/.glslScreenSaver/ikeda.frag
+
+    values:
+        fragment: ~/.glslScreenSaver/values.frag
+
+wait: 300 # in seconds
+screensaver: [clock_analog, defrag, grayscot, ikeda, values ]
+# screensaver: values

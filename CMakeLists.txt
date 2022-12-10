@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.2)
 
 set(VERSION_MAJOR 3)
-set(VERSION_MINOR 0)
-set(VERSION_PATCH 8)
+set(VERSION_MINOR 1)
+set(VERSION_PATCH 0)
 set(VERSION "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}")
 
 project(glslViewer 
@@ -156,8 +156,13 @@ else()
 
         if (NOT APPLE)
             target_link_libraries(glslViewer PRIVATE atomic)
-            install(FILES "${PROJECT_SOURCE_DIR}/assets/glslViewer.png" DESTINATION share/pixmaps)
-            install(FILES "${PROJECT_SOURCE_DIR}/assets/glslViewer.desktop" DESTINATION share/applications)
+            install(FILES "${PROJECT_SOURCE_DIR}/assets/glslViewer.png" DESTINATION /usr/share/pixmaps)
+            install(FILES "${PROJECT_SOURCE_DIR}/assets/glslViewer.desktop" DESTINATION /usr/share/applications)
+            install(FILES "${PROJECT_SOURCE_DIR}/assets/glslScreenSaver" DESTINATION /usr/bin)
+            install(FILES "${PROJECT_SOURCE_DIR}/assets/glslThumbnailer.sh" DESTINATION /usr/bin)
+            install(FILES "${PROJECT_SOURCE_DIR}/assets/glslViewer.thumbnailer" DESTINATION /usr/share/thumbnailers)
+            install(FILES "${PROJECT_SOURCE_DIR}/assets/glslViewer-types.xml" DESTINATION /usr/share/mime/packages)
+            
 
             # set(CPACK_GENERATOR "DEB")
             set(DEBSRC_BUILD_DEPENDS debhelper git cmake xorg-dev libgbm-dev libglu1-mesa-dev libavcodec-dev libavfilter-dev  libavdevice-dev libavformat-dev libavutil-dev libswscale-dev libv4l-dev libjpeg-dev libpng-dev libtiff-dev)

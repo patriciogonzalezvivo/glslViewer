@@ -228,6 +228,14 @@ int main(int argc, char **argv) {
             else
                 std::cout << "Argument '" << argument << "' should be followed by a <pixels>. Skipping argument." << std::endl;
         }
+        else if (   argument == "-s"    || argument == "-size"         || argument == "--size" ) {
+            if(++i < argc) {
+                window_properties.screen_width = vera::toInt( std::string(argv[i]) );
+                window_properties.screen_height = vera::toInt( std::string(argv[i]) );
+            }
+            else
+                std::cout << "Argument '" << argument << "' should be followed by a <pixels>. Skipping argument." << std::endl;
+        }
         else if (   argument == "-w"    || argument == "-width"         || argument == "--width" ) {
             if(++i < argc)
                 window_properties.screen_width = vera::toInt( std::string(argv[i]) );
@@ -362,7 +370,8 @@ int main(int argc, char **argv) {
         std::string argument = std::string(argv[i]);
 
         // Avoid parsing twice through windows properties arguments with values
-        if (        argument == "-x"        || argument == "-y"             ||
+        if (        argument == "-x"        || argument == "-y"             || 
+                    argument == "-s"        || argument == "-size"          || argument == "--size"     ||
                     argument == "-w"        || argument == "-width"         || argument == "--width"    ||
                     argument == "-h"        || argument == "-height"        || argument == "--height"   ||
                 #if defined(DRIVER_GBM) 
@@ -389,9 +398,9 @@ int main(int argc, char **argv) {
         }
 
         // Change internal states with no second parameter
-        else if (   argument == "-verbose"  || argument == "--verbose"      )   sandbox.verbose = true;
         else if (   argument == "-noncurses"|| argument == "--noncurses"    )   commands_ncurses = false;
         else if (   argument == "-nocursor" || argument == "--nocursor"     )   sandbox.cursor = false;
+        else if (   argument == "-verbose"  || argument == "--verbose"      )   sandbox.verbose = true;
         else if (   argument == "-fxaa"     || argument == "--fxaa"         )   sandbox.fxaa = true;
         else if (   argument == "-vFlip"    || argument == "--vFlip"        )   vFlip = false;
         else if (   argument == "-fullFps"  || argument == "--fullFps"      ) {
@@ -1801,16 +1810,18 @@ void printUsage(char * executableName) {
     std::cerr << "      -c <enviromental_map>.(png/tga/jpg/bmp/psd/gif/hdr)     # load a env. map as cubemap but hided" << std::endl;
     std::cerr << "      -sh <enviromental_map>.(png/tga/jpg/bmp/psd/gif/hdr)    # load a env. map as spherical harmonics array" << std::endl;
     std::cerr << "      -vFlip                      # all textures after will be flipped vertically" << std::endl;
-    std::cerr << "      -x <pixels>                 # set the X position of the billboard on the screen" << std::endl;
-    std::cerr << "      -y <pixels>                 # set the Y position of the billboard on the screen" << std::endl;
-    std::cerr << "      -w <pixels>                 # set the width of the window" << std::endl;
-    std::cerr << "      -h <pixels>                 # set the height of the billboard" << std::endl;
+    std::cerr << "      -x <pixels>                 # set the X position of the window on the screen" << std::endl;
+    std::cerr << "      -y <pixels>                 # set the Y position of the window on the screen" << std::endl;
+    std::cerr << "      -s  or --size <pixels>      # set width and height of the window" << std::endl;
+    std::cerr << "      -w  or --width <pixels>     # set the width of the window" << std::endl;
+    std::cerr << "      -h  or --height <pixels>    # set the height of the window" << std::endl;
     std::cerr << "      -d  or --display <display>  # open specific display port. Ex: -d /dev/dri/card1" << std::endl;
     std::cerr << "      -f  or --fullscreen         # load the window in fullscreen" << std::endl;
     std::cerr << "      -l  or --life-coding        # live code mode, where the billboard is allways visible" << std::endl;
     std::cerr << "      -ss or --screensaver        # screensaver mode, any pressed key will exit" << std::endl;
     std::cerr << "      --headless                  # headless rendering" << std::endl;
     std::cerr << "      --nocursor                  # hide cursor" << std::endl;
+    std::cerr << "      --nofloor                   # hide cursor" << std::endl;
     std::cerr << "      --noncurses                 # disable ncurses command interface" << std::endl;
     std::cerr << "      --fps <fps>                 # fix the max FPS" << std::endl;
     std::cerr << "      --fxaa                      # set FXAA as postprocess filter" << std::endl;

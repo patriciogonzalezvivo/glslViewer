@@ -1,5 +1,5 @@
 [Desktop Entry]
-Version=1.6
+Version=3.1.0
 Name=GlslViewer
 Name[en_GB]=GlslViewer
 GenericName=Glsl shader sandbox
@@ -7,7 +7,7 @@ GenericName[en_GB]=Glsl shader sandbox
 Comment=Shader sandbox for 2D and 3D
 Type=Application
 Exec=glslViewer %f --msaa -e dynamic_shadows,on
-Icon=/usr/local/share/pixmaps/glslViewer.png
+Icon=/usr/share/pixmaps/glslViewer.png
 Terminal=true
-MimeType=model/mesh;model/x-ply;model/x-obj;model/x-glb;model/x-gltf;
-Categories=Graphics;3DGraphics;Viewer;
+MimeType=text/x-frag;text/x-vert;text/x-glsl;model/mesh;model/lst;model/ply;model/x-ply;model/obj;model/x-obj;application/x-tgif;model/gltf-binary;model/gltf+json;model/x-glb;model/x-gltf;application/octet-stream
+Categories=Graphics;3DGraphics;Shader;Viewer;
