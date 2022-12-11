@@ -29,5 +29,5 @@ void main() {
     color += fill( rectSDF( st + vec2(0.0, 0.16), vec2(1., 0.2)), 0.4);
     color += fill( rectSDF( st.yx + vec2(0.0, 0.16), vec2(1., 0.2)), 0.4);
 
-    gl_FragColor = vec4(color, color.r);
+    gl_FragColor = vec4(color, 1.0);
 }
