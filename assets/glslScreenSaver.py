@@ -8,7 +8,11 @@ import yaml
 import random
 import subprocess
 
-CONFIG_FILE = os.path.join(os.path.expanduser("~"),".glslScreenSaver.yaml")
+CONFIG_FILE = "/usr/share/glslViewer/glslScreenSaver.yaml"
+USER_CONFIG_FILE = os.path.join(os.path.expanduser("~"),".glslScreenSaver.yaml")
+
+if os.path.exists( USER_CONFIG_FILE ):
+    CONFIG_FILE = USER_CONFIG_FILE;
 
 OPTION = "run"
 

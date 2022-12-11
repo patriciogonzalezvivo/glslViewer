@@ -1997,6 +1997,10 @@ void Sandbox::renderUI() {
             y += yStep;
             vera::text("f - hide/show floor", x, y);
             y += yStep;
+        }
+        vera::text("F - " + std::string( vera::isFullscreen() ? "disable" : "enable" ) + " fullscreen", x, y);
+        y += yStep;
+        if (geom_index != -1) {
             vera::text("g - " + std::string( m_sceneRender.showGrid? "hide" : "show" ) + " grid", x, y);
             y += yStep;
         }
@@ -2024,11 +2028,6 @@ void Sandbox::renderUI() {
         y += yStep;
         vera::text("v - " + std::string( verbose? "disable" : "enable" ) + " verbose", x, y);
         y += yStep;
-
-        if (!m_postprocessing || fxaa) {
-            vera::text("x - " + std::string( fxaa? "disable" : "enable" ) + " fxaa", x, y);
-            y += yStep;
-        }
 
         if (uniforms.streams.size() > 0) {
             vera::text("space - start/stop stream textures", x, y);

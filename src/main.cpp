@@ -51,7 +51,7 @@
 // Global state variables/functions
 std::string                 version = vera::toString(GLSLVIEWER_VERSION_MAJOR) + "." + vera::toString(GLSLVIEWER_VERSION_MINOR) + "." + vera::toString(GLSLVIEWER_VERSION_PATCH);
 std::string                 about   = "GlslViewer " + version + " by Patricio Gonzalez Vivo ( http://patriciogonzalezvivo.com )"; 
-std::string                 icon_base64 = "iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAACzklEQVR4XmMYBQMYAv+hYCAjgXGgLAf5HdluRiAYCLcMSACgex7m8YEIBLoHAC7PD1Qg0DUAcCX7gcwOdAsAQp4cqECgSwAQ67mBCASaBwCpnqJ3INA0AMj1DD0DgWYBQKkn6BUINAkAajmeHoFA9QCgtqNpHQhUDQBaOZaWgUC1ACDHkTA9xDSBaRUIVAkASjxPShOYFoFAcQBQw/MDGQgUBQA1PT9QgUB2AFAz2dMrC2EbbyArAGjh4IEKBJIDgJYOHYhAICkA6OFAegcC0QFAT4fR0y6iAmAgkia97GQiNBJLjkOwmYluDj57SVGLb2SZGHMYSXEIqaO22BxAyAxy9KD7gZRIwxkAtIx5XIFADc/DAoNY9zMSk1wpHa8nxmPU9DwpgcBESfLBZRG6mdgCENnD1MoqhOzFag+yJnKSPbIecvI3thRIijmUdqUZSc0z+AIMJEdpINCqkMQVueAAoDTmiUnyhAKO0sAjNyUQbAcwkAGw5TVkY7A5llrZh1TnUj0LEPIotpRA62wDshNvFoA5itpZgZhkTSjGyElN6Gbi8xcjKYpxOZYajsRmNq09D44gYiwmp4BBN5cYM5D10MPzOAMAX57Bl2SplRLo5Xm8ATBQgUBPzxMMAHoHAr09T1QA0CsQBsLzRAcArQNhoDxPUgDQKhAYCABKOzsEzWcgEeBrVOAyilAM49JHa8+TnAJgDqVHINDD82QHAK2zA708T1EA0CoQ6Ol5igOA2oFAb89TJQCoFQgD4XmqBQClgTBQnqdqAJAbCAxEAHJqHQYiAdkLJHCZT23H0tLzVE8BsEChlqNp7XmaBQA1sgM9PE/TAKAkEOjleZoHADmBQE/P0yUASAkEenuebgFATCAMhOfpGgD4AmGgPE/3AMAWCAxogNThcwYKAdUbQsS4Bz3GYXro7fkBSQEwzw5ksmcYLOA/FDCMgoELAQBY/dg+WWmSLQAAAABJRU5ErkJggg=="; 
+std::string                 icon_base64 = "iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAACzklEQVR4XmMYBaMhMBoCoyEwkkOAkV6e/w8EpNjFCAT0cBtNA4BUT+PyMC0Dg+oBQC1P0yswqBYAxHic2JikplmEshFVAgCfgylNvrQ0GxQ4FAUALsfRKs/Swj6yA4DenoclZWrbS1YAYHMEvaotfAFBjhtIDoDB4HlqBgJJAUBtz8PMoyT1UOomogOAVp6HxeZABQITuc1NajsYV+FGjPsocQtRKQDdcdT2PLInqWk2MWYRDABaeh7mQHrYgSslMTHQCeDzJHpMUZIdSPUO3hRArZgh1hx62wcKLKJTALl5kxRPUSslkOJWmmYBcmKU3tkBZwBQmg8pSc7UDgR8fmGidT0LM5+UAKU08EF2EpsNaJYFsDmAGI9hU0NJ24BQBGMNAGrEAK5YwGc2LT2Py16CKYDS0Cc2JdDC88S4nSpZgFCKIRQI5HieWqmU4gCAOYTcQKDE89QIBIoCAN0B5AQCeiFFKNmSaidZhSAxVSMuz1ISCKR6npwqFt1vNKkGyQkEcj3PQCGg2YAIKYFAqecpqakoSgHUcPhAep6k3iCulEbLpEuNQpVmhSCywbQIBHp4nqgUQMghsICgZiBQy/PEuB1rGUBuoUKNQKBVzONyG9WrQUoCgV7JHjn7MlHS6KFmwUhtzxObdZnI9QShgCMlJdA65vG5hSYtQVIKxoFI9iRnAZAGYpMUesqgpJVGrl5S3Eq3mSFSA5BanidkDk2zACmNJXLVMlAIRidHiQ1A9CRMSd7GlR2oaSaxZpGdBcgtFEEBjs1xtAhQYiJ3dIkMqWUItpinJPYoKcOo4RZGchwwGAKBWm5gJDcGaFGQEeMWatvLSO0kiKuQY6ACoEWgM9LSYdQIDHy1DTXKHqoEAMijxFSLxDqYmmYRimCqBQDMImIcT0mqo3aNQ/UAQPYctQKDltUsTQOAksAYqLYFwygYDYHREBgNgZEUAgDEsgRgHB+UVwAAAABJRU5ErkJggg==";
 std::atomic<bool>           bKeepRunnig(true);
 bool                        bScreensaverMode = false;
 bool                        bRunAtFullFps = false;
@@ -765,6 +765,7 @@ int main(int argc, char **argv) {
             }
             else if (_key == 'F') {
                 vera::setFullscreen(!vera::isFullscreen());
+                commandsRun("update");
             }
             else if (_key == 'g' || _key == 'G') {
                 commandsRun("grid,toggle");
@@ -808,10 +809,6 @@ int main(int argc, char **argv) {
             }
             else if (_key == 'v' || _key == 'V') {
                 sandbox.verbose = !sandbox.verbose;
-                commandsRun("update");
-            }
-            else if (_key == 'x' || _key == 'X') {
-                sandbox.fxaa = !sandbox.fxaa;
                 commandsRun("update");
             }
             else if (_key == 32) {

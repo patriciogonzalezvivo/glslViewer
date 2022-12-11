@@ -185,15 +185,16 @@ else()
                     PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
                     DESTINATION "/usr/bin"
                     RENAME "glslScreenSaver")
-
-
+            
+            install(FILES "${PROJECT_SOURCE_DIR}/assets/glslScreenSaver.frag" DESTINATION "/usr/share/glslViewer")
+            install(FILES "${PROJECT_SOURCE_DIR}/assets/glslScreenSaver.yaml" DESTINATION "/usr/share/glslViewer")
 
             find_program(XDG-DESKTOP-MENU_EXECUTABLE xdg-desktop-menu)
             execute_process(COMMAND ${XDG-DESKTOP-MENU_EXECUTABLE} install --novendor /usr/share/applications/glslViewer.desktop)
 
             # set(CPACK_GENERATOR "DEB")
             set(DEBSRC_BUILD_DEPENDS debhelper git cmake xorg-dev libgbm-dev libglu1-mesa-dev libavcodec-dev libavfilter-dev  libavdevice-dev libavformat-dev libavutil-dev libswscale-dev libv4l-dev libjpeg-dev libpng-dev libtiff-dev)
-            set(DEBSRC_PACKAGE_DEPENDS git cmake ffmpeg libavcodec-extra libavfilter-extra)
+            set(DEBSRC_PACKAGE_DEPENDS ffmpeg libavcodec-extra libavfilter-extra xorg-x11-server-Xvfb )
 
             set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
 

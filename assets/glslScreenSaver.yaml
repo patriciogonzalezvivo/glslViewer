@@ -1,0 +1,6 @@
+shaders:
+    ikeda:
+        fragment: /usr/share/glslViewer/glslScreenSaver.frag
+
+wait: 300 # in seconds
+screensaver: [ ikeda ]
