@@ -1,4 +1,4 @@
-<img src=".github/images/logo.png" style="display: block; margin-left: auto; margin-right: auto; filter: drop-shadow(2px 3px 4px gray);">
+![](.github/images/logo.png)
 
 # glslViewer 
 
