@@ -1,3 +1,5 @@
+<img src=".github/images/logo.png" width="600" style="display: block; margin-left: auto; margin-right: auto; filter: drop-shadow(2px 3px 4px gray);">
+
 # glslViewer 
 
 ![](.github/images/02.gif)
