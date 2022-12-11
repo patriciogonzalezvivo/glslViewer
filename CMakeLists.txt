@@ -153,16 +153,43 @@ else()
     else()
         target_link_libraries(glslViewer PRIVATE pthread dl lo_static)
         install(TARGETS glslViewer DESTINATION bin)
-
+        
         if (NOT APPLE)
-            target_link_libraries(glslViewer PRIVATE atomic)
-            install(FILES "${PROJECT_SOURCE_DIR}/assets/glslViewer.png" DESTINATION /usr/share/pixmaps)
+        target_link_libraries(glslViewer PRIVATE atomic)
+        install(FILES "${PROJECT_SOURCE_DIR}/assets/glslViewer.png" DESTINATION /usr/share/pixmaps)
             install(FILES "${PROJECT_SOURCE_DIR}/assets/glslViewer.desktop" DESTINATION /usr/share/applications)
-            install(FILES "${PROJECT_SOURCE_DIR}/assets/glslScreenSaver" DESTINATION /usr/bin)
-            install(FILES "${PROJECT_SOURCE_DIR}/assets/glslThumbnailer.sh" DESTINATION /usr/bin)
-            install(FILES "${PROJECT_SOURCE_DIR}/assets/glslViewer.thumbnailer" DESTINATION /usr/share/thumbnailers)
-            install(FILES "${PROJECT_SOURCE_DIR}/assets/glslViewer-types.xml" DESTINATION /usr/share/mime/packages)
             
+            # Install supported MIME file types by GlslViewer
+            install(FILES "${PROJECT_SOURCE_DIR}/assets/glslViewer-types.xml" DESTINATION /usr/share/mime/packages)
+            find_program(XDG-MIME_EXECUTABLE xdg-mime)
+            install(CODE "execute_process(COMMAND ${XDG-MIME_EXECUTABLE} install --novendor /usr/share/mime/packages/glslViewer-types.xml)")
+            install(CODE "execute_process(COMMAND ${XDG-MIME_EXECUTABLE} default /usr/share/applications/glslViewer.desktop model/lst)")
+            install(CODE "execute_process(COMMAND ${XDG-MIME_EXECUTABLE} default /usr/share/applications/glslViewer.desktop model/ply)")
+            install(CODE "execute_process(COMMAND ${XDG-MIME_EXECUTABLE} default /usr/share/applications/glslViewer.desktop model/obj)")
+            install(CODE "execute_process(COMMAND ${XDG-MIME_EXECUTABLE} default /usr/share/applications/glslViewer.desktop model/gltf-binary)")
+            install(CODE "execute_process(COMMAND ${XDG-MIME_EXECUTABLE} default /usr/share/applications/glslViewer.desktop model/gltf+json)")
+            find_program(UPDATE_MIME_DATABASE update-mime-database)
+            install(CODE "execute_process(COMMAND sudo ${UPDATE_MIME_DATABASE} /usr/share/mime )")
+            find_program(UPDATE_DESKTOP_DATABASE update-desktop-database)
+            install(CODE "execute_process(COMMAND sudo ${UPDATE_DESKTOP_DATABASE} /usr/share/applications)")
+            
+            # Add a thumbnailer for 3D Models
+            install(FILES "${PROJECT_SOURCE_DIR}/assets/glslViewer.thumbnailer" DESTINATION /usr/share/thumbnailers)
+            install(FILES "${PROJECT_SOURCE_DIR}/assets/glslThumbnailer.sh"
+                    PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
+                    DESTINATION "/usr/bin"
+                    RENAME "glslThumbnailer")
+
+            # Add ScreenSaver script
+            install(FILES "${PROJECT_SOURCE_DIR}/assets/glslScreenSaver.py"
+                    PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
+                    DESTINATION "/usr/bin"
+                    RENAME "glslScreenSaver")
+
+
+
+            find_program(XDG-DESKTOP-MENU_EXECUTABLE xdg-desktop-menu)
+            execute_process(COMMAND ${XDG-DESKTOP-MENU_EXECUTABLE} install --novendor /usr/share/applications/glslViewer.desktop)
 
             # set(CPACK_GENERATOR "DEB")
             set(DEBSRC_BUILD_DEPENDS debhelper git cmake xorg-dev libgbm-dev libglu1-mesa-dev libavcodec-dev libavfilter-dev  libavdevice-dev libavformat-dev libavutil-dev libswscale-dev libv4l-dev libjpeg-dev libpng-dev libtiff-dev)

@@ -1,3 +1,4 @@
 [Thumbnailer Entry]
-Exec=bash /usr/bin/glslThumbnailer.sh %i %s %o
-MimeType=model/lst;model/ply;model/x-ply;model/obj;model/x-obj;application/x-tgif;model/gltf-binary;model/gltf+json;model/x-glb;model/x-gltf;application/octet-stream
+TryExec=glslThumbnailer
+Exec=glslThumbnailer %i %s %o
+MimeType=model/lst;model/ply;model/obj;model/gltf-binary;model/gltf+json
