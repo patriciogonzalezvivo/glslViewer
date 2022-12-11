@@ -23,6 +23,7 @@
 #include "vera/ops/fs.h"
 #include "vera/ops/math.h"
 #include "vera/ops/time.h"
+#include "vera/ops/pixel.h"
 #include "vera/ops/string.h"
 #include "vera/shaders/defaultShaders.h"
 #include "vera/xr/holoPlay.h"
@@ -50,6 +51,7 @@
 // Global state variables/functions
 std::string                 version = vera::toString(GLSLVIEWER_VERSION_MAJOR) + "." + vera::toString(GLSLVIEWER_VERSION_MINOR) + "." + vera::toString(GLSLVIEWER_VERSION_PATCH);
 std::string                 about   = "GlslViewer " + version + " by Patricio Gonzalez Vivo ( http://patriciogonzalezvivo.com )"; 
+std::string                 icon_base64 = "iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAACzklEQVR4XmMYBQMYAv+hYCAjgXGgLAf5HdluRiAYCLcMSACgex7m8YEIBLoHAC7PD1Qg0DUAcCX7gcwOdAsAQp4cqECgSwAQ67mBCASaBwCpnqJ3INA0AMj1DD0DgWYBQKkn6BUINAkAajmeHoFA9QCgtqNpHQhUDQBaOZaWgUC1ACDHkTA9xDSBaRUIVAkASjxPShOYFoFAcQBQw/MDGQgUBQA1PT9QgUB2AFAz2dMrC2EbbyArAGjh4IEKBJIDgJYOHYhAICkA6OFAegcC0QFAT4fR0y6iAmAgkia97GQiNBJLjkOwmYluDj57SVGLb2SZGHMYSXEIqaO22BxAyAxy9KD7gZRIwxkAtIx5XIFADc/DAoNY9zMSk1wpHa8nxmPU9DwpgcBESfLBZRG6mdgCENnD1MoqhOzFag+yJnKSPbIecvI3thRIijmUdqUZSc0z+AIMJEdpINCqkMQVueAAoDTmiUnyhAKO0sAjNyUQbAcwkAGw5TVkY7A5llrZh1TnUj0LEPIotpRA62wDshNvFoA5itpZgZhkTSjGyElN6Gbi8xcjKYpxOZYajsRmNq09D44gYiwmp4BBN5cYM5D10MPzOAMAX57Bl2SplRLo5Xm8ATBQgUBPzxMMAHoHAr09T1QA0CsQBsLzRAcArQNhoDxPUgDQKhAYCABKOzsEzWcgEeBrVOAyilAM49JHa8+TnAJgDqVHINDD82QHAK2zA708T1EA0CoQ6Ol5igOA2oFAb89TJQCoFQgD4XmqBQClgTBQnqdqAJAbCAxEAHJqHQYiAdkLJHCZT23H0tLzVE8BsEChlqNp7XmaBQA1sgM9PE/TAKAkEOjleZoHADmBQE/P0yUASAkEenuebgFATCAMhOfpGgD4AmGgPE/3AMAWCAxogNThcwYKAdUbQsS4Bz3GYXro7fkBSQEwzw5ksmcYLOA/FDCMgoELAQBY/dg+WWmSLQAAAABJRU5ErkJggg=="; 
 std::atomic<bool>           bKeepRunnig(true);
 bool                        bScreensaverMode = false;
 bool                        bRunAtFullFps = false;
@@ -352,12 +354,21 @@ int main(int argc, char **argv) {
     commandsInit();
 
     // Initialize openGL context
-    vera::initGL (window_properties);
+    vera::initGL(window_properties);
     #ifndef __EMSCRIPTEN__
-    vera::setWindowTitle("GlslViewer");
+    if (window_properties.style != vera::HEADLESS) {
+        vera::setWindowTitle("GlslViewer");
 
+        #if defined(DRIVER_GLFW)
+        int icon_width, icon_height; 
+        unsigned char* icon_data = vera::loadPixelsBase64(icon_base64, &icon_width, &icon_height);
+        vera::setWindowIcon(icon_data, icon_width, icon_height);
+        #endif
+
+    }
     // Start Console IN listener thread
     std::thread cinWatcher( &cinWatcherThread );
+    
     #endif
 
     struct stat st;                         // for files to watch
@@ -748,9 +759,12 @@ int main(int argc, char **argv) {
                 sandbox.getSceneRender().dynamicShadows = !sandbox.getSceneRender().dynamicShadows;
                 commandsRun("update");
             }
-            else if (_key == 'f' || _key == 'F') {
+            else if (_key == 'f') {
                 commandsRun("floor,toggle");
                 commandsRun("update");
+            }
+            else if (_key == 'F') {
+                vera::setFullscreen(!vera::isFullscreen());
             }
             else if (_key == 'g' || _key == 'G') {
                 commandsRun("grid,toggle");
