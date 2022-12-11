@@ -1,4 +1,4 @@
-<img src=".github/images/logo.png" width="600" style="display: block; margin-left: auto; margin-right: auto; filter: drop-shadow(2px 3px 4px gray);">
+<img src=".github/images/logo.png" style="display: block; margin-left: auto; margin-right: auto; filter: drop-shadow(2px 3px 4px gray);">
 
 # glslViewer 
 
@@ -35,17 +35,9 @@ GlslViewer gives support to:
 * PNG sequence export
 * WASM crosscompiling
 
-![](.github/images/05.gif)
-
 ![](.github/images/06.gif)
 
 ![](.github/images/09.gif)
-
-![](.github/images/10.gif)
-
-![](.github/images/00.gif)
-
-![](.github/images/dof.gif)
 
 ## Wiki themes
 
