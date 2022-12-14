@@ -122,7 +122,6 @@ else()
         )
 
         install(TARGETS glslViewer)
-
         set(CPACK_GENERATOR "ZIP")
 
     else()
@@ -131,9 +130,11 @@ else()
         
         if (NOT APPLE)
             target_link_libraries(glslViewer PRIVATE atomic)
+
+            # Install glslViewer Icon
             install(FILES "${PROJECT_SOURCE_DIR}/assets/glslViewer.png" DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/pixmaps)
             install(FILES "${PROJECT_SOURCE_DIR}/assets/glslViewer.desktop" DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/applications)
-            install(CODE "execute_process(COMMAND &{ECHO_EXECUTABLE} Icon=${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DATAROOTDIR}/pixmaps/glslViewer.png >> ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DATAROOTDIR}/applications/glslViewer.desktop)")
+            install(CODE "execute_process(COMMAND sh -c \"echo Icon=${CMAKE_INSTALL_FULL_DATAROOTDIR}/pixmaps/glslViewer.png >> ${CMAKE_INSTALL_FULL_DATAROOTDIR}/applications/glslViewer.desktop\")")
             
             # Install supported MIME file types by GlslViewer
             install(FILES "${PROJECT_SOURCE_DIR}/assets/glslViewer-types.xml" DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/mime/packages)
@@ -161,7 +162,6 @@ else()
                     PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
                     DESTINATION ${CMAKE_INSTALL_BINDIR}
                     RENAME "glslScreenSaver")
-            
             install(FILES "${PROJECT_SOURCE_DIR}/assets/glslScreenSaver.frag" DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/glslViewer")
             install(FILES "${PROJECT_SOURCE_DIR}/assets/glslScreenSaver.yaml" DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/glslViewer")
 
