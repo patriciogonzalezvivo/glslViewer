@@ -302,20 +302,10 @@ void Sandbox::commandsInit(CommandList &_commands ) {
                 m_plot_shader.setSource(vera::getDefaultSrc(vera::FRAG_PLOT), vera::getDefaultSrc(vera::VERT_DYNAMIC_BILLBOARD));
                 m_plot_shader.delDefine("PLOT_VALUE");
 
-                if (values[1] == "toggle") {
-                    if (m_plot == PLOT_OFF)
-                        values[1] = "luma";
-                    else if (m_plot == PLOT_LUMA)
-                        values[1] = "rgb";
-                    else if (m_plot == PLOT_RGB)
-                        values[1] = "fps";
-                    else
-                        values[1] = "off";
-                }
-
                 using polt_value_display_t = std::tuple<std::string, PlotType, std::string>;
                 const std::vector<polt_value_display_t> lala = {
-                    {"luma", PLOT_LUMA, "color.rgb = vec3(step(st.y, data.a)); color += stroke(fract(st.x * 5.0), 0.5, 0.025) * 0.1;"}
+                    {"off", PLOT_OFF, ""}
+                    , {"luma", PLOT_LUMA, "color.rgb = vec3(step(st.y, data.a)); color += stroke(fract(st.x * 5.0), 0.5, 0.025) * 0.1;"}
                     , {"red", PLOT_RED, "color.rgb = vec3(step(st.y, data.r), 0.0, 0.0);  color += stroke(fract(st.x * 5.0), 0.5, 0.025) * 0.1;"}
                     , {"green", PLOT_GREEN, "color.rgb = vec3(0.0, step(st.y, data.g), 0.0);  color += stroke(fract(st.x * 5.0), 0.5, 0.025) * 0.1;"}
                     , {"blue", PLOT_BLUE, "color.rgb = vec3(0.0, 0.0, step(st.y, data.b));  color += stroke(fract(st.x * 5.0), 0.5, 0.025) * 0.1;"}
@@ -324,22 +314,23 @@ void Sandbox::commandsInit(CommandList &_commands ) {
                     , {"ms", PLOT_MS, "color.rgb += digits(uv * 0.1 + vec2(0.105, -0.01), value.r * 60.0, 1.0); color += stroke(fract(st.y * 3.0), 0.5, 0.05) * 0.1;"}
                 };
 
-                const auto switch_off = [&](){ m_plot = PLOT_OFF;};
-                const auto set_appropriate_plot = [&](const std::string plot_id_keyword ){
-                    const auto it = std::find_if(std::begin(lala), std::end(lala)
-                                                 , [&](const polt_value_display_t& i){return std::get<0>(i) == plot_id_keyword;});
-                    if(it != std::end(lala)) {
-                        const auto define_text_primary_key = "PLOT_VALUE";
-                        m_plot = std::get<1>(*it);
-                        m_plot_shader.addDefine(define_text_primary_key, std::get<2>(*it));
+                if (values[1] == "toggle") {
+                    auto carousel = std::vector<PlotType>{PLOT_OFF, PLOT_LUMA, PLOT_RGB, PLOT_FPS};
+                    const auto it = std::find_if(std::begin(carousel), std::end(carousel), [&](const PlotType& s){return m_plot == s;});
+                    if(it != std::end(carousel)) {
+                        std::rotate(std::begin(carousel), std::next(it), std::end(carousel));
+                        const auto it = std::find_if(std::begin(lala), std::end(lala), [&](const polt_value_display_t& s){return carousel.front() == std::get<1>(s);});
+                        values[1] = std::get<0>(*it);
                     }
-                };
-
-                const auto plot_id_keyword = values[1];
-                if (plot_id_keyword == "off") {
-                    switch_off();
+                }
+                if (values[1] == "off") {
+                    m_plot = PLOT_OFF;
                 } else {
-                    set_appropriate_plot(plot_id_keyword);
+                    const auto it = std::find_if(std::begin(lala), std::end(lala), [&](const polt_value_display_t& i){return std::get<0>(i) == values[1];});
+                    if(it != std::end(lala)) {
+                        m_plot = std::get<1>(*it);
+                        m_plot_shader.addDefine("PLOT_VALUE", std::get<2>(*it));
+                    }
                 }
                 m_update_buffers = true;
                 return true;
