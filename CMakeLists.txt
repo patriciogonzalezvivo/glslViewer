@@ -104,6 +104,7 @@ else()
         # SUPPORT_PLY_BINARY
     )
 
+    include(GNUInstallDirs)
     include(InstallRequiredSystemLibraries)
     set(CPACK_PACKAGE_NAME "glslViewer")
     set(CPACK_PACKAGE_CONTACT "Patricio Gonzalez Vivo <patriciogonzalezvivo@gmail.com>")
@@ -152,45 +153,45 @@ else()
 
     else()
         target_link_libraries(glslViewer PRIVATE pthread dl lo_static)
-        install(TARGETS glslViewer DESTINATION bin)
+        install(TARGETS glslViewer DESTINATION ${CMAKE_INSTALL_BINDIR})
         
         if (NOT APPLE)
-        target_link_libraries(glslViewer PRIVATE atomic)
-        install(FILES "${PROJECT_SOURCE_DIR}/assets/glslViewer.png" DESTINATION /usr/share/pixmaps)
-            install(FILES "${PROJECT_SOURCE_DIR}/assets/glslViewer.desktop" DESTINATION /usr/share/applications)
+            target_link_libraries(glslViewer PRIVATE atomic)
+            install(FILES "${PROJECT_SOURCE_DIR}/assets/glslViewer.png" DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/pixmaps)
+            install(FILES "${PROJECT_SOURCE_DIR}/assets/glslViewer.desktop" DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/applications)
             
             # Install supported MIME file types by GlslViewer
-            install(FILES "${PROJECT_SOURCE_DIR}/assets/glslViewer-types.xml" DESTINATION /usr/share/mime/packages)
+            install(FILES "${PROJECT_SOURCE_DIR}/assets/glslViewer-types.xml" DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/mime/packages)
             find_program(XDG-MIME_EXECUTABLE xdg-mime)
-            install(CODE "execute_process(COMMAND ${XDG-MIME_EXECUTABLE} install --novendor /usr/share/mime/packages/glslViewer-types.xml)")
-            install(CODE "execute_process(COMMAND ${XDG-MIME_EXECUTABLE} default /usr/share/applications/glslViewer.desktop model/lst)")
-            install(CODE "execute_process(COMMAND ${XDG-MIME_EXECUTABLE} default /usr/share/applications/glslViewer.desktop model/ply)")
-            install(CODE "execute_process(COMMAND ${XDG-MIME_EXECUTABLE} default /usr/share/applications/glslViewer.desktop model/obj)")
-            install(CODE "execute_process(COMMAND ${XDG-MIME_EXECUTABLE} default /usr/share/applications/glslViewer.desktop model/gltf-binary)")
-            install(CODE "execute_process(COMMAND ${XDG-MIME_EXECUTABLE} default /usr/share/applications/glslViewer.desktop model/gltf+json)")
+            install(CODE "execute_process(COMMAND ${XDG-MIME_EXECUTABLE} install --novendor ${CMAKE_INSTALL_FULL_DATAROOTDIR}/mime/packages/glslViewer-types.xml)")
+            install(CODE "execute_process(COMMAND ${XDG-MIME_EXECUTABLE} default ${CMAKE_INSTALL_FULL_DATAROOTDIR}/applications/glslViewer.desktop model/lst)")
+            install(CODE "execute_process(COMMAND ${XDG-MIME_EXECUTABLE} default ${CMAKE_INSTALL_FULL_DATAROOTDIR}/applications/glslViewer.desktop model/ply)")
+            install(CODE "execute_process(COMMAND ${XDG-MIME_EXECUTABLE} default ${CMAKE_INSTALL_FULL_DATAROOTDIR}/applications/glslViewer.desktop model/obj)")
+            install(CODE "execute_process(COMMAND ${XDG-MIME_EXECUTABLE} default ${CMAKE_INSTALL_FULL_DATAROOTDIR}/applications/glslViewer.desktop model/gltf-binary)")
+            install(CODE "execute_process(COMMAND ${XDG-MIME_EXECUTABLE} default ${CMAKE_INSTALL_FULL_DATAROOTDIR}/applications/glslViewer.desktop model/gltf+json)")
             find_program(UPDATE_MIME_DATABASE update-mime-database)
-            install(CODE "execute_process(COMMAND sudo ${UPDATE_MIME_DATABASE} /usr/share/mime )")
+            install(CODE "execute_process(COMMAND ${UPDATE_MIME_DATABASE} ${CMAKE_INSTALL_FULL_DATAROOTDIR}/mime )")
             find_program(UPDATE_DESKTOP_DATABASE update-desktop-database)
-            install(CODE "execute_process(COMMAND sudo ${UPDATE_DESKTOP_DATABASE} /usr/share/applications)")
+            install(CODE "execute_process(COMMAND ${UPDATE_DESKTOP_DATABASE} ${CMAKE_INSTALL_FULL_DATAROOTDIR}/applications)")
             
             # Add a thumbnailer for 3D Models
-            install(FILES "${PROJECT_SOURCE_DIR}/assets/glslViewer.thumbnailer" DESTINATION /usr/share/thumbnailers)
+            install(FILES "${PROJECT_SOURCE_DIR}/assets/glslViewer.thumbnailer" DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/thumbnailers)
             install(FILES "${PROJECT_SOURCE_DIR}/assets/glslThumbnailer.sh"
                     PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
-                    DESTINATION "/usr/bin"
+                    DESTINATION ${CMAKE_INSTALL_BINDIR}
                     RENAME "glslThumbnailer")
 
             # Add ScreenSaver script
             install(FILES "${PROJECT_SOURCE_DIR}/assets/glslScreenSaver.py"
                     PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
-                    DESTINATION "/usr/bin"
+                    DESTINATION ${CMAKE_INSTALL_BINDIR}
                     RENAME "glslScreenSaver")
             
-            install(FILES "${PROJECT_SOURCE_DIR}/assets/glslScreenSaver.frag" DESTINATION "/usr/share/glslViewer")
-            install(FILES "${PROJECT_SOURCE_DIR}/assets/glslScreenSaver.yaml" DESTINATION "/usr/share/glslViewer")
+            install(FILES "${PROJECT_SOURCE_DIR}/assets/glslScreenSaver.frag" DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/glslViewer")
+            install(FILES "${PROJECT_SOURCE_DIR}/assets/glslScreenSaver.yaml" DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/glslViewer")
 
             find_program(XDG-DESKTOP-MENU_EXECUTABLE xdg-desktop-menu)
-            execute_process(COMMAND ${XDG-DESKTOP-MENU_EXECUTABLE} install --novendor /usr/share/applications/glslViewer.desktop)
+            execute_process(COMMAND ${XDG-DESKTOP-MENU_EXECUTABLE} install --novendor ${CMAKE_INSTALL_FULL_DATAROOTDIR}/applications/glslViewer.desktop)
 
             # set(CPACK_GENERATOR "DEB")
             set(DEBSRC_BUILD_DEPENDS debhelper git cmake xorg-dev libgbm-dev libglu1-mesa-dev libavcodec-dev libavfilter-dev  libavdevice-dev libavformat-dev libavutil-dev libswscale-dev libv4l-dev libjpeg-dev libpng-dev libtiff-dev)
