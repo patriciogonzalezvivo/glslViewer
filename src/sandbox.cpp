@@ -302,8 +302,8 @@ void Sandbox::commandsInit(CommandList &_commands ) {
                 m_plot_shader.setSource(vera::getDefaultSrc(vera::FRAG_PLOT), vera::getDefaultSrc(vera::VERT_DYNAMIC_BILLBOARD));
                 m_plot_shader.delDefine("PLOT_VALUE");
 
-                using polt_value_display_t = std::tuple<std::string, PlotType, std::string>;
-                const std::vector<polt_value_display_t> lala = {
+                using plot_value_display_t = std::tuple<std::string, PlotType, std::string>;
+                const std::vector<plot_value_display_t> plot_metadata = {
                     {"off", PLOT_OFF, ""}
                     , {"luma", PLOT_LUMA, "color.rgb = vec3(step(st.y, data.a)); color += stroke(fract(st.x * 5.0), 0.5, 0.025) * 0.1;"}
                     , {"red", PLOT_RED, "color.rgb = vec3(step(st.y, data.r), 0.0, 0.0);  color += stroke(fract(st.x * 5.0), 0.5, 0.025) * 0.1;"}
@@ -319,15 +319,16 @@ void Sandbox::commandsInit(CommandList &_commands ) {
                     const auto it = std::find_if(std::begin(carousel), std::end(carousel), [&](const PlotType& s){return m_plot == s;});
                     if(it != std::end(carousel)) {
                         std::rotate(std::begin(carousel), std::next(it), std::end(carousel));
-                        const auto it = std::find_if(std::begin(lala), std::end(lala), [&](const polt_value_display_t& s){return carousel.front() == std::get<1>(s);});
+                        const auto it = std::find_if(std::begin(plot_metadata), std::end(plot_metadata), [&](const plot_value_display_t& s){return carousel.front() == std::get<1>(s);});
                         values[1] = std::get<0>(*it);
                     }
                 }
-                if (values[1] == "off") {
+
+                if (values[1] == "off") 
                     m_plot = PLOT_OFF;
-                } else {
-                    const auto it = std::find_if(std::begin(lala), std::end(lala), [&](const polt_value_display_t& i){return std::get<0>(i) == values[1];});
-                    if(it != std::end(lala)) {
+                else {
+                    const auto it = std::find_if(std::begin(plot_metadata), std::end(plot_metadata), [&](const plot_value_display_t& i){return std::get<0>(i) == values[1];});
+                    if(it != std::end(plot_metadata)) {
                         m_plot = std::get<1>(*it);
                         m_plot_shader.addDefine("PLOT_VALUE", std::get<2>(*it));
                     }
