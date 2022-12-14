@@ -8,9 +8,12 @@ import yaml
 import random
 import subprocess
 
-CONFIG_FILE = "/usr/share/glslViewer/glslScreenSaver.yaml"
-USER_CONFIG_FILE = os.path.join(os.path.expanduser("~"),".glslScreenSaver.yaml")
+CONFIG_FOLDER = "/usr/share/glslViewer/" 
+if not os.path.exists( CONFIG_FOLDER ):
+    CONFIG_FOLDER = "/usr/local/share/glslViewer/"
+CONFIG_FILE = os.path.join(CONFIG_FOLDER, "glslScreenSaver.yaml")
 
+USER_CONFIG_FILE = os.path.join(os.path.expanduser("~"),".glslScreenSaver.yaml")
 if os.path.exists( USER_CONFIG_FILE ):
     CONFIG_FILE = USER_CONFIG_FILE;
 
@@ -70,7 +73,6 @@ if __name__ == '__main__':
         if "extra" in config["shaders"][choise]:
             cmd += " " + config["shaders"][choise]["extra"]
 
-
         print(cmd)
         screenshot()
-        subprocess.call(cmd, shell=True)
+        subprocess.call(cmd, cwd=CONFIG_FOLDER, shell=True)
