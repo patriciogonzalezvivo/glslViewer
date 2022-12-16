@@ -2021,28 +2021,31 @@ void overlay_m_showPasses(Uniforms& uniforms, bool m_postprocessing, const Scene
         vera::textAlign(vera::ALIGN_BOTTOM);
         vera::textAlign(vera::ALIGN_LEFT);
 
-        for (size_t i = 0; i < uniforms.buffers.size(); i++) {
-            glm::vec2 offset = glm::vec2(lolo.xOffset, lolo.yOffset);
-            glm::vec2 scale = glm::vec2(lolo.yStep);
-            scale.x *= ((float)uniforms.buffers[i]->getWidth()/(float)uniforms.buffers[i]->getHeight());
-            offset.x += lolo.xStep - scale.x;
-
-            vera::image(uniforms.buffers[i], offset.x, offset.y, scale.x, scale.y);
-            vera::text("u_buffer" + vera::toString(i), lolo.xOffset - scale.x, vera::getWindowHeight() - lolo.yOffset + lolo.yStep);
-
+        const auto print_text = [&](const std::string& prompt, const float offsetx) {
+            vera::text(prompt, offsetx, vera::getWindowHeight() - lolo.yOffset + lolo.yStep);
             lolo.yOffset -= lolo.yStep * 2.0;
+        };
+
+        const auto print_fbo_text = [&](const vera::Fbo& lala, const std::string& prompt) {
+            vera::image(&lala, lolo.xOffset, lolo.yOffset, lolo.xStep, lolo.yStep);
+            print_text(prompt, lolo.xOffset - lolo.xStep);
+        };
+
+        const auto print_buffers_text =[&](const vera::Fbo& uniforms_buffer, size_t i, const std::string& prompt) {
+                glm::vec2 offset = glm::vec2(lolo.xOffset, lolo.yOffset);
+                glm::vec2 scale = glm::vec2(lolo.yStep);
+                scale.x *= ((float)uniforms_buffer.getWidth()/(float)uniforms_buffer.getHeight());
+                offset.x += lolo.xStep - scale.x;
+                vera::image(uniforms_buffer, offset.x, offset.y, scale.x, scale.y);
+                print_text(prompt + vera::toString(i), lolo.xOffset - scale.x);
+        };
+
+        for (size_t i = 0; i < uniforms.buffers.size(); i++) {
+            print_buffers_text(*uniforms.buffers[i], i, "u_buffer");
         }
 
         for (size_t i = 0; i < uniforms.doubleBuffers.size(); i++) {
-            glm::vec2 offset = glm::vec2(lolo.xOffset, lolo.yOffset);
-            glm::vec2 scale = glm::vec2(lolo.yStep);
-            scale.x *= ((float)uniforms.doubleBuffers[i]->src->getWidth()/(float)uniforms.doubleBuffers[i]->src->getHeight());
-            offset.x += lolo.xStep - scale.x;
-
-            vera::image(uniforms.doubleBuffers[i]->src, offset.x, offset.y, scale.x, scale.y);
-            vera::text("u_doubleBuffer" + vera::toString(i), lolo.xOffset - scale.x, vera::getWindowHeight() - lolo.yOffset + lolo.yStep);
-
-            lolo.yOffset -= lolo.yStep * 2.0;
+            print_buffers_text(*uniforms.doubleBuffers[i]->src, i, "u_doubleBuffer");
         }
 
         for (size_t i = 0; i < uniforms.pyramids.size(); i++) {
@@ -2081,41 +2084,31 @@ void overlay_m_showPasses(Uniforms& uniforms, bool m_postprocessing, const Scene
                 if ( it->second->getShadowMap()->getDepthTextureId() ) {
                     vera::imageDepth(it->second->getShadowMap(), lolo.xOffset, lolo.yOffset, lolo.xStep, lolo.yStep, it->second->getShadowMapFar(), it->second->getShadowMapNear());
                     // vera::image(it->second->getShadowMap(), xOffset, yOffset, xStep, yStep);
-                    vera::text("u_lightShadowMap", lolo.xOffset - lolo.xStep, vera::getWindowHeight() - lolo.yOffset + lolo.yStep);
-                    lolo.yOffset -= lolo.yStep * 2.0;
+                    print_text("u_lightShadowMap", lolo.xOffset - lolo.xStep);
                 }
             }
         }
 
         if (uniforms.functions["u_scenePosition"].present) {
-            vera::image(&m_sceneRender.positionFbo, lolo.xOffset, lolo.yOffset, lolo.xStep, lolo.yStep);
-            vera::text("u_scenePosition", lolo.xOffset - lolo.xStep, vera::getWindowHeight() - lolo.yOffset + lolo.yStep);
-            lolo.yOffset -= lolo.yStep * 2.0;
+            print_fbo_text(m_sceneRender.positionFbo, "u_scenePosition");
         }
 
         if (uniforms.functions["u_sceneNormal"].present) {
-            vera::image(&m_sceneRender.normalFbo, lolo.xOffset, lolo.yOffset, lolo.xStep, lolo.yStep);
-            vera::text("u_sceneNormal", lolo.xOffset - lolo.xStep, vera::getWindowHeight() - lolo.yOffset + lolo.yStep);
-            lolo.yOffset -= lolo.yStep * 2.0;
+            print_fbo_text(m_sceneRender.normalFbo, "u_sceneNormal");
         }
 
         for (size_t i = 0; i < m_sceneRender.buffersFbo.size(); i++) {
-            vera::image(m_sceneRender.buffersFbo[i], lolo.xOffset, lolo.yOffset, lolo.xStep, lolo.yStep);
-            vera::text("u_sceneBuffer" + vera::toString(i), lolo.xOffset - lolo.xStep, vera::getWindowHeight() - lolo.yOffset + lolo.yStep);
-            lolo.yOffset -= lolo.yStep * 2.0;
+            print_fbo_text(*m_sceneRender.buffersFbo[i], "u_sceneBuffer");
         }
 
         if (uniforms.functions["u_scene"].present) {
-            vera::image(&m_sceneRender.renderFbo, lolo.xOffset, lolo.yOffset, lolo.xStep, lolo.yStep);
-            vera::text("u_scene", lolo.xOffset - lolo.xStep, vera::getWindowHeight() - lolo.yOffset + lolo.yStep);
-            lolo.yOffset -= lolo.yStep * 2.0;
+            print_fbo_text(m_sceneRender.renderFbo, "u_scene");
         }
 
         if (uniforms.functions["u_sceneDepth"].present) {
             if (uniforms.activeCamera)
                 vera::imageDepth(&m_sceneRender.renderFbo, lolo.xOffset, lolo.yOffset, lolo.xStep, lolo.yStep, uniforms.activeCamera->getFarClip(), uniforms.activeCamera->getNearClip());
-            vera::text("u_sceneDepth", lolo.xOffset - lolo.xStep, vera::getWindowHeight() - lolo.yOffset + lolo.yStep);
-            lolo.yOffset -= lolo.yStep * 2.0;
+            print_text("u_sceneDepth", lolo.xOffset - lolo.xStep);
         }
     }
     TRACK_END("renderUI:buffers")
