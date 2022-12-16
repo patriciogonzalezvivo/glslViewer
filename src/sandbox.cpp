@@ -988,61 +988,37 @@ void Sandbox::commandsInit(CommandList &_commands ) {
                 // bbox.expand( (max_dist*max_dist) * padding );
                 // it->second->addDefine("MODEL_SDF_SCALE", vera::toString(2.0f-bbox.getArea()/area) );
 
-                glm::vec3   bdiagonal   = acc.getDiagonal();
-                float       max_dist    = glm::length(bdiagonal);
+                int voxel_resolution_lod_0  = std::pow(2, 2);
+                glm::vec3   bdiagonal       = acc.getDiagonal();
+                float       max_dist        = glm::length(bdiagonal);
                 acc.expand( (max_dist*max_dist) * padding );
-                int voxel_resolution_lod_0 = std::pow(2, 2);
 
-                std::vector<vera::Image> prev_lod;
+                std::vector<vera::Image> current_lod;
                 for (int z = 0; z < voxel_resolution_lod_0; z++)
-                    prev_lod.push_back( vera::toSdfLayer( &acc, voxel_resolution_lod_0, z) );
+                    current_lod.push_back( vera::toSdfLayer( &acc, voxel_resolution_lod_0, z) );
                 uniforms.loadMutex.lock();
-                uniforms.loadQueue[ name ] = packSprite(prev_lod);
+                uniforms.loadQueue[ name ] = packSprite(current_lod);
                 uniforms.loadMutex.unlock();
                 addDefine("MODEL_SDF_TEXTURE_RESOLUTION", vera::toString(voxel_resolution_lod_0) );
 
-                for (int l = 0; l < 4; l++) {
-                    std::vector<vera::Image> next_lod = vera::scaleSprite(prev_lod, 4);
+                for (int l = 1; l < 4; l++) {
+                    std::vector<vera::Image> new_lod = vera::scaleSprite(current_lod, 4);
                     uniforms.loadMutex.lock();
-                    uniforms.loadQueue[ name ] = vera::packSprite(next_lod);
+                    uniforms.loadQueue[ name ] = vera::packSprite(new_lod);
                     uniforms.loadMutex.unlock();
-                    addDefine("MODEL_SDF_TEXTURE_RESOLUTION", vera::toString(next_lod.size()) );
+                    addDefine("MODEL_SDF_TEXTURE_RESOLUTION", vera::toString(new_lod.size()) );
 
-                    if (l != 3)
-                    for (int z = 0; z < next_lod.size(); z++) {
-                        next_lod[z] = vera::toSdfLayer( &acc, next_lod.size(), z);
+                    if (l < 3)
+                    for (int z = 0; z < new_lod.size(); z++) {
+                        new_lod[z] = vera::toSdfLayer( &acc, new_lod.size(), z);
+                        console_draw_pct( float(z) / float(new_lod.size() - 1) );
                         uniforms.loadMutex.lock();
-                        uniforms.loadQueue[ name ] = vera::packSprite(next_lod);
+                        uniforms.loadQueue[ name ] = vera::packSprite(new_lod);
                         uniforms.loadMutex.unlock();
                     }
                     
-                    prev_lod = next_lod;
+                    current_lod = new_lod;
                 }
-
-                // std::vector<vera::Image> layers_lod_2 = vera::scaleSprite(layers_lod_1, 4);
-                // uniforms.loadMutex.lock();
-                // uniforms.loadQueue[ name ] = vera::packSprite(layers_lod_2);
-                // uniforms.loadMutex.unlock();
-                // addDefine("MODEL_SDF_TEXTURE_RESOLUTION", vera::toString(layers_lod_2.size()) );
-                // for (int z = 0; z < layers_lod_2.size(); z++) {
-                //     layers_lod_2[z] = vera::toSdfLayer( &acc, layers_lod_2.size(), z);
-                //     uniforms.loadMutex.lock();
-                //     uniforms.loadQueue[ name ] = vera::packSprite(layers_lod_2);
-                //     uniforms.loadMutex.unlock();
-                // }
-
-                // std::vector<vera::Image> layers_lod_3 = vera::scaleSprite(layers_lod_2, 4);
-                // uniforms.loadMutex.lock();
-                // uniforms.loadQueue[ name ] = vera::packSprite(layers_lod_3);
-                // uniforms.loadMutex.unlock();
-                // addDefine("MODEL_SDF_TEXTURE_RESOLUTION", vera::toString(layers_lod_3.size()) );
-
-                // for (int z = 0; z < layers_lod_3.size(); z++) {
-                //     layers_lod_3[z] = vera::toSdfLayer( &acc, layers_lod_3.size(), z);
-                //     std::cout << z << " " << layers_lod_3[z].getWidth() << "x" << layers_lod_3[z].getHeight() << "x" << layers_lod_3[z].getChannels() << std::endl;
-                //     uniforms.loadQueue[ name ] = vera::packSprite(layers_lod_3);
-                // }
-
             }
 
             return true;
