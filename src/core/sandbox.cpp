@@ -2211,56 +2211,37 @@ void overlay_prompt_help(Uniforms& uniforms, int& geom_index, SceneRender& m_sce
     vera::textSize(22.0f);
     lolo.yStep = vera::getFontHeight() * 1.5f;
 
-    if (geom_index != -1) {
-        vera::text("a - " + std::string( m_sceneRender.showAxis? "hide" : "show" ) + " axis", lolo.x, lolo.y);
+    const auto print_text = [&](const std::string& prompt){
+        vera::text(prompt, lolo.x, lolo.y);
         lolo.y += lolo.yStep;
-        vera::text("b - " + std::string( m_sceneRender.showBBoxes? "hide" : "show" ) + " bounding boxes", lolo.x, lolo.y);
-        lolo.y += lolo.yStep;
-    }
+    };
 
-    vera::text("c - hide/show cursor", lolo.x, lolo.y);
-    lolo.y += lolo.yStep;
+    const auto geometry_available = geom_index != -1;
+    const auto uniform_streams_available = uniforms.streams.size() > 0;
 
-    if (geom_index != -1) {
-        vera::text("d - " + std::string( m_sceneRender.dynamicShadows? "disable" : "enable" ) + " dynamic shadows", lolo.x, lolo.y);
-        lolo.y += lolo.yStep;
-        vera::text("f - hide/show floor", lolo.x, lolo.y);
-        lolo.y += lolo.yStep;
-    }
-    vera::text("F - " + std::string( vera::isFullscreen() ? "disable" : "enable" ) + " fullscreen", lolo.x, lolo.y);
-    lolo.y += lolo.yStep;
-    if (geom_index != -1) {
-        vera::text("g - " + std::string( m_sceneRender.showGrid? "hide" : "show" ) + " grid", lolo.x, lolo.y);
-        lolo.y += lolo.yStep;
-    }
+    using kv = std::pair<bool, std::string>;
+    const auto help_prompts = {
+        kv{geometry_available, "a - " + std::string( m_sceneRender.showAxis? "hide" : "show" ) + " axis"}
+        , {geometry_available, "b - " + std::string( m_sceneRender.showBBoxes? "hide" : "show" ) + " bounding boxes"}
+        , {true, "c - hide/show cursor"}
+        , {geometry_available, "d - " + std::string( m_sceneRender.dynamicShadows? "disable" : "enable" ) + " dynamic shadows"}
+        , {geometry_available, "f - hide/show floor"}
+        , {true, "F - " + std::string( vera::isFullscreen() ? "disable" : "enable" ) + " fullscreen"}
+        , {geometry_available, "g - " + std::string( m_sceneRender.showGrid? "hide" : "show" ) + " grid"}
+        , {true, "h - " + std::string( help? "hide" : "show" ) + " help"}
+        , {true, "i - hide/show extra info"}
+        , {true, "o - open shaders on default editor"}
+        , {true, "p - hide/show render passes/buffers"}
+        , {uniform_streams_available, "r - restart stream textures"}
+        , {geometry_available, "s - hide/show sky"}
+        , {true, "t - hide/show loaded textures"}
+        , {true, "v - " + std::string( verbose? "disable" : "enable" ) + " verbose"}
+        , {uniform_streams_available, "space - start/stop stream textures"}
+    };
 
-    vera::text("h - " + std::string( help? "hide" : "show" ) + " help", lolo.x, lolo.y);
-    lolo.y += lolo.yStep;
-    vera::text("i - hide/show extra info", lolo.x, lolo.y);
-    lolo.y += lolo.yStep;
-    vera::text("o - open shaders on default editor", lolo.x, lolo.y);
-    lolo.y += lolo.yStep;
-    vera::text("p - hide/show render passes/buffers", lolo.x, lolo.y);
-    lolo.y += lolo.yStep;
-
-    if (uniforms.streams.size() > 0) {
-        vera::text("r - restart stream textures", lolo.x, lolo.y);
-        lolo.y += lolo.yStep;
-    }
-
-    if (geom_index != -1) {
-        vera::text("s - hide/show sky", lolo.x, lolo.y);
-        lolo.y += lolo.yStep;
-    }
-
-    vera::text("t - hide/show loaded textures", lolo.x, lolo.y);
-    lolo.y += lolo.yStep;
-    vera::text("v - " + std::string( verbose? "disable" : "enable" ) + " verbose", lolo.x, lolo.y);
-    lolo.y += lolo.yStep;
-
-    if (uniforms.streams.size() > 0) {
-        vera::text("space - start/stop stream textures", lolo.x, lolo.y);
-        lolo.y += lolo.yStep;
+    for(const auto& prompt : help_prompts) {
+        if(std::get<0>(prompt)) // activated prompt
+            print_text(std::get<1>(prompt));
     }
 
     vera::setCamera(cam);
