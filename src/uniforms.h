@@ -2,6 +2,7 @@
 
 #include <map>
 #include <queue>
+#include <mutex>
 #include <array>
 #include <vector>
 #include <string>
@@ -86,6 +87,7 @@ public:
     virtual void        printBuffers();
     virtual void        clearBuffers();
 
+    std::mutex          loadMutex;
     ImagesMap           loadQueue;
 
     // Ingest new uniforms

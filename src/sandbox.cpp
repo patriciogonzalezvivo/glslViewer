@@ -8,6 +8,7 @@
 
 #include "vera/window.h"
 
+
 #include "tools/job.h"
 #include "tools/text.h"
 #include "tools/record.h"
@@ -966,28 +967,83 @@ void Sandbox::commandsInit(CommandList &_commands ) {
         if (geom_index != -1) {
             std::vector<std::string> values = vera::split(_line,',');
             float padding = 0.01f;
-            int resolution = 6;
-
             if (values.size() > 1)
                 padding = vera::toFloat(values[1]);
 
-            if (values.size() > 2)
-                resolution = vera::toInt(values[2]);
-
-            int cells_per_side = std::sqrt(std::pow(2, resolution));
-            
             for (vera::ModelsMap::iterator it = uniforms.models.begin(); it != uniforms.models.end(); ++it) {
                 std::string name = "u_" + it->first + "Sdf";
-                uniforms.loadQueue[ name ] = vera::toSdf( it->second->mesh, padding, resolution);
-                vera::BoundingBox bbox  = it->second->getBoundingBox();
-                float area = bbox.getArea();
-                glm::vec3   bdiagonal   = bbox.getDiagonal();
+                addDefine("MODEL_SDF_TEXTURE", name );
+
+                vera::Mesh mesh = it->second->mesh;
+                center(mesh);
+                std::vector<vera::Triangle> tris = mesh.getTriangles();
+                vera::BVH acc(tris, vera::SPLIT_MIDPOINT);
+                acc.square();
+
+                // // Calculate scale difference between model and SDF
+                // vera::BoundingBox bbox  = it->second->getBoundingBox();
+                // float area = bbox.getArea();
+                // glm::vec3   bdiagonal   = bbox.getDiagonal();
+                // float       max_dist    = glm::length(bdiagonal);
+                // bbox.expand( (max_dist*max_dist) * padding );
+                // it->second->addDefine("MODEL_SDF_SCALE", vera::toString(2.0f-bbox.getArea()/area) );
+
+                glm::vec3   bdiagonal   = acc.getDiagonal();
                 float       max_dist    = glm::length(bdiagonal);
-                bbox.expand( (max_dist*max_dist) * padding );
-                it->second->addDefine("MODEL_SDF_TEXTURE", name );
-                it->second->addDefine("MODEL_SDF_SCALE", vera::toString(2.0f-bbox.getArea()/area) );
+                acc.expand( (max_dist*max_dist) * padding );
+                int voxel_resolution_lod_0 = std::pow(2, 2);
+
+                std::vector<vera::Image> prev_lod;
+                for (int z = 0; z < voxel_resolution_lod_0; z++)
+                    prev_lod.push_back( vera::toSdfLayer( &acc, voxel_resolution_lod_0, z) );
+                uniforms.loadMutex.lock();
+                uniforms.loadQueue[ name ] = packSprite(prev_lod);
+                uniforms.loadMutex.unlock();
+                addDefine("MODEL_SDF_TEXTURE_RESOLUTION", vera::toString(voxel_resolution_lod_0) );
+
+                for (int l = 0; l < 4; l++) {
+                    std::vector<vera::Image> next_lod = vera::scaleSprite(prev_lod, 4);
+                    uniforms.loadMutex.lock();
+                    uniforms.loadQueue[ name ] = vera::packSprite(next_lod);
+                    uniforms.loadMutex.unlock();
+                    addDefine("MODEL_SDF_TEXTURE_RESOLUTION", vera::toString(next_lod.size()) );
+
+                    if (l != 3)
+                    for (int z = 0; z < next_lod.size(); z++) {
+                        next_lod[z] = vera::toSdfLayer( &acc, next_lod.size(), z);
+                        uniforms.loadMutex.lock();
+                        uniforms.loadQueue[ name ] = vera::packSprite(next_lod);
+                        uniforms.loadMutex.unlock();
+                    }
+                    
+                    prev_lod = next_lod;
+                }
+
+                // std::vector<vera::Image> layers_lod_2 = vera::scaleSprite(layers_lod_1, 4);
+                // uniforms.loadMutex.lock();
+                // uniforms.loadQueue[ name ] = vera::packSprite(layers_lod_2);
+                // uniforms.loadMutex.unlock();
+                // addDefine("MODEL_SDF_TEXTURE_RESOLUTION", vera::toString(layers_lod_2.size()) );
+                // for (int z = 0; z < layers_lod_2.size(); z++) {
+                //     layers_lod_2[z] = vera::toSdfLayer( &acc, layers_lod_2.size(), z);
+                //     uniforms.loadMutex.lock();
+                //     uniforms.loadQueue[ name ] = vera::packSprite(layers_lod_2);
+                //     uniforms.loadMutex.unlock();
+                // }
+
+                // std::vector<vera::Image> layers_lod_3 = vera::scaleSprite(layers_lod_2, 4);
+                // uniforms.loadMutex.lock();
+                // uniforms.loadQueue[ name ] = vera::packSprite(layers_lod_3);
+                // uniforms.loadMutex.unlock();
+                // addDefine("MODEL_SDF_TEXTURE_RESOLUTION", vera::toString(layers_lod_3.size()) );
+
+                // for (int z = 0; z < layers_lod_3.size(); z++) {
+                //     layers_lod_3[z] = vera::toSdfLayer( &acc, layers_lod_3.size(), z);
+                //     std::cout << z << " " << layers_lod_3[z].getWidth() << "x" << layers_lod_3[z].getHeight() << "x" << layers_lod_3[z].getChannels() << std::endl;
+                //     uniforms.loadQueue[ name ] = vera::packSprite(layers_lod_3);
+                // }
+
             }
-            addDefine("SDF_CELLS_PER_SIDE", vera::toString(cells_per_side) );
 
             return true;
         }
@@ -1539,10 +1595,11 @@ void Sandbox::renderPrep() {
     if (m_initialized) {
         uniforms.update();
         if (uniforms.loadQueue.size() > 0) {
-            for (ImagesMap::iterator it = uniforms.loadQueue.begin(); it != uniforms.loadQueue.end(); ++it) {
+            uniforms.loadMutex.lock();
+            for (ImagesMap::iterator it = uniforms.loadQueue.begin(); it != uniforms.loadQueue.end(); ++it)
                 uniforms.addTexture( it->first, it->second );
-            }
             uniforms.loadQueue.clear();
+            uniforms.loadMutex.unlock();
         }
     }
 
