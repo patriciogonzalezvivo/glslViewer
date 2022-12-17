@@ -1992,6 +1992,25 @@ void overlay_m_showTextures(const Uniforms& uniforms) {
     }
 }
 
+void print_text(const std::string& prompt, const float offsetx, render_ui_t& lolo) {
+    vera::text(prompt, offsetx, vera::getWindowHeight() - lolo.yOffset + lolo.yStep);
+    lolo.yOffset -= lolo.yStep * 2.0;
+}
+
+void print_fbo_text(const vera::Fbo& lala, const std::string& prompt, render_ui_t& lolo) {
+    vera::image(&lala, lolo.xOffset, lolo.yOffset, lolo.xStep, lolo.yStep);
+    print_text(prompt, lolo.xOffset - lolo.xStep, lolo);
+}
+
+void print_buffers_text(const vera::Fbo& uniforms_buffer, size_t i, const std::string& prompt, render_ui_t& lolo) {
+        glm::vec2 offset = glm::vec2(lolo.xOffset, lolo.yOffset);
+        glm::vec2 scale = glm::vec2(lolo.yStep);
+        scale.x *= ((float)uniforms_buffer.getWidth()/(float)uniforms_buffer.getHeight());
+        offset.x += lolo.xStep - scale.x;
+        vera::image(uniforms_buffer, offset.x, offset.y, scale.x, scale.y);
+        print_text(prompt + vera::toString(i), lolo.xOffset - scale.x, lolo);
+}
+
 void overlay_m_showPasses(Uniforms& uniforms, bool m_postprocessing, const SceneRender& m_sceneRender) {
     glDisable(GL_DEPTH_TEST);
     TRACK_BEGIN("renderUI:buffers")
@@ -2027,31 +2046,12 @@ void overlay_m_showPasses(Uniforms& uniforms, bool m_postprocessing, const Scene
         vera::textAlign(vera::ALIGN_BOTTOM);
         vera::textAlign(vera::ALIGN_LEFT);
 
-        const auto print_text = [&](const std::string& prompt, const float offsetx) {
-            vera::text(prompt, offsetx, vera::getWindowHeight() - lolo.yOffset + lolo.yStep);
-            lolo.yOffset -= lolo.yStep * 2.0;
-        };
-
-        const auto print_fbo_text = [&](const vera::Fbo& lala, const std::string& prompt) {
-            vera::image(&lala, lolo.xOffset, lolo.yOffset, lolo.xStep, lolo.yStep);
-            print_text(prompt, lolo.xOffset - lolo.xStep);
-        };
-
-        const auto print_buffers_text =[&](const vera::Fbo& uniforms_buffer, size_t i, const std::string& prompt) {
-                glm::vec2 offset = glm::vec2(lolo.xOffset, lolo.yOffset);
-                glm::vec2 scale = glm::vec2(lolo.yStep);
-                scale.x *= ((float)uniforms_buffer.getWidth()/(float)uniforms_buffer.getHeight());
-                offset.x += lolo.xStep - scale.x;
-                vera::image(uniforms_buffer, offset.x, offset.y, scale.x, scale.y);
-                print_text(prompt + vera::toString(i), lolo.xOffset - scale.x);
-        };
-
         for (size_t i = 0; i < uniforms.buffers.size(); i++) {
-            print_buffers_text(*uniforms.buffers[i], i, "u_buffer");
+            print_buffers_text(*uniforms.buffers[i], i, "u_buffer", lolo);
         }
 
         for (size_t i = 0; i < uniforms.doubleBuffers.size(); i++) {
-            print_buffers_text(*uniforms.doubleBuffers[i]->src, i, "u_doubleBuffer");
+            print_buffers_text(*uniforms.doubleBuffers[i]->src, i, "u_doubleBuffer", lolo);
         }
 
         for (size_t i = 0; i < uniforms.pyramids.size(); i++) {
@@ -2085,31 +2085,31 @@ void overlay_m_showPasses(Uniforms& uniforms, bool m_postprocessing, const Scene
                 if ( it->second->getShadowMap()->getDepthTextureId() ) {
                     vera::imageDepth(it->second->getShadowMap(), lolo.xOffset, lolo.yOffset, lolo.xStep, lolo.yStep, it->second->getShadowMapFar(), it->second->getShadowMapNear());
                     // vera::image(it->second->getShadowMap(), xOffset, yOffset, xStep, yStep);
-                    print_text("u_lightShadowMap", lolo.xOffset - lolo.xStep);
+                    print_text("u_lightShadowMap", lolo.xOffset - lolo.xStep, lolo);
                 }
             }
         }
 
         if (uniforms.functions["u_scenePosition"].present) {
-            print_fbo_text(m_sceneRender.positionFbo, "u_scenePosition");
+            print_fbo_text(m_sceneRender.positionFbo, "u_scenePosition", lolo);
         }
 
         if (uniforms.functions["u_sceneNormal"].present) {
-            print_fbo_text(m_sceneRender.normalFbo, "u_sceneNormal");
+            print_fbo_text(m_sceneRender.normalFbo, "u_sceneNormal", lolo);
         }
 
         for (size_t i = 0; i < m_sceneRender.buffersFbo.size(); i++) {
-            print_fbo_text(*m_sceneRender.buffersFbo[i], "u_sceneBuffer");
+            print_fbo_text(*m_sceneRender.buffersFbo[i], "u_sceneBuffer", lolo);
         }
 
         if (uniforms.functions["u_scene"].present) {
-            print_fbo_text(m_sceneRender.renderFbo, "u_scene");
+            print_fbo_text(m_sceneRender.renderFbo, "u_scene", lolo);
         }
 
         if (uniforms.functions["u_sceneDepth"].present) {
             if (uniforms.activeCamera)
                 vera::imageDepth(&m_sceneRender.renderFbo, lolo.xOffset, lolo.yOffset, lolo.xStep, lolo.yStep, uniforms.activeCamera->getFarClip(), uniforms.activeCamera->getNearClip());
-            print_text("u_sceneDepth", lolo.xOffset - lolo.xStep);
+            print_text("u_sceneDepth", lolo.xOffset - lolo.xStep, lolo);
         }
     }
     TRACK_END("renderUI:buffers")
