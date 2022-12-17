@@ -2056,22 +2056,17 @@ void overlay_m_showPasses(Uniforms& uniforms, bool m_postprocessing, const Scene
             offset.x += lolo.xStep - w;
             for (size_t j = 0; j < uniforms.pyramids[i].getDepth() * 2; j++ ) {
 
-                if (j < uniforms.pyramids[i].getDepth())
-                    vera::image(uniforms.pyramids[i].getResult(j), offset.x, offset.y, scale.x, scale.y);
-                else
-                    vera::image(uniforms.pyramids[i].getResult(j), offset.x + w * 2.0f, offset.y, scale.x, scale.y);
+                const auto is_lower_depth = (j < uniforms.pyramids[i].getDepth());
+                const auto delta_offset = is_lower_depth ? offset.x : offset.x + w * 2.0f;
 
-                offset.x -= scale.x;
-                if (j < uniforms.pyramids[i].getDepth()) {
-                    scale *= 0.5;
-                    offset.y = lolo.yOffset - lolo.yStep * 0.5;
-                }
-                else {
-                    offset.y = lolo.yOffset + lolo.yStep * 0.5;
-                    scale *= 2.0;
-                }
+                vera::image(uniforms.pyramids[i].getResult(j), delta_offset, offset.y, scale.x, scale.y);
                 offset.x -= scale.x;
 
+                using kv = std::pair<glm::vec2, float>;
+                std::tie(scale, offset.y) = is_lower_depth
+                                            ? kv{scale *= 0.5, lolo.yOffset - lolo.yStep * 0.5}
+                                            : kv{scale *= 2.0, lolo.yOffset + lolo.yStep * 0.5};
+                offset.x -= scale.x;
             }
 
             // vera::text("u_pyramid0" + vera::toString(i), xOffset - scale.x * 2.0, vera::getWindowHeight() - yOffset + yStep);
