@@ -2,6 +2,7 @@
 
 #include <sys/stat.h>   // stat
 #include <algorithm>    // std::find
+#include <numeric>
 #include <fstream>
 #include <math.h>
 #include <memory>
@@ -1996,17 +1997,22 @@ void overlay_m_showPasses(Uniforms& uniforms, bool m_postprocessing, const Scene
     TRACK_BEGIN("renderUI:buffers")
 
     // DEBUG BUFFERS
-    int nTotal = uniforms.buffers.size();
-    nTotal += uniforms.doubleBuffers.size();
-    nTotal += uniforms.pyramids.size();
-    if (m_postprocessing && uniforms.models.size() > 0 ) {
-        nTotal += 1;
-        nTotal += uniforms.functions["u_scene"].present;
-        nTotal += uniforms.functions["u_sceneDepth"].present;
-    }
-    nTotal += uniforms.functions["u_sceneNormal"].present;
-    nTotal += uniforms.functions["u_scenePosition"].present;
-    nTotal += m_sceneRender.getBuffersTotal();
+    const auto is_postprocessing_with_uniforms = m_postprocessing
+                                                 && uniforms.models.size() > 0;
+    using kv = std::pair<bool, int>;
+    const auto nTotalArray = {
+        kv{true, uniforms.buffers.size()}
+        , {true, uniforms.doubleBuffers.size()}
+        , {true, uniforms.pyramids.size()}
+        , {is_postprocessing_with_uniforms, 1}
+        , {is_postprocessing_with_uniforms, uniforms.functions["u_scene"].present}
+        , {is_postprocessing_with_uniforms, uniforms.functions["u_sceneDepth"].present}
+        , {true, uniforms.functions["u_sceneNormal"].present}
+        , {true, uniforms.functions["u_scenePosition"].present}
+        , {true, m_sceneRender.getBuffersTotal()}
+    };
+    const auto nTotal = std::accumulate(std::begin(nTotalArray), std::end(nTotalArray), int{}
+                                        , [](const int acc, const kv& kv) { return acc + ((kv.first) ? kv.second : 0); });
 
     if (nTotal > 0) {
         render_ui_t lolo;
