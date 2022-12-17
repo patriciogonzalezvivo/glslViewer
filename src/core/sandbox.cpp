@@ -2011,6 +2011,77 @@ void print_buffers_text(const vera::Fbo& uniforms_buffer, size_t i, const std::s
         print_text(prompt + vera::toString(i), lolo.xOffset - scale.x, lolo);
 }
 
+using renderer_process_info_t = std::tuple<std::string, const vera::Fbo* const, const BuffersList* const>;
+
+void do_something_00(const std::string& prompt_id, Uniforms& uniforms, const renderer_process_info_t& abc, render_ui_t& lolo) {
+    if (uniforms.functions[prompt_id].present) {
+        print_fbo_text(*std::get<1>(abc), prompt_id, lolo);
+    }
+}
+
+void do_something_01(const std::string& prompt_id, Uniforms& , const renderer_process_info_t& abc, render_ui_t& lolo) {
+    const auto& fbolist = *std::get<2>(abc);
+    for (size_t i = 0; i < fbolist.size(); i++) {
+        print_fbo_text(*fbolist[i], prompt_id, lolo);
+    }
+}
+
+void do_something_02(const std::string& prompt_id, Uniforms& uniforms, const renderer_process_info_t& abc, render_ui_t& lolo) {
+    if (uniforms.functions[prompt_id].present) {
+        if (uniforms.activeCamera)
+            vera::imageDepth(*std::get<1>(abc), lolo.xOffset, lolo.yOffset, lolo.xStep, lolo.yStep, uniforms.activeCamera->getFarClip(), uniforms.activeCamera->getNearClip());
+        print_text(prompt_id, lolo.xOffset - lolo.xStep, lolo);
+    }
+}
+
+void do_something_lightmap(const std::string& prompt_id, Uniforms& uniforms, const renderer_process_info_t&, render_ui_t& lolo) {
+    if (uniforms.models.size() > 0) {
+        for (vera::LightsMap::iterator it = uniforms.lights.begin(); it != uniforms.lights.end(); ++it ) {
+            if ( it->second->getShadowMap()->getDepthTextureId() ) {
+                vera::imageDepth(it->second->getShadowMap(), lolo.xOffset, lolo.yOffset, lolo.xStep, lolo.yStep, it->second->getShadowMapFar(), it->second->getShadowMapNear());
+                // vera::image(it->second->getShadowMap(), xOffset, yOffset, xStep, yStep);
+                print_text(prompt_id, lolo.xOffset - lolo.xStep, lolo);
+            }
+        }
+    }
+}
+
+void do_something_pyramid(const std::string&, Uniforms& uniforms, const renderer_process_info_t&, render_ui_t& lolo) {
+    for (size_t i = 0; i < uniforms.pyramids.size(); i++) {
+        glm::vec2 offset = glm::vec2(lolo.xOffset, lolo.yOffset);
+        glm::vec2 scale = glm::vec2(lolo.yStep);
+        scale.x *= ((float)uniforms.pyramids[i].getWidth()/(float)uniforms.pyramids[i].getHeight());
+        float w = scale.x;
+        offset.x += lolo.xStep - w;
+        for (size_t j = 0; j < uniforms.pyramids[i].getDepth() * 2; j++ ) {
+            const auto is_lower_depth = (j < uniforms.pyramids[i].getDepth());
+            const auto delta_offset = is_lower_depth ? offset.x : offset.x + w * 2.0f;
+
+            vera::image(uniforms.pyramids[i].getResult(j), delta_offset, offset.y, scale.x, scale.y);
+            offset.x -= scale.x;
+
+            std::tie(scale, offset.y) = is_lower_depth
+                                        ? std::pair<glm::vec2, float>{scale *= 0.5, lolo.yOffset - lolo.yStep * 0.5}
+                                        : std::pair<glm::vec2, float>{scale *= 2.0, lolo.yOffset + lolo.yStep * 0.5};
+            offset.x -= scale.x;
+        }
+        // vera::text("u_pyramid0" + vera::toString(i), xOffset - scale.x * 2.0, vera::getWindowHeight() - yOffset + yStep);
+        lolo.yOffset -= lolo.yStep * 2.0;
+    }
+}
+
+void do_something_doublebuffers(const std::string& prompt_id, Uniforms& uniforms, const renderer_process_info_t&, render_ui_t& lolo) {
+    for (size_t i = 0; i < uniforms.doubleBuffers.size(); i++) {
+        print_buffers_text(*uniforms.doubleBuffers[i]->src, i, prompt_id, lolo);
+    }
+}
+
+void do_something_singlebuffer(const std::string& prompt_id, Uniforms& uniforms, const renderer_process_info_t&, render_ui_t& lolo) {
+    for (size_t i = 0; i < uniforms.buffers.size(); i++) {
+        print_buffers_text(*uniforms.buffers[i], i, prompt_id, lolo);
+    }
+}
+
 void overlay_m_showPasses(Uniforms& uniforms, bool m_postprocessing, const SceneRender& m_sceneRender) {
     glDisable(GL_DEPTH_TEST);
     TRACK_BEGIN("renderUI:buffers")
@@ -2046,70 +2117,25 @@ void overlay_m_showPasses(Uniforms& uniforms, bool m_postprocessing, const Scene
         vera::textAlign(vera::ALIGN_BOTTOM);
         vera::textAlign(vera::ALIGN_LEFT);
 
-        for (size_t i = 0; i < uniforms.buffers.size(); i++) {
-            print_buffers_text(*uniforms.buffers[i], i, "u_buffer", lolo);
-        }
+        using func_sig_t = auto (*)(const std::string&, Uniforms&, const renderer_process_info_t&, render_ui_t&)-> void;
+        using vtable_kv_t = std::pair<renderer_process_info_t, func_sig_t>;
+        const std::array<vtable_kv_t, 9> somelist {
+            vtable_kv_t{{"u_buffer", nullptr, nullptr}, do_something_singlebuffer}
+            , {{"u_doubleBuffer", nullptr, nullptr}, do_something_doublebuffers}
+            , {{"u_pyramid0", nullptr, nullptr}, do_something_pyramid}
+            , {{"u_lightShadowMap", nullptr, nullptr}, do_something_lightmap}
+            , {{"u_scenePosition", &m_sceneRender.positionFbo, nullptr}, do_something_00}
+            , {{"u_sceneNormal", &m_sceneRender.normalFbo, nullptr}, do_something_00}
+            , {{"u_sceneBuffer", nullptr, &m_sceneRender.buffersFbo}, do_something_01}
+            , {{"u_scene", &m_sceneRender.renderFbo, nullptr}, do_something_00}
+            , {{"u_sceneDepth", &m_sceneRender.renderFbo, nullptr}, do_something_02}
+        };
 
-        for (size_t i = 0; i < uniforms.doubleBuffers.size(); i++) {
-            print_buffers_text(*uniforms.doubleBuffers[i]->src, i, "u_doubleBuffer", lolo);
-        }
-
-        for (size_t i = 0; i < uniforms.pyramids.size(); i++) {
-            glm::vec2 offset = glm::vec2(lolo.xOffset, lolo.yOffset);
-            glm::vec2 scale = glm::vec2(lolo.yStep);
-            scale.x *= ((float)uniforms.pyramids[i].getWidth()/(float)uniforms.pyramids[i].getHeight());
-            float w = scale.x;
-            offset.x += lolo.xStep - w;
-            for (size_t j = 0; j < uniforms.pyramids[i].getDepth() * 2; j++ ) {
-
-                const auto is_lower_depth = (j < uniforms.pyramids[i].getDepth());
-                const auto delta_offset = is_lower_depth ? offset.x : offset.x + w * 2.0f;
-
-                vera::image(uniforms.pyramids[i].getResult(j), delta_offset, offset.y, scale.x, scale.y);
-                offset.x -= scale.x;
-
-                using kv = std::pair<glm::vec2, float>;
-                std::tie(scale, offset.y) = is_lower_depth
-                                            ? kv{scale *= 0.5, lolo.yOffset - lolo.yStep * 0.5}
-                                            : kv{scale *= 2.0, lolo.yOffset + lolo.yStep * 0.5};
-                offset.x -= scale.x;
-            }
-
-            // vera::text("u_pyramid0" + vera::toString(i), xOffset - scale.x * 2.0, vera::getWindowHeight() - yOffset + yStep);
-            lolo.yOffset -= lolo.yStep * 2.0;
-
-        }
-
-        if (uniforms.models.size() > 0) {
-            for (vera::LightsMap::iterator it = uniforms.lights.begin(); it != uniforms.lights.end(); ++it ) {
-                if ( it->second->getShadowMap()->getDepthTextureId() ) {
-                    vera::imageDepth(it->second->getShadowMap(), lolo.xOffset, lolo.yOffset, lolo.xStep, lolo.yStep, it->second->getShadowMapFar(), it->second->getShadowMapNear());
-                    // vera::image(it->second->getShadowMap(), xOffset, yOffset, xStep, yStep);
-                    print_text("u_lightShadowMap", lolo.xOffset - lolo.xStep, lolo);
-                }
-            }
-        }
-
-        if (uniforms.functions["u_scenePosition"].present) {
-            print_fbo_text(m_sceneRender.positionFbo, "u_scenePosition", lolo);
-        }
-
-        if (uniforms.functions["u_sceneNormal"].present) {
-            print_fbo_text(m_sceneRender.normalFbo, "u_sceneNormal", lolo);
-        }
-
-        for (size_t i = 0; i < m_sceneRender.buffersFbo.size(); i++) {
-            print_fbo_text(*m_sceneRender.buffersFbo[i], "u_sceneBuffer", lolo);
-        }
-
-        if (uniforms.functions["u_scene"].present) {
-            print_fbo_text(m_sceneRender.renderFbo, "u_scene", lolo);
-        }
-
-        if (uniforms.functions["u_sceneDepth"].present) {
-            if (uniforms.activeCamera)
-                vera::imageDepth(&m_sceneRender.renderFbo, lolo.xOffset, lolo.yOffset, lolo.xStep, lolo.yStep, uniforms.activeCamera->getFarClip(), uniforms.activeCamera->getNearClip());
-            print_text("u_sceneDepth", lolo.xOffset - lolo.xStep, lolo);
+        for(const auto& abc : somelist) {
+            const auto process_renderer = std::get<1>(abc);
+            const auto& process_info = std::get<0>(abc);
+            const auto& prompt_id = std::get<0>(process_info);
+            process_renderer(prompt_id, uniforms, process_info, lolo);
         }
     }
     TRACK_END("renderUI:buffers")
