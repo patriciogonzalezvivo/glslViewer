@@ -2085,7 +2085,7 @@ void process_render_passes(Uniforms& uniforms, const SceneRender& m_sceneRender,
     for(const auto& _ : somelist) { _.process_renderer(_.prompt_id, uniforms, _.process_info, lolo); }
 }
 
-struct metadata {
+struct overlay_fn_args_t {
     Uniforms * uniforms;
     const SceneRender* m_sceneRender;
     const bool* m_postprocessing;
@@ -2097,7 +2097,7 @@ struct metadata {
     const bool* verbose;
 };
 
-void overlay_m_showTextures(const metadata& muu) {
+void overlay_m_showTextures(const overlay_fn_args_t& muu) {
     int nTotal = muu.uniforms->textures.size();
     if (nTotal > 0) {
         glDisable(GL_DEPTH_TEST);
@@ -2129,7 +2129,7 @@ void overlay_m_showTextures(const metadata& muu) {
     }
 }
 
-void overlay_m_showPasses(const metadata& muu) {
+void overlay_m_showPasses(const overlay_fn_args_t& muu) {
     glDisable(GL_DEPTH_TEST);
     TRACK_BEGIN("renderUI:buffers")
 
@@ -2156,7 +2156,7 @@ void overlay_m_showPasses(const metadata& muu) {
     TRACK_END("renderUI:buffers")
 };
 
-void overlay_m_plot(const metadata& muu) {
+void overlay_m_plot(const overlay_fn_args_t& muu) {
     glDisable(GL_DEPTH_TEST);
     TRACK_BEGIN("renderUI:plot_data")
 
@@ -2183,7 +2183,7 @@ void overlay_m_plot(const metadata& muu) {
     TRACK_END("renderUI:plot_data")
 }
 
-void overlay_cursor(const metadata& muu) {
+void overlay_cursor(const overlay_fn_args_t& muu) {
     TRACK_BEGIN("renderUI:cursor")
     if ((*muu.m_cross_vbo) == nullptr)
         (*muu.m_cross_vbo) = std::unique_ptr<vera::Vbo>(new vera::Vbo( vera::crossMesh( glm::vec3(0.0f, 0.0f, 0.0f), 10.0f) ));
@@ -2196,7 +2196,7 @@ void overlay_cursor(const metadata& muu) {
     TRACK_END("renderUI:cursor")
 }
 
-void overlay_prompt_drag_and_drop(const metadata&) {
+void overlay_prompt_drag_and_drop(const overlay_fn_args_t&) {
     render_ui_t lolo;
     lolo.xStep = lolo.w * 0.05;
     lolo.yStep = lolo.h * 0.05;
@@ -2224,7 +2224,7 @@ void overlay_prompt_drag_and_drop(const metadata&) {
     vera::setCamera(cam);
 }
 
-void overlay_prompt_help(const metadata& muu) {
+void overlay_prompt_help(const overlay_fn_args_t& muu) {
     render_ui_t lolo;
     lolo.xStep = lolo.w * 0.05;
     lolo.yStep = lolo.h * 0.05;
@@ -2293,15 +2293,14 @@ void Sandbox::renderUI() {
     const auto diplay_cursor = cursor && vera::getMouseEntered();
     const auto no_geometry_available = frag_index == -1 && vert_index == -1 && geom_index == -1;
 
-    struct vtable_metatadata_with_pred_t {
-        using function_sig_t = auto (*)(const renderable_objects::metadata&) -> void;
+    struct vtable_overlay_fn_args_with_pred_t {
+        using function_sig_t = auto (*)(const overlay_fn_args_t&) -> void;
         const bool predicate;
         const function_sig_t do_overlay_action;
-        const renderable_objects::metadata parameters;
+        const overlay_fn_args_t parameters;
     };
-
-    const std::array<vtable_metatadata_with_pred_t, 6> lala = {
-        vtable_metatadata_with_pred_t{m_showTextures, &overlay_m_showTextures, {&uniforms, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr}}
+    const std::array<vtable_overlay_fn_args_with_pred_t, 6> lala = {
+        vtable_overlay_fn_args_with_pred_t{m_showTextures, &overlay_m_showTextures, {&uniforms, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr}}
         , {m_showPasses, &overlay_m_showPasses, {&uniforms, &m_sceneRender, &m_postprocessing, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr}}
         , {display_m_plots, &overlay_m_plot, {nullptr, nullptr, nullptr, &m_plot_shader, &m_plot_texture, nullptr, nullptr, nullptr, nullptr}}
         , {diplay_cursor, &overlay_cursor, {nullptr, nullptr, nullptr, nullptr, nullptr, &m_cross_vbo, nullptr, nullptr, nullptr}}
