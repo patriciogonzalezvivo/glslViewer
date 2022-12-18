@@ -1955,8 +1955,7 @@ struct render_ui_t {
     glm::vec2 step = {w * scale, h * scale};
     glm::vec2 offset = {w - step.x, h - step.y};
     float p = vera::getPixelDensity();
-    float x = (float)(vera::getWindowWidth()) * 0.5;
-    float y = h + 10;
+    glm::vec2 pos = {w * 0.5, h + 10};
 };
 
 void print_text(const std::string& prompt, const float offsetx, render_ui_t& lolo) {
@@ -2160,12 +2159,12 @@ void overlay_m_plot(const overlay_fn_args_t& muu) {
     lolo.p = vera::getPixelDensity();
     lolo.w = 100 * lolo.p;
     lolo.h = 30 * lolo.p;
-    lolo.x = (float)(vera::getWindowWidth()) * 0.5;
-    lolo.y = lolo.h + 10;
+    lolo.pos.x = (float)(vera::getWindowWidth()) * 0.5;
+    lolo.pos.y = lolo.h + 10;
 
     muu.m_plot_shader->use();
     muu.m_plot_shader->setUniform("u_scale", lolo.w, lolo.h);
-    muu.m_plot_shader->setUniform("u_translate", lolo.x, lolo.y);
+    muu.m_plot_shader->setUniform("u_translate", lolo.pos.x, lolo.pos.y);
     muu.m_plot_shader->setUniform("u_resolution", (float)vera::getWindowWidth(), (float)vera::getWindowHeight());
     muu.m_plot_shader->setUniform("u_viewport", lolo.w, lolo.h);
     muu.m_plot_shader->setUniform("u_model", glm::vec3(1.0f));
@@ -2196,8 +2195,8 @@ void overlay_prompt_drag_and_drop(const overlay_fn_args_t&) {
     render_ui_t lolo;
     lolo.step.x = lolo.w * 0.05;
     lolo.step.y = lolo.h * 0.05;
-    lolo.x = lolo.step.x * 2.0f;
-    lolo.y = lolo.step.y * 3.0f;
+    lolo.pos.x = lolo.step.x * 2.0f;
+    lolo.pos.y = lolo.step.y * 3.0f;
 
     vera::Camera *cam = vera::getCamera();
     vera::resetCamera();
@@ -2218,8 +2217,8 @@ void overlay_prompt_help(const overlay_fn_args_t& muu) {
     render_ui_t lolo;
     lolo.step.x = lolo.w * 0.05;
     lolo.step.y = lolo.h * 0.05;
-    lolo.x = lolo.step.x * 2.0f;
-    lolo.y = lolo.step.y * 3.0f;
+    lolo.pos.x = lolo.step.x * 2.0f;
+    lolo.pos.y = lolo.step.y * 3.0f;
 
     vera::Camera *cam = vera::getCamera();
     vera::resetCamera();
@@ -2233,8 +2232,8 @@ void overlay_prompt_help(const overlay_fn_args_t& muu) {
     lolo.step.y = vera::getFontHeight() * 1.5f;
 
     const auto print_text = [&](const std::string& prompt){
-        vera::text(prompt, lolo.x, lolo.y);
-        lolo.y += lolo.step.y;
+        vera::text(prompt, lolo.pos.x, lolo.pos.y);
+        lolo.pos.y += lolo.step.y;
     };
 
     const auto geometry_available = *muu.geom_index != -1;
