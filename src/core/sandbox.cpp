@@ -2090,6 +2090,7 @@ void process_render_passes(Uniforms& uniforms, const SceneRender& m_sceneRender,
     for(const auto& _ : somelist) { _.process_renderer(_.prompt_id, uniforms, _.process_info, lolo); }
 }
 
+namespace overlay_actions {
 struct overlay_fn_args_t {
     Uniforms * uniforms;
     const SceneRender* m_sceneRender;
@@ -2285,13 +2286,13 @@ void overlay_prompt_help(const overlay_fn_args_t& muu) {
     vera::setCamera(cam);
     glDisable(GL_DEPTH_TEST);
 }
+} // namespace [overlay_actions]
 }
-
 }
 
 void Sandbox::renderUI() {
     TRACK_BEGIN("renderUI")
-    using namespace renderable_objects;
+    using namespace renderable_objects::overlay_actions;
 
     const auto display_m_plots = m_plot != PLOT_OFF && m_plot_texture ;
     const auto diplay_cursor = cursor && vera::getMouseEntered();
