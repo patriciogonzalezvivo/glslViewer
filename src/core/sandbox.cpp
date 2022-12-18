@@ -2056,6 +2056,13 @@ void do_pass_singlebuffer(const std::string& prompt_id, Uniforms& uniforms, cons
 }
 } // namespace [render_pass_actions]
 
+void set_common_text_attributes(float textangle, float textsize, vera::VerticalAlign v, vera::HorizontalAlign h){
+    vera::textAngle(textangle);
+    vera::textSize(textsize);
+    vera::textAlign(v);
+    vera::textAlign(h);
+}
+
 void process_render_passes(Uniforms& uniforms, const SceneRender& m_sceneRender, int nTotal){
     using namespace render_pass_actions;
     render_ui_t lolo;
@@ -2065,10 +2072,7 @@ void process_render_passes(Uniforms& uniforms, const SceneRender& m_sceneRender,
     lolo.xOffset = lolo.w - lolo.xStep;
     lolo.yOffset = lolo.h - lolo.yStep;
 
-    vera::textAngle(-HALF_PI);
-    vera::textSize(lolo.yStep * 0.2f / vera::getPixelDensity(false));
-    vera::textAlign(vera::ALIGN_BOTTOM);
-    vera::textAlign(vera::ALIGN_LEFT);
+    set_common_text_attributes(-HALF_PI, lolo.yStep * 0.2f / vera::getPixelDensity(false), vera::ALIGN_BOTTOM, vera::ALIGN_LEFT);
 
     struct vtable_render_pass_t{
         using func_sig_t = auto (*)(const std::string&, Uniforms&, const render_pass_args_t&, render_ui_t&)-> void;
@@ -2115,10 +2119,7 @@ void overlay_m_showTextures(const overlay_fn_args_t& muu) {
         lolo.xOffset = lolo.xStep;
         lolo.yOffset = lolo.h - lolo.yStep;
 
-        vera::textAngle(-HALF_PI);
-        vera::textAlign(vera::ALIGN_TOP);
-        vera::textAlign(vera::ALIGN_LEFT);
-        vera::textSize(lolo.yStep * 0.2f / vera::getPixelDensity(false));
+        set_common_text_attributes(-HALF_PI, lolo.yStep * 0.2f / vera::getPixelDensity(false), vera::ALIGN_TOP, vera::ALIGN_LEFT);
 
         for (vera::TexturesMap::const_iterator it = muu.uniforms->textures.begin(); it != muu.uniforms->textures.end(); it++) {
             vera::TextureStreamsMap::const_iterator slit = muu.uniforms->streams.find(it->first);
@@ -2217,11 +2218,8 @@ void overlay_prompt_drag_and_drop(const overlay_fn_args_t&) {
     vera::rect(glm::vec2(lolo.w * 0.5f, lolo.h * 0.5f), glm::vec2(lolo.w - lolo.xStep * 2.0f, lolo.h - lolo.yStep * 2.0f));
 
     vera::fill(1.0f);
-    vera::textAlign(vera::ALIGN_MIDDLE);
-    vera::textAlign(vera::ALIGN_CENTER);
-    vera::textAngle(0.0f);
+    set_common_text_attributes(0.0f, 38.0f, vera::ALIGN_MIDDLE, vera::ALIGN_CENTER);
 
-    vera::textSize(38.0f);
     vera::text("Drag & Drop", lolo.w * 0.5f, lolo.h * 0.45f);
 
     vera::textSize(22.0f);
@@ -2245,10 +2243,8 @@ void overlay_prompt_help(const overlay_fn_args_t& muu) {
     vera::rect(glm::vec2(lolo.w * 0.5f, lolo.h * 0.5f), glm::vec2(lolo.w - lolo.xStep * 2.0f, lolo.h - lolo.yStep * 2.0f));
 
     vera::fill(1.0f);
-    vera::textAlign(vera::ALIGN_MIDDLE);
-    vera::textAlign(vera::ALIGN_LEFT);
-    vera::textAngle(0.0f);
-    vera::textSize(22.0f);
+    set_common_text_attributes(0.0f, 22.0f, vera::ALIGN_MIDDLE, vera::ALIGN_LEFT);
+
     lolo.yStep = vera::getFontHeight() * 1.5f;
 
     const auto print_text = [&](const std::string& prompt){
