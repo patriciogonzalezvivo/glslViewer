@@ -2145,15 +2145,15 @@ void overlay_m_showPasses(const overlay_fn_args_t& muu) {
                                                  && muu.uniforms->models.size() > 0;
     using num_of_passes_t = std::pair<bool, size_t>;
     const auto nTotalArray = {
-        num_of_passes_t{true, muu.uniforms->buffers.size()}
-        , {true, muu.uniforms->doubleBuffers.size()}
-        , {true, muu.uniforms->pyramids.size()}
-        , {is_postprocessing_with_uniforms, 1}
+        num_of_passes_t{true, muu.uniforms->buffers.size()} //buffer
+        , {true, muu.uniforms->doubleBuffers.size()}    // doublebuffer
+        , {true, muu.uniforms->pyramids.size()} //pyramid
+        , {is_postprocessing_with_uniforms, 1}  // lightmap
+        , {true, muu.uniforms->functions["u_scenePosition"].present}
+        , {true, muu.uniforms->functions["u_sceneNormal"].present}
+        , {true, muu.m_sceneRender->getBuffersTotal()}
         , {is_postprocessing_with_uniforms, muu.uniforms->functions["u_scene"].present}
         , {is_postprocessing_with_uniforms, muu.uniforms->functions["u_sceneDepth"].present}
-        , {true, muu.uniforms->functions["u_sceneNormal"].present}
-        , {true, muu.uniforms->functions["u_scenePosition"].present}
-        , {true, muu.m_sceneRender->getBuffersTotal()}
     };
     const auto nTotal = std::accumulate(std::begin(nTotalArray), std::end(nTotalArray), int{}
                                         , [](const int acc, const num_of_passes_t& kv) { return acc + ((kv.first) ? kv.second : 0); });
