@@ -1960,49 +1960,6 @@ struct render_ui_t {
     float y = h + 10;
 };
 namespace renderable_objects {
-struct metadata {
-    Uniforms * uniforms;
-    const SceneRender* m_sceneRender;
-    const bool* m_postprocessing;
-    vera::Shader* m_plot_shader;
-    vera::Texture** m_plot_texture;
-    std::unique_ptr<vera::Vbo>* m_cross_vbo;
-    const int* geom_index;
-    const bool* help;
-    const bool* verbose;
-};
-
-void overlay_m_showTextures(const metadata& muu) {
-    int nTotal = muu.uniforms->textures.size();
-    if (nTotal > 0) {
-        glDisable(GL_DEPTH_TEST);
-        TRACK_BEGIN("renderUI:textures")
-        render_ui_t lolo;
-        lolo.scale = fmin(1.0f / (float)(nTotal), 0.25) * 0.5;
-        lolo.xStep = lolo.w * lolo.scale;
-        lolo.yStep = lolo.h * lolo.scale;
-        lolo.xOffset = lolo.xStep;
-        lolo.yOffset = lolo.h - lolo.yStep;
-
-        vera::textAngle(-HALF_PI);
-        vera::textAlign(vera::ALIGN_TOP);
-        vera::textAlign(vera::ALIGN_LEFT);
-        vera::textSize(lolo.yStep * 0.2f / vera::getPixelDensity(false));
-
-        for (vera::TexturesMap::const_iterator it = muu.uniforms->textures.begin(); it != muu.uniforms->textures.end(); it++) {
-            vera::TextureStreamsMap::const_iterator slit = muu.uniforms->streams.find(it->first);
-            if ( slit != muu.uniforms->streams.end() )
-                vera::image((vera::TextureStream*)slit->second, lolo.xOffset, lolo.yOffset, lolo.xStep, lolo.yStep, true);
-            else
-                vera::image(it->second, lolo.xOffset, lolo.yOffset, lolo.xStep, lolo.yStep);
-
-            vera::text(it->first, lolo.xOffset + lolo.xStep, vera::getWindowHeight() - lolo.yOffset + lolo.yStep);
-
-            lolo.yOffset -= lolo.yStep * 2.0;
-        }
-        TRACK_END("renderUI:textures")
-    }
-}
 
 void print_text(const std::string& prompt, const float offsetx, render_ui_t& lolo) {
     vera::text(prompt, offsetx, vera::getWindowHeight() - lolo.yOffset + lolo.yStep);
@@ -2125,6 +2082,50 @@ void process_render_passes(Uniforms& uniforms, const SceneRender& m_sceneRender,
         , {"u_sceneDepth", {&m_sceneRender.renderFbo, nullptr}, do_something_02}
     };
     for(const auto& _ : somelist) { _.process_renderer(_.prompt_id, uniforms, _.process_info, lolo); }
+}
+
+struct metadata {
+    Uniforms * uniforms;
+    const SceneRender* m_sceneRender;
+    const bool* m_postprocessing;
+    vera::Shader* m_plot_shader;
+    vera::Texture** m_plot_texture;
+    std::unique_ptr<vera::Vbo>* m_cross_vbo;
+    const int* geom_index;
+    const bool* help;
+    const bool* verbose;
+};
+
+void overlay_m_showTextures(const metadata& muu) {
+    int nTotal = muu.uniforms->textures.size();
+    if (nTotal > 0) {
+        glDisable(GL_DEPTH_TEST);
+        TRACK_BEGIN("renderUI:textures")
+        render_ui_t lolo;
+        lolo.scale = fmin(1.0f / (float)(nTotal), 0.25) * 0.5;
+        lolo.xStep = lolo.w * lolo.scale;
+        lolo.yStep = lolo.h * lolo.scale;
+        lolo.xOffset = lolo.xStep;
+        lolo.yOffset = lolo.h - lolo.yStep;
+
+        vera::textAngle(-HALF_PI);
+        vera::textAlign(vera::ALIGN_TOP);
+        vera::textAlign(vera::ALIGN_LEFT);
+        vera::textSize(lolo.yStep * 0.2f / vera::getPixelDensity(false));
+
+        for (vera::TexturesMap::const_iterator it = muu.uniforms->textures.begin(); it != muu.uniforms->textures.end(); it++) {
+            vera::TextureStreamsMap::const_iterator slit = muu.uniforms->streams.find(it->first);
+            if ( slit != muu.uniforms->streams.end() )
+                vera::image((vera::TextureStream*)slit->second, lolo.xOffset, lolo.yOffset, lolo.xStep, lolo.yStep, true);
+            else
+                vera::image(it->second, lolo.xOffset, lolo.yOffset, lolo.xStep, lolo.yStep);
+
+            vera::text(it->first, lolo.xOffset + lolo.xStep, vera::getWindowHeight() - lolo.yOffset + lolo.yStep);
+
+            lolo.yOffset -= lolo.yStep * 2.0;
+        }
+        TRACK_END("renderUI:textures")
+    }
 }
 
 void overlay_m_showPasses(const metadata& muu) {
