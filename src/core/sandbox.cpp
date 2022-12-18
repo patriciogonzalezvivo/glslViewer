@@ -2158,8 +2158,7 @@ void overlay_m_plot(const overlay_fn_args_t& muu) {
     render_ui_t lolo;
     lolo.p = vera::getPixelDensity();
     std::tie(lolo.w, lolo.h) = std::pair<float, float>{100 * lolo.p, 30 * lolo.p};
-    lolo.pos.x = (float)(vera::getWindowWidth()) * 0.5;
-    lolo.pos.y = lolo.h + 10;
+    lolo.pos = {(float)(vera::getWindowWidth()) * 0.5, lolo.h + 10};
 
     muu.m_plot_shader->use();
     muu.m_plot_shader->setUniform("u_scale", lolo.w, lolo.h);
@@ -2194,8 +2193,7 @@ void overlay_prompt_drag_and_drop(const overlay_fn_args_t&) {
     render_ui_t lolo;
     lolo.step.x = lolo.w * 0.05;
     lolo.step.y = lolo.h * 0.05;
-    lolo.pos.x = lolo.step.x * 2.0f;
-    lolo.pos.y = lolo.step.y * 3.0f;
+    lolo.pos = {lolo.step.x * 2.0f, lolo.step.y * 3.0f};
 
     vera::Camera *cam = vera::getCamera();
     vera::resetCamera();
@@ -2216,8 +2214,7 @@ void overlay_prompt_help(const overlay_fn_args_t& muu) {
     render_ui_t lolo;
     lolo.step.x = lolo.w * 0.05;
     lolo.step.y = lolo.h * 0.05;
-    lolo.pos.x = lolo.step.x * 2.0f;
-    lolo.pos.y = lolo.step.y * 3.0f;
+    lolo.pos = {lolo.step.x * 2.0f, lolo.step.y * 3.0f};
 
     vera::Camera *cam = vera::getCamera();
     vera::resetCamera();
