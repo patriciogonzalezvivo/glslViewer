@@ -1945,7 +1945,9 @@ void Sandbox::renderPost() {
     if  (vera::getWindowStyle() != vera::EMBEDDED)
         console_uniforms_refresh();
 }
+
 namespace {
+namespace renderable_objects {
 
 struct render_ui_t {
     float w = (float)(vera::getWindowWidth());
@@ -1959,7 +1961,6 @@ struct render_ui_t {
     float x = (float)(vera::getWindowWidth()) * 0.5;
     float y = h + 10;
 };
-namespace renderable_objects {
 
 void print_text(const std::string& prompt, const float offsetx, render_ui_t& lolo) {
     vera::text(prompt, offsetx, vera::getWindowHeight() - lolo.yOffset + lolo.yStep);
