@@ -1981,30 +1981,33 @@ void print_buffers_text(const vera::Fbo& uniforms_buffer, size_t i, const std::s
         print_text(prompt + vera::toString(i), lolo.xOffset - scale.x, lolo);
 }
 
-using renderer_process_info_t = std::tuple<const vera::Fbo* const, const BuffersList* const>;
+namespace render_pass_actions {
+struct render_pass_args_t {
+    const vera::Fbo* const fbo;
+    const BuffersList* const fbolist;
+};
 
-void do_something_00(const std::string& prompt_id, Uniforms& uniforms, const renderer_process_info_t& abc, render_ui_t& lolo) {
+void do_pass_scene(const std::string& prompt_id, Uniforms& uniforms, const render_pass_args_t& abc, render_ui_t& lolo) {
     if (uniforms.functions[prompt_id].present) {
-        print_fbo_text(*std::get<0>(abc), prompt_id, lolo);
+        print_fbo_text(*abc.fbo, prompt_id, lolo);
     }
 }
 
-void do_something_01(const std::string& prompt_id, Uniforms& , const renderer_process_info_t& abc, render_ui_t& lolo) {
-    const auto& fbolist = *std::get<1>(abc);
-    for (size_t i = 0; i < fbolist.size(); i++) {
-        print_fbo_text(*fbolist[i], prompt_id, lolo);
+void do_pass_scenebuffer(const std::string& prompt_id, Uniforms& , const render_pass_args_t& abc, render_ui_t& lolo) {
+    for (size_t i = 0; i < abc.fbolist->size(); i++) {
+        print_fbo_text(*(*abc.fbolist)[i], prompt_id, lolo);
     }
 }
 
-void do_something_02(const std::string& prompt_id, Uniforms& uniforms, const renderer_process_info_t& abc, render_ui_t& lolo) {
+void do_pass_scenedepth(const std::string& prompt_id, Uniforms& uniforms, const render_pass_args_t& abc, render_ui_t& lolo) {
     if (uniforms.functions[prompt_id].present) {
         if (uniforms.activeCamera)
-            vera::imageDepth(*std::get<0>(abc), lolo.xOffset, lolo.yOffset, lolo.xStep, lolo.yStep, uniforms.activeCamera->getFarClip(), uniforms.activeCamera->getNearClip());
+            vera::imageDepth(*abc.fbo, lolo.xOffset, lolo.yOffset, lolo.xStep, lolo.yStep, uniforms.activeCamera->getFarClip(), uniforms.activeCamera->getNearClip());
         print_text(prompt_id, lolo.xOffset - lolo.xStep, lolo);
     }
 }
 
-void do_something_lightmap(const std::string& prompt_id, Uniforms& uniforms, const renderer_process_info_t&, render_ui_t& lolo) {
+void do_pass_lightmap(const std::string& prompt_id, Uniforms& uniforms, const render_pass_args_t&, render_ui_t& lolo) {
     if (uniforms.models.size() > 0) {
         for (vera::LightsMap::iterator it = uniforms.lights.begin(); it != uniforms.lights.end(); ++it ) {
             if ( it->second->getShadowMap()->getDepthTextureId() ) {
@@ -2016,7 +2019,7 @@ void do_something_lightmap(const std::string& prompt_id, Uniforms& uniforms, con
     }
 }
 
-void do_something_pyramid(const std::string&, Uniforms& uniforms, const renderer_process_info_t&, render_ui_t& lolo) {
+void do_pass_pyramid(const std::string&, Uniforms& uniforms, const render_pass_args_t&, render_ui_t& lolo) {
     for (size_t i = 0; i < uniforms.pyramids.size(); i++) {
         glm::vec2 offset = glm::vec2(lolo.xOffset, lolo.yOffset);
         glm::vec2 scale = glm::vec2(lolo.yStep);
@@ -2040,19 +2043,21 @@ void do_something_pyramid(const std::string&, Uniforms& uniforms, const renderer
     }
 }
 
-void do_something_doublebuffers(const std::string& prompt_id, Uniforms& uniforms, const renderer_process_info_t&, render_ui_t& lolo) {
+void do_pass_doublebuffers(const std::string& prompt_id, Uniforms& uniforms, const render_pass_args_t&, render_ui_t& lolo) {
     for (size_t i = 0; i < uniforms.doubleBuffers.size(); i++) {
         print_buffers_text(*uniforms.doubleBuffers[i]->src, i, prompt_id, lolo);
     }
 }
 
-void do_something_singlebuffer(const std::string& prompt_id, Uniforms& uniforms, const renderer_process_info_t&, render_ui_t& lolo) {
+void do_pass_singlebuffer(const std::string& prompt_id, Uniforms& uniforms, const render_pass_args_t&, render_ui_t& lolo) {
     for (size_t i = 0; i < uniforms.buffers.size(); i++) {
         print_buffers_text(*uniforms.buffers[i], i, prompt_id, lolo);
     }
 }
+} // namespace [render_pass_actions]
 
 void process_render_passes(Uniforms& uniforms, const SceneRender& m_sceneRender, int nTotal){
+    using namespace render_pass_actions;
     render_ui_t lolo;
     lolo.scale = fmin(1.0f / (float)(nTotal), 0.25) * 0.5;
     lolo.xStep = lolo.w * lolo.scale;
@@ -2065,22 +2070,22 @@ void process_render_passes(Uniforms& uniforms, const SceneRender& m_sceneRender,
     vera::textAlign(vera::ALIGN_BOTTOM);
     vera::textAlign(vera::ALIGN_LEFT);
 
-    struct vtable_kv_t{
-        using func_sig_t = auto (*)(const std::string&, Uniforms&, const renderer_process_info_t&, render_ui_t&)-> void;
+    struct vtable_render_pass_t{
+        using func_sig_t = auto (*)(const std::string&, Uniforms&, const render_pass_args_t&, render_ui_t&)-> void;
         const std::string prompt_id;
-        const renderer_process_info_t process_info;
+        const render_pass_args_t process_info;
         const func_sig_t process_renderer;
     };
-    const std::array<vtable_kv_t, 9> somelist {
-        vtable_kv_t{"u_buffer", {nullptr, nullptr}, do_something_singlebuffer}
-        , {"u_doubleBuffer", {nullptr, nullptr}, do_something_doublebuffers}
-        , {"u_pyramid0", {nullptr, nullptr}, do_something_pyramid}
-        , {"u_lightShadowMap", {nullptr, nullptr}, do_something_lightmap}
-        , {"u_scenePosition", {&m_sceneRender.positionFbo, nullptr}, do_something_00}
-        , {"u_sceneNormal", {&m_sceneRender.normalFbo, nullptr}, do_something_00}
-        , {"u_sceneBuffer", {nullptr, &m_sceneRender.buffersFbo}, do_something_01}
-        , {"u_scene", {&m_sceneRender.renderFbo, nullptr}, do_something_00}
-        , {"u_sceneDepth", {&m_sceneRender.renderFbo, nullptr}, do_something_02}
+    const std::array<vtable_render_pass_t, 9> somelist {
+        vtable_render_pass_t{"u_buffer", {nullptr, nullptr}, do_pass_singlebuffer}
+        , {"u_doubleBuffer", {nullptr, nullptr}, do_pass_doublebuffers}
+        , {"u_pyramid0", {nullptr, nullptr}, do_pass_pyramid}
+        , {"u_lightShadowMap", {nullptr, nullptr}, do_pass_lightmap}
+        , {"u_scenePosition", {&m_sceneRender.positionFbo, nullptr}, do_pass_scene}
+        , {"u_sceneNormal", {&m_sceneRender.normalFbo, nullptr}, do_pass_scene}
+        , {"u_sceneBuffer", {nullptr, &m_sceneRender.buffersFbo}, do_pass_scenebuffer}
+        , {"u_scene", {&m_sceneRender.renderFbo, nullptr}, do_pass_scene}
+        , {"u_sceneDepth", {&m_sceneRender.renderFbo, nullptr}, do_pass_scenedepth}
     };
     for(const auto& _ : somelist) { _.process_renderer(_.prompt_id, uniforms, _.process_info, lolo); }
 }
