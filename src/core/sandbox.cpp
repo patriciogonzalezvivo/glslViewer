@@ -1948,7 +1948,6 @@ void Sandbox::renderPost() {
 
 namespace {
 namespace renderable_objects {
-
 struct render_ui_t {
     float w = (float)(vera::getWindowWidth());
     float h = (float)(vera::getWindowHeight());
@@ -1988,15 +1987,13 @@ struct render_pass_args_t {
 };
 
 void do_pass_scene(const std::string& prompt_id, Uniforms& uniforms, const render_pass_args_t& abc, render_ui_t& lolo) {
-    if (uniforms.functions[prompt_id].present) {
+    if (uniforms.functions[prompt_id].present)
         print_fbo_text(*abc.fbo, prompt_id, lolo);
-    }
 }
 
 void do_pass_scenebuffer(const std::string& prompt_id, Uniforms& , const render_pass_args_t& abc, render_ui_t& lolo) {
-    for (size_t i = 0; i < abc.fbolist->size(); i++) {
+    for (size_t i = 0; i < abc.fbolist->size(); i++)
         print_fbo_text(*(*abc.fbolist)[i], prompt_id, lolo);
-    }
 }
 
 void do_pass_scenedepth(const std::string& prompt_id, Uniforms& uniforms, const render_pass_args_t& abc, render_ui_t& lolo) {
@@ -2029,10 +2026,8 @@ void do_pass_pyramid(const std::string&, Uniforms& uniforms, const render_pass_a
         for (size_t j = 0; j < uniforms.pyramids[i].getDepth() * 2; j++ ) {
             const auto is_lower_depth = (j < uniforms.pyramids[i].getDepth());
             const auto delta_offset = is_lower_depth ? offset.x : offset.x + w * 2.0f;
-
             vera::image(uniforms.pyramids[i].getResult(j), delta_offset, offset.y, scale.x, scale.y);
             offset.x -= scale.x;
-
             std::tie(scale, offset.y) = is_lower_depth
                                         ? std::pair<glm::vec2, float>{scale *= 0.5, lolo.yOffset - lolo.yStep * 0.5}
                                         : std::pair<glm::vec2, float>{scale *= 2.0, lolo.yOffset + lolo.yStep * 0.5};
@@ -2044,15 +2039,13 @@ void do_pass_pyramid(const std::string&, Uniforms& uniforms, const render_pass_a
 }
 
 void do_pass_doublebuffers(const std::string& prompt_id, Uniforms& uniforms, const render_pass_args_t&, render_ui_t& lolo) {
-    for (size_t i = 0; i < uniforms.doubleBuffers.size(); i++) {
+    for (size_t i = 0; i < uniforms.doubleBuffers.size(); i++)
         print_buffers_text(*uniforms.doubleBuffers[i]->src, i, prompt_id, lolo);
-    }
 }
 
 void do_pass_singlebuffer(const std::string& prompt_id, Uniforms& uniforms, const render_pass_args_t&, render_ui_t& lolo) {
-    for (size_t i = 0; i < uniforms.buffers.size(); i++) {
+    for (size_t i = 0; i < uniforms.buffers.size(); i++)
         print_buffers_text(*uniforms.buffers[i], i, prompt_id, lolo);
-    }
 }
 } // namespace [render_pass_actions]
 
@@ -2127,9 +2120,7 @@ void overlay_m_showTextures(const overlay_fn_args_t& muu) {
                 vera::image((vera::TextureStream*)slit->second, lolo.xOffset, lolo.yOffset, lolo.xStep, lolo.yStep, true);
             else
                 vera::image(it->second, lolo.xOffset, lolo.yOffset, lolo.xStep, lolo.yStep);
-
             vera::text(it->first, lolo.xOffset + lolo.xStep, vera::getWindowHeight() - lolo.yOffset + lolo.yStep);
-
             lolo.yOffset -= lolo.yStep * 2.0;
         }
         TRACK_END("renderUI:textures")
@@ -2216,12 +2207,9 @@ void overlay_prompt_drag_and_drop(const overlay_fn_args_t&) {
     vera::fill(0.0f, 0.0f, 0.0f, 0.75f);
     vera::noStroke();
     vera::rect(glm::vec2(lolo.w * 0.5f, lolo.h * 0.5f), glm::vec2(lolo.w - lolo.xStep * 2.0f, lolo.h - lolo.yStep * 2.0f));
-
     vera::fill(1.0f);
     set_common_text_attributes(0.0f, 38.0f, vera::ALIGN_MIDDLE, vera::ALIGN_CENTER);
-
     vera::text("Drag & Drop", lolo.w * 0.5f, lolo.h * 0.45f);
-
     vera::textSize(22.0f);
     vera::text(".vert .frag .ply .lst .obj .gltf .glb", lolo.w * 0.5f, lolo.h * 0.55f);
 
@@ -2241,7 +2229,6 @@ void overlay_prompt_help(const overlay_fn_args_t& muu) {
     vera::fill(0.0f, 0.0f, 0.0f, 0.75f);
     vera::noStroke();
     vera::rect(glm::vec2(lolo.w * 0.5f, lolo.h * 0.5f), glm::vec2(lolo.w - lolo.xStep * 2.0f, lolo.h - lolo.yStep * 2.0f));
-
     vera::fill(1.0f);
     set_common_text_attributes(0.0f, 22.0f, vera::ALIGN_MIDDLE, vera::ALIGN_LEFT);
 
