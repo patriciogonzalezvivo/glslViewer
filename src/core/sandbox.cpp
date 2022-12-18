@@ -2023,16 +2023,16 @@ void print_buffers_text(const vera::Fbo& uniforms_buffer, size_t i, const std::s
         print_text(prompt + vera::toString(i), lolo.xOffset - scale.x, lolo);
 }
 
-using renderer_process_info_t = std::tuple<std::string, const vera::Fbo* const, const BuffersList* const>;
+using renderer_process_info_t = std::tuple<const vera::Fbo* const, const BuffersList* const>;
 
 void do_something_00(const std::string& prompt_id, Uniforms& uniforms, const renderer_process_info_t& abc, render_ui_t& lolo) {
     if (uniforms.functions[prompt_id].present) {
-        print_fbo_text(*std::get<1>(abc), prompt_id, lolo);
+        print_fbo_text(*std::get<0>(abc), prompt_id, lolo);
     }
 }
 
 void do_something_01(const std::string& prompt_id, Uniforms& , const renderer_process_info_t& abc, render_ui_t& lolo) {
-    const auto& fbolist = *std::get<2>(abc);
+    const auto& fbolist = *std::get<1>(abc);
     for (size_t i = 0; i < fbolist.size(); i++) {
         print_fbo_text(*fbolist[i], prompt_id, lolo);
     }
@@ -2041,7 +2041,7 @@ void do_something_01(const std::string& prompt_id, Uniforms& , const renderer_pr
 void do_something_02(const std::string& prompt_id, Uniforms& uniforms, const renderer_process_info_t& abc, render_ui_t& lolo) {
     if (uniforms.functions[prompt_id].present) {
         if (uniforms.activeCamera)
-            vera::imageDepth(*std::get<1>(abc), lolo.xOffset, lolo.yOffset, lolo.xStep, lolo.yStep, uniforms.activeCamera->getFarClip(), uniforms.activeCamera->getNearClip());
+            vera::imageDepth(*std::get<0>(abc), lolo.xOffset, lolo.yOffset, lolo.xStep, lolo.yStep, uniforms.activeCamera->getFarClip(), uniforms.activeCamera->getNearClip());
         print_text(prompt_id, lolo.xOffset - lolo.xStep, lolo);
     }
 }
@@ -2107,26 +2107,24 @@ void process_render_passes(Uniforms& uniforms, const SceneRender& m_sceneRender,
     vera::textAlign(vera::ALIGN_BOTTOM);
     vera::textAlign(vera::ALIGN_LEFT);
 
-    using func_sig_t = auto (*)(const std::string&, Uniforms&, const renderer_process_info_t&, render_ui_t&)-> void;
-    using vtable_kv_t = std::pair<renderer_process_info_t, func_sig_t>;
-    const std::array<vtable_kv_t, 9> somelist {
-        vtable_kv_t{{"u_buffer", nullptr, nullptr}, do_something_singlebuffer}
-        , {{"u_doubleBuffer", nullptr, nullptr}, do_something_doublebuffers}
-        , {{"u_pyramid0", nullptr, nullptr}, do_something_pyramid}
-        , {{"u_lightShadowMap", nullptr, nullptr}, do_something_lightmap}
-        , {{"u_scenePosition", &m_sceneRender.positionFbo, nullptr}, do_something_00}
-        , {{"u_sceneNormal", &m_sceneRender.normalFbo, nullptr}, do_something_00}
-        , {{"u_sceneBuffer", nullptr, &m_sceneRender.buffersFbo}, do_something_01}
-        , {{"u_scene", &m_sceneRender.renderFbo, nullptr}, do_something_00}
-        , {{"u_sceneDepth", &m_sceneRender.renderFbo, nullptr}, do_something_02}
+    struct vtable_kv_t{
+        using func_sig_t = auto (*)(const std::string&, Uniforms&, const renderer_process_info_t&, render_ui_t&)-> void;
+        const std::string prompt_id;
+        const renderer_process_info_t process_info;
+        const func_sig_t process_renderer;
     };
-
-    for(const auto& abc : somelist) {
-        const auto process_renderer = std::get<1>(abc);
-        const auto& process_info = std::get<0>(abc);
-        const auto& prompt_id = std::get<0>(process_info);
-        process_renderer(prompt_id, uniforms, process_info, lolo);
-    }
+    const std::array<vtable_kv_t, 9> somelist {
+        vtable_kv_t{"u_buffer", {nullptr, nullptr}, do_something_singlebuffer}
+        , {"u_doubleBuffer", {nullptr, nullptr}, do_something_doublebuffers}
+        , {"u_pyramid0", {nullptr, nullptr}, do_something_pyramid}
+        , {"u_lightShadowMap", {nullptr, nullptr}, do_something_lightmap}
+        , {"u_scenePosition", {&m_sceneRender.positionFbo, nullptr}, do_something_00}
+        , {"u_sceneNormal", {&m_sceneRender.normalFbo, nullptr}, do_something_00}
+        , {"u_sceneBuffer", {nullptr, &m_sceneRender.buffersFbo}, do_something_01}
+        , {"u_scene", {&m_sceneRender.renderFbo, nullptr}, do_something_00}
+        , {"u_sceneDepth", {&m_sceneRender.renderFbo, nullptr}, do_something_02}
+    };
+    for(const auto& _ : somelist) { _.process_renderer(_.prompt_id, uniforms, _.process_info, lolo); }
 }
 
 void overlay_m_showPasses(const metadata& muu) {
