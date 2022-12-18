@@ -2287,8 +2287,8 @@ void overlay_prompt_help(const overlay_fn_args_t& muu) {
     glDisable(GL_DEPTH_TEST);
 }
 } // namespace [overlay_actions]
-}
-}
+} // namespace [renderable_objects]
+} // namespace [_]
 
 void Sandbox::renderUI() {
     TRACK_BEGIN("renderUI")
