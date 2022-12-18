@@ -2136,9 +2136,9 @@ void overlay_m_showPasses(const overlay_fn_args_t& muu) {
     // DEBUG BUFFERS
     const auto is_postprocessing_with_uniforms = muu.m_postprocessing
                                                  && muu.uniforms->models.size() > 0;
-    using kv = std::pair<bool, int>;
+    using num_of_passes_t = std::pair<bool, size_t>;
     const auto nTotalArray = {
-        kv{true, muu.uniforms->buffers.size()}
+        num_of_passes_t{true, muu.uniforms->buffers.size()}
         , {true, muu.uniforms->doubleBuffers.size()}
         , {true, muu.uniforms->pyramids.size()}
         , {is_postprocessing_with_uniforms, 1}
@@ -2149,7 +2149,7 @@ void overlay_m_showPasses(const overlay_fn_args_t& muu) {
         , {true, muu.m_sceneRender->getBuffersTotal()}
     };
     const auto nTotal = std::accumulate(std::begin(nTotalArray), std::end(nTotalArray), int{}
-                                        , [](const int acc, const kv& kv) { return acc + ((kv.first) ? kv.second : 0); });
+                                        , [](const int acc, const num_of_passes_t& kv) { return acc + ((kv.first) ? kv.second : 0); });
     if (nTotal > 0) {
         process_render_passes(*muu.uniforms, *muu.m_sceneRender, nTotal);
     }
