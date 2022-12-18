@@ -1960,8 +1960,20 @@ struct render_ui_t {
     float y = h + 10;
 };
 namespace renderable_objects {
-void overlay_m_showTextures(const Uniforms& uniforms) {
-    int nTotal = uniforms.textures.size();
+struct metadata {
+    Uniforms * uniforms;
+    const SceneRender* m_sceneRender;
+    const bool* m_postprocessing;
+    vera::Shader* m_plot_shader;
+    vera::Texture** m_plot_texture;
+    std::unique_ptr<vera::Vbo>* m_cross_vbo;
+    const int* geom_index;
+    const bool* help;
+    const bool* verbose;
+};
+
+void overlay_m_showTextures(const metadata& muu) {
+    int nTotal = muu.uniforms->textures.size();
     if (nTotal > 0) {
         glDisable(GL_DEPTH_TEST);
         TRACK_BEGIN("renderUI:textures")
@@ -1977,9 +1989,9 @@ void overlay_m_showTextures(const Uniforms& uniforms) {
         vera::textAlign(vera::ALIGN_LEFT);
         vera::textSize(lolo.yStep * 0.2f / vera::getPixelDensity(false));
 
-        for (vera::TexturesMap::const_iterator it = uniforms.textures.begin(); it != uniforms.textures.end(); it++) {
-            vera::TextureStreamsMap::const_iterator slit = uniforms.streams.find(it->first);
-            if ( slit != uniforms.streams.end() )
+        for (vera::TexturesMap::const_iterator it = muu.uniforms->textures.begin(); it != muu.uniforms->textures.end(); it++) {
+            vera::TextureStreamsMap::const_iterator slit = muu.uniforms->streams.find(it->first);
+            if ( slit != muu.uniforms->streams.end() )
                 vera::image((vera::TextureStream*)slit->second, lolo.xOffset, lolo.yOffset, lolo.xStep, lolo.yStep, true);
             else
                 vera::image(it->second, lolo.xOffset, lolo.yOffset, lolo.xStep, lolo.yStep);
@@ -2117,34 +2129,34 @@ void process_render_passes(Uniforms& uniforms, const SceneRender& m_sceneRender,
     }
 }
 
-void overlay_m_showPasses(Uniforms& uniforms, bool m_postprocessing, const SceneRender& m_sceneRender) {
+void overlay_m_showPasses(const metadata& muu) {
     glDisable(GL_DEPTH_TEST);
     TRACK_BEGIN("renderUI:buffers")
 
     // DEBUG BUFFERS
-    const auto is_postprocessing_with_uniforms = m_postprocessing
-                                                 && uniforms.models.size() > 0;
+    const auto is_postprocessing_with_uniforms = muu.m_postprocessing
+                                                 && muu.uniforms->models.size() > 0;
     using kv = std::pair<bool, int>;
     const auto nTotalArray = {
-        kv{true, uniforms.buffers.size()}
-        , {true, uniforms.doubleBuffers.size()}
-        , {true, uniforms.pyramids.size()}
+        kv{true, muu.uniforms->buffers.size()}
+        , {true, muu.uniforms->doubleBuffers.size()}
+        , {true, muu.uniforms->pyramids.size()}
         , {is_postprocessing_with_uniforms, 1}
-        , {is_postprocessing_with_uniforms, uniforms.functions["u_scene"].present}
-        , {is_postprocessing_with_uniforms, uniforms.functions["u_sceneDepth"].present}
-        , {true, uniforms.functions["u_sceneNormal"].present}
-        , {true, uniforms.functions["u_scenePosition"].present}
-        , {true, m_sceneRender.getBuffersTotal()}
+        , {is_postprocessing_with_uniforms, muu.uniforms->functions["u_scene"].present}
+        , {is_postprocessing_with_uniforms, muu.uniforms->functions["u_sceneDepth"].present}
+        , {true, muu.uniforms->functions["u_sceneNormal"].present}
+        , {true, muu.uniforms->functions["u_scenePosition"].present}
+        , {true, muu.m_sceneRender->getBuffersTotal()}
     };
     const auto nTotal = std::accumulate(std::begin(nTotalArray), std::end(nTotalArray), int{}
                                         , [](const int acc, const kv& kv) { return acc + ((kv.first) ? kv.second : 0); });
     if (nTotal > 0) {
-        process_render_passes(uniforms, m_sceneRender, nTotal);
+        process_render_passes(*muu.uniforms, *muu.m_sceneRender, nTotal);
     }
     TRACK_END("renderUI:buffers")
 };
 
-void overlay_m_plot(vera::Shader& m_plot_shader, const vera::Texture* const m_plot_texture) {
+void overlay_m_plot(const metadata& muu) {
     glDisable(GL_DEPTH_TEST);
     TRACK_BEGIN("renderUI:plot_data")
 
@@ -2155,36 +2167,36 @@ void overlay_m_plot(vera::Shader& m_plot_shader, const vera::Texture* const m_pl
     lolo.x = (float)(vera::getWindowWidth()) * 0.5;
     lolo.y = lolo.h + 10;
 
-    m_plot_shader.use();
-    m_plot_shader.setUniform("u_scale", lolo.w, lolo.h);
-    m_plot_shader.setUniform("u_translate", lolo.x, lolo.y);
-    m_plot_shader.setUniform("u_resolution", (float)vera::getWindowWidth(), (float)vera::getWindowHeight());
-    m_plot_shader.setUniform("u_viewport", lolo.w, lolo.h);
-    m_plot_shader.setUniform("u_model", glm::vec3(1.0f));
-    m_plot_shader.setUniform("u_modelMatrix", glm::mat4(1.0f));
-    m_plot_shader.setUniform("u_viewMatrix", glm::mat4(1.0f));
-    m_plot_shader.setUniform("u_projectionMatrix", glm::mat4(1.0f));
-    m_plot_shader.setUniform("u_modelViewProjectionMatrix", vera::getOrthoMatrix());
-    m_plot_shader.setUniformTexture("u_plotData", m_plot_texture, 0);
+    muu.m_plot_shader->use();
+    muu.m_plot_shader->setUniform("u_scale", lolo.w, lolo.h);
+    muu.m_plot_shader->setUniform("u_translate", lolo.x, lolo.y);
+    muu.m_plot_shader->setUniform("u_resolution", (float)vera::getWindowWidth(), (float)vera::getWindowHeight());
+    muu.m_plot_shader->setUniform("u_viewport", lolo.w, lolo.h);
+    muu.m_plot_shader->setUniform("u_model", glm::vec3(1.0f));
+    muu.m_plot_shader->setUniform("u_modelMatrix", glm::mat4(1.0f));
+    muu.m_plot_shader->setUniform("u_viewMatrix", glm::mat4(1.0f));
+    muu.m_plot_shader->setUniform("u_projectionMatrix", glm::mat4(1.0f));
+    muu.m_plot_shader->setUniform("u_modelViewProjectionMatrix", vera::getOrthoMatrix());
+    muu.m_plot_shader->setUniformTexture("u_plotData", *muu.m_plot_texture, 0);
 
-    vera::getBillboard()->render(&m_plot_shader);
+    vera::getBillboard()->render(&*muu.m_plot_shader);
     TRACK_END("renderUI:plot_data")
 }
 
-void overlay_cursor(std::unique_ptr<vera::Vbo> &m_cross_vbo) {
+void overlay_cursor(const metadata& muu) {
     TRACK_BEGIN("renderUI:cursor")
-    if (m_cross_vbo == nullptr)
-        m_cross_vbo = std::unique_ptr<vera::Vbo>(new vera::Vbo( vera::crossMesh( glm::vec3(0.0f, 0.0f, 0.0f), 10.0f) ));
+    if ((*muu.m_cross_vbo) == nullptr)
+        (*muu.m_cross_vbo) = std::unique_ptr<vera::Vbo>(new vera::Vbo( vera::crossMesh( glm::vec3(0.0f, 0.0f, 0.0f), 10.0f) ));
 
     vera::Shader* fill = vera::getFillShader();
     fill->use();
     fill->setUniform("u_modelViewProjectionMatrix", glm::translate(vera::getOrthoMatrix(), glm::vec3(vera::getMouseX(), vera::getMouseY(), 0.0f) ) );
     fill->setUniform("u_color", glm::vec4(1.0f));
-    m_cross_vbo->render(fill);
+    (*muu.m_cross_vbo)->render(fill);
     TRACK_END("renderUI:cursor")
 }
 
-void overlay_prompt_drag_and_drop() {
+void overlay_prompt_drag_and_drop(const metadata&) {
     render_ui_t lolo;
     lolo.xStep = lolo.w * 0.05;
     lolo.yStep = lolo.h * 0.05;
@@ -2212,8 +2224,7 @@ void overlay_prompt_drag_and_drop() {
     vera::setCamera(cam);
 }
 
-void overlay_prompt_help(Uniforms& uniforms, int& geom_index, SceneRender& m_sceneRender, bool help, bool verbose) {
-
+void overlay_prompt_help(const metadata& muu) {
     render_ui_t lolo;
     lolo.xStep = lolo.w * 0.05;
     lolo.yStep = lolo.h * 0.05;
@@ -2239,26 +2250,26 @@ void overlay_prompt_help(Uniforms& uniforms, int& geom_index, SceneRender& m_sce
         lolo.y += lolo.yStep;
     };
 
-    const auto geometry_available = geom_index != -1;
-    const auto uniform_streams_available = uniforms.streams.size() > 0;
+    const auto geometry_available = *muu.geom_index != -1;
+    const auto uniform_streams_available = muu.uniforms->streams.size() > 0;
 
     using kv = std::pair<bool, std::string>;
     const auto help_prompts = {
-        kv{geometry_available, "a - " + std::string( m_sceneRender.showAxis? "hide" : "show" ) + " axis"}
-        , {geometry_available, "b - " + std::string( m_sceneRender.showBBoxes? "hide" : "show" ) + " bounding boxes"}
+        kv{geometry_available, "a - " + std::string( muu.m_sceneRender->showAxis? "hide" : "show" ) + " axis"}
+        , {geometry_available, "b - " + std::string( muu.m_sceneRender->showBBoxes? "hide" : "show" ) + " bounding boxes"}
         , {true, "c - hide/show cursor"}
-        , {geometry_available, "d - " + std::string( m_sceneRender.dynamicShadows? "disable" : "enable" ) + " dynamic shadows"}
+        , {geometry_available, "d - " + std::string( muu.m_sceneRender->dynamicShadows? "disable" : "enable" ) + " dynamic shadows"}
         , {geometry_available, "f - hide/show floor"}
         , {true, "F - " + std::string( vera::isFullscreen() ? "disable" : "enable" ) + " fullscreen"}
-        , {geometry_available, "g - " + std::string( m_sceneRender.showGrid? "hide" : "show" ) + " grid"}
-        , {true, "h - " + std::string( help? "hide" : "show" ) + " help"}
+        , {geometry_available, "g - " + std::string( muu.m_sceneRender->showGrid? "hide" : "show" ) + " grid"}
+        , {true, "h - " + std::string( muu.help? "hide" : "show" ) + " help"}
         , {true, "i - hide/show extra info"}
         , {true, "o - open shaders on default editor"}
         , {true, "p - hide/show render passes/buffers"}
         , {uniform_streams_available, "r - restart stream textures"}
         , {geometry_available, "s - hide/show sky"}
         , {true, "t - hide/show loaded textures"}
-        , {true, "v - " + std::string( verbose? "disable" : "enable" ) + " verbose"}
+        , {true, "v - " + std::string( muu.verbose? "disable" : "enable" ) + " verbose"}
         , {uniform_streams_available, "space - start/stop stream textures"}
     };
 
@@ -2278,31 +2289,26 @@ void Sandbox::renderUI() {
     TRACK_BEGIN("renderUI")
     using namespace renderable_objects;
 
-    // // IN PUT TEXTURES
-    if (m_showTextures) {      
-        overlay_m_showTextures(uniforms);
-    }
+    const auto display_m_plots = m_plot != PLOT_OFF && m_plot_texture ;
+    const auto diplay_cursor = cursor && vera::getMouseEntered();
+    const auto no_geometry_available = frag_index == -1 && vert_index == -1 && geom_index == -1;
 
-    // RESULTING BUFFERS
-    if (m_showPasses) {
-        overlay_m_showPasses(uniforms, m_postprocessing, m_sceneRender);
-    }
+    struct vtable_metatadata_with_pred_t {
+        using function_sig_t = auto (*)(const renderable_objects::metadata&) -> void;
+        const bool predicate;
+        const function_sig_t do_overlay_action;
+        const renderable_objects::metadata parameters;
+    };
 
-    if (m_plot != PLOT_OFF && m_plot_texture ) {
-        overlay_m_plot(m_plot_shader, m_plot_texture);
-    }
-
-    if (cursor && vera::getMouseEntered()) {
-        overlay_cursor(m_cross_vbo);
-    }
-
-    if (frag_index == -1 && vert_index == -1 && geom_index == -1) {
-        overlay_prompt_drag_and_drop();
-    }
-
-    if (help) {
-        overlay_prompt_help(uniforms, geom_index, m_sceneRender,help, verbose);
-    }
+    const std::array<vtable_metatadata_with_pred_t, 6> lala = {
+        vtable_metatadata_with_pred_t{m_showTextures, &overlay_m_showTextures, {&uniforms, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr}}
+        , {m_showPasses, &overlay_m_showPasses, {&uniforms, &m_sceneRender, &m_postprocessing, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr}}
+        , {display_m_plots, &overlay_m_plot, {nullptr, nullptr, nullptr, &m_plot_shader, &m_plot_texture, nullptr, nullptr, nullptr, nullptr}}
+        , {diplay_cursor, &overlay_cursor, {nullptr, nullptr, nullptr, nullptr, nullptr, &m_cross_vbo, nullptr, nullptr, nullptr}}
+        , {no_geometry_available, &overlay_prompt_drag_and_drop, {nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr}}
+        , {help, &overlay_prompt_help, {&uniforms, &m_sceneRender, nullptr, nullptr, nullptr, nullptr, &geom_index, &help, &verbose}}
+    };
+    for(const auto& _: lala) { if(_.predicate) _.do_overlay_action(_.parameters);  }
 
     TRACK_END("renderUI")
 }
