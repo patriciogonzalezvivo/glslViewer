@@ -2157,8 +2157,7 @@ void overlay_m_plot(const overlay_fn_args_t& muu) {
 
     render_ui_t lolo;
     lolo.p = vera::getPixelDensity();
-    lolo.w = 100 * lolo.p;
-    lolo.h = 30 * lolo.p;
+    std::tie(lolo.w, lolo.h) = std::pair<float, float>{100 * lolo.p, 30 * lolo.p};
     lolo.pos.x = (float)(vera::getWindowWidth()) * 0.5;
     lolo.pos.y = lolo.h + 10;
 
