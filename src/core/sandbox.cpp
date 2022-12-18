@@ -2082,6 +2082,41 @@ void do_something_singlebuffer(const std::string& prompt_id, Uniforms& uniforms,
     }
 }
 
+void process_render_passes(Uniforms& uniforms, const SceneRender& m_sceneRender, int nTotal){
+    render_ui_t lolo;
+    lolo.scale = fmin(1.0f / (float)(nTotal), 0.25) * 0.5;
+    lolo.xStep = lolo.w * lolo.scale;
+    lolo.yStep = lolo.h * lolo.scale;
+    lolo.xOffset = lolo.w - lolo.xStep;
+    lolo.yOffset = lolo.h - lolo.yStep;
+
+    vera::textAngle(-HALF_PI);
+    vera::textSize(lolo.yStep * 0.2f / vera::getPixelDensity(false));
+    vera::textAlign(vera::ALIGN_BOTTOM);
+    vera::textAlign(vera::ALIGN_LEFT);
+
+    using func_sig_t = auto (*)(const std::string&, Uniforms&, const renderer_process_info_t&, render_ui_t&)-> void;
+    using vtable_kv_t = std::pair<renderer_process_info_t, func_sig_t>;
+    const std::array<vtable_kv_t, 9> somelist {
+        vtable_kv_t{{"u_buffer", nullptr, nullptr}, do_something_singlebuffer}
+        , {{"u_doubleBuffer", nullptr, nullptr}, do_something_doublebuffers}
+        , {{"u_pyramid0", nullptr, nullptr}, do_something_pyramid}
+        , {{"u_lightShadowMap", nullptr, nullptr}, do_something_lightmap}
+        , {{"u_scenePosition", &m_sceneRender.positionFbo, nullptr}, do_something_00}
+        , {{"u_sceneNormal", &m_sceneRender.normalFbo, nullptr}, do_something_00}
+        , {{"u_sceneBuffer", nullptr, &m_sceneRender.buffersFbo}, do_something_01}
+        , {{"u_scene", &m_sceneRender.renderFbo, nullptr}, do_something_00}
+        , {{"u_sceneDepth", &m_sceneRender.renderFbo, nullptr}, do_something_02}
+    };
+
+    for(const auto& abc : somelist) {
+        const auto process_renderer = std::get<1>(abc);
+        const auto& process_info = std::get<0>(abc);
+        const auto& prompt_id = std::get<0>(process_info);
+        process_renderer(prompt_id, uniforms, process_info, lolo);
+    }
+}
+
 void overlay_m_showPasses(Uniforms& uniforms, bool m_postprocessing, const SceneRender& m_sceneRender) {
     glDisable(GL_DEPTH_TEST);
     TRACK_BEGIN("renderUI:buffers")
@@ -2103,40 +2138,8 @@ void overlay_m_showPasses(Uniforms& uniforms, bool m_postprocessing, const Scene
     };
     const auto nTotal = std::accumulate(std::begin(nTotalArray), std::end(nTotalArray), int{}
                                         , [](const int acc, const kv& kv) { return acc + ((kv.first) ? kv.second : 0); });
-
     if (nTotal > 0) {
-        render_ui_t lolo;
-        lolo.scale = fmin(1.0f / (float)(nTotal), 0.25) * 0.5;
-        lolo.xStep = lolo.w * lolo.scale;
-        lolo.yStep = lolo.h * lolo.scale;
-        lolo.xOffset = lolo.w - lolo.xStep;
-        lolo.yOffset = lolo.h - lolo.yStep;
-
-        vera::textAngle(-HALF_PI);
-        vera::textSize(lolo.yStep * 0.2f / vera::getPixelDensity(false));
-        vera::textAlign(vera::ALIGN_BOTTOM);
-        vera::textAlign(vera::ALIGN_LEFT);
-
-        using func_sig_t = auto (*)(const std::string&, Uniforms&, const renderer_process_info_t&, render_ui_t&)-> void;
-        using vtable_kv_t = std::pair<renderer_process_info_t, func_sig_t>;
-        const std::array<vtable_kv_t, 9> somelist {
-            vtable_kv_t{{"u_buffer", nullptr, nullptr}, do_something_singlebuffer}
-            , {{"u_doubleBuffer", nullptr, nullptr}, do_something_doublebuffers}
-            , {{"u_pyramid0", nullptr, nullptr}, do_something_pyramid}
-            , {{"u_lightShadowMap", nullptr, nullptr}, do_something_lightmap}
-            , {{"u_scenePosition", &m_sceneRender.positionFbo, nullptr}, do_something_00}
-            , {{"u_sceneNormal", &m_sceneRender.normalFbo, nullptr}, do_something_00}
-            , {{"u_sceneBuffer", nullptr, &m_sceneRender.buffersFbo}, do_something_01}
-            , {{"u_scene", &m_sceneRender.renderFbo, nullptr}, do_something_00}
-            , {{"u_sceneDepth", &m_sceneRender.renderFbo, nullptr}, do_something_02}
-        };
-
-        for(const auto& abc : somelist) {
-            const auto process_renderer = std::get<1>(abc);
-            const auto& process_info = std::get<0>(abc);
-            const auto& prompt_id = std::get<0>(process_info);
-            process_renderer(prompt_id, uniforms, process_info, lolo);
-        }
+        process_render_passes(uniforms, m_sceneRender, nTotal);
     }
     TRACK_END("renderUI:buffers")
 };
