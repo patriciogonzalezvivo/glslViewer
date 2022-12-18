@@ -2253,13 +2253,12 @@ void overlay_prompt_help(const overlay_fn_args_t& muu) {
     const auto geometry_available = *muu.geom_index != -1;
     const auto uniform_streams_available = muu.uniforms->streams.size() > 0;
 
-    struct kv_prompt {
+    struct help_prompt_t {
         bool predicate;
         std::string message;
     };
-
     const auto help_prompts = {
-        kv_prompt{geometry_available, "a - " + std::string( muu.m_sceneRender->showAxis? "hide" : "show" ) + " axis"}
+        help_prompt_t{geometry_available, "a - " + std::string( muu.m_sceneRender->showAxis? "hide" : "show" ) + " axis"}
         , {geometry_available, "b - " + std::string( muu.m_sceneRender->showBBoxes? "hide" : "show" ) + " bounding boxes"}
         , {true, "c - hide/show cursor"}
         , {geometry_available, "d - " + std::string( muu.m_sceneRender->dynamicShadows? "disable" : "enable" ) + " dynamic shadows"}
