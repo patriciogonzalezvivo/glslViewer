@@ -1952,30 +1952,29 @@ struct render_ui_t {
     float w = (float)(vera::getWindowWidth());
     float h = (float)(vera::getWindowHeight());
     float scale = 1;
-    float xStep = w * scale;
-    float yStep = h * scale;
-    float xOffset = w - xStep;
-    float yOffset = h - yStep;
+    glm::vec2 step = {w * scale, h * scale};
+    float xOffset = w - step.x;
+    float yOffset = h - step.y;
     float p = vera::getPixelDensity();
     float x = (float)(vera::getWindowWidth()) * 0.5;
     float y = h + 10;
 };
 
 void print_text(const std::string& prompt, const float offsetx, render_ui_t& lolo) {
-    vera::text(prompt, offsetx, vera::getWindowHeight() - lolo.yOffset + lolo.yStep);
-    lolo.yOffset -= lolo.yStep * 2.0;
+    vera::text(prompt, offsetx, vera::getWindowHeight() - lolo.yOffset + lolo.step.y);
+    lolo.yOffset -= lolo.step.y * 2.0;
 }
 
 void print_fbo_text(const vera::Fbo& lala, const std::string& prompt, render_ui_t& lolo) {
-    vera::image(&lala, lolo.xOffset, lolo.yOffset, lolo.xStep, lolo.yStep);
-    print_text(prompt, lolo.xOffset - lolo.xStep, lolo);
+    vera::image(&lala, lolo.xOffset, lolo.yOffset, lolo.step.x, lolo.step.y);
+    print_text(prompt, lolo.xOffset - lolo.step.x, lolo);
 }
 
 void print_buffers_text(const vera::Fbo& uniforms_buffer, size_t i, const std::string& prompt, render_ui_t& lolo) {
         glm::vec2 offset = glm::vec2(lolo.xOffset, lolo.yOffset);
-        glm::vec2 scale = glm::vec2(lolo.yStep);
+        glm::vec2 scale = glm::vec2(lolo.step.y);
         scale.x *= ((float)uniforms_buffer.getWidth()/(float)uniforms_buffer.getHeight());
-        offset.x += lolo.xStep - scale.x;
+        offset.x += lolo.step.x - scale.x;
         vera::image(uniforms_buffer, offset.x, offset.y, scale.x, scale.y);
         print_text(prompt + vera::toString(i), lolo.xOffset - scale.x, lolo);
 }
@@ -1999,8 +1998,8 @@ void do_pass_scenebuffer(const std::string& prompt_id, Uniforms& , const render_
 void do_pass_scenedepth(const std::string& prompt_id, Uniforms& uniforms, const render_pass_args_t& abc, render_ui_t& lolo) {
     if (uniforms.functions[prompt_id].present) {
         if (uniforms.activeCamera)
-            vera::imageDepth(*abc.fbo, lolo.xOffset, lolo.yOffset, lolo.xStep, lolo.yStep, uniforms.activeCamera->getFarClip(), uniforms.activeCamera->getNearClip());
-        print_text(prompt_id, lolo.xOffset - lolo.xStep, lolo);
+            vera::imageDepth(*abc.fbo, lolo.xOffset, lolo.yOffset, lolo.step.x, lolo.step.y, uniforms.activeCamera->getFarClip(), uniforms.activeCamera->getNearClip());
+        print_text(prompt_id, lolo.xOffset - lolo.step.x, lolo);
     }
 }
 
@@ -2008,9 +2007,9 @@ void do_pass_lightmap(const std::string& prompt_id, Uniforms& uniforms, const re
     if (uniforms.models.size() > 0) {
         for (vera::LightsMap::iterator it = uniforms.lights.begin(); it != uniforms.lights.end(); ++it ) {
             if ( it->second->getShadowMap()->getDepthTextureId() ) {
-                vera::imageDepth(it->second->getShadowMap(), lolo.xOffset, lolo.yOffset, lolo.xStep, lolo.yStep, it->second->getShadowMapFar(), it->second->getShadowMapNear());
+                vera::imageDepth(it->second->getShadowMap(), lolo.xOffset, lolo.yOffset, lolo.step.x, lolo.step.y, it->second->getShadowMapFar(), it->second->getShadowMapNear());
                 // vera::image(it->second->getShadowMap(), xOffset, yOffset, xStep, yStep);
-                print_text(prompt_id, lolo.xOffset - lolo.xStep, lolo);
+                print_text(prompt_id, lolo.xOffset - lolo.step.x, lolo);
             }
         }
     }
@@ -2019,22 +2018,22 @@ void do_pass_lightmap(const std::string& prompt_id, Uniforms& uniforms, const re
 void do_pass_pyramid(const std::string&, Uniforms& uniforms, const render_pass_args_t&, render_ui_t& lolo) {
     for (size_t i = 0; i < uniforms.pyramids.size(); i++) {
         glm::vec2 offset = glm::vec2(lolo.xOffset, lolo.yOffset);
-        glm::vec2 scale = glm::vec2(lolo.yStep);
+        glm::vec2 scale = glm::vec2(lolo.step.y);
         scale.x *= ((float)uniforms.pyramids[i].getWidth()/(float)uniforms.pyramids[i].getHeight());
         float w = scale.x;
-        offset.x += lolo.xStep - w;
+        offset.x += lolo.step.x - w;
         for (size_t j = 0; j < uniforms.pyramids[i].getDepth() * 2; j++ ) {
             const auto is_lower_depth = (j < uniforms.pyramids[i].getDepth());
             const auto delta_offset = is_lower_depth ? offset.x : offset.x + w * 2.0f;
             vera::image(uniforms.pyramids[i].getResult(j), delta_offset, offset.y, scale.x, scale.y);
             offset.x -= scale.x;
             std::tie(scale, offset.y) = is_lower_depth
-                                        ? std::pair<glm::vec2, float>{scale *= 0.5, lolo.yOffset - lolo.yStep * 0.5}
-                                        : std::pair<glm::vec2, float>{scale *= 2.0, lolo.yOffset + lolo.yStep * 0.5};
+                                        ? std::pair<glm::vec2, float>{scale *= 0.5, lolo.yOffset - lolo.step.y * 0.5}
+                                        : std::pair<glm::vec2, float>{scale *= 2.0, lolo.yOffset + lolo.step.y * 0.5};
             offset.x -= scale.x;
         }
         // vera::text("u_pyramid0" + vera::toString(i), xOffset - scale.x * 2.0, vera::getWindowHeight() - yOffset + yStep);
-        lolo.yOffset -= lolo.yStep * 2.0;
+        lolo.yOffset -= lolo.step.y * 2.0;
     }
 }
 
@@ -2060,12 +2059,12 @@ void process_render_passes(Uniforms& uniforms, const SceneRender& m_sceneRender,
     using namespace render_pass_actions;
     render_ui_t lolo;
     lolo.scale = fmin(1.0f / (float)(nTotal), 0.25) * 0.5;
-    lolo.xStep = lolo.w * lolo.scale;
-    lolo.yStep = lolo.h * lolo.scale;
-    lolo.xOffset = lolo.w - lolo.xStep;
-    lolo.yOffset = lolo.h - lolo.yStep;
+    lolo.step.x = lolo.w * lolo.scale;
+    lolo.step.y = lolo.h * lolo.scale;
+    lolo.xOffset = lolo.w - lolo.step.x;
+    lolo.yOffset = lolo.h - lolo.step.y;
 
-    set_common_text_attributes(-HALF_PI, lolo.yStep * 0.2f / vera::getPixelDensity(false), vera::ALIGN_BOTTOM, vera::ALIGN_LEFT);
+    set_common_text_attributes(-HALF_PI, lolo.step.y * 0.2f / vera::getPixelDensity(false), vera::ALIGN_BOTTOM, vera::ALIGN_LEFT);
 
     struct vtable_render_pass_t{
         using func_sig_t = auto (*)(const std::string&, Uniforms&, const render_pass_args_t&, render_ui_t&)-> void;
@@ -2107,21 +2106,21 @@ void overlay_m_showTextures(const overlay_fn_args_t& muu) {
         TRACK_BEGIN("renderUI:textures")
         render_ui_t lolo;
         lolo.scale = fmin(1.0f / (float)(nTotal), 0.25) * 0.5;
-        lolo.xStep = lolo.w * lolo.scale;
-        lolo.yStep = lolo.h * lolo.scale;
-        lolo.xOffset = lolo.xStep;
-        lolo.yOffset = lolo.h - lolo.yStep;
+        lolo.step.x = lolo.w * lolo.scale;
+        lolo.step.y = lolo.h * lolo.scale;
+        lolo.xOffset = lolo.step.x;
+        lolo.yOffset = lolo.h - lolo.step.y;
 
-        set_common_text_attributes(-HALF_PI, lolo.yStep * 0.2f / vera::getPixelDensity(false), vera::ALIGN_TOP, vera::ALIGN_LEFT);
+        set_common_text_attributes(-HALF_PI, lolo.step.y * 0.2f / vera::getPixelDensity(false), vera::ALIGN_TOP, vera::ALIGN_LEFT);
 
         for (vera::TexturesMap::const_iterator it = muu.uniforms->textures.begin(); it != muu.uniforms->textures.end(); it++) {
             vera::TextureStreamsMap::const_iterator slit = muu.uniforms->streams.find(it->first);
             if ( slit != muu.uniforms->streams.end() )
-                vera::image((vera::TextureStream*)slit->second, lolo.xOffset, lolo.yOffset, lolo.xStep, lolo.yStep, true);
+                vera::image((vera::TextureStream*)slit->second, lolo.xOffset, lolo.yOffset, lolo.step.x, lolo.step.y, true);
             else
-                vera::image(it->second, lolo.xOffset, lolo.yOffset, lolo.xStep, lolo.yStep);
-            vera::text(it->first, lolo.xOffset + lolo.xStep, vera::getWindowHeight() - lolo.yOffset + lolo.yStep);
-            lolo.yOffset -= lolo.yStep * 2.0;
+                vera::image(it->second, lolo.xOffset, lolo.yOffset, lolo.step.x, lolo.step.y);
+            vera::text(it->first, lolo.xOffset + lolo.step.x, vera::getWindowHeight() - lolo.yOffset + lolo.step.y);
+            lolo.yOffset -= lolo.step.y * 2.0;
         }
         TRACK_END("renderUI:textures")
     }
@@ -2196,17 +2195,17 @@ void overlay_cursor(const overlay_fn_args_t& muu) {
 
 void overlay_prompt_drag_and_drop(const overlay_fn_args_t&) {
     render_ui_t lolo;
-    lolo.xStep = lolo.w * 0.05;
-    lolo.yStep = lolo.h * 0.05;
-    lolo.x = lolo.xStep * 2.0f;
-    lolo.y = lolo.yStep * 3.0f;
+    lolo.step.x = lolo.w * 0.05;
+    lolo.step.y = lolo.h * 0.05;
+    lolo.x = lolo.step.x * 2.0f;
+    lolo.y = lolo.step.y * 3.0f;
 
     vera::Camera *cam = vera::getCamera();
     vera::resetCamera();
 
     vera::fill(0.0f, 0.0f, 0.0f, 0.75f);
     vera::noStroke();
-    vera::rect(glm::vec2(lolo.w * 0.5f, lolo.h * 0.5f), glm::vec2(lolo.w - lolo.xStep * 2.0f, lolo.h - lolo.yStep * 2.0f));
+    vera::rect(glm::vec2(lolo.w * 0.5f, lolo.h * 0.5f), glm::vec2(lolo.w - lolo.step.x * 2.0f, lolo.h - lolo.step.y * 2.0f));
     vera::fill(1.0f);
     set_common_text_attributes(0.0f, 38.0f, vera::ALIGN_MIDDLE, vera::ALIGN_CENTER);
     vera::text("Drag & Drop", lolo.w * 0.5f, lolo.h * 0.45f);
@@ -2218,25 +2217,25 @@ void overlay_prompt_drag_and_drop(const overlay_fn_args_t&) {
 
 void overlay_prompt_help(const overlay_fn_args_t& muu) {
     render_ui_t lolo;
-    lolo.xStep = lolo.w * 0.05;
-    lolo.yStep = lolo.h * 0.05;
-    lolo.x = lolo.xStep * 2.0f;
-    lolo.y = lolo.yStep * 3.0f;
+    lolo.step.x = lolo.w * 0.05;
+    lolo.step.y = lolo.h * 0.05;
+    lolo.x = lolo.step.x * 2.0f;
+    lolo.y = lolo.step.y * 3.0f;
 
     vera::Camera *cam = vera::getCamera();
     vera::resetCamera();
 
     vera::fill(0.0f, 0.0f, 0.0f, 0.75f);
     vera::noStroke();
-    vera::rect(glm::vec2(lolo.w * 0.5f, lolo.h * 0.5f), glm::vec2(lolo.w - lolo.xStep * 2.0f, lolo.h - lolo.yStep * 2.0f));
+    vera::rect(glm::vec2(lolo.w * 0.5f, lolo.h * 0.5f), glm::vec2(lolo.w - lolo.step.x * 2.0f, lolo.h - lolo.step.y * 2.0f));
     vera::fill(1.0f);
     set_common_text_attributes(0.0f, 22.0f, vera::ALIGN_MIDDLE, vera::ALIGN_LEFT);
 
-    lolo.yStep = vera::getFontHeight() * 1.5f;
+    lolo.step.y = vera::getFontHeight() * 1.5f;
 
     const auto print_text = [&](const std::string& prompt){
         vera::text(prompt, lolo.x, lolo.y);
-        lolo.y += lolo.yStep;
+        lolo.y += lolo.step.y;
     };
 
     const auto geometry_available = *muu.geom_index != -1;
