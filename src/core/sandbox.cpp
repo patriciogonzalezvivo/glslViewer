@@ -2073,8 +2073,8 @@ void process_render_passes(Uniforms& uniforms, const SceneRender& m_sceneRender,
         const render_pass_args_t process_info;
         const func_sig_t process_renderer;
     };
-    const std::array<vtable_render_pass_t, 9> somelist {
-        vtable_render_pass_t{"u_buffer", {nullptr, nullptr}, do_pass_singlebuffer}
+    const std::array<vtable_render_pass_t, 9> somelist { vtable_render_pass_t
+        {"u_buffer", {nullptr, nullptr}, do_pass_singlebuffer}
         , {"u_doubleBuffer", {nullptr, nullptr}, do_pass_doublebuffers}
         , {"u_pyramid0", {nullptr, nullptr}, do_pass_pyramid}
         , {"u_lightShadowMap", {nullptr, nullptr}, do_pass_lightmap}
@@ -2135,8 +2135,8 @@ void overlay_m_showPasses(const overlay_fn_args_t& muu) {
     const auto is_postprocessing_with_uniforms = muu.m_postprocessing
                                                  && muu.uniforms->models.size() > 0;
     using num_of_passes_t = std::pair<bool, size_t>;
-    const auto nTotalArray = {
-        num_of_passes_t{true, muu.uniforms->buffers.size()} //buffer
+    const auto nTotalArray = { num_of_passes_t
+        {true, muu.uniforms->buffers.size()} //buffer
         , {true, muu.uniforms->doubleBuffers.size()}    // doublebuffer
         , {true, muu.uniforms->pyramids.size()} //pyramid
         , {is_postprocessing_with_uniforms, 1}  // lightmap
@@ -2246,8 +2246,8 @@ void overlay_prompt_help(const overlay_fn_args_t& muu) {
         bool predicate;
         std::string message;
     };
-    const auto help_prompts = {
-        help_prompt_t{geometry_available, "a - " + std::string( muu.m_sceneRender->showAxis? "hide" : "show" ) + " axis"}
+    const auto help_prompts = { help_prompt_t
+        {geometry_available, "a - " + std::string( muu.m_sceneRender->showAxis? "hide" : "show" ) + " axis"}
         , {geometry_available, "b - " + std::string( muu.m_sceneRender->showBBoxes? "hide" : "show" ) + " bounding boxes"}
         , {true, "c - hide/show cursor"}
         , {geometry_available, "d - " + std::string( muu.m_sceneRender->dynamicShadows? "disable" : "enable" ) + " dynamic shadows"}
@@ -2287,8 +2287,8 @@ void Sandbox::renderUI() {
         const function_sig_t do_overlay_action;
         const overlay_fn_args_t parameters;
     };
-    const std::array<vtable_overlay_fn_args_with_pred_t, 6> lala = {
-        vtable_overlay_fn_args_with_pred_t{m_showTextures, &overlay_m_showTextures, {&uniforms, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr}}
+    const std::array<vtable_overlay_fn_args_with_pred_t, 6> lala = { vtable_overlay_fn_args_with_pred_t
+        {m_showTextures, &overlay_m_showTextures, {&uniforms, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr}}
         , {m_showPasses, &overlay_m_showPasses, {&uniforms, &m_sceneRender, &m_postprocessing, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr}}
         , {display_m_plots, &overlay_m_plot, {nullptr, nullptr, nullptr, &m_plot_shader, &m_plot_texture, nullptr, nullptr, nullptr, nullptr}}
         , {diplay_cursor, &overlay_cursor, {nullptr, nullptr, nullptr, nullptr, nullptr, &m_cross_vbo, nullptr, nullptr, nullptr}}
