@@ -2251,9 +2251,13 @@ void overlay_prompt_help(const metadata& muu) {
     const auto geometry_available = *muu.geom_index != -1;
     const auto uniform_streams_available = muu.uniforms->streams.size() > 0;
 
-    using kv = std::pair<bool, std::string>;
+    struct kv_prompt {
+        bool predicate;
+        std::string message;
+    };
+
     const auto help_prompts = {
-        kv{geometry_available, "a - " + std::string( muu.m_sceneRender->showAxis? "hide" : "show" ) + " axis"}
+        kv_prompt{geometry_available, "a - " + std::string( muu.m_sceneRender->showAxis? "hide" : "show" ) + " axis"}
         , {geometry_available, "b - " + std::string( muu.m_sceneRender->showBBoxes? "hide" : "show" ) + " bounding boxes"}
         , {true, "c - hide/show cursor"}
         , {geometry_available, "d - " + std::string( muu.m_sceneRender->dynamicShadows? "disable" : "enable" ) + " dynamic shadows"}
@@ -2270,11 +2274,7 @@ void overlay_prompt_help(const metadata& muu) {
         , {true, "v - " + std::string( muu.verbose? "disable" : "enable" ) + " verbose"}
         , {uniform_streams_available, "space - start/stop stream textures"}
     };
-
-    for(const auto& prompt : help_prompts) {
-        if(std::get<0>(prompt)) // activated prompt
-            print_text(std::get<1>(prompt));
-    }
+    for(const auto& _ : help_prompts) { if(_.predicate) print_text(_.message); }
 
     vera::setCamera(cam);
     glDisable(GL_DEPTH_TEST);
