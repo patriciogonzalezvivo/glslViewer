@@ -2058,8 +2058,7 @@ void process_render_passes(Uniforms& uniforms, const SceneRender& m_sceneRender,
     render_ui_t lolo;
     lolo.scale = fmin(1.0f / (float)(nTotal), 0.25) * 0.5;
     lolo.step = {lolo.w * lolo.scale, lolo.h * lolo.scale};
-    lolo.offset.x = lolo.w - lolo.step.x;
-    lolo.offset.y = lolo.h - lolo.step.y;
+    lolo.offset = {lolo.w - lolo.step.x, lolo.h - lolo.step.y};
 
     set_common_text_attributes(-HALF_PI, lolo.step.y * 0.2f / vera::getPixelDensity(false), vera::ALIGN_BOTTOM, vera::ALIGN_LEFT);
 
@@ -2104,8 +2103,7 @@ void overlay_m_showTextures(const overlay_fn_args_t& muu) {
         render_ui_t lolo;
         lolo.scale = fmin(1.0f / (float)(nTotal), 0.25) * 0.5;
         lolo.step = {lolo.w * lolo.scale, lolo.h * lolo.scale};
-        lolo.offset.x = lolo.step.x;
-        lolo.offset.y = lolo.h - lolo.step.y;
+        lolo.offset = {lolo.step.x, lolo.h - lolo.step.y};
 
         set_common_text_attributes(-HALF_PI, lolo.step.y * 0.2f / vera::getPixelDensity(false), vera::ALIGN_TOP, vera::ALIGN_LEFT);
 
