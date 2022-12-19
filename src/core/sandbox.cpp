@@ -2184,8 +2184,7 @@ void overlay_cursor(const overlay_fn_args_t& muu) {
     TRACK_END("renderUI:cursor")
 }
 
-void overlay_prompt_drag_and_drop(const overlay_fn_args_t&) {
-    render_ui_t lolo;
+vera::Camera* overlay_black_box(float textangle, float textsize, vera::VerticalAlign v, vera::HorizontalAlign h, render_ui_t& lolo) {
     lolo.step = {lolo.dimensions.x * 0.05, lolo.dimensions.y * 0.05};
     lolo.pos = {lolo.step.x * 2.0f, lolo.step.y * 3.0f};
 
@@ -2196,7 +2195,14 @@ void overlay_prompt_drag_and_drop(const overlay_fn_args_t&) {
     vera::noStroke();
     vera::rect(glm::vec2(lolo.dimensions.x * 0.5f, lolo.dimensions.y * 0.5f), glm::vec2(lolo.dimensions.x - lolo.step.x * 2.0f, lolo.dimensions.y - lolo.step.y * 2.0f));
     vera::fill(1.0f);
-    set_common_text_attributes(0.0f, 38.0f, vera::ALIGN_MIDDLE, vera::ALIGN_CENTER);
+    set_common_text_attributes(textangle, textsize, v, h);
+    return cam;
+}
+
+void overlay_prompt_drag_and_drop(const overlay_fn_args_t&) {
+    render_ui_t lolo;
+    vera::Camera *cam = overlay_black_box(0.0f, 38.0f, vera::ALIGN_MIDDLE, vera::ALIGN_CENTER, lolo);
+
     vera::text("Drag & Drop", lolo.dimensions.x * 0.5f, lolo.dimensions.y * 0.45f);
     vera::textSize(22.0f);
     vera::text(".vert .frag .ply .lst .obj .gltf .glb", lolo.dimensions.x * 0.5f, lolo.dimensions.y * 0.55f);
@@ -2206,18 +2212,7 @@ void overlay_prompt_drag_and_drop(const overlay_fn_args_t&) {
 
 void overlay_prompt_help(const overlay_fn_args_t& muu) {
     render_ui_t lolo;
-    lolo.step = {lolo.dimensions.x * 0.05, lolo.dimensions.y * 0.05};
-    lolo.pos = {lolo.step.x * 2.0f, lolo.step.y * 3.0f};
-
-    vera::Camera *cam = vera::getCamera();
-    vera::resetCamera();
-
-    vera::fill(0.0f, 0.0f, 0.0f, 0.75f);
-    vera::noStroke();
-    vera::rect(glm::vec2(lolo.dimensions.x * 0.5f, lolo.dimensions.y * 0.5f), glm::vec2(lolo.dimensions.x - lolo.step.x * 2.0f, lolo.dimensions.y - lolo.step.y * 2.0f));
-    vera::fill(1.0f);
-    set_common_text_attributes(0.0f, 22.0f, vera::ALIGN_MIDDLE, vera::ALIGN_LEFT);
-
+    vera::Camera *cam = overlay_black_box(0.0f, 22.0f, vera::ALIGN_MIDDLE, vera::ALIGN_LEFT, lolo);
     lolo.step.y = vera::getFontHeight() * 1.5f;
 
     const auto print_text = [&](const std::string& prompt){
