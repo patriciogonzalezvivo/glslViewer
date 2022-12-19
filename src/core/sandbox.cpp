@@ -2057,8 +2057,7 @@ void process_render_passes(Uniforms& uniforms, const SceneRender& m_sceneRender,
     using namespace render_pass_actions;
     render_ui_t lolo;
     lolo.scale = fmin(1.0f / (float)(nTotal), 0.25) * 0.5;
-    lolo.step.x = lolo.w * lolo.scale;
-    lolo.step.y = lolo.h * lolo.scale;
+    lolo.step = {lolo.w * lolo.scale, lolo.h * lolo.scale};
     lolo.offset.x = lolo.w - lolo.step.x;
     lolo.offset.y = lolo.h - lolo.step.y;
 
@@ -2104,8 +2103,7 @@ void overlay_m_showTextures(const overlay_fn_args_t& muu) {
         TRACK_BEGIN("renderUI:textures")
         render_ui_t lolo;
         lolo.scale = fmin(1.0f / (float)(nTotal), 0.25) * 0.5;
-        lolo.step.x = lolo.w * lolo.scale;
-        lolo.step.y = lolo.h * lolo.scale;
+        lolo.step = {lolo.w * lolo.scale, lolo.h * lolo.scale};
         lolo.offset.x = lolo.step.x;
         lolo.offset.y = lolo.h - lolo.step.y;
 
@@ -2191,8 +2189,7 @@ void overlay_cursor(const overlay_fn_args_t& muu) {
 
 void overlay_prompt_drag_and_drop(const overlay_fn_args_t&) {
     render_ui_t lolo;
-    lolo.step.x = lolo.w * 0.05;
-    lolo.step.y = lolo.h * 0.05;
+    lolo.step = {lolo.w * 0.05, lolo.h * 0.05};
     lolo.pos = {lolo.step.x * 2.0f, lolo.step.y * 3.0f};
 
     vera::Camera *cam = vera::getCamera();
@@ -2212,8 +2209,7 @@ void overlay_prompt_drag_and_drop(const overlay_fn_args_t&) {
 
 void overlay_prompt_help(const overlay_fn_args_t& muu) {
     render_ui_t lolo;
-    lolo.step.x = lolo.w * 0.05;
-    lolo.step.y = lolo.h * 0.05;
+    lolo.step = {lolo.w * 0.05, lolo.h * 0.05};
     lolo.pos = {lolo.step.x * 2.0f, lolo.step.y * 3.0f};
 
     vera::Camera *cam = vera::getCamera();
