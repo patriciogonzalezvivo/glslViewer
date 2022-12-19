@@ -1949,13 +1949,12 @@ void Sandbox::renderPost() {
 namespace {
 namespace renderable_objects {
 struct render_ui_t {
-    float w = (float)(vera::getWindowWidth());
-    float h = (float)(vera::getWindowHeight());
+    glm::vec2 dimensions = {vera::getWindowWidth(), vera::getWindowHeight()};
     float scale = 1;
-    glm::vec2 step = {w * scale, h * scale};
-    glm::vec2 offset = {w - step.x, h - step.y};
+    glm::vec2 step = {dimensions.x * scale, dimensions.y * scale};
+    glm::vec2 offset = {dimensions.x - step.x, dimensions.y - step.y};
     float p = vera::getPixelDensity();
-    glm::vec2 pos = {w * 0.5, h + 10};
+    glm::vec2 pos = {dimensions.x * 0.5, dimensions.y + 10};
 };
 
 void print_text(const std::string& prompt, const float offsetx, render_ui_t& lolo) {
@@ -2057,8 +2056,8 @@ void process_render_passes(Uniforms& uniforms, const SceneRender& m_sceneRender,
     using namespace render_pass_actions;
     render_ui_t lolo;
     lolo.scale = fmin(1.0f / (float)(nTotal), 0.25) * 0.5;
-    lolo.step = {lolo.w * lolo.scale, lolo.h * lolo.scale};
-    lolo.offset = {lolo.w - lolo.step.x, lolo.h - lolo.step.y};
+    lolo.step = {lolo.dimensions.x * lolo.scale, lolo.dimensions.y * lolo.scale};
+    lolo.offset = {lolo.dimensions.x - lolo.step.x, lolo.dimensions.y - lolo.step.y};
 
     set_common_text_attributes(-HALF_PI, lolo.step.y * 0.2f / vera::getPixelDensity(false), vera::ALIGN_BOTTOM, vera::ALIGN_LEFT);
 
@@ -2102,8 +2101,8 @@ void overlay_m_showTextures(const overlay_fn_args_t& muu) {
         TRACK_BEGIN("renderUI:textures")
         render_ui_t lolo;
         lolo.scale = fmin(1.0f / (float)(nTotal), 0.25) * 0.5;
-        lolo.step = {lolo.w * lolo.scale, lolo.h * lolo.scale};
-        lolo.offset = {lolo.step.x, lolo.h - lolo.step.y};
+        lolo.step = {lolo.dimensions.x * lolo.scale, lolo.dimensions.y * lolo.scale};
+        lolo.offset = {lolo.step.x, lolo.dimensions.y - lolo.step.y};
 
         set_common_text_attributes(-HALF_PI, lolo.step.y * 0.2f / vera::getPixelDensity(false), vera::ALIGN_TOP, vera::ALIGN_LEFT);
 
@@ -2153,14 +2152,14 @@ void overlay_m_plot(const overlay_fn_args_t& muu) {
 
     render_ui_t lolo;
     lolo.p = vera::getPixelDensity();
-    std::tie(lolo.w, lolo.h) = std::pair<float, float>{100 * lolo.p, 30 * lolo.p};
-    lolo.pos = {(float)(vera::getWindowWidth()) * 0.5, lolo.h + 10};
+    std::tie(lolo.dimensions.x, lolo.dimensions.y) = std::pair<float, float>{100 * lolo.p, 30 * lolo.p};
+    lolo.pos = {(float)(vera::getWindowWidth()) * 0.5, lolo.dimensions.y + 10};
 
     muu.m_plot_shader->use();
-    muu.m_plot_shader->setUniform("u_scale", lolo.w, lolo.h);
+    muu.m_plot_shader->setUniform("u_scale", lolo.dimensions.x, lolo.dimensions.y);
     muu.m_plot_shader->setUniform("u_translate", lolo.pos.x, lolo.pos.y);
     muu.m_plot_shader->setUniform("u_resolution", (float)vera::getWindowWidth(), (float)vera::getWindowHeight());
-    muu.m_plot_shader->setUniform("u_viewport", lolo.w, lolo.h);
+    muu.m_plot_shader->setUniform("u_viewport", lolo.dimensions.x, lolo.dimensions.y);
     muu.m_plot_shader->setUniform("u_model", glm::vec3(1.0f));
     muu.m_plot_shader->setUniform("u_modelMatrix", glm::mat4(1.0f));
     muu.m_plot_shader->setUniform("u_viewMatrix", glm::mat4(1.0f));
@@ -2187,7 +2186,7 @@ void overlay_cursor(const overlay_fn_args_t& muu) {
 
 void overlay_prompt_drag_and_drop(const overlay_fn_args_t&) {
     render_ui_t lolo;
-    lolo.step = {lolo.w * 0.05, lolo.h * 0.05};
+    lolo.step = {lolo.dimensions.x * 0.05, lolo.dimensions.y * 0.05};
     lolo.pos = {lolo.step.x * 2.0f, lolo.step.y * 3.0f};
 
     vera::Camera *cam = vera::getCamera();
@@ -2195,19 +2194,19 @@ void overlay_prompt_drag_and_drop(const overlay_fn_args_t&) {
 
     vera::fill(0.0f, 0.0f, 0.0f, 0.75f);
     vera::noStroke();
-    vera::rect(glm::vec2(lolo.w * 0.5f, lolo.h * 0.5f), glm::vec2(lolo.w - lolo.step.x * 2.0f, lolo.h - lolo.step.y * 2.0f));
+    vera::rect(glm::vec2(lolo.dimensions.x * 0.5f, lolo.dimensions.y * 0.5f), glm::vec2(lolo.dimensions.x - lolo.step.x * 2.0f, lolo.dimensions.y - lolo.step.y * 2.0f));
     vera::fill(1.0f);
     set_common_text_attributes(0.0f, 38.0f, vera::ALIGN_MIDDLE, vera::ALIGN_CENTER);
-    vera::text("Drag & Drop", lolo.w * 0.5f, lolo.h * 0.45f);
+    vera::text("Drag & Drop", lolo.dimensions.x * 0.5f, lolo.dimensions.y * 0.45f);
     vera::textSize(22.0f);
-    vera::text(".vert .frag .ply .lst .obj .gltf .glb", lolo.w * 0.5f, lolo.h * 0.55f);
+    vera::text(".vert .frag .ply .lst .obj .gltf .glb", lolo.dimensions.x * 0.5f, lolo.dimensions.y * 0.55f);
 
     vera::setCamera(cam);
 }
 
 void overlay_prompt_help(const overlay_fn_args_t& muu) {
     render_ui_t lolo;
-    lolo.step = {lolo.w * 0.05, lolo.h * 0.05};
+    lolo.step = {lolo.dimensions.x * 0.05, lolo.dimensions.y * 0.05};
     lolo.pos = {lolo.step.x * 2.0f, lolo.step.y * 3.0f};
 
     vera::Camera *cam = vera::getCamera();
@@ -2215,7 +2214,7 @@ void overlay_prompt_help(const overlay_fn_args_t& muu) {
 
     vera::fill(0.0f, 0.0f, 0.0f, 0.75f);
     vera::noStroke();
-    vera::rect(glm::vec2(lolo.w * 0.5f, lolo.h * 0.5f), glm::vec2(lolo.w - lolo.step.x * 2.0f, lolo.h - lolo.step.y * 2.0f));
+    vera::rect(glm::vec2(lolo.dimensions.x * 0.5f, lolo.dimensions.y * 0.5f), glm::vec2(lolo.dimensions.x - lolo.step.x * 2.0f, lolo.dimensions.y - lolo.step.y * 2.0f));
     vera::fill(1.0f);
     set_common_text_attributes(0.0f, 22.0f, vera::ALIGN_MIDDLE, vera::ALIGN_LEFT);
 
