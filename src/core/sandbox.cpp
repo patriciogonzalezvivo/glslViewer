@@ -2108,8 +2108,7 @@ void overlay_m_showTextures(const overlay_fn_args_t& muu) {
                 vera::image((vera::TextureStream*)slit->second, lolo.offset.x, lolo.offset.y, lolo.step.x, lolo.step.y, true);
             else
                 vera::image(it->second, lolo.offset.x, lolo.offset.y, lolo.step.x, lolo.step.y);
-            vera::text(it->first, glm::vec2{lolo.offset.x, vera::getWindowHeight() - lolo.offset.y} + lolo.step);
-            lolo.offset.y -= lolo.step.y * 2.0;
+            print_text(it->first, lolo.offset.x + lolo.step.x, lolo);
         }
         TRACK_END("renderUI:textures")
     }
