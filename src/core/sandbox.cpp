@@ -2091,24 +2091,24 @@ struct overlay_fn_args_t {
 };
 
 void overlay_m_showTextures(const overlay_fn_args_t& muu) {
-    int nTotal = muu.uniforms->textures.size();
-    if (nTotal > 0) {
+    if (muu.uniforms->textures.size() > 0) {
         glDisable(GL_DEPTH_TEST);
         TRACK_BEGIN("renderUI:textures")
         render_ui_t lolo;
-        lolo.scale = fmin(1.0f / (float)(nTotal), 0.25) * 0.5;
+        lolo.scale = fmin(1.0f / (float)(muu.uniforms->textures.size()), 0.25) * 0.5;
         lolo.step = {lolo.dimensions * lolo.scale};
         lolo.offset = {lolo.step.x, lolo.dimensions.y - lolo.step.y};
 
         set_common_text_attributes(-HALF_PI, lolo.step.y * 0.2f / vera::getPixelDensity(false), vera::ALIGN_TOP, vera::ALIGN_LEFT);
 
-        for (vera::TexturesMap::const_iterator it = muu.uniforms->textures.begin(); it != muu.uniforms->textures.end(); it++) {
-            vera::TextureStreamsMap::const_iterator slit = muu.uniforms->streams.find(it->first);
-            if ( slit != muu.uniforms->streams.end() )
-                vera::image((vera::TextureStream*)slit->second, lolo.offset.x, lolo.offset.y, lolo.step.x, lolo.step.y, true);
+        for(const auto& texture : muu.uniforms->textures) {
+            const auto textureStream_match = std::find_if(std::begin(muu.uniforms->streams), std::end(muu.uniforms->streams)
+                                           , [&](vera::TextureStreamsMap::value_type stream){return texture.first == stream.first;});
+            if ( textureStream_match != std::end(muu.uniforms->streams) )
+                vera::image((vera::TextureStream*)textureStream_match->second, lolo.offset.x, lolo.offset.y, lolo.step.x, lolo.step.y, true);
             else
-                vera::image(it->second, lolo.offset.x, lolo.offset.y, lolo.step.x, lolo.step.y);
-            print_text(it->first, lolo.offset.x + lolo.step.x, lolo);
+                vera::image(texture.second, lolo.offset.x, lolo.offset.y, lolo.step.x, lolo.step.y);
+            print_text(texture.first, lolo.offset.x + lolo.step.x, lolo);
         }
         TRACK_END("renderUI:textures")
     }
