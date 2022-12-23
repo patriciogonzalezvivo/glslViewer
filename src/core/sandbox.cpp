@@ -2023,7 +2023,6 @@ void do_pass_pyramid(const std::string&, Uniforms& uniforms, const render_pass_a
             std::tie(scale, offset.y) = is_lower_depth
                                         ? std::pair<glm::vec2, float>{scale *= 0.5, uio.offset.y - uio.step.y * 0.5}
                                         : std::pair<glm::vec2, float>{scale *= 2.0, uio.offset.y + uio.step.y * 0.5};
-
             offset.x -= scale.x;
         }
         // vera::text("u_pyramid0" + vera::toString(i), xOffset - scale.x * 2.0, vera::getWindowHeight() - yOffset + yStep);
@@ -2055,7 +2054,6 @@ void process_render_passes(Uniforms& uniforms, const SceneRender& m_sceneRender,
     uio.scale = fmin(1.0f / (float)(nTotal), 0.25) * 0.5;
     uio.step = uio.dimensions * uio.scale;
     uio.offset = uio.dimensions - uio.step;
-
     set_common_text_attributes(-HALF_PI, uio.step.y * 0.2f / vera::getPixelDensity(false), vera::ALIGN_BOTTOM, vera::ALIGN_LEFT);
 
     struct vtable_render_pass_t{
@@ -2099,7 +2097,6 @@ void overlay_m_showTextures(const overlay_fn_args_t& o) {
         uio.scale = fmin(1.0f / (float)(o.uniforms->textures.size()), 0.25) * 0.5;
         uio.step = uio.dimensions * uio.scale;
         uio.offset = {uio.step.x, uio.dimensions.y - uio.step.y};
-
         set_common_text_attributes(-HALF_PI, uio.step.y * 0.2f / vera::getPixelDensity(false), vera::ALIGN_TOP, vera::ALIGN_LEFT);
 
         for(const auto& texture : o.uniforms->textures) {
@@ -2118,7 +2115,6 @@ void overlay_m_showTextures(const overlay_fn_args_t& o) {
 void overlay_m_showPasses(const overlay_fn_args_t& o) {
     glDisable(GL_DEPTH_TEST);
     TRACK_BEGIN("renderUI:buffers")
-
     // DEBUG BUFFERS
     const auto is_postprocessing_with_uniforms = o.m_postprocessing
                                                  && o.uniforms->models.size() > 0;
@@ -2136,16 +2132,14 @@ void overlay_m_showPasses(const overlay_fn_args_t& o) {
     };
     const auto nTotal = std::accumulate(std::begin(nTotalArray), std::end(nTotalArray), int{}
                                         , [](const int acc, const num_of_passes_t& kv) { return acc + ((kv.first) ? kv.second : 0); });
-    if (nTotal > 0) {
+    if (nTotal > 0)
         process_render_passes(*o.uniforms, *o.m_sceneRender, nTotal);
-    }
     TRACK_END("renderUI:buffers")
 };
 
 void overlay_m_plot(const overlay_fn_args_t& o) {
     glDisable(GL_DEPTH_TEST);
     TRACK_BEGIN("renderUI:plot_data")
-
     render_ui_t uio;
     uio.dimensions = glm::vec2{100, 30} * uio.p;
     uio.pos = {(float)(vera::getWindowWidth()) * 0.5, uio.dimensions.y + 10};
@@ -2185,7 +2179,6 @@ vera::Camera* overlay_black_box(float textangle, float textsize, vera::VerticalA
 
     vera::Camera *cam = vera::getCamera();
     vera::resetCamera();
-
     vera::fill(0.0f, 0.0f, 0.0f, 0.75f);
     vera::noStroke();
     vera::rect(uio.dimensions * 0.5f, uio.dimensions - uio.step * 2.0f);
@@ -2197,11 +2190,9 @@ vera::Camera* overlay_black_box(float textangle, float textsize, vera::VerticalA
 void overlay_prompt_drag_and_drop(const overlay_fn_args_t&) {
     render_ui_t uio;
     vera::Camera *cam = overlay_black_box(0.0f, 38.0f, vera::ALIGN_MIDDLE, vera::ALIGN_CENTER, uio);
-
     vera::text("Drag & Drop", uio.dimensions.x * 0.5f, uio.dimensions.y * 0.45f);
     vera::textSize(22.0f);
     vera::text(".vert .frag .ply .lst .obj .gltf .glb", uio.dimensions.x * 0.5f, uio.dimensions.y * 0.55f);
-
     vera::setCamera(cam);
 }
 
@@ -2214,7 +2205,6 @@ void overlay_prompt_help(const overlay_fn_args_t& o) {
         vera::text(prompt, uio.pos);
         uio.pos.y += uio.step.y;
     };
-
     const auto geometry_available = *o.geom_index != -1;
     const auto uniform_streams_available = o.uniforms->streams.size() > 0;
 
@@ -2252,7 +2242,6 @@ void overlay_prompt_help(const overlay_fn_args_t& o) {
 void Sandbox::renderUI() {
     TRACK_BEGIN("renderUI")
     using namespace renderable_objects::overlay_actions;
-
     const auto display_m_plots = m_plot != PLOT_OFF && m_plot_texture ;
     const auto diplay_cursor = cursor && vera::getMouseEntered();
     const auto no_geometry_available = frag_index == -1 && vert_index == -1 && geom_index == -1;
