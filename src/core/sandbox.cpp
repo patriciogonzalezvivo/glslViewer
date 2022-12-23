@@ -2199,7 +2199,7 @@ void overlay_prompt_help(const overlay_fn_args_t& o) {
     vera::Camera *cam = overlay_black_box(0.0f, 22.0f, vera::ALIGN_MIDDLE, vera::ALIGN_LEFT, uio);
     uio.step.y = vera::getFontHeight() * 1.5f;
 
-    const auto print_text = [&](const std::string& prompt){
+    const auto print_help_prompt = [&](const std::string& prompt){
         vera::text(prompt, uio.pos);
         uio.pos.y += uio.step.y;
     };
@@ -2228,7 +2228,7 @@ void overlay_prompt_help(const overlay_fn_args_t& o) {
         , {true, "v - " + std::string( o.verbose? "disable" : "enable" ) + " verbose"}
         , {uniform_streams_available, "space - start/stop stream textures"}
     };
-    for(const auto& _ : help_prompts) { if(_.predicate) print_text(_.message); }
+    for(const auto& _ : help_prompts) { if(_.predicate) print_help_prompt(_.message); }
 
     vera::setCamera(cam);
     glDisable(GL_DEPTH_TEST);
