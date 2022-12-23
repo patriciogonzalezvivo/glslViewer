@@ -2250,7 +2250,7 @@ void Sandbox::renderUI() {
         const function_sig_t do_overlay_action;
         const overlay_fn_args_t parameters;
     };
-    const std::array<vtable_overlay_fn_args_with_pred_t, 6> lala = { vtable_overlay_fn_args_with_pred_t
+    const std::array<vtable_overlay_fn_args_with_pred_t, 6> overlay_table = { vtable_overlay_fn_args_with_pred_t
         {m_showTextures, &overlay_m_showTextures, {&uniforms, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr}}
         , {m_showPasses, &overlay_m_showPasses, {&uniforms, &m_sceneRender, &m_postprocessing, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr}}
         , {display_m_plots, &overlay_m_plot, {nullptr, nullptr, nullptr, &m_plot_shader, &m_plot_texture, nullptr, nullptr, nullptr, nullptr}}
@@ -2258,7 +2258,7 @@ void Sandbox::renderUI() {
         , {no_geometry_available, &overlay_prompt_drag_and_drop, {nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr}}
         , {help, &overlay_prompt_help, {&uniforms, &m_sceneRender, nullptr, nullptr, nullptr, nullptr, &geom_index, &help, &verbose}}
     };
-    for(const auto& _: lala) { if(_.predicate) _.do_overlay_action(_.parameters);  }
+    for(const auto& _: overlay_table) { if(_.predicate) _.do_overlay_action(_.parameters);  }
 
     TRACK_END("renderUI")
 }
