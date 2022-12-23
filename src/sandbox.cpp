@@ -974,8 +974,13 @@ void Sandbox::commandsInit(CommandList &_commands ) {
                 std::string name = "u_" + it->first + "Sdf";
                 addDefine("MODEL_SDF_TEXTURE", name );
 
+                clock_t start, end;
+                start = clock();
+
                 vera::Mesh mesh = it->second->mesh;
+                mesh.setMaterial(it->second->mesh.getMaterial());
                 center(mesh);
+                
                 std::vector<vera::Triangle> tris = mesh.getTriangles();
                 vera::BVH acc(tris, vera::SPLIT_MIDPOINT);
                 acc.square();
@@ -996,29 +1001,48 @@ void Sandbox::commandsInit(CommandList &_commands ) {
                 std::vector<vera::Image> current_lod;
                 for (int z = 0; z < voxel_resolution_lod_0; z++)
                     current_lod.push_back( vera::toSdfLayer( &acc, voxel_resolution_lod_0, z) );
+                
                 uniforms.loadMutex.lock();
                 uniforms.loadQueue[ name ] = packSprite(current_lod);
                 uniforms.loadMutex.unlock();
-                addDefine("MODEL_SDF_TEXTURE_RESOLUTION", vera::toString(voxel_resolution_lod_0) );
+                addDefine("MODEL_SDF_VOXEL_RESOLUTION", vera::toString(voxel_resolution_lod_0) + ".0" );
+                addDefine("MODEL_SDF_TEXTURE_RESOLUTION", "vec2(" + vera::toString( uniforms.loadQueue[ name ].getWidth() ) + ".0)" );
 
-                for (int l = 1; l < 4; l++) {
+                size_t lod_total = 4;
+                for (int l = 1; l < lod_total; l++) {
                     std::vector<vera::Image> new_lod = vera::scaleSprite(current_lod, 4);
                     uniforms.loadMutex.lock();
                     uniforms.loadQueue[ name ] = vera::packSprite(new_lod);
                     uniforms.loadMutex.unlock();
-                    addDefine("MODEL_SDF_TEXTURE_RESOLUTION", vera::toString(new_lod.size()) );
+                    addDefine("MODEL_SDF_VOXEL_RESOLUTION", vera::toString(new_lod.size()) + ".0" );
+                    addDefine("MODEL_SDF_TEXTURE_RESOLUTION", "vec2(" + vera::toString( uniforms.loadQueue[ name ].getWidth() ) + ".0)" );
 
-                    if (l < 3)
-                    for (int z = 0; z < new_lod.size(); z++) {
-                        new_lod[z] = vera::toSdfLayer( &acc, new_lod.size(), z);
-                        console_draw_pct( float(z) / float(new_lod.size() - 1) );
-                        uniforms.loadMutex.lock();
-                        uniforms.loadQueue[ name ] = vera::packSprite(new_lod);
-                        uniforms.loadMutex.unlock();
+                    if (l < (lod_total-1)) {
+                        for (int z = 0; z < new_lod.size(); z++) {
+                            new_lod[z] = vera::toSdfLayer( &acc, new_lod.size(), z);
+                            console_draw_pct( float(z) / float(new_lod.size() - 1) );
+                            uniforms.loadMutex.lock();
+                            uniforms.loadQueue[ name ] = vera::packSprite(new_lod);
+                            uniforms.loadMutex.unlock();
+                        }
                     }
                     
                     current_lod = new_lod;
                 }
+
+                // float pct = 1.0;
+                // for (size_t i = 0; i < 500; i++) {
+                //     refineSdfLayers(&acc, current_lod, pct);
+                //     uniforms.loadMutex.lock();
+                //     uniforms.loadQueue[ name ] = vera::packSprite(current_lod);
+                //     uniforms.loadMutex.unlock();
+                //     std::cout << "Refine " << i << " at " << pct <<std::endl;
+                //     pct *= 0.95;
+                // }
+
+                end = clock();
+                double duration_sec = double(end-start)/CLOCKS_PER_SEC;
+                std::cout << "Took " << duration_sec << "secs" << std::endl;
             }
 
             return true;

@@ -80,15 +80,15 @@ void SceneRender::commandsInit(CommandList& _commands, Uniforms& _uniforms) {
     _commands.push_back(Command("material", [&](const std::string& _line){ 
         if (_line == "materials") {
             for (vera::MaterialsMap::iterator it = _uniforms.materials.begin(); it != _uniforms.materials.end(); it++)
-                std::cout << it->second.name << std::endl;
+                std::cout << it->second->name << std::endl;
             return true;
         }
         else {
             std::vector<std::string> values = vera::split(_line,',');
             if (values.size() == 2 && values[0] == "material") {
                 for (vera::MaterialsMap::iterator it = _uniforms.materials.begin(); it != _uniforms.materials.end(); it++) {
-                    if (it->second.name == values[1]) {
-                        it->second.printDefines();
+                    if (it->second->name == values[1]) {
+                        it->second->printDefines();
                         return true;
                     }
                 }
