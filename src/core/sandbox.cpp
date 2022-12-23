@@ -1980,18 +1980,18 @@ struct render_pass_args_t {
     const BuffersList* const fbolist;
 };
 
-void do_pass_scene(const std::string& prompt_id, Uniforms& uniforms, const render_pass_args_t& abc, render_ui_t& uio) {
-    if (uniforms.functions[prompt_id].present) { print_fbo_text(*abc.fbo, prompt_id, uio); }
+void do_pass_scene(const std::string& prompt_id, Uniforms& uniforms, const render_pass_args_t& current, render_ui_t& uio) {
+    if (uniforms.functions[prompt_id].present) { print_fbo_text(*current.fbo, prompt_id, uio); }
 }
 
-void do_pass_scenebuffer(const std::string& prompt_id, Uniforms& , const render_pass_args_t& abc, render_ui_t& uio) {
-    for(const auto& fbo : (*abc.fbolist)) { print_fbo_text(*fbo, prompt_id, uio); }
+void do_pass_scenebuffer(const std::string& prompt_id, Uniforms& , const render_pass_args_t& current, render_ui_t& uio) {
+    for(const auto& fbo : (*current.fbolist)) { print_fbo_text(*fbo, prompt_id, uio); }
 }
 
-void do_pass_scenedepth(const std::string& prompt_id, Uniforms& uniforms, const render_pass_args_t& abc, render_ui_t& uio) {
+void do_pass_scenedepth(const std::string& prompt_id, Uniforms& uniforms, const render_pass_args_t& current, render_ui_t& uio) {
     if (uniforms.functions[prompt_id].present) {
         if (uniforms.activeCamera)
-            vera::imageDepth(*abc.fbo, uio.offset.x, uio.offset.y, uio.step.x, uio.step.y, uniforms.activeCamera->getFarClip(), uniforms.activeCamera->getNearClip());
+            vera::imageDepth(*current.fbo, uio.offset.x, uio.offset.y, uio.step.x, uio.step.y, uniforms.activeCamera->getFarClip(), uniforms.activeCamera->getNearClip());
         print_text(prompt_id, uio.offset.x - uio.step.x, uio);
     }
 }
