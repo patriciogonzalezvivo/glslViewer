@@ -982,7 +982,7 @@ void Sandbox::commandsInit(CommandList &_commands ) {
                 center(mesh);
                 
                 std::vector<vera::Triangle> tris = mesh.getTriangles();
-                vera::BVH acc(tris, vera::SPLIT_MIDPOINT);
+                vera::BVH acc(tris, vera::SPLIT_MIDPOINT );
                 acc.square();
 
                 // // Calculate scale difference between model and SDF
