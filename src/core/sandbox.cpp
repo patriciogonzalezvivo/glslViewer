@@ -1962,8 +1962,8 @@ void print_text(const std::string& prompt, const float offsetx, render_ui_t& uio
     uio.offset.y -= uio.step.y * 2.0;
 }
 
-void print_fbo_text(const vera::Fbo& lala, const std::string& prompt, render_ui_t& uio) {
-    vera::image(&lala, uio.offset.x, uio.offset.y, uio.step.x, uio.step.y);
+void print_fbo_text(const vera::Fbo& fbo, const std::string& prompt, render_ui_t& uio) {
+    vera::image(&fbo, uio.offset.x, uio.offset.y, uio.step.x, uio.step.y);
     print_text(prompt, uio.offset.x - uio.step.x, uio);
 }
 
