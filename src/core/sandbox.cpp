@@ -1981,13 +1981,11 @@ struct render_pass_args_t {
 };
 
 void do_pass_scene(const std::string& prompt_id, Uniforms& uniforms, const render_pass_args_t& abc, render_ui_t& uio) {
-    if (uniforms.functions[prompt_id].present)
-        print_fbo_text(*abc.fbo, prompt_id, uio);
+    if (uniforms.functions[prompt_id].present) { print_fbo_text(*abc.fbo, prompt_id, uio); }
 }
 
 void do_pass_scenebuffer(const std::string& prompt_id, Uniforms& , const render_pass_args_t& abc, render_ui_t& uio) {
-    for (size_t i = 0; i < abc.fbolist->size(); i++)
-        print_fbo_text(*(*abc.fbolist)[i], prompt_id, uio);
+    for(const auto& fbo : (*abc.fbolist)) { print_fbo_text(*fbo, prompt_id, uio); }
 }
 
 void do_pass_scenedepth(const std::string& prompt_id, Uniforms& uniforms, const render_pass_args_t& abc, render_ui_t& uio) {
