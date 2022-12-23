@@ -1957,21 +1957,21 @@ struct render_ui_t {
     glm::vec2 pos = dimensions * glm::vec2{0.5, 1} + glm::vec2{0, 10};
 };
 
-void print_text(const std::string& prompt, const float offsetx, render_ui_t& lolo) {
-    vera::text(prompt, offsetx, vera::getWindowHeight() - lolo.offset.y + lolo.step.y);
-    lolo.offset.y -= lolo.step.y * 2.0;
+void print_text(const std::string& prompt, const float offsetx, render_ui_t& uio) {
+    vera::text(prompt, offsetx, vera::getWindowHeight() - uio.offset.y + uio.step.y);
+    uio.offset.y -= uio.step.y * 2.0;
 }
 
-void print_fbo_text(const vera::Fbo& lala, const std::string& prompt, render_ui_t& lolo) {
-    vera::image(&lala, lolo.offset.x, lolo.offset.y, lolo.step.x, lolo.step.y);
-    print_text(prompt, lolo.offset.x - lolo.step.x, lolo);
+void print_fbo_text(const vera::Fbo& lala, const std::string& prompt, render_ui_t& uio) {
+    vera::image(&lala, uio.offset.x, uio.offset.y, uio.step.x, uio.step.y);
+    print_text(prompt, uio.offset.x - uio.step.x, uio);
 }
 
-void print_buffers_text(const vera::Fbo& uniforms_buffer, size_t i, const std::string& prompt, render_ui_t& lolo) {
-    glm::vec2 scale = lolo.step.y * glm::vec2{((float)uniforms_buffer.getWidth()/(float)uniforms_buffer.getHeight()), 1};
-    glm::vec2 offset = lolo.offset + glm::vec2{lolo.step.x - scale.x, 0};
+void print_buffers_text(const vera::Fbo& uniforms_buffer, size_t i, const std::string& prompt, render_ui_t& uio) {
+    glm::vec2 scale = uio.step.y * glm::vec2{((float)uniforms_buffer.getWidth()/(float)uniforms_buffer.getHeight()), 1};
+    glm::vec2 offset = uio.offset + glm::vec2{uio.step.x - scale.x, 0};
     vera::image(uniforms_buffer, offset.x, offset.y, scale.x, scale.y);
-    print_text(prompt + vera::toString(i), lolo.offset.x - scale.x, lolo);
+    print_text(prompt + vera::toString(i), uio.offset.x - scale.x, uio);
 }
 
 namespace render_pass_actions {
@@ -1980,40 +1980,40 @@ struct render_pass_args_t {
     const BuffersList* const fbolist;
 };
 
-void do_pass_scene(const std::string& prompt_id, Uniforms& uniforms, const render_pass_args_t& abc, render_ui_t& lolo) {
+void do_pass_scene(const std::string& prompt_id, Uniforms& uniforms, const render_pass_args_t& abc, render_ui_t& uio) {
     if (uniforms.functions[prompt_id].present)
-        print_fbo_text(*abc.fbo, prompt_id, lolo);
+        print_fbo_text(*abc.fbo, prompt_id, uio);
 }
 
-void do_pass_scenebuffer(const std::string& prompt_id, Uniforms& , const render_pass_args_t& abc, render_ui_t& lolo) {
+void do_pass_scenebuffer(const std::string& prompt_id, Uniforms& , const render_pass_args_t& abc, render_ui_t& uio) {
     for (size_t i = 0; i < abc.fbolist->size(); i++)
-        print_fbo_text(*(*abc.fbolist)[i], prompt_id, lolo);
+        print_fbo_text(*(*abc.fbolist)[i], prompt_id, uio);
 }
 
-void do_pass_scenedepth(const std::string& prompt_id, Uniforms& uniforms, const render_pass_args_t& abc, render_ui_t& lolo) {
+void do_pass_scenedepth(const std::string& prompt_id, Uniforms& uniforms, const render_pass_args_t& abc, render_ui_t& uio) {
     if (uniforms.functions[prompt_id].present) {
         if (uniforms.activeCamera)
-            vera::imageDepth(*abc.fbo, lolo.offset.x, lolo.offset.y, lolo.step.x, lolo.step.y, uniforms.activeCamera->getFarClip(), uniforms.activeCamera->getNearClip());
-        print_text(prompt_id, lolo.offset.x - lolo.step.x, lolo);
+            vera::imageDepth(*abc.fbo, uio.offset.x, uio.offset.y, uio.step.x, uio.step.y, uniforms.activeCamera->getFarClip(), uniforms.activeCamera->getNearClip());
+        print_text(prompt_id, uio.offset.x - uio.step.x, uio);
     }
 }
 
-void do_pass_lightmap(const std::string& prompt_id, Uniforms& uniforms, const render_pass_args_t&, render_ui_t& lolo) {
+void do_pass_lightmap(const std::string& prompt_id, Uniforms& uniforms, const render_pass_args_t&, render_ui_t& uio) {
     if (uniforms.models.size() > 0) {
         for (vera::LightsMap::iterator it = uniforms.lights.begin(); it != uniforms.lights.end(); ++it ) {
             if ( it->second->getShadowMap()->getDepthTextureId() ) {
-                vera::imageDepth(it->second->getShadowMap(), lolo.offset.x, lolo.offset.y, lolo.step.x, lolo.step.y, it->second->getShadowMapFar(), it->second->getShadowMapNear());
+                vera::imageDepth(it->second->getShadowMap(), uio.offset.x, uio.offset.y, uio.step.x, uio.step.y, it->second->getShadowMapFar(), it->second->getShadowMapNear());
                 // vera::image(it->second->getShadowMap(), xOffset, yOffset, xStep, yStep);
-                print_text(prompt_id, lolo.offset.x - lolo.step.x, lolo);
+                print_text(prompt_id, uio.offset.x - uio.step.x, uio);
             }
         }
     }
 }
 
-void do_pass_pyramid(const std::string&, Uniforms& uniforms, const render_pass_args_t&, render_ui_t& lolo) {
+void do_pass_pyramid(const std::string&, Uniforms& uniforms, const render_pass_args_t&, render_ui_t& uio) {
     for (size_t i = 0; i < uniforms.pyramids.size(); i++) {
-        glm::vec2 scale = lolo.step.y * glm::vec2{((float)uniforms.pyramids[i].getWidth()/(float)uniforms.pyramids[i].getHeight()), 1};
-        glm::vec2 offset = lolo.offset  + glm::vec2{lolo.step.x - scale.x, 0};
+        glm::vec2 scale = uio.step.y * glm::vec2{((float)uniforms.pyramids[i].getWidth()/(float)uniforms.pyramids[i].getHeight()), 1};
+        glm::vec2 offset = uio.offset  + glm::vec2{uio.step.x - scale.x, 0};
         const auto w = scale.x;
         for (size_t j = 0; j < uniforms.pyramids[i].getDepth() * 2; j++ ) {
             const auto is_lower_depth = (j < uniforms.pyramids[i].getDepth());
@@ -2021,23 +2021,24 @@ void do_pass_pyramid(const std::string&, Uniforms& uniforms, const render_pass_a
             vera::image(uniforms.pyramids[i].getResult(j), delta_offset, offset.y, scale.x, scale.y);
             offset.x -= scale.x;
             std::tie(scale, offset.y) = is_lower_depth
-                                        ? std::pair<glm::vec2, float>{scale *= 0.5, lolo.offset.y - lolo.step.y * 0.5}
-                                        : std::pair<glm::vec2, float>{scale *= 2.0, lolo.offset.y + lolo.step.y * 0.5};
+                                        ? std::pair<glm::vec2, float>{scale *= 0.5, uio.offset.y - uio.step.y * 0.5}
+                                        : std::pair<glm::vec2, float>{scale *= 2.0, uio.offset.y + uio.step.y * 0.5};
+
             offset.x -= scale.x;
         }
         // vera::text("u_pyramid0" + vera::toString(i), xOffset - scale.x * 2.0, vera::getWindowHeight() - yOffset + yStep);
-        lolo.offset.y -= lolo.step.y * 2.0;
+        uio.offset.y -= uio.step.y * 2.0;
     }
 }
 
-void do_pass_doublebuffers(const std::string& prompt_id, Uniforms& uniforms, const render_pass_args_t&, render_ui_t& lolo) {
+void do_pass_doublebuffers(const std::string& prompt_id, Uniforms& uniforms, const render_pass_args_t&, render_ui_t& uio) {
     for (size_t i = 0; i < uniforms.doubleBuffers.size(); i++)
-        print_buffers_text(*uniforms.doubleBuffers[i]->src, i, prompt_id, lolo);
+        print_buffers_text(*uniforms.doubleBuffers[i]->src, i, prompt_id, uio);
 }
 
-void do_pass_singlebuffer(const std::string& prompt_id, Uniforms& uniforms, const render_pass_args_t&, render_ui_t& lolo) {
+void do_pass_singlebuffer(const std::string& prompt_id, Uniforms& uniforms, const render_pass_args_t&, render_ui_t& uio) {
     for (size_t i = 0; i < uniforms.buffers.size(); i++)
-        print_buffers_text(*uniforms.buffers[i], i, prompt_id, lolo);
+        print_buffers_text(*uniforms.buffers[i], i, prompt_id, uio);
 }
 } // namespace [render_pass_actions]
 
@@ -2050,12 +2051,12 @@ void set_common_text_attributes(float textangle, float textsize, vera::VerticalA
 
 void process_render_passes(Uniforms& uniforms, const SceneRender& m_sceneRender, int nTotal){
     using namespace render_pass_actions;
-    render_ui_t lolo;
-    lolo.scale = fmin(1.0f / (float)(nTotal), 0.25) * 0.5;
-    lolo.step = {lolo.dimensions * lolo.scale};
-    lolo.offset = {lolo.dimensions - lolo.step};
+    render_ui_t uio;
+    uio.scale = fmin(1.0f / (float)(nTotal), 0.25) * 0.5;
+    uio.step = uio.dimensions * uio.scale;
+    uio.offset = uio.dimensions - uio.step;
 
-    set_common_text_attributes(-HALF_PI, lolo.step.y * 0.2f / vera::getPixelDensity(false), vera::ALIGN_BOTTOM, vera::ALIGN_LEFT);
+    set_common_text_attributes(-HALF_PI, uio.step.y * 0.2f / vera::getPixelDensity(false), vera::ALIGN_BOTTOM, vera::ALIGN_LEFT);
 
     struct vtable_render_pass_t{
         using func_sig_t = auto (*)(const std::string&, Uniforms&, const render_pass_args_t&, render_ui_t&)-> void;
@@ -2074,7 +2075,7 @@ void process_render_passes(Uniforms& uniforms, const SceneRender& m_sceneRender,
         , {"u_scene", {&m_sceneRender.renderFbo, nullptr}, do_pass_scene}
         , {"u_sceneDepth", {&m_sceneRender.renderFbo, nullptr}, do_pass_scenedepth}
     };
-    for(const auto& _ : somelist) { _.process_renderer(_.prompt_id, uniforms, _.process_info, lolo); }
+    for(const auto& _ : somelist) { _.process_renderer(_.prompt_id, uniforms, _.process_info, uio); }
 }
 
 namespace overlay_actions {
@@ -2094,21 +2095,21 @@ void overlay_m_showTextures(const overlay_fn_args_t& muu) {
     if (muu.uniforms->textures.size() > 0) {
         glDisable(GL_DEPTH_TEST);
         TRACK_BEGIN("renderUI:textures")
-        render_ui_t lolo;
-        lolo.scale = fmin(1.0f / (float)(muu.uniforms->textures.size()), 0.25) * 0.5;
-        lolo.step = {lolo.dimensions * lolo.scale};
-        lolo.offset = {lolo.step.x, lolo.dimensions.y - lolo.step.y};
+        render_ui_t uio;
+        uio.scale = fmin(1.0f / (float)(muu.uniforms->textures.size()), 0.25) * 0.5;
+        uio.step = uio.dimensions * uio.scale;
+        uio.offset = {uio.step.x, uio.dimensions.y - uio.step.y};
 
-        set_common_text_attributes(-HALF_PI, lolo.step.y * 0.2f / vera::getPixelDensity(false), vera::ALIGN_TOP, vera::ALIGN_LEFT);
+        set_common_text_attributes(-HALF_PI, uio.step.y * 0.2f / vera::getPixelDensity(false), vera::ALIGN_TOP, vera::ALIGN_LEFT);
 
         for(const auto& texture : muu.uniforms->textures) {
             const auto textureStream_match = std::find_if(std::begin(muu.uniforms->streams), std::end(muu.uniforms->streams)
                                            , [&](vera::TextureStreamsMap::value_type stream){return texture.first == stream.first;});
             if ( textureStream_match != std::end(muu.uniforms->streams) )
-                vera::image((vera::TextureStream*)textureStream_match->second, lolo.offset.x, lolo.offset.y, lolo.step.x, lolo.step.y, true);
+                vera::image((vera::TextureStream*)textureStream_match->second, uio.offset.x, uio.offset.y, uio.step.x, uio.step.y, true);
             else
-                vera::image(texture.second, lolo.offset.x, lolo.offset.y, lolo.step.x, lolo.step.y);
-            print_text(texture.first, lolo.offset.x + lolo.step.x, lolo);
+                vera::image(texture.second, uio.offset.x, uio.offset.y, uio.step.x, uio.step.y);
+            print_text(texture.first, uio.offset.x + uio.step.x, uio);
         }
         TRACK_END("renderUI:textures")
     }
@@ -2145,15 +2146,15 @@ void overlay_m_plot(const overlay_fn_args_t& muu) {
     glDisable(GL_DEPTH_TEST);
     TRACK_BEGIN("renderUI:plot_data")
 
-    render_ui_t lolo;
-    lolo.dimensions = glm::vec2{100, 30} * lolo.p;
-    lolo.pos = {(float)(vera::getWindowWidth()) * 0.5, lolo.dimensions.y + 10};
+    render_ui_t uio;
+    uio.dimensions = glm::vec2{100, 30} * uio.p;
+    uio.pos = {(float)(vera::getWindowWidth()) * 0.5, uio.dimensions.y + 10};
 
     muu.m_plot_shader->use();
-    muu.m_plot_shader->setUniform("u_scale", lolo.dimensions);
-    muu.m_plot_shader->setUniform("u_translate", lolo.pos);
+    muu.m_plot_shader->setUniform("u_scale", uio.dimensions);
+    muu.m_plot_shader->setUniform("u_translate", uio.pos);
     muu.m_plot_shader->setUniform("u_resolution", {vera::getWindowWidth(), vera::getWindowHeight()});
-    muu.m_plot_shader->setUniform("u_viewport", lolo.dimensions);
+    muu.m_plot_shader->setUniform("u_viewport", uio.dimensions);
     muu.m_plot_shader->setUniform("u_model", glm::vec3(1.0f));
     muu.m_plot_shader->setUniform("u_modelMatrix", glm::mat4(1.0f));
     muu.m_plot_shader->setUniform("u_viewMatrix", glm::mat4(1.0f));
@@ -2178,40 +2179,40 @@ void overlay_cursor(const overlay_fn_args_t& muu) {
     TRACK_END("renderUI:cursor")
 }
 
-vera::Camera* overlay_black_box(float textangle, float textsize, vera::VerticalAlign v, vera::HorizontalAlign h, render_ui_t& lolo) {
-    lolo.step = lolo.dimensions * 0.05f;
-    lolo.pos = lolo.step * glm::vec2{2.0f, 3.0f};
+vera::Camera* overlay_black_box(float textangle, float textsize, vera::VerticalAlign v, vera::HorizontalAlign h, render_ui_t& uio) {
+    uio.step = uio.dimensions * 0.05f;
+    uio.pos = uio.step * glm::vec2{2.0f, 3.0f};
 
     vera::Camera *cam = vera::getCamera();
     vera::resetCamera();
 
     vera::fill(0.0f, 0.0f, 0.0f, 0.75f);
     vera::noStroke();
-    vera::rect(lolo.dimensions * 0.5f, lolo.dimensions - lolo.step * 2.0f);
+    vera::rect(uio.dimensions * 0.5f, uio.dimensions - uio.step * 2.0f);
     vera::fill(1.0f);
     set_common_text_attributes(textangle, textsize, v, h);
     return cam;
 }
 
 void overlay_prompt_drag_and_drop(const overlay_fn_args_t&) {
-    render_ui_t lolo;
-    vera::Camera *cam = overlay_black_box(0.0f, 38.0f, vera::ALIGN_MIDDLE, vera::ALIGN_CENTER, lolo);
+    render_ui_t uio;
+    vera::Camera *cam = overlay_black_box(0.0f, 38.0f, vera::ALIGN_MIDDLE, vera::ALIGN_CENTER, uio);
 
-    vera::text("Drag & Drop", lolo.dimensions.x * 0.5f, lolo.dimensions.y * 0.45f);
+    vera::text("Drag & Drop", uio.dimensions.x * 0.5f, uio.dimensions.y * 0.45f);
     vera::textSize(22.0f);
-    vera::text(".vert .frag .ply .lst .obj .gltf .glb", lolo.dimensions.x * 0.5f, lolo.dimensions.y * 0.55f);
+    vera::text(".vert .frag .ply .lst .obj .gltf .glb", uio.dimensions.x * 0.5f, uio.dimensions.y * 0.55f);
 
     vera::setCamera(cam);
 }
 
 void overlay_prompt_help(const overlay_fn_args_t& muu) {
-    render_ui_t lolo;
-    vera::Camera *cam = overlay_black_box(0.0f, 22.0f, vera::ALIGN_MIDDLE, vera::ALIGN_LEFT, lolo);
-    lolo.step.y = vera::getFontHeight() * 1.5f;
+    render_ui_t uio;
+    vera::Camera *cam = overlay_black_box(0.0f, 22.0f, vera::ALIGN_MIDDLE, vera::ALIGN_LEFT, uio);
+    uio.step.y = vera::getFontHeight() * 1.5f;
 
     const auto print_text = [&](const std::string& prompt){
-        vera::text(prompt, lolo.pos);
-        lolo.pos.y += lolo.step.y;
+        vera::text(prompt, uio.pos);
+        uio.pos.y += uio.step.y;
     };
 
     const auto geometry_available = *muu.geom_index != -1;
