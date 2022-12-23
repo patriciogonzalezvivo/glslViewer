@@ -2000,9 +2000,9 @@ void do_pass_scenedepth(const std::string& prompt_id, Uniforms& uniforms, const 
 
 void do_pass_lightmap(const std::string& prompt_id, Uniforms& uniforms, const render_pass_args_t&, render_ui_t& uio) {
     if (uniforms.models.size() > 0) {
-        for (vera::LightsMap::iterator it = uniforms.lights.begin(); it != uniforms.lights.end(); ++it ) {
-            if ( it->second->getShadowMap()->getDepthTextureId() ) {
-                vera::imageDepth(it->second->getShadowMap(), uio.offset.x, uio.offset.y, uio.step.x, uio.step.y, it->second->getShadowMapFar(), it->second->getShadowMapNear());
+        for (const auto& it : uniforms.lights) {
+            if ( it.second->getShadowMap()->getDepthTextureId() ) {
+                vera::imageDepth(it.second->getShadowMap(), uio.offset.x, uio.offset.y, uio.step.x, uio.step.y, it.second->getShadowMapFar(), it.second->getShadowMapNear());
                 // vera::image(it->second->getShadowMap(), xOffset, yOffset, xStep, yStep);
                 print_text(prompt_id, uio.offset.x - uio.step.x, uio);
             }
