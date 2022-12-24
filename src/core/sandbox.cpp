@@ -2009,14 +2009,14 @@ void do_pass_lightmap(const std::string& prompt_id, Uniforms& uniforms, const re
 }
 
 void do_pass_pyramid(const std::string&, Uniforms& uniforms, const render_pass_args_t&, render_ui_t& uio) {
-    for (size_t i = 0; i < uniforms.pyramids.size(); i++) {
-        glm::vec2 scale = uio.step.y * glm::vec2{((float)uniforms.pyramids[i].getWidth()/(float)uniforms.pyramids[i].getHeight()), 1};
+    for(const auto& pyramid : uniforms.pyramids) {
+        glm::vec2 scale = uio.step.y * glm::vec2{((float)pyramid.getWidth()/(float)pyramid.getHeight()), 1};
         glm::vec2 offset = uio.offset  + glm::vec2{uio.step.x - scale.x, 0};
         const auto w = scale.x;
-        for (size_t j = 0; j < uniforms.pyramids[i].getDepth() * 2; j++ ) {
-            const auto is_lower_depth = (j < uniforms.pyramids[i].getDepth());
+        for (size_t j = 0; j < pyramid.getDepth() * 2; j++ ) {
+            const auto is_lower_depth = (j < pyramid.getDepth());
             const auto delta_offset = is_lower_depth ? offset.x : offset.x + w * 2.0f;
-            vera::image(uniforms.pyramids[i].getResult(j), delta_offset, offset.y, scale.x, scale.y);
+            vera::image(pyramid.getResult(j), delta_offset, offset.y, scale.x, scale.y);
             offset.x -= scale.x;
             std::tie(scale, offset.y) = is_lower_depth
                                         ? std::pair<glm::vec2, float>{scale *= 0.5, uio.offset.y - uio.step.y * 0.5}
