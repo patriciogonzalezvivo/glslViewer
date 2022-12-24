@@ -2018,9 +2018,8 @@ void do_pass_pyramid(const std::string&, Uniforms& uniforms, const render_pass_a
             const auto delta_offset = is_lower_depth ? offset.x : offset.x + w * 2.0f;
             vera::image(pyramid.getResult(j), delta_offset, offset.y, scale.x, scale.y);
             offset.x -= scale.x;
-            std::tie(scale, offset.y) = is_lower_depth
-                                        ? std::pair<glm::vec2, float>{scale *= 0.5, uio.offset.y - uio.step.y * 0.5}
-                                        : std::pair<glm::vec2, float>{scale *= 2.0, uio.offset.y + uio.step.y * 0.5};
+            using _t = std::pair<glm::vec2, float>;
+            std::tie(scale, offset.y) = is_lower_depth ? _t{scale *= 0.5, uio.offset.y - uio.step.y * 0.5} : _t{scale *= 2.0, uio.offset.y + uio.step.y * 0.5};
             offset.x -= scale.x;
         }
         // vera::text("u_pyramid0" + vera::toString(i), xOffset - scale.x * 2.0, vera::getWindowHeight() - yOffset + yStep);
