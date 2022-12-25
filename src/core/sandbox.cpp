@@ -2186,7 +2186,7 @@ vera::Camera* overlay_black_box(float textangle, float textsize, vera::VerticalA
 
 void overlay_prompt_drag_and_drop(const overlay_fn_args_t&) {
     render_ui_t uio;
-    vera::Camera *cam = overlay_black_box(0.0f, 38.0f, vera::ALIGN_MIDDLE, vera::ALIGN_CENTER, uio);
+    vera::Camera* const cam = overlay_black_box(0.0f, 38.0f, vera::ALIGN_MIDDLE, vera::ALIGN_CENTER, uio);
     vera::text("Drag & Drop", uio.dimensions.x * 0.5f, uio.dimensions.y * 0.45f);
     vera::textSize(22.0f);
     vera::text(".vert .frag .ply .lst .obj .gltf .glb", uio.dimensions.x * 0.5f, uio.dimensions.y * 0.55f);
@@ -2195,7 +2195,7 @@ void overlay_prompt_drag_and_drop(const overlay_fn_args_t&) {
 
 void overlay_prompt_help(const overlay_fn_args_t& o) {
     render_ui_t uio;
-    vera::Camera *cam = overlay_black_box(0.0f, 22.0f, vera::ALIGN_MIDDLE, vera::ALIGN_LEFT, uio);
+    vera::Camera* const cam = overlay_black_box(0.0f, 22.0f, vera::ALIGN_MIDDLE, vera::ALIGN_LEFT, uio);
     uio.step.y = vera::getFontHeight() * 1.5f;
 
     const auto print_help_prompt = [&](const std::string& prompt){
@@ -2206,8 +2206,8 @@ void overlay_prompt_help(const overlay_fn_args_t& o) {
     const auto uniform_streams_available = o.uniforms->streams.size() > 0;
 
     struct help_prompt_t {
-        bool predicate;
-        std::string message;
+        const bool predicate;
+        const std::string message;
     };
     const auto help_prompts = { help_prompt_t
         {geometry_available, "a - " + std::string( o.m_sceneRender->showAxis? "hide" : "show" ) + " axis"}
