@@ -2156,7 +2156,7 @@ void overlay_cursor(const overlay_fn_args_t& o) {
     if ((*o.m_cross_vbo) == nullptr)
         (*o.m_cross_vbo) = std::unique_ptr<vera::Vbo>(new vera::Vbo( vera::crossMesh( glm::vec3(0.0f, 0.0f, 0.0f), 10.0f) ));
 
-    vera::Shader* fill = vera::getFillShader();
+    const auto fill = vera::getFillShader();
     fill->use();
     fill->setUniform("u_modelViewProjectionMatrix", glm::translate(vera::getOrthoMatrix(), glm::vec3(vera::getMouseX(), vera::getMouseY(), 0.0f) ) );
     fill->setUniform("u_color", glm::vec4(1.0f));
@@ -2168,7 +2168,7 @@ vera::Camera* overlay_black_box(float textangle, float textsize, vera::VerticalA
     uio.step = uio.dimensions * 0.05f;
     uio.pos = uio.step * glm::vec2{2.0f, 3.0f};
 
-    vera::Camera *cam = vera::getCamera();
+    const auto cam = vera::getCamera();
     vera::resetCamera();
     vera::fill(0.0f, 0.0f, 0.0f, 0.75f);
     vera::noStroke();
@@ -2180,7 +2180,7 @@ vera::Camera* overlay_black_box(float textangle, float textsize, vera::VerticalA
 
 void overlay_prompt_drag_and_drop(const overlay_fn_args_t&) {
     render_ui_t uio;
-    vera::Camera* const cam = overlay_black_box(0.0f, 38.0f, vera::ALIGN_MIDDLE, vera::ALIGN_CENTER, uio);
+    const auto cam = overlay_black_box(0.0f, 38.0f, vera::ALIGN_MIDDLE, vera::ALIGN_CENTER, uio);
     vera::text("Drag & Drop", uio.dimensions.x * 0.5f, uio.dimensions.y * 0.45f);
     vera::textSize(22.0f);
     vera::text(".vert .frag .ply .lst .obj .gltf .glb", uio.dimensions.x * 0.5f, uio.dimensions.y * 0.55f);
@@ -2189,7 +2189,7 @@ void overlay_prompt_drag_and_drop(const overlay_fn_args_t&) {
 
 void overlay_prompt_help(const overlay_fn_args_t& o) {
     render_ui_t uio;
-    vera::Camera* const cam = overlay_black_box(0.0f, 22.0f, vera::ALIGN_MIDDLE, vera::ALIGN_LEFT, uio);
+    const auto cam = overlay_black_box(0.0f, 22.0f, vera::ALIGN_MIDDLE, vera::ALIGN_LEFT, uio);
     uio.step.y = vera::getFontHeight() * 1.5f;
 
     const auto print_help_prompt = [&](const std::string& prompt){
