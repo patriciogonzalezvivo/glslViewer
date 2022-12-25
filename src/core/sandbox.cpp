@@ -1968,8 +1968,8 @@ void print_fbo_text(const vera::Fbo& fbo, const std::string& prompt, render_ui_t
 }
 
 void print_buffers_text(const vera::Fbo& uniforms_buffer, size_t i, const std::string& prompt, render_ui_t& uio) {
-    glm::vec2 scale = uio.step.y * glm::vec2{((float)uniforms_buffer.getWidth()/(float)uniforms_buffer.getHeight()), 1};
-    glm::vec2 offset = uio.offset + glm::vec2{uio.step.x - scale.x, 0};
+    const auto scale = uio.step.y * glm::vec2{((float)uniforms_buffer.getWidth()/(float)uniforms_buffer.getHeight()), 1};
+    const auto offset = uio.offset + glm::vec2{uio.step.x - scale.x, 0};
     vera::image(uniforms_buffer, offset.x, offset.y, scale.x, scale.y);
     print_text(prompt + vera::toString(i), uio.offset.x - scale.x, uio);
 }
@@ -2007,8 +2007,8 @@ void do_pass_lightmap(const std::string& prompt_id, Uniforms& uniforms, const re
 
 void do_pass_pyramid(const std::string&, Uniforms& uniforms, const render_pass_args_t&, render_ui_t& uio) {
     for(const auto& pyramid : uniforms.pyramids) {
-        glm::vec2 scale = uio.step.y * glm::vec2{((float)pyramid.getWidth()/(float)pyramid.getHeight()), 1};
-        glm::vec2 offset = uio.offset  + glm::vec2{uio.step.x - scale.x, 0};
+        auto scale = uio.step.y * glm::vec2{((float)pyramid.getWidth()/(float)pyramid.getHeight()), 1};
+        auto offset = uio.offset  + glm::vec2{uio.step.x - scale.x, 0};
         const auto w = scale.x;
         for (size_t j = 0; j < pyramid.getDepth() * 2; j++ ) {
             const auto is_lower_depth = (j < pyramid.getDepth());
