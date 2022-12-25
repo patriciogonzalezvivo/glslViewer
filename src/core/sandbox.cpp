@@ -1989,16 +1989,14 @@ void do_pass_scenebuffer(const std::string& prompt_id, Uniforms& , const render_
 }
 
 void do_pass_scenedepth(const std::string& prompt_id, Uniforms& uniforms, const render_pass_args_t& current, render_ui_t& uio) {
-    if (!uniforms.functions[prompt_id].present)
-        return;
+    if (!uniforms.functions[prompt_id].present) { return; }
     if (uniforms.activeCamera)
         vera::imageDepth(*current.fbo, uio.offset.x, uio.offset.y, uio.step.x, uio.step.y, uniforms.activeCamera->getFarClip(), uniforms.activeCamera->getNearClip());
     print_text(prompt_id, uio.offset.x - uio.step.x, uio);
 }
 
 void do_pass_lightmap(const std::string& prompt_id, Uniforms& uniforms, const render_pass_args_t&, render_ui_t& uio) {
-    if (uniforms.models.empty())
-        return;
+    if (uniforms.models.empty()) { return; }
     for (const auto& it : uniforms.lights) {
         if (!it.second->getShadowMap()->getDepthTextureId()) { continue; }
         vera::imageDepth(it.second->getShadowMap(), uio.offset.x, uio.offset.y, uio.step.x, uio.step.y, it.second->getShadowMapFar(), it.second->getShadowMapNear());
@@ -2086,8 +2084,7 @@ struct overlay_fn_args_t {
 };
 
 void overlay_m_showTextures(const overlay_fn_args_t& o) {
-    if (o.uniforms->textures.empty())
-        return;
+    if (o.uniforms->textures.empty()) { return; }
     glDisable(GL_DEPTH_TEST);
     TRACK_BEGIN("renderUI:textures")
     render_ui_t uio;
@@ -2128,8 +2125,7 @@ void overlay_m_showPasses(const overlay_fn_args_t& o) {
     };
     const auto nTotal = std::accumulate(std::begin(nTotalArray), std::end(nTotalArray), int{}
                                         , [](const int acc, const num_of_passes_t& kv) { return acc + ((kv.first) ? kv.second : 0); });
-    if (nTotal > 0)
-        process_render_passes(*o.uniforms, *o.m_sceneRender, nTotal);
+    if (nTotal > 0) { process_render_passes(*o.uniforms, *o.m_sceneRender, nTotal); }
     TRACK_END("renderUI:buffers")
 };
 
@@ -2257,7 +2253,6 @@ void Sandbox::renderUI() {
         , {help, &overlay_prompt_help, {&uniforms, &m_sceneRender, nullptr, nullptr, nullptr, nullptr, &geom_index, &help, &verbose}}
     };
     for(const auto& _: overlay_table) { if(_.predicate) _.do_overlay_action(_.parameters);  }
-
     TRACK_END("renderUI")
 }
 
