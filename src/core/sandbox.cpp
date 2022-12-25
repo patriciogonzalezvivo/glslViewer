@@ -2109,8 +2109,7 @@ void overlay_m_showPasses(const overlay_fn_args_t& o) {
     glDisable(GL_DEPTH_TEST);
     TRACK_BEGIN("renderUI:buffers")
     // DEBUG BUFFERS
-    const auto is_postprocessing_with_uniforms = o.m_postprocessing
-                                                 && o.uniforms->models.size() > 0;
+    const auto is_postprocessing_with_uniforms = o.m_postprocessing && !o.uniforms->models.empty();
     using num_of_passes_t = std::pair<bool, size_t>;
     const auto nTotalArray = { num_of_passes_t
         {true, o.uniforms->buffers.size()} //buffer
