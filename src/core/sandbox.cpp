@@ -2054,9 +2054,9 @@ void process_render_passes(Uniforms& uniforms, const SceneRender& m_sceneRender,
         using func_sig_t = auto (*)(const std::string&, Uniforms&, const render_pass_args_t&, render_ui_t&)-> void;
         const std::string prompt_id;
         const render_pass_args_t process_info;
-        const func_sig_t process_renderer;
+        const func_sig_t process_render_pass;
     };
-    const std::array<vtable_render_pass_t, 9> somelist { vtable_render_pass_t
+    const auto render_pass_table = { vtable_render_pass_t
         {"u_buffer", {nullptr, nullptr}, do_pass_singlebuffer}
         , {"u_doubleBuffer", {nullptr, nullptr}, do_pass_doublebuffers}
         , {"u_pyramid0", {nullptr, nullptr}, do_pass_pyramid}
@@ -2067,7 +2067,7 @@ void process_render_passes(Uniforms& uniforms, const SceneRender& m_sceneRender,
         , {"u_scene", {&m_sceneRender.renderFbo, nullptr}, do_pass_scene}
         , {"u_sceneDepth", {&m_sceneRender.renderFbo, nullptr}, do_pass_scenedepth}
     };
-    for(const auto& _ : somelist) { _.process_renderer(_.prompt_id, uniforms, _.process_info, uio); }
+    for(const auto& _ : render_pass_table) { _.process_render_pass(_.prompt_id, uniforms, _.process_info, uio); }
 }
 
 namespace overlay_actions {
