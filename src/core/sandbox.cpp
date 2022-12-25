@@ -2105,7 +2105,7 @@ void overlay_m_showTextures(const overlay_fn_args_t& o) {
     TRACK_END("renderUI:textures")
 }
 
-void overlay_m_showPasses(const overlay_fn_args_t& o) {
+void overlay_show_buffer_passes(const overlay_fn_args_t& o) {
     glDisable(GL_DEPTH_TEST);
     TRACK_BEGIN("renderUI:buffers")
     // DEBUG BUFFERS
@@ -2245,7 +2245,7 @@ void Sandbox::renderUI() {
     };
     const std::array<vtable_overlay_fn_args_with_pred_t, 6> overlay_table = { vtable_overlay_fn_args_with_pred_t
         {m_showTextures, &overlay_m_showTextures, {&uniforms, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr}}
-        , {m_showPasses, &overlay_m_showPasses, {&uniforms, &m_sceneRender, &m_postprocessing, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr}}
+        , {m_showPasses, &overlay_show_buffer_passes, {&uniforms, &m_sceneRender, &m_postprocessing, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr}}
         , {display_m_plots, &overlay_plot_data, {nullptr, nullptr, nullptr, &m_plot_shader, &m_plot_texture, nullptr, nullptr, nullptr, nullptr}}
         , {diplay_cursor, &overlay_cursor, {nullptr, nullptr, nullptr, nullptr, nullptr, &m_cross_vbo, nullptr, nullptr, nullptr}}
         , {no_geometry_available, &overlay_prompt_drag_and_drop, {nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr}}
