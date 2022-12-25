@@ -2042,7 +2042,7 @@ void set_common_text_attributes(float textangle, float textsize, vera::VerticalA
     vera::textAlign(h);
 }
 
-void process_render_passes(Uniforms& uniforms, const SceneRender& m_sceneRender, int nTotal){
+void process_render_passes(Uniforms& uniforms, const SceneRender& m_sceneRender, size_t nTotal){
     using namespace render_pass_actions;
     render_ui_t uio;
     uio.scale = fmin(1.0f / (float)(nTotal), 0.25) * 0.5;
@@ -2123,7 +2123,7 @@ void overlay_m_showPasses(const overlay_fn_args_t& o) {
         , {is_postprocessing_with_uniforms, o.uniforms->functions["u_sceneDepth"].present}
     };
     const auto nTotal = std::accumulate(std::begin(nTotalArray), std::end(nTotalArray), int{}
-                                        , [](const int acc, const num_of_passes_t& kv) { return acc + ((kv.first) ? kv.second : 0); });
+                                        , [](const size_t acc, const num_of_passes_t& kv) { return acc + ((kv.first) ? kv.second : 0); });
     if (nTotal > 0) { process_render_passes(*o.uniforms, *o.m_sceneRender, nTotal); }
     TRACK_END("renderUI:buffers")
 };
