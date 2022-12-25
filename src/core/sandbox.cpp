@@ -1989,22 +1989,21 @@ void do_pass_scenebuffer(const std::string& prompt_id, Uniforms& , const render_
 }
 
 void do_pass_scenedepth(const std::string& prompt_id, Uniforms& uniforms, const render_pass_args_t& current, render_ui_t& uio) {
-    if (uniforms.functions[prompt_id].present) {
-        if (uniforms.activeCamera)
-            vera::imageDepth(*current.fbo, uio.offset.x, uio.offset.y, uio.step.x, uio.step.y, uniforms.activeCamera->getFarClip(), uniforms.activeCamera->getNearClip());
-        print_text(prompt_id, uio.offset.x - uio.step.x, uio);
-    }
+    if (!uniforms.functions[prompt_id].present)
+        return;
+    if (uniforms.activeCamera)
+        vera::imageDepth(*current.fbo, uio.offset.x, uio.offset.y, uio.step.x, uio.step.y, uniforms.activeCamera->getFarClip(), uniforms.activeCamera->getNearClip());
+    print_text(prompt_id, uio.offset.x - uio.step.x, uio);
 }
 
 void do_pass_lightmap(const std::string& prompt_id, Uniforms& uniforms, const render_pass_args_t&, render_ui_t& uio) {
-    if (uniforms.models.size() > 0) {
-        for (const auto& it : uniforms.lights) {
-            if ( it.second->getShadowMap()->getDepthTextureId() ) {
-                vera::imageDepth(it.second->getShadowMap(), uio.offset.x, uio.offset.y, uio.step.x, uio.step.y, it.second->getShadowMapFar(), it.second->getShadowMapNear());
-                // vera::image(it->second->getShadowMap(), xOffset, yOffset, xStep, yStep);
-                print_text(prompt_id, uio.offset.x - uio.step.x, uio);
-            }
-        }
+    if (uniforms.models.empty())
+        return;
+    for (const auto& it : uniforms.lights) {
+        if (!it.second->getShadowMap()->getDepthTextureId()) { continue; }
+        vera::imageDepth(it.second->getShadowMap(), uio.offset.x, uio.offset.y, uio.step.x, uio.step.y, it.second->getShadowMapFar(), it.second->getShadowMapNear());
+        // vera::image(it->second->getShadowMap(), xOffset, yOffset, xStep, yStep);
+        print_text(prompt_id, uio.offset.x - uio.step.x, uio);
     }
 }
 
@@ -2087,26 +2086,26 @@ struct overlay_fn_args_t {
 };
 
 void overlay_m_showTextures(const overlay_fn_args_t& o) {
-    if (o.uniforms->textures.size() > 0) {
-        glDisable(GL_DEPTH_TEST);
-        TRACK_BEGIN("renderUI:textures")
-        render_ui_t uio;
-        uio.scale = fmin(1.0f / (float)(o.uniforms->textures.size()), 0.25) * 0.5;
-        uio.step = uio.dimensions * uio.scale;
-        uio.offset = {uio.step.x, uio.dimensions.y - uio.step.y};
-        set_common_text_attributes(-HALF_PI, uio.step.y * 0.2f / vera::getPixelDensity(false), vera::ALIGN_TOP, vera::ALIGN_LEFT);
+    if (o.uniforms->textures.empty())
+        return;
+    glDisable(GL_DEPTH_TEST);
+    TRACK_BEGIN("renderUI:textures")
+    render_ui_t uio;
+    uio.scale = fmin(1.0f / (float)(o.uniforms->textures.size()), 0.25) * 0.5;
+    uio.step = uio.dimensions * uio.scale;
+    uio.offset = {uio.step.x, uio.dimensions.y - uio.step.y};
+    set_common_text_attributes(-HALF_PI, uio.step.y * 0.2f / vera::getPixelDensity(false), vera::ALIGN_TOP, vera::ALIGN_LEFT);
 
-        for(const auto& texture : o.uniforms->textures) {
-            const auto textureStream_match = std::find_if(std::begin(o.uniforms->streams), std::end(o.uniforms->streams)
-                                           , [&](vera::TextureStreamsMap::value_type stream){return texture.first == stream.first;});
-            if ( textureStream_match != std::end(o.uniforms->streams) )
-                vera::image((vera::TextureStream*)textureStream_match->second, uio.offset.x, uio.offset.y, uio.step.x, uio.step.y, true);
-            else
-                vera::image(texture.second, uio.offset.x, uio.offset.y, uio.step.x, uio.step.y);
-            print_text(texture.first, uio.offset.x + uio.step.x, uio);
-        }
-        TRACK_END("renderUI:textures")
+    for(const auto& texture : o.uniforms->textures) {
+        const auto textureStream_match = std::find_if(std::begin(o.uniforms->streams), std::end(o.uniforms->streams)
+                                       , [&](vera::TextureStreamsMap::value_type stream){return texture.first == stream.first;});
+        if ( textureStream_match != std::end(o.uniforms->streams) )
+            vera::image((vera::TextureStream*)textureStream_match->second, uio.offset.x, uio.offset.y, uio.step.x, uio.step.y, true);
+        else
+            vera::image(texture.second, uio.offset.x, uio.offset.y, uio.step.x, uio.step.y);
+        print_text(texture.first, uio.offset.x + uio.step.x, uio);
     }
+    TRACK_END("renderUI:textures")
 }
 
 void overlay_m_showPasses(const overlay_fn_args_t& o) {
