@@ -1,3 +1,4 @@
 [submodule "deps/vera"]
 	path = deps/vera
 	url = https://github.com/patriciogonzalezvivo/vera.git
+	# url = git@github.com:patriciogonzalezvivo/vera.git
