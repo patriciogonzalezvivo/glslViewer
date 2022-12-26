@@ -16,6 +16,7 @@
 
 #include "vera/ops/fs.h"
 #include "vera/ops/draw.h"
+#include "vera/ops/geom.h"
 #include "vera/ops/math.h"
 #include "vera/ops/image.h"
 #include "vera/ops/pixel.h"
@@ -979,7 +980,7 @@ void Sandbox::commandsInit(CommandList &_commands ) {
 
                 vera::Mesh mesh = it->second->mesh;
                 mesh.setMaterial(it->second->mesh.getMaterial());
-                center(mesh);
+                vera::center(mesh);
                 
                 std::vector<vera::Triangle> tris = mesh.getTriangles();
                 vera::BVH acc(tris, vera::SPLIT_MIDPOINT );
