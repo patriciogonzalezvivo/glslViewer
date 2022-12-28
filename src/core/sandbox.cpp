@@ -1995,7 +1995,7 @@ void do_pass_scenedepth(const std::string& prompt_id, Uniforms& uniforms, const 
     print_text(prompt_id, uio.offset.x - uio.step.x, uio);
 }
 
-void do_pass_lightmap(const std::string& prompt_id, Uniforms& uniforms, const render_pass_args_t&, render_ui_t& uio) {
+void do_pass_lightmap(const std::string& prompt_id, Uniforms& uniforms, render_ui_t& uio) {
     if (uniforms.models.empty()) { return; }
     for (const auto& lightmap : uniforms.lights) {
         if (!lightmap.second->getShadowMap()->getDepthTextureId()) { continue; }
@@ -2053,7 +2053,7 @@ void process_render_passes(Uniforms& uniforms, const SceneRender& m_sceneRender,
     do_pass_singlebuffer("u_buffer", uniforms, uio);
     do_pass_doublebuffers("u_doubleBuffer", uniforms, uio);
     do_pass_pyramid("u_pyramid0", uniforms, uio);
-    do_pass_lightmap("u_lightShadowMap", uniforms, {nullptr, nullptr}, uio);
+    do_pass_lightmap("u_lightShadowMap", uniforms, uio);
     do_pass_scene("u_scenePosition", uniforms, {&m_sceneRender.positionFbo, nullptr}, uio);
     do_pass_scene("u_sceneNormal", uniforms, {&m_sceneRender.normalFbo, nullptr}, uio);
     do_pass_scenebuffer("u_sceneBuffer", uniforms, {nullptr, &m_sceneRender.buffersFbo}, uio);
