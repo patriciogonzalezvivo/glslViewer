@@ -2178,7 +2178,7 @@ vera::Camera* overlay_black_box(float textangle, float textsize, vera::VerticalA
     return cam;
 }
 
-void overlay_prompt_drag_and_drop(const overlay_fn_args_t&) {
+void overlay_prompt_drag_and_drop() {
     render_ui_t uio;
     const auto cam = overlay_black_box(0.0f, 38.0f, vera::ALIGN_MIDDLE, vera::ALIGN_CENTER, uio);
     vera::text("Drag & Drop", uio.dimensions.x * 0.5f, uio.dimensions.y * 0.45f);
@@ -2241,7 +2241,7 @@ void Sandbox::renderUI() {
     if(m_showPasses) { overlay_show_buffer_passes(uniforms, m_sceneRender, m_postprocessing);}
     if(display_m_plots){ overlay_plot_data(m_plot_shader, m_plot_texture);}
     if(diplay_cursor) { overlay_cursor(m_cross_vbo);}
-    if(no_geometry_available) { overlay_prompt_drag_and_drop({nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr});}
+    if(no_geometry_available) { overlay_prompt_drag_and_drop();}
     if(help) { overlay_prompt_help({&uniforms, &m_sceneRender, nullptr, nullptr, nullptr, nullptr, &geom_index, &help, &verbose});}
 
     TRACK_END("renderUI")
