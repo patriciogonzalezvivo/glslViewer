@@ -2105,26 +2105,26 @@ void overlay_show_textures(const Uniforms& uniforms) {
     TRACK_END("renderUI:textures")
 }
 
-void overlay_show_buffer_passes(const overlay_fn_args_t& o) {
+void overlay_show_buffer_passes(Uniforms& uniforms, const SceneRender& m_sceneRender, bool m_postprocessing) {
     glDisable(GL_DEPTH_TEST);
     TRACK_BEGIN("renderUI:buffers")
     // DEBUG BUFFERS
-    const auto is_postprocessing_with_uniforms = o.m_postprocessing && !o.uniforms->models.empty();
+    const auto is_postprocessing_with_uniforms = m_postprocessing && !uniforms.models.empty();
     using num_of_passes_t = std::pair<bool, size_t>;
     const auto nTotalArray = { num_of_passes_t
-        {true, o.uniforms->buffers.size()} //buffer
-        , {true, o.uniforms->doubleBuffers.size()}    // doublebuffer
-        , {true, o.uniforms->pyramids.size()} //pyramid
+        {true, uniforms.buffers.size()} //buffer
+        , {true, uniforms.doubleBuffers.size()}    // doublebuffer
+        , {true, uniforms.pyramids.size()} //pyramid
         , {is_postprocessing_with_uniforms, 1}  // lightmap
-        , {true, o.uniforms->functions["u_scenePosition"].present}
-        , {true, o.uniforms->functions["u_sceneNormal"].present}
-        , {true, o.m_sceneRender->getBuffersTotal()}
-        , {is_postprocessing_with_uniforms, o.uniforms->functions["u_scene"].present}
-        , {is_postprocessing_with_uniforms, o.uniforms->functions["u_sceneDepth"].present}
+        , {true, uniforms.functions["u_scenePosition"].present}
+        , {true, uniforms.functions["u_sceneNormal"].present}
+        , {true, m_sceneRender.getBuffersTotal()}
+        , {is_postprocessing_with_uniforms, uniforms.functions["u_scene"].present}
+        , {is_postprocessing_with_uniforms, uniforms.functions["u_sceneDepth"].present}
     };
     const auto nTotal = std::accumulate(std::begin(nTotalArray), std::end(nTotalArray), int{}
                                         , [](const size_t acc, const num_of_passes_t& kv) { return acc + ((kv.first) ? kv.second : 0); });
-    if (nTotal > 0) { process_render_passes(*o.uniforms, *o.m_sceneRender, nTotal); }
+    if (nTotal > 0) { process_render_passes(uniforms, m_sceneRender, nTotal); }
     TRACK_END("renderUI:buffers")
 };
 
@@ -2238,7 +2238,7 @@ void Sandbox::renderUI() {
     const auto no_geometry_available = frag_index == -1 && vert_index == -1 && geom_index == -1;
 
     if(m_showTextures) { overlay_show_textures (uniforms);}
-    if(m_showPasses) { overlay_show_buffer_passes({&uniforms, &m_sceneRender, &m_postprocessing, nullptr});}
+    if(m_showPasses) { overlay_show_buffer_passes(uniforms, m_sceneRender, m_postprocessing);}
     if(display_m_plots){ overlay_plot_data({nullptr, nullptr, nullptr, &m_plot_shader, &m_plot_texture});}
     if(diplay_cursor) { overlay_cursor({nullptr, nullptr, nullptr, nullptr, nullptr, &m_cross_vbo, nullptr, nullptr, nullptr});}
     if(no_geometry_available) { overlay_prompt_drag_and_drop({nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr});}
