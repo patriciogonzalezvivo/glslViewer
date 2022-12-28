@@ -2083,20 +2083,20 @@ struct overlay_fn_args_t {
     const bool* verbose;
 };
 
-void overlay_show_textures(const overlay_fn_args_t& o) {
-    if (o.uniforms->textures.empty()) { return; }
+void overlay_show_textures(const Uniforms& uniforms) {
+    if (uniforms.textures.empty()) { return; }
     glDisable(GL_DEPTH_TEST);
     TRACK_BEGIN("renderUI:textures")
     render_ui_t uio;
-    uio.scale = fmin(1.0f / (float)(o.uniforms->textures.size()), 0.25) * 0.5;
+    uio.scale = fmin(1.0f / (float)(uniforms.textures.size()), 0.25) * 0.5;
     uio.step = uio.dimensions * uio.scale;
     uio.offset = {uio.step.x, uio.dimensions.y - uio.step.y};
     set_common_text_attributes(-HALF_PI, uio.step.y * 0.2f / vera::getPixelDensity(false), vera::ALIGN_TOP, vera::ALIGN_LEFT);
 
-    for(const auto& texture : o.uniforms->textures) {
-        const auto textureStream_match = std::find_if(std::begin(o.uniforms->streams), std::end(o.uniforms->streams)
+    for(const auto& texture : uniforms.textures) {
+        const auto textureStream_match = std::find_if(std::begin(uniforms.streams), std::end(uniforms.streams)
                                        , [&](vera::TextureStreamsMap::value_type stream){return texture.first == stream.first;});
-        if ( textureStream_match != std::end(o.uniforms->streams) )
+        if ( textureStream_match != std::end(uniforms.streams) )
             vera::image((vera::TextureStream*)textureStream_match->second, uio.offset.x, uio.offset.y, uio.step.x, uio.step.y, true);
         else
             vera::image(texture.second, uio.offset.x, uio.offset.y, uio.step.x, uio.step.y);
@@ -2237,7 +2237,7 @@ void Sandbox::renderUI() {
     const auto diplay_cursor = cursor && vera::getMouseEntered();
     const auto no_geometry_available = frag_index == -1 && vert_index == -1 && geom_index == -1;
 
-    if(m_showTextures) { overlay_show_textures ({&uniforms});}
+    if(m_showTextures) { overlay_show_textures (uniforms);}
     if(m_showPasses) { overlay_show_buffer_passes({&uniforms, &m_sceneRender, &m_postprocessing, nullptr});}
     if(display_m_plots){ overlay_plot_data({nullptr, nullptr, nullptr, &m_plot_shader, &m_plot_texture});}
     if(diplay_cursor) { overlay_cursor({nullptr, nullptr, nullptr, nullptr, nullptr, &m_cross_vbo, nullptr, nullptr, nullptr});}
