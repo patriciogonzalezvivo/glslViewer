@@ -1980,8 +1980,8 @@ struct render_pass_args_t {
     const BuffersList* const fbolist;
 };
 
-void do_pass_scene(const std::string& prompt_id, Uniforms& uniforms, const render_pass_args_t& current, render_ui_t& uio) {
-    if (uniforms.functions[prompt_id].present) { print_fbo_text(*current.fbo, prompt_id, uio); }
+void do_pass_scene(const std::string& prompt_id, Uniforms& uniforms, const vera::Fbo& fbo, render_ui_t& uio) {
+    if (uniforms.functions[prompt_id].present) { print_fbo_text(fbo, prompt_id, uio); }
 }
 
 void do_pass_scenebuffer(const std::string& prompt_id, Uniforms& , const render_pass_args_t& current, render_ui_t& uio) {
@@ -2054,10 +2054,10 @@ void process_render_passes(Uniforms& uniforms, const SceneRender& m_sceneRender,
     do_pass_doublebuffers("u_doubleBuffer", uniforms, uio);
     do_pass_pyramid("u_pyramid0", uniforms, uio);
     do_pass_lightmap("u_lightShadowMap", uniforms, uio);
-    do_pass_scene("u_scenePosition", uniforms, {&m_sceneRender.positionFbo, nullptr}, uio);
-    do_pass_scene("u_sceneNormal", uniforms, {&m_sceneRender.normalFbo, nullptr}, uio);
+    do_pass_scene("u_scenePosition", uniforms, m_sceneRender.positionFbo, uio);
+    do_pass_scene("u_sceneNormal", uniforms, m_sceneRender.normalFbo, uio);
     do_pass_scenebuffer("u_sceneBuffer", uniforms, {nullptr, &m_sceneRender.buffersFbo}, uio);
-    do_pass_scene("u_scene", uniforms, {&m_sceneRender.renderFbo, nullptr}, uio);
+    do_pass_scene("u_scene", uniforms, m_sceneRender.renderFbo, uio);
     do_pass_scenedepth("u_sceneDepth", uniforms, {&m_sceneRender.renderFbo, nullptr}, uio);
 }
 
