@@ -2071,18 +2071,6 @@ void process_render_passes(Uniforms& uniforms, const SceneRender& m_sceneRender,
 }
 
 namespace overlay_actions {
-struct overlay_fn_args_t {
-    Uniforms * uniforms;
-    const SceneRender* m_sceneRender;
-    const bool* m_postprocessing;
-    vera::Shader* m_plot_shader;
-    vera::Texture** m_plot_texture;
-    std::unique_ptr<vera::Vbo>* m_cross_vbo;
-    const int* geom_index;
-    const bool* help;
-    const bool* verbose;
-};
-
 void overlay_show_textures(const Uniforms& uniforms) {
     if (uniforms.textures.empty()) { return; }
     glDisable(GL_DEPTH_TEST);
