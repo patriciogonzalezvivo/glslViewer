@@ -1975,11 +1975,6 @@ void print_buffers_text(const vera::Fbo& uniforms_buffer, size_t i, const std::s
 }
 
 namespace render_pass_actions {
-struct render_pass_args_t {
-    const vera::Fbo* const fbo;
-    const BuffersList* const fbolist;
-};
-
 void do_pass_scene(const std::string& prompt_id, Uniforms& uniforms, const vera::Fbo& fbo, render_ui_t& uio) {
     if (uniforms.functions[prompt_id].present) { print_fbo_text(fbo, prompt_id, uio); }
 }
