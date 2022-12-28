@@ -2128,26 +2128,26 @@ void overlay_show_buffer_passes(Uniforms& uniforms, const SceneRender& m_sceneRe
     TRACK_END("renderUI:buffers")
 };
 
-void overlay_plot_data(const overlay_fn_args_t& o) {
+void overlay_plot_data(vera::Shader& m_plot_shader, const vera::Texture* const m_plot_texture) {
     glDisable(GL_DEPTH_TEST);
     TRACK_BEGIN("renderUI:plot_data")
     render_ui_t uio;
     uio.dimensions = glm::vec2{100, 30} * uio.p;
     uio.pos = {(float)(vera::getWindowWidth()) * 0.5, uio.dimensions.y + 10};
 
-    o.m_plot_shader->use();
-    o.m_plot_shader->setUniform("u_scale", uio.dimensions);
-    o.m_plot_shader->setUniform("u_translate", uio.pos);
-    o.m_plot_shader->setUniform("u_resolution", {vera::getWindowWidth(), vera::getWindowHeight()});
-    o.m_plot_shader->setUniform("u_viewport", uio.dimensions);
-    o.m_plot_shader->setUniform("u_model", glm::vec3(1.0f));
-    o.m_plot_shader->setUniform("u_modelMatrix", glm::mat4(1.0f));
-    o.m_plot_shader->setUniform("u_viewMatrix", glm::mat4(1.0f));
-    o.m_plot_shader->setUniform("u_projectionMatrix", glm::mat4(1.0f));
-    o.m_plot_shader->setUniform("u_modelViewProjectionMatrix", vera::getOrthoMatrix());
-    o.m_plot_shader->setUniformTexture("u_plotData", *o.m_plot_texture, 0);
+    m_plot_shader.use();
+    m_plot_shader.setUniform("u_scale", uio.dimensions);
+    m_plot_shader.setUniform("u_translate", uio.pos);
+    m_plot_shader.setUniform("u_resolution", {vera::getWindowWidth(), vera::getWindowHeight()});
+    m_plot_shader.setUniform("u_viewport", uio.dimensions);
+    m_plot_shader.setUniform("u_model", glm::vec3(1.0f));
+    m_plot_shader.setUniform("u_modelMatrix", glm::mat4(1.0f));
+    m_plot_shader.setUniform("u_viewMatrix", glm::mat4(1.0f));
+    m_plot_shader.setUniform("u_projectionMatrix", glm::mat4(1.0f));
+    m_plot_shader.setUniform("u_modelViewProjectionMatrix", vera::getOrthoMatrix());
+    m_plot_shader.setUniformTexture("u_plotData", m_plot_texture, 0);
 
-    vera::getBillboard()->render(&*o.m_plot_shader);
+    vera::getBillboard()->render(&m_plot_shader);
     TRACK_END("renderUI:plot_data")
 }
 
@@ -2239,7 +2239,7 @@ void Sandbox::renderUI() {
 
     if(m_showTextures) { overlay_show_textures (uniforms);}
     if(m_showPasses) { overlay_show_buffer_passes(uniforms, m_sceneRender, m_postprocessing);}
-    if(display_m_plots){ overlay_plot_data({nullptr, nullptr, nullptr, &m_plot_shader, &m_plot_texture});}
+    if(display_m_plots){ overlay_plot_data(m_plot_shader, m_plot_texture);}
     if(diplay_cursor) { overlay_cursor({nullptr, nullptr, nullptr, nullptr, nullptr, &m_cross_vbo, nullptr, nullptr, nullptr});}
     if(no_geometry_available) { overlay_prompt_drag_and_drop({nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr});}
     if(help) { overlay_prompt_help({&uniforms, &m_sceneRender, nullptr, nullptr, nullptr, nullptr, &geom_index, &help, &verbose});}
