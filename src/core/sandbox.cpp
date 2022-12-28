@@ -2237,21 +2237,13 @@ void Sandbox::renderUI() {
     const auto diplay_cursor = cursor && vera::getMouseEntered();
     const auto no_geometry_available = frag_index == -1 && vert_index == -1 && geom_index == -1;
 
-    struct vtable_overlay_fn_args_with_pred_t {
-        using function_sig_t = auto (*)(const overlay_fn_args_t&) -> void;
-        const bool predicate;
-        const function_sig_t do_overlay_action;
-        const overlay_fn_args_t parameters;
-    };
-    const auto overlay_table = { vtable_overlay_fn_args_with_pred_t
-        {m_showTextures, &overlay_show_textures, {&uniforms, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr}}
-        , {m_showPasses, &overlay_show_buffer_passes, {&uniforms, &m_sceneRender, &m_postprocessing, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr}}
-        , {display_m_plots, &overlay_plot_data, {nullptr, nullptr, nullptr, &m_plot_shader, &m_plot_texture, nullptr, nullptr, nullptr, nullptr}}
-        , {diplay_cursor, &overlay_cursor, {nullptr, nullptr, nullptr, nullptr, nullptr, &m_cross_vbo, nullptr, nullptr, nullptr}}
-        , {no_geometry_available, &overlay_prompt_drag_and_drop, {nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr}}
-        , {help, &overlay_prompt_help, {&uniforms, &m_sceneRender, nullptr, nullptr, nullptr, nullptr, &geom_index, &help, &verbose}}
-    };
-    for(const auto& _: overlay_table) { if(_.predicate) _.do_overlay_action(_.parameters);  }
+    if(m_showTextures) { overlay_show_textures ({&uniforms});}
+    if(m_showPasses) { overlay_show_buffer_passes({&uniforms, &m_sceneRender, &m_postprocessing, nullptr});}
+    if(display_m_plots){ overlay_plot_data({nullptr, nullptr, nullptr, &m_plot_shader, &m_plot_texture});}
+    if(diplay_cursor) { overlay_cursor({nullptr, nullptr, nullptr, nullptr, nullptr, &m_cross_vbo, nullptr, nullptr, nullptr});}
+    if(no_geometry_available) { overlay_prompt_drag_and_drop({nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr});}
+    if(help) { overlay_prompt_help({&uniforms, &m_sceneRender, nullptr, nullptr, nullptr, nullptr, &geom_index, &help, &verbose});}
+
     TRACK_END("renderUI")
 }
 
