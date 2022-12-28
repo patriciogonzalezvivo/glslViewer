@@ -2029,7 +2029,7 @@ void do_pass_doublebuffers(const std::string& prompt_id, Uniforms& uniforms, con
         print_buffers_text(*uniforms.doubleBuffers[i]->src, i, prompt_id, uio);
 }
 
-void do_pass_singlebuffer(const std::string& prompt_id, Uniforms& uniforms, const render_pass_args_t&, render_ui_t& uio) {
+void do_pass_singlebuffer(const std::string& prompt_id, Uniforms& uniforms, render_ui_t& uio) {
     for (size_t i = 0; i < uniforms.buffers.size(); i++)
         print_buffers_text(*uniforms.buffers[i], i, prompt_id, uio);
 }
@@ -2050,7 +2050,7 @@ void process_render_passes(Uniforms& uniforms, const SceneRender& m_sceneRender,
     uio.offset = uio.dimensions - uio.step;
     set_common_text_attributes(-HALF_PI, uio.step.y * 0.2f / vera::getPixelDensity(false), vera::ALIGN_BOTTOM, vera::ALIGN_LEFT);
 
-    do_pass_singlebuffer("u_buffer", uniforms, {nullptr, nullptr}, uio);
+    do_pass_singlebuffer("u_buffer", uniforms, uio);
     do_pass_doublebuffers("u_doubleBuffer", uniforms, {nullptr, nullptr}, uio);
     do_pass_pyramid("u_pyramid0", uniforms, {nullptr, nullptr}, uio);
     do_pass_lightmap("u_lightShadowMap", uniforms, {nullptr, nullptr}, uio);
