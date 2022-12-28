@@ -1988,10 +1988,10 @@ void do_pass_scenebuffer(const std::string& prompt_id, const BuffersList& fbolis
     for(const auto& fbo : fbolist) { print_fbo_text(*fbo, prompt_id, uio); }
 }
 
-void do_pass_scenedepth(const std::string& prompt_id, Uniforms& uniforms, const render_pass_args_t& current, render_ui_t& uio) {
+void do_pass_scenedepth(const std::string& prompt_id, Uniforms& uniforms, const vera::Fbo& fbo, render_ui_t& uio) {
     if (!uniforms.functions[prompt_id].present) { return; }
     if (uniforms.activeCamera)
-        vera::imageDepth(*current.fbo, uio.offset.x, uio.offset.y, uio.step.x, uio.step.y, uniforms.activeCamera->getFarClip(), uniforms.activeCamera->getNearClip());
+        vera::imageDepth(fbo, uio.offset.x, uio.offset.y, uio.step.x, uio.step.y, uniforms.activeCamera->getFarClip(), uniforms.activeCamera->getNearClip());
     print_text(prompt_id, uio.offset.x - uio.step.x, uio);
 }
 
@@ -2058,7 +2058,7 @@ void process_render_passes(Uniforms& uniforms, const SceneRender& m_sceneRender,
     do_pass_scene("u_sceneNormal", uniforms, m_sceneRender.normalFbo, uio);
     do_pass_scenebuffer("u_sceneBuffer", m_sceneRender.buffersFbo, uio);
     do_pass_scene("u_scene", uniforms, m_sceneRender.renderFbo, uio);
-    do_pass_scenedepth("u_sceneDepth", uniforms, {&m_sceneRender.renderFbo, nullptr}, uio);
+    do_pass_scenedepth("u_sceneDepth", uniforms, m_sceneRender.renderFbo, uio);
 }
 
 namespace overlay_actions {
