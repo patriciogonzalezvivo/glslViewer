@@ -2151,16 +2151,16 @@ void overlay_plot_data(vera::Shader& m_plot_shader, const vera::Texture* const m
     TRACK_END("renderUI:plot_data")
 }
 
-void overlay_cursor(const overlay_fn_args_t& o) {
+void overlay_cursor(std::unique_ptr<vera::Vbo>& m_cross_vbo) {
     TRACK_BEGIN("renderUI:cursor")
-    if ((*o.m_cross_vbo) == nullptr)
-        (*o.m_cross_vbo) = std::unique_ptr<vera::Vbo>(new vera::Vbo( vera::crossMesh( glm::vec3(0.0f, 0.0f, 0.0f), 10.0f) ));
+    if (m_cross_vbo == nullptr)
+        m_cross_vbo = std::unique_ptr<vera::Vbo>(new vera::Vbo( vera::crossMesh( glm::vec3(0.0f, 0.0f, 0.0f), 10.0f) ));
 
     const auto fill = vera::getFillShader();
     fill->use();
     fill->setUniform("u_modelViewProjectionMatrix", glm::translate(vera::getOrthoMatrix(), glm::vec3(vera::getMouseX(), vera::getMouseY(), 0.0f) ) );
     fill->setUniform("u_color", glm::vec4(1.0f));
-    (*o.m_cross_vbo)->render(fill);
+    m_cross_vbo->render(fill);
     TRACK_END("renderUI:cursor")
 }
 
@@ -2240,7 +2240,7 @@ void Sandbox::renderUI() {
     if(m_showTextures) { overlay_show_textures (uniforms);}
     if(m_showPasses) { overlay_show_buffer_passes(uniforms, m_sceneRender, m_postprocessing);}
     if(display_m_plots){ overlay_plot_data(m_plot_shader, m_plot_texture);}
-    if(diplay_cursor) { overlay_cursor({nullptr, nullptr, nullptr, nullptr, nullptr, &m_cross_vbo, nullptr, nullptr, nullptr});}
+    if(diplay_cursor) { overlay_cursor(m_cross_vbo);}
     if(no_geometry_available) { overlay_prompt_drag_and_drop({nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr});}
     if(help) { overlay_prompt_help({&uniforms, &m_sceneRender, nullptr, nullptr, nullptr, nullptr, &geom_index, &help, &verbose});}
 
