@@ -2005,7 +2005,7 @@ void do_pass_lightmap(const std::string& prompt_id, Uniforms& uniforms, const re
     }
 }
 
-void do_pass_pyramid(const std::string&, Uniforms& uniforms, const render_pass_args_t&, render_ui_t& uio) {
+void do_pass_pyramid(const std::string&, Uniforms& uniforms, render_ui_t& uio) {
     for(const auto& pyramid : uniforms.pyramids) {
         auto scale = uio.step.y * glm::vec2{((float)pyramid.getWidth()/(float)pyramid.getHeight()), 1};
         auto offset = uio.offset  + glm::vec2{uio.step.x - scale.x, 0};
@@ -2052,7 +2052,7 @@ void process_render_passes(Uniforms& uniforms, const SceneRender& m_sceneRender,
 
     do_pass_singlebuffer("u_buffer", uniforms, uio);
     do_pass_doublebuffers("u_doubleBuffer", uniforms, uio);
-    do_pass_pyramid("u_pyramid0", uniforms, {nullptr, nullptr}, uio);
+    do_pass_pyramid("u_pyramid0", uniforms, uio);
     do_pass_lightmap("u_lightShadowMap", uniforms, {nullptr, nullptr}, uio);
     do_pass_scene("u_scenePosition", uniforms, {&m_sceneRender.positionFbo, nullptr}, uio);
     do_pass_scene("u_sceneNormal", uniforms, {&m_sceneRender.normalFbo, nullptr}, uio);
