@@ -2187,7 +2187,7 @@ void overlay_prompt_drag_and_drop() {
     vera::setCamera(cam);
 }
 
-void overlay_prompt_help(const overlay_fn_args_t& o) {
+void overlay_prompt_help(const Uniforms& uniforms, const SceneRender& m_sceneRender, int geom_index, bool help, bool verbose) {
     render_ui_t uio;
     const auto cam = overlay_black_box(0.0f, 22.0f, vera::ALIGN_MIDDLE, vera::ALIGN_LEFT, uio);
     uio.step.y = vera::getFontHeight() * 1.5f;
@@ -2196,29 +2196,29 @@ void overlay_prompt_help(const overlay_fn_args_t& o) {
         vera::text(prompt, uio.pos);
         uio.pos.y += uio.step.y;
     };
-    const auto geometry_available = *o.geom_index != -1;
-    const auto uniform_streams_available = o.uniforms->streams.size() > 0;
+    const auto geometry_available = geom_index != -1;
+    const auto uniform_streams_available = !uniforms.streams.empty();
 
     struct help_prompt_t {
         const bool predicate;
         const std::string message;
     };
     const auto help_prompts = { help_prompt_t
-        {geometry_available, "a - " + std::string( o.m_sceneRender->showAxis? "hide" : "show" ) + " axis"}
-        , {geometry_available, "b - " + std::string( o.m_sceneRender->showBBoxes? "hide" : "show" ) + " bounding boxes"}
+        {geometry_available, "a - " + std::string( m_sceneRender.showAxis? "hide" : "show" ) + " axis"}
+        , {geometry_available, "b - " + std::string( m_sceneRender.showBBoxes? "hide" : "show" ) + " bounding boxes"}
         , {true, "c - hide/show cursor"}
-        , {geometry_available, "d - " + std::string( o.m_sceneRender->dynamicShadows? "disable" : "enable" ) + " dynamic shadows"}
+        , {geometry_available, "d - " + std::string( m_sceneRender.dynamicShadows? "disable" : "enable" ) + " dynamic shadows"}
         , {geometry_available, "f - hide/show floor"}
         , {true, "F - " + std::string( vera::isFullscreen() ? "disable" : "enable" ) + " fullscreen"}
-        , {geometry_available, "g - " + std::string( o.m_sceneRender->showGrid? "hide" : "show" ) + " grid"}
-        , {true, "h - " + std::string( o.help? "hide" : "show" ) + " help"}
+        , {geometry_available, "g - " + std::string( m_sceneRender.showGrid? "hide" : "show" ) + " grid"}
+        , {true, "h - " + std::string( help? "hide" : "show" ) + " help"}
         , {true, "i - hide/show extra info"}
         , {true, "o - open shaders on default editor"}
         , {true, "p - hide/show render passes/buffers"}
         , {uniform_streams_available, "r - restart stream textures"}
         , {geometry_available, "s - hide/show sky"}
         , {true, "t - hide/show loaded textures"}
-        , {true, "v - " + std::string( o.verbose? "disable" : "enable" ) + " verbose"}
+        , {true, "v - " + std::string( verbose? "disable" : "enable" ) + " verbose"}
         , {uniform_streams_available, "space - start/stop stream textures"}
     };
     for(const auto& _ : help_prompts) { if(_.predicate) print_help_prompt(_.message); }
@@ -2242,7 +2242,7 @@ void Sandbox::renderUI() {
     if(display_m_plots){ overlay_plot_data(m_plot_shader, m_plot_texture);}
     if(diplay_cursor) { overlay_cursor(m_cross_vbo);}
     if(no_geometry_available) { overlay_prompt_drag_and_drop();}
-    if(help) { overlay_prompt_help({&uniforms, &m_sceneRender, nullptr, nullptr, nullptr, nullptr, &geom_index, &help, &verbose});}
+    if(help) { overlay_prompt_help(uniforms, m_sceneRender, geom_index, help, verbose);}
 
     TRACK_END("renderUI")
 }
