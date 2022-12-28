@@ -2050,24 +2050,15 @@ void process_render_passes(Uniforms& uniforms, const SceneRender& m_sceneRender,
     uio.offset = uio.dimensions - uio.step;
     set_common_text_attributes(-HALF_PI, uio.step.y * 0.2f / vera::getPixelDensity(false), vera::ALIGN_BOTTOM, vera::ALIGN_LEFT);
 
-    struct vtable_render_pass_t{
-        using func_sig_t = auto (*)(const std::string&, Uniforms&, const render_pass_args_t&, render_ui_t&)-> void;
-        const std::string prompt_id;
-        const render_pass_args_t process_info;
-        const func_sig_t process_render_pass;
-    };
-    const auto render_pass_table = { vtable_render_pass_t
-        {"u_buffer", {nullptr, nullptr}, do_pass_singlebuffer}
-        , {"u_doubleBuffer", {nullptr, nullptr}, do_pass_doublebuffers}
-        , {"u_pyramid0", {nullptr, nullptr}, do_pass_pyramid}
-        , {"u_lightShadowMap", {nullptr, nullptr}, do_pass_lightmap}
-        , {"u_scenePosition", {&m_sceneRender.positionFbo, nullptr}, do_pass_scene}
-        , {"u_sceneNormal", {&m_sceneRender.normalFbo, nullptr}, do_pass_scene}
-        , {"u_sceneBuffer", {nullptr, &m_sceneRender.buffersFbo}, do_pass_scenebuffer}
-        , {"u_scene", {&m_sceneRender.renderFbo, nullptr}, do_pass_scene}
-        , {"u_sceneDepth", {&m_sceneRender.renderFbo, nullptr}, do_pass_scenedepth}
-    };
-    for(const auto& _ : render_pass_table) { _.process_render_pass(_.prompt_id, uniforms, _.process_info, uio); }
+    do_pass_singlebuffer("u_buffer", uniforms, {nullptr, nullptr}, uio);
+    do_pass_doublebuffers("u_doubleBuffer", uniforms, {nullptr, nullptr}, uio);
+    do_pass_pyramid("u_pyramid0", uniforms, {nullptr, nullptr}, uio);
+    do_pass_lightmap("u_lightShadowMap", uniforms, {nullptr, nullptr}, uio);
+    do_pass_scene("u_scenePosition", uniforms, {&m_sceneRender.positionFbo, nullptr}, uio);
+    do_pass_scene("u_sceneNormal", uniforms, {&m_sceneRender.normalFbo, nullptr}, uio);
+    do_pass_scenebuffer("u_sceneBuffer", uniforms, {nullptr, &m_sceneRender.buffersFbo}, uio);
+    do_pass_scene("u_scene", uniforms, {&m_sceneRender.renderFbo, nullptr}, uio);
+    do_pass_scenedepth("u_sceneDepth", uniforms, {&m_sceneRender.renderFbo, nullptr}, uio);
 }
 
 namespace overlay_actions {
