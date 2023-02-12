@@ -2302,7 +2302,7 @@ void Sandbox::onScreenshot(std::string _file) {
         if (vera::getExt(_file) == "hdr") {
             float* pixels = new float[vera::getWindowWidth() * vera::getWindowHeight()*4];
             glReadPixels(0, 0, vera::getWindowWidth(), vera::getWindowHeight(), GL_RGBA, GL_FLOAT, pixels);
-            vera::savePixelsHDR(_file, pixels, vera::getWindowWidth(), vera::getWindowHeight());
+            vera::savePixelsFloat(_file, pixels, vera::getWindowWidth(), vera::getWindowHeight());
         }
         #if defined(SUPPORT_LIBAV) && !defined(PLATFORM_RPI)
         else if (recordingPipe()) {

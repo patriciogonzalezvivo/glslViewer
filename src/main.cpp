@@ -324,6 +324,7 @@ int main(int argc, char **argv) {
         }
         else if (   argument == "-noncurses"|| argument == "--noncurses"    )   commands_ncurses = false;
         else if (   vera::haveExt(argument,"hdr") || vera::haveExt(argument,"HDR") ||
+                    vera::haveExt(argument,"exr") || vera::haveExt(argument,"EXR") ||
                     vera::haveExt(argument,"png") || vera::haveExt(argument,"PNG") ||
                     vera::haveExt(argument,"tga") || vera::haveExt(argument,"TGA") ||
                     vera::haveExt(argument,"psd") || vera::haveExt(argument,"PSD") ||
@@ -568,6 +569,7 @@ int main(int argc, char **argv) {
 
         // load image 
         else if (   vera::haveExt(argument,"hdr") || vera::haveExt(argument,"HDR") ||
+                    vera::haveExt(argument,"exr") || vera::haveExt(argument,"EXR") ||
                     vera::haveExt(argument,"png") || vera::haveExt(argument,"PNG") ||
                     vera::haveExt(argument,"tga") || vera::haveExt(argument,"TGA") ||
                     vera::haveExt(argument,"psd") || vera::haveExt(argument,"PSD") ||
@@ -1813,8 +1815,8 @@ void printUsage(char * executableName) {
     std::cerr << "Usage:"<< std::endl;
     std::cerr << "          " << executableName << " <frag_shader>.frag [<vert_shader>.vert <geometry>.obj|ply|stl|glb|gltf]\n" << std::endl;
     std::cerr << "Optional arguments:\n"<< std::endl;
-    std::cerr << "      <texture>.(png/tga/jpg/bmp/psd/gif/hdr/mov/mp4/rtsp/rtmp/etc)   # load and assign texture to uniform u_tex<N>" << std::endl;
-    std::cerr << "      -<uniform_name> <texture>.(png/tga/jpg/bmp/psd/gif/hdr)         # load a textures with a custom name" << std::endl;
+    std::cerr << "      <texture>.(png/tga/jpg/bmp/psd/gif/exr/hdr/mov/mp4/rtsp/rtmp/etc)   # load and assign texture to uniform u_tex<N>" << std::endl;
+    std::cerr << "      -<uniform_name> <texture>.(png/tga/jpg/bmp/psd/gif/exr/hdr)         # load a textures with a custom name" << std::endl;
     std::cerr << "      --video <video_device_number>   # open video device allocated wit that particular id" << std::endl;
     std::cerr << "      --audio [<capture_device_id>]   # open audio capture device as sampler2D texture " << std::endl;
     std::cerr << "      -C <enviromental_map>.(png/tga/jpg/bmp/psd/gif/hdr)     # load a env. map as cubemap" << std::endl;
