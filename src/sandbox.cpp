@@ -1275,7 +1275,7 @@ void Sandbox::resetShaders( WatchFileList &_files ) {
 
     // UPDATE shaders dependencies
     {
-        vera::StringList new_dependencies = vera::merge(m_frag_dependencies, m_vert_dependencies);
+        vera::StringList new_dependencies = vera::mergeLists(m_frag_dependencies, m_vert_dependencies);
 
         // remove old dependencies
         for (int i = _files.size() - 1; i >= 0; i--)
