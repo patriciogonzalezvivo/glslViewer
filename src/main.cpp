@@ -29,11 +29,11 @@
 #include "vera/xr/holoPlay.h"
 #include "vera/xr/xr.h"
 
-#include "sandbox.h"
-#include "tools/files.h"
-#include "tools/text.h"
-#include "tools/record.h"
-#include "tools/console.h"
+#include "core/sandbox.h"
+#include "core/tools/files.h"
+#include "core/tools/text.h"
+#include "core/tools/record.h"
+#include "core/tools/console.h"
 
 #if defined(SUPPORT_NCURSES)
 #include <ncurses.h>

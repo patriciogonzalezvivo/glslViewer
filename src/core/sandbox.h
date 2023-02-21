@@ -35,6 +35,7 @@ public:
     void                loadModel(vera::Model* _model);
     void                commandsInit(CommandList &_commands);
 
+    void                setFrame(size_t _frame) { m_frame = _frame; }
     void                setSource(ShaderType _type, const std::string& _source);
     void                resetShaders(WatchFileList &_files);
 
@@ -89,7 +90,7 @@ public:
     bool                help;
     bool                fxaa;
 
-private:
+protected:
     void                _updateBuffers();
     void                _renderBuffers();
 

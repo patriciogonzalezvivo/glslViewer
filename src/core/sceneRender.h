@@ -43,7 +43,7 @@ public:
     void            printBuffers();
 
     void            render(Uniforms& _uniforms);
-    void            renderFloor(Uniforms& _uniforms, const glm::mat4& _mvp, bool _lights = true);
+    void            renderFloor(Uniforms& _uniforms, bool _lights = true);
     void            renderBackground(Uniforms& _uniforms);
     void            renderDebug(Uniforms& _uniforms);
     void            renderShadowMap(Uniforms& _uniforms);

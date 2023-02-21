@@ -86,8 +86,12 @@ Sandbox::Sandbox():
     } );
 
     uniforms.functions["u_time"] = UniformFunction( "float", [&](vera::Shader& _shader) {
+        #if defined(PYTHON_RENDER)
+        _shader.setUniform("u_time", float(m_frame/24.0f));
+        #else
         if (isRecording()) _shader.setUniform("u_time", getRecordingTime());
         else _shader.setUniform("u_time", float(vera::getTime()) - m_time_offset);
+        #endif
     }, 
     [&]() {  
         if (isRecording()) return vera::toString( getRecordingTime() );
@@ -1113,7 +1117,7 @@ void Sandbox::loadAssets(WatchFileList &_files) {
     // FINISH SCENE SETUP
     // -------------------------------------------------
     uniforms.activeCamera->setViewport(vera::getWindowWidth(), vera::getWindowHeight());
-
+    
     if (lenticular.size() > 0)
         vera::setLenticularProperties(lenticular);
 
@@ -1156,7 +1160,6 @@ void Sandbox::loadAssets(WatchFileList &_files) {
         addDefine("SCENE_SH_ARRAY", "u_SH");
         addDefine("SCENE_CUBEMAP", "u_cubeMap");
     }
-
 
     // LOAD SHADERS
     resetShaders( _files );
@@ -1242,8 +1245,14 @@ const std::string& Sandbox::getSource(ShaderType _type) const {
 // ------------------------------------------------------------------------- RELOAD SHADER
 
 void Sandbox::setSource(ShaderType _type, const std::string& _source) {
-    if (_type == FRAGMENT) m_frag_source = _source;
-    else  m_vert_source = _source;
+    if (_type == FRAGMENT) {
+        m_frag_dependencies.clear();
+        m_frag_source = vera::resolveGlsl(_source, include_folders, &m_frag_dependencies);
+    }
+    else {
+        m_vert_dependencies.clear();
+        m_vert_source = vera::resolveGlsl(_source, include_folders, &m_vert_dependencies);;
+    }
 };
 
 void Sandbox::resetShaders( WatchFileList &_files ) {
@@ -1571,8 +1580,10 @@ void Sandbox::_renderBuffers() {
         reset_viewport = true;
     #endif
 
+    #if !defined(PYTHON_RENDER)
     if (reset_viewport)
         glViewport(0.0f, 0.0f, vera::getWindowWidth(), vera::getWindowHeight());
+    #endif
     
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -2110,7 +2121,9 @@ void Sandbox::renderDone() {
 
     if (!m_initialized) {
         m_initialized = true;
+
         vera::updateViewport();
+
         flagChange();
     }
     else

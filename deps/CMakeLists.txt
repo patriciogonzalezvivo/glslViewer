@@ -1,4 +1,4 @@
-## Ada
+## VERA
 add_subdirectory(vera)
 
 if (NOT EMSCRIPTEN) 

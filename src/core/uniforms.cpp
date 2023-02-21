@@ -281,8 +281,8 @@ bool Uniforms::feedTo(vera::Shader *_shader, bool _lights, bool _buffers ) {
             vera::LightsMap::iterator it = lights.begin();
             _shader->setUniform("u_lightColor", it->second->color);
             _shader->setUniform("u_lightIntensity", it->second->intensity);
-            if (it->second->getLightType() != vera::LIGHT_DIRECTIONAL)
-                _shader->setUniform("u_light", it->second->getPosition());
+            // if (it->second->getLightType() != vera::LIGHT_DIRECTIONAL)
+            _shader->setUniform("u_light", it->second->getPosition());
             if (it->second->getLightType() == vera::LIGHT_DIRECTIONAL || it->second->getLightType() == vera::LIGHT_SPOT)
                 _shader->setUniform("u_lightDirection", it->second->direction);
             if (it->second->falloff > 0)
@@ -299,8 +299,8 @@ bool Uniforms::feedTo(vera::Shader *_shader, bool _lights, bool _buffers ) {
 
                 _shader->setUniform(name + "Color", it->second->color);
                 _shader->setUniform(name + "Intensity", it->second->intensity);
-                if (it->second->getLightType() != vera::LIGHT_DIRECTIONAL)
-                    _shader->setUniform(name, it->second->getPosition());
+                // if (it->second->getLightType() != vera::LIGHT_DIRECTIONAL)
+                _shader->setUniform(name, it->second->getPosition());
                 if (it->second->getLightType() == vera::LIGHT_DIRECTIONAL || it->second->getLightType() == vera::LIGHT_SPOT)
                     _shader->setUniform(name + "Direction", it->second->direction);
                 if (it->second->falloff > 0)
