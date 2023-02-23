@@ -9,7 +9,7 @@ Engine::Engine() {
     props.style = vera::EMBEDDED;
     vera::initGL(props);
 
-    // verbose = true;
+    verbose = true;
 
     addDefine("GLSLVIEWER", vera::toString(GLSLVIEWER_VERSION_MAJOR) + vera::toString(GLSLVIEWER_VERSION_MINOR) + vera::toString(GLSLVIEWER_VERSION_PATCH) );
 
@@ -74,6 +74,8 @@ void main(void) {
     setSource(VERTEX, vera::getDefaultSrc(vera::VERT_DEFAULT_SCENE));
     resetShaders( files );
 
+    help = false;
+    cursor = false;
     m_sceneRender.dynamicShadows = true;
 };
 

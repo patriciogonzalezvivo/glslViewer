@@ -3,14 +3,38 @@ import numpy as np
 
 from .pylib import GlslViewer as gl
 
+RENDER_CAM_TYPE_ID = "render_camera_type"
+RENDER_CAM_TYPE_PERSPECTIVE = "perspective"
+RENDER_CAM_TYPE_SPHERICAL_QUADRILATERAL = "spherical_quadrilateral"
+RENDER_CAM_TYPE_QUADRILATERAL_HEXAHEDRON = "quadrilateral_hexahedron"
+
 def bl2npMatrix(mat):
     return np.array(mat)
 
-def bl2veraCamera(region_view_3d: bpy.types.RegionView3D, img_dims: tuple[int, int]):
-    projection_matrix = np.array(region_view_3d.window_matrix)
-    view_matrix = np.array(region_view_3d.view_matrix.inverted())
-
+def bl2veraCamera(source: bpy.types.RegionView3D | bpy.types.Object, img_dims: tuple[int, int]):
     cam = gl.Camera()
+
+    view_matrix = None
+    projection_matrix = None
+
+    if isinstance(source, bpy.types.RegionView3D):
+        projection_matrix = np.array(source.window_matrix)
+        view_matrix = np.array(source.view_matrix.inverted())
+
+    elif isinstance(source, bpy.types.Object):
+        render = bpy.context.scene.render
+        view_matrix = source.matrix_world.inverted()
+        projection_matrix = source.calc_matrix_camera(
+            render.resolution_x,
+            render.resolution_y,
+            render.pixel_aspect_x,
+            render.pixel_aspect_y,
+        )
+    
+    else:
+        print(f"INVALID CAMERA SOURCE: {source}")
+        return None
+
     cam.setTransformMatrix(
         view_matrix[0][0], view_matrix[2][0], view_matrix[1][0], view_matrix[3][0],
         view_matrix[0][1], view_matrix[2][1], view_matrix[1][1], view_matrix[3][1],

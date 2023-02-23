@@ -17,9 +17,15 @@ modules = developer_utility.setup_addon_modules(
 )
 
 from .scripts.gv_render_engine import register_render_engine, unregister_render_engine
+from .scripts.gv_preferences import register_addon_preferences, unregister_addon_preferences
+from .scripts.gv_operators import register_operators, unregister_operators
 
 def register():
+    register_addon_preferences()
     register_render_engine()
+    register_operators()
 
 def unregister():
+    unregister_addon_preferences()
     unregister_render_engine()
+    unregister_operators()

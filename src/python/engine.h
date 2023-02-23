@@ -25,6 +25,15 @@ public:
                                     float x3, float y3, float z3, float w3,
                                     float x4, float y4, float z4, float w4 );
 
+    void printDefines() { m_sceneRender.printDefines(); uniforms.printDefines(); }
+    void printBuffers() { m_sceneRender.printBuffers(); uniforms.printBuffers(); }
+    void printTextures() { uniforms.printTextures(); }
+    void printCubemaps() { uniforms.printCubemaps(); }
+    void printLights() { uniforms.printLights(); }
+    void printMaterials() { uniforms.printMaterials(); }
+    void printModels() { uniforms.printModels(); }
+    void printShaders() { uniforms.printShaders(); }
+
     void resize(const size_t& width, const size_t& height);
 
     void reloadShaders();

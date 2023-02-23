@@ -1721,7 +1721,6 @@ void Sandbox::render() {
 }
 
 void Sandbox::renderPost() {
-
     // POST PROCESSING
     if (m_postprocessing) {
         TRACK_BEGIN("render:postprocessing")
@@ -2005,6 +2004,7 @@ void Sandbox::renderUI() {
         vera::rect(glm::vec2(w * 0.5f, h * 0.5f), glm::vec2(w - xStep * 2.0f, h - yStep * 2.0f));
 
         vera::fill(1.0f);
+
         vera::textAlign(vera::ALIGN_MIDDLE);
         vera::textAlign(vera::ALIGN_CENTER);
         vera::textAngle(0.0f);

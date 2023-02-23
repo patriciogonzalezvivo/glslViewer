@@ -243,7 +243,6 @@ PYBIND11_MODULE(PyGlslViewer, m) {
         .def("setSun", &Engine::setSun, py::arg("_light"))
         .def("setSunPosition", &Engine::setSunPosition, py::arg("_az"), py::arg("_elev"), py::arg("_distance"))
         .def("setSource",&Engine::setSource, py::arg("_type"), py::arg("_source"))
-        .def("getSource",&Engine::getSource, py::arg("_type"))
         .def("setFrame",&Engine::setFrame, py::arg("_frame"))
         .def("loadMesh",&Engine::loadMesh, py::arg("_name"), py::arg("_mesh"))
         .def("setMeshTransformMatrix",&Engine::setMeshTransformMatrix, py::arg("_name"), py::arg("x1"), py::arg("y1"), py::arg("z1"), py::arg("w1"), py::arg("x2"), py::arg("y2"), py::arg("z2"), py::arg("w2"), py::arg("x3"), py::arg("y3"), py::arg("z3"), py::arg("w3"), py::arg("x4"), py::arg("y4"), py::arg("z4"), py::arg("w4") )
@@ -251,8 +250,19 @@ PYBIND11_MODULE(PyGlslViewer, m) {
         .def("draw", &Engine::draw)
         .def("reloadShaders", &Engine::reloadShaders)
         .def("clearModels", &Engine::clearModels)
+        
+        .def("getSource",&Engine::getSource, py::arg("_type"))
+
+        .def("printDefines", &Engine::printDefines)
+        .def("printBuffers", &Engine::printBuffers)
+        .def("printTextures", &Engine::printTextures)
+        .def("printCubemaps", &Engine::printCubemaps)
+        .def("printLights", &Engine::printLights)
+        .def("printMaterials", &Engine::printMaterials)
+        .def("printModels", &Engine::printModels)
+        .def("printShaders", &Engine::printShaders)
+        
         .def_readwrite("include_folders", &Engine::include_folders)
-        // .def_readwrite("uniforms", &Engine::uniforms)
         .def_readwrite("screenshotFile", &Engine::screenshotFile)
 
         .def_readwrite("frag_index", &Engine::frag_index)
