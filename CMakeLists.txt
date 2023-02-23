@@ -236,23 +236,26 @@ endif()
 # find_package(ZLIB REQUIRED)
 # include_directories(${ZLIB_INCLUDE_DIRS})
 
-# pybind11
-set(DEPS_FOLDER "${PROJECT_SOURCE_DIR}/deps")
-add_subdirectory("${DEPS_FOLDER}/pybind11")
-include_directories(${pybind11_INCLUDE_DIRS})
+if (PYTHON_BINDINGS)
+    # pybind11
+    set(DEPS_FOLDER "${PROJECT_SOURCE_DIR}/deps")
+    add_subdirectory("${DEPS_FOLDER}/pybind11")
+    include_directories(${pybind11_INCLUDE_DIRS})
 
-set(PYBIND_INCLUDES
-    "${PROJECT_SOURCE_DIR}/src/python/engine.h"
-    "${PROJECT_SOURCE_DIR}/src/python/engine.cpp"
-    "${PROJECT_SOURCE_DIR}/src/python/bindings.cpp"
-    ${CORE_SOURCES}
-    ${CORE_HEADERS}
-)
+    set(PYBIND_INCLUDES
+        "${PROJECT_SOURCE_DIR}/src/python/engine.h"
+        "${PROJECT_SOURCE_DIR}/src/python/engine.cpp"
+        "${PROJECT_SOURCE_DIR}/src/python/bindings.cpp"
+        ${CORE_SOURCES}
+        ${CORE_HEADERS}
+    )
 
-pybind11_add_module(PyGlslViewer ${PYBIND_INCLUDES})
-target_compile_definitions(PyGlslViewer PUBLIC PYTHON_RENDER)
-target_compile_definitions(PyGlslViewer PRIVATE GLSLVIEWER_VERSION_MAJOR=${VERSION_MAJOR})
-target_compile_definitions(PyGlslViewer PRIVATE GLSLVIEWER_VERSION_MINOR=${VERSION_MINOR})
-target_compile_definitions(PyGlslViewer PRIVATE GLSLVIEWER_VERSION_PATCH=${VERSION_PATCH})
-target_include_directories(PyGlslViewer PUBLIC ${DEPS_FOLDER})
-target_link_libraries(PyGlslViewer PRIVATE vera ${ZLIB_LIBRARIES} pybind11::module)
+    pybind11_add_module(PyGlslViewer ${PYBIND_INCLUDES})
+    target_compile_definitions(PyGlslViewer PUBLIC PYTHON_RENDER)
+    target_compile_definitions(PyGlslViewer PRIVATE GLSLVIEWER_VERSION_MAJOR=${VERSION_MAJOR})
+    target_compile_definitions(PyGlslViewer PRIVATE GLSLVIEWER_VERSION_MINOR=${VERSION_MINOR})
+    target_compile_definitions(PyGlslViewer PRIVATE GLSLVIEWER_VERSION_PATCH=${VERSION_PATCH})
+    target_include_directories(PyGlslViewer PUBLIC ${DEPS_FOLDER})
+    target_link_libraries(PyGlslViewer PRIVATE vera ${ZLIB_LIBRARIES} pybind11::module)
+
+endif()

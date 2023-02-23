@@ -1498,6 +1498,9 @@ void Sandbox::_renderBuffers() {
         uniforms.buffers[i]->bind();
 
         m_buffers_shaders[i].use();
+        m_buffers_shaders[i].setUniform("u_modelMatrix", glm::mat4(1.0f));
+        m_buffers_shaders[i].setUniform("u_viewMatrix", glm::mat4(1.0f));
+        m_buffers_shaders[i].setUniform("u_projectionMatrix", glm::mat4(1.0f));
 
         // Pass textures for the other buffers
         for (size_t j = 0; j < uniforms.buffers.size(); j++)
@@ -1674,6 +1677,9 @@ void Sandbox::render() {
                 uniforms.feedTo( &m_canvas_shader );
 
                 // Pass special uniforms
+                m_canvas_shader.setUniform("u_modelMatrix", glm::mat4(1.0));
+                m_canvas_shader.setUniform("u_viewMatrix", glm::mat4(1.0f));
+                m_canvas_shader.setUniform("u_projectionMatrix", glm::mat4(1.0f));
                 m_canvas_shader.setUniform("u_modelViewProjectionMatrix", glm::mat4(1.));
                 vera::getBillboard()->render( &m_canvas_shader );
             }, true);
@@ -1684,6 +1690,9 @@ void Sandbox::render() {
             uniforms.feedTo( &m_canvas_shader );
 
             // Pass special uniforms
+            m_canvas_shader.setUniform("u_modelMatrix", glm::mat4(1.0));
+            m_canvas_shader.setUniform("u_viewMatrix", glm::mat4(1.0f));
+            m_canvas_shader.setUniform("u_projectionMatrix", glm::mat4(1.0f));
             m_canvas_shader.setUniform("u_modelViewProjectionMatrix", glm::mat4(1.));
             vera::getBillboard()->render( &m_canvas_shader );
         }
@@ -1738,6 +1747,9 @@ void Sandbox::renderPost() {
             m_record_fbo.bind();
     
         m_postprocessing_shader.use();
+        m_postprocessing_shader.setUniform("u_modelMatrix", glm::mat4(1.0));
+        m_postprocessing_shader.setUniform("u_viewMatrix", glm::mat4(1.0f));
+        m_postprocessing_shader.setUniform("u_projectionMatrix", glm::mat4(1.0f));
 
         // Update uniforms and textures
         uniforms.feedTo( &m_postprocessing_shader, true, true );
@@ -1968,6 +1980,9 @@ void Sandbox::renderUI() {
         m_plot_shader.setUniform("u_translate", x, y);
         m_plot_shader.setUniform("u_resolution", (float)vera::getWindowWidth(), (float)vera::getWindowHeight());
         m_plot_shader.setUniform("u_viewport", w, h);
+        m_plot_shader.setUniform("u_modelMatrix", glm::mat4(1.0));
+        m_plot_shader.setUniform("u_viewMatrix", glm::mat4(1.0f));
+        m_plot_shader.setUniform("u_projectionMatrix", glm::mat4(1.0f));
         m_plot_shader.setUniform("u_modelViewProjectionMatrix", vera::getOrthoMatrix());
         m_plot_shader.setUniformTexture("u_plotData", m_plot_texture, 0);
         

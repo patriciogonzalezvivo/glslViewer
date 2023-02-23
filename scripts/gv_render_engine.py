@@ -30,11 +30,11 @@ class GVRenderEngine(bpy.types.RenderEngine):
 
     bl_idname = "GLSLVIEWER_ENGINE"
     bl_label = "GlslViewer"
-    bl_use_preview = False
+    bl_use_preview = True
     # bl_use_postprocess = True
     # bl_use_exclude_layers = True
     # bl_use_save_buffers = True
-    # bl_use_eevee_viewport = True
+    bl_use_eevee_viewport = True
     # bl_use_shading_nodes = True
     # bl_use_custom_freestyle = True
     # bl_use_shading_nodes_custom = False
@@ -179,8 +179,13 @@ class GVRenderEngine(bpy.types.RenderEngine):
                 # pass
 
             # else:
-            if not update.id.name in bpy.data.objects:
-                self.update_camera(context)
+            if update.id.name in bpy.data.collections:
+                self.reloadScene(context, depsgraph)
+                continue
+
+            elif not update.id.name in bpy.data.objects:
+                print("Don't know how to update", update.id.name)
+                # self.update_camera(context)
                 continue 
 # 
             obj = bpy.data.objects[update.id.name]
@@ -291,7 +296,6 @@ class GVRenderEngine(bpy.types.RenderEngine):
         print("GVRenderEngine: view_draw")
         scene = depsgraph.scene
 
-
         if not self._started:
             self.start()
             self.reloadScene(context, depsgraph)
@@ -300,23 +304,22 @@ class GVRenderEngine(bpy.types.RenderEngine):
             print("GVRenderEngine: view_draw -> ", update.id.name)
 
         self.update_camera(context);
-        
         self.engine.setFrame( scene.frame_current )
 
         bgl.glEnable(bgl.GL_DEPTH_TEST)
         bgl.glDepthMask(bgl.GL_TRUE)
         bgl.glClearDepth(100000);
-        # bgl.glClearColor(0.0, 0.0, 0.0, 0.0);
+        bgl.glClearColor(0.0, 0.0, 0.0, 0.0);
         bgl.glClear(bgl.GL_COLOR_BUFFER_BIT | bgl.GL_DEPTH_BUFFER_BIT)
 
-        # bgl.glEnable(bgl.GL_BLEND)
-        # bgl.glBlendFunc(bgl.GL_ONE, bgl.GL_ONE_MINUS_SRC_ALPHA)
-        # self.bind_display_space_shader(scene)
+        bgl.glEnable(bgl.GL_BLEND)
+        bgl.glBlendFunc(bgl.GL_ONE, bgl.GL_ONE_MINUS_SRC_ALPHA)
+        self.bind_display_space_shader(scene)
         
         self.engine.draw()
         
-        # self.unbind_display_space_shader()
-        # bgl.glDisable(bgl.GL_BLEND)
+        self.unbind_display_space_shader()
+        bgl.glDisable(bgl.GL_BLEND)
         bgl.glDisable(bgl.GL_DEPTH_TEST)
 
     # This is the method called by Blender for both final renders (F12) and

@@ -37,26 +37,10 @@ class GV_OT_print_textures(bpy.types.Operator):
 
         return {'FINISHED'}
 
-class GV_OT_listen(bpy.types.Operator):
-    bl_idname = "wm.gv_listener"
-    bl_label = "Listener"
-    bl_options = {'INTERNAL'}
-
-    def modal(self, context, event):
-        print(event.type)
-        return {'PASS_THROUGH'}
-
-    def execute(self, context):
-        wm = context.window_manager
-        wm.modal_handler_add(self)
-        return {'RUNNING_MODAL'}
-
-
 classes = [
     GV_OT_print_defines,
     GV_OT_print_buffers,
     GV_OT_print_textures,
-    GV_OT_listen
 ]
 
 def register_operators():
