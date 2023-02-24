@@ -45,7 +45,7 @@ SceneRender::SceneRender():
     // Floor
     m_floor_height(0.0), m_floor_subd_target(-1), m_floor_subd(-1),
 
-    m_buffers_total(0)
+    m_buffers_total(0), m_commands_loaded(false), m_uniforms_loaded(false)
     {
     m_origin.setPosition(glm::vec3(0.0));
 }
@@ -54,332 +54,334 @@ SceneRender::~SceneRender() {
 }
 
 void SceneRender::commandsInit(CommandList& _commands, Uniforms& _uniforms) {
-    // ADD COMMANDS
-    // ----------------------------------------- 
-    _commands.push_back(Command("model", [&](const std::string& _line){ 
-        if (_line == "models") {
-            for (vera::ModelsMap::iterator it = _uniforms.models.begin(); it != _uniforms.models.end(); ++it)
-                std::cout << it->second->getName() << std::endl;
-            return true;
-        }
-        else {
-            std::vector<std::string> values = vera::split(_line,',');
-            if (values.size() == 2) {
-                for (vera::ModelsMap::iterator it = _uniforms.models.begin(); it != _uniforms.models.end(); ++it)
-                    if (it->second->getName() == values[1]) {
-                        it->second->printVboInfo();
-                        std::cout << "Defines:" << std::endl;
-                        it->second->printDefines();
-                        std::cout << "Position:" << std::endl;
-                        glm::vec3 pos = it->second->getPosition();
-                        std::cout << pos.x << ',' << pos.y << ',' << pos.z << std::endl;
-                        return true;
-                    }
-            }
-            else if (values.size() == 5) {
-                for (vera::ModelsMap::iterator it = _uniforms.models.begin(); it != _uniforms.models.end(); ++it)
-                    if (it->second->getName() == values[1]) {
-                        it->second->setPosition( glm::vec3(vera::toFloat(values[2]), vera::toFloat(values[3]), vera::toFloat(values[4])) );
-                        return true;
-                    }
-            }
-        }
-        return false;
-    },
-    "models", "print all the names of the models"));
+    if (!m_commands_loaded) {
 
-    _commands.push_back(Command("origin", [&](const std::string& _line){ 
-        std::vector<std::string> values = vera::split(_line,',');
-        if (values.size() == 4) {
-            m_origin.setPosition( glm::vec3(vera::toFloat(values[1]), vera::toFloat(values[2]), vera::toFloat(values[3])) );
-            return true;
-        }
-        else {
-            glm::vec3 pos = m_origin.getPosition();
-            std::cout << pos.x << ',' << pos.y << ',' << pos.z << std::endl;
-            return true;
-        }
-        return false;
-    },
-    "origin[,<x>,<y>,<z>]", "get or set the origin position."));
+        // ADD COMMANDS
+        // ----------------------------------------- 
+        _commands.push_back(Command("model", [&](const std::string& _line){ 
+            if (_line == "models") {
+                for (vera::ModelsMap::iterator it = _uniforms.models.begin(); it != _uniforms.models.end(); ++it)
+                    std::cout << it->second->getName() << std::endl;
+                return true;
+            }
+            else {
+                std::vector<std::string> values = vera::split(_line,',');
+                if (values.size() == 2) {
+                    for (vera::ModelsMap::iterator it = _uniforms.models.begin(); it != _uniforms.models.end(); ++it)
+                        if (it->second->getName() == values[1]) {
+                            it->second->printVboInfo();
+                            std::cout << "Defines:" << std::endl;
+                            it->second->printDefines();
+                            std::cout << "Position:" << std::endl;
+                            glm::vec3 pos = it->second->getPosition();
+                            std::cout << pos.x << ',' << pos.y << ',' << pos.z << std::endl;
+                            return true;
+                        }
+                }
+                else if (values.size() == 5) {
+                    for (vera::ModelsMap::iterator it = _uniforms.models.begin(); it != _uniforms.models.end(); ++it)
+                        if (it->second->getName() == values[1]) {
+                            it->second->setPosition( glm::vec3(vera::toFloat(values[2]), vera::toFloat(values[3]), vera::toFloat(values[4])) );
+                            return true;
+                        }
+                }
+            }
+            return false;
+        },
+        "models", "print all the names of the models"));
 
-    _commands.push_back(Command("material", [&](const std::string& _line){ 
-        if (_line == "materials") {
-            for (vera::MaterialsMap::iterator it = _uniforms.materials.begin(); it != _uniforms.materials.end(); it++)
-                std::cout << it->second->name << std::endl;
-            return true;
-        }
-        else {
+        _commands.push_back(Command("origin", [&](const std::string& _line){ 
             std::vector<std::string> values = vera::split(_line,',');
-            if (values.size() == 2 && values[0] == "material") {
-                for (vera::MaterialsMap::iterator it = _uniforms.materials.begin(); it != _uniforms.materials.end(); it++) {
-                    if (it->second->name == values[1]) {
-                        it->second->printDefines();
-                        return true;
+            if (values.size() == 4) {
+                m_origin.setPosition( glm::vec3(vera::toFloat(values[1]), vera::toFloat(values[2]), vera::toFloat(values[3])) );
+                return true;
+            }
+            else {
+                glm::vec3 pos = m_origin.getPosition();
+                std::cout << pos.x << ',' << pos.y << ',' << pos.z << std::endl;
+                return true;
+            }
+            return false;
+        },
+        "origin[,<x>,<y>,<z>]", "get or set the origin position."));
+
+        _commands.push_back(Command("material", [&](const std::string& _line){ 
+            if (_line == "materials") {
+                for (vera::MaterialsMap::iterator it = _uniforms.materials.begin(); it != _uniforms.materials.end(); it++)
+                    std::cout << it->second->name << std::endl;
+                return true;
+            }
+            else {
+                std::vector<std::string> values = vera::split(_line,',');
+                if (values.size() == 2 && values[0] == "material") {
+                    for (vera::MaterialsMap::iterator it = _uniforms.materials.begin(); it != _uniforms.materials.end(); it++) {
+                        if (it->second->name == values[1]) {
+                            it->second->printDefines();
+                            return true;
+                        }
                     }
                 }
             }
-        }
 
-        return false;
-    },
-    "materials", "print all the materials names"));
+            return false;
+        },
+        "materials", "print all the materials names"));
 
-    _commands.push_back(Command("blend", [&](const std::string& _line){ 
-        std::vector<std::string> values = vera::split(_line,',');
-        if (values.size() == 1) {
-            if (getBlend() == vera::BLEND_NONE) std::cout << "none" << std::endl;
-            else if (getBlend() == vera::BLEND_ALPHA) std::cout << "alpha" << std::endl;
-            else if (getBlend() == vera::BLEND_ADD) std::cout << "add" << std::endl;
-            else if (getBlend() == vera::BLEND_MULTIPLY) std::cout << "multiply" << std::endl;
-            else if (getBlend() == vera::BLEND_SCREEN) std::cout << "screen" << std::endl;
-            else if (getBlend() == vera::BLEND_SUBSTRACT) std::cout << "substract" << std::endl;
-            
-            return true;
-        }
-        else if (values.size() == 2) {
-            if (values[1] == "none" || values[1] == "off") setBlend(vera::BLEND_NONE);
-            else if (values[1] == "alpha") setBlend(vera::BLEND_ALPHA);
-            else if (values[1] == "add") setBlend(vera::BLEND_ADD);
-            else if (values[1] == "multiply") setBlend(vera::BLEND_MULTIPLY);
-            else if (values[1] == "screen") setBlend(vera::BLEND_SCREEN);
-            else if (values[1] == "substract") setBlend(vera::BLEND_SUBSTRACT);
-
-            return true;
-        }
-
-        return false;
-    },
-    "blend[,alpha|add|multiply|screen|substract]", "get or set the blending modes"));
-
-    _commands.push_back(Command("depth_test", [&](const std::string& _line){ 
-        if (_line == "depth_test") {
-            std::string rta = m_depth_test ? "on" : "off";
-            std::cout <<  rta << std::endl; 
-            return true;
-        }
-        else {
+        _commands.push_back(Command("blend", [&](const std::string& _line){ 
             std::vector<std::string> values = vera::split(_line,',');
-            if (values.size() == 2) {
-                m_depth_test = (values[1] == "on");
+            if (values.size() == 1) {
+                if (getBlend() == vera::BLEND_NONE) std::cout << "none" << std::endl;
+                else if (getBlend() == vera::BLEND_ALPHA) std::cout << "alpha" << std::endl;
+                else if (getBlend() == vera::BLEND_ADD) std::cout << "add" << std::endl;
+                else if (getBlend() == vera::BLEND_MULTIPLY) std::cout << "multiply" << std::endl;
+                else if (getBlend() == vera::BLEND_SCREEN) std::cout << "screen" << std::endl;
+                else if (getBlend() == vera::BLEND_SUBSTRACT) std::cout << "substract" << std::endl;
+                
                 return true;
             }
-        }
-        return false;
-    },
-    "depth_test[,on|off]", "turn on/off depth test"));
+            else if (values.size() == 2) {
+                if (values[1] == "none" || values[1] == "off") setBlend(vera::BLEND_NONE);
+                else if (values[1] == "alpha") setBlend(vera::BLEND_ALPHA);
+                else if (values[1] == "add") setBlend(vera::BLEND_ADD);
+                else if (values[1] == "multiply") setBlend(vera::BLEND_MULTIPLY);
+                else if (values[1] == "screen") setBlend(vera::BLEND_SCREEN);
+                else if (values[1] == "substract") setBlend(vera::BLEND_SUBSTRACT);
 
-    _commands.push_back(Command("culling", [&](const std::string& _line){ 
-        std::vector<std::string> values = vera::split(_line,',');
-        if (values.size() == 1) {
-            if (getCulling() == vera::CULL_NONE) std::cout << "none" << std::endl;
-            else if (getCulling() == vera::CULL_FRONT) std::cout << "front" << std::endl;
-            else if (getCulling() == vera::CULL_BACK) std::cout << "back" << std::endl;
-            else if (getCulling() == vera::CULL_BOTH) std::cout << "both" << std::endl;
-
-            return true;
-        }
-        else if (values.size() == 2) {
-            if (values[1] == "none") setCulling(vera::CULL_NONE);
-            else if (values[1] == "front") setCulling(vera::CULL_FRONT);
-            else if (values[1] == "back") setCulling(vera::CULL_BACK);
-            else if (values[1] == "both") setCulling(vera::CULL_BOTH);
-
-            return true;
-        }
-
-        return false;
-    },
-    "culling[,none|front|back|both]", "get or set the culling modes"));
-    
-    _commands.push_back(Command("dynamic_shadows", [&](const std::string& _line){ 
-        if (_line == "dynamic_shadows") {
-            std::string rta = dynamicShadows ? "on" : "off";
-            std::cout <<  rta << std::endl; 
-            return true;
-        }
-        else {
-            std::vector<std::string> values = vera::split(_line,',');
-            if (values.size() == 2) {
-                dynamicShadows = (values[1] == "on");
                 return true;
             }
-        }
-        return false;
-    },
-    "dynamic_shadows[,on|off]", "get or set dynamic shadows"));
 
-    _commands.push_back(Command("floor_color", [&](const std::string& _line){ 
-        std::vector<std::string> values = vera::split(_line,',');
-        if (values.size() == 4) {
-            std::string str_color = "vec4("+values[1]+","+values[2]+","+values[3]+",1.0)"; 
-            addDefine("FLOOR_COLOR",str_color);
-            
-            _uniforms.setGroundAlbedo( glm::vec3(vera::toFloat(values[1]), vera::toFloat(values[2]), vera::toFloat(values[3])) );
-            _uniforms.activeCubemap = _uniforms.cubemaps["default"];
-            return true;
-        }
-        else {
-            glm::vec3 ground = _uniforms.getGroundAlbedo();
-            std::cout << ground.x << ',' << ground.y << ',' << ground.z << std::endl;
-            return true;
-        }
-        return false;
-    },
-    "floor_color[,<r>,<g>,<b>]", "get or set the ground color of the skybox."));
-    
-    _commands.push_back(Command("floor", [&](const std::string& _line) {
-        std::vector<std::string> values = vera::split(_line,',');
+            return false;
+        },
+        "blend[,alpha|add|multiply|screen|substract]", "get or set the blending modes"));
 
-        if (_line == "floor") {
-            std::string rta = m_floor_subd > 0 ? vera::toString(m_floor_subd) : "off";
-            std::cout << rta << std::endl; 
-            return true;
-        }
-        else {
-            if (values.size() == 2) {
-                if (values[1] == "toggle")
-                    values[1] = m_floor_subd_target >= 0 ? "off" : "on";
-
-                if (values[1] == "off")
-                    m_floor_subd_target = -1;
-                else if (values[1] == "on") {
-                    if (m_floor_subd_target == -1)
-                        m_floor_subd_target = 0;
+        _commands.push_back(Command("depth_test", [&](const std::string& _line){ 
+            if (_line == "depth_test") {
+                std::string rta = m_depth_test ? "on" : "off";
+                std::cout <<  rta << std::endl; 
+                return true;
+            }
+            else {
+                std::vector<std::string> values = vera::split(_line,',');
+                if (values.size() == 2) {
+                    m_depth_test = (values[1] == "on");
+                    return true;
                 }
-                else
-                    m_floor_subd_target = vera::toInt(values[1]);
-                return true;
             }
-        }
-        return false;
-    },
-    "floor[,on|off|<subD_level>]", "show/hide floor or presice the subdivision level"));
+            return false;
+        },
+        "depth_test[,on|off]", "turn on/off depth test"));
 
-    _commands.push_back(Command("grid", [&](const std::string& _line){
-        if (_line == "grid") {
-            std::string rta = showGrid ? "on" : "off";
-            std::cout << rta << std::endl; 
-            return true;
-        }
-        else {
+        _commands.push_back(Command("culling", [&](const std::string& _line){ 
             std::vector<std::string> values = vera::split(_line,',');
-            if (values.size() == 2) {
-                if (values[1] == "toggle")
-                    values[1] = showGrid ? "off" : "on";
+            if (values.size() == 1) {
+                if (getCulling() == vera::CULL_NONE) std::cout << "none" << std::endl;
+                else if (getCulling() == vera::CULL_FRONT) std::cout << "front" << std::endl;
+                else if (getCulling() == vera::CULL_BACK) std::cout << "back" << std::endl;
+                else if (getCulling() == vera::CULL_BOTH) std::cout << "both" << std::endl;
 
-                showGrid = values[1] == "on";
                 return true;
             }
-        }
-        return false;
-    },
-    "grid[,on|off]", "show/hide grid"));
+            else if (values.size() == 2) {
+                if (values[1] == "none") setCulling(vera::CULL_NONE);
+                else if (values[1] == "front") setCulling(vera::CULL_FRONT);
+                else if (values[1] == "back") setCulling(vera::CULL_BACK);
+                else if (values[1] == "both") setCulling(vera::CULL_BOTH);
 
-    _commands.push_back(Command("axis", [&](const std::string& _line){
-        if (_line == "grid") {
-            std::string rta = showAxis ? "on" : "off";
-            std::cout << rta << std::endl; 
-            return true;
-        }
-        else {
+                return true;
+            }
+
+            return false;
+        },
+        "culling[,none|front|back|both]", "get or set the culling modes"));
+        
+        _commands.push_back(Command("dynamic_shadows", [&](const std::string& _line){ 
+            if (_line == "dynamic_shadows") {
+                std::string rta = dynamicShadows ? "on" : "off";
+                std::cout <<  rta << std::endl; 
+                return true;
+            }
+            else {
+                std::vector<std::string> values = vera::split(_line,',');
+                if (values.size() == 2) {
+                    dynamicShadows = (values[1] == "on");
+                    return true;
+                }
+            }
+            return false;
+        },
+        "dynamic_shadows[,on|off]", "get or set dynamic shadows"));
+
+        _commands.push_back(Command("floor_color", [&](const std::string& _line){ 
             std::vector<std::string> values = vera::split(_line,',');
-            if (values.size() == 2) {
-                if (values[1] == "toggle")
-                    values[1] = showAxis ? "off" : "on";
-
-                showAxis = values[1] == "on";
+            if (values.size() == 4) {
+                std::string str_color = "vec4("+values[1]+","+values[2]+","+values[3]+",1.0)"; 
+                addDefine("FLOOR_COLOR",str_color);
+                
+                _uniforms.setGroundAlbedo( glm::vec3(vera::toFloat(values[1]), vera::toFloat(values[2]), vera::toFloat(values[3])) );
+                _uniforms.activeCubemap = _uniforms.cubemaps["default"];
                 return true;
             }
-        }
-        return false;
-    },
-    "axis[,on|off]", "show/hide axis"));
-
-    _commands.push_back(Command("bboxes", [&](const std::string& _line){
-        if (_line == "bboxes") {
-            std::string rta = showBBoxes ? "on" : "off";
-            std::cout << rta << std::endl; 
-            return true;
-        }
-        else {
+            else {
+                glm::vec3 ground = _uniforms.getGroundAlbedo();
+                std::cout << ground.x << ',' << ground.y << ',' << ground.z << std::endl;
+                return true;
+            }
+            return false;
+        },
+        "floor_color[,<r>,<g>,<b>]", "get or set the ground color of the skybox."));
+        
+        _commands.push_back(Command("floor", [&](const std::string& _line) {
             std::vector<std::string> values = vera::split(_line,',');
-            if (values.size() == 2) {
-                if (values[1] == "toggle")
-                    values[1] = showBBoxes ? "off" : "on";
 
-                showBBoxes = values[1] == "on";
+            if (_line == "floor") {
+                std::string rta = m_floor_subd > 0 ? vera::toString(m_floor_subd) : "off";
+                std::cout << rta << std::endl; 
                 return true;
             }
-        }
-        return false;
-    },
-    "bboxes[,on|off]", "show/hide models bounding boxes"));
-    
-    _uniforms.functions["u_area"] = UniformFunction("float", [this](vera::Shader& _shader) {
-        _shader.setUniform("u_area", m_area);
-    },
-    [this]() { return vera::toString(m_area); });
+            else {
+                if (values.size() == 2) {
+                    if (values[1] == "toggle")
+                        values[1] = m_floor_subd_target >= 0 ? "off" : "on";
 
-    // _uniforms.functions["u_model"] = UniformFunction("vec3", [this](vera::Shader& _shader) {
-    //     _shader.setUniform("u_model", m_origin.getPosition());
-    // },
-    // [this]() { return vera::toString(m_origin.getPosition(), ','); });
+                    if (values[1] == "off")
+                        m_floor_subd_target = -1;
+                    else if (values[1] == "on") {
+                        if (m_floor_subd_target == -1)
+                            m_floor_subd_target = 0;
+                    }
+                    else
+                        m_floor_subd_target = vera::toInt(values[1]);
+                    return true;
+                }
+            }
+            return false;
+        },
+        "floor[,on|off|<subD_level>]", "show/hide floor or presice the subdivision level"));
 
-    // _uniforms.functions["u_modelMatrix"] = UniformFunction("mat4", [this](vera::Shader& _shader) {
-    //     _shader.setUniform("u_modelMatrix", m_origin.getTransformMatrix() );
-    // });
+        _commands.push_back(Command("grid", [&](const std::string& _line){
+            if (_line == "grid") {
+                std::string rta = showGrid ? "on" : "off";
+                std::cout << rta << std::endl; 
+                return true;
+            }
+            else {
+                std::vector<std::string> values = vera::split(_line,',');
+                if (values.size() == 2) {
+                    if (values[1] == "toggle")
+                        values[1] = showGrid ? "off" : "on";
 
-    _uniforms.functions["u_scene"] = UniformFunction("sampler2D", [this](vera::Shader& _shader) {
-        if (renderFbo.getTextureId())
-            _shader.setUniformTexture("u_scene", &renderFbo, _shader.textureIndex++ );
-    });
+                    showGrid = values[1] == "on";
+                    return true;
+                }
+            }
+            return false;
+        },
+        "grid[,on|off]", "show/hide grid"));
 
-    _uniforms.functions["u_sceneDepth"] = UniformFunction("sampler2D", [this](vera::Shader& _shader) {
-        if (renderFbo.getTextureId())
-            _shader.setUniformDepthTexture("u_sceneDepth", &renderFbo, _shader.textureIndex++ );
-    });
+        _commands.push_back(Command("axis", [&](const std::string& _line){
+            if (_line == "grid") {
+                std::string rta = showAxis ? "on" : "off";
+                std::cout << rta << std::endl; 
+                return true;
+            }
+            else {
+                std::vector<std::string> values = vera::split(_line,',');
+                if (values.size() == 2) {
+                    if (values[1] == "toggle")
+                        values[1] = showAxis ? "off" : "on";
 
-    _uniforms.functions["u_sceneNormal"] = UniformFunction("sampler2D", [this](vera::Shader& _shader) {
-        if (normalFbo.getTextureId())
-            _shader.setUniformTexture("u_sceneNormal", &normalFbo, _shader.textureIndex++ );
-    });
+                    showAxis = values[1] == "on";
+                    return true;
+                }
+            }
+            return false;
+        },
+        "axis[,on|off]", "show/hide axis"));
 
-    _uniforms.functions["u_scenePosition"] = UniformFunction("sampler2D", [this](vera::Shader& _shader) {
-        if (positionFbo.getTextureId())
-            _shader.setUniformTexture("u_scenePosition", &positionFbo, _shader.textureIndex++ );
-    });
+        _commands.push_back(Command("bboxes", [&](const std::string& _line){
+            if (_line == "bboxes") {
+                std::string rta = showBBoxes ? "on" : "off";
+                std::cout << rta << std::endl; 
+                return true;
+            }
+            else {
+                std::vector<std::string> values = vera::split(_line,',');
+                if (values.size() == 2) {
+                    if (values[1] == "toggle")
+                        values[1] = showBBoxes ? "off" : "on";
 
-    // SSAO data (https://learnopengl.com/Advanced-Lighting/SSAO)
-    //
-    std::uniform_real_distribution<float> randomFloats(0.0, 1.0); // random floats between [0.0, 1.0]
-    std::default_random_engine generator;
-
-    for (size_t i = 0; i < 64; ++i) {
-        glm::vec3 sample(   randomFloats(generator) * 2.0 - 1.0, 
-                            randomFloats(generator) * 2.0 - 1.0, 
-                            randomFloats(generator) );
-
-        sample = glm::normalize(sample);
-        float scale = (float)i / 64.0;
-        scale   = vera::lerp(0.1f, 1.0f, scale * scale);
-        sample *= scale;
-        m_ssaoSamples[i] = sample;
+                    showBBoxes = values[1] == "on";
+                    return true;
+                }
+            }
+            return false;
+        },
+        "bboxes[,on|off]", "show/hide models bounding boxes"));
+        m_commands_loaded = true;
     }
+}
 
-    _uniforms.functions["u_ssaoSamples"] = UniformFunction("vec3", [this](vera::Shader& _shader) {
-        _shader.setUniform("u_ssaoSamples", m_ssaoSamples, 64 );
-    });
+void SceneRender::uniformsInit(Uniforms& _uniforms) {
+    if (!m_uniforms_loaded) {
+        // ADD UNIFORMS
+        //
+        _uniforms.functions["u_area"] = UniformFunction("float", [this](vera::Shader& _shader) {
+            _shader.setUniform("u_area", m_area);
+        },
+        [this]() { return vera::toString(m_area); });
 
-    for (size_t i = 0; i < 16; i++) {
-        m_ssaoNoise[i] = glm::vec3( randomFloats(generator) * 2.0 - 1.0, 
-                                    randomFloats(generator) * 2.0 - 1.0, 
-                                    0.0f );
+        _uniforms.functions["u_scene"] = UniformFunction("sampler2D", [this](vera::Shader& _shader) {
+            if (renderFbo.getTextureId())
+                _shader.setUniformTexture("u_scene", &renderFbo, _shader.textureIndex++ );
+        });
+
+        _uniforms.functions["u_sceneDepth"] = UniformFunction("sampler2D", [this](vera::Shader& _shader) {
+            if (renderFbo.getTextureId())
+                _shader.setUniformDepthTexture("u_sceneDepth", &renderFbo, _shader.textureIndex++ );
+        });
+
+        _uniforms.functions["u_sceneNormal"] = UniformFunction("sampler2D", [this](vera::Shader& _shader) {
+            if (normalFbo.getTextureId())
+                _shader.setUniformTexture("u_sceneNormal", &normalFbo, _shader.textureIndex++ );
+        });
+
+        _uniforms.functions["u_scenePosition"] = UniformFunction("sampler2D", [this](vera::Shader& _shader) {
+            if (positionFbo.getTextureId())
+                _shader.setUniformTexture("u_scenePosition", &positionFbo, _shader.textureIndex++ );
+        });
+
+        // SSAO data (https://learnopengl.com/Advanced-Lighting/SSAO)
+        //
+        std::uniform_real_distribution<float> randomFloats(0.0, 1.0); // random floats between [0.0, 1.0]
+        std::default_random_engine generator;
+
+        for (size_t i = 0; i < 64; ++i) {
+            glm::vec3 sample(   randomFloats(generator) * 2.0 - 1.0, 
+                                randomFloats(generator) * 2.0 - 1.0, 
+                                randomFloats(generator) );
+
+            sample = glm::normalize(sample);
+            float scale = (float)i / 64.0;
+            scale   = vera::lerp(0.1f, 1.0f, scale * scale);
+            sample *= scale;
+            m_ssaoSamples[i] = sample;
+        }
+
+        _uniforms.functions["u_ssaoSamples"] = UniformFunction("vec3", [this](vera::Shader& _shader) {
+            _shader.setUniform("u_ssaoSamples", m_ssaoSamples, 64 );
+        });
+
+        for (size_t i = 0; i < 16; i++) {
+            m_ssaoNoise[i] = glm::vec3( randomFloats(generator) * 2.0 - 1.0, 
+                                        randomFloats(generator) * 2.0 - 1.0, 
+                                        0.0f );
+        }
+
+        _uniforms.functions["u_ssaoNoise"] = UniformFunction("vec3", [this](vera::Shader& _shader) {
+            _shader.setUniform("u_ssaoNoise", m_ssaoNoise, 16 );
+        });
+        m_uniforms_loaded = false;
     }
-
-    _uniforms.functions["u_ssaoNoise"] = UniformFunction("vec3", [this](vera::Shader& _shader) {
-        _shader.setUniform("u_ssaoNoise", m_ssaoNoise, 16 );
-    });
 }
 
 void SceneRender::addDefine(const std::string& _define, const std::string& _value) {
@@ -442,7 +444,9 @@ bool SceneRender::loadScene(Uniforms& _uniforms) {
     m_cubemap_shader.setSource(vera::getDefaultSrc(vera::FRAG_CUBEMAP), vera::getDefaultSrc(vera::VERT_CUBEMAP));
 
     // Light
+    #if !defined(PYTHON_RENDER)
     _uniforms.setSunPosition( glm::vec3(0.0,m_area*10.0,m_area*10.0) );
+    #endif
     vera::addLabel("u_light", _uniforms.lights["default"], vera::LABEL_DOWN, 30.0f);
     m_lightUI_shader.setSource(vera::getDefaultSrc(vera::FRAG_LIGHT), vera::getDefaultSrc(vera::VERT_LIGHT));
 
@@ -586,6 +590,7 @@ void SceneRender::render(Uniforms& _uniforms) {
         // Pass special uniforms
         it->second->getShader()->setUniform( "u_modelViewProjectionMatrix", vera::getProjectionViewWorldMatrix() * it->second->getTransformMatrix() );
         it->second->getShader()->setUniform( "u_modelMatrix", m_origin.getTransformMatrix() * it->second->getTransformMatrix() );
+        it->second->getShader()->setUniform( "u_model", m_origin.getPosition() + m_floor.getPosition() );
         for (size_t i = 0; i < buffersFbo.size(); i++)
             it->second->getShader()->setUniformTexture("u_sceneBuffer" + vera::toString(i), buffersFbo[i], it->second->getShader()->textureIndex++);
 
@@ -627,6 +632,7 @@ void SceneRender::renderNormalBuffer(Uniforms& _uniforms) {
             normalShader->use();
             _uniforms.feedTo( normalShader, false );
             normalShader->setUniform("u_modelViewProjectionMatrix", vera::getProjectionViewWorldMatrix() * m_floor.getTransformMatrix());
+            normalShader->setUniform("u_model", m_origin.getPosition() + m_floor.getPosition() );
             normalShader->setUniform("u_modelMatrix", m_origin.getTransformMatrix() * m_floor.getTransformMatrix() );
             m_floor.render(normalShader);
             TRACK_END("render:sceneNormal:floor")
@@ -648,6 +654,7 @@ void SceneRender::renderNormalBuffer(Uniforms& _uniforms) {
 
             // Pass special uniforms
             normalShader->setUniform( "u_modelViewProjectionMatrix", vera::getProjectionViewWorldMatrix() * it->second->getTransformMatrix());
+            normalShader->setUniform( "u_model", m_origin.getPosition() + it->second->getPosition() );
             normalShader->setUniform( "u_modelMatrix", m_origin.getTransformMatrix() * it->second->getTransformMatrix() );
             it->second->render(normalShader);
 
@@ -687,6 +694,7 @@ void SceneRender::renderPositionBuffer(Uniforms& _uniforms) {
             positionShader->use();
             _uniforms.feedTo( positionShader, false );
             positionShader->setUniform("u_modelViewProjectionMatrix", vera::getProjectionViewWorldMatrix() *  m_floor.getTransformMatrix() );
+            positionShader->setUniform("u_model", m_origin.getPosition() + m_floor.getPosition() );
             positionShader->setUniform("u_modelMatrix", m_origin.getTransformMatrix() * m_floor.getTransformMatrix() );
             m_floor.render(positionShader);
             TRACK_END("render:scenePosition:floor")
@@ -708,6 +716,7 @@ void SceneRender::renderPositionBuffer(Uniforms& _uniforms) {
 
             // Pass special uniforms
             positionShader->setUniform( "u_modelViewProjectionMatrix", vera::getProjectionViewWorldMatrix() *  it->second->getTransformMatrix() );
+            positionShader->setUniform( "u_model", m_origin.getPosition() + it->second->getPosition() );
             positionShader->setUniform( "u_modelMatrix", m_origin.getTransformMatrix() * it->second->getTransformMatrix() );
             it->second->render(positionShader);
 
@@ -766,6 +775,7 @@ void SceneRender::renderBuffers(Uniforms& _uniforms) {
                     bufferShader->use();
                     _uniforms.feedTo( bufferShader, false );
                     bufferShader->setUniform( "u_modelViewProjectionMatrix", vera::getProjectionViewWorldMatrix() * m_floor.getTransformMatrix() );
+                    bufferShader->setUniform( "u_model", m_origin.getPosition() + m_floor.getPosition() );
                     bufferShader->setUniform( "u_modelMatrix", m_origin.getTransformMatrix() * m_floor.getTransformMatrix() );
                     m_floor.render(bufferShader);
                     TRACK_END("render:"+bufferName+":floor")
@@ -788,6 +798,7 @@ void SceneRender::renderBuffers(Uniforms& _uniforms) {
 
                 // Pass special uniforms
                 bufferShader->setUniform( "u_modelViewProjectionMatrix", vera::getProjectionViewWorldMatrix() * it->second->getTransformMatrix() );
+                bufferShader->setUniform( "u_model", m_origin.getPosition() + it->second->getPosition() );
                 bufferShader->setUniform( "u_modelMatrix", m_origin.getTransformMatrix() * it->second->getTransformMatrix() );
                 it->second->render(bufferShader);
 
@@ -829,6 +840,7 @@ void SceneRender::renderShadowMap(Uniforms& _uniforms) {
                 shadowShader->setUniform( "u_projectionMatrix", lit->second->getProjectionMatrix() );
                 shadowShader->setUniform( "u_viewMatrix", lit->second->getViewMatrix() );
                 shadowShader->setUniform( "u_modelMatrix", m_origin.getTransformMatrix() * m_floor.getTransformMatrix() );
+                shadowShader->setUniform( "u_model", m_origin.getPosition() + m_floor.getPosition() );
                 m_floor.render(shadowShader);
                 TRACK_END("render:scene:shadowmap:floor")
             }
@@ -849,6 +861,7 @@ void SceneRender::renderShadowMap(Uniforms& _uniforms) {
                     shadowShader->setUniform( "u_projectionMatrix", lit->second->getProjectionMatrix() );
                     shadowShader->setUniform( "u_viewMatrix", lit->second->getViewMatrix() );
                     shadowShader->setUniform( "u_modelMatrix", m_origin.getTransformMatrix() * mit->second->getTransformMatrix() );
+                    shadowShader->setUniform( "u_model", m_origin.getPosition() + mit->second->getPosition() );
                     mit->second->render(shadowShader);
 
                     TRACK_END("render:scene:shadowmap:" + mit->second->getName())
@@ -916,6 +929,7 @@ void SceneRender::renderFloor(Uniforms& _uniforms, bool _lights) {
 
             m_floor.getShader()->setUniform("u_modelViewProjectionMatrix", vera::getProjectionViewWorldMatrix() * m_floor.getTransformMatrix() );
             m_floor.getShader()->setUniform("u_modelMatrix", m_origin.getTransformMatrix() * m_floor.getTransformMatrix() );
+            m_floor.getShader()->setUniform("u_model", m_origin.getPosition() + m_floor.getPosition() );
             // for (size_t i = 0; i < buffersFbo.size(); i++)
             //     m_floor.getShader()->setUniformTexture("u_sceneBuffer" + vera::toString(i), &(buffersFbo[i]), m_floor.getShader()->textureIndex++);
             

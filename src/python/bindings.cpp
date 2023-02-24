@@ -239,19 +239,21 @@ PYBIND11_MODULE(PyGlslViewer, m) {
 
     py::class_<Engine>(m, "Engine")
         .def(py::init<>())
+
+        .def("loadMesh",&Engine::loadMesh, py::arg("_name"), py::arg("_mesh"))
+        .def("loadImage",&Engine::loadImage, py::arg("_name"), py::arg("_path"), py::arg("_flip"))
+        .def("loadShaders", &Engine::loadShaders)
+
         .def("setCamera", &Engine::setCamera, py::arg("_cam"))
         .def("setSun", &Engine::setSun, py::arg("_light"))
         .def("setSunPosition", &Engine::setSunPosition, py::arg("_az"), py::arg("_elev"), py::arg("_distance"))
         .def("setSource",&Engine::setSource, py::arg("_type"), py::arg("_source"))
         .def("setFrame",&Engine::setFrame, py::arg("_frame"))
-        .def("loadMesh",&Engine::loadMesh, py::arg("_name"), py::arg("_mesh"))
         .def("setMeshTransformMatrix",&Engine::setMeshTransformMatrix, py::arg("_name"), py::arg("x1"), py::arg("y1"), py::arg("z1"), py::arg("w1"), py::arg("x2"), py::arg("y2"), py::arg("z2"), py::arg("w2"), py::arg("x3"), py::arg("y3"), py::arg("z3"), py::arg("w3"), py::arg("x4"), py::arg("y4"), py::arg("z4"), py::arg("w4") )
-        .def("resize",&Engine::resize, py::arg("width"), py::arg("height"))
-        .def("draw", &Engine::draw)
-        .def("reloadShaders", &Engine::reloadShaders)
-        .def("clearModels", &Engine::clearModels)
         
         .def("getSource",&Engine::getSource, py::arg("_type"))
+        .def("getShowTextures", &Engine::getShowTextures)
+        .def("getShowPasses", &Engine::getShowPasses)
 
         .def("printDefines", &Engine::printDefines)
         .def("printBuffers", &Engine::printBuffers)
@@ -262,10 +264,14 @@ PYBIND11_MODULE(PyGlslViewer, m) {
         .def("printModels", &Engine::printModels)
         .def("printShaders", &Engine::printShaders)
 
+
+        .def("clearModels", &Engine::clearModels)
+
         .def("showTextures",&Engine::showTextures, py::arg("_value"))
-        .def("getShowTextures", &Engine::getShowTextures)
         .def("showPasses",&Engine::showPasses, py::arg("_value"))
-        .def("getShowPasses", &Engine::getShowPasses)
+        .def("resize",&Engine::resize, py::arg("width"), py::arg("height"))
+
+        .def("draw", &Engine::draw)
         
         .def_readwrite("include_folders", &Engine::include_folders)
         .def_readwrite("screenshotFile", &Engine::screenshotFile)

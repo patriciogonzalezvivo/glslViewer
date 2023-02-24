@@ -1060,8 +1060,10 @@ void Sandbox::commandsInit(CommandList &_commands ) {
     }, "max_mem_in_queue[,<bytes>]", "set the maximum amount of memory used by a queue to export images to disk"));
     #endif
 
-    if (vert_index != -1 || geom_index != -1)
-        m_sceneRender.commandsInit( _commands, uniforms);
+    if (vert_index != -1 || geom_index != -1) {
+        m_sceneRender.commandsInit(_commands, uniforms);
+        m_sceneRender.uniformsInit(uniforms);
+    }
 }
 
 void Sandbox::loadAssets(WatchFileList &_files) {
@@ -1321,6 +1323,7 @@ void Sandbox::resetShaders( WatchFileList &_files ) {
         // Specific defines for this buffer
         m_postprocessing_shader.addDefine("POSTPROCESSING");
         m_postprocessing_shader.setSource(m_frag_source, vera::getDefaultSrc(vera::VERT_BILLBOARD));
+        uniforms.functions["u_scene"].present = havePostprocessing;
         m_postprocessing = havePostprocessing;
     }
     else if (lenticular.size() > 0) {
@@ -1498,6 +1501,7 @@ void Sandbox::_renderBuffers() {
         uniforms.buffers[i]->bind();
 
         m_buffers_shaders[i].use();
+        m_buffers_shaders[i].setUniform("u_model", glm::vec3(0.0f));
         m_buffers_shaders[i].setUniform("u_modelMatrix", glm::mat4(1.0f));
         m_buffers_shaders[i].setUniform("u_viewMatrix", glm::mat4(1.0f));
         m_buffers_shaders[i].setUniform("u_projectionMatrix", glm::mat4(1.0f));
@@ -1677,7 +1681,8 @@ void Sandbox::render() {
                 uniforms.feedTo( &m_canvas_shader );
 
                 // Pass special uniforms
-                m_canvas_shader.setUniform("u_modelMatrix", glm::mat4(1.0));
+                m_canvas_shader.setUniform("u_model", glm::vec3(0.0f));
+                m_canvas_shader.setUniform("u_modelMatrix", glm::mat4(1.0f));
                 m_canvas_shader.setUniform("u_viewMatrix", glm::mat4(1.0f));
                 m_canvas_shader.setUniform("u_projectionMatrix", glm::mat4(1.0f));
                 m_canvas_shader.setUniform("u_modelViewProjectionMatrix", glm::mat4(1.));
@@ -1690,7 +1695,8 @@ void Sandbox::render() {
             uniforms.feedTo( &m_canvas_shader );
 
             // Pass special uniforms
-            m_canvas_shader.setUniform("u_modelMatrix", glm::mat4(1.0));
+            m_canvas_shader.setUniform("u_model", glm::vec3(0.0f));
+            m_canvas_shader.setUniform("u_modelMatrix", glm::mat4(1.0f));
             m_canvas_shader.setUniform("u_viewMatrix", glm::mat4(1.0f));
             m_canvas_shader.setUniform("u_projectionMatrix", glm::mat4(1.0f));
             m_canvas_shader.setUniform("u_modelViewProjectionMatrix", glm::mat4(1.));
@@ -1747,7 +1753,8 @@ void Sandbox::renderPost() {
             m_record_fbo.bind();
     
         m_postprocessing_shader.use();
-        m_postprocessing_shader.setUniform("u_modelMatrix", glm::mat4(1.0));
+        m_postprocessing_shader.setUniform("u_model", glm::vec3(0.0f));
+        m_postprocessing_shader.setUniform("u_modelMatrix", glm::mat4(1.0f));
         m_postprocessing_shader.setUniform("u_viewMatrix", glm::mat4(1.0f));
         m_postprocessing_shader.setUniform("u_projectionMatrix", glm::mat4(1.0f));
 
@@ -2005,7 +2012,8 @@ void Sandbox::renderUI() {
         m_plot_shader.setUniform("u_translate", x, y);
         m_plot_shader.setUniform("u_resolution", (float)vera::getWindowWidth(), (float)vera::getWindowHeight());
         m_plot_shader.setUniform("u_viewport", w, h);
-        m_plot_shader.setUniform("u_modelMatrix", glm::mat4(1.0));
+        m_plot_shader.setUniform("u_model", glm::vec3(0.0f));
+        m_plot_shader.setUniform("u_modelMatrix", glm::mat4(1.0f));
         m_plot_shader.setUniform("u_viewMatrix", glm::mat4(1.0f));
         m_plot_shader.setUniform("u_projectionMatrix", glm::mat4(1.0f));
         m_plot_shader.setUniform("u_modelViewProjectionMatrix", vera::getOrthoMatrix());

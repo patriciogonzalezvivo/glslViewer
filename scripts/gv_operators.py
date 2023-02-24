@@ -38,15 +38,55 @@ class GV_OT_print_textures(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class GV_OT_show_hide_passes(bpy.types.Operator):
-    bl_idname = "glsl_viewer.show_hide_passes"
-    bl_label = "Print Defines"
+class GV_OT_show_passes(bpy.types.Operator):
+    bl_idname = "glsl_viewer.show_passes"
+    bl_label = "Show Passes"
+    bl_description = "Hide active render passes and buffers on the active viewport"
     bl_options = {'INTERNAL'}
 
     def execute(self, context):
         engine = get_gv_engine()
         if engine != None:
-            engine.showTextures( not engine.getShowTextures() )
+            engine.showPasses( True )
+
+        return {'FINISHED'}
+    
+class GV_OT_hide_passes(bpy.types.Operator):
+    bl_idname = "glsl_viewer.hide_passes"
+    bl_label = "Hide Passes"
+    bl_description = "Hide active render passes and buffers on the active viewport"
+    bl_options = {'INTERNAL'}
+
+    def execute(self, context):
+        engine = get_gv_engine()
+        if engine != None:
+            engine.showPasses( False )
+
+        return {'FINISHED'}
+    
+class GV_OT_show_textures(bpy.types.Operator):
+    bl_idname = "glsl_viewer.show_textures"
+    bl_label = "Show textures"
+    bl_description = "Show loaded textures on the active viewport"
+    bl_options = {'INTERNAL'}
+
+    def execute(self, context):
+        engine = get_gv_engine()
+        if engine != None:
+            engine.showTextures( True )
+
+        return {'FINISHED'}
+    
+class GV_OT_hide_textures(bpy.types.Operator):
+    bl_idname = "glsl_viewer.hide_textures"
+    bl_label = "Hide Textures"
+    bl_description = "Hide loaded textures on the active viewport"
+    bl_options = {'INTERNAL'}
+
+    def execute(self, context):
+        engine = get_gv_engine()
+        if engine != None:
+            engine.showTextures( False )
 
         return {'FINISHED'}
 
@@ -54,7 +94,10 @@ classes = [
     GV_OT_print_defines,
     GV_OT_print_buffers,
     GV_OT_print_textures,
-    GV_OT_show_hide_passes
+    GV_OT_show_passes,
+    GV_OT_hide_passes,
+    GV_OT_show_textures,
+    GV_OT_hide_textures,
 ]
 
 def register_operators():

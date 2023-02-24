@@ -39,9 +39,9 @@ class GVRenderEngine(bpy.types.RenderEngine):
     # bl_use_custom_freestyle = True
     # bl_use_shading_nodes_custom = False
 
-    _frag_filename = "main.frag"
+    # _frag_filename = "main.frag"
     _frag_code = ""
-    _vert_filename = "main.vert"
+    # _vert_filename = "main.vert"
     _vert_code = ""
     _started = False
     _skip = False
@@ -74,38 +74,13 @@ class GVRenderEngine(bpy.types.RenderEngine):
         global __GV_RENDER__
         __GV_RENDER__ = None
 
-
     def start(self):
         # if self._started:
         #     return    
         print("GVRenderEngine: start")
 
         self._started = True
-
-        if not self._frag_filename in bpy.data.texts:
-            print(f'File name {self._frag_filename} not found. Will create an internal one')
-
-            if file_exist(self._frag_filename):
-                    bpy.ops.text.open(filepath=self._frag_filename)
-
-            # else create a internal file with the default fragment code
-            else:
-                bpy.data.texts.new(self._frag_filename)
-                self._frag_code = self.engine.getSource(gv.FRAGMENT)
-                bpy.data.texts[self._frag_filename].write( self._frag_code )
-
-        if not self._vert_filename in bpy.data.texts:
-            print(f'File name {self._vert_filename} not found. Will create an internal one')
-
-            if file_exist(self._vert_filename):
-                    bpy.ops.text.open(filepath=self._vert_filename)
-
-            # else create a internal file with the default fragment code
-            else:
-                bpy.data.texts.new(self._vert_filename)
-                self._vert_code = self.engine.getSource(gv.VERTEX)
-                bpy.data.texts[self._vert_filename].write( self._vert_code )
-
+        self.update_shaders()
         bpy.app.timers.register(self.event, first_interval=1)
 
 
@@ -139,15 +114,18 @@ class GVRenderEngine(bpy.types.RenderEngine):
                 mesh = bl2veraMesh(instance.object)
                 self.engine.loadMesh(instance.object.name_full, mesh)
                 M = bl2npMatrix(instance.object.matrix_world)
-                self.engine.setMeshTransformMatrix(  instance.object.name_full, 
-                                                        M[0][0], M[2][0], M[1][0], M[3][0],
-                                                        M[0][1], M[2][1], M[1][1], M[3][1],
-                                                        M[0][2], M[2][2], M[1][2], M[3][2],
-                                                        -M[0][3], -M[2][3], -M[1][3], M[3][3] )
+                self.engine.setMeshTransformMatrix( instance.object.name_full, 
+                                                     M[0][0],  M[2][0],  M[1][0], M[3][0],
+                                                     M[0][1],  M[2][1],  M[1][1], M[3][1],
+                                                     M[0][2],  M[2][2],  M[1][2], M[3][2],
+                                                    -M[0][3], -M[2][3], -M[1][3], M[3][3] )
 
             elif instance.object.type == 'LIGHT':
                 sun = bl2veraLight(instance.object)
                 self.engine.setSun(sun);
+        
+            elif not instance.object.name_full in bpy.data.objects:
+                print("Don't know how to reload", instance.object.name_full, instance.object.type)
 
         self.update_camera(context)
         self.update_shaders(context, True);
@@ -201,14 +179,13 @@ class GVRenderEngine(bpy.types.RenderEngine):
                 if update.is_updated_transform:
                     M = bl2npMatrix(obj.matrix_world)
                     self.engine.setMeshTransformMatrix(  obj.name_full, 
-                                                            M[0][0], M[2][0], M[1][0], M[3][0],
-                                                            M[0][1], M[2][1], M[1][1], M[3][1],
-                                                            M[0][2], M[2][2], M[1][2], M[3][2],
-                                                            -M[0][3], -M[2][3], -M[1][3], M[3][3] )
+                                                         M[0][0],  M[2][0],  M[1][0], M[3][0],
+                                                         M[0][1],  M[2][1],  M[1][1], M[3][1],
+                                                         M[0][2],  M[2][2],  M[1][2], M[3][2],
+                                                        -M[0][3], -M[2][3], -M[1][3], M[3][3] )
 
             elif obj.type == 'CAMERA':
                 self.update_camera(context)
-
                 # dimensions = region.width, region.height
                 # self.engine.resize(region.width, region.height)
                 # self.engine.setCamera( bl2veraCamera(obj, dimensions) )
@@ -220,13 +197,41 @@ class GVRenderEngine(bpy.types.RenderEngine):
 
 
     def update_shaders(self, context = None, reload_shaders = False):
+
+        frag_filename = bpy.context.scene.glsl_viewer_frag
+        vert_filename = bpy.context.scene.glsl_viewer_vert
+
+        if not frag_filename in bpy.data.texts:
+            print(f'File name {frag_filename} not found. Will create an internal one')
+
+            if file_exist(frag_filename):
+                bpy.ops.text.open(filepath=frag_filename)
+
+            # else create a internal file with the default fragment code
+            else:
+                bpy.data.texts.new(frag_filename)
+                self._frag_code = self.engine.getSource(gv.FRAGMENT)
+                bpy.data.texts[frag_filename].write( self._frag_code )
+
+        if not vert_filename in bpy.data.texts:
+            print(f'File name {vert_filename} not found. Will create an internal one')
+
+            if file_exist(vert_filename):
+                bpy.ops.text.open(filepath=vert_filename)
+
+            # else create a internal file with the default fragment code
+            else:
+                bpy.data.texts.new(vert_filename)
+                self._vert_code = self.engine.getSource(gv.VERTEX)
+                bpy.data.texts[vert_filename].write( self._vert_code )
+
         # print("GVRenderEngine: update_shaders")
         for text in bpy.data.texts:
 
             # filename, file_extension = os.path.splitext(text.name_full)
-            if text.name_full == self._frag_filename:
+            if text.name_full == frag_filename:
                 if not text.is_in_memory and text.is_modified and context != None:
-                    print(f'External file {self._frag_filename} have been modify. Reloading...')
+                    print(f'External file {frag_filename} have been modify. Reloading...')
                     ctx = context.copy()
                     #Ensure  context area is not None
                     ctx['area'] = ctx['screen'].areas[0]
@@ -243,9 +248,9 @@ class GVRenderEngine(bpy.types.RenderEngine):
                     self.engine.setSource(gv.FRAGMENT, self._frag_code)
                     reload_shaders = True
 
-            elif text.name_full == self._vert_filename:
+            elif text.name_full == vert_filename:
                 if not text.is_in_memory and text.is_modified and context != None:
-                    print(f'External file {self._vert_filename} have been modify. Reloading...')
+                    print(f'External file {vert_filename} have been modify. Reloading...')
                     ctx = context.copy()
                     #Ensure  context area is not None
                     ctx['area'] = ctx['screen'].areas[0]
@@ -263,7 +268,7 @@ class GVRenderEngine(bpy.types.RenderEngine):
                     reload_shaders = True
 
         if reload_shaders:
-            self.engine.reloadShaders()
+            self.engine.loadShaders()
             self.tag_redraw()
 
 
@@ -300,7 +305,7 @@ class GVRenderEngine(bpy.types.RenderEngine):
             self.tag_redraw()
             return
 
-        print("GVRenderEngine: view_draw")
+        # print("GVRenderEngine: view_draw")
         scene = depsgraph.scene
 
         if not self._started:

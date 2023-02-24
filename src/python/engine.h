@@ -13,12 +13,13 @@ public:
     Engine();
     virtual ~Engine();
 
+    void loadMesh(const std::string& _name, const vera::Mesh& _mesh);
+    void loadImage(const std::string& _name, const std::string& _path, bool _flip);
+    void loadShaders();
+
     void setSun(const vera::Light& _light);
     void setSunPosition(float _az, float _elev, float _distance);
-
     void setCamera(const vera::Camera& _cam);
-
-    void loadMesh(const std::string& _name, const vera::Mesh& _mesh);
     void setMeshTransformMatrix(    const std::string& _name, 
                                     float x1, float y1, float z1, float w1,
                                     float x2, float y2, float z2, float w2,
@@ -40,8 +41,6 @@ public:
     bool getShowPasses() { return m_showPasses; };
 
     void resize(const size_t& width, const size_t& height);
-
-    void reloadShaders();
 
     void clearModels();
 

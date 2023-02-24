@@ -83,6 +83,23 @@ Engine::~Engine() {
 
 };
 
+void Engine::loadMesh(const std::string& _name, const vera::Mesh& _mesh) {
+    uniforms.models[_name] = new vera::Model(_name, _mesh);
+    m_sceneRender.loadScene(uniforms);
+    m_sceneRender.uniformsInit(uniforms);
+    flagChange();
+}
+
+void Engine::loadImage(const std::string& _name, const std::string& _path, bool _flip) {
+    uniforms.addTexture(_name, _path, _flip);
+    flagChange();
+}
+
+void Engine::loadShaders() {
+    resetShaders(files);
+    flagChange();
+}
+
 void Engine::setCamera(const vera::Camera& _cam) {
     vera::Camera* cam = uniforms.activeCamera;
     if (cam == nullptr)
@@ -108,12 +125,6 @@ void Engine::setSunPosition(float _az, float _elev, float _distance) {
     uniforms.setSunPosition(_az, _elev, _distance);
 }
 
-void Engine::loadMesh(const std::string& _name, const vera::Mesh& _mesh) {
-    uniforms.models[_name] = new vera::Model(_name, _mesh);
-    // m_sceneRender.loadScene(uniforms);
-    flagChange();
-}
-
 void Engine::setMeshTransformMatrix(    const std::string& _name, 
                                         float x1, float y1, float z1, float w1,
                                         float x2, float y2, float z2, float w2,
@@ -130,10 +141,7 @@ void Engine::resize(const size_t& width, const size_t& height) {
     vera::setViewport(width, height);
 }
 
-void Engine::reloadShaders() {
-    resetShaders(files);
-    flagChange();
-}
+
 
 void Engine::clearModels() {
     uniforms.clearModels();

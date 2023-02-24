@@ -17,6 +17,7 @@ public:
     virtual ~SceneRender();
 
     void            commandsInit(CommandList& _commands, Uniforms& _uniforms);
+    void            uniformsInit(Uniforms& _uniforms);
 
     bool            loadScene(Uniforms& _uniforms);
     bool            clearScene();
@@ -99,4 +100,7 @@ protected:
     glm::vec3                   m_ssaoNoise[16];
 
     size_t                      m_buffers_total;
+
+    bool                        m_commands_loaded;
+    bool                        m_uniforms_loaded;
 };

@@ -152,6 +152,7 @@ protected:
     vera::ShaderErrorResolve    m_error_screen;
     bool                m_change;
     bool                m_update_buffers;
+
     bool                m_initialized;
 
     //  Debug
