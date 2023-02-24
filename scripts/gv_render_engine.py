@@ -149,8 +149,8 @@ class GVRenderEngine(bpy.types.RenderEngine):
                 sun = bl2veraLight(instance.object)
                 self.engine.setSun(sun);
 
-        self.update_shaders(context, True);
         self.update_camera(context)
+        self.update_shaders(context, True);
         self.tag_redraw()
 
 
@@ -276,6 +276,13 @@ class GVRenderEngine(bpy.types.RenderEngine):
             area: bpy.types.Area
             if area.type == 'VIEW_3D':
                 current_region3d = area.spaces.active.region_3d
+
+                global __GV_ENGINE__
+                if __GV_ENGINE__ is None or self.engine is None:
+                    __GV_ENGINE__ = gv.Engine()
+                    self.engine = __GV_ENGINE__
+                    self.update_shaders(context, True);
+                    self.tag_redraw()
 
                 self.engine.resize(region.width, region.height)
                 self.engine.setCamera( bl2veraCamera(current_region3d, dimensions) )

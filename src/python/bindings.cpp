@@ -261,6 +261,11 @@ PYBIND11_MODULE(PyGlslViewer, m) {
         .def("printMaterials", &Engine::printMaterials)
         .def("printModels", &Engine::printModels)
         .def("printShaders", &Engine::printShaders)
+
+        .def("showTextures",&Engine::showTextures, py::arg("_value"))
+        .def("getShowTextures", &Engine::getShowTextures)
+        .def("showPasses",&Engine::showPasses, py::arg("_value"))
+        .def("getShowPasses", &Engine::getShowPasses)
         
         .def_readwrite("include_folders", &Engine::include_folders)
         .def_readwrite("screenshotFile", &Engine::screenshotFile)

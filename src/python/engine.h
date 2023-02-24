@@ -34,6 +34,11 @@ public:
     void printModels() { uniforms.printModels(); }
     void printShaders() { uniforms.printShaders(); }
 
+    void showTextures(bool _value) { m_showTextures = _value; };
+    bool getShowTextures() { return m_showTextures; };
+    void showPasses(bool _value) { m_showPasses = _value; };
+    bool getShowPasses() { return m_showPasses; };
+
     void resize(const size_t& width, const size_t& height);
 
     void reloadShaders();

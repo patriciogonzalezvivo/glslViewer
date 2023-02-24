@@ -161,6 +161,8 @@ void Engine::draw() {
     //  - close recording FBO (when recording)
     renderPost();
 
+    renderUI();
+
     // Finish rendering triggering some events like
     //  - anouncing the first pass have been made
     // renderDone();

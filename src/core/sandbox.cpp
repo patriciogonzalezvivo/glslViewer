@@ -1811,11 +1811,13 @@ void Sandbox::renderUI() {
             float yStep = h * scale;
             float xOffset = xStep;
             float yOffset = h - yStep;
-
+            
+            #if !defined(PYTHON_RENDER)
             vera::textAngle(-HALF_PI);
             vera::textAlign(vera::ALIGN_TOP);
             vera::textAlign(vera::ALIGN_LEFT);
             vera::textSize(yStep * 0.2f / vera::getPixelDensity(false));
+            #endif
 
             for (vera::TexturesMap::iterator it = uniforms.textures.begin(); it != uniforms.textures.end(); it++) {
                 vera::TextureStreamsMap::const_iterator slit = uniforms.streams.find(it->first);
@@ -1824,7 +1826,9 @@ void Sandbox::renderUI() {
                 else 
                     vera::image(it->second, xOffset, yOffset, xStep, yStep);
 
+                #if !defined(PYTHON_RENDER)
                 vera::text(it->first, xOffset + xStep, vera::getWindowHeight() - yOffset + yStep);
+                #endif
 
                 yOffset -= yStep * 2.0;
             }
@@ -1834,7 +1838,8 @@ void Sandbox::renderUI() {
 
     // RESULTING BUFFERS
     if (m_showPasses) {        
-
+        std::cout << "renderUI buffers" << std::endl;
+        
         glDisable(GL_DEPTH_TEST);
         TRACK_BEGIN("renderUI:buffers")
 
@@ -1860,10 +1865,12 @@ void Sandbox::renderUI() {
             float xOffset = w - xStep;
             float yOffset = h - yStep;
 
+            #if !defined(PYTHON_RENDER)
             vera::textAngle(-HALF_PI);
             vera::textSize(yStep * 0.2f / vera::getPixelDensity(false));
             vera::textAlign(vera::ALIGN_BOTTOM);
             vera::textAlign(vera::ALIGN_LEFT);
+            #endif
 
             for (size_t i = 0; i < uniforms.buffers.size(); i++) {
                 glm::vec2 offset = glm::vec2(xOffset, yOffset);
@@ -1872,7 +1879,10 @@ void Sandbox::renderUI() {
                 offset.x += xStep - scale.x;
 
                 vera::image(uniforms.buffers[i], offset.x, offset.y, scale.x, scale.y);
+
+                #if !defined(PYTHON_RENDER)
                 vera::text("u_buffer" + vera::toString(i), xOffset - scale.x, vera::getWindowHeight() - yOffset + yStep);
+                #endif
 
                 yOffset -= yStep * 2.0;
             }
@@ -1884,7 +1894,10 @@ void Sandbox::renderUI() {
                 offset.x += xStep - scale.x;
 
                 vera::image(uniforms.doubleBuffers[i]->src, offset.x, offset.y, scale.x, scale.y);
+
+                #if !defined(PYTHON_RENDER)
                 vera::text("u_doubleBuffer" + vera::toString(i), xOffset - scale.x, vera::getWindowHeight() - yOffset + yStep);
+                #endif
 
                 yOffset -= yStep * 2.0;
             }
@@ -1925,7 +1938,9 @@ void Sandbox::renderUI() {
                     if ( it->second->getShadowMap()->getDepthTextureId() ) {
                         vera::imageDepth(it->second->getShadowMap(), xOffset, yOffset, xStep, yStep, it->second->getShadowMapFar(), it->second->getShadowMapNear());
                         // vera::image(it->second->getShadowMap(), xOffset, yOffset, xStep, yStep);
+                        #if !defined(PYTHON_RENDER)
                         vera::text("u_lightShadowMap", xOffset - xStep, vera::getWindowHeight() - yOffset + yStep);
+                        #endif
                         yOffset -= yStep * 2.0;
                     }
                 }
@@ -1933,32 +1948,42 @@ void Sandbox::renderUI() {
 
             if (uniforms.functions["u_scenePosition"].present) {
                 vera::image(&m_sceneRender.positionFbo, xOffset, yOffset, xStep, yStep);
+                #if !defined(PYTHON_RENDER)
                 vera::text("u_scenePosition", xOffset - xStep, vera::getWindowHeight() - yOffset + yStep);
+                #endif
                 yOffset -= yStep * 2.0;
             }
 
             if (uniforms.functions["u_sceneNormal"].present) {
                 vera::image(&m_sceneRender.normalFbo, xOffset, yOffset, xStep, yStep);
+                #if !defined(PYTHON_RENDER)
                 vera::text("u_sceneNormal", xOffset - xStep, vera::getWindowHeight() - yOffset + yStep);
+                #endif
                 yOffset -= yStep * 2.0;
             }
 
             for (size_t i = 0; i < m_sceneRender.buffersFbo.size(); i++) {
                 vera::image(m_sceneRender.buffersFbo[i], xOffset, yOffset, xStep, yStep);
+                #if !defined(PYTHON_RENDER)
                 vera::text("u_sceneBuffer" + vera::toString(i), xOffset - xStep, vera::getWindowHeight() - yOffset + yStep);
+                #endif
                 yOffset -= yStep * 2.0;
             }
 
             if (uniforms.functions["u_scene"].present) {
                 vera::image(&m_sceneRender.renderFbo, xOffset, yOffset, xStep, yStep);
+                #if !defined(PYTHON_RENDER)
                 vera::text("u_scene", xOffset - xStep, vera::getWindowHeight() - yOffset + yStep);
+                #endif
                 yOffset -= yStep * 2.0;
             }
 
             if (uniforms.functions["u_sceneDepth"].present) {
                 if (uniforms.activeCamera)
                     vera::imageDepth(&m_sceneRender.renderFbo, xOffset, yOffset, xStep, yStep, uniforms.activeCamera->getFarClip(), uniforms.activeCamera->getNearClip());
+                #if !defined(PYTHON_RENDER)
                 vera::text("u_sceneDepth", xOffset - xStep, vera::getWindowHeight() - yOffset + yStep);
+                #endif
                 yOffset -= yStep * 2.0;
             }
         }
@@ -2003,6 +2028,7 @@ void Sandbox::renderUI() {
         TRACK_END("renderUI:cursor")
     }
 
+    #if !defined(PYTHON_RENDER)
     if (frag_index == -1 && vert_index == -1 && geom_index == -1) {
         float w = (float)(vera::getWindowWidth());
         float h = (float)(vera::getWindowHeight());
@@ -2034,7 +2060,6 @@ void Sandbox::renderUI() {
     }
 
     if (help) {
-
         float w = (float)(vera::getWindowWidth());
         float h = (float)(vera::getWindowHeight());
         float xStep = w * 0.05;
@@ -2111,6 +2136,7 @@ void Sandbox::renderUI() {
         vera::setCamera(cam);
         glDisable(GL_DEPTH_TEST);
     }
+    #endif
 
     TRACK_END("renderUI")
 }

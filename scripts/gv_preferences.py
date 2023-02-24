@@ -12,6 +12,7 @@ class HelloWorldOperator(bpy.types.Operator):
         print("Hello World")
         return {'FINISHED'}
 
+
 class RENDER_PT_glslViewer_render(Panel):
     bl_label = "Render"
     bl_space_type = "PROPERTIES"
@@ -29,7 +30,7 @@ class RENDER_PT_glslViewer_render(Panel):
 
         split = layout.split(factor=0.7)
         col = split.column()
-        col.label(text="NON-COMMERCIAL VERSION")
+        col.label(text="Go to Scripts and search for main.frag/vert shaders.")
 
     
 
