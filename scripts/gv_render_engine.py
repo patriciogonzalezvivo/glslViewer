@@ -1,6 +1,8 @@
+import os
+import numpy as np
+
 import bpy
 import bgl
-import functools
 
 from .pylib import GlslViewer as gv
 from .tools import bl2npMatrix, bl2veraCamera, bl2veraMesh, bl2veraLight, file_exist
@@ -128,6 +130,7 @@ class GVRenderEngine(bpy.types.RenderEngine):
                 print("Don't know how to reload", instance.object.name_full, instance.object.type)
 
         self.update_camera(context)
+        self.update_images(context)
         self.update_shaders(context, True);
         self.tag_redraw()
 
@@ -293,6 +296,16 @@ class GVRenderEngine(bpy.types.RenderEngine):
                 self.engine.setCamera( bl2veraCamera(current_region3d, dimensions) )
 
 
+    def update_images(self, context = None):
+        for img in bpy.data.images:
+            name, ext = os.path.splitext(img.name)
+            name = "u_" + name + "Tex"
+            if not self.engine.haveTexture(name):
+                print("Add Texture", img.name, "as", name)
+                pixels = np.array(img.pixels)
+                self.engine.addTexture(name, img.size[0], img.size[1], pixels)
+
+
     def view_draw(self, context, depsgraph):
         '''
         For viewport renders. Blender calls view_draw whenever it redraws the 3D viewport.
@@ -315,7 +328,8 @@ class GVRenderEngine(bpy.types.RenderEngine):
         for update in depsgraph.updates:
             print("GVRenderEngine: view_draw -> ", update.id.name)
 
-        self.update_camera(context);
+        self.update_camera(context)
+        self.update_images(context)
         self.engine.setFrame( scene.frame_current )
 
         bgl.glEnable(bgl.GL_DEPTH_TEST)
@@ -326,11 +340,11 @@ class GVRenderEngine(bpy.types.RenderEngine):
 
         bgl.glEnable(bgl.GL_BLEND)
         bgl.glBlendFunc(bgl.GL_ONE, bgl.GL_ONE_MINUS_SRC_ALPHA)
-        self.bind_display_space_shader(scene)
+        # self.bind_display_space_shader(scene)
         
         self.engine.draw()
         
-        self.unbind_display_space_shader()
+        # self.unbind_display_space_shader()
         bgl.glDisable(bgl.GL_BLEND)
         bgl.glDisable(bgl.GL_DEPTH_TEST)
 

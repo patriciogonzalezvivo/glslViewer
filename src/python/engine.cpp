@@ -193,3 +193,30 @@ void Engine::draw() {
         flagChange();
     }
 }
+
+
+bool Engine::haveTexture(const std::string& _name) {
+    return uniforms.textures.find(_name) != uniforms.textures.end();
+}
+
+bool Engine::addTexture(const std::string& _name, int _width, int _height,const std::vector<float>& _pixels) {
+    if (uniforms.textures.find(_name) == uniforms.textures.end()) {
+        // vera::Image img;
+        // img.allocate(_width, _height, 4);
+        // img.setColors( _pixels.data(), _width * _height, 4 );
+
+        vera::Texture* tex = new vera::Texture();
+        if (tex->load(_width, _height, 4, 32, _pixels.data())) {
+            uniforms.textures[_name] = tex;
+
+            if (verbose) {
+                std::cout << "uniform sampler2D   " << _name  << ";"<< std::endl;
+                std::cout << "uniform vec2        " << _name  << "Resolution;"<< std::endl;
+            }
+
+            return true;
+        }
+    }
+
+    return false;
+}

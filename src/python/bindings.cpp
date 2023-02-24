@@ -268,6 +268,9 @@ PYBIND11_MODULE(PyGlslViewer, m) {
         .def("clearModels", &Engine::clearModels)
 
         .def("showTextures",&Engine::showTextures, py::arg("_value"))
+        .def("haveTexture",&Engine::haveTexture, py::arg("_name"))
+        .def("addTexture",&Engine::addTexture, py::arg("_name"), py::arg("_width"), py::arg("_height"), py::arg("_pixels"))
+
         .def("showPasses",&Engine::showPasses, py::arg("_value"))
         .def("resize",&Engine::resize, py::arg("width"), py::arg("height"))
 

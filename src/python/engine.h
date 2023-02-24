@@ -37,8 +37,12 @@ public:
 
     void showTextures(bool _value) { m_showTextures = _value; };
     bool getShowTextures() { return m_showTextures; };
+    bool haveTexture(const std::string& _name);
+    bool addTexture(const std::string& _name, int _width, int _height,const std::vector<float>& _pixels);
+
     void showPasses(bool _value) { m_showPasses = _value; };
     bool getShowPasses() { return m_showPasses; };
+
 
     void resize(const size_t& width, const size_t& height);
 
