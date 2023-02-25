@@ -1,4 +1,5 @@
 import bpy
+import bmesh
 import numpy as np
 
 from .pylib import GlslViewer as gl
@@ -59,32 +60,25 @@ def bl2veraMesh(bl_mesh: bpy.types.Mesh):
     N = W.inverted_safe().transposed().to_3x3()
 
     bl_mesh.data.calc_loop_triangles()
-    for v in bl_mesh.data.vertices:
+    bl_mesh.data.calc_normals_split()
+    has_uv = bl_mesh.data.uv_layers != None and len(bl_mesh.data.uv_layers) > 0
 
-        # https://blender.stackexchange.com/questions/6155/how-to-convert-coordinates-from-vertex-to-world-space
-        
-        p = v.co
-        mesh.addVertex(-p[0], -p[1], -p[2])
+    for triangle_loop in bl_mesh.data.loop_triangles:
+        for loop_index in triangle_loop.loops:
+            loop = bl_mesh.data.loops[loop_index]
 
-        n = v.normal
-        # n = N @ v.normal
-        # mesh.addNormal(-n[0], n[2], -n[1])
-        mesh.addNormal(-n[0], -n[1], -n[2])
+            v = bl_mesh.data.vertices[loop.vertex_index].co
+            n = loop.normal
+            mesh.addVertex(-v[0], -v[1], -v[2])
+            mesh.addNormal(-n[0], -n[1], -n[2])
 
-        # mesh.addNormal(-n[0], -n[2], -n[1])
+            # c = bl_mesh.data.vertex_colors.active.data[loop_index].color
 
-    # mesh.computeNormals()
-    # mesh.invertNormals()
+            if has_uv:
+                t = bl_mesh.data.uv_layers.active.data[loop_index].uv
+                mesh.addTexCoord(t[0], t[1])
 
-    for tri in bl_mesh.data.loop_triangles:
-        mesh.addIndex(tri.vertices[0])
-        mesh.addIndex(tri.vertices[1])
-        mesh.addIndex(tri.vertices[2])
-
-    if bl_mesh.data.uv_layers.active:
-        for i in range(mesh.getVerticesTotal()):
-            uv = bl_mesh.data.uv_layers.active.data[i].uv
-            mesh.addTexCoord(uv[0], uv[1])
+    if has_uv:
         mesh.computeTangents()
 
     return mesh
