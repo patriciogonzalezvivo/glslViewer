@@ -95,6 +95,7 @@ PYBIND11_MODULE(PyGlslViewer, m) {
         .def(py::init<>())
         .def("addVertex",py::overload_cast<float,float,float>(&vera::Mesh::addVertex), py::arg("_x"), py::arg("_y"), py::arg("_z"))
         .def("getVerticesTotal",&vera::Mesh::getVerticesTotal)
+        .def("addColor",py::overload_cast<float,float,float,float>(&vera::Mesh::addColor), py::arg("_r"), py::arg("_g"), py::arg("_b"), py::arg("_a"))
         .def("addNormal",py::overload_cast<float,float,float>(&vera::Mesh::addNormal), py::arg("_x"), py::arg("_y"), py::arg("_z"))
         .def("computeNormals",&vera::Mesh::computeNormals)
         .def("smoothNormals",&vera::Mesh::smoothNormals, py::arg("_angle"))

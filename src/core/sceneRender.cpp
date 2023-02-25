@@ -877,8 +877,13 @@ void SceneRender::renderShadowMap(Uniforms& _uniforms) {
 void SceneRender::renderBackground(Uniforms& _uniforms) {
     if (m_background) {
         TRACK_BEGIN("render:scene:background")
+        glDisable(GL_DEPTH_TEST);
 
         m_background_shader.use();
+        m_background_shader.setUniform("u_modelMatrix", glm::mat4(1.0));
+        m_background_shader.setUniform("u_viewMatrix", glm::mat4(1.0));
+        // m_background_shader.setUniform("u_projectionMatrix", glm::mat4(1.0));
+        // m_background_shader.setUniform("u_modelViewProjectionMatrix", glm::mat4(1.0));
 
         // Update Uniforms and textures
         _uniforms.feedTo( &m_background_shader );
@@ -892,6 +897,8 @@ void SceneRender::renderBackground(Uniforms& _uniforms) {
         if (showCubebox && _uniforms.activeCubemap->loaded()) {
             TRACK_BEGIN("render:scene:cubemap")
 
+            glDisable(GL_DEPTH_TEST);
+
             if (!m_cubemap_vbo)
                 m_cubemap_vbo = std::unique_ptr<vera::Vbo>(new vera::Vbo( vera::cubeMesh(1.0f) ));
 
@@ -903,7 +910,10 @@ void SceneRender::renderBackground(Uniforms& _uniforms) {
             #endif
 
             m_cubemap_shader.use();
-            m_cubemap_shader.setUniform("u_modelViewProjectionMatrix", _uniforms.activeCamera->getProjectionMatrix() * ori );
+            m_cubemap_shader.setUniform("u_modelViewProjectionMatrix", _uniforms.activeCamera->getProjectionMatrix() * ori);
+            m_cubemap_shader.setUniform("u_modelMatrix", glm::mat4(1.0));
+            m_cubemap_shader.setUniform("u_viewMatrix", ori);
+            m_cubemap_shader.setUniform("u_projectionMatrix", _uniforms.activeCamera->getProjectionMatrix());
             m_cubemap_shader.setUniformTextureCube("u_cubeMap", _uniforms.activeCubemap, 0);
             m_cubemap_vbo->render(&m_cubemap_shader);
 

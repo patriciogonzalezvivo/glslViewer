@@ -62,17 +62,21 @@ def bl2veraMesh(bl_mesh: bpy.types.Mesh):
     bl_mesh.data.calc_loop_triangles()
     bl_mesh.data.calc_normals_split()
     has_uv = bl_mesh.data.uv_layers != None and len(bl_mesh.data.uv_layers) > 0
+    has_color = bl_mesh.data.vertex_colors != None and len(bl_mesh.data.vertex_colors) > 0
 
     for triangle_loop in bl_mesh.data.loop_triangles:
         for loop_index in triangle_loop.loops:
             loop = bl_mesh.data.loops[loop_index]
 
             v = bl_mesh.data.vertices[loop.vertex_index].co
-            n = loop.normal
             mesh.addVertex(-v[0], -v[1], -v[2])
+
+            n = loop.normal
             mesh.addNormal(-n[0], -n[1], -n[2])
 
-            # c = bl_mesh.data.vertex_colors.active.data[loop_index].color
+            if has_color:
+                c = bl_mesh.data.vertex_colors.active.data[loop_index].color
+                mesh.addColor(c[0], c[1], c[2], c[3])
 
             if has_uv:
                 t = bl_mesh.data.uv_layers.active.data[loop_index].uv
@@ -86,7 +90,7 @@ def bl2veraMesh(bl_mesh: bpy.types.Mesh):
 def bl2veraLight(bl_light):
     W = bl_light.matrix_world
     loc = bl_light.location 
-    # loc = W @ loc
+    loc = W @ loc
     light = gl.Light()
     light.setPosition(-loc[0], -loc[2], -loc[1]);
 

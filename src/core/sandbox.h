@@ -136,26 +136,26 @@ protected:
     PlotType                        m_plot;
 
     // Recording
-    vera::Fbo           m_record_fbo;
+    vera::Fbo                       m_record_fbo;
     #if defined(SUPPORT_MULTITHREAD_RECORDING)
-    std::atomic<int>    m_task_count {0};
-    std::atomic<long long>      m_max_mem_in_queue {0};
-    thread_pool::ThreadPool     m_save_threads;
+    std::atomic<int>                m_task_count {0};
+    std::atomic<long long>          m_max_mem_in_queue {0};
+    thread_pool::ThreadPool         m_save_threads;
     #endif
 
     // Other state properties
-    glm::mat3           m_view2d;
-    float               m_time_offset;
-    float               m_camera_azimuth;
-    float               m_camera_elevation;
-    size_t              m_frame;
-    vera::ShaderErrorResolve    m_error_screen;
-    bool                m_change;
-    bool                m_update_buffers;
+    glm::mat3                       m_view2d;
+    float                           m_time_offset;
+    float                           m_camera_azimuth;
+    float                           m_camera_elevation;
+    size_t                          m_frame;
+    vera::ShaderErrorResolve        m_error_screen;
+    bool                            m_change;
+    bool                            m_update_buffers;
 
-    bool                m_initialized;
+    bool                            m_initialized;
 
     //  Debug
-    bool                m_showTextures;
-    bool                m_showPasses;
+    bool                            m_showTextures;
+    bool                            m_showPasses;
 };

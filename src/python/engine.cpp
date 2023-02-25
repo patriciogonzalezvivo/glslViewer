@@ -77,6 +77,7 @@ void main(void) {
     help = false;
     cursor = false;
     m_sceneRender.dynamicShadows = true;
+    uniforms.setSkyFlip(true);
 };
 
 Engine::~Engine() {
@@ -111,15 +112,17 @@ void Engine::setSun(const vera::Light& _light) {
     vera::Light* light = uniforms.lights["default"];
     if (light == nullptr)
         return;
+    
+    if (uniforms.cubemaps.size() == 1)
+        uniforms.activeCubemap = uniforms.cubemaps["default"];
+        uniforms.setSunPosition( _light.getPosition() * glm::vec3(1.0, -1.0, 1.0) );
 
-    uniforms.setSunPosition( _light.getPosition() );
-    // light->setPosition( _light.getPosition() );
-    // light->setType(vera::LIGHT_POINT);
+    light->setPosition( _light.getPosition() );
+    light->setType(vera::LIGHT_POINT);
     light->color = _light.color;
     light->direction = _light.direction;
     light->intensity = _light.intensity;
     light->falloff = _light.falloff;
-
 }
 
 void Engine::setSunPosition(float _az, float _elev, float _distance) {
