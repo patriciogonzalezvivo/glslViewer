@@ -1844,9 +1844,7 @@ void Sandbox::renderUI() {
     }
 
     // RESULTING BUFFERS
-    if (m_showPasses) {        
-        std::cout << "renderUI buffers" << std::endl;
-        
+    if (m_showPasses) {
         glDisable(GL_DEPTH_TEST);
         TRACK_BEGIN("renderUI:buffers")
 

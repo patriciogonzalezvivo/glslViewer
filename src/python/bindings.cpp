@@ -270,7 +270,7 @@ PYBIND11_MODULE(PyGlslViewer, m) {
         .def("getShowCubemap", &Engine::getShowCubemap)
         .def("getEnableCubemap", &Engine::getEnableCubemap)
         .def("showCubemap",&Engine::showCubemap, py::arg("_value"))
-        .def("enableCubemap",&Engine::showCubemap, py::arg("_value"))
+        .def("enableCubemap",&Engine::enableCubemap, py::arg("_value"))
         .def("haveCubemap",&Engine::haveCubemap, py::arg("_name"))
         .def("addCubemap",&Engine::addCubemap, py::arg("_name"), py::arg("_width"), py::arg("_height"), py::arg("_pixels"))
         .def("printCubemaps", &Engine::printCubemaps)

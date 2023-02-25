@@ -4,7 +4,7 @@
 
 WatchFileList   files;
 
-Engine::Engine() {
+Engine::Engine() : m_enableCubemap (false) {
     vera::WindowProperties props;
     props.style = vera::EMBEDDED;
     vera::initGL(props);
@@ -112,8 +112,9 @@ void Engine::setSun(const vera::Light& _light) {
     if (light == nullptr)
         return;
 
-    light->setPosition( _light.getPosition() );
-    light->setType(vera::LIGHT_POINT);
+    uniforms.setSunPosition( _light.getPosition() );
+    // light->setPosition( _light.getPosition() );
+    // light->setType(vera::LIGHT_POINT);
     light->color = _light.color;
     light->direction = _light.direction;
     light->intensity = _light.intensity;
@@ -145,12 +146,10 @@ void Engine::resize(const size_t& width, const size_t& height) {
 
 void Engine::clearModels() {
     uniforms.clearModels();
-    // uniforms.clearMaterials();
-    // uniforms.clearShaders();
-    // m_sceneRender.clearScene();
 }
 
 void Engine::draw() {
+    uniforms.update();
 
     // PREP for main render:
     //  - update uniforms
@@ -235,6 +234,9 @@ bool Engine::addCubemap(const std::string& _name, int _width, int _height, const
 
             uniforms.cubemaps[_name] = tex;
             uniforms.activeCubemap = uniforms.cubemaps[_name];
+
+            enableCubemap(true);
+
             return true;
         }
         else

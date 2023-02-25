@@ -57,6 +57,6 @@ public:
 
 private:
 
-    bool m_enableCubemap = false;
+    bool m_enableCubemap;
 
 };

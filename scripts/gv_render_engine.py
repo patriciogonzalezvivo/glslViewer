@@ -304,8 +304,6 @@ class GVRenderEngine(bpy.types.RenderEngine):
             name, ext = os.path.splitext(img.name)
             name = name.replace(" ", "")
 
-            print(ext)
-
             if ext == '.hdr' or ext == '.HDR':
                 if not self.engine.haveCubemap(name):
                     print("Add Cubemap", img.name, "as", name)
