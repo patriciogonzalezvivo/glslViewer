@@ -299,6 +299,7 @@ class GVRenderEngine(bpy.types.RenderEngine):
     def update_images(self, context = None):
         for img in bpy.data.images:
             name, ext = os.path.splitext(img.name)
+            name = name.replace(" ", "")
             name = "u_" + name + "Tex"
             if not self.engine.haveTexture(name):
                 print("Add Texture", img.name, "as", name)

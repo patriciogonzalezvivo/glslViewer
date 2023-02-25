@@ -26,11 +26,9 @@ public:
                                     float x3, float y3, float z3, float w3,
                                     float x4, float y4, float z4, float w4 );
 
+    void printLights() { uniforms.printLights(); }
     void printDefines() { m_sceneRender.printDefines(); uniforms.printDefines(); }
     void printBuffers() { m_sceneRender.printBuffers(); uniforms.printBuffers(); }
-    void printTextures() { uniforms.printTextures(); }
-    void printCubemaps() { uniforms.printCubemaps(); }
-    void printLights() { uniforms.printLights(); }
     void printMaterials() { uniforms.printMaterials(); }
     void printModels() { uniforms.printModels(); }
     void printShaders() { uniforms.printShaders(); }
@@ -39,10 +37,16 @@ public:
     bool getShowTextures() { return m_showTextures; };
     bool haveTexture(const std::string& _name);
     bool addTexture(const std::string& _name, int _width, int _height,const std::vector<float>& _pixels);
+    void printTextures() { uniforms.printTextures(); }
+
+    void showCubemap(bool _value) { m_sceneRender.showCubebox = _value; };
+    bool getShowCubemap() { return m_sceneRender.showCubebox; };
+    bool haveCubemap(const std::string& _name);
+    bool addCubemap(const std::string& _name, int _width, int _height,const std::vector<float>& _pixels);
+    void printCubemaps() { uniforms.printCubemaps(); }
 
     void showPasses(bool _value) { m_showPasses = _value; };
     bool getShowPasses() { return m_showPasses; };
-
 
     void resize(const size_t& width, const size_t& height);
 

@@ -252,26 +252,31 @@ PYBIND11_MODULE(PyGlslViewer, m) {
         .def("setMeshTransformMatrix",&Engine::setMeshTransformMatrix, py::arg("_name"), py::arg("x1"), py::arg("y1"), py::arg("z1"), py::arg("w1"), py::arg("x2"), py::arg("y2"), py::arg("z2"), py::arg("w2"), py::arg("x3"), py::arg("y3"), py::arg("z3"), py::arg("w3"), py::arg("x4"), py::arg("y4"), py::arg("z4"), py::arg("w4") )
         
         .def("getSource",&Engine::getSource, py::arg("_type"))
-        .def("getShowTextures", &Engine::getShowTextures)
-        .def("getShowPasses", &Engine::getShowPasses)
 
         .def("printDefines", &Engine::printDefines)
-        .def("printBuffers", &Engine::printBuffers)
-        .def("printTextures", &Engine::printTextures)
-        .def("printCubemaps", &Engine::printCubemaps)
         .def("printLights", &Engine::printLights)
         .def("printMaterials", &Engine::printMaterials)
-        .def("printModels", &Engine::printModels)
         .def("printShaders", &Engine::printShaders)
 
-
         .def("clearModels", &Engine::clearModels)
+        .def("printModels", &Engine::printModels)
 
+        .def("getShowTextures", &Engine::getShowTextures)
         .def("showTextures",&Engine::showTextures, py::arg("_value"))
         .def("haveTexture",&Engine::haveTexture, py::arg("_name"))
         .def("addTexture",&Engine::addTexture, py::arg("_name"), py::arg("_width"), py::arg("_height"), py::arg("_pixels"))
+        .def("printTextures", &Engine::printTextures)
 
+        .def("getShowCubemap", &Engine::getShowCubemap)
+        .def("showCubemap",&Engine::showCubemap, py::arg("_value"))
+        .def("haveCubemap",&Engine::haveCubemap, py::arg("_name"))
+        .def("addCubemap",&Engine::addCubemap, py::arg("_name"), py::arg("_width"), py::arg("_height"), py::arg("_pixels"))
+        .def("printCubemaps", &Engine::printCubemaps)
+
+        .def("getShowPasses", &Engine::getShowPasses)
         .def("showPasses",&Engine::showPasses, py::arg("_value"))
+        .def("printBuffers", &Engine::printBuffers)
+
         .def("resize",&Engine::resize, py::arg("width"), py::arg("height"))
 
         .def("draw", &Engine::draw)

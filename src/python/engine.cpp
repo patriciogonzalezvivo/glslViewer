@@ -201,10 +201,6 @@ bool Engine::haveTexture(const std::string& _name) {
 
 bool Engine::addTexture(const std::string& _name, int _width, int _height,const std::vector<float>& _pixels) {
     if (uniforms.textures.find(_name) == uniforms.textures.end()) {
-        // vera::Image img;
-        // img.allocate(_width, _height, 4);
-        // img.setColors( _pixels.data(), _width * _height, 4 );
-
         vera::Texture* tex = new vera::Texture();
         if (tex->load(_width, _height, 4, 32, _pixels.data())) {
             uniforms.textures[_name] = tex;
@@ -216,7 +212,37 @@ bool Engine::addTexture(const std::string& _name, int _width, int _height,const 
 
             return true;
         }
+        else
+            delete tex;
     }
+    return false;
+}
 
+bool Engine::haveCubemap(const std::string& _name) {
+    return uniforms.cubemaps.find(_name) != uniforms.cubemaps.end();
+}
+
+bool Engine::addCubemap(const std::string& _name, int _width, int _height, const std::vector<float>& _pixels) {
+    if (uniforms.cubemaps.find(_name) == uniforms.cubemaps.end()) {
+        vera::TextureCube* tex = new vera::TextureCube();
+        if ( tex->load(_width, _height, 4, _pixels.data(), true) ) {
+
+            if (verbose) {
+                std::cout << "// " << _name << " loaded as: " << std::endl;
+                std::cout << "uniform samplerCube u_cubeMap;"<< std::endl;
+                std::cout << "uniform vec3        u_SH[9];"<< std::endl;
+            }
+
+            uniforms.cubemaps[_name] = tex;
+            uniforms.activeCubemap = uniforms.cubemaps[_name];
+
+            addDefine("SCENE_SH_ARRAY", "u_SH");
+            addDefine("SCENE_CUBEMAP", "u_cubeMap");
+
+            return true;
+        }
+        else
+            delete tex;
+    }
     return false;
 }
