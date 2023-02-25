@@ -5,8 +5,8 @@ from bpy import utils
 import bpy
 
 PROPS = [
-    ('glsl_viewer_vert', bpy.props.StringProperty(name='Vertex Shader Filename', default='main.vert')),
-    ('glsl_viewer_frag', bpy.props.StringProperty(name='Fragment Shader Filename', default='main.frag')),
+    ('glsl_viewer_vert', bpy.props.StringProperty(name='Vertex Shader', default='main.vert')),
+    ('glsl_viewer_frag', bpy.props.StringProperty(name='Fragment Shader', default='main.frag')),
 ]
 
 # Thank you https://devtalk.blender.org/t/how-to-save-custom-user-preferences-for-an-addon/10362 

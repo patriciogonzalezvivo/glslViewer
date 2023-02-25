@@ -298,13 +298,26 @@ class GVRenderEngine(bpy.types.RenderEngine):
 
     def update_images(self, context = None):
         for img in bpy.data.images:
+            if img.name == 'Render Result' or img.name == 'Viewer Node':
+                continue
+
             name, ext = os.path.splitext(img.name)
             name = name.replace(" ", "")
-            name = "u_" + name + "Tex"
-            if not self.engine.haveTexture(name):
-                print("Add Texture", img.name, "as", name)
-                pixels = np.array(img.pixels)
-                self.engine.addTexture(name, img.size[0], img.size[1], pixels)
+
+            print(ext)
+
+            if ext == '.hdr' or ext == '.HDR':
+                if not self.engine.haveCubemap(name):
+                    print("Add Cubemap", img.name, "as", name)
+                    pixels = np.array(img.pixels)
+                    self.engine.addCubemap(name, img.size[0], img.size[1], pixels)
+
+            else:
+                name = "u_" + name + "Tex"
+                if not self.engine.haveTexture(name):
+                    print("Add Texture", img.name, "as", name)
+                    pixels = np.array(img.pixels)
+                    self.engine.addTexture(name, img.size[0], img.size[1], pixels)
 
 
     def view_draw(self, context, depsgraph):

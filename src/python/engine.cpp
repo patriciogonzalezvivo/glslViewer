@@ -235,14 +235,22 @@ bool Engine::addCubemap(const std::string& _name, int _width, int _height, const
 
             uniforms.cubemaps[_name] = tex;
             uniforms.activeCubemap = uniforms.cubemaps[_name];
-
-            addDefine("SCENE_SH_ARRAY", "u_SH");
-            addDefine("SCENE_CUBEMAP", "u_cubeMap");
-
             return true;
         }
         else
             delete tex;
     }
     return false;
+}
+
+void Engine::enableCubemap(bool _value) {
+    m_enableCubemap = _value;
+    if (_value) {
+        addDefine("SCENE_SH_ARRAY", "u_SH");
+        addDefine("SCENE_CUBEMAP", "u_cubeMap");
+    }
+    else {
+        delDefine("SCENE_SH_ARRAY");
+        delDefine("SCENE_CUBEMAP");
+    }
 }

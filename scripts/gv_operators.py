@@ -90,6 +90,58 @@ class GV_OT_hide_textures(bpy.types.Operator):
 
         return {'FINISHED'}
 
+class GV_OT_show_cubemap(bpy.types.Operator):
+    bl_idname = "glsl_viewer.show_cubemap"
+    bl_label = "Show textures"
+    bl_description = "Show cubemap on the active viewport"
+    bl_options = {'INTERNAL'}
+
+    def execute(self, context):
+        engine = get_gv_engine()
+        if engine != None:
+            engine.showCubemap( True )
+
+        return {'FINISHED'}
+    
+class GV_OT_hide_cubemap(bpy.types.Operator):
+    bl_idname = "glsl_viewer.hide_cubemap"
+    bl_label = "Hide Textures"
+    bl_description = "Hide cubemap on the active viewport"
+    bl_options = {'INTERNAL'}
+
+    def execute(self, context):
+        engine = get_gv_engine()
+        if engine != None:
+            engine.enableCubemap( False )
+
+        return {'FINISHED'}
+    
+class GV_OT_disable_cubemap(bpy.types.Operator):
+    bl_idname = "glsl_viewer.disable_cubemap"
+    bl_label = "Hide Textures"
+    bl_description = "Hide cubemap on the active viewport"
+    bl_options = {'INTERNAL'}
+
+    def execute(self, context):
+        engine = get_gv_engine()
+        if engine != None:
+            engine.showCubemap( False )
+
+        return {'FINISHED'}
+        
+class GV_OT_enable_cubemap(bpy.types.Operator):
+    bl_idname = "glsl_viewer.enable_cubemap"
+    bl_label = "Show textures"
+    bl_description = "Show cubemap on the active viewport"
+    bl_options = {'INTERNAL'}
+
+    def execute(self, context):
+        engine = get_gv_engine()
+        if engine != None:
+            engine.enableCubemap( True )
+
+        return {'FINISHED'}
+
 classes = [
     GV_OT_print_defines,
     GV_OT_print_buffers,
@@ -98,6 +150,10 @@ classes = [
     GV_OT_hide_passes,
     GV_OT_show_textures,
     GV_OT_hide_textures,
+    GV_OT_show_cubemap,
+    GV_OT_hide_cubemap,
+    GV_OT_enable_cubemap,
+    GV_OT_disable_cubemap,
 ]
 
 def register_operators():

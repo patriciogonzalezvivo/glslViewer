@@ -40,11 +40,12 @@ public:
     void printTextures() { uniforms.printTextures(); }
 
     void showCubemap(bool _value) { m_sceneRender.showCubebox = _value; };
+    void enableCubemap(bool _value);
     bool getShowCubemap() { return m_sceneRender.showCubebox; };
+    bool getEnableCubemap() { return m_enableCubemap; };
     bool haveCubemap(const std::string& _name);
     bool addCubemap(const std::string& _name, int _width, int _height,const std::vector<float>& _pixels);
     void printCubemaps() { uniforms.printCubemaps(); }
-
     void showPasses(bool _value) { m_showPasses = _value; };
     bool getShowPasses() { return m_showPasses; };
 
@@ -55,5 +56,7 @@ public:
     void draw();
 
 private:
+
+    bool m_enableCubemap = false;
 
 };
