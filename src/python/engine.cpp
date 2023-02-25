@@ -143,9 +143,11 @@ void Engine::setMeshTransformMatrix(    const std::string& _name,
 void Engine::resize(const size_t& width, const size_t& height) {
     onViewportResize(width, height);
     vera::setViewport(width, height);
+    vera::Camera* cam = uniforms.activeCamera;
+    if (cam == nullptr)
+        return;
+    cam->setViewport(width, height);
 }
-
-
 
 void Engine::clearModels() {
     uniforms.clearModels();
@@ -183,10 +185,10 @@ void Engine::draw() {
     //     recordingFrameAdded();
     // }
     // // SCREENSHOT 
-    // else if (screenshotFile != "") {
-    //     onScreenshot(screenshotFile);
-    //     screenshotFile = "";
-    // }
+    if (screenshotFile != "") {
+        onScreenshot(screenshotFile);
+        screenshotFile = "";
+    }
 
     unflagChange();
     if (!m_initialized) {

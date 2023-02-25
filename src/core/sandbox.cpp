@@ -2346,15 +2346,18 @@ void Sandbox::onViewportResize(int _newWidth, int _newHeight) {
             m_sceneRender.updateBuffers(uniforms, _newWidth, _newHeight);
     }
 
-    if (screenshotFile != "" || isRecording())
+    if (screenshotFile != "" || isRecording()) 
         m_record_fbo.allocate(_newWidth, _newHeight, vera::COLOR_TEXTURE_DEPTH_BUFFER);
 
     flagChange();
 }
 
 void Sandbox::onScreenshot(std::string _file) {
-
+    #if defined(PYTHON_RENDER)
+    if (_file != "") {
+    #else
     if (_file != "" && vera::isGL()) {
+    #endif
         TRACK_BEGIN("screenshot")
 
         glBindFramebuffer(GL_FRAMEBUFFER, m_record_fbo.getId());
@@ -2379,8 +2382,7 @@ void Sandbox::onScreenshot(std::string _file) {
             auto pixels = std::unique_ptr<unsigned char[]>(new unsigned char [width * height * 4]);
             glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixels.get());
 
-            #if defined(SUPPORT_MULTITHREAD_RECORDING)
-            
+            #if defined(SUPPORT_MULTITHREAD_RECORDING) && !defined(PYTHON_RENDER)
             std::shared_ptr<Job> saverPtr = std::make_shared<Job>(std::move(_file), width, height, std::move(pixels), m_task_count, m_max_mem_in_queue);
             /** In the case that we render faster than we can safe frames, more and more frames
              * have to be stored temporary in the save queue. That means that more and more ram is used.

@@ -1,18 +1,14 @@
 import bpy
-import bmesh
 import numpy as np
 
-from .pylib import GlslViewer as gl
+from .gv_lib import GlslViewer as gl
 
 RENDER_CAM_TYPE_ID = "render_camera_type"
 RENDER_CAM_TYPE_PERSPECTIVE = "perspective"
 RENDER_CAM_TYPE_SPHERICAL_QUADRILATERAL = "spherical_quadrilateral"
 RENDER_CAM_TYPE_QUADRILATERAL_HEXAHEDRON = "quadrilateral_hexahedron"
 
-def bl2npMatrix(mat):
-    return np.array(mat)
-
-def bl2veraCamera(source: bpy.types.RegionView3D | bpy.types.Object, img_dims: tuple[int, int]):
+def bl2veraCamera(source: bpy.types.RegionView3D | bpy.types.Object):
     cam = gl.Camera()
 
     view_matrix = None
@@ -49,7 +45,7 @@ def bl2veraCamera(source: bpy.types.RegionView3D | bpy.types.Object, img_dims: t
         projection_matrix[0][3], projection_matrix[1][3], projection_matrix[2][3], projection_matrix[3][3]
     )
 
-    cam.setViewport(img_dims[0], img_dims[1])
+    # cam.setViewport(img_dims[0], img_dims[1])
     cam.setScale(0.5)
 
     return cam
@@ -96,10 +92,3 @@ def bl2veraLight(bl_light):
 
     return light
 
-def file_exist(filename):
-    try:
-        file = open( bpy.path.abspath(filename) ,'r')
-        file.close()
-        return True
-    except:
-        return False
