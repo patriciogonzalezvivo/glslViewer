@@ -193,15 +193,6 @@ class GVRenderEngine(bpy.types.RenderEngine):
         view3d = context.space_data
         scene = depsgraph.scene
 
-        self.engine.setFxaa( scene.glsl_viewer_fxaa )
-        self.engine.enableCubemap( scene.glsl_viewer_enable_cubemap )
-        self.engine.showCubemap( scene.glsl_viewer_show_cubemap )
-        self.engine.showTextures( scene.glsl_viewer_show_textures )
-        self.engine.showPasses( scene.glsl_viewer_show_passes )
-        self.engine.setSkyGround( scene.glsl_viewer_skybox_ground[0], scene.glsl_viewer_skybox_ground[1], scene.glsl_viewer_skybox_ground[2] )
-        self.engine.setSkyTurbidity( scene.glsl_viewer_skybox_turbidity )
-        self.engine.showBoudningBox( scene.glsl_viewer_show_debug )
-
         self.engine.clearModels()
         for instance in depsgraph.object_instances:
 
@@ -225,6 +216,14 @@ class GVRenderEngine(bpy.types.RenderEngine):
         # self.update_camera(context)
         self.update_images()
         self.update_shaders(context, True);
+        self.engine.setFxaa( scene.glsl_viewer_fxaa )
+        self.engine.enableCubemap( scene.glsl_viewer_enable_cubemap )
+        self.engine.showCubemap( scene.glsl_viewer_show_cubemap )
+        self.engine.showTextures( scene.glsl_viewer_show_textures )
+        self.engine.showPasses( scene.glsl_viewer_show_passes )
+        self.engine.setSkyGround( scene.glsl_viewer_skybox_ground[0], scene.glsl_viewer_skybox_ground[1], scene.glsl_viewer_skybox_ground[2] )
+        self.engine.setSkyTurbidity( scene.glsl_viewer_skybox_turbidity )
+        self.engine.showBoudningBox( scene.glsl_viewer_show_debug )
 
 
     def view_update(self, context, depsgraph):
@@ -595,29 +594,11 @@ void main(void) {
         out_image = os.path.join(absolutepath, 'render.png')
 
         self.engine.resize(width, height)
-        self.engine.printModels()
-        self.engine.printDefines()
-        print(self.engine.getSource(gv.VERTEX))
-        print(self.engine.getSource(gv.FRAGMENT))
         self.engine.setFrame(scene.frame_current)
         self.engine.setOutput(out_image)
         # self.engine.setCamera( bl2veraCamera(scene.camera) )
-
-        # bgl.glEnable(bgl.GL_DEPTH_TEST)
-        # bgl.glDepthMask(bgl.GL_TRUE)
-        # bgl.glClearDepth(100000);
-        # bgl.glClearColor(0.0, 0.0, 0.0, 0.0);
-        # bgl.glClear(bgl.GL_COLOR_BUFFER_BIT | bgl.GL_DEPTH_BUFFER_BIT)
-
-        # bgl.glEnable(bgl.GL_BLEND)
-        # bgl.glBlendFunc(bgl.GL_ONE, bgl.GL_ONE_MINUS_SRC_ALPHA)
-        # self.bind_display_space_shader(scene)
         
         self.engine.draw()
-        
-        # self.unbind_display_space_shader()
-        # bgl.glDisable(bgl.GL_BLEND)
-        # bgl.glDisable(bgl.GL_DEPTH_TEST)
 
         result = self.begin_result(0, 0, width, height)
         lay = result.layers[0]

@@ -78,6 +78,7 @@ void main(void) {
     cursor = false;
     m_sceneRender.dynamicShadows = true;
     uniforms.setSkyFlip(true);
+    uniforms.setSkySize(2048);
 };
 
 Engine::~Engine() {

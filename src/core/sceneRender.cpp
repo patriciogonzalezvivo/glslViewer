@@ -1000,9 +1000,8 @@ void SceneRender::renderDebug(Uniforms& _uniforms) {
             m_lightUI_vbo = std::unique_ptr<vera::Vbo>(new vera::Vbo( vera::rectMesh(0.0,0.0,0.0,0.0) ));
 
         m_lightUI_shader.use();
-        m_lightUI_shader.setUniform("u_scale", 12.0f, 12.0f);
+        m_lightUI_shader.setUniform("u_scale", 2.0f, 2.0f);
         m_lightUI_shader.setUniform("u_viewMatrix", _uniforms.activeCamera->getViewMatrix());
-        // m_lightUI_shader.setUniform("u_projectionMatrix", vera::getProjectionMatrix() );
         m_lightUI_shader.setUniform("u_modelViewProjectionMatrix", vera::getProjectionViewWorldMatrix() );
 
         for (vera::LightsMap::iterator it = _uniforms.lights.begin(); it != _uniforms.lights.end(); ++it) {
