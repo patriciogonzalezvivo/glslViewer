@@ -8,6 +8,9 @@ from .gv_lib import GlslViewer as gv
 from .gv_preferences import fetch_pref
 from .gv_translate import bl2veraCamera, bl2veraMesh, bl2veraLight
 
+from bpy.app.handlers import persistent
+
+
 __GV_RENDER__ = None
 def get_gv_render():
     global __GV_RENDER__
@@ -24,6 +27,21 @@ def update_areas():
     for window in bpy.context.window_manager.windows:
         for area in window.screen.areas:
             area.tag_redraw()
+
+
+@persistent
+def load_new_scene(dummy):
+    print("Event: load_new_scene", bpy.data.filepath)
+
+    global __GV_ENGINE__
+    if __GV_ENGINE__:
+        del __GV_ENGINE__ 
+    __GV_ENGINE__ = None
+
+    global __GV_RENDER__
+    if __GV_RENDER__:
+        del __GV_RENDER__ 
+    __GV_RENDER__ = None
 
 
 def file_exist(filename):
@@ -73,6 +91,7 @@ class GVRenderEngine(bpy.types.RenderEngine):
         if __GV_RENDER__ is None:
             __GV_RENDER__ = self
 
+
     def __del__(self):
         '''
         When the render engine instance is destroy, this is called. Clean up any
@@ -81,7 +100,9 @@ class GVRenderEngine(bpy.types.RenderEngine):
         print("GVRenderEngine: __del__")
 
         global __GV_RENDER__
+        del __GV_RENDER__
         __GV_RENDER__ = None
+
 
     def start(self):
         # if self._preview_started:
@@ -214,7 +235,66 @@ class GVRenderEngine(bpy.types.RenderEngine):
             # else create a internal file with the default fragment code
             else:
                 bpy.data.texts.new(frag_filename)
-                self._frag_code = self.engine.getSource(gv.FRAGMENT)
+                # self._frag_code = self.engine.getSource(gv.FRAGMEN)
+                self._frag_code = '''
+#ifdef GL_ES
+precision highp float;
+#endif
+
+uniform vec3        u_camera;
+
+uniform vec2        u_resolution;
+uniform float       u_time;
+uniform int         u_frame;
+
+varying vec4        v_position;
+
+#ifdef MODEL_VERTEX_COLOR
+varying vec4        v_color;
+#endif
+
+#ifdef MODEL_VERTEX_NORMAL
+varying vec3        v_normal;
+#endif
+
+#ifdef MODEL_VERTEX_TEXCOORD
+varying vec2        v_texcoord;
+#endif
+
+#ifdef MODEL_VERTEX_TANGENT
+varying vec4        v_tangent;
+varying mat3        v_tangentToWorld;
+#endif
+
+void main(void) {
+    vec4 color = vec4(0.0, 0.0, 0.0, 1.0);
+    vec3 pos = v_position.xyz;
+
+    vec2 pixel = 1.0/u_resolution;
+    vec2 st = gl_FragCoord.xy * pixel;
+
+    color.rgb = pos;
+
+    #ifdef MODEL_VERTEX_COLOR
+    color = v_color;
+    #endif
+
+    #ifdef MODEL_VERTEX_NORMAL
+    color.rgb = v_normal * 0.5 + 0.5;
+    #endif
+
+    #ifdef MODEL_VERTEX_TEXCOORD
+    vec2 uv = v_texcoord;
+    #else
+    vec2 uv = st;
+    #endif
+    
+    color.rg = uv;
+    
+    gl_FragColor = color;
+}
+                '''
+
                 bpy.data.texts[frag_filename].write( self._frag_code )
 
         if not vert_filename in bpy.data.texts:
@@ -226,7 +306,75 @@ class GVRenderEngine(bpy.types.RenderEngine):
             # else create a internal file with the default fragment code
             else:
                 bpy.data.texts.new(vert_filename)
-                self._vert_code = self.engine.getSource(gv.VERTEX)
+                # self._vert_code = self.engine.getSource(gv.VERTEX)
+                self._vert_code = '''#ifdef GL_ES
+precision mediump float;
+#endif
+
+uniform mat4    u_modelViewProjectionMatrix;
+uniform mat4    u_projectionMatrix;
+uniform mat4    u_modelMatrix;
+uniform mat4    u_viewMatrix;
+uniform mat3    u_normalMatrix;
+
+attribute vec4  a_position;
+varying vec4    v_position;
+
+#ifdef MODEL_VERTEX_COLOR
+attribute vec4  a_color;
+varying vec4    v_color;
+#endif
+
+#ifdef MODEL_VERTEX_NORMAL
+attribute vec3  a_normal;
+varying vec3    v_normal;
+#endif
+
+#ifdef MODEL_VERTEX_TEXCOORD
+attribute vec2  a_texcoord;
+varying vec2    v_texcoord;
+#endif
+
+#ifdef MODEL_VERTEX_TANGENT
+attribute vec4  a_tangent;
+varying vec4    v_tangent;
+varying mat3    v_tangentToWorld;
+#endif
+
+#ifdef LIGHT_SHADOWMAP
+uniform mat4    u_lightMatrix;
+varying vec4    v_lightCoord;
+#endif
+
+void main(void) {
+    
+    v_position = u_modelMatrix * a_position;
+    
+#ifdef MODEL_VERTEX_COLOR
+    v_color = a_color;
+#endif
+    
+#ifdef MODEL_VERTEX_NORMAL
+    v_normal = vec4(u_modelMatrix * vec4(a_normal, 0.0) ).xyz;
+#endif
+    
+#ifdef MODEL_VERTEX_TEXCOORD
+    v_texcoord = a_texcoord;
+#endif
+    
+#ifdef MODEL_VERTEX_TANGENT
+    v_tangent = a_tangent;
+    vec3 worldTangent = a_tangent.xyz;
+    vec3 worldBiTangent = cross(v_normal, worldTangent);// * sign(a_tangent.w);
+    v_tangentToWorld = mat3(normalize(worldTangent), normalize(worldBiTangent), normalize(v_normal));
+#endif
+    
+#ifdef LIGHT_SHADOWMAP
+    v_lightCoord = u_lightMatrix * v_position;
+#endif
+    
+    gl_Position = u_projectionMatrix * u_viewMatrix * v_position;
+}'''
                 bpy.data.texts[vert_filename].write( self._vert_code )
 
         # print("GVRenderEngine: update_shaders")
@@ -247,7 +395,6 @@ class GVRenderEngine(bpy.types.RenderEngine):
                     ctx['area'].type = oldAreaType
             
                 if text.as_string() != self._frag_code:
-                    # print("setSource FRAG")
                     self._frag_code = text.as_string()
                     self.engine.setSource(gv.FRAGMENT, self._frag_code)
                     reload_shaders = True
@@ -266,7 +413,6 @@ class GVRenderEngine(bpy.types.RenderEngine):
                     ctx['area'].type = oldAreaType
 
                 if text.as_string() != self._vert_code:
-                    # print("setSource VERT")
                     self._vert_code = text.as_string()
                     self.engine.setSource(gv.VERTEX, self._vert_code)
                     reload_shaders = True
@@ -340,7 +486,7 @@ class GVRenderEngine(bpy.types.RenderEngine):
         for update in depsgraph.updates:
             print("GVRenderEngine: view_draw -> ", update.id.name)
 
-        self.engine.resize(context.region.width, context.region.height)   
+        # self.engine.resize(context.region.width, context.region.height)   
         self.engine.setFrame(scene.frame_current)
         self.update_camera(context)
         self.update_images(context)
@@ -377,15 +523,13 @@ class GVRenderEngine(bpy.types.RenderEngine):
             # self.reloadScene(bpy.context, depsgraph)
             self._preview_started = True
 
-        # pixel_count = self.width * self.height
-        # rect = [color] * pixel_count
-
         # Here we write the pixel values to the RenderResult
         filepath = bpy.context.scene.render.filepath
         absolutepath = bpy.path.abspath(filepath)
         out_image = os.path.join(absolutepath, 'render.png')
 
-        self.engine.resize(width, height)
+        self.engine.printModels()
+        # self.engine.resize(width, height)
         self.engine.setFrame(scene.frame_current)
         self.engine.setOutput(out_image)
         # self.engine.setCamera( bl2veraCamera(scene.camera) )
@@ -453,6 +597,7 @@ def get_panels():
 def register_render_engine():
     # Register the RenderEngine
     bpy.utils.register_class(GVRenderEngine)
+    bpy.app.handlers.load_pre.append(load_new_scene)
 
     for panel in get_panels():
         panel.COMPAT_ENGINES.add('GLSLVIEWER_ENGINE')
@@ -460,6 +605,7 @@ def register_render_engine():
 
 def unregister_render_engine():
     bpy.utils.unregister_class(GVRenderEngine)
+    bpy.app.handlers.load_pre.remove(load_new_scene)
 
     for panel in get_panels():
         if 'GLSLVIEWER_ENGINE' in panel.COMPAT_ENGINES:

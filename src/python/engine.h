@@ -25,8 +25,9 @@ public:
                                     float x2, float y2, float z2, float w2,
                                     float x3, float y3, float z3, float w3,
                                     float x4, float y4, float z4, float w4 );
-    void setOutput(const std::string& _path) { screenshotFile = _path;}
 
+    void setOutput(const std::string& _path) { screenshotFile = _path;}
+    int  getOutputFboId() { return m_record_fbo.getId(); }
     void printLights() { uniforms.printLights(); }
     void printDefines() { m_sceneRender.printDefines(); uniforms.printDefines(); }
     void printBuffers() { m_sceneRender.printBuffers(); uniforms.printBuffers(); }

@@ -251,9 +251,11 @@ PYBIND11_MODULE(PyGlslViewer, m) {
         .def("setSource",&Engine::setSource, py::arg("_type"), py::arg("_source"))
         .def("setFrame",&Engine::setFrame, py::arg("_frame"))
         .def("setMeshTransformMatrix",&Engine::setMeshTransformMatrix, py::arg("_name"), py::arg("x1"), py::arg("y1"), py::arg("z1"), py::arg("w1"), py::arg("x2"), py::arg("y2"), py::arg("z2"), py::arg("w2"), py::arg("x3"), py::arg("y3"), py::arg("z3"), py::arg("w3"), py::arg("x4"), py::arg("y4"), py::arg("z4"), py::arg("w4") )
+        
         .def("setOutput", &Engine::setOutput, py::arg("_path"))
 
         .def("getSource",&Engine::getSource, py::arg("_type"))
+        .def("getOutputFboId",&Engine::getOutputFboId)
 
         .def("printDefines", &Engine::printDefines)
         .def("printLights", &Engine::printLights)
