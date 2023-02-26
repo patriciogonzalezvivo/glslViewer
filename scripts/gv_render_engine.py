@@ -44,17 +44,11 @@ class GVRenderEngine(bpy.types.RenderEngine):
     bl_idname = "GLSLVIEWER_ENGINE"
     bl_label = "GlslViewer"
     bl_use_preview = True
-    # bl_use_postprocess = True
-    # bl_use_exclude_layers = True
-    # bl_use_save_buffers = True
+    bl_use_gpu_context = True
     bl_use_eevee_viewport = True
-    # bl_use_shading_nodes = True
-    # bl_use_custom_freestyle = True
-    # bl_use_shading_nodes_custom = False
+    bl_use_postprocess = True
 
-    # _frag_filename = "main.frag"
     _frag_code = ""
-    # _vert_filename = "main.vert"
     _vert_code = ""
     _render_started = False
 
@@ -145,12 +139,6 @@ class GVRenderEngine(bpy.types.RenderEngine):
         # self.update_camera(context)
         self.update_images(context)
         self.update_shaders(context, True);
-
-
-    def update(self, data, depsgraph):
-        print("GVRenderEngine: update")
-        scene = depsgraph.scene
-        pass
 
 
     def view_update(self, context, depsgraph):
@@ -342,7 +330,7 @@ class GVRenderEngine(bpy.types.RenderEngine):
             self.tag_redraw()
             return
 
-        # print("GVRenderEngine: view_draw")
+        print("GVRenderEngine: view_draw")
         scene = depsgraph.scene
 
         if not self._preview_started:
@@ -373,9 +361,11 @@ class GVRenderEngine(bpy.types.RenderEngine):
         bgl.glDisable(bgl.GL_BLEND)
         bgl.glDisable(bgl.GL_DEPTH_TEST)
 
-    # This is the method called by Blender for both final renders (F12) and
-    # small preview for materials, world and lights.
+
     def render(self, depsgraph):
+        '''
+        Main render entry point. Blender calls this when doing final renders or preview renders.
+        '''
         print("GVRenderEngine: render")
 
         scene = depsgraph.scene
@@ -398,10 +388,25 @@ class GVRenderEngine(bpy.types.RenderEngine):
         self.engine.resize(width, height)
         self.engine.setFrame(scene.frame_current)
         self.engine.setOutput(out_image)
+        # self.engine.setCamera( bl2veraCamera(scene.camera) )
+
+        bgl.glEnable(bgl.GL_DEPTH_TEST)
+        bgl.glDepthMask(bgl.GL_TRUE)
+        bgl.glClearDepth(100000);
+        bgl.glClearColor(0.0, 0.0, 0.0, 0.0);
+        bgl.glClear(bgl.GL_COLOR_BUFFER_BIT | bgl.GL_DEPTH_BUFFER_BIT)
+
+        bgl.glEnable(bgl.GL_BLEND)
+        bgl.glBlendFunc(bgl.GL_ONE, bgl.GL_ONE_MINUS_SRC_ALPHA)
+        # self.bind_display_space_shader(scene)
+        
         self.engine.draw()
+        
+        # self.unbind_display_space_shader()
+        bgl.glDisable(bgl.GL_BLEND)
+        bgl.glDisable(bgl.GL_DEPTH_TEST)
 
         result = self.begin_result(0, 0, width, height)
-
         lay = result.layers[0]
         try:
             lay.load_from_file(out_image)

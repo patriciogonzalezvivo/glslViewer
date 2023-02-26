@@ -8,6 +8,86 @@ RENDER_CAM_TYPE_PERSPECTIVE = "perspective"
 RENDER_CAM_TYPE_SPHERICAL_QUADRILATERAL = "spherical_quadrilateral"
 RENDER_CAM_TYPE_QUADRILATERAL_HEXAHEDRON = "quadrilateral_hexahedron"
 
+def view_plane(camd, winx, winy, xasp, yasp):    
+    #/* fields rendering */
+    ycor = yasp / xasp
+    use_fields = False
+    if (use_fields):
+      ycor *= 2
+
+    def BKE_camera_sensor_size(p_sensor_fit, sensor_x, sensor_y):
+        #/* sensor size used to fit to. for auto, sensor_x is both x and y. */
+        if (p_sensor_fit == 'VERTICAL'):
+            return sensor_y;
+
+        return sensor_x;
+
+    if (camd.type == 'ORTHO'):
+      #/* orthographic camera */
+      #/* scale == 1.0 means exact 1 to 1 mapping */
+      pixsize = camd.ortho_scale
+    else:
+      #/* perspective camera */
+      sensor_size = BKE_camera_sensor_size(camd.sensor_fit, camd.sensor_width, camd.sensor_height)
+      pixsize = (sensor_size * camd.clip_start) / camd.lens
+
+    #/* determine sensor fit */
+    def BKE_camera_sensor_fit(p_sensor_fit, sizex, sizey):
+        if (p_sensor_fit == 'AUTO'):
+            if (sizex >= sizey):
+                return 'HORIZONTAL'
+            else:
+                return 'VERTICAL'
+
+        return p_sensor_fit
+
+    sensor_fit = BKE_camera_sensor_fit(camd.sensor_fit, xasp * winx, yasp * winy)
+
+    if (sensor_fit == 'HORIZONTAL'):
+      viewfac = winx
+    else:
+      viewfac = ycor * winy
+
+    pixsize /= viewfac
+
+    #/* extra zoom factor */
+    pixsize *= 1 #params->zoom
+
+    #/* compute view plane:
+    # * fully centered, zbuffer fills in jittered between -.5 and +.5 */
+    xmin = -0.5 * winx
+    ymin = -0.5 * ycor * winy
+    xmax =  0.5 * winx
+    ymax =  0.5 * ycor * winy
+
+    #/* lens shift and offset */
+    dx = camd.shift_x * viewfac # + winx * params->offsetx
+    dy = camd.shift_y * viewfac # + winy * params->offsety
+
+    xmin += dx
+    ymin += dy
+    xmax += dx
+    ymax += dy
+
+    #/* fields offset */
+    #if (params->field_second):
+    #    if (params->field_odd):
+    #        ymin -= 0.5 * ycor
+    #        ymax -= 0.5 * ycor
+    #    else:
+    #        ymin += 0.5 * ycor
+    #        ymax += 0.5 * ycor
+
+    #/* the window matrix is used for clipping, and not changed during OSA steps */
+    #/* using an offset of +0.5 here would give clip errors on edges */
+    xmin *= pixsize
+    xmax *= pixsize
+    ymin *= pixsize
+    ymax *= pixsize
+
+    return xmin, xmax, ymin, ymax
+
+
 def bl2veraCamera(source: bpy.types.RegionView3D | bpy.types.Object):
     cam = gl.Camera()
 
@@ -20,13 +100,32 @@ def bl2veraCamera(source: bpy.types.RegionView3D | bpy.types.Object):
 
     elif isinstance(source, bpy.types.Object):
         render = bpy.context.scene.render
-        view_matrix = source.matrix_world.inverted()
-        projection_matrix = source.calc_matrix_camera(
-            render.resolution_x,
-            render.resolution_y,
-            render.pixel_aspect_x,
-            render.pixel_aspect_y,
-        )
+        view_matrix = np.array(source.matrix_world.inverted())
+        # projection_matrix = np.array(source.calc_matrix_camera(
+        #     depsgraph=bpy.context.evaluated_depsgraph_get(),
+        #     x=render.resolution_x,
+        #     y=render.resolution_y,
+        #     scale_x=render.pixel_aspect_x,
+        #     scale_y=render.pixel_aspect_y,
+        # ))
+
+        left, right, bottom, top = view_plane(source.data, render.resolution_x, render.resolution_y, 1, 1)
+        farClip, nearClip = source.data.clip_end, source.data.clip_start
+
+        Xdelta = right - left
+        Ydelta = top - bottom
+        Zdelta = farClip - nearClip
+
+        mat = [[0]*4 for i in range(4)]
+
+        mat[0][0] = nearClip * 2 / Xdelta
+        mat[1][1] = nearClip * 2 / Ydelta
+        mat[2][0] = (right + left) / Xdelta #/* note: negate Z  */
+        mat[2][1] = (top + bottom) / Ydelta
+        mat[2][2] = -(farClip + nearClip) / Zdelta
+        mat[2][3] = -1
+        mat[3][2] = (-2 * nearClip * farClip) / Zdelta
+        projection_matrix = mat
     
     else:
         print(f"INVALID CAMERA SOURCE: {source}")

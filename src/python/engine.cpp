@@ -174,17 +174,6 @@ void Engine::draw() {
     renderPost();
 
     renderUI();
-
-    // Finish rendering triggering some events like
-    //  - anouncing the first pass have been made
-    // renderDone();
-
-    // // RECORD
-    // if (isRecording()) {
-    //     onScreenshot( vera::toString( getRecordingCount() , 0, 5, '0') + ".png");
-    //     recordingFrameAdded();
-    // }
-    // // SCREENSHOT 
     if (screenshotFile != "") {
         onScreenshot(screenshotFile);
         screenshotFile = "";
