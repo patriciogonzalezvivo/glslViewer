@@ -956,12 +956,19 @@ void SceneRender::renderDebug(Uniforms& _uniforms) {
     
     // Draw Bounding boxes
     if (showBBoxes) {
+        #if defined(PYTHON_RENDER)
+        vera::strokeWeight(1.0f);
+        #else
         vera::strokeWeight(3.0f);
+        #endif
 
         vera::stroke(glm::vec3(1.0f, 0.0f, 0.0f));
-        for (vera::ModelsMap::iterator it = _uniforms.models.begin(); it != _uniforms.models.end(); ++it)
+        for (vera::ModelsMap::iterator it = _uniforms.models.begin(); it != _uniforms.models.end(); ++it) {
+            vera::applyMatrix( it->second->getTransformMatrix() );
             vera::model( it->second->getVboBbox() );
+        }
 
+        vera::resetMatrix();
         vera::fill(.8f);
         vera::textSize(24.0f);
         vera::labels();
@@ -995,6 +1002,7 @@ void SceneRender::renderDebug(Uniforms& _uniforms) {
         m_lightUI_shader.use();
         m_lightUI_shader.setUniform("u_scale", 12.0f, 12.0f);
         m_lightUI_shader.setUniform("u_viewMatrix", _uniforms.activeCamera->getViewMatrix());
+        // m_lightUI_shader.setUniform("u_projectionMatrix", vera::getProjectionMatrix() );
         m_lightUI_shader.setUniform("u_modelViewProjectionMatrix", vera::getProjectionViewWorldMatrix() );
 
         for (vera::LightsMap::iterator it = _uniforms.lights.begin(); it != _uniforms.lights.end(); ++it) {

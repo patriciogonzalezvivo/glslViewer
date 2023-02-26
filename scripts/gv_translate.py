@@ -1,6 +1,8 @@
 import bpy
 import numpy as np
 
+import mathutils
+
 from .gv_lib import GlslViewer as gl
 
 RENDER_CAM_TYPE_ID = "render_camera_type"
@@ -166,7 +168,8 @@ def bl2veraMesh(bl_mesh: bpy.types.Mesh):
             v = bl_mesh.data.vertices[loop.vertex_index].co
             mesh.addVertex(-v[0], -v[1], -v[2])
 
-            n = loop.normal
+            # n = loop.normal
+            n = bl_mesh.data.vertices[loop.vertex_index].normal
             mesh.addNormal(-n[0], -n[1], -n[2])
 
             if has_color:
@@ -188,6 +191,5 @@ def bl2veraLight(bl_light):
     loc = W @ loc
     light = gl.Light()
     light.setPosition(-loc[0], -loc[2], -loc[1]);
-
     return light
 

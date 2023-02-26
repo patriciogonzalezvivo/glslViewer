@@ -156,6 +156,8 @@ void Engine::clearModels() {
 void Engine::draw() {
     uniforms.update();
 
+    vera::blendMode( vera::BLEND_ALPHA );
+
     // PREP for main render:
     //  - update uniforms
     //  - render buffers, double buffers and pyramid convolutions
@@ -249,4 +251,17 @@ void Engine::enableCubemap(bool _value) {
         delDefine("SCENE_SH_ARRAY");
         delDefine("SCENE_CUBEMAP");
     }
+}
+
+void Engine::showHistogram(bool _value) { 
+    if (_value) {
+        m_plot = PLOT_RGB;
+        m_plot_shader.setSource(vera::getDefaultSrc(vera::FRAG_PLOT), vera::getDefaultSrc(vera::VERT_DYNAMIC_BILLBOARD));
+        m_plot_shader.addDefine("PLOT_VALUE", "color += stroke(fract(st.x * 5.0), 0.5, 0.025) * 0.1;");
+    }
+    else {
+        m_plot = PLOT_OFF; 
+        m_plot_shader.delDefine("PLOT_VALUE"); 
+    }
+    m_update_buffers = true;
 }

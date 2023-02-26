@@ -1,7 +1,6 @@
 import bpy
 
-from .gv_render_engine import get_gv_engine
-from .gv_preferences import PROPS
+from .gv_render_engine import PROPS
 
 
 class RENDER_PT_glslViewer_render(bpy.types.Panel):
@@ -19,7 +18,6 @@ class RENDER_PT_glslViewer_render(bpy.types.Panel):
             return
 
         layout = self.layout
-        engine = get_gv_engine()
 
         # split = layout.split(factor=0.7)
         col = layout.column()
@@ -30,28 +28,6 @@ class RENDER_PT_glslViewer_render(bpy.types.Panel):
             row = col.row()
             row.prop(context.scene, prop_name)
 
-        if engine != None:
-            row2 = layout.row(align=True)
-            if engine.getShowTextures():
-                row2.operator('glsl_viewer.hide_textures', text="Hide Textures")  
-            else:
-                row2.operator('glsl_viewer.show_textures', text="Show Textures")
-
-            if engine.getShowPasses():
-                row2.operator('glsl_viewer.hide_passes', text="Hide Passes")  
-            else:
-                row2.operator('glsl_viewer.show_passes', text="Show Passes")
-
-            row3 = layout.row(align=True)
-            if engine.getShowCubemap():
-                row3.operator('glsl_viewer.hide_cubemap', text="Hide Cubemap")  
-            else:
-                row3.operator('glsl_viewer.show_cubemap', text="Show Cubemap")
-
-            if engine.getEnableCubemap():
-                row3.operator('glsl_viewer.disable_cubemap', text="Disable Cubemap")  
-            else:
-                row3.operator('glsl_viewer.enable_cubemap', text="Enable Cubemap")
 
 def register_render_ui():
     bpy.utils.register_class(RENDER_PT_glslViewer_render)

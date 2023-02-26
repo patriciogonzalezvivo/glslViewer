@@ -265,23 +265,26 @@ PYBIND11_MODULE(PyGlslViewer, m) {
         .def("clearModels", &Engine::clearModels)
         .def("printModels", &Engine::printModels)
 
-        .def("getShowTextures", &Engine::getShowTextures)
         .def("showTextures",&Engine::showTextures, py::arg("_value"))
         .def("haveTexture",&Engine::haveTexture, py::arg("_name"))
         .def("addTexture",&Engine::addTexture, py::arg("_name"), py::arg("_width"), py::arg("_height"), py::arg("_pixels"))
         .def("printTextures", &Engine::printTextures)
 
-        .def("getShowCubemap", &Engine::getShowCubemap)
-        .def("getEnableCubemap", &Engine::getEnableCubemap)
+        .def("setSkyTurbidity", &Engine::setSkyTurbidity, py::arg("_turbidity"))
+        .def("setSkyGround", &Engine::setSkyGround, py::arg("_r"), py::arg("_g"), py::arg("_b"))
+
         .def("showCubemap",&Engine::showCubemap, py::arg("_value"))
         .def("enableCubemap",&Engine::enableCubemap, py::arg("_value"))
         .def("haveCubemap",&Engine::haveCubemap, py::arg("_name"))
         .def("addCubemap",&Engine::addCubemap, py::arg("_name"), py::arg("_width"), py::arg("_height"), py::arg("_pixels"))
         .def("printCubemaps", &Engine::printCubemaps)
 
-        .def("getShowPasses", &Engine::getShowPasses)
         .def("showPasses",&Engine::showPasses, py::arg("_value"))
         .def("printBuffers", &Engine::printBuffers)
+
+        .def("showHistogram",&Engine::showHistogram, py::arg("_value"))
+        .def("showBoudningBox",&Engine::showBoudningBox, py::arg("_value"))
+        .def("setFxaa",&Engine::setFxaa, py::arg("_value"))
 
         .def("resize",&Engine::resize, py::arg("width"), py::arg("height"))
 
