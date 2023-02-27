@@ -1,6 +1,7 @@
 import bpy
 import numpy as np
 
+import math
 import mathutils
 
 from .gv_lib import GlslViewer as gl
@@ -99,52 +100,35 @@ def bl2veraCamera(source: bpy.types.RegionView3D | bpy.types.Object):
     if isinstance(source, bpy.types.RegionView3D):
         projection_matrix = np.array(source.window_matrix)
         view_matrix = np.array(source.view_matrix.inverted())
+        cam.setTransformMatrix(
+            view_matrix[0][0], view_matrix[2][0], view_matrix[1][0], view_matrix[3][0],
+            view_matrix[0][1], view_matrix[2][1], view_matrix[1][1], view_matrix[3][1],
+            view_matrix[0][2], view_matrix[2][2], view_matrix[1][2], view_matrix[3][2],
+            view_matrix[0][3], view_matrix[2][3], view_matrix[1][3], view_matrix[3][3]
+        )
+        cam.setProjection(
+            projection_matrix[0][0], projection_matrix[1][0], projection_matrix[2][0], projection_matrix[3][0],
+            projection_matrix[0][1], projection_matrix[1][1], projection_matrix[2][1], projection_matrix[3][1],
+            projection_matrix[0][2], projection_matrix[1][2], projection_matrix[2][2], projection_matrix[3][2],
+            projection_matrix[0][3], projection_matrix[1][3], projection_matrix[2][3], projection_matrix[3][3]
+        )
 
     elif isinstance(source, bpy.types.Object):
         render = bpy.context.scene.render
-        view_matrix = np.array(source.matrix_world.inverted())
-        # projection_matrix = np.array(source.calc_matrix_camera(
-        #     depsgraph=bpy.context.evaluated_depsgraph_get(),
-        #     x=render.resolution_x,
-        #     y=render.resolution_y,
-        #     scale_x=render.pixel_aspect_x,
-        #     scale_y=render.pixel_aspect_y,
-        # ))
-
-        left, right, bottom, top = view_plane(source.data, render.resolution_x, render.resolution_y, 1, 1)
-        farClip, nearClip = source.data.clip_end, source.data.clip_start
-
-        Xdelta = right - left
-        Ydelta = top - bottom
-        Zdelta = farClip - nearClip
-
-        mat = [[0]*4 for i in range(4)]
-
-        mat[0][0] = nearClip * 2 / Xdelta
-        mat[1][1] = nearClip * 2 / Ydelta
-        mat[2][0] = (right + left) / Xdelta #/* note: negate Z  */
-        mat[2][1] = (top + bottom) / Ydelta
-        mat[2][2] = -(farClip + nearClip) / Zdelta
-        mat[2][3] = -1
-        mat[3][2] = (-2 * nearClip * farClip) / Zdelta
-        projection_matrix = mat
+        view_matrix = np.array(source.matrix_world)
+        cam.setTransformMatrix(
+            view_matrix[0][0], view_matrix[2][0], view_matrix[1][0], view_matrix[3][0],
+            view_matrix[0][1], view_matrix[2][1], view_matrix[1][1], view_matrix[3][1],
+            view_matrix[0][2], view_matrix[2][2], view_matrix[1][2], view_matrix[3][2],
+            view_matrix[0][3], view_matrix[2][3], view_matrix[1][3], view_matrix[3][3]
+        )
+        cam.setFOV( math.degrees(2 * math.atan(source.data.sensor_width /(2 * source.data.lens))) )
+        cam.setClipping( source.data.clip_start, source.data.clip_end )
+        
     
     else:
         print(f"INVALID CAMERA SOURCE: {source}")
         return None
-
-    cam.setTransformMatrix(
-        view_matrix[0][0], view_matrix[2][0], view_matrix[1][0], view_matrix[3][0],
-        view_matrix[0][1], view_matrix[2][1], view_matrix[1][1], view_matrix[3][1],
-        view_matrix[0][2], view_matrix[2][2], view_matrix[1][2], view_matrix[3][2],
-        view_matrix[0][3], view_matrix[2][3], view_matrix[1][3], view_matrix[3][3]
-    )
-    cam.setProjection(
-        projection_matrix[0][0], projection_matrix[1][0], projection_matrix[2][0], projection_matrix[3][0],
-        projection_matrix[0][1], projection_matrix[1][1], projection_matrix[2][1], projection_matrix[3][1],
-        projection_matrix[0][2], projection_matrix[1][2], projection_matrix[2][2], projection_matrix[3][2],
-        projection_matrix[0][3], projection_matrix[1][3], projection_matrix[2][3], projection_matrix[3][3]
-    )
 
     # cam.setViewport(img_dims[0], img_dims[1])
     cam.setScale(0.5)

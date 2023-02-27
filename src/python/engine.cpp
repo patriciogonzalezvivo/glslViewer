@@ -266,3 +266,15 @@ void Engine::showHistogram(bool _value) {
     }
     m_update_buffers = true;
 }
+
+void Engine::setFxaa(bool _value) { 
+    fxaa = _value; 
+    // if (fxaa) {
+    //     m_postprocessing_shader.setSource(vera::getDefaultSrc(vera::FRAG_FXAA), vera::getDefaultSrc(vera::VERT_BILLBOARD));
+    //     uniforms.functions["u_scene"].present = true;
+    //     m_postprocessing = true;
+    //     m_update_buffers = true;
+    // }
+    resetShaders(files);
+    flagChange();
+}

@@ -968,10 +968,12 @@ void SceneRender::renderDebug(Uniforms& _uniforms) {
             vera::model( it->second->getVboBbox() );
         }
 
+        #if !defined(PYTHON_RENDER)
         vera::resetMatrix();
         vera::fill(.8f);
         vera::textSize(24.0f);
         vera::labels();
+        #endif
     }
     
     // Axis

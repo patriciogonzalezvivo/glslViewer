@@ -58,11 +58,6 @@ def fxaa_change(self, context):
     get_gv_render().tag_redraw()
 
 
-def enable_cubemap_change(self, context):
-    get_gv_engine().enableCubemap( self.glsl_viewer_enable_cubemap )
-    get_gv_render().tag_redraw()
-
-
 def show_cubemap_change(self, context):
     get_gv_engine().showCubemap( self.glsl_viewer_show_cubemap )
     get_gv_render().tag_redraw()
@@ -83,11 +78,6 @@ def show_histogram_change(self, context):
     get_gv_render().tag_redraw()
 
 
-def show_skybox_ground_change(self, context):
-    get_gv_engine().setSkyGround( self.glsl_viewer_skybox_ground[0], self.glsl_viewer_skybox_ground[1], self.glsl_viewer_skybox_ground[2] )
-    get_gv_render().tag_redraw()
-
-
 def show_skybox_turbidity_change(self, context):
     get_gv_engine().setSkyTurbidity( self.glsl_viewer_skybox_turbidity )
     get_gv_render().tag_redraw()
@@ -101,13 +91,11 @@ def show_debug_change(self, context):
 PROPS = [
     ('glsl_viewer_vert', bpy.props.StringProperty(name='Vertex Shader', default='main.vert')),
     ('glsl_viewer_frag', bpy.props.StringProperty(name='Fragment Shader', default='main.frag')),
-    ('glsl_viewer_skybox_ground', bpy.props.FloatVectorProperty(name='Skybox Ground', subtype='COLOR', min=0, max=1, default=(0.25,0.25,0.25), update=show_skybox_ground_change)),
     ('glsl_viewer_skybox_turbidity', bpy.props.FloatProperty(name='Skybox Turbidity', min=1, default=4.0, update=show_skybox_turbidity_change)),
-    ('glsl_viewer_enable_cubemap', bpy.props.BoolProperty(name='Enable Cubemap', default=False, update=enable_cubemap_change)),
     ('glsl_viewer_show_cubemap', bpy.props.BoolProperty(name='Show Cubemap', default=False, update=show_cubemap_change)),
     ('glsl_viewer_show_textures', bpy.props.BoolProperty(name='Show Textures', default=False, update=show_textures_change)),
     ('glsl_viewer_show_passes', bpy.props.BoolProperty(name='Show Passes', default=False, update=show_passes_change)),
-    # ('glsl_viewer_show_histogram', bpy.props.BoolProperty(name='Show Histogram', default=False, update=show_histogram_change)),
+    ('glsl_viewer_show_histogram', bpy.props.BoolProperty(name='Show Histogram', default=False, update=show_histogram_change)),
     ('glsl_viewer_show_debug', bpy.props.BoolProperty(name='Debug View', default=False, update=show_debug_change)),
     ('glsl_viewer_fxaa', bpy.props.BoolProperty(name='FXAA', default=False, update=fxaa_change)),
 ]
@@ -122,9 +110,13 @@ class GVRenderEngine(bpy.types.RenderEngine):
     bl_idname = "GLSLVIEWER_ENGINE"
     bl_label = "GlslViewer"
     bl_use_preview = True
+    bl_use_image_save = True
     bl_use_gpu_context = True
-    bl_use_eevee_viewport = True
     bl_use_postprocess = True
+    bl_use_alembic_procedural = True
+    bl_use_eevee_viewport = True
+    bl_use_shading_nodes = False
+    bl_use_shading_nodes_custom = False
 
     _frag_code = ""
     _vert_code = ""
@@ -159,15 +151,12 @@ class GVRenderEngine(bpy.types.RenderEngine):
         render engine data here, for example stopping running render threads.
         '''
         print("GVRenderEngine: __del__")
-        # global __GV_RENDER__
-        # del __GV_RENDER__
-        # __GV_RENDER__ = None
         pass
 
 
     def start(self):
-        # if self._preview_started:
-        #     return    
+        if self._preview_started:
+            return    
         print("GVRenderEngine: start")
 
         self._preview_started = True
@@ -213,15 +202,16 @@ class GVRenderEngine(bpy.types.RenderEngine):
             elif not instance.object.name_full in bpy.data.objects:
                 print("Don't know how to reload", instance.object.name_full, instance.object.type)
 
-        # self.update_camera(context)
+        self.update_camera(context)
         self.update_images()
         self.update_shaders(context, True);
         self.engine.setFxaa( scene.glsl_viewer_fxaa )
-        self.engine.enableCubemap( scene.glsl_viewer_enable_cubemap )
+        self.engine.enableCubemap( True )
         self.engine.showCubemap( scene.glsl_viewer_show_cubemap )
         self.engine.showTextures( scene.glsl_viewer_show_textures )
         self.engine.showPasses( scene.glsl_viewer_show_passes )
-        self.engine.setSkyGround( scene.glsl_viewer_skybox_ground[0], scene.glsl_viewer_skybox_ground[1], scene.glsl_viewer_skybox_ground[2] )
+        clear_color = scene.world.color
+        self.engine.setSkyGround( clear_color[0], clear_color[1], clear_color[2] )
         self.engine.setSkyTurbidity( scene.glsl_viewer_skybox_turbidity )
         self.engine.showBoudningBox( scene.glsl_viewer_show_debug )
 
@@ -250,6 +240,11 @@ class GVRenderEngine(bpy.types.RenderEngine):
                 self.tag_redraw()
                 continue
 
+            elif update.id.name == "World":
+                clear_color = scene.world.color
+                self.engine.setSkyGround( clear_color[0], clear_color[1], clear_color[2] )
+                continue
+    
             elif not update.id.name in bpy.data.objects:
                 print("view_update: skipping update of", update.id.name)
                 # self.update_camera(context)
@@ -275,9 +270,6 @@ class GVRenderEngine(bpy.types.RenderEngine):
                     
             elif obj.type == 'CAMERA':
                 self.update_camera(context)
-                # dimensions = region.width, region.height
-                # self.engine.resize(region.width, region.height)
-                # self.engine.setCamera( bl2veraCamera(obj, dimensions) )
 
             else:
                 print("GVRenderEngine: view_update -> obj type", obj.type)
@@ -502,8 +494,8 @@ void main(void) {
                     self.update_shaders(context, True);
                     self.tag_redraw()
 
-                self.engine.resize(region.width, region.height)
                 self.engine.setCamera( bl2veraCamera(current_region3d) )
+                self.engine.resize(region.width, region.height)
 
     # def update_skybox(self):
 
@@ -552,16 +544,18 @@ void main(void) {
         for update in depsgraph.updates:
             print("GVRenderEngine: view_draw -> ", update.id.name)
 
-        # self.engine.resize(context.region.width, context.region.height)   
         self.engine.setFrame(scene.frame_current)
         self.update_camera(context)
         self.update_images()
 
         bgl.glEnable(bgl.GL_DEPTH_TEST)
         bgl.glDepthMask(bgl.GL_TRUE)
+
+        # # Clear background with the user's clear color
+        clear_color = scene.world.color
         # bgl.glClearDepth(100000);
-        # bgl.glClearColor(0.0, 0.0, 0.0, 0.0);
-        # bgl.glClear(bgl.GL_COLOR_BUFFER_BIT | bgl.GL_DEPTH_BUFFER_BIT)
+        bgl.glClearColor(clear_color[0], clear_color[1], clear_color[2], 1.0)
+        bgl.glClear(bgl.GL_COLOR_BUFFER_BIT | bgl.GL_DEPTH_BUFFER_BIT)
 
         # bgl.glEnable(bgl.GL_BLEND)
         # bgl.glBlendFunc(bgl.GL_ONE, bgl.GL_ONE_MINUS_SRC_ALPHA)
@@ -585,23 +579,34 @@ void main(void) {
         width = int(scene.render.resolution_x * scale)
         height = int(scene.render.resolution_y * scale)
 
+        camera = self.camera_override
+
         if not self._preview_started:
             self._preview_started = True
 
         # Here we write the pixel values to the RenderResult
         filepath = bpy.context.scene.render.filepath
         absolutepath = bpy.path.abspath(filepath)
-        out_image = os.path.join(absolutepath, 'render.png')
+        out_image = os.path.join(absolutepath, '_render.png')
 
+        self.engine.setCamera(bl2veraCamera(camera))
         self.engine.resize(width, height)
         self.engine.setFrame(scene.frame_current)
         self.engine.setOutput(out_image)
-        # self.engine.setCamera( bl2veraCamera(scene.camera) )
-        
+
+        bgl.glEnable(bgl.GL_DEPTH_TEST)
+        bgl.glDepthMask(bgl.GL_TRUE)
+
+        bgl.glEnable(bgl.GL_BLEND)
+        bgl.glBlendFunc(bgl.GL_ONE, bgl.GL_ONE_MINUS_SRC_ALPHA)
+
         self.engine.draw()
+        
+        bgl.glDisable(bgl.GL_BLEND)
+        bgl.glDisable(bgl.GL_DEPTH_TEST)
 
         result = self.begin_result(0, 0, width, height)
-        lay = result.layers[0]
+        lay = result.layers[0].passes["Combined"]
         try:
             lay.load_from_file(out_image)
         except:

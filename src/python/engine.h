@@ -56,7 +56,7 @@ public:
     void showPasses(bool _value) { m_showPasses = _value; };
 
     void showBoudningBox(bool _value) { m_sceneRender.showBBoxes = _value; }
-    void setFxaa(bool _value) { fxaa = _value; }
+    void setFxaa(bool _value);
 
     void resize(const size_t& width, const size_t& height);
 
