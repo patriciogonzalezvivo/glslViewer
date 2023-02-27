@@ -267,7 +267,7 @@ class GVRenderEngine(bpy.types.RenderEngine):
                                                         -M[0][3], -M[2][3], -M[1][3], M[3][3] )
                     
             elif obj.type == 'CAMERA':
-                self.update_camera(context)
+                pass
 
             else:
                 print("GVRenderEngine: view_update -> obj type", obj.type)
@@ -476,26 +476,6 @@ void main(void) {
             self.tag_redraw()
 
 
-    def update_camera(self, context):
-        region = context.region
-        # Get viewport dimensions
-        current_region3d: bpy.types.RegionView3D = None
-        for area in context.screen.areas:
-            area: bpy.types.Area
-            if area.type == 'VIEW_3D':
-                current_region3d = area.spaces.active.region_3d
-
-                global __GV_ENGINE__
-                if __GV_ENGINE__ is None or self.engine is None:
-                    __GV_ENGINE__ = gv.Engine()
-                    self.engine = __GV_ENGINE__
-                    self.update_shaders(True);
-                    self.tag_redraw()
-
-                self.engine.setCamera( bl2veraCamera(current_region3d) )
-                self.engine.resize(region.width, region.height)
-
-
     def update_images(self):
         for img in bpy.data.images:
             if img.name == 'Render Result' or img.name == 'Viewer Node':
@@ -540,8 +520,25 @@ void main(void) {
         for update in depsgraph.updates:
             print("GVRenderEngine: view_draw -> ", update.id.name)
 
+        # Get viewport camera
+        region = context.region
+        current_region3d: bpy.types.RegionView3D = None
+        for area in context.screen.areas:
+            area: bpy.types.Area
+            if area.type == 'VIEW_3D':
+                current_region3d = area.spaces.active.region_3d
+
+                global __GV_ENGINE__
+                if __GV_ENGINE__ is None or self.engine is None:
+                    __GV_ENGINE__ = gv.Engine()
+                    self.engine = __GV_ENGINE__
+                    self.update_shaders(True);
+                    self.tag_redraw()
+
+                self.engine.setCamera( bl2veraCamera(current_region3d) )
+                self.engine.resize(region.width, region.height)
+
         self.engine.setFrame(scene.frame_current)
-        self.update_camera(context)
         self.update_images()
 
         bgl.glEnable(bgl.GL_DEPTH_TEST)
@@ -604,16 +601,7 @@ void main(void) {
         except:
             pass
 
-        # layer = result.layers[0].passes["Combined"]
-        # layer.rect = rect
-
         self.end_result(result)
-
-
-    # def camera_model_matrix(self, camera, use_spherical_stereo):
-    #     print("GVRenderEngine: camera_model_matrix")
-    #     pass
-
     
 
 def get_panels():
