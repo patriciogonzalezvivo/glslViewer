@@ -150,6 +150,7 @@ void Engine::resize(const size_t& width, const size_t& height) {
     cam->setViewport(width, height);
 }
 
+
 void Engine::clearModels() {
     uniforms.clearModels();
 }

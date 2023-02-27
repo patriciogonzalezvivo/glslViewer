@@ -997,6 +997,7 @@ void SceneRender::renderDebug(Uniforms& _uniforms) {
     }
 
     // Light
+    #if !defined(PYTHON_RENDER)
     {
         if (m_lightUI_vbo == nullptr)
             m_lightUI_vbo = std::unique_ptr<vera::Vbo>(new vera::Vbo( vera::rectMesh(0.0,0.0,0.0,0.0) ));
@@ -1012,6 +1013,7 @@ void SceneRender::renderDebug(Uniforms& _uniforms) {
             m_lightUI_vbo->render( &m_lightUI_shader );
         }
     }
+    #endif
 
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glDisable(GL_DEPTH_TEST);

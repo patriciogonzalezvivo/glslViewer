@@ -160,7 +160,6 @@ class GVRenderEngine(bpy.types.RenderEngine):
         print("GVRenderEngine: start")
 
         self._preview_started = True
-        self.update_shaders()
         bpy.app.timers.register(self.event, first_interval=1)
 
 
@@ -177,9 +176,9 @@ class GVRenderEngine(bpy.types.RenderEngine):
         return 1.0
 
 
-    def reloadScene(self, context, depsgraph):
+    def reloadScene(self, depsgraph):
         # print("Reload entire scene")
-        view3d = context.space_data
+        # view3d = context.space_data
         scene = depsgraph.scene
 
         self.engine.clearModels()
@@ -197,14 +196,17 @@ class GVRenderEngine(bpy.types.RenderEngine):
 
             elif instance.object.type == 'LIGHT':
                 sun = bl2veraLight(instance.object)
-                self.engine.setSun(sun);
+                self.engine.setSun(sun);    
+            
+            elif instance.object.type == 'CAMERA':
+                self.engine.setCamera(bl2veraCamera(instance.object))
         
             elif not instance.object.name_full in bpy.data.objects:
                 print("Don't know how to reload", instance.object.name_full, instance.object.type)
 
-        self.update_camera(context)
         self.update_images()
-        self.update_shaders(context, True);
+        self.update_shaders(True);
+
         self.engine.setFxaa( scene.glsl_viewer_fxaa )
         self.engine.enableCubemap( True )
         self.engine.showCubemap( scene.glsl_viewer_show_cubemap )
@@ -224,9 +226,6 @@ class GVRenderEngine(bpy.types.RenderEngine):
         Typically a render thread will be started to do the work while keeping Blender responsive.
         '''
         # print("GVRenderEngine: view_update")
-
-        region = context.region
-        view3d = context.space_data
         scene = depsgraph.scene
 
         for update in depsgraph.updates:
@@ -236,7 +235,7 @@ class GVRenderEngine(bpy.types.RenderEngine):
 
             # else:
             if update.id.name in bpy.data.collections:
-                self.reloadScene(context, depsgraph)
+                self.reloadScene(depsgraph)
                 self.tag_redraw()
                 continue
 
@@ -247,7 +246,6 @@ class GVRenderEngine(bpy.types.RenderEngine):
     
             elif not update.id.name in bpy.data.objects:
                 print("view_update: skipping update of", update.id.name)
-                # self.update_camera(context)
                 continue 
 # 
             obj = bpy.data.objects[update.id.name]
@@ -258,7 +256,7 @@ class GVRenderEngine(bpy.types.RenderEngine):
 
             elif obj.type == 'MESH':
                 if update.is_updated_geometry:
-                    self.reloadScene(context, depsgraph)
+                    self.reloadScene(depsgraph)
 
                 if update.is_updated_transform:
                     M = np.array(obj.matrix_world)
@@ -277,7 +275,8 @@ class GVRenderEngine(bpy.types.RenderEngine):
         self.tag_redraw()
 
 
-    def update_shaders(self, context = None, reload_shaders = False):
+    def update_shaders(self, reload_shaders = False):
+        context = bpy.context
 
         frag_filename = bpy.context.scene.glsl_viewer_frag
         vert_filename = bpy.context.scene.glsl_viewer_vert
@@ -433,7 +432,6 @@ void main(void) {
 }'''
                 bpy.data.texts[vert_filename].write( self._vert_code )
 
-        # print("GVRenderEngine: update_shaders")
         for text in bpy.data.texts:
 
             # filename, file_extension = os.path.splitext(text.name_full)
@@ -491,13 +489,11 @@ void main(void) {
                 if __GV_ENGINE__ is None or self.engine is None:
                     __GV_ENGINE__ = gv.Engine()
                     self.engine = __GV_ENGINE__
-                    self.update_shaders(context, True);
+                    self.update_shaders(True);
                     self.tag_redraw()
 
                 self.engine.setCamera( bl2veraCamera(current_region3d) )
                 self.engine.resize(region.width, region.height)
-
-    # def update_skybox(self):
 
 
     def update_images(self):
@@ -539,7 +535,7 @@ void main(void) {
 
         if not self._preview_started:
             self.start()
-            self.reloadScene(context, depsgraph)
+            self.reloadScene(depsgraph)
 
         for update in depsgraph.updates:
             print("GVRenderEngine: view_draw -> ", update.id.name)
@@ -589,6 +585,8 @@ void main(void) {
         absolutepath = bpy.path.abspath(filepath)
         out_image = os.path.join(absolutepath, '_render.png')
 
+        # self.reloadScene(depsgraph)
+
         self.engine.setCamera(bl2veraCamera(camera))
         self.engine.resize(width, height)
         self.engine.setFrame(scene.frame_current)
@@ -596,13 +594,7 @@ void main(void) {
 
         bgl.glEnable(bgl.GL_DEPTH_TEST)
         bgl.glDepthMask(bgl.GL_TRUE)
-
-        bgl.glEnable(bgl.GL_BLEND)
-        bgl.glBlendFunc(bgl.GL_ONE, bgl.GL_ONE_MINUS_SRC_ALPHA)
-
         self.engine.draw()
-        
-        bgl.glDisable(bgl.GL_BLEND)
         bgl.glDisable(bgl.GL_DEPTH_TEST)
 
         result = self.begin_result(0, 0, width, height)
