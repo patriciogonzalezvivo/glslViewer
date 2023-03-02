@@ -11,7 +11,7 @@ from .gv_translate import bl2veraCamera, bl2veraMesh, bl2veraLight
 
 from bpy.app.handlers import persistent
 
-
+__GV_HOLD_PREVIEW__ = False
 __GV_PREVIEW_RENDER__ = None
 
 __GV_ENGINE__ = None
@@ -174,6 +174,9 @@ class GVRenderEngine(bpy.types.RenderEngine):
                 __GV_ENGINE__.include_folders = [ fetch_pref('include_folder') ]
         self.preview_engine = __GV_ENGINE__
         self.reloadScene(self.preview_engine, depsgraph)
+        self.preview_engine.setSource(gv.VERTEX, self.vert_code)
+        self.preview_engine.setSource(gv.FRAGMENT, self.frag_code)
+        self.preview_engine.loadShaders()
 
         global __GV_PREVIEW_RENDER__
         if __GV_PREVIEW_RENDER__ is None:
@@ -183,7 +186,12 @@ class GVRenderEngine(bpy.types.RenderEngine):
     def closePreview(self):
         print("GVRenderEngine: closePreview")
 
+        global __GV_HOLD_PREVIEW__
+        __GV_HOLD_PREVIEW__ = True
+
         global __GV_ENGINE__
+        if __GV_ENGINE__:
+            del __GV_ENGINE__
         __GV_ENGINE__ = None
         self.preview_engine = None
 
@@ -199,6 +207,9 @@ class GVRenderEngine(bpy.types.RenderEngine):
 
     def check_for_changes_on_shaders(self):
         # print("GVRenderEngine: check_for_changes_on_shaders")
+        if not self.preview_shader_checker:
+            return
+
         if bpy.context.scene.render.engine != 'GLSLVIEWER_ENGINE':
             return
         
@@ -350,6 +361,10 @@ class GVRenderEngine(bpy.types.RenderEngine):
         '''
         print("GVRenderEngine: view_update")
 
+        global __GV_HOLD_PREVIEW__
+        if __GV_HOLD_PREVIEW__:
+            return
+
         # Make sure that the preview engine is running
         if self.preview_engine == None:
             self.initPreview(depsgraph)
@@ -409,6 +424,10 @@ class GVRenderEngine(bpy.types.RenderEngine):
         Blender will draw overlays for selection and editing on top of the rendered image automatically.
         '''
         print("GVRenderEngine: view_draw")
+
+        global __GV_HOLD_PREVIEW__
+        if __GV_HOLD_PREVIEW__:
+            return
 
         if self.preview_skip_draw:
             self.preview_skip_draw = False
@@ -490,12 +509,16 @@ class GVRenderEngine(bpy.types.RenderEngine):
 
         final_engine.close()
 
+        global __GV_HOLD_PREVIEW__
+        __GV_HOLD_PREVIEW__ = False
+
         result = self.begin_result(0, 0, width, height)
 
         layer = result.layers[0]
         layer.load_from_file(out_image)
 
         self.end_result(result)
+        __GV_PREVIEW_RENDER__.tag_update()
 
 
 def get_panels():
