@@ -444,9 +444,8 @@ bool SceneRender::loadScene(Uniforms& _uniforms) {
     m_cubemap_shader.setSource(vera::getDefaultSrc(vera::FRAG_CUBEMAP), vera::getDefaultSrc(vera::VERT_CUBEMAP));
 
     // Light
-    #if !defined(PYTHON_RENDER)
-    _uniforms.setSunPosition( glm::vec3(0.0,m_area*10.0,m_area*10.0) );
-    #endif
+    if (vera::getWindowStyle() != vera::EMBEDDED)
+        _uniforms.setSunPosition( glm::vec3(0.0,m_area*10.0,m_area*10.0) );
     vera::addLabel("u_light", _uniforms.lights["default"], vera::LABEL_DOWN, 30.0f);
     m_lightUI_shader.setSource(vera::getDefaultSrc(vera::FRAG_LIGHT), vera::getDefaultSrc(vera::VERT_LIGHT));
 
@@ -956,11 +955,7 @@ void SceneRender::renderDebug(Uniforms& _uniforms) {
     
     // Draw Bounding boxes
     if (showBBoxes) {
-        #if defined(PYTHON_RENDER)
-        vera::strokeWeight(1.0f);
-        #else
-        vera::strokeWeight(3.0f);
-        #endif
+        vera::strokeWeight(2.0f);
 
         vera::stroke(glm::vec3(1.0f, 0.0f, 0.0f));
         for (vera::ModelsMap::iterator it = _uniforms.models.begin(); it != _uniforms.models.end(); ++it) {
@@ -968,12 +963,12 @@ void SceneRender::renderDebug(Uniforms& _uniforms) {
             vera::model( it->second->getVboBbox() );
         }
 
-        #if !defined(PYTHON_RENDER)
-        vera::resetMatrix();
-        vera::fill(.8f);
-        vera::textSize(24.0f);
-        vera::labels();
-        #endif
+        if (vera::getWindowStyle() != vera::EMBEDDED) {
+            vera::resetMatrix();
+            vera::fill(.8f);
+            vera::textSize(24.0f);
+            vera::labels();
+        }
     }
     
     // Axis
@@ -997,7 +992,7 @@ void SceneRender::renderDebug(Uniforms& _uniforms) {
     }
 
     // Light
-    #if !defined(PYTHON_RENDER)
+    if (vera::getWindowStyle() != vera::EMBEDDED)
     {
         if (m_lightUI_vbo == nullptr)
             m_lightUI_vbo = std::unique_ptr<vera::Vbo>(new vera::Vbo( vera::rectMesh(0.0,0.0,0.0,0.0) ));
@@ -1013,7 +1008,6 @@ void SceneRender::renderDebug(Uniforms& _uniforms) {
             m_lightUI_vbo->render( &m_lightUI_shader );
         }
     }
-    #endif
 
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glDisable(GL_DEPTH_TEST);

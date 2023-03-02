@@ -86,12 +86,12 @@ Sandbox::Sandbox():
     } );
 
     uniforms.functions["u_time"] = UniformFunction( "float", [&](vera::Shader& _shader) {
-        #if defined(PYTHON_RENDER)
-        _shader.setUniform("u_time", float(m_frame/24.0f));
-        #else
-        if (isRecording()) _shader.setUniform("u_time", getRecordingTime());
-        else _shader.setUniform("u_time", float(vera::getTime()) - m_time_offset);
-        #endif
+        if (vera::getWindowStyle() == vera::EMBEDDED) 
+            _shader.setUniform("u_time", float(m_frame) * vera::getRestSec());
+        else if (isRecording()) 
+            _shader.setUniform("u_time", getRecordingTime());
+        else 
+            _shader.setUniform("u_time", float(vera::getTime()) - m_time_offset);
     }, 
     [&]() {  
         if (isRecording()) return vera::toString( getRecordingTime() );
@@ -1587,10 +1587,8 @@ void Sandbox::_renderBuffers() {
         reset_viewport = true;
     #endif
 
-    #if !defined(PYTHON_RENDER)
-    if (reset_viewport)
+    if (vera::getWindowStyle() != vera::EMBEDDED && reset_viewport)
         glViewport(0.0f, 0.0f, vera::getWindowWidth(), vera::getWindowHeight());
-    #endif
     
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -2010,8 +2008,7 @@ void Sandbox::renderUI() {
         TRACK_END("renderUI:cursor")
     }
 
-    #if !defined(PYTHON_RENDER)
-    if (frag_index == -1 && vert_index == -1 && geom_index == -1) {
+    if (frag_index == -1 && vert_index == -1 && geom_index == -1 && vera::getWindowStyle() != vera::EMBEDDED) {
         float w = (float)(vera::getWindowWidth());
         float h = (float)(vera::getWindowHeight());
         float xStep = w * 0.05;
@@ -2041,7 +2038,7 @@ void Sandbox::renderUI() {
         vera::setCamera(cam);
     }
 
-    if (help) {
+    if (help && vera::getWindowStyle() != vera::EMBEDDED) {
         float w = (float)(vera::getWindowWidth());
         float h = (float)(vera::getWindowHeight());
         float xStep = w * 0.05;
@@ -2118,7 +2115,6 @@ void Sandbox::renderUI() {
         vera::setCamera(cam);
         glDisable(GL_DEPTH_TEST);
     }
-    #endif
 
     TRACK_END("renderUI")
 }

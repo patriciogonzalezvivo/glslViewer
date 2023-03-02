@@ -13,59 +13,59 @@ public:
     Engine();
     virtual ~Engine();
 
-    void loadMesh(const std::string& _name, const vera::Mesh& _mesh);
-    void loadImage(const std::string& _name, const std::string& _path, bool _flip);
-    void loadShaders();
+    virtual void init();
 
-    void setSun(const vera::Light& _light);
-    void setSunPosition(float _az, float _elev, float _distance);
+    virtual void loadMesh(const std::string& _name, const vera::Mesh& _mesh);
+    virtual void loadImage(const std::string& _name, const std::string& _path, bool _flip);
+    virtual void loadShaders();
 
-
-    void setCamera(const vera::Camera& _cam);
-    void setMeshTransformMatrix(    const std::string& _name, 
+    virtual void setCamera(const vera::Camera& _cam);
+    
+    virtual void setSun(const vera::Light& _light);
+    virtual void setSkyTurbidity(float _turbidity) { uniforms.setSkyTurbidity(_turbidity); }
+    virtual void setSkyGround(float _r, float _g, float _b) { uniforms.setGroundAlbedo(glm::vec3(_r, _g, _b));  }
+    
+    virtual void setMeshTransformMatrix(    const std::string& _name, 
                                     float x1, float y1, float z1, float w1,
                                     float x2, float y2, float z2, float w2,
                                     float x3, float y3, float z3, float w3,
                                     float x4, float y4, float z4, float w4 );
+    virtual void setFps(int _fps);
+    virtual void setFxaa(bool _value);
+    virtual void setOutput(const std::string& _path) { screenshotFile = _path;}
 
-    void setOutput(const std::string& _path) { screenshotFile = _path;}
-    int  getOutputFboId() { return m_record_fbo.getId(); }
+    virtual int  getOutputFboId() const { return m_record_fbo.getId(); }
     
-    void printLights() { uniforms.printLights(); }
-    void printDefines() { m_sceneRender.printDefines(); uniforms.printDefines(); }
-    void printBuffers() { m_sceneRender.printBuffers(); uniforms.printBuffers(); }
-    void printMaterials() { uniforms.printMaterials(); }
-    void printModels() { uniforms.printModels(); }
-    void printShaders() { uniforms.printShaders(); }
+    virtual void printLights() { uniforms.printLights(); }
+    virtual void printDefines() { m_sceneRender.printDefines(); uniforms.printDefines(); }
+    virtual void printBuffers() { m_sceneRender.printBuffers(); uniforms.printBuffers(); }
+    virtual void printMaterials() { uniforms.printMaterials(); }
+    virtual void printModels() { uniforms.printModels(); }
+    virtual void printShaders() { uniforms.printShaders(); }
 
-    void showHistogram(bool _value);
+    virtual void showHistogram(bool _value);
+    virtual void showTextures(bool _value) { m_showTextures = _value; };
+    virtual bool haveTexture(const std::string& _name);
+    virtual bool addTexture(const std::string& _name, int _width, int _height,const std::vector<float>& _pixels);
+    virtual void printTextures() { uniforms.printTextures(); }
 
-    void showTextures(bool _value) { m_showTextures = _value; };
-    bool haveTexture(const std::string& _name);
-    bool addTexture(const std::string& _name, int _width, int _height,const std::vector<float>& _pixels);
-    void printTextures() { uniforms.printTextures(); }
+    virtual void showCubemap(bool _value) { m_sceneRender.showCubebox = _value; };
+    virtual void enableCubemap(bool _value);
+    virtual bool haveCubemap(const std::string& _name);
+    virtual bool addCubemap(const std::string& _name, int _width, int _height,const std::vector<float>& _pixels);
+    virtual void printCubemaps() { uniforms.printCubemaps(); }
 
-    void setSkyTurbidity(float _turbidity) { uniforms.setSkyTurbidity(_turbidity); }
-    void setSkyGround(float _r, float _g, float _b) { uniforms.setGroundAlbedo(glm::vec3(_r, _g, _b));  }
-    void showCubemap(bool _value) { m_sceneRender.showCubebox = _value; };
-    void enableCubemap(bool _value);
+    virtual void showPasses(bool _value) { m_showPasses = _value; };
+    virtual void showBoudningBox(bool _value) { m_sceneRender.showBBoxes = _value; }
+    
+    virtual void resize(const size_t& width, const size_t& height);
 
-    bool haveCubemap(const std::string& _name);
-    bool addCubemap(const std::string& _name, int _width, int _height,const std::vector<float>& _pixels);
-    void printCubemaps() { uniforms.printCubemaps(); }
-    void showPasses(bool _value) { m_showPasses = _value; };
+    virtual void clearModels();
 
-    void showBoudningBox(bool _value) { m_sceneRender.showBBoxes = _value; }
-    void setFxaa(bool _value);
-
-    void resize(const size_t& width, const size_t& height);
-
-    void clearModels();
-
-    void draw();
+    virtual void draw();
 
 private:
 
-    bool m_enableCubemap;
+    bool    m_enableCubemap;
 
 };

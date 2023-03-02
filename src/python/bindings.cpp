@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "engine.h"
+#include "headless.h"
 #include "vera/types/node.h"
 #include "vera/types/mesh.h"
 #include "vera/types/light.h"
@@ -247,12 +248,12 @@ PYBIND11_MODULE(PyGlslViewer, m) {
 
         .def("setCamera", &Engine::setCamera, py::arg("_cam"))
         .def("setSun", &Engine::setSun, py::arg("_light"))
-        .def("setSunPosition", &Engine::setSunPosition, py::arg("_az"), py::arg("_elev"), py::arg("_distance"))
         .def("setSource",&Engine::setSource, py::arg("_type"), py::arg("_source"))
         .def("setFrame",&Engine::setFrame, py::arg("_frame"))
         .def("setMeshTransformMatrix",&Engine::setMeshTransformMatrix, py::arg("_name"), py::arg("x1"), py::arg("y1"), py::arg("z1"), py::arg("w1"), py::arg("x2"), py::arg("y2"), py::arg("z2"), py::arg("w2"), py::arg("x3"), py::arg("y3"), py::arg("z3"), py::arg("w3"), py::arg("x4"), py::arg("y4"), py::arg("z4"), py::arg("w4") )
         
         .def("setOutput", &Engine::setOutput, py::arg("_path"))
+        .def("setFps", &Engine::setFps, py::arg("setFps"))
 
         .def("getSource",&Engine::getSource, py::arg("_type"))
         .def("getOutputFboId",&Engine::getOutputFboId)
@@ -286,8 +287,8 @@ PYBIND11_MODULE(PyGlslViewer, m) {
         .def("showBoudningBox",&Engine::showBoudningBox, py::arg("_value"))
         .def("setFxaa",&Engine::setFxaa, py::arg("_value"))
 
+        .def("init", &Engine::init)
         .def("resize",&Engine::resize, py::arg("width"), py::arg("height"))
-
         .def("draw", &Engine::draw)
         
         .def_readwrite("include_folders", &Engine::include_folders)
@@ -298,5 +299,68 @@ PYBIND11_MODULE(PyGlslViewer, m) {
         .def_readwrite("geom_index", &Engine::geom_index)
         .def_readwrite("help", &Engine::help)
         .def_readwrite("fxaa", &Engine::fxaa)
+    ;
+
+    py::class_<Headless>(m, "Headless")
+        .def(py::init<>())
+
+        .def("loadMesh",&Headless::loadMesh, py::arg("_name"), py::arg("_mesh"))
+        .def("loadImage",&Headless::loadImage, py::arg("_name"), py::arg("_path"), py::arg("_flip"))
+        .def("loadShaders", &Headless::loadShaders)
+
+        .def("setCamera", &Headless::setCamera, py::arg("_cam"))
+        .def("setSun", &Headless::setSun, py::arg("_light"))
+        .def("setSource",&Headless::setSource, py::arg("_type"), py::arg("_source"))
+        .def("setFrame",&Headless::setFrame, py::arg("_frame"))
+        .def("setMeshTransformMatrix",&Headless::setMeshTransformMatrix, py::arg("_name"), py::arg("x1"), py::arg("y1"), py::arg("z1"), py::arg("w1"), py::arg("x2"), py::arg("y2"), py::arg("z2"), py::arg("w2"), py::arg("x3"), py::arg("y3"), py::arg("z3"), py::arg("w3"), py::arg("x4"), py::arg("y4"), py::arg("z4"), py::arg("w4") )
+        
+        .def("setOutput", &Headless::setOutput, py::arg("_path"))
+        .def("setFps", &Headless::setFps, py::arg("setFps"))
+
+        .def("getSource",&Headless::getSource, py::arg("_type"))
+        .def("getOutputFboId",&Headless::getOutputFboId)
+
+        .def("printDefines", &Headless::printDefines)
+        .def("printLights", &Headless::printLights)
+        .def("printMaterials", &Headless::printMaterials)
+        .def("printShaders", &Headless::printShaders)
+
+        .def("clearModels", &Headless::clearModels)
+        .def("printModels", &Headless::printModels)
+
+        .def("showTextures",&Headless::showTextures, py::arg("_value"))
+        .def("haveTexture",&Headless::haveTexture, py::arg("_name"))
+        .def("addTexture",&Headless::addTexture, py::arg("_name"), py::arg("_width"), py::arg("_height"), py::arg("_pixels"))
+        .def("printTextures", &Headless::printTextures)
+
+        .def("setSkyTurbidity", &Headless::setSkyTurbidity, py::arg("_turbidity"))
+        .def("setSkyGround", &Headless::setSkyGround, py::arg("_r"), py::arg("_g"), py::arg("_b"))
+
+        .def("showCubemap",&Headless::showCubemap, py::arg("_value"))
+        .def("enableCubemap",&Headless::enableCubemap, py::arg("_value"))
+        .def("haveCubemap",&Headless::haveCubemap, py::arg("_name"))
+        .def("addCubemap",&Headless::addCubemap, py::arg("_name"), py::arg("_width"), py::arg("_height"), py::arg("_pixels"))
+        .def("printCubemaps", &Headless::printCubemaps)
+
+        .def("showPasses",&Headless::showPasses, py::arg("_value"))
+        .def("printBuffers", &Headless::printBuffers)
+
+        .def("showHistogram",&Headless::showHistogram, py::arg("_value"))
+        .def("showBoudningBox",&Headless::showBoudningBox, py::arg("_value"))
+        .def("setFxaa",&Headless::setFxaa, py::arg("_value"))
+
+        .def("init", &Headless::init)
+        .def("resize",&Headless::resize, py::arg("width"), py::arg("height"))
+        .def("draw", &Headless::draw)
+        .def("close", &Headless::close)
+        
+        .def_readwrite("include_folders", &Headless::include_folders)
+        .def_readwrite("screenshotFile", &Headless::screenshotFile)
+
+        .def_readwrite("frag_index", &Headless::frag_index)
+        .def_readwrite("vert_index", &Headless::vert_index)
+        .def_readwrite("geom_index", &Headless::geom_index)
+        .def_readwrite("help", &Headless::help)
+        .def_readwrite("fxaa", &Headless::fxaa)
     ;
 }

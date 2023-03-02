@@ -5,85 +5,29 @@
 WatchFileList   files;
 
 Engine::Engine() : m_enableCubemap (false) {
+    verbose = true;
+    help = false;
+    cursor = false;
+};
+
+Engine::~Engine() {
+};
+
+void Engine::init() {
     vera::WindowProperties props;
     props.style = vera::EMBEDDED;
     vera::initGL(props);
 
-    verbose = true;
-
     addDefine("GLSLVIEWER", vera::toString(GLSLVIEWER_VERSION_MAJOR) + vera::toString(GLSLVIEWER_VERSION_MINOR) + vera::toString(GLSLVIEWER_VERSION_PATCH) );
-
-    // LOAD DEFAULT SHADER
-    setSource(FRAGMENT, R"(#ifdef GL_ES
-precision highp float;
-#endif
-
-uniform vec3        u_camera;
-
-uniform vec2        u_resolution;
-uniform float       u_time;
-uniform int         u_frame;
-
-varying vec4        v_position;
-
-#ifdef MODEL_VERTEX_COLOR
-varying vec4        v_color;
-#endif
-
-#ifdef MODEL_VERTEX_NORMAL
-varying vec3        v_normal;
-#endif
-
-#ifdef MODEL_VERTEX_TEXCOORD
-varying vec2        v_texcoord;
-#endif
-
-#ifdef MODEL_VERTEX_TANGENT
-varying vec4        v_tangent;
-varying mat3        v_tangentToWorld;
-#endif
-
-void main(void) {
-    vec4 color = vec4(0.0, 0.0, 0.0, 1.0);
-    vec3 pos = v_position.xyz;
-
-    vec2 pixel = 1.0/u_resolution;
-    vec2 st = gl_FragCoord.xy * pixel;
-
-    color.rgb = pos;
-
-    #ifdef MODEL_VERTEX_COLOR
-    color = v_color;
-    #endif
-
-    #ifdef MODEL_VERTEX_NORMAL
-    color.rgb = v_normal * 0.5 + 0.5;
-    #endif
-
-    #ifdef MODEL_VERTEX_TEXCOORD
-    vec2 uv = v_texcoord;
-    #else
-    vec2 uv = st;
-    #endif
-    
-    color.rg = uv;
-    
-    gl_FragColor = color;
-})");
-
+    setSource(FRAGMENT, vera::getDefaultSrc(vera::FRAG_DEFAULT));
     setSource(VERTEX, vera::getDefaultSrc(vera::VERT_DEFAULT_SCENE));
     resetShaders( files );
 
-    help = false;
-    cursor = false;
     m_sceneRender.dynamicShadows = true;
     uniforms.setSkyFlip(true);
-    uniforms.setSkySize(2048);
-};
-
-Engine::~Engine() {
-
-};
+    uniforms.setSkySize(2048/2);
+    m_initialized = true;
+}
 
 void Engine::loadMesh(const std::string& _name, const vera::Mesh& _mesh) {
     uniforms.models[_name] = new vera::Model(_name, _mesh);
@@ -126,8 +70,8 @@ void Engine::setSun(const vera::Light& _light) {
     light->falloff = _light.falloff;
 }
 
-void Engine::setSunPosition(float _az, float _elev, float _distance) {
-    uniforms.setSunPosition(_az, _elev, _distance);
+void Engine::setFps(int _fps) {
+    vera::setFps(_fps);
 }
 
 void Engine::setMeshTransformMatrix(    const std::string& _name, 
@@ -157,26 +101,10 @@ void Engine::clearModels() {
 
 void Engine::draw() {
     uniforms.update();
-
-    vera::blendMode( vera::BLEND_ALPHA );
-
-    // PREP for main render:
-    //  - update uniforms
-    //  - render buffers, double buffers and pyramid convolutions
-    //  - render lighmaps (3D scenes only)
-    //  - render normal/possition/extra g buffers (3D scenes only)
-    //  - start the recording FBO (when recording)
     renderPrep();
-
-    // Render the main 2D Shader on a billboard or 3D Scene when there is geometry models
-    // Note: if the render require multiple views of the render (for quilts or VR) it happens here.
     render();
-
-    // POST render:
-    //  - post-processing render pass
-    //  - close recording FBO (when recording)
     renderPost();
-
+    
     renderUI();
     if (screenshotFile != "") {
         onScreenshot(screenshotFile);

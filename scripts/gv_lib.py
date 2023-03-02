@@ -29,6 +29,7 @@ class GlslViewerMetaClass(type):
         cls.module = importlib.import_module('PyGlslViewer')
         return getattr(cls.module, name)
 
+
 class GlslViewer(metaclass=GlslViewerMetaClass):
     def __getattr__(self, name):
         return getattr(type(self), name)

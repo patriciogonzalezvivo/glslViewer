@@ -19,7 +19,6 @@ class RENDER_PT_glslViewer_render(bpy.types.Panel):
 
         layout = self.layout
 
-        # split = layout.split(factor=0.7)
         col = layout.column()
         col.label(text="Go to Scripts and search for the following files:")
 

@@ -232,11 +232,9 @@ else()
 
 endif()
 
-# # zlib
-# find_package(ZLIB REQUIRED)
-# include_directories(${ZLIB_INCLUDE_DIRS})
-
 if (PYTHON_BINDINGS)
+    find_package(Python3 3.10 REQUIRED COMPONENTS Interpreter Development)
+
     # pybind11
     set(DEPS_FOLDER "${PROJECT_SOURCE_DIR}/deps")
     add_subdirectory("${DEPS_FOLDER}/pybind11")
@@ -245,6 +243,8 @@ if (PYTHON_BINDINGS)
     set(PYBIND_INCLUDES
         "${PROJECT_SOURCE_DIR}/src/python/engine.h"
         "${PROJECT_SOURCE_DIR}/src/python/engine.cpp"
+        "${PROJECT_SOURCE_DIR}/src/python/headless.h"
+        "${PROJECT_SOURCE_DIR}/src/python/headless.cpp"
         "${PROJECT_SOURCE_DIR}/src/python/bindings.cpp"
         ${CORE_SOURCES}
         ${CORE_HEADERS}
@@ -256,6 +256,6 @@ if (PYTHON_BINDINGS)
     target_compile_definitions(PyGlslViewer PRIVATE GLSLVIEWER_VERSION_MINOR=${VERSION_MINOR})
     target_compile_definitions(PyGlslViewer PRIVATE GLSLVIEWER_VERSION_PATCH=${VERSION_PATCH})
     target_include_directories(PyGlslViewer PUBLIC ${DEPS_FOLDER})
-    target_link_libraries(PyGlslViewer PRIVATE vera ${ZLIB_LIBRARIES} pybind11::module)
+    target_link_libraries(PyGlslViewer PRIVATE vera pybind11::module)
 
 endif()

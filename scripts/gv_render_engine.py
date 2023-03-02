@@ -3,25 +3,21 @@ import numpy as np
 
 import bpy
 import bgl
+import gpu
 
 from .gv_lib import GlslViewer as gv
-from .gv_preferences import fetch_pref
+from .gv_preferences import fetch_pref, default_vert_code, default_frag_code
 from .gv_translate import bl2veraCamera, bl2veraMesh, bl2veraLight
 
 from bpy.app.handlers import persistent
 
 
-__GV_RENDER__ = None
-def get_gv_render():
-    global __GV_RENDER__
-    return __GV_RENDER__
-
+__GV_PREVIEW_RENDER__ = None
 
 __GV_ENGINE__ = None
 def get_gv_engine():
     global __GV_ENGINE__
     return __GV_ENGINE__
-
 
 @persistent
 def load_new_scene(dummy):
@@ -32,10 +28,10 @@ def load_new_scene(dummy):
         del __GV_ENGINE__ 
     __GV_ENGINE__ = None
 
-    global __GV_RENDER__
-    if __GV_RENDER__:
-        del __GV_RENDER__ 
-    __GV_RENDER__ = None
+    global __GV_PREVIEW_RENDER__
+    if __GV_PREVIEW_RENDER__:
+        del __GV_PREVIEW_RENDER__ 
+    __GV_PREVIEW_RENDER__ = None
 
 
 def file_exist(filename):
@@ -54,44 +50,66 @@ def update_areas():
 
 
 def fxaa_change(self, context):
-    get_gv_engine().setFxaa( self.glsl_viewer_fxaa )
-    get_gv_render().tag_redraw()
+    engine = get_gv_engine()
+    if engine != None:
+        engine.setFxaa( self.glsl_viewer_fxaa )
+        engine.tag_redraw()
+
+
+def enable_cubemap_change(self, context):
+    engine = get_gv_engine()
+    if engine != None:
+        engine.enableCubemap( self.glsl_viewer_enable_cubemap )
+        engine.tag_redraw()
 
 
 def show_cubemap_change(self, context):
-    get_gv_engine().showCubemap( self.glsl_viewer_show_cubemap )
-    get_gv_render().tag_redraw()
+    engine = get_gv_engine()
+    if engine != None:
+        engine.showCubemap( self.glsl_viewer_show_cubemap )
+        engine.tag_redraw()
 
 
 def show_textures_change(self, context):
-    get_gv_engine().showTextures( self.glsl_viewer_show_textures )
-    get_gv_render().tag_redraw()
+    engine = get_gv_engine()
+    if engine != None:
+        engine.showTextures( self.glsl_viewer_show_textures )
+        engine.tag_redraw()
 
 
 def show_passes_change(self, context):
-    get_gv_engine().showPasses( self.glsl_viewer_show_passes )
-    get_gv_render().tag_redraw()
+    engine = get_gv_engine()
+    if engine != None:
+        engine.showPasses( self.glsl_viewer_show_passes )
+        engine.tag_redraw()
 
 
 def show_histogram_change(self, context):
-    get_gv_engine().showHistogram( self.glsl_viewer_show_histogram )
-    get_gv_render().tag_redraw()
+    engine = get_gv_engine()
+    if engine != None:
+        engine.showHistogram( self.glsl_viewer_show_histogram )
+        engine.tag_redraw()
 
 
 def show_skybox_turbidity_change(self, context):
-    get_gv_engine().setSkyTurbidity( self.glsl_viewer_skybox_turbidity )
-    get_gv_render().tag_redraw()
+    engine = get_gv_engine()
+    if engine != None:
+        engine.setSkyTurbidity( self.glsl_viewer_skybox_turbidity )
+        engine.tag_redraw()
 
 
 def show_debug_change(self, context):
-    get_gv_engine().showBoudningBox( self.glsl_viewer_show_debug )
-    get_gv_render().tag_redraw()
+    engine = get_gv_engine()
+    if engine != None:
+        engine.showBoudningBox( self.glsl_viewer_show_debug )
+        engine.tag_redraw()
 
 
 PROPS = [
     ('glsl_viewer_vert', bpy.props.StringProperty(name='Vertex Shader', default='main.vert')),
     ('glsl_viewer_frag', bpy.props.StringProperty(name='Fragment Shader', default='main.frag')),
     ('glsl_viewer_skybox_turbidity', bpy.props.FloatProperty(name='Skybox Turbidity', min=1, default=4.0, update=show_skybox_turbidity_change)),
+    ('glsl_viewer_enable_cubemap', bpy.props.BoolProperty(name='Enable Cubemap', default=True, update=enable_cubemap_change)),
     ('glsl_viewer_show_cubemap', bpy.props.BoolProperty(name='Show Cubemap', default=False, update=show_cubemap_change)),
     ('glsl_viewer_show_textures', bpy.props.BoolProperty(name='Show Textures', default=False, update=show_textures_change)),
     ('glsl_viewer_show_passes', bpy.props.BoolProperty(name='Show Passes', default=False, update=show_passes_change)),
@@ -110,20 +128,20 @@ class GVRenderEngine(bpy.types.RenderEngine):
     bl_idname = "GLSLVIEWER_ENGINE"
     bl_label = "GlslViewer"
     bl_use_preview = True
-    bl_use_image_save = True
-    bl_use_gpu_context = True
+    # bl_use_image_save = True
     bl_use_postprocess = True
-    bl_use_alembic_procedural = True
+    # bl_use_alembic_procedural = True
     bl_use_eevee_viewport = True
     bl_use_shading_nodes = False
     bl_use_shading_nodes_custom = False
 
-    _frag_code = ""
-    _vert_code = ""
-    _render_started = False
+    frag_code = ""
+    vert_code = ""
 
-    _preview_started = False
-    _preview_skip = False
+    preview_engine = None
+    preview_skip_draw = False
+    preview_shader_checker = False
+
 
     def __init__(self):
         '''
@@ -132,17 +150,6 @@ class GVRenderEngine(bpy.types.RenderEngine):
         render.
         '''
         print("GVRenderEngine: __init__")
-    
-        global __GV_ENGINE__
-        if __GV_ENGINE__ is None:
-            __GV_ENGINE__ = gv.Engine()
-            __GV_ENGINE__.include_folders = [ fetch_pref('include_folder') ]
-
-        self.engine = __GV_ENGINE__
-
-        global __GV_RENDER__
-        if __GV_RENDER__ is None:
-            __GV_RENDER__ = self
 
 
     def __del__(self):
@@ -154,41 +161,65 @@ class GVRenderEngine(bpy.types.RenderEngine):
         pass
 
 
-    def start(self):
-        if self._preview_started:
-            return    
-        print("GVRenderEngine: start")
+    def initPreview(self, depsgraph):
+        print("GVRenderEngine: initPreview")
+        global __GV_ENGINE__
+        if self.preview_engine != None and __GV_ENGINE__ != None:
+            return 
+    
+        if __GV_ENGINE__ is None:
+            __GV_ENGINE__ = gv.Engine()
+            __GV_ENGINE__.init()
+            if fetch_pref('include_folder') != '.':
+                __GV_ENGINE__.include_folders = [ fetch_pref('include_folder') ]
+        self.preview_engine = __GV_ENGINE__
+        self.reloadScene(self.preview_engine, depsgraph)
 
-        self._preview_started = True
-        bpy.app.timers.register(self.event, first_interval=1)
+        global __GV_PREVIEW_RENDER__
+        if __GV_PREVIEW_RENDER__ is None:
+            __GV_PREVIEW_RENDER__ = self
 
 
-    def event(self):
-        # print("GVRenderEngine: event")
-        if get_gv_render() == None:
+    def closePreview(self):
+        print("GVRenderEngine: closePreview")
+
+        global __GV_ENGINE__
+        __GV_ENGINE__ = None
+        self.preview_engine = None
+
+
+    def start_checking_changes_on_shaders(self):
+        print("GVRenderEngine: start")        
+        if self.preview_shader_checker:
             return
 
+        self.preview_shader_checker = True
+        bpy.app.timers.register(self.check_for_changes_on_shaders, first_interval=1)
+
+
+    def check_for_changes_on_shaders(self):
+        # print("GVRenderEngine: check_for_changes_on_shaders")
         if bpy.context.scene.render.engine != 'GLSLVIEWER_ENGINE':
             return
+        
+        if self.preview_engine == None:
+            return
 
-        self.update_shaders()
-
+        self.update_shaders(self.preview_engine)
         return 1.0
 
 
-    def reloadScene(self, depsgraph):
-        # print("Reload entire scene")
-        # view3d = context.space_data
-        scene = depsgraph.scene
+    def reloadScene(self, engine, depsgraph):
+        print("Reload entire scene")
 
-        self.engine.clearModels()
+        engine.clearModels()
         for instance in depsgraph.object_instances:
 
             if instance.object.type == 'MESH':
                 mesh = bl2veraMesh(instance.object)
-                self.engine.loadMesh(instance.object.name_full, mesh)
+                engine.loadMesh(instance.object.name_full, mesh)
                 M = np.array(instance.object.matrix_world)
-                self.engine.setMeshTransformMatrix( instance.object.name_full, 
+                engine.setMeshTransformMatrix( instance.object.name_full, 
                                                      M[0][0],  M[2][0],  M[1][0], M[3][0],
                                                      M[0][1],  M[2][1],  M[1][1], M[3][1],
                                                      M[0][2],  M[2][2],  M[1][2], M[3][2],
@@ -196,86 +227,51 @@ class GVRenderEngine(bpy.types.RenderEngine):
 
             elif instance.object.type == 'LIGHT':
                 sun = bl2veraLight(instance.object)
-                self.engine.setSun(sun);    
+                engine.setSun(sun);    
             
             elif instance.object.type == 'CAMERA':
-                self.engine.setCamera(bl2veraCamera(instance.object))
+                engine.setCamera(bl2veraCamera(instance.object))
         
             elif not instance.object.name_full in bpy.data.objects:
                 print("Don't know how to reload", instance.object.name_full, instance.object.type)
 
-        self.update_images()
-        self.update_shaders(True);
+        self.update_shaders(engine, True)
+        self.update_images(engine)
 
-        self.engine.setFxaa( scene.glsl_viewer_fxaa )
-        self.engine.enableCubemap( True )
-        self.engine.showCubemap( scene.glsl_viewer_show_cubemap )
-        self.engine.showTextures( scene.glsl_viewer_show_textures )
-        self.engine.showPasses( scene.glsl_viewer_show_passes )
-        clear_color = scene.world.color
-        self.engine.setSkyGround( clear_color[0], clear_color[1], clear_color[2] )
-        self.engine.setSkyTurbidity( scene.glsl_viewer_skybox_turbidity )
-        self.engine.showBoudningBox( scene.glsl_viewer_show_debug )
-
-
-    def view_update(self, context, depsgraph):
-        '''
-        For viewport renders. Blender calls view_update when starting viewport renders
-        and/or something changes in the scene.
-        This method is where data should be read from Blender in the same thread. 
-        Typically a render thread will be started to do the work while keeping Blender responsive.
-        '''
-        # print("GVRenderEngine: view_update")
         scene = depsgraph.scene
+        engine.setFxaa( scene.glsl_viewer_fxaa )
+        engine.enableCubemap( True )
+        engine.showCubemap( scene.glsl_viewer_show_cubemap )
+        engine.showTextures( scene.glsl_viewer_show_textures )
+        engine.showPasses( scene.glsl_viewer_show_passes )
+        engine.setSkyGround( scene.world.color[0], scene.world.color[1], scene.world.color[2] )
+        engine.setSkyTurbidity( scene.glsl_viewer_skybox_turbidity )
+        engine.showBoudningBox( scene.glsl_viewer_show_debug )
 
-        for update in depsgraph.updates:
-            if update.id.name == "Scene":
-                self._preview_skip = True
-                # pass
 
-            # else:
-            if update.id.name in bpy.data.collections:
-                self.reloadScene(depsgraph)
-                self.tag_redraw()
+    def update_images(self, engine):
+        for img in bpy.data.images:
+            if img.name == 'Render Result' or img.name == 'Viewer Node':
                 continue
 
-            elif update.id.name == "World":
-                clear_color = scene.world.color
-                self.engine.setSkyGround( clear_color[0], clear_color[1], clear_color[2] )
-                continue
-    
-            elif not update.id.name in bpy.data.objects:
-                print("view_update: skipping update of", update.id.name)
-                continue 
-# 
-            obj = bpy.data.objects[update.id.name]
-            
-            if obj.type == 'LIGHT':
-                sun = bl2veraLight(obj)
-                self.engine.setSun(sun);
+            name, ext = os.path.splitext(img.name)
+            name = name.replace(" ", "")
 
-            elif obj.type == 'MESH':
-                if update.is_updated_geometry:
-                    self.reloadScene(depsgraph)
-
-                if update.is_updated_transform:
-                    M = np.array(obj.matrix_world)
-                    self.engine.setMeshTransformMatrix(  obj.name_full, 
-                                                         M[0][0],  M[2][0],  M[1][0], M[3][0],
-                                                         M[0][1],  M[2][1],  M[1][1], M[3][1],
-                                                         M[0][2],  M[2][2],  M[1][2], M[3][2],
-                                                        -M[0][3], -M[2][3], -M[1][3], M[3][3] )
-                    
-            elif obj.type == 'CAMERA':
-                pass
+            if ext == '.hdr' or ext == '.HDR':
+                if not engine.haveCubemap(name):
+                    print("Add Cubemap", img.name, "as", name)
+                    pixels = np.array(img.pixels)
+                    engine.addCubemap(name, img.size[0], img.size[1], pixels)
 
             else:
-                print("GVRenderEngine: view_update -> obj type", obj.type)
+                name = "u_" + name + "Tex"
+                if not engine.haveTexture(name):
+                    print("Add Texture", img.name, "as", name)
+                    pixels = np.array(img.pixels)
+                    engine.addTexture(name, img.size[0], img.size[1], pixels)
 
-        self.tag_redraw()
-
-
-    def update_shaders(self, reload_shaders = False):
+    
+    def update_shaders(self, engine, reload_shaders = False):
         context = bpy.context
 
         frag_filename = bpy.context.scene.glsl_viewer_frag
@@ -286,151 +282,20 @@ class GVRenderEngine(bpy.types.RenderEngine):
 
             if file_exist(frag_filename):
                 bpy.ops.text.open(filepath=frag_filename)
-
-            # else create a internal file with the default fragment code
             else:
                 bpy.data.texts.new(frag_filename)
-                # self._frag_code = self.engine.getSource(gv.FRAGMEN)
-                self._frag_code = '''
-#ifdef GL_ES
-precision highp float;
-#endif
-
-uniform vec3        u_camera;
-
-uniform vec2        u_resolution;
-uniform float       u_time;
-uniform int         u_frame;
-
-varying vec4        v_position;
-
-#ifdef MODEL_VERTEX_COLOR
-varying vec4        v_color;
-#endif
-
-#ifdef MODEL_VERTEX_NORMAL
-varying vec3        v_normal;
-#endif
-
-#ifdef MODEL_VERTEX_TEXCOORD
-varying vec2        v_texcoord;
-#endif
-
-#ifdef MODEL_VERTEX_TANGENT
-varying vec4        v_tangent;
-varying mat3        v_tangentToWorld;
-#endif
-
-void main(void) {
-    vec4 color = vec4(0.0, 0.0, 0.0, 1.0);
-    vec3 pos = v_position.xyz;
-
-    vec2 pixel = 1.0/u_resolution;
-    vec2 st = gl_FragCoord.xy * pixel;
-
-    color.rgb = pos;
-
-    #ifdef MODEL_VERTEX_COLOR
-    color = v_color;
-    #endif
-
-    #ifdef MODEL_VERTEX_NORMAL
-    color.rgb = v_normal * 0.5 + 0.5;
-    #endif
-
-    #ifdef MODEL_VERTEX_TEXCOORD
-    vec2 uv = v_texcoord;
-    #else
-    vec2 uv = st;
-    #endif
-    
-    color.rg = uv;
-    
-    gl_FragColor = color;
-}
-                '''
-
-                bpy.data.texts[frag_filename].write( self._frag_code )
+                self.frag_code = default_frag_code
+                bpy.data.texts[frag_filename].write( self.frag_code )
 
         if not vert_filename in bpy.data.texts:
             print(f'File name {vert_filename} not found. Will create an internal one')
 
             if file_exist(vert_filename):
                 bpy.ops.text.open(filepath=vert_filename)
-
-            # else create a internal file with the default fragment code
             else:
                 bpy.data.texts.new(vert_filename)
-                # self._vert_code = self.engine.getSource(gv.VERTEX)
-                self._vert_code = '''#ifdef GL_ES
-precision mediump float;
-#endif
-
-uniform mat4    u_modelViewProjectionMatrix;
-uniform mat4    u_projectionMatrix;
-uniform mat4    u_modelMatrix;
-uniform mat4    u_viewMatrix;
-uniform mat3    u_normalMatrix;
-
-attribute vec4  a_position;
-varying vec4    v_position;
-
-#ifdef MODEL_VERTEX_COLOR
-attribute vec4  a_color;
-varying vec4    v_color;
-#endif
-
-#ifdef MODEL_VERTEX_NORMAL
-attribute vec3  a_normal;
-varying vec3    v_normal;
-#endif
-
-#ifdef MODEL_VERTEX_TEXCOORD
-attribute vec2  a_texcoord;
-varying vec2    v_texcoord;
-#endif
-
-#ifdef MODEL_VERTEX_TANGENT
-attribute vec4  a_tangent;
-varying vec4    v_tangent;
-varying mat3    v_tangentToWorld;
-#endif
-
-#ifdef LIGHT_SHADOWMAP
-uniform mat4    u_lightMatrix;
-varying vec4    v_lightCoord;
-#endif
-
-void main(void) {
-    
-    v_position = u_modelMatrix * a_position;
-    
-#ifdef MODEL_VERTEX_COLOR
-    v_color = a_color;
-#endif
-    
-#ifdef MODEL_VERTEX_NORMAL
-    v_normal = vec4(u_modelMatrix * vec4(a_normal, 0.0) ).xyz;
-#endif
-    
-#ifdef MODEL_VERTEX_TEXCOORD
-    v_texcoord = a_texcoord;
-#endif
-    
-#ifdef MODEL_VERTEX_TANGENT
-    v_tangent = a_tangent;
-    vec3 worldTangent = a_tangent.xyz;
-    vec3 worldBiTangent = cross(v_normal, worldTangent);// * sign(a_tangent.w);
-    v_tangentToWorld = mat3(normalize(worldTangent), normalize(worldBiTangent), normalize(v_normal));
-#endif
-    
-#ifdef LIGHT_SHADOWMAP
-    v_lightCoord = u_lightMatrix * v_position;
-#endif
-    
-    gl_Position = u_projectionMatrix * u_viewMatrix * v_position;
-}'''
-                bpy.data.texts[vert_filename].write( self._vert_code )
+                self.vert_code = default_vert_code
+                bpy.data.texts[vert_filename].write( self.vert_code )
 
         for text in bpy.data.texts:
 
@@ -448,9 +313,9 @@ void main(void) {
                     #Restore context
                     ctx['area'].type = oldAreaType
             
-                if text.as_string() != self._frag_code:
-                    self._frag_code = text.as_string()
-                    self.engine.setSource(gv.FRAGMENT, self._frag_code)
+                if text.as_string() != self.frag_code:
+                    self.frag_code = text.as_string()
+                    engine.setSource(gv.FRAGMENT, self.frag_code)
                     reload_shaders = True
 
             elif text.name_full == vert_filename:
@@ -466,36 +331,74 @@ void main(void) {
                     #Restore context
                     ctx['area'].type = oldAreaType
 
-                if text.as_string() != self._vert_code:
-                    self._vert_code = text.as_string()
-                    self.engine.setSource(gv.VERTEX, self._vert_code)
+                if text.as_string() != self.vert_code:
+                    self.vert_code = text.as_string()
+                    engine.setSource(gv.VERTEX, self.vert_code)
                     reload_shaders = True
 
         if reload_shaders:
-            self.engine.loadShaders()
+            engine.loadShaders()
             self.tag_redraw()
 
 
-    def update_images(self):
-        for img in bpy.data.images:
-            if img.name == 'Render Result' or img.name == 'Viewer Node':
+    def view_update(self, context, depsgraph):
+        '''
+        For viewport renders. Blender calls view_update when starting viewport renders
+        and/or something changes in the scene.
+        This method is where data should be read from Blender in the same thread. 
+        Typically a render thread will be started to do the work while keeping Blender responsive.
+        '''
+        print("GVRenderEngine: view_update")
+
+        # Make sure that the preview engine is running
+        if self.preview_engine == None:
+            self.initPreview(depsgraph)
+
+        for update in depsgraph.updates:
+            if update.id.name == "Scene":
+                self.preview_skip_draw = True
+                # pass
+
+            # else:
+            if update.id.name in bpy.data.collections:
+                self.reloadScene(self.preview_engine, depsgraph)
+                self.tag_redraw()
                 continue
 
-            name, ext = os.path.splitext(img.name)
-            name = name.replace(" ", "")
+            elif update.id.name == "World":
+                clear_color = depsgraph.scene.world.color
+                self.preview_engine.setSkyGround( clear_color[0], clear_color[1], clear_color[2] )
+                continue
+    
+            elif not update.id.name in bpy.data.objects:
+                print("view_update: skipping update of", update.id.name)
+                continue 
 
-            if ext == '.hdr' or ext == '.HDR':
-                if not self.engine.haveCubemap(name):
-                    print("Add Cubemap", img.name, "as", name)
-                    pixels = np.array(img.pixels)
-                    self.engine.addCubemap(name, img.size[0], img.size[1], pixels)
+            obj = bpy.data.objects[update.id.name]
+            
+            if obj.type == 'LIGHT':
+                sun = bl2veraLight(obj)
+                self.preview_engine.setSun(sun);
+
+            elif obj.type == 'MESH':
+                if update.is_updated_geometry:
+                    self.reloadScene(self.preview_engine, depsgraph)
+
+                if update.is_updated_transform:
+                    M = np.array(obj.matrix_world)
+                    self.preview_engine.setMeshTransformMatrix(  obj.name_full, 
+                                                         M[0][0],  M[2][0],  M[1][0], M[3][0],
+                                                         M[0][1],  M[2][1],  M[1][1], M[3][1],
+                                                         M[0][2],  M[2][2],  M[1][2], M[3][2],
+                                                        -M[0][3], -M[2][3], -M[1][3], M[3][3] )
+            
+            elif obj.type == 'CAMERA':
+                pass
 
             else:
-                name = "u_" + name + "Tex"
-                if not self.engine.haveTexture(name):
-                    print("Add Texture", img.name, "as", name)
-                    pixels = np.array(img.pixels)
-                    self.engine.addTexture(name, img.size[0], img.size[1], pixels)
+                print("GVRenderEngine: view_update -> obj type", obj.type)
+
+        # self.tag_redraw()
 
 
     def view_draw(self, context, depsgraph):
@@ -505,20 +408,20 @@ void main(void) {
         The renderer is expected to quickly draw the render with OpenGL, and not perform other expensive work.
         Blender will draw overlays for selection and editing on top of the rendered image automatically.
         '''
-        if self._preview_skip:
-            self._preview_skip = False
+        print("GVRenderEngine: view_draw")
+
+        if self.preview_skip_draw:
+            self.preview_skip_draw = False
             self.tag_redraw()
             return
+        
+        # Make sure that the preview engine is running
+        if self.preview_engine == None:
+            self.initPreview(depsgraph)
 
-        # print("GVRenderEngine: view_draw")
-        scene = depsgraph.scene
-
-        if not self._preview_started:
-            self.start()
-            self.reloadScene(depsgraph)
-
-        for update in depsgraph.updates:
-            print("GVRenderEngine: view_draw -> ", update.id.name)
+        if not self.preview_shader_checker:
+            self.start_checking_changes_on_shaders()
+            # self.reloadScene(self.preview_engine, depsgraph)
 
         # Get viewport camera
         region = context.region
@@ -527,37 +430,20 @@ void main(void) {
             area: bpy.types.Area
             if area.type == 'VIEW_3D':
                 current_region3d = area.spaces.active.region_3d
+                self.preview_engine.setCamera( bl2veraCamera(current_region3d) )
+                self.preview_engine.resize(region.width, region.height)
 
-                global __GV_ENGINE__
-                if __GV_ENGINE__ is None or self.engine is None:
-                    __GV_ENGINE__ = gv.Engine()
-                    self.engine = __GV_ENGINE__
-                    self.update_shaders(True);
-                    self.tag_redraw()
-
-                self.engine.setCamera( bl2veraCamera(current_region3d) )
-                self.engine.resize(region.width, region.height)
-
-        self.engine.setFrame(scene.frame_current)
-        self.update_images()
+        self.preview_engine.setFrame(depsgraph.scene.frame_current)
+        self.update_images(self.preview_engine)
 
         bgl.glEnable(bgl.GL_DEPTH_TEST)
         bgl.glDepthMask(bgl.GL_TRUE)
-
-        # # Clear background with the user's clear color
-        clear_color = scene.world.color
-        # bgl.glClearDepth(100000);
-        bgl.glClearColor(clear_color[0], clear_color[1], clear_color[2], 1.0)
+        bgl.glDepthRange(0,1)
+        bgl.glClearColor(depsgraph.scene.world.color[0], depsgraph.scene.world.color[1], depsgraph.scene.world.color[2], 1.0)
         bgl.glClear(bgl.GL_COLOR_BUFFER_BIT | bgl.GL_DEPTH_BUFFER_BIT)
 
-        # bgl.glEnable(bgl.GL_BLEND)
-        # bgl.glBlendFunc(bgl.GL_ONE, bgl.GL_ONE_MINUS_SRC_ALPHA)
-        # self.bind_display_space_shader(scene)
-        
-        self.engine.draw()
-        
-        # self.unbind_display_space_shader()
-        # bgl.glDisable(bgl.GL_BLEND)
+        self.preview_engine.draw()
+
         bgl.glDisable(bgl.GL_DEPTH_TEST)
 
 
@@ -567,42 +453,50 @@ void main(void) {
         '''
         print("GVRenderEngine: render")
 
+        global __GV_PREVIEW_RENDER__
+        if __GV_PREVIEW_RENDER__:
+            __GV_PREVIEW_RENDER__.closePreview()
+        
         scene = depsgraph.scene
         scale = scene.render.resolution_percentage / 100.0
         width = int(scene.render.resolution_x * scale)
         height = int(scene.render.resolution_y * scale)
-
         camera = self.camera_override
-
-        if not self._preview_started:
-            self._preview_started = True
-
-        # Here we write the pixel values to the RenderResult
         filepath = bpy.context.scene.render.filepath
         absolutepath = bpy.path.abspath(filepath)
         out_image = os.path.join(absolutepath, '_render.png')
 
-        # self.reloadScene(depsgraph)
+        final_engine = gv.Headless()
+        if fetch_pref('include_folder') != '.':
+            final_engine.include_folders = [ fetch_pref('include_folder') ]
+        final_engine.init()
+        self.reloadScene(final_engine, depsgraph)
+        self.update_shaders(final_engine, True)
+        final_engine.setSource(gv.FRAGMENT, self.frag_code)
+        final_engine.setSource(gv.VERTEX, self.vert_code)
+        final_engine.loadShaders()
+        final_engine.setCamera( bl2veraCamera(camera) )
+        final_engine.resize(width, height)
+        final_engine.setFrame( scene.frame_current )
+        final_engine.showTextures( False)
+        final_engine.showPasses( False )
+        final_engine.showBoudningBox( False )
+        final_engine.setOutput( out_image )
 
-        self.engine.setCamera(bl2veraCamera(camera))
-        self.engine.resize(width, height)
-        self.engine.setFrame(scene.frame_current)
-        self.engine.setOutput(out_image)
+        bgl.glClearColor(depsgraph.scene.world.color[0], depsgraph.scene.world.color[1], depsgraph.scene.world.color[2], 1.0)
+        bgl.glClear(bgl.GL_COLOR_BUFFER_BIT)
 
-        bgl.glEnable(bgl.GL_DEPTH_TEST)
-        bgl.glDepthMask(bgl.GL_TRUE)
-        self.engine.draw()
-        bgl.glDisable(bgl.GL_DEPTH_TEST)
+        final_engine.draw()
+
+        final_engine.close()
 
         result = self.begin_result(0, 0, width, height)
-        lay = result.layers[0].passes["Combined"]
-        try:
-            lay.load_from_file(out_image)
-        except:
-            pass
+
+        layer = result.layers[0]
+        layer.load_from_file(out_image)
 
         self.end_result(result)
-    
+
 
 def get_panels():
     '''

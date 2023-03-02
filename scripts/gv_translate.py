@@ -112,9 +112,14 @@ def bl2veraCamera(source: bpy.types.RegionView3D | bpy.types.Object):
             projection_matrix[0][2], projection_matrix[1][2], projection_matrix[2][2], projection_matrix[3][2],
             projection_matrix[0][3], projection_matrix[1][3], projection_matrix[2][3], projection_matrix[3][3]
         )
+        cam.setScale(0.5)
 
     elif isinstance(source, bpy.types.Object):
         render = bpy.context.scene.render
+        scale = render.resolution_percentage / 100.0
+        width = (render.resolution_x * scale)
+        height = (render.resolution_y * scale)
+
         view_matrix = np.array(source.matrix_world)
         cam.setTransformMatrix(
             view_matrix[0][0], view_matrix[2][0], view_matrix[1][0], view_matrix[3][0],
@@ -122,18 +127,20 @@ def bl2veraCamera(source: bpy.types.RegionView3D | bpy.types.Object):
             view_matrix[0][2], view_matrix[2][2], view_matrix[1][2], view_matrix[3][2],
             view_matrix[0][3], view_matrix[2][3], view_matrix[1][3], view_matrix[3][3]
         )
-        cam.setFOV( math.degrees(2 * math.atan(source.data.sensor_width /(2 * source.data.lens))) )
         cam.setClipping( source.data.clip_start, source.data.clip_end )
-        
+        fov = math.degrees(2.0 * math.atan(source.data.sensor_width /(2.0 * source.data.lens)) )
+        cam.setFOV(fov * 0.328)
+        cam.setScale(1.0)
     
     else:
         print(f"INVALID CAMERA SOURCE: {source}")
         return None
 
-    # cam.setViewport(img_dims[0], img_dims[1])
-    cam.setScale(0.5)
+    
+    
 
     return cam
+
 
 def bl2veraMesh(bl_mesh: bpy.types.Mesh):
     mesh = gl.Mesh()
