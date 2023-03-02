@@ -128,9 +128,9 @@ class GVRenderEngine(bpy.types.RenderEngine):
     bl_idname = "GLSLVIEWER_ENGINE"
     bl_label = "GlslViewer"
     bl_use_preview = True
-    # bl_use_image_save = True
+    bl_use_image_save = True
     bl_use_postprocess = True
-    # bl_use_alembic_procedural = True
+    bl_use_alembic_procedural = True
     bl_use_eevee_viewport = True
     bl_use_shading_nodes = False
     bl_use_shading_nodes_custom = False
@@ -149,7 +149,7 @@ class GVRenderEngine(bpy.types.RenderEngine):
         instances may exist at the same time, for example for a viewport and final
         render.
         '''
-        print("GVRenderEngine: __init__")
+        # print("GVRenderEngine: __init__")
 
 
     def __del__(self):
@@ -157,12 +157,12 @@ class GVRenderEngine(bpy.types.RenderEngine):
         When the render engine instance is destroy, this is called. Clean up any
         render engine data here, for example stopping running render threads.
         '''
-        print("GVRenderEngine: __del__")
+        # print("GVRenderEngine: __del__")
         pass
 
 
     def initPreview(self, depsgraph):
-        print("GVRenderEngine: initPreview")
+        # print("GVRenderEngine: initPreview")
         global __GV_ENGINE__
         if self.preview_engine != None and __GV_ENGINE__ != None:
             return 
@@ -184,7 +184,7 @@ class GVRenderEngine(bpy.types.RenderEngine):
 
 
     def closePreview(self):
-        print("GVRenderEngine: closePreview")
+        # print("GVRenderEngine: closePreview")
 
         global __GV_HOLD_PREVIEW__
         __GV_HOLD_PREVIEW__ = True
@@ -197,7 +197,7 @@ class GVRenderEngine(bpy.types.RenderEngine):
 
 
     def start_checking_changes_on_shaders(self):
-        print("GVRenderEngine: start")        
+        # print("GVRenderEngine: start")        
         if self.preview_shader_checker:
             return
 
@@ -225,6 +225,7 @@ class GVRenderEngine(bpy.types.RenderEngine):
 
         engine.clearModels()
         for instance in depsgraph.object_instances:
+            print("load", instance.object.type, instance.object.name)
 
             if instance.object.type == 'MESH':
                 mesh = bl2veraMesh(instance.object)
@@ -238,7 +239,7 @@ class GVRenderEngine(bpy.types.RenderEngine):
 
             elif instance.object.type == 'LIGHT':
                 sun = bl2veraLight(instance.object)
-                engine.setSun(sun);    
+                engine.setSun(sun);
             
             elif instance.object.type == 'CAMERA':
                 engine.setCamera(bl2veraCamera(instance.object))
@@ -246,8 +247,8 @@ class GVRenderEngine(bpy.types.RenderEngine):
             elif not instance.object.name_full in bpy.data.objects:
                 print("Don't know how to reload", instance.object.name_full, instance.object.type)
 
-        self.update_shaders(engine, True)
         self.update_images(engine)
+        self.update_shaders(engine, True)
 
         scene = depsgraph.scene
         engine.setFxaa( scene.glsl_viewer_fxaa )
@@ -359,7 +360,7 @@ class GVRenderEngine(bpy.types.RenderEngine):
         This method is where data should be read from Blender in the same thread. 
         Typically a render thread will be started to do the work while keeping Blender responsive.
         '''
-        print("GVRenderEngine: view_update")
+        # print("GVRenderEngine: view_update")
 
         global __GV_HOLD_PREVIEW__
         if __GV_HOLD_PREVIEW__:
@@ -423,7 +424,7 @@ class GVRenderEngine(bpy.types.RenderEngine):
         The renderer is expected to quickly draw the render with OpenGL, and not perform other expensive work.
         Blender will draw overlays for selection and editing on top of the rendered image automatically.
         '''
-        print("GVRenderEngine: view_draw")
+        # print("GVRenderEngine: view_draw")
 
         global __GV_HOLD_PREVIEW__
         if __GV_HOLD_PREVIEW__:
@@ -440,7 +441,6 @@ class GVRenderEngine(bpy.types.RenderEngine):
 
         if not self.preview_shader_checker:
             self.start_checking_changes_on_shaders()
-            # self.reloadScene(self.preview_engine, depsgraph)
 
         # Get viewport camera
         region = context.region
@@ -470,7 +470,7 @@ class GVRenderEngine(bpy.types.RenderEngine):
         '''
         Main render entry point. Blender calls this when doing final renders or preview renders.
         '''
-        print("GVRenderEngine: render")
+        # print("GVRenderEngine: render")
 
         global __GV_PREVIEW_RENDER__
         if __GV_PREVIEW_RENDER__:
@@ -502,10 +502,15 @@ class GVRenderEngine(bpy.types.RenderEngine):
         final_engine.showBoudningBox( False )
         final_engine.setOutput( out_image )
 
+        bgl.glEnable(bgl.GL_DEPTH_TEST)
+        bgl.glDepthMask(bgl.GL_TRUE)
+        bgl.glDepthRange(0,1)
         bgl.glClearColor(depsgraph.scene.world.color[0], depsgraph.scene.world.color[1], depsgraph.scene.world.color[2], 1.0)
-        bgl.glClear(bgl.GL_COLOR_BUFFER_BIT)
+        bgl.glClear(bgl.GL_COLOR_BUFFER_BIT | bgl.GL_DEPTH_BUFFER_BIT)
 
         final_engine.draw()
+
+        bgl.glDisable(bgl.GL_DEPTH_TEST)
 
         final_engine.close()
 

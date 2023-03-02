@@ -2,12 +2,18 @@
 
 #include "vera/shaders/defaultShaders.h"
 
-WatchFileList   files;
 
 Engine::Engine() : m_enableCubemap (false) {
-    verbose = true;
+    // verbose = true;
     help = false;
     cursor = false;
+    m_initialized = true;
+    m_sceneRender.dynamicShadows = true;
+    uniforms.setSkyFlip(true);
+    uniforms.setSkySize(2048/2);
+    addDefine("GLSLVIEWER", vera::toString(GLSLVIEWER_VERSION_MAJOR) + vera::toString(GLSLVIEWER_VERSION_MINOR) + vera::toString(GLSLVIEWER_VERSION_PATCH) );
+    setSource(FRAGMENT, vera::getDefaultSrc(vera::FRAG_DEFAULT));
+    setSource(VERTEX, vera::getDefaultSrc(vera::VERT_DEFAULT_SCENE));
 };
 
 Engine::~Engine() {
@@ -17,16 +23,24 @@ void Engine::init() {
     vera::WindowProperties props;
     props.style = vera::EMBEDDED;
     vera::initGL(props);
-
-    addDefine("GLSLVIEWER", vera::toString(GLSLVIEWER_VERSION_MAJOR) + vera::toString(GLSLVIEWER_VERSION_MINOR) + vera::toString(GLSLVIEWER_VERSION_PATCH) );
-    setSource(FRAGMENT, vera::getDefaultSrc(vera::FRAG_DEFAULT));
-    setSource(VERTEX, vera::getDefaultSrc(vera::VERT_DEFAULT_SCENE));
+    WatchFileList files;
     resetShaders( files );
+}
 
-    m_sceneRender.dynamicShadows = true;
-    uniforms.setSkyFlip(true);
-    uniforms.setSkySize(2048/2);
-    m_initialized = true;
+void Engine::draw() {
+    uniforms.update();
+
+    renderPrep();
+    render();
+    renderPost();
+    
+    renderUI();
+    if (screenshotFile != "") {
+        onScreenshot(screenshotFile);
+        screenshotFile = "";
+    }
+
+    unflagChange();
 }
 
 void Engine::loadMesh(const std::string& _name, const vera::Mesh& _mesh) {
@@ -42,7 +56,8 @@ void Engine::loadImage(const std::string& _name, const std::string& _path, bool 
 }
 
 void Engine::loadShaders() {
-    resetShaders(files);
+    WatchFileList files;
+    resetShaders( files );
     flagChange();
 }
 
@@ -98,27 +113,6 @@ void Engine::resize(const size_t& width, const size_t& height) {
 void Engine::clearModels() {
     uniforms.clearModels();
 }
-
-void Engine::draw() {
-    uniforms.update();
-    renderPrep();
-    render();
-    renderPost();
-    
-    renderUI();
-    if (screenshotFile != "") {
-        onScreenshot(screenshotFile);
-        screenshotFile = "";
-    }
-
-    unflagChange();
-    if (!m_initialized) {
-        m_initialized = true;
-        vera::updateViewport();
-        flagChange();
-    }
-}
-
 
 bool Engine::haveTexture(const std::string& _name) {
     return uniforms.textures.find(_name) != uniforms.textures.end();
@@ -198,12 +192,8 @@ void Engine::showHistogram(bool _value) {
 
 void Engine::setFxaa(bool _value) { 
     fxaa = _value; 
-    // if (fxaa) {
-    //     m_postprocessing_shader.setSource(vera::getDefaultSrc(vera::FRAG_FXAA), vera::getDefaultSrc(vera::VERT_BILLBOARD));
-    //     uniforms.functions["u_scene"].present = true;
-    //     m_postprocessing = true;
-    //     m_update_buffers = true;
-    // }
-    resetShaders(files);
+    
+    WatchFileList files;
+    resetShaders( files );
     flagChange();
 }
