@@ -4,6 +4,7 @@
 
 
 Headless::Headless() {
+    m_sceneRender.showBBoxes = false;
 };
 
 Headless::~Headless() {

@@ -1755,6 +1755,7 @@ void Sandbox::renderPost() {
         m_postprocessing_shader.setUniform("u_modelMatrix", glm::mat4(1.0f));
         m_postprocessing_shader.setUniform("u_viewMatrix", glm::mat4(1.0f));
         m_postprocessing_shader.setUniform("u_projectionMatrix", glm::mat4(1.0f));
+        m_postprocessing_shader.setUniform("u_modelViewProjectionMatrix", glm::mat4(1.0f));//vera::getOrthoMatrix());
 
         // Update uniforms and textures
         uniforms.feedTo( &m_postprocessing_shader, true, true );

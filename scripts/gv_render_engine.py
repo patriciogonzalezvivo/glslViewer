@@ -19,6 +19,12 @@ def get_gv_engine():
     global __GV_ENGINE__
     return __GV_ENGINE__
 
+
+__GV_PREVIEW_RENDER__ = None
+def get_gv_render():
+    global __GV_PREVIEW_RENDER__
+    return __GV_PREVIEW_RENDER__
+
 @persistent
 def load_new_scene(dummy):
     print("Event: load_new_scene", bpy.data.filepath)
@@ -51,58 +57,82 @@ def update_areas():
 
 def fxaa_change(self, context):
     engine = get_gv_engine()
-    if engine != None:
+    if engine:
         engine.setFxaa( self.glsl_viewer_fxaa )
-        engine.tag_redraw()
+
+    render = get_gv_render()
+    if render:
+        render.tag_redraw()
 
 
 def enable_cubemap_change(self, context):
     engine = get_gv_engine()
-    if engine != None:
+    if engine:
         engine.enableCubemap( self.glsl_viewer_enable_cubemap )
-        engine.tag_redraw()
+
+    render = get_gv_render()
+    if render:
+        render.tag_redraw()
 
 
 def show_cubemap_change(self, context):
     engine = get_gv_engine()
-    if engine != None:
+    if engine:
         engine.showCubemap( self.glsl_viewer_show_cubemap )
-        engine.tag_redraw()
+        
+    render = get_gv_render()
+    if render:
+        render.tag_redraw()
 
 
 def show_textures_change(self, context):
     engine = get_gv_engine()
-    if engine != None:
+    if engine:
         engine.showTextures( self.glsl_viewer_show_textures )
-        engine.tag_redraw()
+
+    render = get_gv_render()
+    if render:
+        render.tag_redraw()
 
 
 def show_passes_change(self, context):
     engine = get_gv_engine()
-    if engine != None:
+    if engine:
         engine.showPasses( self.glsl_viewer_show_passes )
-        engine.tag_redraw()
+
+    render = get_gv_render()
+    if render:
+        render.tag_redraw()
 
 
 def show_histogram_change(self, context):
     engine = get_gv_engine()
-    if engine != None:
+    if engine:
         engine.showHistogram( self.glsl_viewer_show_histogram )
-        engine.tag_redraw()
+
+    render = get_gv_render()
+    if render:
+        render.tag_redraw()
 
 
 def show_skybox_turbidity_change(self, context):
     engine = get_gv_engine()
-    if engine != None:
+    if engine:
         engine.setSkyTurbidity( self.glsl_viewer_skybox_turbidity )
-        engine.tag_redraw()
+
+    render = get_gv_render()
+    if render:
+        render.tag_redraw()
 
 
 def show_debug_change(self, context):
     engine = get_gv_engine()
-    if engine != None:
+    if engine:
         engine.showBoudningBox( self.glsl_viewer_show_debug )
-        engine.tag_redraw()
+
+    render = get_gv_render()
+    if render:
+        render.tag_redraw()
 
 
 PROPS = [
@@ -139,6 +169,7 @@ class GVRenderEngine(bpy.types.RenderEngine):
     vert_code = ""
 
     preview_engine = None
+    preview_engine_this = False
     preview_skip_draw = False
     preview_shader_checker = False
 
@@ -158,6 +189,10 @@ class GVRenderEngine(bpy.types.RenderEngine):
         render engine data here, for example stopping running render threads.
         '''
         # print("GVRenderEngine: __del__")
+        global __GV_PREVIEW_RENDER__
+        if __GV_PREVIEW_RENDER__ and self.preview_engine_this:
+            __GV_PREVIEW_RENDER__ = None
+
         pass
 
 
@@ -181,6 +216,7 @@ class GVRenderEngine(bpy.types.RenderEngine):
         global __GV_PREVIEW_RENDER__
         if __GV_PREVIEW_RENDER__ is None:
             __GV_PREVIEW_RENDER__ = self
+        self.preview_engine_this = True
 
 
     def closePreview(self):
@@ -221,11 +257,22 @@ class GVRenderEngine(bpy.types.RenderEngine):
 
 
     def reloadScene(self, engine, depsgraph):
-        print("Reload entire scene")
+        # print("Reload entire scene")
+        self.update_images(engine)
+        self.update_shaders(engine, True)
+
+        scene = depsgraph.scene
+        engine.setFxaa( scene.glsl_viewer_fxaa )
+        engine.enableCubemap( scene.glsl_viewer_enable_cubemap )
+        engine.showCubemap( scene.glsl_viewer_show_cubemap )
+        engine.showTextures( scene.glsl_viewer_show_textures )
+        engine.showPasses( scene.glsl_viewer_show_passes )
+        engine.setSkyGround( scene.world.color[0], scene.world.color[1], scene.world.color[2] )
+        engine.setSkyTurbidity( scene.glsl_viewer_skybox_turbidity )
+        engine.showBoudningBox( scene.glsl_viewer_show_debug )
 
         engine.clearModels()
         for instance in depsgraph.object_instances:
-            print("load", instance.object.type, instance.object.name)
 
             if instance.object.type == 'MESH':
                 mesh = bl2veraMesh(instance.object)
@@ -246,19 +293,6 @@ class GVRenderEngine(bpy.types.RenderEngine):
         
             elif not instance.object.name_full in bpy.data.objects:
                 print("Don't know how to reload", instance.object.name_full, instance.object.type)
-
-        self.update_images(engine)
-        self.update_shaders(engine, True)
-
-        scene = depsgraph.scene
-        engine.setFxaa( scene.glsl_viewer_fxaa )
-        engine.enableCubemap( True )
-        engine.showCubemap( scene.glsl_viewer_show_cubemap )
-        engine.showTextures( scene.glsl_viewer_show_textures )
-        engine.showPasses( scene.glsl_viewer_show_passes )
-        engine.setSkyGround( scene.world.color[0], scene.world.color[1], scene.world.color[2] )
-        engine.setSkyTurbidity( scene.glsl_viewer_skybox_turbidity )
-        engine.showBoudningBox( scene.glsl_viewer_show_debug )
 
 
     def update_images(self, engine):
@@ -494,12 +528,13 @@ class GVRenderEngine(bpy.types.RenderEngine):
         final_engine.setSource(gv.FRAGMENT, self.frag_code)
         final_engine.setSource(gv.VERTEX, self.vert_code)
         final_engine.loadShaders()
-        final_engine.setCamera( bl2veraCamera(camera) )
         final_engine.resize(width, height)
+        final_engine.setCamera( bl2veraCamera(camera) )
         final_engine.setFrame( scene.frame_current )
         final_engine.showTextures( False)
         final_engine.showPasses( False )
         final_engine.showBoudningBox( False )
+        final_engine.resize(width, height)
         final_engine.setOutput( out_image )
 
         bgl.glEnable(bgl.GL_DEPTH_TEST)
@@ -523,7 +558,9 @@ class GVRenderEngine(bpy.types.RenderEngine):
         layer.load_from_file(out_image)
 
         self.end_result(result)
-        __GV_PREVIEW_RENDER__.tag_update()
+
+        if __GV_PREVIEW_RENDER__:
+            __GV_PREVIEW_RENDER__.tag_update()
 
 
 def get_panels():
