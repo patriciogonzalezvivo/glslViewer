@@ -8,7 +8,8 @@ def fetch_pref(name: str):
     return prefs[name]
 
 
-default_vert_code = '''#ifdef GL_ES
+default_vert_code = '''#version 100
+#ifdef GL_ES
 precision mediump float;
 #endif
 
@@ -77,7 +78,8 @@ void main(void) {
     gl_Position = u_projectionMatrix * u_viewMatrix * v_position;
 }'''
 
-default_frag_code = '''#ifdef GL_ES
+default_frag_code = '''#version 100
+#ifdef GL_ES
 precision highp float;
 #endif
 
