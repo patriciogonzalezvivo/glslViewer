@@ -48,7 +48,7 @@ public:
     virtual bool haveTexture(const std::string& _name);
     virtual bool loadTexture(const std::string& _name, int _width, int _height, int _channels, const std::vector<float>& _pixels);
     virtual bool addTexture(const std::string& _name, int _width, int _height, int _id);
-    virtual void printTextures() { uniforms.printTextures(); }
+    virtual void printTextures() { uniforms.printTextures(); uniforms.printCubemaps(); }
 
     virtual void showCubemap(bool _value) { m_sceneRender.showCubebox = _value; };
     virtual void enableCubemap(bool _value);

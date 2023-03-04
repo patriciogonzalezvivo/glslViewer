@@ -9,6 +9,7 @@ public:
     virtual ~Headless();
 
     void init();
+    
     void draw();
 
     void close();

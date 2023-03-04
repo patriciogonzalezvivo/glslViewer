@@ -8,7 +8,7 @@ Engine::Engine() : m_enableCubemap (true) {
     // verbose = true;
     help = false;
     cursor = false;
-    m_initialized = true;
+    m_initialized = false;
     m_sceneRender.dynamicShadows = true;
     uniforms.setSkyFlip(true);
     uniforms.setSkySize(2048/2);
@@ -85,9 +85,10 @@ void Engine::setSun(const vera::Light& _light) {
     if (light == nullptr)
         return;
     
-    if (uniforms.cubemaps.size() == 1)
+    if (uniforms.cubemaps.size() == 1) {
         uniforms.activeCubemap = uniforms.cubemaps["default"];
         uniforms.setSunPosition( _light.getPosition() * glm::vec3(1.0, -1.0, 1.0) );
+    }
 
     light->setPosition( _light.getPosition() );
     light->setType(vera::LIGHT_POINT);

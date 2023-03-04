@@ -19,18 +19,13 @@ void Headless::init() {
 }
 
 void Headless::draw() {
-    vera::updateGL();
-    
+    vera::updateGL();    
     uniforms.update();
 
     renderPrep();
     render();
     renderPost();
-
-    if (screenshotFile != "") {
-        onScreenshot(screenshotFile);
-        screenshotFile = "";
-    }
+    renderDone();
 
     vera::renderGL();
 }

@@ -309,7 +309,7 @@ class GVRenderEngine(bpy.types.RenderEngine):
 
     def update_images(self, engine):
         for img in bpy.data.images:
-            if img.name == 'Render Result' or img.name == 'Viewer Node':
+            if img.type != 'IMAGE':
                 continue
 
             name, _ = os.path.splitext(img.name)
@@ -556,6 +556,7 @@ class GVRenderEngine(bpy.types.RenderEngine):
         if fetch_pref('include_folder') != '.':
             final_engine.include_folders = [ fetch_pref('include_folder') ]
         final_engine.init()
+        final_engine.enableCubemap( True )
         self.reloadScene(final_engine, depsgraph)
         self.update_shaders(final_engine, True)
         final_engine.setSource(gv.FRAGMENT, self.frag_code)
@@ -564,23 +565,18 @@ class GVRenderEngine(bpy.types.RenderEngine):
         final_engine.resize(width, height)
         final_engine.setCamera( bl2veraCamera(camera) )
         final_engine.setFrame( scene.frame_current )
+
+        final_engine.resize(width, height)
         final_engine.enableCubemap( scene.glsl_viewer_enable_cubemap )
         final_engine.showCubemap( scene.glsl_viewer_show_cubemap )
         final_engine.showTextures( False)
         final_engine.showPasses( False )
         final_engine.showBoudningBox( False )
-        final_engine.resize(width, height)
-        final_engine.setOutput( out_image )
-
-        bgl.glEnable(bgl.GL_DEPTH_TEST)
-        bgl.glDepthMask(bgl.GL_TRUE)
-        bgl.glDepthRange(0,1)
-        bgl.glClearColor(depsgraph.scene.world.color[0], depsgraph.scene.world.color[1], depsgraph.scene.world.color[2], 1.0)
-        bgl.glClear(bgl.GL_COLOR_BUFFER_BIT | bgl.GL_DEPTH_BUFFER_BIT)
 
         final_engine.draw()
 
-        bgl.glDisable(bgl.GL_DEPTH_TEST)
+        final_engine.setOutput( out_image )
+        final_engine.draw()
 
         final_engine.close()
 

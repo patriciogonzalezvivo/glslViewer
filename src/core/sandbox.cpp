@@ -1258,7 +1258,10 @@ void Sandbox::setSource(ShaderType _type, const std::string& _source) {
 };
 
 void Sandbox::resetShaders( WatchFileList &_files ) {
-    console_clear();
+
+    if (vera::getWindowStyle() != vera::EMBEDDED)
+        console_clear();
+        
     flagChange();
 
     // UPDATE scene shaders of models (materials)
@@ -1339,7 +1342,8 @@ void Sandbox::resetShaders( WatchFileList &_files ) {
     else 
         m_postprocessing = false;
 
-    console_refresh();
+    if (vera::getWindowStyle() != vera::EMBEDDED)
+        console_refresh();
 
     // Make sure this runs in main loop
     m_update_buffers = true;
@@ -1755,7 +1759,7 @@ void Sandbox::renderPost() {
         m_postprocessing_shader.setUniform("u_modelMatrix", glm::mat4(1.0f));
         m_postprocessing_shader.setUniform("u_viewMatrix", glm::mat4(1.0f));
         m_postprocessing_shader.setUniform("u_projectionMatrix", glm::mat4(1.0f));
-        m_postprocessing_shader.setUniform("u_modelViewProjectionMatrix", glm::mat4(1.0f));//vera::getOrthoMatrix());
+        m_postprocessing_shader.setUniform("u_modelViewProjectionMatrix", glm::mat4(1.0f) );//vera::getOrthoMatrix());
 
         // Update uniforms and textures
         uniforms.feedTo( &m_postprocessing_shader, true, true );
@@ -1795,9 +1799,10 @@ void Sandbox::renderPost() {
         vera::image(m_record_fbo);
     }
 
-
     TRACK_END("render")
-    console_uniforms_refresh();
+    
+    if  (vera::getWindowStyle() != vera::EMBEDDED)
+        console_uniforms_refresh();
 }
 
 
@@ -1820,7 +1825,7 @@ void Sandbox::renderUI() {
             float xOffset = xStep;
             float yOffset = h - yStep;
             
-            // vera::textAngle(-HALF_PI);
+            vera::textAngle(0.0);
             vera::textAlign(vera::ALIGN_TOP);
             vera::textAlign(vera::ALIGN_LEFT);
             vera::textSize(xStep * 0.2f / vera::getPixelDensity(false));
@@ -1869,7 +1874,7 @@ void Sandbox::renderUI() {
             float xOffset = w - xStep;
             float yOffset = h - yStep;
 
-            // vera::textAngle(-HALF_PI);
+            vera::textAngle(0.0);
             vera::textSize(xStep * 0.2f / vera::getPixelDensity(false));
             vera::textAlign(vera::ALIGN_TOP);
             vera::textAlign(vera::ALIGN_LEFT);
@@ -1924,7 +1929,7 @@ void Sandbox::renderUI() {
 
                 }
 
-                // vera::text("u_pyramid0" + vera::toString(i), xOffset - scale.x * 2.0, vera::getWindowHeight() - yOffset + yStep);
+                // vera::text("u_pyramid0" + vera::toString(i), xOffset - scale.x * 2.0, vera::getWindowHeight() - yOffset - yStep);
                 yOffset -= yStep * 2.0;
 
             }
@@ -2034,9 +2039,9 @@ void Sandbox::renderUI() {
 
         vera::fill(1.0f);
 
+        vera::textAngle(0.0f);
         vera::textAlign(vera::ALIGN_MIDDLE);
         vera::textAlign(vera::ALIGN_CENTER);
-        vera::textAngle(0.0f);
 
         vera::textSize(38.0f);
         vera::text("Drag & Drop", w * 0.5f, h * 0.45f);

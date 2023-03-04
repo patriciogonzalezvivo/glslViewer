@@ -718,6 +718,10 @@ int main(int argc, char **argv) {
 
     // Load files to sandbox
     sandbox.loadAssets(files);
+    if (sandbox.uniforms.models.size() > 0 ) {
+        float area = sandbox.getSceneRender().getArea();
+        sandbox.uniforms.setSunPosition( glm::vec3(0.0,area*10.0,area*10.0) );
+    }
 
     // EVENTs callbacks
     //
@@ -859,6 +863,8 @@ int main(int argc, char **argv) {
                         vera::haveExt(path,"glb") || vera::haveExt(path,"GLB") ||
                         vera::haveExt(path,"gltf") || vera::haveExt(path,"GLTF") ) {
 
+                bool init_lights = sandbox.uniforms.models.size() == 0;
+
                 if (sandbox.geom_index == -1) {
                     WatchFile file;
                     file.type = GEOMETRY;
@@ -873,6 +879,12 @@ int main(int argc, char **argv) {
                     files[sandbox.geom_index].lastChange = 0;
                 }
                 sandbox.loadAssets(files);
+
+                // if (init_lights) {
+                //     float area = sandbox.getSceneRender().getArea();
+                //     sandbox.uniforms.setSunPosition( glm::vec3(0.0,area*10.0,area*10.0) );
+                // }
+
                 commandsRun("update");
             }
             // load cubemap

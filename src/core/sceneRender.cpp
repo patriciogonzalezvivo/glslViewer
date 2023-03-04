@@ -39,7 +39,7 @@ SceneRender::SceneRender():
     // Camera.
     m_blend(vera::BLEND_ALPHA), m_culling(vera::CULL_NONE), m_depth_test(true),
     // Light
-    dynamicShadows(true), m_shadows(false),
+    dynamicShadows(false), m_shadows(false),
     // Background
     m_background(false), 
     // Floor
@@ -445,8 +445,6 @@ bool SceneRender::loadScene(Uniforms& _uniforms) {
     m_cubemap_shader.setSource(vera::getDefaultSrc(vera::FRAG_CUBEMAP), vera::getDefaultSrc(vera::VERT_CUBEMAP));
 
     // Light
-    if (vera::getWindowStyle() != vera::EMBEDDED)
-        _uniforms.setSunPosition( glm::vec3(0.0,m_area*10.0,m_area*10.0) );
     vera::addLabel("u_light", _uniforms.lights["default"], vera::LABEL_DOWN, 30.0f);
     m_lightUI_shader.setSource(vera::getDefaultSrc(vera::FRAG_LIGHT), vera::getDefaultSrc(vera::VERT_LIGHT));
 
