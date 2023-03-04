@@ -1,9 +1,10 @@
 #include "engine.h"
 
 #include "vera/shaders/defaultShaders.h"
+#include "vera/ops/draw.h"
 
 
-Engine::Engine() : m_enableCubemap (false) {
+Engine::Engine() : m_enableCubemap (true) {
     // verbose = true;
     help = false;
     cursor = false;
@@ -28,19 +29,24 @@ void Engine::init() {
 }
 
 void Engine::draw() {
+    vera::textFont("default");
+    
     uniforms.update();
 
     renderPrep();
     render();
     renderPost();
-    
     renderUI();
+
     if (screenshotFile != "") {
         onScreenshot(screenshotFile);
         screenshotFile = "";
     }
 
     unflagChange();
+
+    if (m_plot != PLOT_OFF)
+        onPlot();
 }
 
 void Engine::loadMesh(const std::string& _name, const vera::Mesh& _mesh) {
@@ -59,6 +65,12 @@ void Engine::loadShaders() {
     WatchFileList files;
     resetShaders( files );
     flagChange();
+}
+
+void Engine::setSkyGround(float _r, float _g, float _b) { 
+    glm::vec3 c = uniforms.getGroundAlbedo();
+    if (c.r != _r || c.g != _g || c.b != _b)
+        uniforms.setGroundAlbedo(glm::vec3(_r, _g, _b));
 }
 
 void Engine::setCamera(const vera::Camera& _cam) {
@@ -118,10 +130,29 @@ bool Engine::haveTexture(const std::string& _name) {
     return uniforms.textures.find(_name) != uniforms.textures.end();
 }
 
-bool Engine::addTexture(const std::string& _name, int _width, int _height,const std::vector<float>& _pixels) {
+bool Engine::addTexture(const std::string& _name, int _width, int _height, int _id) {
     if (uniforms.textures.find(_name) == uniforms.textures.end()) {
         vera::Texture* tex = new vera::Texture();
-        if (tex->load(_width, _height, 4, 32, _pixels.data())) {
+        if (tex->load(_width, _height, _id)) {
+            uniforms.textures[_name] = tex;
+
+            if (verbose) {
+                std::cout << "uniform sampler2D   " << _name  << ";"<< std::endl;
+                std::cout << "uniform vec2        " << _name  << "Resolution;"<< std::endl;
+            }
+
+            return true;
+        }
+        else
+            delete tex;
+    }
+    return false;
+}
+
+bool Engine::loadTexture(const std::string& _name, int _width, int _height, int _channels, const std::vector<float>& _pixels) {
+    if (uniforms.textures.find(_name) == uniforms.textures.end()) {
+        vera::Texture* tex = new vera::Texture();
+        if (tex->load(_width, _height, _channels, 32, _pixels.data())) {
             uniforms.textures[_name] = tex;
 
             if (verbose) {
@@ -141,10 +172,10 @@ bool Engine::haveCubemap(const std::string& _name) {
     return uniforms.cubemaps.find(_name) != uniforms.cubemaps.end();
 }
 
-bool Engine::addCubemap(const std::string& _name, int _width, int _height, const std::vector<float>& _pixels) {
+bool Engine::addCubemap(const std::string& _name, int _width, int _height, int _channels, const std::vector<float>& _pixels) {
     if (uniforms.cubemaps.find(_name) == uniforms.cubemaps.end()) {
         vera::TextureCube* tex = new vera::TextureCube();
-        if ( tex->load(_width, _height, 4, _pixels.data(), true) ) {
+        if ( tex->load(_width, _height, _channels, _pixels.data(), true) ) {
 
             if (verbose) {
                 std::cout << "// " << _name << " loaded as: " << std::endl;
@@ -163,6 +194,10 @@ bool Engine::addCubemap(const std::string& _name, int _width, int _height, const
             delete tex;
     }
     return false;
+}
+
+void Engine::setUniform(const std::string& _name, const std::vector<float>& _values) {
+    uniforms.set(_name, _values, false);
 }
 
 void Engine::enableCubemap(bool _value) {

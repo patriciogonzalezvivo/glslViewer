@@ -39,7 +39,7 @@ SceneRender::SceneRender():
     // Camera.
     m_blend(vera::BLEND_ALPHA), m_culling(vera::CULL_NONE), m_depth_test(true),
     // Light
-    dynamicShadows(false), m_shadows(false),
+    dynamicShadows(true), m_shadows(false),
     // Background
     m_background(false), 
     // Floor
@@ -421,6 +421,7 @@ void SceneRender::printDefines() {
 }
 
 bool SceneRender::loadScene(Uniforms& _uniforms) {
+    vera::cleanLabels();
 
     // Calculate the total area
     vera::BoundingBox bbox;
@@ -963,12 +964,12 @@ void SceneRender::renderDebug(Uniforms& _uniforms) {
             vera::model( it->second->getVboBbox() );
         }
 
-        if (vera::getWindowStyle() != vera::EMBEDDED) {
+        // if (vera::getWindowStyle() != vera::EMBEDDED) {
             vera::resetMatrix();
             vera::fill(.8f);
             vera::textSize(24.0f);
             vera::labels();
-        }
+        // }
     }
     
     // Axis

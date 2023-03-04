@@ -2,8 +2,8 @@ import os
 import numpy as np
 
 import bpy
+import idprop
 import bgl
-import gpu
 
 from .gv_lib import GlslViewer as gv
 from .gv_preferences import fetch_pref, default_vert_code, default_frag_code
@@ -27,7 +27,7 @@ def get_gv_render():
 
 @persistent
 def load_new_scene(dummy):
-    print("Event: load_new_scene", bpy.data.filepath)
+    # print("Event: load_new_scene", bpy.data.filepath)
 
     global __GV_ENGINE__
     if __GV_ENGINE__:
@@ -190,10 +190,11 @@ class GVRenderEngine(bpy.types.RenderEngine):
         '''
         # print("GVRenderEngine: __del__")
         global __GV_PREVIEW_RENDER__
-        if __GV_PREVIEW_RENDER__ and self.preview_engine_this:
-            __GV_PREVIEW_RENDER__ = None
-
-        pass
+        try:
+            if __GV_PREVIEW_RENDER__ and self.preview_engine_this:
+                __GV_PREVIEW_RENDER__ = None
+        except:
+            pass
 
 
     def initPreview(self, depsgraph):
@@ -243,7 +244,10 @@ class GVRenderEngine(bpy.types.RenderEngine):
 
     def check_for_changes_on_shaders(self):
         # print("GVRenderEngine: check_for_changes_on_shaders")
-        if not self.preview_shader_checker:
+        try:
+            if not self.preview_shader_checker:
+                return
+        except:
             return
 
         if bpy.context.scene.render.engine != 'GLSLVIEWER_ENGINE':
@@ -258,19 +262,21 @@ class GVRenderEngine(bpy.types.RenderEngine):
 
     def reloadScene(self, engine, depsgraph):
         # print("Reload entire scene")
-        self.update_images(engine)
         self.update_shaders(engine, True)
 
         scene = depsgraph.scene
-        engine.setFxaa( scene.glsl_viewer_fxaa )
-        engine.enableCubemap( scene.glsl_viewer_enable_cubemap )
-        engine.showCubemap( scene.glsl_viewer_show_cubemap )
-        engine.showTextures( scene.glsl_viewer_show_textures )
-        engine.showPasses( scene.glsl_viewer_show_passes )
+        engine.enableCubemap( True )
+    
         engine.setSkyGround( scene.world.color[0], scene.world.color[1], scene.world.color[2] )
-        engine.setSkyTurbidity( scene.glsl_viewer_skybox_turbidity )
-        engine.showBoudningBox( scene.glsl_viewer_show_debug )
+        for name, value in bpy.context.scene.world.items():
+            if isinstance(value, float):
+                self.preview_engine.setUniform(name, [value])
+            elif isinstance(value, idprop.types.IDPropertyArray):
+                self.preview_engine.setUniform(name, value.to_list())
 
+        engine.setSkyTurbidity( scene.glsl_viewer_skybox_turbidity )
+        engine.setFxaa( scene.glsl_viewer_fxaa )
+        
         engine.clearModels()
         for instance in depsgraph.object_instances:
 
@@ -294,27 +300,42 @@ class GVRenderEngine(bpy.types.RenderEngine):
             elif not instance.object.name_full in bpy.data.objects:
                 print("Don't know how to reload", instance.object.name_full, instance.object.type)
 
+        engine.showBoudningBox( scene.glsl_viewer_show_debug )
+        engine.enableCubemap( scene.glsl_viewer_enable_cubemap )
+        engine.showCubemap( scene.glsl_viewer_show_cubemap )
+        engine.showTextures( scene.glsl_viewer_show_textures )
+        engine.showHistogram( scene.glsl_viewer_show_histogram )
+
 
     def update_images(self, engine):
         for img in bpy.data.images:
             if img.name == 'Render Result' or img.name == 'Viewer Node':
                 continue
 
-            name, ext = os.path.splitext(img.name)
+            name, _ = os.path.splitext(img.name)
             name = name.replace(" ", "")
 
-            if ext == '.hdr' or ext == '.HDR':
+            if img.file_format == 'HDR':
                 if not engine.haveCubemap(name):
                     print("Add Cubemap", img.name, "as", name)
                     pixels = np.array(img.pixels)
-                    engine.addCubemap(name, img.size[0], img.size[1], pixels)
+                    engine.addCubemap(name, img.size[0], img.size[1], img.channels, pixels)
 
             else:
                 name = "u_" + name + "Tex"
-                if not engine.haveTexture(name):
-                    print("Add Texture", img.name, "as", name)
-                    pixels = np.array(img.pixels)
-                    engine.addTexture(name, img.size[0], img.size[1], pixels)
+                global __GV_HOLD_PREVIEW__
+                if __GV_HOLD_PREVIEW__:
+                    # If this is a FINAL RENDER, we need to load the texture as a file
+                    if not engine.haveTexture(name):
+                        print("Add Texture", img.name, "as", name)
+                        pixels = np.array(img.pixels)
+                        engine.addTexture(name, img.size[0], img.size[1], img.channels, pixels)
+                else:
+                    # If this is a PREVIEW RENDER, we can piggy bag from what's uploaded on texture
+                    img.gl_load()
+                    if not engine.haveTexture(name):
+                        engine.addTexture(name, img.size[0], img.size[1], img.bindcode)
+
 
     
     def update_shaders(self, engine, reload_shaders = False):
@@ -415,13 +436,22 @@ class GVRenderEngine(bpy.types.RenderEngine):
                 self.tag_redraw()
                 continue
 
-            elif update.id.name == "World":
+            elif update.id.name == "World" or update.id.name == "Shader Nodetree":
                 clear_color = depsgraph.scene.world.color
                 self.preview_engine.setSkyGround( clear_color[0], clear_color[1], clear_color[2] )
+
+                for name, value in bpy.context.scene.world.items():
+                    if isinstance(value, float):
+                        print(">", name, [value])
+                        self.preview_engine.setUniform(name, [value])
+                    elif isinstance(value, idprop.types.IDPropertyArray):
+                        print(">", name, np.array(value.to_list()))
+                        self.preview_engine.setUniform(name, np.array(value.to_list()))
+
                 continue
     
             elif not update.id.name in bpy.data.objects:
-                print("view_update: skipping update of", update.id.name)
+                # print("view_update: skipping update of", update.id.name)
                 continue 
 
             obj = bpy.data.objects[update.id.name]
@@ -507,9 +537,12 @@ class GVRenderEngine(bpy.types.RenderEngine):
         # print("GVRenderEngine: render")
 
         global __GV_PREVIEW_RENDER__
-        if __GV_PREVIEW_RENDER__:
-            __GV_PREVIEW_RENDER__.closePreview()
-        
+        try:
+            if __GV_PREVIEW_RENDER__:
+                __GV_PREVIEW_RENDER__.closePreview()
+        except:
+            pass
+
         scene = depsgraph.scene
         scale = scene.render.resolution_percentage / 100.0
         width = int(scene.render.resolution_x * scale)
@@ -531,6 +564,8 @@ class GVRenderEngine(bpy.types.RenderEngine):
         final_engine.resize(width, height)
         final_engine.setCamera( bl2veraCamera(camera) )
         final_engine.setFrame( scene.frame_current )
+        final_engine.enableCubemap( scene.glsl_viewer_enable_cubemap )
+        final_engine.showCubemap( scene.glsl_viewer_show_cubemap )
         final_engine.showTextures( False)
         final_engine.showPasses( False )
         final_engine.showBoudningBox( False )
@@ -559,8 +594,11 @@ class GVRenderEngine(bpy.types.RenderEngine):
 
         self.end_result(result)
 
-        if __GV_PREVIEW_RENDER__:
-            __GV_PREVIEW_RENDER__.tag_update()
+        try:
+            if __GV_PREVIEW_RENDER__:
+                __GV_PREVIEW_RENDER__.tag_update()
+        except:
+            pass
 
 
 def get_panels():

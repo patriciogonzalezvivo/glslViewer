@@ -23,7 +23,7 @@ public:
     
     virtual void setSun(const vera::Light& _light);
     virtual void setSkyTurbidity(float _turbidity) { uniforms.setSkyTurbidity(_turbidity); }
-    virtual void setSkyGround(float _r, float _g, float _b) { uniforms.setGroundAlbedo(glm::vec3(_r, _g, _b));  }
+    virtual void setSkyGround(float _r, float _g, float _b);
     
     virtual void setMeshTransformMatrix(    const std::string& _name, 
                                     float x1, float y1, float z1, float w1,
@@ -46,14 +46,17 @@ public:
     virtual void showHistogram(bool _value);
     virtual void showTextures(bool _value) { m_showTextures = _value; };
     virtual bool haveTexture(const std::string& _name);
-    virtual bool addTexture(const std::string& _name, int _width, int _height,const std::vector<float>& _pixels);
+    virtual bool loadTexture(const std::string& _name, int _width, int _height, int _channels, const std::vector<float>& _pixels);
+    virtual bool addTexture(const std::string& _name, int _width, int _height, int _id);
     virtual void printTextures() { uniforms.printTextures(); }
 
     virtual void showCubemap(bool _value) { m_sceneRender.showCubebox = _value; };
     virtual void enableCubemap(bool _value);
     virtual bool haveCubemap(const std::string& _name);
-    virtual bool addCubemap(const std::string& _name, int _width, int _height,const std::vector<float>& _pixels);
+    virtual bool addCubemap(const std::string& _name, int _width, int _height, int _channels, const std::vector<float>& _pixels);
     virtual void printCubemaps() { uniforms.printCubemaps(); }
+
+    virtual void setUniform(const std::string& _name, const std::vector<float>& _values);
 
     virtual void showPasses(bool _value) { m_showPasses = _value; };
     virtual void showBoudningBox(bool _value) { m_sceneRender.showBBoxes = _value; }

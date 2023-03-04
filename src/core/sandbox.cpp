@@ -1785,7 +1785,7 @@ void Sandbox::renderPost() {
 
         vera::image(m_sceneRender.renderFbo);
     }
-    
+        
     if (screenshotFile != "" || isRecording()) {
         m_record_fbo.unbind();
 
@@ -1794,6 +1794,7 @@ void Sandbox::renderPost() {
 
         vera::image(m_record_fbo);
     }
+
 
     TRACK_END("render")
     console_uniforms_refresh();
@@ -1812,25 +1813,28 @@ void Sandbox::renderUI() {
             TRACK_BEGIN("renderUI:textures")
             float w = (float)(vera::getWindowWidth());
             float h = (float)(vera::getWindowHeight());
+            float a = h/w;
             float scale = fmin(1.0f / (float)(nTotal), 0.25) * 0.5;
-            float xStep = w * scale;
+            float xStep = w * scale * a;
             float yStep = h * scale;
             float xOffset = xStep;
             float yOffset = h - yStep;
             
-            vera::textAngle(-HALF_PI);
+            // vera::textAngle(-HALF_PI);
             vera::textAlign(vera::ALIGN_TOP);
             vera::textAlign(vera::ALIGN_LEFT);
-            vera::textSize(yStep * 0.2f / vera::getPixelDensity(false));
+            vera::textSize(xStep * 0.2f / vera::getPixelDensity(false));
 
             for (vera::TexturesMap::iterator it = uniforms.textures.begin(); it != uniforms.textures.end(); it++) {
+                float imgAspect = ((float)it->second->getWidth()/(float)it->second->getHeight());
+                float imgW = xStep * imgAspect;
                 vera::TextureStreamsMap::const_iterator slit = uniforms.streams.find(it->first);
                 if ( slit != uniforms.streams.end() )
-                    vera::image((vera::TextureStream*)slit->second, xOffset, yOffset, xStep, yStep, true);
+                    vera::image((vera::TextureStream*)slit->second, xStep * 0.5 + imgW * 0.5, yOffset, imgW, yStep, true);
                 else 
-                    vera::image(it->second, xOffset, yOffset, xStep, yStep);
+                    vera::image(it->second, xStep * 0.5 + imgW * 0.5, yOffset, imgW, yStep);
 
-                vera::text(it->first, xOffset + xStep, vera::getWindowHeight() - yOffset + yStep);
+                vera::text(it->first, 0, vera::getWindowHeight() - yOffset - yStep);
 
                 yOffset -= yStep * 2.0;
             }
@@ -1865,9 +1869,9 @@ void Sandbox::renderUI() {
             float xOffset = w - xStep;
             float yOffset = h - yStep;
 
-            vera::textAngle(-HALF_PI);
-            vera::textSize(yStep * 0.2f / vera::getPixelDensity(false));
-            vera::textAlign(vera::ALIGN_BOTTOM);
+            // vera::textAngle(-HALF_PI);
+            vera::textSize(xStep * 0.2f / vera::getPixelDensity(false));
+            vera::textAlign(vera::ALIGN_TOP);
             vera::textAlign(vera::ALIGN_LEFT);
 
             for (size_t i = 0; i < uniforms.buffers.size(); i++) {
@@ -1877,7 +1881,7 @@ void Sandbox::renderUI() {
                 offset.x += xStep - scale.x;
 
                 vera::image(uniforms.buffers[i], offset.x, offset.y, scale.x, scale.y);
-                vera::text("u_buffer" + vera::toString(i), xOffset - scale.x, vera::getWindowHeight() - yOffset + yStep);
+                vera::text("u_buffer" + vera::toString(i), xOffset - scale.x, vera::getWindowHeight() - yOffset - yStep);
 
                 yOffset -= yStep * 2.0;
             }
@@ -1889,7 +1893,7 @@ void Sandbox::renderUI() {
                 offset.x += xStep - scale.x;
 
                 vera::image(uniforms.doubleBuffers[i]->src, offset.x, offset.y, scale.x, scale.y);
-                vera::text("u_doubleBuffer" + vera::toString(i), xOffset - scale.x, vera::getWindowHeight() - yOffset + yStep);
+                vera::text("u_doubleBuffer" + vera::toString(i), xOffset - scale.x, vera::getWindowHeight() - yOffset - yStep);
 
                 yOffset -= yStep * 2.0;
             }
@@ -1926,45 +1930,49 @@ void Sandbox::renderUI() {
             }
 
             if (uniforms.models.size() > 0) {
+                vera::fill(0.0);
                 for (vera::LightsMap::iterator it = uniforms.lights.begin(); it != uniforms.lights.end(); ++it ) {
                     if ( it->second->getShadowMap()->getDepthTextureId() ) {
                         vera::imageDepth(it->second->getShadowMap(), xOffset, yOffset, xStep, yStep, it->second->getShadowMapFar(), it->second->getShadowMapNear());
                         // vera::image(it->second->getShadowMap(), xOffset, yOffset, xStep, yStep);
-                        vera::text("u_lightShadowMap", xOffset - xStep, vera::getWindowHeight() - yOffset + yStep);
+                        vera::text("u_lightShadowMap", xOffset - xStep, vera::getWindowHeight() - yOffset - yStep);
                         yOffset -= yStep * 2.0;
                     }
                 }
+                vera::fill(1.0);
             }
 
             if (uniforms.functions["u_scenePosition"].present) {
                 vera::image(&m_sceneRender.positionFbo, xOffset, yOffset, xStep, yStep);
-                vera::text("u_scenePosition", xOffset - xStep, vera::getWindowHeight() - yOffset + yStep);
+                vera::text("u_scenePosition", xOffset - xStep, vera::getWindowHeight() - yOffset - yStep);
                 yOffset -= yStep * 2.0;
             }
 
             if (uniforms.functions["u_sceneNormal"].present) {
                 vera::image(&m_sceneRender.normalFbo, xOffset, yOffset, xStep, yStep);
-                vera::text("u_sceneNormal", xOffset - xStep, vera::getWindowHeight() - yOffset + yStep);
+                vera::text("u_sceneNormal", xOffset - xStep, vera::getWindowHeight() - yOffset - yStep);
                 yOffset -= yStep * 2.0;
             }
 
             for (size_t i = 0; i < m_sceneRender.buffersFbo.size(); i++) {
                 vera::image(m_sceneRender.buffersFbo[i], xOffset, yOffset, xStep, yStep);
-                vera::text("u_sceneBuffer" + vera::toString(i), xOffset - xStep, vera::getWindowHeight() - yOffset + yStep);
+                vera::text("u_sceneBuffer" + vera::toString(i), xOffset - xStep, vera::getWindowHeight() - yOffset - yStep);
                 yOffset -= yStep * 2.0;
             }
 
             if (uniforms.functions["u_scene"].present) {
                 vera::image(&m_sceneRender.renderFbo, xOffset, yOffset, xStep, yStep);
-                vera::text("u_scene", xOffset - xStep, vera::getWindowHeight() - yOffset + yStep);
+                vera::text("u_scene", xOffset - xStep, vera::getWindowHeight() - yOffset - yStep);
                 yOffset -= yStep * 2.0;
             }
 
             if (uniforms.functions["u_sceneDepth"].present) {
+                vera::fill(0.0);
                 if (uniforms.activeCamera)
                     vera::imageDepth(&m_sceneRender.renderFbo, xOffset, yOffset, xStep, yStep, uniforms.activeCamera->getFarClip(), uniforms.activeCamera->getNearClip());
-                vera::text("u_sceneDepth", xOffset - xStep, vera::getWindowHeight() - yOffset + yStep);
+                vera::text("u_sceneDepth", xOffset - xStep, vera::getWindowHeight() - yOffset - yStep);
                 yOffset -= yStep * 2.0;
+                vera::fill(1.0);
             }
         }
         TRACK_END("renderUI:buffers")
@@ -2039,7 +2047,7 @@ void Sandbox::renderUI() {
         vera::setCamera(cam);
     }
 
-    if (help && vera::getWindowStyle() != vera::EMBEDDED) {
+    if (help) {
         float w = (float)(vera::getWindowWidth());
         float h = (float)(vera::getWindowHeight());
         float xStep = w * 0.05;
@@ -2393,11 +2401,14 @@ void Sandbox::onScreenshot(std::string _file) {
 }
 
 void Sandbox::onPlot() {
-    if ( !vera::isGL() )
+    // if ( !vera::isGL() )
+    //     return;
+    if (!m_sceneRender.renderFbo.isAllocated())
         return;
 
     if ( (m_plot == PLOT_LUMA || m_plot == PLOT_RGB || m_plot == PLOT_RED || m_plot == PLOT_GREEN || m_plot == PLOT_BLUE ) && haveChange() ) {
         TRACK_BEGIN("plot::histogram")
+
 
         // Extract pixels
         glBindFramebuffer(GL_FRAMEBUFFER, m_sceneRender.renderFbo.getId());

@@ -254,6 +254,7 @@ PYBIND11_MODULE(PyGlslViewer, m) {
         
         .def("setOutput", &Engine::setOutput, py::arg("_path"))
         .def("setFps", &Engine::setFps, py::arg("setFps"))
+        .def("setUniform", &Engine::setUniform, py::arg("_name"), py::arg("_values"))
 
         .def("getSource",&Engine::getSource, py::arg("_type"))
         .def("getOutputFboId",&Engine::getOutputFboId)
@@ -268,7 +269,8 @@ PYBIND11_MODULE(PyGlslViewer, m) {
 
         .def("showTextures",&Engine::showTextures, py::arg("_value"))
         .def("haveTexture",&Engine::haveTexture, py::arg("_name"))
-        .def("addTexture",&Engine::addTexture, py::arg("_name"), py::arg("_width"), py::arg("_height"), py::arg("_pixels"))
+        .def("loadTexture",&Engine::loadTexture, py::arg("_name"), py::arg("_width"), py::arg("_height"), py::arg("_channels"), py::arg("_pixels"))
+        .def("addTexture",&Engine::addTexture, py::arg("_name"), py::arg("_width"), py::arg("_height"), py::arg("_id"))
         .def("printTextures", &Engine::printTextures)
 
         .def("setSkyTurbidity", &Engine::setSkyTurbidity, py::arg("_turbidity"))
@@ -277,7 +279,7 @@ PYBIND11_MODULE(PyGlslViewer, m) {
         .def("showCubemap",&Engine::showCubemap, py::arg("_value"))
         .def("enableCubemap",&Engine::enableCubemap, py::arg("_value"))
         .def("haveCubemap",&Engine::haveCubemap, py::arg("_name"))
-        .def("addCubemap",&Engine::addCubemap, py::arg("_name"), py::arg("_width"), py::arg("_height"), py::arg("_pixels"))
+        .def("addCubemap",&Engine::addCubemap, py::arg("_name"), py::arg("_width"), py::arg("_height"), py::arg("_channels"), py::arg("_pixels"))
         .def("printCubemaps", &Engine::printCubemaps)
 
         .def("showPasses",&Engine::showPasses, py::arg("_value"))
@@ -316,6 +318,7 @@ PYBIND11_MODULE(PyGlslViewer, m) {
         
         .def("setOutput", &Headless::setOutput, py::arg("_path"))
         .def("setFps", &Headless::setFps, py::arg("setFps"))
+        .def("setUniform", &Engine::setUniform, py::arg("_name"), py::arg("_values"))
 
         .def("getSource",&Headless::getSource, py::arg("_type"))
         .def("getOutputFboId",&Headless::getOutputFboId)
@@ -330,7 +333,8 @@ PYBIND11_MODULE(PyGlslViewer, m) {
 
         .def("showTextures",&Headless::showTextures, py::arg("_value"))
         .def("haveTexture",&Headless::haveTexture, py::arg("_name"))
-        .def("addTexture",&Headless::addTexture, py::arg("_name"), py::arg("_width"), py::arg("_height"), py::arg("_pixels"))
+        .def("loadTexture",&Headless::loadTexture, py::arg("_name"), py::arg("_width"), py::arg("_height"), py::arg("_channels"), py::arg("_pixels"))
+        .def("addTexture",&Engine::addTexture, py::arg("_name"), py::arg("_width"), py::arg("_height"), py::arg("_id"))
         .def("printTextures", &Headless::printTextures)
 
         .def("setSkyTurbidity", &Headless::setSkyTurbidity, py::arg("_turbidity"))
@@ -339,7 +343,7 @@ PYBIND11_MODULE(PyGlslViewer, m) {
         .def("showCubemap",&Headless::showCubemap, py::arg("_value"))
         .def("enableCubemap",&Headless::enableCubemap, py::arg("_value"))
         .def("haveCubemap",&Headless::haveCubemap, py::arg("_name"))
-        .def("addCubemap",&Headless::addCubemap, py::arg("_name"), py::arg("_width"), py::arg("_height"), py::arg("_pixels"))
+        .def("addCubemap",&Headless::addCubemap, py::arg("_name"), py::arg("_width"), py::arg("_height"), py::arg("_channels"), py::arg("_pixels"))
         .def("printCubemaps", &Headless::printCubemaps)
 
         .def("showPasses",&Headless::showPasses, py::arg("_value"))
