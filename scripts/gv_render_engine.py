@@ -420,20 +420,24 @@ class GVRenderEngine(bpy.types.RenderEngine):
         global __GV_HOLD_PREVIEW__
         if __GV_HOLD_PREVIEW__:
             return
+        
+        reset_shaders = False
 
         # Make sure that the preview engine is running
         if self.preview_engine == None:
             self.initPreview(depsgraph)
 
         for update in depsgraph.updates:
-            if update.id.name == "Scene":
+            if update.id.name == "Scene": 
                 self.preview_skip_draw = True
+                reset_shaders = True
                 # pass
+                continue
 
             # else:
-            if update.id.name in bpy.data.collections:
+            if update.id.name in bpy.data.collections or update.id.name == "Scene Collection":
                 self.reloadScene(self.preview_engine, depsgraph)
-                self.tag_redraw()
+                reset_shaders = True
                 continue
 
             elif update.id.name == "World" or update.id.name == "Shader Nodetree":
@@ -451,8 +455,11 @@ class GVRenderEngine(bpy.types.RenderEngine):
                 continue
     
             elif not update.id.name in bpy.data.objects:
-                # print("view_update: skipping update of", update.id.name)
-                continue 
+                if update.id.name == "Collection":
+                    self.reloadScene(self.preview_engine, depsgraph)
+                    reset_shaders = True
+                else:
+                    continue 
 
             obj = bpy.data.objects[update.id.name]
             
@@ -463,6 +470,7 @@ class GVRenderEngine(bpy.types.RenderEngine):
             elif obj.type == 'MESH':
                 if update.is_updated_geometry:
                     self.reloadScene(self.preview_engine, depsgraph)
+                    reset_shaders = True
 
                 if update.is_updated_transform:
                     M = np.array(obj.matrix_world)
@@ -477,6 +485,10 @@ class GVRenderEngine(bpy.types.RenderEngine):
 
             else:
                 print("GVRenderEngine: view_update -> obj type", obj.type)
+
+        if reset_shaders:
+            self.update_shaders(self.preview_engine, True)
+            self.tag_redraw()
 
         # self.tag_redraw()
 
