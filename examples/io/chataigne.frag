@@ -13,14 +13,8 @@ varying vec4 v_color;
 varying vec3 v_normal;
 varying vec2 v_texcoord;
 
-float stroke(float x, float size, float w) {
-    float d = step(size, x+w*.5) - step(size, x-w*.5);
-    return clamp(d, 0., 1.);
-}
-
-float circleSDF(vec2 st) {
-    return length(st-.5)*2.;
-}
+#include "../../deps/lygia/draw/stroke.glsl"
+#include "../../deps/lygia/sdf/circleSDF.gls
 
 void main (void) {
     vec2 st = gl_FragCoord.xy/u_resolution.xy;

@@ -34,11 +34,7 @@ varying vec4    v_color;
 varying vec3    v_normal;
 #endif
 
-vec2 ratio(in vec2 st, in vec2 s) {
-    return mix( vec2((st.x*s.x/s.y)-(s.x*.5-s.y*.5)/s.y,st.y),
-                vec2(st.x,st.y*(s.y/s.x)-(s.y*.5-s.x*.5)/s.x),
-                step(s.x,s.y));
-}
+#include "../deps/lygia/space/ratio.glsl"
 
 void main(void) {
    vec3 color = vec3(1.0);

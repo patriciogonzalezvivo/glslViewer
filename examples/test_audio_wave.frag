@@ -10,13 +10,7 @@ uniform sampler2D   u_buffer1;
 
 uniform vec2        u_resolution;
 
-#define decimation(value, presicion) (floor(value * presicion)/presicion)
-
-float stroke(float x, float size, float w) {
-    float d = step(size, x + w * 0.5) - step(size, x - w * 0.5);
-    // return saturate(d);
-    return d;
-}
+#include "../deps/lygia/draw/stroke.glsl"
 
 void main() {
     vec3 color = vec3(0.0);

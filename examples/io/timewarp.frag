@@ -17,39 +17,7 @@ uniform vec2 u_tex3Resolution;
 uniform float u_A;
 uniform float u_B;
 
-#ifndef GAUSSIANBLUR2D_TYPE
-#define GAUSSIANBLUR2D_TYPE vec2
-#endif
-
-#ifndef GAUSSIANBLUR2D_SAMPLER_FNC
-#define GAUSSIANBLUR2D_SAMPLER_FNC(POS_UV) (texture2D(tex, POS_UV).rg * 2.0 - 1.0)
-#endif
-
-#ifndef FNC_GAUSSIANBLUR2D
-#define FNC_GAUSSIANBLUR2D
-GAUSSIANBLUR2D_TYPE gaussianBlur2D(in sampler2D tex, in vec2 st, in vec2 offset, const int kernelSize) {
-  GAUSSIANBLUR2D_TYPE accumColor = GAUSSIANBLUR2D_TYPE(0.);
-  #ifndef GAUSSIANBLUR2D_KERNELSIZE
-  #define GAUSSIANBLUR2D_KERNELSIZE kernelSize
-  #endif
-
-  float accumWeight = 0.;
-  const float k = .15915494; // 1 / (2*PI)
-  float kernelSize2 = float(GAUSSIANBLUR2D_KERNELSIZE) * float(GAUSSIANBLUR2D_KERNELSIZE);
-
-  for (int j = 0; j < GAUSSIANBLUR2D_KERNELSIZE; j++) {
-    float y = -.5 * (float(GAUSSIANBLUR2D_KERNELSIZE) - 1.) + float(j);
-    for (int i = 0; i < GAUSSIANBLUR2D_KERNELSIZE; i++) {
-      float x = -.5 * (float(GAUSSIANBLUR2D_KERNELSIZE) - 1.) + float(i);
-      float weight = (k / float(GAUSSIANBLUR2D_KERNELSIZE)) * exp(-(x * x + y * y) / (2. * kernelSize2));
-      GAUSSIANBLUR2D_TYPE tex = GAUSSIANBLUR2D_SAMPLER_FNC(st + vec2(x, y) * offset);
-      accumColor += weight * tex;
-      accumWeight += weight;
-    }
-  }
-  return accumColor / accumWeight;
-}
-#endif
+#include "../../deps/lygia/filter/gaussianBlur/2D.glsl"
 
 void main (void) {
     vec3 color = vec3(0.0);

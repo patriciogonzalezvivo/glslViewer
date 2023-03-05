@@ -1,12 +1,13 @@
 import os
 import numpy as np
+from pathlib import Path
 
 import bpy
 import idprop
 import bgl
 
 from .gv_lib import GlslViewer as gv
-from .gv_preferences import fetch_pref, default_vert_code, default_frag_code
+from .gv_preferences import default_vert_code, default_frag_code
 from .gv_translate import bl2veraCamera, bl2veraMesh, bl2veraLight
 
 from bpy.app.handlers import persistent
@@ -38,24 +39,6 @@ def load_new_scene(dummy):
     if __GV_PREVIEW_RENDER__:
         del __GV_PREVIEW_RENDER__ 
     __GV_PREVIEW_RENDER__ = None
-
-
-def file_exist(filename):
-    try:
-        file = open( bpy.path.abspath(filename) ,'r')
-        file.close()
-        return True
-    except:
-        return False
-
-
-def update_areas():
-    for window in bpy.context.window_manager.windows:
-        for area in window.screen.areas:
-            area.tag_redraw()
-
-
-
 
 
 class GVRenderEngine(bpy.types.RenderEngine):
@@ -115,8 +98,9 @@ class GVRenderEngine(bpy.types.RenderEngine):
         if __GV_ENGINE__ is None:
             __GV_ENGINE__ = gv.Engine()
             __GV_ENGINE__.init()
-            if fetch_pref('include_folder') != '.':
-                __GV_ENGINE__.include_folders = [ fetch_pref('include_folder') ]
+            lygia_path = os.path.join( Path(__file__).parent.resolve(), '../deps/' )
+            __GV_ENGINE__.include_folders = [ lygia_path ]
+
         self.preview_engine = __GV_ENGINE__
         self.reloadScene(self.preview_engine, depsgraph)
         self.preview_engine.setSource(gv.VERTEX, self.vert_code)
@@ -256,7 +240,7 @@ class GVRenderEngine(bpy.types.RenderEngine):
         if not frag_filename in bpy.data.texts:
             print(f'File name {frag_filename} not found. Will create an internal one')
 
-            if file_exist(frag_filename):
+            if os.path.isfile(frag_filename):
                 bpy.ops.text.open(filepath=frag_filename)
             else:
                 bpy.data.texts.new(frag_filename)
@@ -266,7 +250,7 @@ class GVRenderEngine(bpy.types.RenderEngine):
         if not vert_filename in bpy.data.texts:
             print(f'File name {vert_filename} not found. Will create an internal one')
 
-            if file_exist(vert_filename):
+            if os.path.isfile(vert_filename):
                 bpy.ops.text.open(filepath=vert_filename)
             else:
                 bpy.data.texts.new(vert_filename)
@@ -474,8 +458,9 @@ class GVRenderEngine(bpy.types.RenderEngine):
         out_image = os.path.join(absolutepath, '_render.png')
 
         final_engine = gv.Headless()
-        if fetch_pref('include_folder') != '.':
-            final_engine.include_folders = [ fetch_pref('include_folder') ]
+        lygia_path = os.path.join( Path(__file__).parent.resolve(), '../deps/' )
+        final_engine.include_folders = [ lygia_path ]
+
         final_engine.init()
         final_engine.enableCubemap( True )
         self.reloadScene(final_engine, depsgraph)

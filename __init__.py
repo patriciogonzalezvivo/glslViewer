@@ -28,7 +28,7 @@ from .scripts.gv_render_ui import register_render_ui, unregister_render_ui
 from .scripts.gv_properties import register_properties, unregister_properties
 
 def register():
-    register_addon_preferences()
+    # register_addon_preferences()
     register_render_engine()
     register_operators()
     register_render_ui()
@@ -38,5 +38,5 @@ def unregister():
     unregister_render_ui()
     unregister_operators()
     unregister_render_engine()
-    unregister_addon_preferences()
     unregister_properties()
+    # unregister_addon_preferences()
