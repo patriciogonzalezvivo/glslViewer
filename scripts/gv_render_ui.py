@@ -1,6 +1,6 @@
 import bpy
 
-from .gv_render_engine import PROPS
+from .gv_properties import PROPS
 
 
 class RENDER_PT_glslViewer_render(bpy.types.Panel):
