@@ -37,16 +37,8 @@ varying vec4    v_color;
 varying vec3    v_normal;
 #endif
 
-vec2 ratio(in vec2 st, in vec2 s) {
-    return mix( vec2((st.x*s.x/s.y)-(s.x*.5-s.y*.5)/s.y,st.y),
-                vec2(st.x,st.y*(s.y/s.x)-(s.y*.5-s.x*.5)/s.x),
-                step(s.x,s.y));
-}
-
-float linearizeDepth(float depth) {
-    depth = 2.0 * depth - 1.0;
-    return (2.0 * u_cameraNearClip) / (u_cameraFarClip + u_cameraNearClip - depth * (u_cameraFarClip - u_cameraNearClip));
-}
+#include "../deps/lygia/space/ratio.glsl"
+#include "../deps/lygia/space/linearizeDepth.glsl"
 
 void main(void) {
    vec3 color = vec3(1.0);
@@ -59,7 +51,7 @@ void main(void) {
 #elif defined(POSTPROCESSING)
     vec3 scene = texture2D(u_scene, st).rgb;
     float depth = texture2D(u_sceneDepth, st).r;
-    depth = linearizeDepth(depth) * u_cameraFarClip;
+    depth = linearizeDepth(depth, u_cameraNearClip, u_cameraFarClip);
     depth = clamp( (depth - u_cameraDistance + sin(u_time * 0.5) * 5.0), 0.0 , 1.0);
 
     // Box blur

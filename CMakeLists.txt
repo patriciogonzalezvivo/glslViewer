@@ -1,15 +1,15 @@
 cmake_minimum_required(VERSION 3.2)
 
 set(VERSION_MAJOR 3)
-set(VERSION_MINOR 1)
-set(VERSION_PATCH 2)
+set(VERSION_MINOR 2)
+set(VERSION_PATCH 0)
 set(VERSION "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}")
 
 project(glslViewer 
         VERSION ${VERSION}
         LANGUAGES CXX )
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -24,12 +24,34 @@ if (NO_X11 OR FORCE_GBM)
     add_compile_options(-std=c++14 -DGLM_FORCE_CXX14 -fpermissive -Wno-psabi -lpthread)
 endif()
 
-file(GLOB ROOT_SOURCE 
-    "${PROJECT_SOURCE_DIR}/src/*.cpp"
-    "${PROJECT_SOURCE_DIR}/src/tools/*.cpp"
+set(CORE_HEADERS
+    "${PROJECT_SOURCE_DIR}/src/core/sandbox.h"
+    "${PROJECT_SOURCE_DIR}/src/core/sceneRender.h"
+    "${PROJECT_SOURCE_DIR}/src/core/uniforms.h"
+    "${PROJECT_SOURCE_DIR}/src/core/tools/command.h"
+    "${PROJECT_SOURCE_DIR}/src/core/tools/console.h"
+    "${PROJECT_SOURCE_DIR}/src/core/tools/files.h"
+    "${PROJECT_SOURCE_DIR}/src/core/tools/job.h"
+    "${PROJECT_SOURCE_DIR}/src/core/tools/lockFreeQueue.h"
+    "${PROJECT_SOURCE_DIR}/src/core/tools/record.h"
+    "${PROJECT_SOURCE_DIR}/src/core/tools/text.h"
+    "${PROJECT_SOURCE_DIR}/src/core/tools/tracker.h"
 )
 
-add_executable(glslViewer ${ROOT_SOURCE})
+set(CORE_SOURCES 
+    "${PROJECT_SOURCE_DIR}/src/core/sandbox.cpp"
+    "${PROJECT_SOURCE_DIR}/src/core/sceneRender.cpp"
+    "${PROJECT_SOURCE_DIR}/src/core/uniforms.cpp"
+    "${PROJECT_SOURCE_DIR}/src/core/tools/console.cpp"
+    "${PROJECT_SOURCE_DIR}/src/core/tools/record.cpp"
+    "${PROJECT_SOURCE_DIR}/src/core/tools/text.cpp"
+    "${PROJECT_SOURCE_DIR}/src/core/tools/tracker.cpp"
+)
+
+add_executable(glslViewer 
+    "${PROJECT_SOURCE_DIR}/src/main.cpp"
+    ${CORE_SOURCES}
+)
 
 include_directories(deps/liblo)
 target_include_directories(glslViewer PRIVATE deps)
@@ -210,5 +232,30 @@ else()
 
 endif()
 
+if (PYTHON_BINDINGS)
+    find_package(Python3 3.10 REQUIRED COMPONENTS Interpreter Development)
 
+    # pybind11
+    set(DEPS_FOLDER "${PROJECT_SOURCE_DIR}/deps")
+    add_subdirectory("${DEPS_FOLDER}/pybind11")
+    include_directories(${pybind11_INCLUDE_DIRS})
 
+    set(PYBIND_INCLUDES
+        "${PROJECT_SOURCE_DIR}/src/python/engine.h"
+        "${PROJECT_SOURCE_DIR}/src/python/engine.cpp"
+        "${PROJECT_SOURCE_DIR}/src/python/headless.h"
+        "${PROJECT_SOURCE_DIR}/src/python/headless.cpp"
+        "${PROJECT_SOURCE_DIR}/src/python/bindings.cpp"
+        ${CORE_SOURCES}
+        ${CORE_HEADERS}
+    )
+
+    pybind11_add_module(PyGlslViewer ${PYBIND_INCLUDES})
+    target_compile_definitions(PyGlslViewer PUBLIC PYTHON_RENDER)
+    target_compile_definitions(PyGlslViewer PRIVATE GLSLVIEWER_VERSION_MAJOR=${VERSION_MAJOR})
+    target_compile_definitions(PyGlslViewer PRIVATE GLSLVIEWER_VERSION_MINOR=${VERSION_MINOR})
+    target_compile_definitions(PyGlslViewer PRIVATE GLSLVIEWER_VERSION_PATCH=${VERSION_PATCH})
+    target_include_directories(PyGlslViewer PUBLIC ${DEPS_FOLDER})
+    target_link_libraries(PyGlslViewer PRIVATE vera pybind11::module)
+
+endif()

@@ -7,12 +7,8 @@ uniform vec2        u_tex0Resolution;
 
 uniform vec2        u_resolution;
 
-#define decimation(value, presicion) (floor(value * presicion)/presicion)
-
-vec3 heatmap(float v) {
-    vec3 r = v * 2.1 - vec3(1.8, 1.14, 0.3);
-    return 1.0 - r * r;
-}
+#include "../deps/lygia/color/palette/heatmap.glsl"
+#include "../deps/lygia/math/decimate.glsl"
 
 void main (void) {
     vec3 color = vec3(0.0);
@@ -21,7 +17,7 @@ void main (void) {
     float half_bar = 1./u_tex0Resolution.x;
 
     // fft
-    float bar = decimation(st.x, 25.);
+    float bar = decimate(st.x, 25.);
     float fft = texture2D(u_tex0, vec2(bar + half_bar, 0.5) ).r;
     color += heatmap(bar) * step(st.y, fft);
     

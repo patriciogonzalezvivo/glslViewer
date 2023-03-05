@@ -86,8 +86,12 @@ Sandbox::Sandbox():
     } );
 
     uniforms.functions["u_time"] = UniformFunction( "float", [&](vera::Shader& _shader) {
-        if (isRecording()) _shader.setUniform("u_time", getRecordingTime());
-        else _shader.setUniform("u_time", float(vera::getTime()) - m_time_offset);
+        if (vera::getWindowStyle() == vera::EMBEDDED) 
+            _shader.setUniform("u_time", float(m_frame) * vera::getRestSec());
+        else if (isRecording()) 
+            _shader.setUniform("u_time", getRecordingTime());
+        else 
+            _shader.setUniform("u_time", float(vera::getTime()) - m_time_offset);
     }, 
     [&]() {  
         if (isRecording()) return vera::toString( getRecordingTime() );
@@ -1056,8 +1060,10 @@ void Sandbox::commandsInit(CommandList &_commands ) {
     }, "max_mem_in_queue[,<bytes>]", "set the maximum amount of memory used by a queue to export images to disk"));
     #endif
 
-    if (vert_index != -1 || geom_index != -1)
-        m_sceneRender.commandsInit( _commands, uniforms);
+    if (vert_index != -1 || geom_index != -1) {
+        m_sceneRender.commandsInit(_commands, uniforms);
+        m_sceneRender.uniformsInit(uniforms);
+    }
 }
 
 void Sandbox::loadAssets(WatchFileList &_files) {
@@ -1113,7 +1119,7 @@ void Sandbox::loadAssets(WatchFileList &_files) {
     // FINISH SCENE SETUP
     // -------------------------------------------------
     uniforms.activeCamera->setViewport(vera::getWindowWidth(), vera::getWindowHeight());
-
+    
     if (lenticular.size() > 0)
         vera::setLenticularProperties(lenticular);
 
@@ -1156,7 +1162,6 @@ void Sandbox::loadAssets(WatchFileList &_files) {
         addDefine("SCENE_SH_ARRAY", "u_SH");
         addDefine("SCENE_CUBEMAP", "u_cubeMap");
     }
-
 
     // LOAD SHADERS
     resetShaders( _files );
@@ -1242,12 +1247,21 @@ const std::string& Sandbox::getSource(ShaderType _type) const {
 // ------------------------------------------------------------------------- RELOAD SHADER
 
 void Sandbox::setSource(ShaderType _type, const std::string& _source) {
-    if (_type == FRAGMENT) m_frag_source = _source;
-    else  m_vert_source = _source;
+    if (_type == FRAGMENT) {
+        m_frag_dependencies.clear();
+        m_frag_source = vera::resolveGlsl(_source, include_folders, &m_frag_dependencies);
+    }
+    else {
+        m_vert_dependencies.clear();
+        m_vert_source = vera::resolveGlsl(_source, include_folders, &m_vert_dependencies);;
+    }
 };
 
 void Sandbox::resetShaders( WatchFileList &_files ) {
-    console_clear();
+
+    if (vera::getWindowStyle() != vera::EMBEDDED)
+        console_clear();
+        
     flagChange();
 
     // UPDATE scene shaders of models (materials)
@@ -1312,6 +1326,7 @@ void Sandbox::resetShaders( WatchFileList &_files ) {
         // Specific defines for this buffer
         m_postprocessing_shader.addDefine("POSTPROCESSING");
         m_postprocessing_shader.setSource(m_frag_source, vera::getDefaultSrc(vera::VERT_BILLBOARD));
+        uniforms.functions["u_scene"].present = havePostprocessing;
         m_postprocessing = havePostprocessing;
     }
     else if (lenticular.size() > 0) {
@@ -1327,7 +1342,8 @@ void Sandbox::resetShaders( WatchFileList &_files ) {
     else 
         m_postprocessing = false;
 
-    console_refresh();
+    if (vera::getWindowStyle() != vera::EMBEDDED)
+        console_refresh();
 
     // Make sure this runs in main loop
     m_update_buffers = true;
@@ -1489,6 +1505,10 @@ void Sandbox::_renderBuffers() {
         uniforms.buffers[i]->bind();
 
         m_buffers_shaders[i].use();
+        m_buffers_shaders[i].setUniform("u_model", glm::vec3(1.0f));
+        m_buffers_shaders[i].setUniform("u_modelMatrix", glm::mat4(1.0f));
+        m_buffers_shaders[i].setUniform("u_viewMatrix", glm::mat4(1.0f));
+        m_buffers_shaders[i].setUniform("u_projectionMatrix", glm::mat4(1.0f));
 
         // Pass textures for the other buffers
         for (size_t j = 0; j < uniforms.buffers.size(); j++)
@@ -1571,7 +1591,7 @@ void Sandbox::_renderBuffers() {
         reset_viewport = true;
     #endif
 
-    if (reset_viewport)
+    if (vera::getWindowStyle() != vera::EMBEDDED && reset_viewport)
         glViewport(0.0f, 0.0f, vera::getWindowWidth(), vera::getWindowHeight());
     
     glEnable(GL_BLEND);
@@ -1663,6 +1683,10 @@ void Sandbox::render() {
                 uniforms.feedTo( &m_canvas_shader );
 
                 // Pass special uniforms
+                m_canvas_shader.setUniform("u_model", glm::vec3(1.0f));
+                m_canvas_shader.setUniform("u_modelMatrix", glm::mat4(1.0f));
+                m_canvas_shader.setUniform("u_viewMatrix", glm::mat4(1.0f));
+                m_canvas_shader.setUniform("u_projectionMatrix", glm::mat4(1.0f));
                 m_canvas_shader.setUniform("u_modelViewProjectionMatrix", glm::mat4(1.));
                 vera::getBillboard()->render( &m_canvas_shader );
             }, true);
@@ -1673,6 +1697,10 @@ void Sandbox::render() {
             uniforms.feedTo( &m_canvas_shader );
 
             // Pass special uniforms
+            m_canvas_shader.setUniform("u_model", glm::vec3(1.0f));
+            m_canvas_shader.setUniform("u_modelMatrix", glm::mat4(1.0f));
+            m_canvas_shader.setUniform("u_viewMatrix", glm::mat4(1.0f));
+            m_canvas_shader.setUniform("u_projectionMatrix", glm::mat4(1.0f));
             m_canvas_shader.setUniform("u_modelViewProjectionMatrix", glm::mat4(1.));
             vera::getBillboard()->render( &m_canvas_shader );
         }
@@ -1710,7 +1738,6 @@ void Sandbox::render() {
 }
 
 void Sandbox::renderPost() {
-
     // POST PROCESSING
     if (m_postprocessing) {
         TRACK_BEGIN("render:postprocessing")
@@ -1728,6 +1755,11 @@ void Sandbox::renderPost() {
             m_record_fbo.bind();
     
         m_postprocessing_shader.use();
+        m_postprocessing_shader.setUniform("u_model", glm::vec3(1.0f));
+        m_postprocessing_shader.setUniform("u_modelMatrix", glm::mat4(1.0f));
+        m_postprocessing_shader.setUniform("u_viewMatrix", glm::mat4(1.0f));
+        m_postprocessing_shader.setUniform("u_projectionMatrix", glm::mat4(1.0f));
+        m_postprocessing_shader.setUniform("u_modelViewProjectionMatrix", glm::mat4(1.0f) );//vera::getOrthoMatrix());
 
         // Update uniforms and textures
         uniforms.feedTo( &m_postprocessing_shader, true, true );
@@ -1757,7 +1789,7 @@ void Sandbox::renderPost() {
 
         vera::image(m_sceneRender.renderFbo);
     }
-    
+        
     if (screenshotFile != "" || isRecording()) {
         m_record_fbo.unbind();
 
@@ -1768,7 +1800,9 @@ void Sandbox::renderPost() {
     }
 
     TRACK_END("render")
-    console_uniforms_refresh();
+    
+    if  (vera::getWindowStyle() != vera::EMBEDDED)
+        console_uniforms_refresh();
 }
 
 
@@ -1784,25 +1818,28 @@ void Sandbox::renderUI() {
             TRACK_BEGIN("renderUI:textures")
             float w = (float)(vera::getWindowWidth());
             float h = (float)(vera::getWindowHeight());
+            float a = h/w;
             float scale = fmin(1.0f / (float)(nTotal), 0.25) * 0.5;
-            float xStep = w * scale;
+            float xStep = w * scale * a;
             float yStep = h * scale;
             float xOffset = xStep;
             float yOffset = h - yStep;
-
-            vera::textAngle(-HALF_PI);
+            
+            vera::textAngle(0.0);
             vera::textAlign(vera::ALIGN_TOP);
             vera::textAlign(vera::ALIGN_LEFT);
-            vera::textSize(yStep * 0.2f / vera::getPixelDensity(false));
+            vera::textSize(xStep * 0.2f / vera::getPixelDensity(false));
 
             for (vera::TexturesMap::iterator it = uniforms.textures.begin(); it != uniforms.textures.end(); it++) {
+                float imgAspect = ((float)it->second->getWidth()/(float)it->second->getHeight());
+                float imgW = xStep * imgAspect;
                 vera::TextureStreamsMap::const_iterator slit = uniforms.streams.find(it->first);
                 if ( slit != uniforms.streams.end() )
-                    vera::image((vera::TextureStream*)slit->second, xOffset, yOffset, xStep, yStep, true);
+                    vera::image((vera::TextureStream*)slit->second, xStep * 0.5 + imgW * 0.5, yOffset, imgW, yStep, true);
                 else 
-                    vera::image(it->second, xOffset, yOffset, xStep, yStep);
+                    vera::image(it->second, xStep * 0.5 + imgW * 0.5, yOffset, imgW, yStep);
 
-                vera::text(it->first, xOffset + xStep, vera::getWindowHeight() - yOffset + yStep);
+                vera::text(it->first, 0, vera::getWindowHeight() - yOffset - yStep);
 
                 yOffset -= yStep * 2.0;
             }
@@ -1811,8 +1848,7 @@ void Sandbox::renderUI() {
     }
 
     // RESULTING BUFFERS
-    if (m_showPasses) {        
-
+    if (m_showPasses) {
         glDisable(GL_DEPTH_TEST);
         TRACK_BEGIN("renderUI:buffers")
 
@@ -1838,9 +1874,9 @@ void Sandbox::renderUI() {
             float xOffset = w - xStep;
             float yOffset = h - yStep;
 
-            vera::textAngle(-HALF_PI);
-            vera::textSize(yStep * 0.2f / vera::getPixelDensity(false));
-            vera::textAlign(vera::ALIGN_BOTTOM);
+            vera::textAngle(0.0);
+            vera::textSize(xStep * 0.2f / vera::getPixelDensity(false));
+            vera::textAlign(vera::ALIGN_TOP);
             vera::textAlign(vera::ALIGN_LEFT);
 
             for (size_t i = 0; i < uniforms.buffers.size(); i++) {
@@ -1850,7 +1886,7 @@ void Sandbox::renderUI() {
                 offset.x += xStep - scale.x;
 
                 vera::image(uniforms.buffers[i], offset.x, offset.y, scale.x, scale.y);
-                vera::text("u_buffer" + vera::toString(i), xOffset - scale.x, vera::getWindowHeight() - yOffset + yStep);
+                vera::text("u_buffer" + vera::toString(i), xOffset - scale.x, vera::getWindowHeight() - yOffset - yStep);
 
                 yOffset -= yStep * 2.0;
             }
@@ -1862,7 +1898,7 @@ void Sandbox::renderUI() {
                 offset.x += xStep - scale.x;
 
                 vera::image(uniforms.doubleBuffers[i]->src, offset.x, offset.y, scale.x, scale.y);
-                vera::text("u_doubleBuffer" + vera::toString(i), xOffset - scale.x, vera::getWindowHeight() - yOffset + yStep);
+                vera::text("u_doubleBuffer" + vera::toString(i), xOffset - scale.x, vera::getWindowHeight() - yOffset - yStep);
 
                 yOffset -= yStep * 2.0;
             }
@@ -1893,51 +1929,55 @@ void Sandbox::renderUI() {
 
                 }
 
-                // vera::text("u_pyramid0" + vera::toString(i), xOffset - scale.x * 2.0, vera::getWindowHeight() - yOffset + yStep);
+                // vera::text("u_pyramid0" + vera::toString(i), xOffset - scale.x * 2.0, vera::getWindowHeight() - yOffset - yStep);
                 yOffset -= yStep * 2.0;
 
             }
 
             if (uniforms.models.size() > 0) {
+                vera::fill(0.0);
                 for (vera::LightsMap::iterator it = uniforms.lights.begin(); it != uniforms.lights.end(); ++it ) {
                     if ( it->second->getShadowMap()->getDepthTextureId() ) {
                         vera::imageDepth(it->second->getShadowMap(), xOffset, yOffset, xStep, yStep, it->second->getShadowMapFar(), it->second->getShadowMapNear());
                         // vera::image(it->second->getShadowMap(), xOffset, yOffset, xStep, yStep);
-                        vera::text("u_lightShadowMap", xOffset - xStep, vera::getWindowHeight() - yOffset + yStep);
+                        vera::text("u_lightShadowMap", xOffset - xStep, vera::getWindowHeight() - yOffset - yStep);
                         yOffset -= yStep * 2.0;
                     }
                 }
+                vera::fill(1.0);
             }
 
             if (uniforms.functions["u_scenePosition"].present) {
                 vera::image(&m_sceneRender.positionFbo, xOffset, yOffset, xStep, yStep);
-                vera::text("u_scenePosition", xOffset - xStep, vera::getWindowHeight() - yOffset + yStep);
+                vera::text("u_scenePosition", xOffset - xStep, vera::getWindowHeight() - yOffset - yStep);
                 yOffset -= yStep * 2.0;
             }
 
             if (uniforms.functions["u_sceneNormal"].present) {
                 vera::image(&m_sceneRender.normalFbo, xOffset, yOffset, xStep, yStep);
-                vera::text("u_sceneNormal", xOffset - xStep, vera::getWindowHeight() - yOffset + yStep);
+                vera::text("u_sceneNormal", xOffset - xStep, vera::getWindowHeight() - yOffset - yStep);
                 yOffset -= yStep * 2.0;
             }
 
             for (size_t i = 0; i < m_sceneRender.buffersFbo.size(); i++) {
                 vera::image(m_sceneRender.buffersFbo[i], xOffset, yOffset, xStep, yStep);
-                vera::text("u_sceneBuffer" + vera::toString(i), xOffset - xStep, vera::getWindowHeight() - yOffset + yStep);
+                vera::text("u_sceneBuffer" + vera::toString(i), xOffset - xStep, vera::getWindowHeight() - yOffset - yStep);
                 yOffset -= yStep * 2.0;
             }
 
             if (uniforms.functions["u_scene"].present) {
                 vera::image(&m_sceneRender.renderFbo, xOffset, yOffset, xStep, yStep);
-                vera::text("u_scene", xOffset - xStep, vera::getWindowHeight() - yOffset + yStep);
+                vera::text("u_scene", xOffset - xStep, vera::getWindowHeight() - yOffset - yStep);
                 yOffset -= yStep * 2.0;
             }
 
             if (uniforms.functions["u_sceneDepth"].present) {
+                vera::fill(0.0);
                 if (uniforms.activeCamera)
                     vera::imageDepth(&m_sceneRender.renderFbo, xOffset, yOffset, xStep, yStep, uniforms.activeCamera->getFarClip(), uniforms.activeCamera->getNearClip());
-                vera::text("u_sceneDepth", xOffset - xStep, vera::getWindowHeight() - yOffset + yStep);
+                vera::text("u_sceneDepth", xOffset - xStep, vera::getWindowHeight() - yOffset - yStep);
                 yOffset -= yStep * 2.0;
+                vera::fill(1.0);
             }
         }
         TRACK_END("renderUI:buffers")
@@ -1958,6 +1998,10 @@ void Sandbox::renderUI() {
         m_plot_shader.setUniform("u_translate", x, y);
         m_plot_shader.setUniform("u_resolution", (float)vera::getWindowWidth(), (float)vera::getWindowHeight());
         m_plot_shader.setUniform("u_viewport", w, h);
+        m_plot_shader.setUniform("u_model", glm::vec3(1.0f));
+        m_plot_shader.setUniform("u_modelMatrix", glm::mat4(1.0f));
+        m_plot_shader.setUniform("u_viewMatrix", glm::mat4(1.0f));
+        m_plot_shader.setUniform("u_projectionMatrix", glm::mat4(1.0f));
         m_plot_shader.setUniform("u_modelViewProjectionMatrix", vera::getOrthoMatrix());
         m_plot_shader.setUniformTexture("u_plotData", m_plot_texture, 0);
         
@@ -1978,7 +2022,7 @@ void Sandbox::renderUI() {
         TRACK_END("renderUI:cursor")
     }
 
-    if (frag_index == -1 && vert_index == -1 && geom_index == -1) {
+    if (frag_index == -1 && vert_index == -1 && geom_index == -1 && vera::getWindowStyle() != vera::EMBEDDED) {
         float w = (float)(vera::getWindowWidth());
         float h = (float)(vera::getWindowHeight());
         float xStep = w * 0.05;
@@ -1994,9 +2038,10 @@ void Sandbox::renderUI() {
         vera::rect(glm::vec2(w * 0.5f, h * 0.5f), glm::vec2(w - xStep * 2.0f, h - yStep * 2.0f));
 
         vera::fill(1.0f);
+
+        vera::textAngle(0.0f);
         vera::textAlign(vera::ALIGN_MIDDLE);
         vera::textAlign(vera::ALIGN_CENTER);
-        vera::textAngle(0.0f);
 
         vera::textSize(38.0f);
         vera::text("Drag & Drop", w * 0.5f, h * 0.45f);
@@ -2008,7 +2053,6 @@ void Sandbox::renderUI() {
     }
 
     if (help) {
-
         float w = (float)(vera::getWindowWidth());
         float h = (float)(vera::getWindowHeight());
         float xStep = w * 0.05;
@@ -2110,7 +2154,9 @@ void Sandbox::renderDone() {
 
     if (!m_initialized) {
         m_initialized = true;
+
         vera::updateViewport();
+
         flagChange();
     }
     else
@@ -2286,15 +2332,18 @@ void Sandbox::onViewportResize(int _newWidth, int _newHeight) {
             m_sceneRender.updateBuffers(uniforms, _newWidth, _newHeight);
     }
 
-    if (screenshotFile != "" || isRecording())
+    if (screenshotFile != "" || isRecording()) 
         m_record_fbo.allocate(_newWidth, _newHeight, vera::COLOR_TEXTURE_DEPTH_BUFFER);
 
     flagChange();
 }
 
 void Sandbox::onScreenshot(std::string _file) {
-
+    #if defined(PYTHON_RENDER)
+    if (_file != "") {
+    #else
     if (_file != "" && vera::isGL()) {
+    #endif
         TRACK_BEGIN("screenshot")
 
         glBindFramebuffer(GL_FRAMEBUFFER, m_record_fbo.getId());
@@ -2319,8 +2368,7 @@ void Sandbox::onScreenshot(std::string _file) {
             auto pixels = std::unique_ptr<unsigned char[]>(new unsigned char [width * height * 4]);
             glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixels.get());
 
-            #if defined(SUPPORT_MULTITHREAD_RECORDING)
-            
+            #if defined(SUPPORT_MULTITHREAD_RECORDING) && !defined(PYTHON_RENDER)
             std::shared_ptr<Job> saverPtr = std::make_shared<Job>(std::move(_file), width, height, std::move(pixels), m_task_count, m_max_mem_in_queue);
             /** In the case that we render faster than we can safe frames, more and more frames
              * have to be stored temporary in the save queue. That means that more and more ram is used.
@@ -2358,11 +2406,14 @@ void Sandbox::onScreenshot(std::string _file) {
 }
 
 void Sandbox::onPlot() {
-    if ( !vera::isGL() )
+    // if ( !vera::isGL() )
+    //     return;
+    if (!m_sceneRender.renderFbo.isAllocated())
         return;
 
     if ( (m_plot == PLOT_LUMA || m_plot == PLOT_RGB || m_plot == PLOT_RED || m_plot == PLOT_GREEN || m_plot == PLOT_BLUE ) && haveChange() ) {
         TRACK_BEGIN("plot::histogram")
+
 
         // Extract pixels
         glBindFramebuffer(GL_FRAMEBUFFER, m_sceneRender.renderFbo.getId());

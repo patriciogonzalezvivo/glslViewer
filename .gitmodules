@@ -2,3 +2,9 @@
 	path = deps/vera
 	url = https://github.com/patriciogonzalezvivo/vera.git
 	# url = git@github.com:patriciogonzalezvivo/vera.git
+[submodule "deps/pybind11"]
+	path = deps/pybind11
+	url = git@github.com:pybind/pybind11.git
+[submodule "deps/lygia"]
+	path = deps/lygia
+	url = git@github.com:patriciogonzalezvivo/lygia.git

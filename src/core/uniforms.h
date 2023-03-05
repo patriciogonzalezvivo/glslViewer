@@ -26,7 +26,7 @@ typedef std::array<float, 4> UniformValue;
 struct UniformData {
     std::string getType();
 
-    void    set(const UniformValue &_value, size_t _size, bool _int);
+    void    set(const UniformValue &_value, size_t _size, bool _int, bool _queue = true);
     void    parse(const std::vector<std::string>& _command, size_t _start = 1);
     bool    check();
 
@@ -98,6 +98,7 @@ public:
     virtual void        set( const std::string& _name, float _x, float _y);
     virtual void        set( const std::string& _name, float _x, float _y, float _z);
     virtual void        set( const std::string& _name, float _x, float _y, float _z, float _w);
+    virtual void        set( const std::string& _name, const std::vector<float>& _data, bool _queue = true);
     virtual void        checkUniforms( const std::string &_vert_src, const std::string &_frag_src );
     virtual bool        parseLine( const std::string &_line );
     virtual void        clearUniforms();

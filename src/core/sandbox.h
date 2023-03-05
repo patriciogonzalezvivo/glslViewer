@@ -35,6 +35,7 @@ public:
     void                loadModel(vera::Model* _model);
     void                commandsInit(CommandList &_commands);
 
+    void                setFrame(size_t _frame) { m_frame = _frame; }
     void                setSource(ShaderType _type, const std::string& _source);
     void                resetShaders(WatchFileList &_files);
 
@@ -89,7 +90,7 @@ public:
     bool                help;
     bool                fxaa;
 
-private:
+protected:
     void                _updateBuffers();
     void                _renderBuffers();
 
@@ -135,25 +136,26 @@ private:
     PlotType                        m_plot;
 
     // Recording
-    vera::Fbo           m_record_fbo;
+    vera::Fbo                       m_record_fbo;
     #if defined(SUPPORT_MULTITHREAD_RECORDING)
-    std::atomic<int>    m_task_count {0};
-    std::atomic<long long>      m_max_mem_in_queue {0};
-    thread_pool::ThreadPool     m_save_threads;
+    std::atomic<int>                m_task_count {0};
+    std::atomic<long long>          m_max_mem_in_queue {0};
+    thread_pool::ThreadPool         m_save_threads;
     #endif
 
     // Other state properties
-    glm::mat3           m_view2d;
-    float               m_time_offset;
-    float               m_camera_azimuth;
-    float               m_camera_elevation;
-    size_t              m_frame;
-    vera::ShaderErrorResolve    m_error_screen;
-    bool                m_change;
-    bool                m_update_buffers;
-    bool                m_initialized;
+    glm::mat3                       m_view2d;
+    float                           m_time_offset;
+    float                           m_camera_azimuth;
+    float                           m_camera_elevation;
+    size_t                          m_frame;
+    vera::ShaderErrorResolve        m_error_screen;
+    bool                            m_change;
+    bool                            m_update_buffers;
+
+    bool                            m_initialized;
 
     //  Debug
-    bool                m_showTextures;
-    bool                m_showPasses;
+    bool                            m_showTextures;
+    bool                            m_showPasses;
 };

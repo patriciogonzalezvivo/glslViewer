@@ -31,6 +31,8 @@ float linearizeDepth(float depth) {
     return (2.0 * u_cameraNearClip) / (u_cameraFarClip + u_cameraNearClip - depth * (u_cameraFarClip - u_cameraNearClip));
 }
 
+#include "../deps/lygia/space/linearizeDepth.glsl"
+
 mat3 camera( in vec3 ro) {
     vec3 cw = normalize(-ro);
     vec3 cp = vec3(0.0, 1.0, 0.0);
@@ -52,8 +54,7 @@ void main(void) {
 #if defined(POSTPROCESSING)
     vec4 scene = texture2D(u_scene, st); 
     float depth = texture2D(u_sceneDepth, st).r;
-    float depthLinear = linearizeDepth(depth);
-    depthLinear = u_cameraNearClip + depthLinear * u_cameraFarClip;
+    float depthLinear = linearizeDepth(depth, u_cameraNearClip, u_cameraFarClip);
 
     color = scene;
     color.rgb = heatmap( (u_cameraDistance - depthLinear) / u_area * 2. );

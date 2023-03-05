@@ -29,11 +29,11 @@
 #include "vera/xr/holoPlay.h"
 #include "vera/xr/xr.h"
 
-#include "sandbox.h"
-#include "tools/files.h"
-#include "tools/text.h"
-#include "tools/record.h"
-#include "tools/console.h"
+#include "core/sandbox.h"
+#include "core/tools/files.h"
+#include "core/tools/text.h"
+#include "core/tools/record.h"
+#include "core/tools/console.h"
 
 #if defined(SUPPORT_NCURSES)
 #include <ncurses.h>
@@ -105,12 +105,12 @@ void command(char* c) {
 
 void setFrag(char* c) {
     sandbox.setSource(FRAGMENT, std::string(c) );
-    sandbox.reloadShaders(files);
+    sandbox.resetShaders(files);
 }
 
 void setVert(char* c) {
     sandbox.setSource(VERTEX, std::string(c) );
-    sandbox.reloadShaders(files);
+    sandbox.resetShaders(files);
 }
 
 char* getFrag() {
@@ -194,7 +194,7 @@ void loop() {
     
     // Swap GL buffer
     TRACK_BEGIN("render:swap")
-    vera::renderGL();    
+    vera::renderGL();
     TRACK_END("render:swap")
 
     #if defined(__EMSCRIPTEN__)
@@ -718,6 +718,10 @@ int main(int argc, char **argv) {
 
     // Load files to sandbox
     sandbox.loadAssets(files);
+    if (sandbox.uniforms.models.size() > 0 ) {
+        float area = sandbox.getSceneRender().getArea();
+        sandbox.uniforms.setSunPosition( glm::vec3(0.0,area*10.0,area*10.0) );
+    }
 
     // EVENTs callbacks
     //
@@ -859,6 +863,8 @@ int main(int argc, char **argv) {
                         vera::haveExt(path,"glb") || vera::haveExt(path,"GLB") ||
                         vera::haveExt(path,"gltf") || vera::haveExt(path,"GLTF") ) {
 
+                bool init_lights = sandbox.uniforms.models.size() == 0;
+
                 if (sandbox.geom_index == -1) {
                     WatchFile file;
                     file.type = GEOMETRY;
@@ -873,6 +879,12 @@ int main(int argc, char **argv) {
                     files[sandbox.geom_index].lastChange = 0;
                 }
                 sandbox.loadAssets(files);
+
+                // if (init_lights) {
+                //     float area = sandbox.getSceneRender().getArea();
+                //     sandbox.uniforms.setSunPosition( glm::vec3(0.0,area*10.0,area*10.0) );
+                // }
+
                 commandsRun("update");
             }
             // load cubemap
@@ -1744,7 +1756,7 @@ void commandsInit() {
         #if defined(__EMSCRIPTEN__)
         // Commands are parse in the main GL loop in EMSCRIPTEN,
         // there is no risk to reload shaders outside main GL thread
-        sandbox.reloadShaders(files);
+        sandbox.resetShaders(files);
         #else
         // Reloading shaders can't be done directly on multi-thread (event thread)
         // to solve that, we trigger reloading by flagging changes on all files

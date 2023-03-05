@@ -17,11 +17,11 @@ std::string UniformData::getType() {
     else return (bInt ? "ivec" : "vec") + vera::toString(size); 
 }
 
-void UniformData::set(const UniformValue &_value, size_t _size, bool _int ) {
+void UniformData::set(const UniformValue &_value, size_t _size, bool _int, bool _queue ) {
     bInt = _int;
     size = _size;
 
-    if (change)
+    if (_queue && change)
         queue.push( _value );
     else
         value = _value;
@@ -281,8 +281,8 @@ bool Uniforms::feedTo(vera::Shader *_shader, bool _lights, bool _buffers ) {
             vera::LightsMap::iterator it = lights.begin();
             _shader->setUniform("u_lightColor", it->second->color);
             _shader->setUniform("u_lightIntensity", it->second->intensity);
-            if (it->second->getLightType() != vera::LIGHT_DIRECTIONAL)
-                _shader->setUniform("u_light", it->second->getPosition());
+            // if (it->second->getLightType() != vera::LIGHT_DIRECTIONAL)
+            _shader->setUniform("u_light", it->second->getPosition());
             if (it->second->getLightType() == vera::LIGHT_DIRECTIONAL || it->second->getLightType() == vera::LIGHT_SPOT)
                 _shader->setUniform("u_lightDirection", it->second->direction);
             if (it->second->falloff > 0)
@@ -299,8 +299,8 @@ bool Uniforms::feedTo(vera::Shader *_shader, bool _lights, bool _buffers ) {
 
                 _shader->setUniform(name + "Color", it->second->color);
                 _shader->setUniform(name + "Intensity", it->second->intensity);
-                if (it->second->getLightType() != vera::LIGHT_DIRECTIONAL)
-                    _shader->setUniform(name, it->second->getPosition());
+                // if (it->second->getLightType() != vera::LIGHT_DIRECTIONAL)
+                _shader->setUniform(name, it->second->getPosition());
                 if (it->second->getLightType() == vera::LIGHT_DIRECTIONAL || it->second->getLightType() == vera::LIGHT_SPOT)
                     _shader->setUniform(name + "Direction", it->second->direction);
                 if (it->second->falloff > 0)
@@ -399,6 +399,16 @@ void Uniforms::set(const std::string& _name, float _x, float _y, float _z, float
     value[2] = _z;
     value[3] = _w;
     data[_name].set(value, 4, false);
+    m_change = true;
+}
+
+void Uniforms::set( const std::string& _name, const std::vector<float>& _data, bool _queue) {
+    UniformValue value;
+    int N = std::min((int)_data.size(), 4);
+    // memcpy(&value, _data.data(), N * sizeof(float) );
+    for (size_t i = 0; i < N; i++)
+        value[i] = _data[i];
+    data[_name].set(value, N, false, _queue);
     m_change = true;
 }
 

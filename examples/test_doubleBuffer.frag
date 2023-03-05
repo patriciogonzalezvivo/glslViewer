@@ -22,22 +22,9 @@ uniform vec2        u_mouse;
 uniform float       u_time;
 uniform int         u_frame;
 
-float random (in float x) {
-    return fract(sin(x)*43758.5453123);
-}
-
-float random (vec2 st) {
-    return fract(sin(dot(st.xy, vec2(12.9898,78.233)))*43758.5453123);
-}
-
-float circleSDF(in vec2 st) {
-    return length(st - 0.5) * 2.;
-}
-
-float stroke(float x, float size, float w) {
-    float d = step(size, x + w * 0.5) - step(size, x - w * 0.5);
-    return clamp(d, 0.0, 1.0);
-}
+#include "../deps/lygia/generative/random.glsl"
+#include "../deps/lygia/draw/stroke.glsl"
+#include "../deps/lygia/sdf/circleSDF.glsl"
 
 void main() {
     vec3 color = vec3(0.0);

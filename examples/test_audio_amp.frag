@@ -7,11 +7,8 @@ uniform vec2        u_tex0Resolution;
 
 uniform vec2        u_resolution;
 
-#define decimation(value, presicion) (floor(value * presicion)/presicion)
-
-float stroke(float x, float size, float w) {
-    return step(size, x + w * 0.5) - step(size, x - w * 0.5);
-}
+#include "../deps/lygia/draw/stroke.glsl"
+#include "../deps/lygia/math/decimate.glsl"
 
 void main (void) {
     vec3 color = vec3(0.0);
@@ -21,7 +18,7 @@ void main (void) {
 
     // hist
     vec2 grid = vec2(u_tex0Resolution.x * .5, 2.0);
-    float his = texture2D(u_tex0, vec2(decimation(st.x, grid.x) + half_bar, 0.5) ).b;
+    float his = texture2D(u_tex0, vec2(decimate(st.x, grid.x) + half_bar, 0.5) ).b;
     vec2 ipos = floor(st*grid);
     vec2 fpos = fract(st*grid);
     fpos.y = (mod(ipos.y,2.) == 0.)? 1.0-fpos.y : fpos.y;
