@@ -72,7 +72,7 @@ class GVRenderEngine(bpy.types.RenderEngine):
         instances may exist at the same time, for example for a viewport and final
         render.
         '''
-        print("GVRenderEngine: __init__")
+        # print("GVRenderEngine: __init__")
 
 
     def __del__(self):
@@ -80,7 +80,7 @@ class GVRenderEngine(bpy.types.RenderEngine):
         When the render engine instance is destroy, this is called. Clean up any
         render engine data here, for example stopping running render threads.
         '''
-        print("GVRenderEngine: __del__")
+        # print("GVRenderEngine: __del__")
         global __GV_PREVIEW_RENDER__
         try:
             if __GV_PREVIEW_RENDER__ and self.preview_engine_this:
@@ -90,7 +90,7 @@ class GVRenderEngine(bpy.types.RenderEngine):
 
 
     def initPreview(self, depsgraph):
-        print("GVRenderEngine: initPreview")
+        # print("GVRenderEngine: initPreview")
         global __GV_ENGINE__
         if self.preview_engine != None and __GV_ENGINE__ != None:
             return 
@@ -102,10 +102,7 @@ class GVRenderEngine(bpy.types.RenderEngine):
             __GV_ENGINE__.include_folders = [ lygia_path ]
 
         self.preview_engine = __GV_ENGINE__
-        # self.preview_engine.setSource(gv.VERTEX, self.vert_code)
-        # self.preview_engine.setSource(gv.FRAGMENT, self.frag_code)
         self.reloadScene(self.preview_engine, depsgraph)
-        # self.preview_engine.loadShaders()
         self.update_shaders(self.preview_engine, True)
         
 
@@ -113,11 +110,10 @@ class GVRenderEngine(bpy.types.RenderEngine):
         if __GV_PREVIEW_RENDER__ is None:
             __GV_PREVIEW_RENDER__ = self
         self.preview_engine_this = True
-        print("GVRenderEngine: initPreview end")
 
 
     def closePreview(self):
-        print("GVRenderEngine: closePreview")
+        # print("GVRenderEngine: closePreview")
 
         global __GV_HOLD_PREVIEW__
         __GV_HOLD_PREVIEW__ = True
@@ -130,7 +126,7 @@ class GVRenderEngine(bpy.types.RenderEngine):
 
 
     def start_checking_changes_on_shaders(self):
-        print("GVRenderEngine: start")   
+        # print("GVRenderEngine: start")
         if self.preview_shader_checker:
             return
 
@@ -157,7 +153,7 @@ class GVRenderEngine(bpy.types.RenderEngine):
 
 
     def reloadScene(self, engine, depsgraph):
-        print("Reload entire scene")
+        # print("Reload entire scene")
         
         scene = depsgraph.scene
         engine.enableCubemap( True )
@@ -311,7 +307,7 @@ class GVRenderEngine(bpy.types.RenderEngine):
         This method is where data should be read from Blender in the same thread. 
         Typically a render thread will be started to do the work while keeping Blender responsive.
         '''
-        print("GVRenderEngine: view_update")
+        # print("GVRenderEngine: view_update")
 
         global __GV_HOLD_PREVIEW__
         if __GV_HOLD_PREVIEW__:
@@ -396,7 +392,7 @@ class GVRenderEngine(bpy.types.RenderEngine):
         The renderer is expected to quickly draw the render with OpenGL, and not perform other expensive work.
         Blender will draw overlays for selection and editing on top of the rendered image automatically.
         '''
-        print("GVRenderEngine: view_draw")
+        # print("GVRenderEngine: view_draw")
 
         global __GV_HOLD_PREVIEW__
         if __GV_HOLD_PREVIEW__:
