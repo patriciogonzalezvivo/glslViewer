@@ -1025,16 +1025,6 @@ void Sandbox::commandsInit(CommandList &_commands ) {
                     current_lod = new_lod;
                 }
 
-                // float pct = 1.0;
-                // for (size_t i = 0; i < 500; i++) {
-                //     refineSdfLayers(&acc, current_lod, pct);
-                //     uniforms.loadMutex.lock();
-                //     uniforms.loadQueue[ name ] = vera::packSprite(current_lod);
-                //     uniforms.loadMutex.unlock();
-                //     std::cout << "Refine " << i << " at " << pct <<std::endl;
-                //     pct *= 0.95;
-                // }
-
                 end = clock();
                 double duration_sec = double(end-start)/CLOCKS_PER_SEC;
                 std::cout << "Took " << duration_sec << "secs" << std::endl;
@@ -1384,7 +1374,8 @@ void Sandbox::_updateBuffers() {
     else
         for (size_t i = 0; i < m_buffers_shaders.size(); i++)
             m_buffers_shaders[i].setSource(m_frag_source, vera::getDefaultSrc(vera::VERT_BILLBOARD));
-
+            
+            
     if ( m_doubleBuffers_total != int(uniforms.doubleBuffers.size()) ) {
 
         if (verbose)

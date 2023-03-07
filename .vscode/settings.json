@@ -101,7 +101,8 @@
         "ranges": "cpp",
         "stop_token": "cpp",
         "numbers": "cpp",
-        "__bits": "cpp"
+        "__bits": "cpp",
+        "coroutine": "cpp"
     },
     "cmake.configureOnOpen": false
 }

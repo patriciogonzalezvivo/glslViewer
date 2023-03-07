@@ -5,7 +5,7 @@
 
 
 Engine::Engine() : m_enableCubemap (true) {
-    // verbose = true;
+    verbose = true;
     help = false;
     cursor = false;
     m_initialized = false;
@@ -30,7 +30,7 @@ void Engine::init() {
 
 void Engine::draw() {
     vera::textFont("default");
-    
+
     uniforms.update();
 
     renderPrep();
@@ -47,6 +47,8 @@ void Engine::draw() {
 
     if (m_plot != PLOT_OFF)
         onPlot();
+
+    m_initialized = true;
 }
 
 void Engine::loadMesh(const std::string& _name, const vera::Mesh& _mesh) {
@@ -64,7 +66,6 @@ void Engine::loadImage(const std::string& _name, const std::string& _path, bool 
 void Engine::loadShaders() {
     WatchFileList files;
     resetShaders( files );
-    flagChange();
 }
 
 void Engine::setSkyGround(float _r, float _g, float _b) { 
