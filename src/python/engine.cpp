@@ -5,7 +5,7 @@
 
 
 Engine::Engine() : m_enableCubemap (true) {
-    verbose = true;
+    // verbose = true;
     help = false;
     cursor = false;
     m_initialized = false;
@@ -33,15 +33,16 @@ void Engine::draw() {
 
     uniforms.update();
 
+    // screenshotFile = "true";
     renderPrep();
     render();
     renderPost();
     renderUI();
 
-    if (screenshotFile != "") {
-        onScreenshot(screenshotFile);
-        screenshotFile = "";
-    }
+    // if (screenshotFile != "") {
+    //     onScreenshot(screenshotFile);
+    //     screenshotFile = "";
+    // }
 
     unflagChange();
 

@@ -6,6 +6,9 @@ import bpy
 import idprop
 import bgl
 
+import gpu
+from gpu_extras.presets import draw_texture_2d
+
 from .gv_lib import GlslViewer as gv
 from .gv_preferences import default_vert_code, default_frag_code
 from .gv_translate import bl2veraCamera, bl2veraMesh, bl2veraLight
@@ -65,7 +68,6 @@ class GVRenderEngine(bpy.types.RenderEngine):
     preview_skip_draw = False
     preview_shader_checker = False
 
-
     def __init__(self):
         '''
         Init is called whenever a new render engine instance is created. Multiple
@@ -81,6 +83,7 @@ class GVRenderEngine(bpy.types.RenderEngine):
         render engine data here, for example stopping running render threads.
         '''
         # print("GVRenderEngine: __del__")
+
         global __GV_PREVIEW_RENDER__
         try:
             if __GV_PREVIEW_RENDER__ and self.preview_engine_this:
@@ -105,7 +108,6 @@ class GVRenderEngine(bpy.types.RenderEngine):
         self.reloadScene(self.preview_engine, depsgraph)
         self.update_shaders(self.preview_engine, True)
         
-
         global __GV_PREVIEW_RENDER__
         if __GV_PREVIEW_RENDER__ is None:
             __GV_PREVIEW_RENDER__ = self
@@ -170,7 +172,6 @@ class GVRenderEngine(bpy.types.RenderEngine):
         
         engine.clearModels()
         for instance in depsgraph.object_instances:
-
             if instance.object.type == 'MESH':
                 mesh = bl2veraMesh(instance.object)
                 engine.loadMesh(instance.object.name_full, mesh)
@@ -208,7 +209,7 @@ class GVRenderEngine(bpy.types.RenderEngine):
 
             if img.file_format == 'HDR':
                 if not engine.haveCubemap(name):
-                    print("Add Cubemap", img.name, "as", name)
+                    # print("Add Cubemap", img.name, "as", name)
                     pixels = np.array(img.pixels)
                     engine.addCubemap(name, img.size[0], img.size[1], img.channels, pixels)
 
@@ -218,7 +219,7 @@ class GVRenderEngine(bpy.types.RenderEngine):
                 if __GV_HOLD_PREVIEW__:
                     # If this is a FINAL RENDER, we need to load the texture as a file
                     if not engine.haveTexture(name):
-                        print("Add Texture", img.name, "as", name)
+                        # print("Add Texture", img.name, "as", name)
                         pixels = np.array(img.pixels)
                         engine.addTexture(name, img.size[0], img.size[1], img.channels, pixels)
                 else:
@@ -237,31 +238,20 @@ class GVRenderEngine(bpy.types.RenderEngine):
         vert_filename = bpy.context.scene.glsl_viewer_vert
 
         if not frag_filename in bpy.data.texts:
-            print(f'File name {frag_filename} not found. Will create an internal one')
-
-            if os.path.isfile(frag_filename):
-                bpy.ops.text.open(filepath=frag_filename)
-            else:
-                bpy.data.texts.new(frag_filename)
-                self.frag_code = default_frag_code
-                bpy.data.texts[frag_filename].write( self.frag_code )
+            bpy.data.texts.new(frag_filename)
+            self.frag_code = default_frag_code
+            bpy.data.texts[frag_filename].write( self.frag_code )
 
         if not vert_filename in bpy.data.texts:
-            print(f'File name {vert_filename} not found. Will create an internal one')
-
-            if os.path.isfile(vert_filename):
-                bpy.ops.text.open(filepath=vert_filename)
-            else:
-                bpy.data.texts.new(vert_filename)
-                self.vert_code = default_vert_code
-                bpy.data.texts[vert_filename].write( self.vert_code )
+            bpy.data.texts.new(vert_filename)
+            self.vert_code = default_vert_code
+            bpy.data.texts[vert_filename].write( self.vert_code )
 
         for text in bpy.data.texts:
-
             # filename, file_extension = os.path.splitext(text.name_full)
             if text.name_full == frag_filename:
                 if not text.is_in_memory and text.is_modified and context != None:
-                    print(f'External file {frag_filename} have been modify. Reloading...')
+                    # print(f'External file {frag_filename} have been modify. Reloading...')
                     ctx = context.copy()
                     #Ensure  context area is not None
                     ctx['area'] = ctx['screen'].areas[0]
@@ -279,7 +269,7 @@ class GVRenderEngine(bpy.types.RenderEngine):
 
             elif text.name_full == vert_filename:
                 if not text.is_in_memory and text.is_modified and context != None:
-                    print(f'External file {vert_filename} have been modify. Reloading...')
+                    # print(f'External file {vert_filename} have been modify. Reloading...')
                     ctx = context.copy()
                     #Ensure  context area is not None
                     ctx['area'] = ctx['screen'].areas[0]
@@ -296,6 +286,8 @@ class GVRenderEngine(bpy.types.RenderEngine):
                     reload_shaders = True
 
         if reload_shaders:
+            engine.setSource(gv.VERTEX, self.vert_code)
+            engine.setSource(gv.FRAGMENT, self.frag_code)
             engine.loadShaders()
             self.tag_redraw()
 
@@ -338,10 +330,10 @@ class GVRenderEngine(bpy.types.RenderEngine):
 
                 for name, value in bpy.context.scene.world.items():
                     if isinstance(value, float):
-                        print(">", name, [value])
+                        # print(">", name, [value])
                         self.preview_engine.setUniform(name, [value])
                     elif isinstance(value, idprop.types.IDPropertyArray):
-                        print(">", name, np.array(value.to_list()))
+                        # print(">", name, np.array(value.to_list()))
                         self.preview_engine.setUniform(name, np.array(value.to_list()))
 
                 continue
@@ -382,8 +374,6 @@ class GVRenderEngine(bpy.types.RenderEngine):
             self.update_shaders(self.preview_engine, True)
             self.tag_redraw()
 
-        # self.tag_redraw()
-
 
     def view_draw(self, context, depsgraph):
         '''
@@ -393,20 +383,21 @@ class GVRenderEngine(bpy.types.RenderEngine):
         Blender will draw overlays for selection and editing on top of the rendered image automatically.
         '''
         # print("GVRenderEngine: view_draw")
+        scene = depsgraph.scene
 
         global __GV_HOLD_PREVIEW__
         if __GV_HOLD_PREVIEW__:
             return
+
+        # Make sure that the preview engine is running
+        if self.preview_engine == None:
+            self.initPreview(depsgraph)
 
         if self.preview_skip_draw:
             self.preview_skip_draw = False
             self.tag_redraw()
             return
         
-        # Make sure that the preview engine is running
-        if self.preview_engine == None:
-            self.initPreview(depsgraph)
-
         if not self.preview_shader_checker:
             self.start_checking_changes_on_shaders()
 
