@@ -7,7 +7,7 @@ bl_info = {
     "author" : "Patricio Gonzalez Vivo",
     "description" : "A Blender addon to integrate GlslViewer as a CustomRenderEngine",
     "blender" : (2, 80, 0),
-    "version" : (3, 2, 1),
+    "version" : (3, 2, 2),
     "location" : "",
     "warning" : "",
     "category" : "Generic"
