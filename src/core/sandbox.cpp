@@ -1343,7 +1343,6 @@ void Sandbox::resetShaders( WatchFileList &_files ) {
 void Sandbox::_updateBuffers() {
 
     if ( m_buffers_total != int(uniforms.buffers.size())) {
-
         if (verbose)
             std::cout << "Creating/removing " << uniforms.buffers.size() << " buffers to match " << m_buffers_total << std::endl;
 

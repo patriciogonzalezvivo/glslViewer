@@ -52,6 +52,9 @@ test_video_prevs:
 test_buffers:
 	glslViewer test_buffers.frag -l
 
+test_buffers_scale:
+	glslViewer test_buffers_scale.frag image.png -l
+
 test_doubleBuffer:
 	glslViewer test_doubleBuffer.frag -l
 

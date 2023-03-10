@@ -127,28 +127,6 @@ int generic_search_count(const std::string& _source, regex_count_t keyword_id ) 
     });
 }
 
-enum class regex_get_t {
-    BufferSize,
-    MAX_KEYWORDS_GET_IDS
-};
-
-using regex_get_string_t = regex_string_t<regex_get_t>;
-const auto valid_get_keyword_ids = std::array<regex_get_string_t, +(regex_get_t::MAX_KEYWORDS_GET_IDS)> {{
-    {regex_get_t::BufferSize, R"(uniform\s*sampler2D\s*(\w*)\;\s*\/\/*\s(\d+)x(\d+))"}
-}};
-
-bool generic_search_get(const std::string& _source, const std::string& _name, glm::vec2& _size, regex_get_t keyword_id ) {
-    bool result;
-    std::smatch match;
-    const auto re = std::regex{std::get<1>(valid_get_keyword_ids[+(keyword_id)])};
-    std::tie(result, match) = does_any_of_the_regex_exist(_source, re); // capture both the "result" and the "match" info.
-    if(result) {
-        if (match[1] == _name) {    // regex-match result data is valid to spec.
-            _size = {vera::toFloat(match[2]), vera::toFloat(match[3])};
-        }
-    }
-    return result;
-}
 }  // Namespace {}
 
 // Quickly determine if a shader program contains the specified identifier.
@@ -162,7 +140,29 @@ int countBuffers(const std::string& _source) {
 }
 
 bool getBufferSize(const std::string& _source, const std::string& _name, glm::vec2& _size) {
-    return generic_search_get(_source, _name, _size, regex_get_t::BufferSize);
+    std::regex re1(R"(uniform\s*sampler2D\s*(\w*)\;\s*\/\/*\s(\d+)x(\d+))");
+    std::regex re2(R"(uniform\s*sampler2D\s*(\w*)\;\s*\/\/*\s(\d*\.\d+|\d+))");
+    std::smatch match;
+
+    // Split Source code in lines
+    std::vector<std::string> lines = vera::split(_source, '\n');
+    for (unsigned int l = 0; l < lines.size(); l++) {
+        if (std::regex_search(lines[l], match, re1)) {
+            if (match[1] == _name) {
+                _size.x = vera::toFloat(match[2]);
+                _size.y = vera::toFloat(match[3]);
+                return true;
+            }
+        }
+        else if (std::regex_search(lines[l], match, re2)) {
+            if (match[1] == _name) {
+                _size *= vera::toFloat(match[2]);
+                return true;
+            }
+        }
+    }
+
+    return false;
 }
 
 // Count how many BUFFERS are in the shader
