@@ -149,6 +149,13 @@ void refresh_stt_win() {
         if (it->second.present && it->second.print)
             mvwprintw(stt_win, y++, stt_x, "%23s  %s", it->first.c_str(), it->second.print().c_str() );
 
+    for (UniformSequenceMap::iterator it= uniforms->sequences.begin(); it != uniforms->sequences.end(); ++it) {
+        if (it->second.size() > 0) {
+            size_t frame = uniforms->getFrame() % it->second.size();
+            mvwprintw(stt_win, y++, stt_x, "%23s  %s", it->first.c_str(), it->second[frame].print().c_str() );
+        }
+    }
+
     for (vera::TexturesMap::iterator it = uniforms->textures.begin(); it != uniforms->textures.end(); ++it)
         mvwprintw(stt_win, y++, stt_x, "%23s  %.1f,%.1f", (it->first + "Resolution").c_str(), (float)it->second->getWidth(), (float)it->second->getHeight());
 

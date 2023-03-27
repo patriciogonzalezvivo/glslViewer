@@ -1,6 +1,7 @@
 #include "uniforms.h"
 
 #include <regex>
+#include <limits>
 #include <fstream>
 #include <sstream>
 #include <sys/stat.h>
@@ -12,12 +13,13 @@
 #include "vera/ops/string.h"
 #include "vera/xr/xr.h"
 
+
 std::string UniformData::getType() {
     if (size == 1) return (bInt ? "int" : "float");
     else return (bInt ? "ivec" : "vec") + vera::toString(size); 
 }
 
-void UniformData::set(const UniformValue &_value, size_t _size, bool _int, bool _queue ) {
+void UniformData::set(const UniformValue &_value, size_t _size, bool _int, bool _queue) {
     bInt = _int;
     size = _size;
 
@@ -29,12 +31,22 @@ void UniformData::set(const UniformValue &_value, size_t _size, bool _int, bool 
     change = true;
 }
 
-void UniformData::parse(const std::vector<std::string>& _command, size_t _start) {;
+void UniformData::parse(const std::vector<std::string>& _command, size_t _start, bool _queue) {;
     UniformValue candidate;
-    for (size_t i = _start; i < _command.size() && i < 5; i++)
+    for (size_t i = _start; i < _command.size() && i < 5; i++) 
         candidate[i-_start] = vera::toFloat(_command[i]);
 
-    set(candidate, _command.size() - _start, true);
+    set(candidate, _command.size() - _start, _queue);
+}
+
+std::string UniformData::print() {
+    std::string rta = "";
+    for (size_t i = 0; i < size; i++) {
+        rta += vera::toString(value[i]);
+        if (i < size - 1)
+            rta += ",";
+    }
+    return rta;
 }
 
 bool UniformData::check() {
@@ -225,7 +237,7 @@ void Uniforms::clear() {
 bool Uniforms::feedTo(vera::Shader *_shader, bool _lights, bool _buffers ) {
     bool update = false;
 
-    // Pass Native uniforms 
+    // Pass native uniforms functions (u_time, u_data, etc...)
     for (UniformFunctionsMap::iterator it = functions.begin(); it != functions.end(); ++it) {
         if (!_lights && ( it->first == "u_scene" || it->first == "u_sceneDepth" || it->first == "u_sceneNormal" || it->first == "u_scenePosition") )
             continue;
@@ -235,13 +247,22 @@ bool Uniforms::feedTo(vera::Shader *_shader, bool _lights, bool _buffers ) {
                 it->second.assign( *_shader );
     }
 
-    // Pass User defined uniforms
+    // Pass user defined uniforms (only if the shader code or scene had changed)
     if (m_change) {
         for (UniformDataMap::iterator it = data.begin(); it != data.end(); ++it) {
             if (it->second.change) {
                 _shader->setUniform(it->first, it->second.value.data(), it->second.size);
                 update += true;
             }
+        }
+    }
+
+    // Pass sequence uniforms (the change every frame)
+    for (UniformSequenceMap::iterator it = sequences.begin(); it != sequences.end(); ++it) {
+        if (it->second.size() > 0) {
+            size_t frame = m_frame % it->second.size();
+            _shader->setUniform(it->first, it->second[frame].value.data(), it->second[frame].size);
+            update += true;
         }
     }
 
@@ -367,6 +388,18 @@ bool Uniforms::haveChange() {
     return false;
 }
 
+void Uniforms::checkUniforms( const std::string &_vert_src, const std::string &_frag_src ) {
+    // Check active native uniforms
+    for (UniformFunctionsMap::iterator it = functions.begin(); it != functions.end(); ++it) {
+        std::string name = it->first + ";";
+        std::string arrayName = it->first + "[";
+        bool present = ( findId(_vert_src, name.c_str()) || findId(_frag_src, name.c_str()) || findId(_frag_src, arrayName.c_str()) );
+        if ( it->second.present != present ) {
+            it->second.present = present;
+            m_change = true;
+        } 
+    }
+}
 
 void Uniforms::set(const std::string& _name, float _value) {
     UniformValue value;
@@ -422,17 +455,39 @@ bool Uniforms::parseLine( const std::string &_line ) {
     return false;
 }
 
-void Uniforms::checkUniforms( const std::string &_vert_src, const std::string &_frag_src ) {
-    // Check active native uniforms
-    for (UniformFunctionsMap::iterator it = functions.begin(); it != functions.end(); ++it) {
-        std::string name = it->first + ";";
-        std::string arrayName = it->first + "[";
-        bool present = ( findId(_vert_src, name.c_str()) || findId(_frag_src, name.c_str()) || findId(_frag_src, arrayName.c_str()) );
-        if ( it->second.present != present ) {
-            it->second.present = present;
-            m_change = true;
-        } 
+bool Uniforms::addSequence( const std::string& _name, const std::string& _filename) {
+    std::cout << "Load values for " << _name << " from " << _filename << std::endl;
+
+    std::vector<UniformData> uniform_data_sequence;
+
+    // Open file _filename and read all lines
+    std::ifstream infile(_filename);
+    std::string line = "";
+    while (std::getline(infile, line)) {
+        if (line.size() > 0) {
+            std::vector<std::string> values = vera::split(line,',', true);
+            if (values.size() > 0) {
+                UniformData data;
+                data.parse(values, 0, false);
+                uniform_data_sequence.push_back(data);
+            }
+        }
     }
+
+    if (uniform_data_sequence.size() == 0)
+        return false;
+
+    sequences[_name] = uniform_data_sequence;
+
+    return true;
+}
+
+void Uniforms::update() {
+    Scene::update();
+
+    m_frame++;
+    if (m_frame >= std::numeric_limits<size_t>::max()-1)
+        m_frame = 0;
 }
 
 
@@ -469,14 +524,27 @@ void Uniforms::printDefinedUniforms(bool _csv){
             }
             std::cout << std::endl;
         }
+
+        for (UniformSequenceMap::iterator it= sequences.begin(); it != sequences.end(); ++it) {
+            if (it->second.size() > 0) {
+                size_t frame = m_frame % it->second.size();
+                std::cout << it->first << ',' << it->second[frame].print() << std::endl;
+            }
+        }
     }
     else {
         for (UniformDataMap::iterator it= data.begin(); it != data.end(); ++it) {
             std::cout << "uniform " << it->second.getType() << "  " << it->first << ";";
             for (int i = 0; i < it->second.size; i++)
                 std::cout << ((i == 0)? " // " : "," ) << it->second.value[i];
-            
             std::cout << std::endl;
+        }
+
+        for (UniformSequenceMap::iterator it= sequences.begin(); it != sequences.end(); ++it) {
+            if (it->second.size() > 0) {
+                size_t frame = m_frame % it->second.size();
+                std::cout << "uniform " << it->second[frame].getType() << "  " << it->first << "; // " << it->second[frame].print() << std::endl;
+            }
         }
     }    
 }
@@ -531,13 +599,14 @@ void Uniforms::clearBuffers() {
 
 void Uniforms::clearUniforms() {
     data.clear();
+    sequences.clear();
 
     for (UniformFunctionsMap::iterator it = functions.begin(); it != functions.end(); ++it)
         it->second.present = false;
 }
 
-bool Uniforms::addCameraPath( const std::string& _name ) {
-    std::fstream is( _name.c_str(), std::ios::in);
+bool Uniforms::addCameraPath( const std::string& _filename ) {
+    std::fstream is( _filename.c_str(), std::ios::in);
     if (is.is_open()) {
 
         glm::vec3 position;

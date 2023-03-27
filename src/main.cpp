@@ -323,6 +323,9 @@ int main(int argc, char **argv) {
             haveGeometry = true;
         }
         else if (   argument == "-noncurses"|| argument == "--noncurses"    )   commands_ncurses = false;
+        else if (   vera::haveExt(argument,"csv") || vera::haveExt(argument,"csv") ) {
+
+        }
         else if (   vera::haveExt(argument,"hdr") || vera::haveExt(argument,"HDR") ||
                     vera::haveExt(argument,"exr") || vera::haveExt(argument,"EXR") ||
                     vera::haveExt(argument,"png") || vera::haveExt(argument,"PNG") ||
@@ -677,6 +680,11 @@ int main(int argc, char **argv) {
                     vera::haveWildcard(argument) ) {
                     sandbox.uniforms.addStreamingTexture(parameterPair, argument, vFlip, false);
                 }
+
+                // Load a sequence of uniform data
+                else if ( vera::haveExt(argument,"csv") || vera::haveExt(argument,"CSV") )
+                    sandbox.uniforms.addSequence(parameterPair, argument);
+                
                 // Else load it as a single texture
                 else 
                     sandbox.uniforms.addTexture(parameterPair, argument, vFlip);

@@ -26,9 +26,10 @@ typedef std::array<float, 4> UniformValue;
 struct UniformData {
     std::string getType();
 
-    void    set(const UniformValue &_value, size_t _size, bool _int, bool _queue = true);
-    void    parse(const std::vector<std::string>& _command, size_t _start = 1);
-    bool    check();
+    void        set(const UniformValue &_value, size_t _size, bool _int, bool _queue = true);
+    void        parse(const std::vector<std::string>& _command, size_t _start = 1, bool _queue = true);
+    std::string print();
+    bool        check();
 
     std::queue<UniformValue>            queue;
     UniformValue                        value;
@@ -50,8 +51,9 @@ struct UniformFunction {
 };
 
 // Uniforms values types (float, vecs and functions)
-typedef std::map<std::string, UniformData>      UniformDataMap;
-typedef std::map<std::string, UniformFunction>  UniformFunctionsMap;
+typedef std::map<std::string, UniformFunction>          UniformFunctionsMap;
+typedef std::map<std::string, UniformData>              UniformDataMap;
+typedef std::map<std::string, std::vector<UniformData>> UniformSequenceMap;
 
 // Buffers types
 typedef std::vector<vera::Fbo*>                 BuffersList;
@@ -90,28 +92,36 @@ public:
     std::mutex          loadMutex;
     ImagesMap           loadQueue;
 
-    // Ingest new uniforms
-    // float, vec2, vec3, vec4 and functions (u_time, u_data, etc.)
-    UniformDataMap      data;
+    // Uniforms that trigger functions (u_time, u_data, etc.)
     UniformFunctionsMap functions;
+    virtual void        checkUniforms( const std::string &_vert_src, const std::string &_frag_src );
+
+    // Manually added uniforms
+    UniformDataMap      data;
     virtual void        set( const std::string& _name, float _value);
     virtual void        set( const std::string& _name, float _x, float _y);
     virtual void        set( const std::string& _name, float _x, float _y, float _z);
     virtual void        set( const std::string& _name, float _x, float _y, float _z, float _w);
     virtual void        set( const std::string& _name, const std::vector<float>& _data, bool _queue = true);
-    virtual void        checkUniforms( const std::string &_vert_src, const std::string &_frag_src );
     virtual bool        parseLine( const std::string &_line );
+
+    UniformSequenceMap  sequences;
+    virtual bool        addSequence( const std::string& _name, const std::string& _filename);
+
+    CameraPath              cameraPath;
+    virtual bool        addCameraPath( const std::string& _filename );
+
     virtual void        clearUniforms();
     virtual void        printAvailableUniforms(bool _non_active);
     virtual void        printDefinedUniforms(bool _csv = false);
-    
-
-    CameraPath          cameraPath;
-    virtual bool        addCameraPath( const std::string& _name );
 
     Tracker             tracker;
 
+    void                update();
+    size_t              getFrame() const { return m_frame; }
+
 protected:
+    size_t              m_frame;
     bool                m_change;
 
 };
