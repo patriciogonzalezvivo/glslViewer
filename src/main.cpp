@@ -363,7 +363,7 @@ int main(int argc, char **argv) {
     if (window_properties.style != vera::HEADLESS) {
         vera::setWindowTitle("GlslViewer");
 
-        #if defined(DRIVER_GLFW)
+        #if defined(DRIVER_GLFW) && defined(PLATFORM_LINUX)
         int icon_width, icon_height; 
         unsigned char* icon_data = vera::loadPixelsBase64(icon_base64, &icon_width, &icon_height);
         vera::setWindowIcon(icon_data, icon_width, icon_height);
