@@ -50,7 +50,7 @@ varying vec4    v_lightCoord;
 
 void main(void) {
     v_position = u_modelMatrix * a_position;
-    v_texcoord = v_position.xy;
+    v_texcoord = a_position.xy * 0.5 + 0.5;
     
 #ifdef MODEL_VERTEX_COLOR
     v_color = a_color;
