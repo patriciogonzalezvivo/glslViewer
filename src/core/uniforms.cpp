@@ -36,7 +36,7 @@ void UniformData::parse(const std::vector<std::string>& _command, size_t _start,
     for (size_t i = _start; i < _command.size() && i < 5; i++) 
         candidate[i-_start] = vera::toFloat(_command[i]);
 
-    set(candidate, _command.size() - _start, _queue);
+    set(candidate, _command.size() - _start, false, _queue);
 }
 
 std::string UniformData::print() {
