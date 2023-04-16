@@ -107,8 +107,11 @@ public:
 
     UniformSequenceMap  sequences;
     virtual bool        addSequence( const std::string& _name, const std::string& _filename);
+    virtual void        setStreamsPlay();
+    virtual void        setStreamsStop();
+    virtual void        setStreamsRestart();
 
-    CameraPath              cameraPath;
+    CameraPath          cameraPath;
     virtual bool        addCameraPath( const std::string& _filename );
 
     virtual void        clearUniforms();
@@ -118,10 +121,13 @@ public:
     Tracker             tracker;
 
     void                update();
+    void                setFrame(size_t _frame) { m_frame = _frame; }
     size_t              getFrame() const { return m_frame; }
+    bool                isPlaying() const { return m_play; }
 
 protected:
     size_t              m_frame;
+    bool                m_play;
     bool                m_change;
 
 };

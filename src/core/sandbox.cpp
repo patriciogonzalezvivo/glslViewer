@@ -65,7 +65,7 @@ Sandbox::Sandbox():
     #endif
 
     // Scene
-    m_view2d(1.0), m_time_offset(0.0), m_camera_elevation(1.0), m_camera_azimuth(180.0), m_frame(0), m_error_screen(vera::SHOW_MAGENTA_SHADER), 
+    m_view2d(1.0), m_time_offset(0.0), m_camera_elevation(1.0), m_camera_azimuth(180.0), m_error_screen(vera::SHOW_MAGENTA_SHADER), 
     m_change(true), m_update_buffers(true), m_initialized(false), 
 
     // Debug
@@ -78,16 +78,23 @@ Sandbox::Sandbox():
     //
     uniforms.functions["u_frame"] = UniformFunction( "int", [&](vera::Shader& _shader) {
         if (isRecording()) _shader.setUniform("u_frame", getRecordingFrame());
-        _shader.setUniform("u_frame", (int)m_frame);
+        _shader.setUniform("u_frame", (int)uniforms.getFrame() );
     }, 
     [&]() { 
         if (isRecording()) return vera::toString( getRecordingFrame() );
-        else return vera::toString(m_frame, 1); 
+        else return vera::toString(uniforms.getFrame(), 1); 
+    } );
+
+    uniforms.functions["u_play"] = UniformFunction( "int", [&](vera::Shader& _shader) {
+        _shader.setUniform("u_play", uniforms.isPlaying()? 1 : 0);
+    }, 
+    [&]() { 
+        return vera::toString( uniforms.isPlaying()? 1 : 0 );
     } );
 
     uniforms.functions["u_time"] = UniformFunction( "float", [&](vera::Shader& _shader) {
         if (vera::getWindowStyle() == vera::EMBEDDED) 
-            _shader.setUniform("u_time", float(m_frame) * vera::getRestSec());
+            _shader.setUniform("u_time", float(uniforms.getFrame()) * vera::getRestSec());
         else if (isRecording()) 
             _shader.setUniform("u_time", getRecordingTime());
         else 
@@ -1347,7 +1354,7 @@ void Sandbox::_updateBuffers() {
             std::cout << "Creating/removing " << uniforms.buffers.size() << " buffers to match " << m_buffers_total << std::endl;
 
         for (size_t i = 0; i < m_buffers_shaders.size(); i++)
-            if (m_buffers_shaders[i].loaded())
+            if (m_buffers_shaders[i].isLoaded())
                 m_buffers_shaders[i].detach(GL_FRAGMENT_SHADER | GL_VERTEX_SHADER);
 
         for (size_t i = 0; i < uniforms.buffers.size(); i++)
@@ -1381,7 +1388,7 @@ void Sandbox::_updateBuffers() {
             std::cout << "Creating/removing " << uniforms.doubleBuffers.size() << " double buffers to match " << m_doubleBuffers_total << std::endl;
 
         for (size_t i = 0; i < m_doubleBuffers_shaders.size(); i++)
-            if (m_doubleBuffers_shaders[i].loaded())
+            if (m_doubleBuffers_shaders[i].isLoaded())
                 m_doubleBuffers_shaders[i].detach(GL_FRAGMENT_SHADER | GL_VERTEX_SHADER);
 
         for (size_t i = 0; i < uniforms.doubleBuffers.size(); i++)
@@ -1416,7 +1423,7 @@ void Sandbox::_updateBuffers() {
             std::cout << "Removing " << uniforms.pyramids.size() << " convolution pyramids to create  " << m_pyramid_total << std::endl;
 
         for (size_t i = 0; i < m_pyramid_subshaders.size(); i++)
-            if (m_pyramid_subshaders[i].loaded())
+            if (m_pyramid_subshaders[i].isLoaded())
                 m_pyramid_subshaders[i].detach(GL_FRAGMENT_SHADER | GL_VERTEX_SHADER);        
 
         uniforms.pyramids.clear();
@@ -2149,8 +2156,6 @@ void Sandbox::renderDone() {
 
         flagChange();
     }
-    else
-        m_frame++;
 
     TRACK_END("update:post_render")
 }

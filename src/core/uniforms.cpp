@@ -80,7 +80,7 @@ UniformFunction::UniformFunction(const std::string &_type, std::function<void(ve
 }
 
 
-Uniforms::Uniforms() : m_change(false) {
+Uniforms::Uniforms() : m_frame(0), m_play(true), m_change(false) {
 
     activeCubemap = nullptr;
 
@@ -248,10 +248,11 @@ bool Uniforms::feedTo(vera::Shader *_shader, bool _lights, bool _buffers ) {
     }
 
     // Pass user defined uniforms (only if the shader code or scene had changed)
-    if (m_change) {
+    // if (m_change) 
+    {
         for (UniformDataMap::iterator it = data.begin(); it != data.end(); ++it) {
+            _shader->setUniform(it->first, it->second.value.data(), it->second.size);
             if (it->second.change) {
-                _shader->setUniform(it->first, it->second.value.data(), it->second.size);
                 update += true;
             }
         }
@@ -456,8 +457,6 @@ bool Uniforms::parseLine( const std::string &_line ) {
 }
 
 bool Uniforms::addSequence( const std::string& _name, const std::string& _filename) {
-    std::cout << "Load values for " << _name << " from " << _filename << std::endl;
-
     std::vector<UniformData> uniform_data_sequence;
 
     // Open file _filename and read all lines
@@ -474,6 +473,7 @@ bool Uniforms::addSequence( const std::string& _name, const std::string& _filena
         }
     }
 
+    // std::cout << "Load " << _name << " from " << _filename <<  " with " << uniform_data_sequence.size() << " values" << std::endl;
     if (uniform_data_sequence.size() == 0)
         return false;
 
@@ -485,9 +485,26 @@ bool Uniforms::addSequence( const std::string& _name, const std::string& _filena
 void Uniforms::update() {
     Scene::update();
 
-    m_frame++;
-    if (m_frame >= std::numeric_limits<size_t>::max()-1)
-        m_frame = 0;
+    if (m_play) {
+        m_frame++;
+        if (m_frame >= std::numeric_limits<size_t>::max()-1)
+            m_frame = 0;
+    }
+}
+
+void Uniforms::setStreamsPlay() {
+    Scene::setStreamsPlay();
+    m_play = true;
+}
+
+void Uniforms::setStreamsStop() {
+    Scene::setStreamsStop();
+    m_play = false;
+}
+
+void Uniforms::setStreamsRestart() {
+    Scene::setStreamsRestart();
+    m_frame = 0;
 }
 
 

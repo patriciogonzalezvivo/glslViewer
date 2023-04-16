@@ -35,7 +35,6 @@ public:
     void                loadModel(vera::Model* _model);
     void                commandsInit(CommandList &_commands);
 
-    void                setFrame(size_t _frame) { m_frame = _frame; }
     void                setSource(ShaderType _type, const std::string& _source);
     void                resetShaders(WatchFileList &_files);
 
@@ -148,7 +147,6 @@ protected:
     float                           m_time_offset;
     float                           m_camera_azimuth;
     float                           m_camera_elevation;
-    size_t                          m_frame;
     vera::ShaderErrorResolve        m_error_screen;
     bool                            m_change;
     bool                            m_update_buffers;
