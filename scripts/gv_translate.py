@@ -152,24 +152,31 @@ def bl2veraMesh(bl_mesh: bpy.types.Mesh):
     has_uv = bl_mesh.data.uv_layers != None and len(bl_mesh.data.uv_layers) > 0
     has_color = bl_mesh.data.vertex_colors != None and len(bl_mesh.data.vertex_colors) > 0
 
-    for triangle_loop in bl_mesh.data.loop_triangles:
-        for loop_index in triangle_loop.loops:
-            loop = bl_mesh.data.loops[loop_index]
+    if len(bl_mesh.data.loop_triangles) == 0:
+        mesh.setDrawMode(gl.POINTS)
+        for v in bl_mesh.data.vertices:
+            mesh.addVertex(-v.co[0], -v.co[1], -v.co[2])
+            mesh.addNormal(-v.normal[0], -v.normal[1], -v.normal[2])
 
-            v = bl_mesh.data.vertices[loop.vertex_index].co
-            mesh.addVertex(-v[0], -v[1], -v[2])
+    else:
+        for triangle_loop in bl_mesh.data.loop_triangles:
+            for loop_index in triangle_loop.loops:
+                loop = bl_mesh.data.loops[loop_index]
 
-            # n = loop.normal
-            n = bl_mesh.data.vertices[loop.vertex_index].normal
-            mesh.addNormal(-n[0], -n[1], -n[2])
+                v = bl_mesh.data.vertices[loop.vertex_index].co
+                mesh.addVertex(-v[0], -v[1], -v[2])
 
-            if has_color:
-                c = bl_mesh.data.vertex_colors.active.data[loop_index].color
-                mesh.addColor(c[0], c[1], c[2], c[3])
+                # n = loop.normal
+                n = bl_mesh.data.vertices[loop.vertex_index].normal
+                mesh.addNormal(-n[0], -n[1], -n[2])
 
-            if has_uv:
-                t = bl_mesh.data.uv_layers.active.data[loop_index].uv
-                mesh.addTexCoord(t[0], t[1])
+                if has_color:
+                    c = bl_mesh.data.vertex_colors.active.data[loop_index].color
+                    mesh.addColor(c[0], c[1], c[2], c[3])
+
+                if has_uv:
+                    t = bl_mesh.data.uv_layers.active.data[loop_index].uv
+                    mesh.addTexCoord(t[0], t[1])
 
     if has_uv:
         mesh.computeTangents()

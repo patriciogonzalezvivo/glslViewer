@@ -92,8 +92,20 @@ PYBIND11_MODULE(PyGlslViewer, m) {
         .def("reset",&vera::Camera::reset)
     ;
 
+    py::enum_<vera::DrawMode>(m, "DrawMode")
+        .value("POINTS", vera::POINTS)
+        .value("LINES", vera::LINES)
+        .value("LINE_STRIP", vera::LINE_STRIP)
+        .value("LINE_LOOP", vera::LINE_LOOP)
+        .value("TRIANGLES", vera::TRIANGLES)
+        .value("TRIANGLE_STRIP", vera::TRIANGLE_STRIP)
+        .value("TRIANGLE_FAN", vera::TRIANGLE_FAN)
+        .export_values();
+    ;
+
     py::class_<vera::Mesh>(m, "Mesh")
         .def(py::init<>())
+        .def("setDrawMode", py::overload_cast<vera::DrawMode>(&vera::Mesh::setDrawMode), py::arg("_drawMode"))
         .def("addVertex",py::overload_cast<float,float,float>(&vera::Mesh::addVertex), py::arg("_x"), py::arg("_y"), py::arg("_z"))
         .def("getVerticesTotal",&vera::Mesh::getVerticesTotal)
         .def("addColor",py::overload_cast<float,float,float,float>(&vera::Mesh::addColor), py::arg("_r"), py::arg("_g"), py::arg("_b"), py::arg("_a"))

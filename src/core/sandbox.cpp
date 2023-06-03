@@ -1241,6 +1241,10 @@ const std::string& Sandbox::getSource(ShaderType _type) const {
     return (_type == FRAGMENT)? m_frag_source : m_vert_source;
 }
 
+void Sandbox::setFrame(size_t _frame) { 
+    uniforms.setFrame(_frame);
+}
+
 // ------------------------------------------------------------------------- RELOAD SHADER
 
 void Sandbox::setSource(ShaderType _type, const std::string& _source) {
