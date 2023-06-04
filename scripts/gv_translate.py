@@ -136,9 +136,6 @@ def bl2veraCamera(source: bpy.types.RegionView3D | bpy.types.Object):
         print(f"INVALID CAMERA SOURCE: {source}")
         return None
 
-    
-    
-
     return cam
 
 
@@ -148,25 +145,37 @@ def bl2veraMesh(bl_mesh: bpy.types.Mesh):
     N = W.inverted_safe().transposed().to_3x3()
 
     bl_mesh.data.calc_loop_triangles()
-    bl_mesh.data.calc_normals_split()
     has_uv = bl_mesh.data.uv_layers != None and len(bl_mesh.data.uv_layers) > 0
     has_color = bl_mesh.data.vertex_colors != None and len(bl_mesh.data.vertex_colors) > 0
 
     if len(bl_mesh.data.loop_triangles) == 0:
         mesh.setDrawMode(gl.POINTS)
-        for v in bl_mesh.data.vertices:
+
+        att = 'Normal' in bl_mesh.data.attributes
+        if att:
+            att = bl_mesh.data.attributes['Normal']
+        else:
+            att = None
+
+        for i, v in enumerate(bl_mesh.data.vertices):
             mesh.addVertex(-v.co[0], -v.co[1], -v.co[2])
-            mesh.addNormal(-v.normal[0], -v.normal[1], -v.normal[2])
+
+            if att:
+                n = att.data[i].vector
+                mesh.addNormal(-n[0], -n[1], -n[2])
+            else:
+                mesh.addNormal(-v.normal[0], -v.normal[1], -v.normal[2])
+
 
     else:
+        bl_mesh.data.calc_normals_split()
         for triangle_loop in bl_mesh.data.loop_triangles:
             for loop_index in triangle_loop.loops:
                 loop = bl_mesh.data.loops[loop_index]
 
-                v = bl_mesh.data.vertices[loop.vertex_index].co
+                v = bl_mesh.data.vertices[loop.vertex_index].co 
                 mesh.addVertex(-v[0], -v[1], -v[2])
 
-                # n = loop.normal
                 n = bl_mesh.data.vertices[loop.vertex_index].normal
                 mesh.addNormal(-n[0], -n[1], -n[2])
 
