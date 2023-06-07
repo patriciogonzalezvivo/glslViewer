@@ -2,6 +2,31 @@ import bpy
 
 from .gv_render_engine import get_gv_render, get_gv_engine
 
+blend_mode = [
+    ("NONE", "None", "", 0),
+    ("ALPHA", "Alpha", "", 1),
+    ("ADD", "Add", "", 2),
+    ("MULTIPLY", "Multiply", "", 3),
+    ("SCREEN", "Screen", "", 4),
+    ("SUBSTRACT", "Substract", "", 5),
+]
+
+def get_blend(self):
+    engine = get_gv_engine()
+    if engine:
+        return engine.getBlendMode()
+    return 0
+
+
+def set_blend(self, value):
+    engine = get_gv_engine()
+    if engine:
+        engine.setBlendMode( value )
+
+    render = get_gv_render()
+    if render:
+        render.tag_redraw()
+
 def fxaa_change(self, context):
     engine = get_gv_engine()
     if engine:
@@ -85,6 +110,7 @@ def show_debug_change(self, context):
 PROPS = [
     ('glsl_viewer_vert', bpy.props.StringProperty(name='Vertex Shader', default='main.vert')),
     ('glsl_viewer_frag', bpy.props.StringProperty(name='Fragment Shader', default='main.frag')),
+    ('glsl_viewer_blend_mode', bpy.props.EnumProperty(name='Blend Mode', set=set_blend, get=get_blend, items=blend_mode)),
     ('glsl_viewer_skybox_turbidity', bpy.props.FloatProperty(name='Skybox Turbidity', min=1, default=4.0, update=show_skybox_turbidity_change)),
     ('glsl_viewer_enable_cubemap', bpy.props.BoolProperty(name='Enable Cubemap', default=True, update=enable_cubemap_change)),
     ('glsl_viewer_show_cubemap', bpy.props.BoolProperty(name='Show Cubemap', default=False, update=show_cubemap_change)),

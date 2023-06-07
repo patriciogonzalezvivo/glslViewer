@@ -69,6 +69,10 @@ void Engine::loadShaders() {
     resetShaders( files );
 }
 
+void Engine::setBlendMode(int _blend) {
+    m_sceneRender.setBlend((vera::BlendMode)_blend);
+}
+
 void Engine::setSkyGround(float _r, float _g, float _b) { 
     glm::vec3 c = uniforms.getGroundAlbedo();
     if (c.r != _r || c.g != _g || c.b != _b)

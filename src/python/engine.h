@@ -19,6 +19,8 @@ public:
     virtual void loadImage(const std::string& _name, const std::string& _path, bool _flip);
     virtual void loadShaders();
 
+    virtual void setBlendMode(int _blend);
+
     virtual void setCamera(const vera::Camera& _cam);
     
     virtual void setSun(const vera::Light& _light);
@@ -34,7 +36,8 @@ public:
     virtual void setFxaa(bool _value);
     virtual void setOutput(const std::string& _path) { screenshotFile = _path;}
 
-    virtual int  getOutputFboId() const { return m_record_fbo.getId(); }
+    virtual int getBlendMode() const { return (int)m_sceneRender.getBlend(); }
+    virtual int getOutputFboId() const { return m_record_fbo.getId(); }
     
     virtual void printLights() { uniforms.printLights(); }
     virtual void printDefines() { m_sceneRender.printDefines(); uniforms.printDefines(); }

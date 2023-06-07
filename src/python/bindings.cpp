@@ -93,13 +93,13 @@ PYBIND11_MODULE(PyGlslViewer, m) {
     ;
 
     py::enum_<vera::DrawMode>(m, "DrawMode")
-        .value("POINTS", vera::POINTS)
-        .value("LINES", vera::LINES)
-        .value("LINE_STRIP", vera::LINE_STRIP)
-        .value("LINE_LOOP", vera::LINE_LOOP)
-        .value("TRIANGLES", vera::TRIANGLES)
+        .value("POINTS",        vera::POINTS)
+        .value("LINES",         vera::LINES)
+        .value("LINE_STRIP",    vera::LINE_STRIP)
+        .value("LINE_LOOP",     vera::LINE_LOOP)
+        .value("TRIANGLES",     vera::TRIANGLES)
         .value("TRIANGLE_STRIP", vera::TRIANGLE_STRIP)
-        .value("TRIANGLE_FAN", vera::TRIANGLE_FAN)
+        .value("TRIANGLE_FAN",  vera::TRIANGLE_FAN)
         .export_values();
     ;
 
@@ -163,8 +163,8 @@ PYBIND11_MODULE(PyGlslViewer, m) {
 
     py::enum_<vera::LightType>(m, "LightType")
         .value("LIGHT_DIRECTIONAL", vera::LIGHT_DIRECTIONAL)
-        .value("LIGHT_POINT", vera::LIGHT_POINT)
-        .value("LIGHT_SPOT", vera::LIGHT_SPOT)
+        .value("LIGHT_POINT",       vera::LIGHT_POINT)
+        .value("LIGHT_SPOT",        vera::LIGHT_SPOT)
         .export_values();
     ;
 
@@ -196,8 +196,8 @@ PYBIND11_MODULE(PyGlslViewer, m) {
     ;
 
     py::enum_<ShaderType>(m, "ShaderType")
-        .value("FRAGMENT", FRAGMENT)
-        .value("VERTEX", VERTEX)
+        .value("FRAGMENT",  FRAGMENT)
+        .value("VERTEX",    VERTEX)
         .export_values();
     ;
 
@@ -251,6 +251,16 @@ PYBIND11_MODULE(PyGlslViewer, m) {
         .def("addCameraPath",&Uniforms::addCameraPath, py::arg("_name"))
     ;
 
+    // py::enum_<vera::BlendMode>(m, "BlendMode")
+    //     .value("BLEND_NONE",        vera::BLEND_NONE)
+    //     .value("BLEND_ALPHA",       vera::BLEND_ALPHA)
+    //     .value("BLEND_ADD",         vera::BLEND_ADD)
+    //     .value("BLEND_MULTIPLY",    vera::BLEND_MULTIPLY)
+    //     .value("BLEND_SCREEN",      vera::BLEND_SCREEN)
+    //     .value("BLEND_SUBSTRACT",   vera::BLEND_SUBSTRACT)
+    //     .export_values();
+    // ;
+
     py::class_<Engine>(m, "Engine")
         .def(py::init<>())
 
@@ -258,6 +268,8 @@ PYBIND11_MODULE(PyGlslViewer, m) {
         .def("loadImage",&Engine::loadImage, py::arg("_name"), py::arg("_path"), py::arg("_flip"))
         .def("loadShaders", &Engine::loadShaders)
 
+        .def("setBlendMode", &Engine::setBlendMode, py::arg("_blend"))
+        .def("getBlendMode", &Engine::getBlendMode)
         .def("setCamera", &Engine::setCamera, py::arg("_cam"))
         .def("setSun", &Engine::setSun, py::arg("_light"))
         .def("setSource",&Engine::setSource, py::arg("_type"), py::arg("_source"))

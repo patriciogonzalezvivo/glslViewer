@@ -28,7 +28,7 @@ public:
     void            printDefines();
 
     void            setBlend(vera::BlendMode _blend) { m_blend = _blend; }
-    vera::BlendMode getBlend() { return m_blend; }
+    vera::BlendMode getBlend() const { return m_blend; }
 
     void            setCulling(vera::CullingMode _culling) { m_culling = _culling; }
     vera::CullingMode getCulling() { return m_culling; }
