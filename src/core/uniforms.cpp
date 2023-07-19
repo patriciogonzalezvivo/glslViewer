@@ -194,7 +194,7 @@ Uniforms::Uniforms() : m_frame(0), m_play(true), m_change(false) {
     },
     [this]() { 
         if (activeCamera)
-            return vera::toString(activeCamera->getSensitivity());
+            return vera::toString(activeCamera->bChange);
         return std::string("");
     });
     

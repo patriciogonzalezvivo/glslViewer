@@ -66,7 +66,7 @@ Sandbox::Sandbox():
 
     // Scene
     m_view2d(1.0), m_time_offset(0.0), m_camera_elevation(1.0), m_camera_azimuth(180.0), m_error_screen(vera::SHOW_MAGENTA_SHADER), 
-    m_change(true), m_update_buffers(true), m_initialized(false), 
+    m_change(true), m_change_viewport(true), m_update_buffers(true), m_initialized(false), 
 
     // Debug
     m_showTextures(false), m_showPasses(false)
@@ -131,10 +131,19 @@ Sandbox::Sandbox():
     },
     []() { return vera::toString((float)vera::getWindowWidth(),1) + "," + vera::toString((float)vera::getWindowHeight(),1); });
 
+    uniforms.functions["u_resolutionChange"] = UniformFunction("bool", [this](vera::Shader& _shader) {
+        _shader.setUniform("u_resolutionChange", m_change_viewport);
+    },
+    [this]() { 
+        return vera::toString(m_change_viewport);
+        return std::string("");
+    });
+
     // SCENE
     uniforms.functions["u_view2d"] = UniformFunction("mat3", [this](vera::Shader& _shader) {
         _shader.setUniform("u_view2d", m_view2d);
     });
+
 
     uniforms.functions["u_modelViewProjectionMatrix"] = UniformFunction("mat4");
 }
@@ -1225,6 +1234,7 @@ void Sandbox::flagChange() {
 
 void Sandbox::unflagChange() {
     m_change = false;
+    m_change_viewport = false;
     m_sceneRender.unflagChange();
     uniforms.unflagChange();
 }
@@ -2303,6 +2313,8 @@ void Sandbox::onMouseDrag(float _x, float _y, int _button) {
 }
 
 void Sandbox::onViewportResize(int _newWidth, int _newHeight) {
+    m_change_viewport = true;
+
     if (uniforms.activeCamera)
         uniforms.activeCamera->setViewport(_newWidth, _newHeight);
     
@@ -2311,10 +2323,10 @@ void Sandbox::onViewportResize(int _newWidth, int _newHeight) {
             uniforms.buffers[i]->allocate(_newWidth, _newHeight, vera::COLOR_FLOAT_TEXTURE);
 
     for (size_t i = 0; i < uniforms.doubleBuffers.size(); i++) {
-        if (!uniforms.doubleBuffers[i]->buffer(0).fixed)
+        if (!uniforms.doubleBuffers[i]->buffer(0).fixed || !uniforms.doubleBuffers[i]->buffer(1).fixed) {
             uniforms.doubleBuffers[i]->buffer(0).allocate(_newWidth, _newHeight, vera::COLOR_FLOAT_TEXTURE);
-        if (!uniforms.doubleBuffers[i]->buffer(1).fixed)
             uniforms.doubleBuffers[i]->buffer(1).allocate(_newWidth, _newHeight, vera::COLOR_FLOAT_TEXTURE);
+        }
     }
 
     for (size_t i = 0; i < uniforms.pyramids.size(); i++) {

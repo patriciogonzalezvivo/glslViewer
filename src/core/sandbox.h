@@ -150,6 +150,7 @@ protected:
     float                           m_camera_elevation;
     vera::ShaderErrorResolve        m_error_screen;
     bool                            m_change;
+    bool                            m_change_viewport;
     bool                            m_update_buffers;
 
     bool                            m_initialized;
