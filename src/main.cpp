@@ -1745,6 +1745,34 @@ void commandsInit() {
     },
     "update", "force all uniforms to be updated", false));
 
+    commands.push_back(Command("plane", [&](const std::string & line) {
+        std::vector<std::string> values = vera::split(line,',');
+        int resolution = 512;
+
+        if (values.size() > 1)
+            resolution  = vera::toInt(values[1]);
+
+        float size_f = resolution;
+        vera::Mesh plane = vera::planeMesh(1.0f, 1.0f, resolution, resolution);
+            
+        // Add Model with pcl mesh
+        sandbox.loadModel( new vera::Model("plane", plane) );
+
+        #if defined(__EMSCRIPTEN__)
+        // Commands are parse in the main GL loop in EMSCRIPTEN,
+        // there is no risk to reload shaders outside main GL thread
+        sandbox.resetShaders(files);
+        #else
+        // Reloading shaders can't be done directly on multi-thread (event thread)
+        // to solve that, we trigger reloading by flagging changes on all files
+        // witch signal the main GL thread to reload assets
+        for (size_t i = 0; i < files.size(); i++)
+            files[i].lastChange = 0;
+        #endif
+
+        return true;
+    }, "plane[,<RESOLUTION>]", "add a plane"));
+
     commands.push_back(Command("pcl_plane", [&](const std::string & line) {
         std::vector<std::string> values = vera::split(line,',');
         int resolution = 512;

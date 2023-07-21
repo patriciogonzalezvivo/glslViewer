@@ -539,6 +539,10 @@ void Sandbox::commandsInit(CommandList &_commands ) {
         else {
             std::vector<std::string> values = vera::split(_line,',');
             if (values.size() == 2) {
+                if (values[1] == "sh") {
+                    uniforms.printCubemapSH();
+                    return true;
+                }
                 if (values[1] == "toggle")
                     values[1] = m_sceneRender.showCubebox ? "off" : "on";
 
@@ -556,7 +560,7 @@ void Sandbox::commandsInit(CommandList &_commands ) {
         }
         return false;
     },
-    "cubemap[,on|off]", "show/hide cubemap"));
+    "cubemap[,on|off|toggle|sh]", "show/hide cubemap or return the spherical harmonics of it"));
 
     _commands.push_back(Command("sky", [&](const std::string& _line){
         if (_line == "sky") {
