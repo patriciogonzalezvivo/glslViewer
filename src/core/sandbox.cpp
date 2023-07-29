@@ -1386,7 +1386,7 @@ void Sandbox::_updateBuffers() {
             uniforms.buffers.push_back( new vera::Fbo() );
 
             glm::vec2 size = glm::vec2(vera::getWindowWidth(), vera::getWindowHeight());
-            uniforms.buffers[i]->fixed = getBufferSize(m_frag_source, "u_buffer" + vera::toString(i), size);
+            uniforms.buffers[i]->scale = getBufferSize(m_frag_source, "u_buffer" + vera::toString(i), size);
             uniforms.buffers[i]->allocate(size.x, size.y, vera::COLOR_FLOAT_TEXTURE);
             
             // New Shader
@@ -1420,9 +1420,9 @@ void Sandbox::_updateBuffers() {
             uniforms.doubleBuffers.push_back( new vera::PingPong() );
 
             glm::vec2 size = glm::vec2(vera::getWindowWidth(), vera::getWindowHeight());
-            bool fixed = getBufferSize(m_frag_source, "u_doubleBuffer" + vera::toString(i), size);
-            uniforms.doubleBuffers[i]->buffer(0).fixed = fixed;
-            uniforms.doubleBuffers[i]->buffer(1).fixed = fixed;
+            float scale = getBufferSize(m_frag_source, "u_doubleBuffer" + vera::toString(i), size);
+            uniforms.doubleBuffers[i]->buffer(0).scale = scale;
+            uniforms.doubleBuffers[i]->buffer(1).scale = scale;
             uniforms.doubleBuffers[i]->allocate(size.x, size.y, vera::COLOR_FLOAT_TEXTURE);
             
             // New Shader
@@ -1449,11 +1449,11 @@ void Sandbox::_updateBuffers() {
         m_pyramid_subshaders.clear();
         for (int i = 0; i < m_pyramid_total; i++) {
             glm::vec2 size = glm::vec2(vera::getWindowWidth(), vera::getWindowHeight());
-            bool fixed = getBufferSize(m_frag_source, "u_pyramid" + vera::toString(i), size);
+            float scale = getBufferSize(m_frag_source, "u_pyramid" + vera::toString(i), size);
             
             uniforms.pyramids.push_back( vera::Pyramid() );
             uniforms.pyramids[i].allocate(size.x, size.y);
-            uniforms.pyramids[i].fixed = fixed;
+            uniforms.pyramids[i].scale = scale;
             uniforms.pyramids[i].pass = [this](vera::Fbo *_target, const vera::Fbo *_tex0, const vera::Fbo *_tex1, int _depth) {
                 _target->bind();
                 glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
@@ -1478,7 +1478,7 @@ void Sandbox::_updateBuffers() {
             };
             m_pyramid_fbos.push_back( vera::Fbo() );
             m_pyramid_fbos[i].allocate(size.x, size.y, vera::COLOR_FLOAT_TEXTURE);
-            m_pyramid_fbos[i].fixed = fixed;
+            m_pyramid_fbos[i].scale = scale;
             m_pyramid_subshaders.push_back( vera::Shader() );
         }
     }
@@ -1515,7 +1515,7 @@ void Sandbox::_renderBuffers() {
     for (size_t i = 0; i < uniforms.buffers.size(); i++) {
         TRACK_BEGIN("render:buffer" + vera::toString(i))
 
-        reset_viewport += uniforms.buffers[i]->fixed;
+        reset_viewport += uniforms.buffers[i]->scale <= 0.0;
 
         uniforms.buffers[i]->bind();
 
@@ -1549,7 +1549,7 @@ void Sandbox::_renderBuffers() {
     for (size_t i = 0; i < uniforms.doubleBuffers.size(); i++) {
         TRACK_BEGIN("render:doubleBuffer" + vera::toString(i))
 
-        reset_viewport += uniforms.doubleBuffers[i]->src->fixed;
+        reset_viewport += uniforms.doubleBuffers[i]->src->scale <= 0.0;
 
         uniforms.doubleBuffers[i]->dst->bind();
 
@@ -1579,7 +1579,7 @@ void Sandbox::_renderBuffers() {
     for (size_t i = 0; i < m_pyramid_subshaders.size(); i++) {
         TRACK_BEGIN("render:convolution_pyramid" + vera::toString(i))
 
-        reset_viewport += m_pyramid_fbos[i].fixed;
+        reset_viewport += m_pyramid_fbos[i].scale <= 0.0;
 
         m_pyramid_fbos[i].bind();
         m_pyramid_subshaders[i].use();
@@ -2323,20 +2323,29 @@ void Sandbox::onViewportResize(int _newWidth, int _newHeight) {
         uniforms.activeCamera->setViewport(_newWidth, _newHeight);
     
     for (size_t i = 0; i < uniforms.buffers.size(); i++) 
-        if (!uniforms.buffers[i]->fixed)
-            uniforms.buffers[i]->allocate(_newWidth, _newHeight, vera::COLOR_FLOAT_TEXTURE);
+        if (uniforms.buffers[i]->scale > 0.0)
+            uniforms.buffers[i]->allocate(  _newWidth * uniforms.buffers[i]->scale, 
+                                            _newHeight * uniforms.buffers[i]->scale, 
+                                            vera::COLOR_FLOAT_TEXTURE);
 
     for (size_t i = 0; i < uniforms.doubleBuffers.size(); i++) {
-        if (!uniforms.doubleBuffers[i]->buffer(0).fixed || !uniforms.doubleBuffers[i]->buffer(1).fixed) {
-            uniforms.doubleBuffers[i]->buffer(0).allocate(_newWidth, _newHeight, vera::COLOR_FLOAT_TEXTURE);
-            uniforms.doubleBuffers[i]->buffer(1).allocate(_newWidth, _newHeight, vera::COLOR_FLOAT_TEXTURE);
+        if (uniforms.doubleBuffers[i]->buffer(0).scale > 0.0 || uniforms.doubleBuffers[i]->buffer(1).scale > 0.0) {
+            uniforms.doubleBuffers[i]->buffer(0).allocate(  _newWidth * uniforms.doubleBuffers[i]->buffer(0).scale, 
+                                                            _newHeight * uniforms.doubleBuffers[i]->buffer(0).scale, 
+                                                            vera::COLOR_FLOAT_TEXTURE);
+            uniforms.doubleBuffers[i]->buffer(1).allocate(  _newWidth * uniforms.doubleBuffers[i]->buffer(1).scale, 
+                                                            _newHeight * uniforms.doubleBuffers[i]->buffer(1).scale, 
+                                                            vera::COLOR_FLOAT_TEXTURE);
         }
     }
 
     for (size_t i = 0; i < uniforms.pyramids.size(); i++) {
-        if (!m_pyramid_fbos[i].fixed) {
-            m_pyramid_fbos[i].allocate(_newWidth, _newHeight, vera::COLOR_FLOAT_TEXTURE);
-            uniforms.pyramids[i].allocate(_newWidth, _newHeight);
+        if (m_pyramid_fbos[i].scale > 0.0) {
+            m_pyramid_fbos[i].allocate( _newWidth * m_pyramid_fbos[i].scale, 
+                                        _newHeight * m_pyramid_fbos[i].scale, 
+                                        vera::COLOR_FLOAT_TEXTURE);
+            uniforms.pyramids[i].allocate(  _newWidth * m_pyramid_fbos[i].scale, 
+                                            _newHeight * m_pyramid_fbos[i].scale);
         }
     }
 

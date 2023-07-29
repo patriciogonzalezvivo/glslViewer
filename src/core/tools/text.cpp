@@ -139,7 +139,8 @@ int countBuffers(const std::string& _source) {
     return generic_search_count(_source, regex_count_t::Buffers);
 }
 
-bool getBufferSize(const std::string& _source, const std::string& _name, glm::vec2& _size) {
+float getBufferSize(const std::string& _source, const std::string& _name, glm::vec2& _size) {
+    float scale = 1.0f;
     std::regex re1(R"(uniform\s*sampler2D\s*(\w*)\;\s*\/\/*\s(\d+)x(\d+))");
     std::regex re2(R"(uniform\s*sampler2D\s*(\w*)\;\s*\/\/*\s(\d*\.\d+|\d+))");
     std::smatch match;
@@ -151,18 +152,19 @@ bool getBufferSize(const std::string& _source, const std::string& _name, glm::ve
             if (match[1] == _name) {
                 _size.x = vera::toFloat(match[2]);
                 _size.y = vera::toFloat(match[3]);
-                return true;
+                return -1.0;
             }
         }
         else if (std::regex_search(lines[l], match, re2)) {
             if (match[1] == _name) {
-                _size *= vera::toFloat(match[2]);
-                return true;
+                scale = vera::toFloat(match[2]);
+                _size *= scale;
+                return scale;
             }
         }
     }
 
-    return false;
+    return scale;
 }
 
 // Count how many BUFFERS are in the shader

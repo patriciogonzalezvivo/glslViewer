@@ -6,7 +6,8 @@
 // Search for one apearance
 bool findId(const std::string& program, const char* id);
 
-bool getBufferSize(const std::string& _source, const std::string& _name, glm::vec2& _size);
+// -1.0 means it have a fixed size
+float getBufferSize(const std::string& _source, const std::string& _name, glm::vec2& _size);
 
 int  countBuffers(const std::string& _source);
 int  countDoubleBuffers(const std::string& _source);
