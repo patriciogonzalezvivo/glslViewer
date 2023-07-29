@@ -2404,8 +2404,12 @@ void Sandbox::onScreenshot(std::string _file) {
             #else
 
             vera::savePixels(_file, pixels.get(), width, height);
-
+            if (vera::getExt(_file) == "png" || 
+                vera::getExt(_file) == "jpg" || vera::getExt(_file) == "jpeg")
+                m_postprocessing_shader.addDefinesTo(_file);
+            
             #endif
+
         }
     
         if ( !isRecording() )
