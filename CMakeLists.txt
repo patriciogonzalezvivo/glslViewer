@@ -156,7 +156,6 @@ else()
             # Install glslViewer Icon
             install(FILES "${PROJECT_SOURCE_DIR}/assets/glslViewer.png" DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/pixmaps)
             install(FILES "${PROJECT_SOURCE_DIR}/assets/glslViewer.desktop" DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/applications)
-            install(CODE "execute_process(COMMAND sh -c \"echo Icon=${CMAKE_INSTALL_FULL_DATAROOTDIR}/pixmaps/glslViewer.png >> ${CMAKE_INSTALL_FULL_DATAROOTDIR}/applications/glslViewer.desktop\")")
             
             # Install supported MIME file types by GlslViewer
             install(FILES "${PROJECT_SOURCE_DIR}/assets/glslViewer-types.xml" DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/mime/packages)
