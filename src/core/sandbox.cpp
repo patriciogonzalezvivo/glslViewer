@@ -1186,6 +1186,8 @@ void Sandbox::loadAssets(WatchFileList &_files) {
 }
 
 void Sandbox::loadModel(vera::Model* _model) {
+    _model->setShader(m_frag_source, m_vert_source);
+
     uniforms.models[_model->getName()] = _model;
     m_sceneRender.loadScene(uniforms);
     uniforms.activeCamera->orbit(m_camera_azimuth, m_camera_elevation, m_sceneRender.getArea() * 2.0);

@@ -1551,12 +1551,12 @@ void commandsInit() {
                 valid = true;
                 settings.trg_args = "-r " + vera::toString( settings.trg_fps );
                 settings.trg_args += " -c:v libx264";
-                settings.trg_args += " -b:v 20000k";
+                // settings.trg_args += " -b:v 20000k";
                 settings.trg_args += " -vf \"vflip,fps=" + vera::toString(settings.trg_fps);
                 if (pd > 1)
                     settings.trg_args += ",scale=" + vera::toString(settings.trg_width,0) + ":" + vera::toString(settings.trg_height,0) + ":flags=lanczos";
                 settings.trg_args += "\"";
-                settings.trg_args += " -crf 18 ";
+                settings.trg_args += " -crf 10";
                 settings.trg_args += " -pix_fmt yuv420p";
                 settings.trg_args += " -vsync 1";
                 settings.trg_args += " -g 1";
