@@ -486,7 +486,7 @@ void Sandbox::commandsInit(CommandList &_commands ) {
     },
     "textures[,on|off]", "return a list of textures as their uniform name and path. Or show/hide textures on viewport.", false));
 
-    _commands.push_back(Command("buffers", [&](const std::string& _line){ 
+    _commands.push_back(Command("buffer", [&](const std::string& _line){ 
         if (_line == "buffers") {
             uniforms.printBuffers();
             m_sceneRender.printBuffers();
@@ -505,17 +505,23 @@ void Sandbox::commandsInit(CommandList &_commands ) {
         }
         else {
             std::vector<std::string> values = vera::split(_line,',');
+
             if (values.size() == 2) {
                 if (values[1] == "toggle")
                     values[1] = m_showPasses ? "off" : "on";
 
-                m_showPasses = (values[1] == "on");
+                m_showPasses = (values[1] == "on" || values[1] == "show");
                 return true;
+            }
+            else if (values.size() == 3) {
+                size_t i = vera::toInt(values[1]);
+                if (i < uniforms.buffers.size())
+                    uniforms.buffers[i]->enabled = (values[1] == "on");
             }
         }
         return false;
     },
-    "buffers[,on|off]", "return a list of buffers as their uniform name. Or show/hide buffer on viewport.", false));
+    "buffers[,show|hide]", "return a list of buffers as their uniform name. Or show/hide buffer on viewport.", false));
 
     // CUBEMAPS
     _commands.push_back(Command("cubemaps", [&](const std::string& _line){
@@ -1369,6 +1375,7 @@ void Sandbox::resetShaders( WatchFileList &_files ) {
 // ------------------------------------------------------------------------- UPDATE
 void Sandbox::_updateBuffers() {
 
+    // Update Buffers
     if ( m_buffers_total != int(uniforms.buffers.size())) {
         if (verbose)
             std::cout << "Creating/removing " << uniforms.buffers.size() << " buffers to match " << m_buffers_total << std::endl;
@@ -1401,7 +1408,7 @@ void Sandbox::_updateBuffers() {
         for (size_t i = 0; i < m_buffers_shaders.size(); i++)
             m_buffers_shaders[i].setSource(m_frag_source, vera::getDefaultSrc(vera::VERT_BILLBOARD));
             
-            
+    // Update Double Buffers
     if ( m_doubleBuffers_total != int(uniforms.doubleBuffers.size()) ) {
 
         if (verbose)
@@ -1437,6 +1444,7 @@ void Sandbox::_updateBuffers() {
         for (size_t i = 0; i < m_doubleBuffers_shaders.size(); i++)
             m_doubleBuffers_shaders[i].setSource(m_frag_source, vera::getDefaultSrc(vera::VERT_BILLBOARD));
 
+    // Update Convolution Pyramids
     if ( m_pyramid_total != int(uniforms.pyramids.size()) ) {
 
         if (verbose)
@@ -1486,19 +1494,20 @@ void Sandbox::_updateBuffers() {
     }
     
     for (size_t i = 0; i < m_pyramid_subshaders.size(); i++) {
-        m_pyramid_subshaders[i].addDefine("CONVOLUTION_PYRAMID_" + vera::toString(i));
+        m_pyramid_subshaders[i].addDefine("PYRAMID_" + vera::toString(i));
         m_pyramid_subshaders[i].setSource(m_frag_source, vera::getDefaultSrc(vera::VERT_BILLBOARD));
     }
 
     if (m_pyramid_total > 0 ) {
         if ( checkConvolutionPyramid( getSource(FRAGMENT) ) ) {
-            m_pyramid_shader.addDefine("CONVOLUTION_PYRAMID_ALGORITHM");
+            m_pyramid_shader.addDefine("PYRAMID_ALGORITHM");
             m_pyramid_shader.setSource(m_frag_source, vera::getDefaultSrc(vera::VERT_BILLBOARD));
         }
         else
             m_pyramid_shader.setSource(vera::getDefaultSrc(vera::FRAG_POISSON), vera::getDefaultSrc(vera::VERT_BILLBOARD));
     }
 
+    // Update Postprocessing
     if (m_postprocessing || m_plot == PLOT_RGB || m_plot == PLOT_RED || m_plot == PLOT_GREEN || m_plot == PLOT_BLUE || m_plot == PLOT_LUMA) {
         if (quilt >= 0)
             m_sceneRender.updateBuffers(uniforms, vera::getQuiltWidth(), vera::getQuiltHeight());
@@ -1506,7 +1515,6 @@ void Sandbox::_updateBuffers() {
             m_sceneRender.updateBuffers(uniforms, vera::getWindowWidth(), vera::getWindowHeight());
     }
 
-    m_update_buffers = false;
 }
 
 // ------------------------------------------------------------------------- DRAW
@@ -1515,6 +1523,9 @@ void Sandbox::_renderBuffers() {
 
     bool reset_viewport = false;
     for (size_t i = 0; i < uniforms.buffers.size(); i++) {
+        if (!(uniforms.buffers[i]->enabled || m_update_buffers))
+            continue;
+
         TRACK_BEGIN("render:buffer" + vera::toString(i))
 
         reset_viewport += uniforms.buffers[i]->scale <= 0.0;
@@ -1590,6 +1601,9 @@ void Sandbox::_renderBuffers() {
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        for (size_t j = 0; j < m_sceneRender.buffersFbo.size(); j++)
+            m_pyramid_subshaders[i].setUniformTexture("u_sceneBuffer" + vera::toString(j), m_sceneRender.buffersFbo[j] );
+
         // Update uniforms and textures
         uniforms.feedTo( &m_pyramid_subshaders[i], true, true );
         vera::getBillboard()->render( &m_pyramid_subshaders[i] );
@@ -1611,6 +1625,8 @@ void Sandbox::_renderBuffers() {
     if (vera::getWindowStyle() != vera::EMBEDDED && reset_viewport)
         glViewport(0.0f, 0.0f, vera::getWindowWidth(), vera::getWindowHeight());
     
+    m_update_buffers = false;
+
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }

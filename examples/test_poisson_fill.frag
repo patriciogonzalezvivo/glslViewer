@@ -22,7 +22,7 @@ void main (void) {
     vec4 color = vec4(0.0);
     vec2 st = gl_FragCoord.xy/u_resolution;
 
-#if defined(CONVOLUTION_PYRAMID_0)
+#if defined(PYRAMID_0)
     color = texture2D(u_tex0, st);
 
 #else

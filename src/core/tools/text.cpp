@@ -54,7 +54,7 @@ enum class regex_check_t {
 };
 using regex_check_string_t = regex_string_t<regex_check_t>;
 const auto valid_check_keyword_ids = std::array<regex_check_string_t, +(regex_check_t::MAX_KEYWORDS_CHECK_IDS)> {{
-    {regex_check_t::Convolution_Pyramid, "CONVOLUTION_PYRAMID_ALGORITHM"}
+    {regex_check_t::Convolution_Pyramid, "PYRAMID_ALGORITHM"}
     , {regex_check_t::Floor,"FLOOR"}
     , {regex_check_t::Background, "BACKGROUND"}
     , {regex_check_t::Post_Processing, "POSTPROCESSING"}
@@ -82,7 +82,7 @@ using regex_count_string_t = regex_string_t<regex_count_t>;
 const auto valid_count_keyword_ids = std::array<regex_count_string_t, +(regex_count_t::MAX_KEYWORDS_COUNT_IDS)> {{
     {regex_count_t::Buffers, "BUFFER"},
     {regex_count_t::Double_Buffers, "DOUBLE_BUFFER"},
-    {regex_count_t::Convolution_Pyramid, "CONVOLUTION_PYRAMID"},
+    {regex_count_t::Convolution_Pyramid, "PYRAMID"},
     {regex_count_t::Scene_Buffers, "SCENE_BUFFER"}
 }};
 
@@ -186,7 +186,7 @@ bool checkPostprocessing(const std::string& _source) {
     return generic_search_check(_source, regex_check_t::Post_Processing);
 }
 
-// Count how many CONVOLUTION_PYRAMID_ are in the shader
+// Count how many PYRAMID_ are in the shader
 int countConvolutionPyramid(const std::string& _source) {
     return generic_search_count(_source, regex_count_t::Convolution_Pyramid);
 }
