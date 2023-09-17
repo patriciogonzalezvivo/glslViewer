@@ -7,13 +7,13 @@
 bool findId(const std::string& program, const char* id);
 
 // -1.0 means it have a fixed size
-float getBufferSize(const std::string& _source, const std::string& _name, glm::vec2& _size);
+glm::vec3 getBufferSize(const std::string& _source, const std::string& _name);
 
 int  countBuffers(const std::string& _source);
 int  countDoubleBuffers(const std::string& _source);
-int  countConvolutionPyramid(const std::string& _source);
+int  countPyramid(const std::string& _source);
 
-bool checkConvolutionPyramid(const std::string& _source);
+bool checkPyramidAlgorithm(const std::string& _source);
 
 bool checkFloor(const std::string& _source);
 bool checkBackground(const std::string& _source);

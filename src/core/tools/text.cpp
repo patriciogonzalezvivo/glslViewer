@@ -8,6 +8,7 @@
 #include <cstring>
 
 #include "vera/ops/string.h"
+#include "vera/window.h"
 
 namespace {
 
@@ -46,7 +47,7 @@ template<typename T1>
 using regex_string_t = std::tuple<T1, regex_stringdata_t>;
 
 enum class regex_check_t {
-    Convolution_Pyramid,
+    Pyramid_Algorithm,
     Floor,
     Background,
     Post_Processing,
@@ -54,7 +55,7 @@ enum class regex_check_t {
 };
 using regex_check_string_t = regex_string_t<regex_check_t>;
 const auto valid_check_keyword_ids = std::array<regex_check_string_t, +(regex_check_t::MAX_KEYWORDS_CHECK_IDS)> {{
-    {regex_check_t::Convolution_Pyramid, "PYRAMID_ALGORITHM"}
+    {regex_check_t::Pyramid_Algorithm, "PYRAMID_ALGORITHM"}
     , {regex_check_t::Floor,"FLOOR"}
     , {regex_check_t::Background, "BACKGROUND"}
     , {regex_check_t::Post_Processing, "POSTPROCESSING"}
@@ -74,7 +75,7 @@ bool generic_search_check(const std::string& _source, regex_check_t keyword_id )
 enum class regex_count_t {
     Buffers,
     Double_Buffers,
-    Convolution_Pyramid,
+    Pyramid,
     Scene_Buffers,
     MAX_KEYWORDS_COUNT_IDS
 };
@@ -82,7 +83,7 @@ using regex_count_string_t = regex_string_t<regex_count_t>;
 const auto valid_count_keyword_ids = std::array<regex_count_string_t, +(regex_count_t::MAX_KEYWORDS_COUNT_IDS)> {{
     {regex_count_t::Buffers, "BUFFER"},
     {regex_count_t::Double_Buffers, "DOUBLE_BUFFER"},
-    {regex_count_t::Convolution_Pyramid, "PYRAMID"},
+    {regex_count_t::Pyramid, "PYRAMID"},
     {regex_count_t::Scene_Buffers, "SCENE_BUFFER"}
 }};
 
@@ -139,8 +140,9 @@ int countBuffers(const std::string& _source) {
     return generic_search_count(_source, regex_count_t::Buffers);
 }
 
-float getBufferSize(const std::string& _source, const std::string& _name, glm::vec2& _size) {
-    float scale = 1.0f;
+glm::vec3 getBufferSize(const std::string& _source, const std::string& _name) {
+    glm::vec3 size = glm::vec3(vera::getWindowWidth(), vera::getWindowHeight(), 1.0f);
+
     std::regex re1(R"(uniform\s*sampler2D\s*(\w*)\;\s*\/\/*\s(\d+)x(\d+))");
     std::regex re2(R"(uniform\s*sampler2D\s*(\w*)\;\s*\/\/*\s(\d*\.\d+|\d+))");
     std::smatch match;
@@ -150,21 +152,25 @@ float getBufferSize(const std::string& _source, const std::string& _name, glm::v
     for (unsigned int l = 0; l < lines.size(); l++) {
         if (std::regex_search(lines[l], match, re1)) {
             if (match[1] == _name) {
-                _size.x = vera::toFloat(match[2]);
-                _size.y = vera::toFloat(match[3]);
-                return -1.0;
+                // Fixed size
+                size.x = vera::toFloat(match[2]);
+                size.y = vera::toFloat(match[3]);
+                size.z = -1.0;
+                return size;
             }
         }
         else if (std::regex_search(lines[l], match, re2)) {
             if (match[1] == _name) {
-                scale = vera::toFloat(match[2]);
-                _size *= scale;
-                return scale;
+                // Variable size
+                size.z = vera::toFloat(match[2]);
+                size.y *= size.z;
+                size.x *= size.z;
+                return size;
             }
         }
     }
 
-    return scale;
+    return size;
 }
 
 // Count how many BUFFERS are in the shader
@@ -187,12 +193,12 @@ bool checkPostprocessing(const std::string& _source) {
 }
 
 // Count how many PYRAMID_ are in the shader
-int countConvolutionPyramid(const std::string& _source) {
-    return generic_search_count(_source, regex_count_t::Convolution_Pyramid);
+int countPyramid(const std::string& _source) {
+    return generic_search_count(_source, regex_count_t::Pyramid);
 }
 
-bool checkConvolutionPyramid(const std::string& _source) {
-    return generic_search_check(_source, regex_check_t::Convolution_Pyramid);
+bool checkPyramidAlgorithm(const std::string& _source) {
+    return generic_search_check(_source, regex_check_t::Pyramid_Algorithm);
 }
 
 int countSceneBuffers(const std::string& _source) {
