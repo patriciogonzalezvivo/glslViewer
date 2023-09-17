@@ -6,14 +6,12 @@
 #include <math.h>
 #include <memory>
 
-#include "vera/window.h"
-
-
 #include "tools/job.h"
 #include "tools/text.h"
 #include "tools/record.h"
 #include "tools/console.h"
 
+#include "vera/window.h"
 #include "vera/ops/fs.h"
 #include "vera/ops/draw.h"
 #include "vera/ops/geom.h"
@@ -1451,17 +1449,16 @@ void Sandbox::_updateBuffers() {
         for (int i = 0; i < m_pyramid_total; i++) {
             glm::vec3 size = getBufferSize(m_frag_source, "u_pyramid" + vera::toString(i));
 
+            // Create Subshader
             m_pyramid_subshaders.push_back( vera::Shader() );
-            m_pyramid_fbos.push_back( vera::Fbo() );
-            uniforms.pyramids.push_back( vera::Pyramid() );
             
-            m_pyramid_fbos[i].allocate(size.x, size.y, vera::COLOR_FLOAT_TEXTURE);
-            m_pyramid_fbos[i].scale = size.z;
-
+            // Create Pyramid structure
+            uniforms.pyramids.push_back( vera::Pyramid() );
             uniforms.pyramids[i].allocate(size.x, size.y);
             uniforms.pyramids[i].scale = size.z;
 
-            uniforms.pyramids[i].pass = [&](vera::Fbo *_target, const vera::Fbo *_tex0, const vera::Fbo *_tex1, int _depth) {
+            // Create pass function for this pyramid
+            uniforms.pyramids[i].pass = [this](vera::Fbo *_target, const vera::Fbo *_tex0, const vera::Fbo *_tex1, int _depth) {
                 _target->bind();
                 glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
                 glClear(GL_COLOR_BUFFER_BIT);
@@ -1482,7 +1479,12 @@ void Sandbox::_updateBuffers() {
 
                 vera::getBillboard()->render( &m_pyramid_shader );
                 _target->unbind();
-            };            
+            };
+
+            // Create input FBO
+            m_pyramid_fbos.push_back( vera::Fbo() );
+            m_pyramid_fbos[i].allocate(size.x, size.y, vera::COLOR_FLOAT_TEXTURE);
+            m_pyramid_fbos[i].scale = size.z;
         }
     }
 
@@ -1594,17 +1596,13 @@ void Sandbox::_renderBuffers() {
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        for (size_t j = 0; j < uniforms.buffers.size(); j++)
-            m_doubleBuffers_shaders[i].setUniformTexture("u_buffer" + vera::toString(j), uniforms.buffers[j] );
-
-        for (size_t j = 0; j < uniforms.doubleBuffers.size(); j++)
-            m_doubleBuffers_shaders[i].setUniformTexture("u_doubleBuffer" + vera::toString(j), uniforms.doubleBuffers[j]->src );
+        // Update uniforms and textures
+        uniforms.feedTo( &m_pyramid_subshaders[i], true, true );
 
         for (size_t j = 0; j < m_sceneRender.buffersFbo.size(); j++)
-            m_pyramid_subshaders[i].setUniformTexture("u_sceneBuffer" + vera::toString(j), m_sceneRender.buffersFbo[j] );
+            if (m_sceneRender.buffersFbo[j]->isAllocated())
+                m_pyramid_subshaders[i].setUniformTexture("u_sceneBuffer" + vera::toString(j), m_sceneRender.buffersFbo[j] );
 
-        // Update uniforms and textures
-        uniforms.feedTo( &m_pyramid_subshaders[i], true, false );
         vera::getBillboard()->render( &m_pyramid_subshaders[i] );
 
         m_pyramid_fbos[i].unbind();
