@@ -142,18 +142,18 @@ void loop() {
     vera::updateGL();
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
-    #ifndef __EMSCRIPTEN__
-    // If nothing in the scene change skip the frame and try to keep it at 60fps
-    if (!bTerminate && !bRunAtFullFps && !sandbox.haveChange()) {
-        std::this_thread::sleep_for(std::chrono::milliseconds( vera::getRestMs() ));
-        return;
-    }
-    #else
+    #ifdef __EMSCRIPTEN__
     // Excecute commands in the main loop in WASM/EMSCRIPTEN project because there is no multiple threads
     if (sandbox.isReady() && commandsArgs.size() > 0) {
         for (size_t i = 0; i < commandsArgs.size(); i++)
             commandsRun(commandsArgs[i]);
         commandsArgs.clear();
+    }
+    #else
+    // If nothing in the scene change skip the frame and try to keep it at 60fps
+    if (!bTerminate && !bRunAtFullFps && !sandbox.haveChange()) {
+        std::this_thread::sleep_for(std::chrono::milliseconds( vera::getRestMs() ));
+        return;
     }
     #endif
 
@@ -1449,7 +1449,7 @@ void commandsInit() {
                 fps = vera::toFloat(values[3]);
 
             if (from >= to) {
-                from = 0;
+                from = 0.0;
             }
 
             commandsMutex.lock();
@@ -1584,7 +1584,7 @@ void commandsInit() {
                     pct = getRecordingPercentage();
                     commandsMutex.unlock();
 
-                    console_draw_pct(pct);
+                    // console_draw_pct(pct);
 
                     std::this_thread::sleep_for(std::chrono::milliseconds( vera::getRestMs() ));
                 }
@@ -1994,6 +1994,7 @@ void cinWatcherThread() {
     #endif
 
     while (!sandbox.isReady()) {
+        std::cout << "NOT ready - wait" << std::endl;
         vera::sleep_ms( vera::getRestSec() * 1000000 );
         std::this_thread::sleep_for(std::chrono::milliseconds( vera::getRestMs() ));
     }
@@ -2001,6 +2002,8 @@ void cinWatcherThread() {
     // Argument commands to execute comming from -e or -E
     if (commandsArgs.size() > 0) {
         for (size_t i = 0; i < commandsArgs.size(); i++) {
+            std::cout << "run: " << commandsArgs[i] << std::endl;
+            std::cout << std::endl;
             commandsRun(commandsArgs[i]);
             #if defined(SUPPORT_NCURSES)
             console_refresh();
