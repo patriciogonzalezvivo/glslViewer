@@ -2001,8 +2001,6 @@ void cinWatcherThread() {
     // Argument commands to execute comming from -e or -E
     if (commandsArgs.size() > 0) {
         for (size_t i = 0; i < commandsArgs.size(); i++) {
-            std::cout << "run: " << commandsArgs[i] << std::endl;
-            std::cout << std::endl;
             commandsRun(commandsArgs[i]);
             #if defined(SUPPORT_NCURSES)
             console_refresh();
