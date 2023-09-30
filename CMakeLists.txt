@@ -53,9 +53,11 @@ add_executable(glslViewer
     ${CORE_SOURCES}
 )
 
+
 include_directories(deps/liblo)
 target_include_directories(glslViewer PRIVATE deps)
 target_link_libraries(glslViewer PRIVATE vera)
+# target_compile_definitions(vera PUBLIC SUPPORT_PLY_BINARY)
 target_compile_definitions(glslViewer PRIVATE GLSLVIEWER_VERSION_MAJOR=${VERSION_MAJOR})
 target_compile_definitions(glslViewer PRIVATE GLSLVIEWER_VERSION_MINOR=${VERSION_MINOR})
 target_compile_definitions(glslViewer PRIVATE GLSLVIEWER_VERSION_PATCH=${VERSION_PATCH})
@@ -97,7 +99,6 @@ else()
     target_compile_definitions(glslViewer PUBLIC 
         SUPPORT_MULTITHREAD_RECORDING 
         SUPPORT_OSC
-        SUPPORT_PLY_BINARY
     )
 
     include(GNUInstallDirs)
