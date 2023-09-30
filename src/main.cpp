@@ -1994,7 +1994,6 @@ void cinWatcherThread() {
     #endif
 
     while (!sandbox.isReady()) {
-        std::cout << "NOT ready - wait" << std::endl;
         vera::sleep_ms( vera::getRestSec() * 1000000 );
         std::this_thread::sleep_for(std::chrono::milliseconds( vera::getRestMs() ));
     }
