@@ -2184,9 +2184,7 @@ void Sandbox::renderDone() {
 
     if (!m_initialized) {
         m_initialized = true;
-
         vera::updateViewport();
-
         flagChange();
     }
 
