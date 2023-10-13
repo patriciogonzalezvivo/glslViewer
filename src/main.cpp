@@ -1584,8 +1584,7 @@ void commandsInit() {
                     pct = getRecordingPercentage();
                     commandsMutex.unlock();
 
-                    // console_draw_pct(pct);
-
+                    console_draw_pct(pct);
                     std::this_thread::sleep_for(std::chrono::milliseconds( vera::getRestMs() ));
                 }
             }
