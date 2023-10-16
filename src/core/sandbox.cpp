@@ -49,6 +49,7 @@ Sandbox::Sandbox():
     m_buffers_total(0),
     m_doubleBuffers_total(0),
     m_pyramid_total(0),
+    m_flood_total(0),
     // PostProcessing
     m_postprocessing(false),
     // Plot helpers
@@ -1333,6 +1334,7 @@ void Sandbox::resetShaders( WatchFileList &_files ) {
     m_buffers_total = countBuffers(m_frag_source);
     m_doubleBuffers_total = countDoubleBuffers(m_frag_source);
     m_pyramid_total = countPyramid( m_frag_source );
+    m_flood_total = countFlood( m_frag_source );
 
     // UPDATE Postprocessing
     bool havePostprocessing = checkPostprocessing( getSource(FRAGMENT) );
@@ -1432,11 +1434,11 @@ void Sandbox::_updateBuffers() {
         for (size_t i = 0; i < m_doubleBuffers_shaders.size(); i++)
             m_doubleBuffers_shaders[i].setSource(m_frag_source, vera::getDefaultSrc(vera::VERT_BILLBOARD));
 
-    // Update Convolution Pyramids
+    // Update PYRAMID buffers
     if ( m_pyramid_total != int(uniforms.pyramids.size()) ) {
 
         if (verbose)
-            std::cout << "Removing " << uniforms.pyramids.size() << " convolution pyramids to create  " << m_pyramid_total << std::endl;
+            std::cout << "Removing " << uniforms.pyramids.size() << " pyramids to create  " << m_pyramid_total << std::endl;
 
         for (size_t i = 0; i < m_pyramid_subshaders.size(); i++)
             if (m_pyramid_subshaders[i].isLoaded())
@@ -1458,7 +1460,7 @@ void Sandbox::_updateBuffers() {
             uniforms.pyramids[i].scale = size.z;
 
             // Create pass function for this pyramid
-            uniforms.pyramids[i].pass = [this](vera::Fbo *_target, const vera::Fbo *_tex0, const vera::Fbo *_tex1, int _depth) {
+            uniforms.pyramids[i].pass = [&](vera::Fbo *_target, const vera::Fbo *_tex0, const vera::Fbo *_tex1, int _depth) {
                 _target->bind();
                 glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
                 glClear(GL_COLOR_BUFFER_BIT);
@@ -1467,7 +1469,7 @@ void Sandbox::_updateBuffers() {
                 uniforms.feedTo( &m_pyramid_shader );
 
                 m_pyramid_shader.setUniform("u_pyramidDepth", _depth);
-                m_pyramid_shader.setUniform("u_pyramidTotalDepth", (int)uniforms.pyramids[0].getDepth());
+                m_pyramid_shader.setUniform("u_pyramidTotalDepth", (int)uniforms.pyramids[i].getDepth());
                 m_pyramid_shader.setUniform("u_pyramidUpscaling", _tex1 != NULL);
 
                 m_pyramid_shader.textureIndex = (uniforms.models.size() == 0) ? 1 : 0;
@@ -1488,18 +1490,80 @@ void Sandbox::_updateBuffers() {
         }
     }
 
+    // Update PYRAMID algo
     if (m_pyramid_total > 0 ) {
         if ( checkPyramidAlgorithm( getSource(FRAGMENT) ) ) {
             m_pyramid_shader.addDefine("PYRAMID_ALGORITHM");
             m_pyramid_shader.setSource(m_frag_source, vera::getDefaultSrc(vera::VERT_BILLBOARD));
         }
         else
-            m_pyramid_shader.setSource(vera::getDefaultSrc(vera::FRAG_POISSON), vera::getDefaultSrc(vera::VERT_BILLBOARD));
+            m_pyramid_shader.setSource(vera::getDefaultSrc(vera::FRAG_POISSONFILL), vera::getDefaultSrc(vera::VERT_BILLBOARD));
     }
     
+    // Update PYRAMID subshaders
     for (size_t i = 0; i < m_pyramid_subshaders.size(); i++) {
         m_pyramid_subshaders[i].addDefine("PYRAMID_" + vera::toString(i));
         m_pyramid_subshaders[i].setSource(m_frag_source, vera::getDefaultSrc(vera::VERT_BILLBOARD));
+    }
+
+    // Update FLOOD Buffers
+    if ( m_flood_total != int(uniforms.floods.size()) ) {
+
+        if (verbose)
+            std::cout << "Removing " << uniforms.floods.size() << " flood to create " << m_flood_total << std::endl;
+
+        for (size_t i = 0; i < m_flood_subshaders.size(); i++)
+            if (m_flood_subshaders[i].isLoaded())
+                m_flood_subshaders[i].detach(GL_FRAGMENT_SHADER | GL_VERTEX_SHADER);        
+
+        uniforms.floods.clear();
+        m_flood_subshaders.clear();
+
+        for (int i = 0; i < m_flood_total; i++) {
+            glm::vec3 size = getBufferSize(m_frag_source, "u_flood" + vera::toString(i));
+
+            // Create Subshader
+            m_flood_subshaders.push_back( vera::Shader() );
+            
+            // Create Pyramid structure
+            uniforms.floods.push_back( vera::Flood() );
+            uniforms.floods[i].allocate(size.x, size.y, vera::COLOR_FLOAT_TEXTURE);
+            uniforms.floods[i].scale = size.z;
+
+            // Create pass function for this flood
+            uniforms.floods[i].pass = [&](vera::Fbo *_dst, const vera::Fbo *_src, int _index) {
+                _dst->bind();
+                glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+                glClear(GL_COLOR_BUFFER_BIT);
+                m_flood_shader.use();
+
+                // uniforms.feedTo( &m_flood_shader, false, false );
+
+                m_flood_shader.setUniform("u_resolution", ((float)_dst->getWidth()), ((float)_dst->getHeight()));
+                m_flood_shader.setUniform("u_floodIndex",_index);
+                m_flood_shader.setUniform("u_floodTotal", (int)uniforms.floods[0].getTotalIterations());
+
+                m_flood_shader.textureIndex = (uniforms.models.size() == 0) ? 1 : 0;
+                m_flood_shader.setUniformTexture("u_floodSrc", _src);
+
+                vera::getBillboard()->render( &m_flood_shader );
+                _dst->unbind();
+            };
+        }
+    }
+
+    if (m_flood_total > 0 ) {
+        if ( checkFloodAlgorithm( getSource(FRAGMENT) ) ) {
+            m_flood_shader.addDefine("FLOOD_ALGORITHM");
+            m_flood_shader.setSource(m_frag_source, vera::getDefaultSrc(vera::VERT_BILLBOARD));
+        }
+        else
+            m_flood_shader.setSource(vera::getDefaultSrc(vera::FRAG_JUMPFLOOD), vera::getDefaultSrc(vera::VERT_BILLBOARD));
+    }
+    
+    for (size_t i = 0; i < m_flood_subshaders.size(); i++) {
+        m_flood_subshaders[i].addDefine("FLOOD_" + vera::toString(i));
+        m_flood_subshaders[i].setSource(m_frag_source, vera::getDefaultSrc(vera::VERT_BILLBOARD));
     }
 
     // Update Postprocessing
@@ -1541,6 +1605,9 @@ void Sandbox::_renderBuffers() {
         for (size_t j = 0; j < uniforms.doubleBuffers.size(); j++)
             m_buffers_shaders[i].setUniformTexture("u_doubleBuffer" + vera::toString(j), uniforms.doubleBuffers[j]->src );
 
+        for (size_t j = 0; j < uniforms.floods.size(); j++)
+            m_buffers_shaders[i].setUniformTexture("u_flood" + vera::toString(j), uniforms.floods[j].dst );
+
         for (size_t j = 0; j < m_sceneRender.buffersFbo.size(); j++)
             m_buffers_shaders[i].setUniformTexture("u_sceneBuffer" + vera::toString(j), m_sceneRender.buffersFbo[j] );
 
@@ -1570,6 +1637,9 @@ void Sandbox::_renderBuffers() {
         for (size_t j = 0; j < uniforms.doubleBuffers.size(); j++)
             m_doubleBuffers_shaders[i].setUniformTexture("u_doubleBuffer" + vera::toString(j), uniforms.doubleBuffers[j]->src );
 
+        for (size_t j = 0; j < uniforms.floods.size(); j++)
+            m_doubleBuffers_shaders[i].setUniformTexture("u_flood" + vera::toString(j), uniforms.floods[j].dst );
+
         for (size_t j = 0; j < m_sceneRender.buffersFbo.size(); j++)
             m_doubleBuffers_shaders[i].setUniformTexture("u_sceneBuffer" + vera::toString(j), m_sceneRender.buffersFbo[j] );
 
@@ -1585,7 +1655,7 @@ void Sandbox::_renderBuffers() {
     }
 
     for (size_t i = 0; i < m_pyramid_subshaders.size(); i++) {
-        TRACK_BEGIN("render:convolution_pyramid" + vera::toString(i))
+        TRACK_BEGIN("render:pyramid" + vera::toString(i))
 
         reset_viewport += m_pyramid_fbos[i].scale <= 0.0;
 
@@ -1611,7 +1681,46 @@ void Sandbox::_renderBuffers() {
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         uniforms.pyramids[i].process(&m_pyramid_fbos[i]);
 
-        TRACK_END("render:convolution_pyramid" + vera::toString(i))
+        TRACK_END("render:pyramid" + vera::toString(i))
+    }
+
+    for (size_t i = 0; i < m_flood_subshaders.size(); i++) {
+        TRACK_BEGIN("render:flood" + vera::toString(i))
+
+        reset_viewport += uniforms.floods[i].scale <= 0.0;
+
+        uniforms.floods[i].dst->bind();
+        m_flood_subshaders[i].use();
+
+        // Clear the background
+        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        for (size_t j = 0; j < uniforms.buffers.size(); j++)
+            m_flood_subshaders[i].setUniformTexture("u_buffer" + vera::toString(j), uniforms.buffers[j] );
+
+        for (size_t j = 0; j < uniforms.doubleBuffers.size(); j++)
+            m_flood_subshaders[i].setUniformTexture("u_doubleBuffer" + vera::toString(j), uniforms.doubleBuffers[j]->src );
+
+        for (size_t j = 0; j < uniforms.floods.size(); j++)
+            m_flood_subshaders[i].setUniformTexture("u_flood" + vera::toString(j), uniforms.floods[j].src );
+
+        for (size_t j = 0; j < m_sceneRender.buffersFbo.size(); j++)
+            if (m_sceneRender.buffersFbo[j]->isAllocated())
+                m_flood_subshaders[i].setUniformTexture("u_sceneBuffer" + vera::toString(j), m_sceneRender.buffersFbo[j] );
+
+        // Update uniforms and textures
+        uniforms.feedTo( &m_flood_subshaders[i], true, false );
+
+        vera::getBillboard()->render( &m_flood_subshaders[i] );
+
+        uniforms.floods[i].dst->unbind();
+
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        uniforms.floods[i].process();
+
+        TRACK_END("render:flood" + vera::toString(i))
     }
 
     #if defined(__EMSCRIPTEN__)
@@ -1653,7 +1762,8 @@ void Sandbox::renderPrep() {
     
     if (uniforms.buffers.size() > 0 || 
         uniforms.doubleBuffers.size() > 0 ||
-        m_pyramid_total > 0)
+        m_pyramid_total > 0 ||
+        m_flood_total > 0)
         _renderBuffers();
 
     // RENDER SHADOW MAP
@@ -1886,6 +1996,7 @@ void Sandbox::renderUI() {
         int nTotal = uniforms.buffers.size();
         nTotal += uniforms.doubleBuffers.size();
         nTotal += uniforms.pyramids.size();
+        nTotal += uniforms.floods.size();
         if (m_postprocessing && uniforms.models.size() > 0 ) {
             nTotal += 1;
             nTotal += uniforms.functions["u_scene"].present;
@@ -1962,6 +2073,18 @@ void Sandbox::renderUI() {
                 // vera::text("u_pyramid0" + vera::toString(i), xOffset - scale.x * 2.0, vera::getWindowHeight() - yOffset - yStep);
                 yOffset -= yStep * 2.0;
 
+            }
+
+            for (size_t i = 0; i < uniforms.floods.size(); i++) {
+                glm::vec2 offset = glm::vec2(xOffset, yOffset);
+                glm::vec2 scale = glm::vec2(yStep);
+                scale.x *= ((float)uniforms.floods[i].dst->getWidth()/(float)uniforms.floods[i].dst->getHeight());
+                offset.x += xStep - scale.x;
+
+                vera::image(uniforms.floods[i].dst, offset.x, offset.y, scale.x, scale.y);
+                vera::text("u_flood" + vera::toString(i), xOffset - scale.x, vera::getWindowHeight() - yOffset - yStep);
+
+                yOffset -= yStep * 2.0;
             }
 
             if (uniforms.models.size() > 0) {
@@ -2360,6 +2483,14 @@ void Sandbox::onViewportResize(int _newWidth, int _newHeight) {
 
             uniforms.pyramids[i].allocate(  _newWidth * m_pyramid_fbos[i].scale, 
                                             _newHeight * m_pyramid_fbos[i].scale);
+        }
+    }
+
+    for (size_t i = 0; i < uniforms.floods.size(); i++) {
+        if (uniforms.floods[i].scale > 0.0) {
+            uniforms.floods[i].allocate( _newWidth * uniforms.floods[i].scale, 
+                                         _newHeight * uniforms.floods[i].scale, 
+                                         vera::COLOR_FLOAT_TEXTURE);
         }
     }
 

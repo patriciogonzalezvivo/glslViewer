@@ -11,6 +11,7 @@
 #include "tools/files.h"
 #include "tools/tracker.h"
 
+#include "vera/gl/flood.h"
 #include "vera/types/scene.h"
 #include "vera/types/image.h"
 
@@ -59,6 +60,7 @@ typedef std::map<std::string, std::vector<UniformData>> UniformSequenceMap;
 typedef std::vector<vera::Fbo*>                 BuffersList;
 typedef std::vector<vera::PingPong*>            DoubleBuffersList;
 typedef std::vector<vera::Pyramid>              PyramidsList;
+typedef std::vector<vera::Flood>                FloodList;
 
 typedef std::map<std::string, vera::Image>      ImagesMap;
 
@@ -86,6 +88,7 @@ public:
     BuffersList         buffers;
     DoubleBuffersList   doubleBuffers;
     PyramidsList        pyramids;
+    FloodList           floods;
     virtual void        printBuffers();
     virtual void        clearBuffers();
 
