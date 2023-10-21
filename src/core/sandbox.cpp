@@ -1460,7 +1460,7 @@ void Sandbox::_updateBuffers() {
             uniforms.pyramids[i].scale = size.z;
 
             // Create pass function for this pyramid
-            uniforms.pyramids[i].pass = [&](vera::Fbo *_target, const vera::Fbo *_tex0, const vera::Fbo *_tex1, int _depth) {
+            uniforms.pyramids[i].pass = [this](vera::Fbo *_target, const vera::Fbo *_tex0, const vera::Fbo *_tex1, int _depth) {
                 _target->bind();
                 glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
                 glClear(GL_COLOR_BUFFER_BIT);
@@ -1469,7 +1469,7 @@ void Sandbox::_updateBuffers() {
                 uniforms.feedTo( &m_pyramid_shader );
 
                 m_pyramid_shader.setUniform("u_pyramidDepth", _depth);
-                m_pyramid_shader.setUniform("u_pyramidTotalDepth", (int)uniforms.pyramids[i].getDepth());
+                m_pyramid_shader.setUniform("u_pyramidTotalDepth", (int)uniforms.pyramids[0].getDepth());
                 m_pyramid_shader.setUniform("u_pyramidUpscaling", _tex1 != NULL);
 
                 m_pyramid_shader.textureIndex = (uniforms.models.size() == 0) ? 1 : 0;
@@ -1531,7 +1531,7 @@ void Sandbox::_updateBuffers() {
             uniforms.floods[i].scale = size.z;
 
             // Create pass function for this flood
-            uniforms.floods[i].pass = [&](vera::Fbo *_dst, const vera::Fbo *_src, int _index) {
+            uniforms.floods[i].pass = [this](vera::Fbo *_dst, const vera::Fbo *_src, int _index) {
                 _dst->bind();
                 glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
                 glClear(GL_COLOR_BUFFER_BIT);
