@@ -814,11 +814,11 @@ void Sandbox::commandsInit(CommandList &_commands ) {
 
         std::vector<std::string> values = vera::split(_line,',');
         if (values.size() == 2) {
-            uniforms.activeCamera->setFOV( vera::toFloat(values[1]) );
+            uniforms.activeCamera->setFOV( glm::radians(vera::toFloat(values[1])) );
             return true;
         }
         else {
-            std::cout << uniforms.activeCamera->getFOV() << std::endl;
+            std::cout << glm::degrees(uniforms.activeCamera->getFOV()) << std::endl;
             return true;
         }
         return false;

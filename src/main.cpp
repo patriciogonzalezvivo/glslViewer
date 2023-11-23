@@ -409,8 +409,7 @@ int main(int argc, char **argv) {
                     argument == "-headless" || argument == "--headless"     || 
                     argument == "-help"     || argument == "--help"         ||
                     argument == "-msaa"     || argument == "--msaa"         || 
-                    argument == "-undecorated"  || argument == "--undecorated" || 
-                    argument == "-lenticular"   || argument == "--lenticular") {
+                    argument == "-undecorated"  || argument == "--undecorated") {
         }
 
         // Change internal states with no second parameter
@@ -469,10 +468,14 @@ int main(int argc, char **argv) {
             std::string calibration_file = "default";
             if (i+1 < argc) {
                 calibration_file = std::string(argv[i+1]);
-                if (vera::urlExists(calibration_file) && vera::haveExt(calibration_file,"json")) i++;
-                else calibration_file = "default";
-            } else
+                if (vera::urlExists(calibration_file) && vera::haveExt(calibration_file,"json")) 
+                    i++;
+                else 
+                    calibration_file = "default";
+            } 
+            else
                 std::cout << "Argument '" << argument << "' should be followed by a path to calibration JSON file" << std::endl;
+
             sandbox.lenticular = calibration_file;
             if (sandbox.quilt == -1) 
                 sandbox.quilt = 0;
