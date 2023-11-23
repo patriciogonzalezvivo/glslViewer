@@ -40,7 +40,7 @@
 
 // ------------------------------------------------------------------------- CONTRUCTOR
 Sandbox::Sandbox(): 
-    screenshotFile(""), lenticular(""), quilt(-1), 
+    screenshotFile(""), lenticular(""), quilt_resolution(-1), quilt_tile(-1), 
     frag_index(-1), vert_index(-1), geom_index(-1), 
     verbose(false), cursor(true), help(false), fxaa(false),
     // Main Vert/Frag/Geom
@@ -1138,9 +1138,9 @@ void Sandbox::loadAssets(WatchFileList &_files) {
     if (lenticular.size() > 0)
         vera::setLenticularProperties(lenticular);
 
-    if (quilt >= 0) {
-        vera::setQuiltProperties(quilt);
-        addDefine("QUILT", vera::toString(quilt));
+    if (quilt_resolution >= 0) {
+        vera::setQuiltProperties(quilt_resolution);
+        addDefine("QUILT", vera::toString(quilt_resolution));
         addDefine("QUILT_WIDTH", vera::toString( vera::getQuiltWidth() ));
         addDefine("QUILT_HEIGHT", vera::toString( vera::getQuiltHeight() ));
         addDefine("QUILT_COLUMNS", vera::toString( vera::getQuiltColumns() ));
@@ -1154,8 +1154,12 @@ void Sandbox::loadAssets(WatchFileList &_files) {
         if (geom_index != -1)
             uniforms.activeCamera->orbit(m_camera_elevation, m_camera_azimuth, m_sceneRender.getArea() * 8.5);
 
-        if (lenticular.size() == 0)
-            vera::setWindowSize(vera::getQuiltWidth(), vera::getQuiltHeight());
+        if (lenticular.size() == 0) {
+            if (quilt_tile >= 0)
+                vera::setWindowSize(vera::getQuiltWidth()/vera::getQuiltColumns(), vera::getQuiltHeight()/vera::getQuiltRows());
+            else
+                vera::setWindowSize(vera::getQuiltWidth(), vera::getQuiltHeight());
+        }
     }
 
     // Prepare viewport
@@ -1568,7 +1572,7 @@ void Sandbox::_updateBuffers() {
 
     // Update Postprocessing
     if (m_postprocessing || m_plot == PLOT_RGB || m_plot == PLOT_RED || m_plot == PLOT_GREEN || m_plot == PLOT_BLUE || m_plot == PLOT_LUMA) {
-        if (quilt >= 0)
+        if (quilt_resolution >= 0)
             m_sceneRender.updateBuffers(uniforms, vera::getQuiltWidth(), vera::getQuiltHeight());
         else 
             m_sceneRender.updateBuffers(uniforms, vera::getWindowWidth(), vera::getWindowHeight());
@@ -1811,7 +1815,7 @@ void Sandbox::render() {
         // Load main shader
         m_canvas_shader.use();
 
-        if (quilt >= 0) {
+        if (quilt_resolution >= 0) {
             vera::renderQuilt([&](const vera::QuiltProperties& quilt, glm::vec4& viewport, int &viewIndex) {
 
                 // set up the camera rotation and position for current view
@@ -1829,7 +1833,7 @@ void Sandbox::render() {
                 m_canvas_shader.setUniform("u_projectionMatrix", glm::mat4(1.0f));
                 m_canvas_shader.setUniform("u_modelViewProjectionMatrix", glm::mat4(1.));
                 vera::getBillboard()->render( &m_canvas_shader );
-            }, true);
+            }, quilt_tile, true);
         }
 
         else {
@@ -1850,13 +1854,11 @@ void Sandbox::render() {
 
     else {
         TRACK_BEGIN("render:3D_scene")
-        if (quilt >= 0) {
+        if (quilt_resolution >= 0) {
             vera::renderQuilt([&](const vera::QuiltProperties& quilt, glm::vec4& viewport, int &viewIndex){
 
                 // set up the camera rotation and position for current view
                 uniforms.activeCamera->setVirtualOffset(m_sceneRender.getArea() * 0.75, viewIndex, quilt.totalViews);
-                // uniforms.activeCamera->setVirtualOffset(5.0f, viewIndex, quilt.totalViews);
-                // uniforms.activeCamera->setVirtualOffset(10.0f, viewIndex, quilt.totalViews);
 
                 uniforms.set("u_tile", float(quilt.columns), float(quilt.rows), float(quilt.totalViews));
                 uniforms.set("u_viewport", float(viewport.x), float(viewport.y), float(viewport.z), float(viewport.w));
@@ -1865,7 +1867,7 @@ void Sandbox::render() {
 
                 if (m_sceneRender.showGrid || m_sceneRender.showAxis || m_sceneRender.showBBoxes)
                     m_sceneRender.renderDebug(uniforms);
-            }, true);
+            }, quilt_tile, true);
         }
 
         else {
@@ -2407,7 +2409,7 @@ void Sandbox::onMouseDrag(float _x, float _y, int _button) {
     if (uniforms.activeCamera == nullptr)
         return;
 
-    if (quilt < 0) {
+    if (quilt_resolution < 0) {
         // If it's not playing on the HOLOPLAY
         // produce continue draging like blender
         //
@@ -2495,7 +2497,7 @@ void Sandbox::onViewportResize(int _newWidth, int _newHeight) {
     }
 
     if (m_postprocessing || m_plot == PLOT_LUMA || m_plot == PLOT_RGB || m_plot == PLOT_RED || m_plot == PLOT_GREEN || m_plot == PLOT_BLUE ) {
-        if (quilt >= 0)
+        if (quilt_resolution >= 0)
             m_sceneRender.updateBuffers(uniforms, vera::getQuiltWidth(), vera::getQuiltHeight());
         else 
             m_sceneRender.updateBuffers(uniforms, _newWidth, _newHeight);

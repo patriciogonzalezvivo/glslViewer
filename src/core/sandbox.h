@@ -79,7 +79,8 @@ public:
 
     // Quilt/Lenticular
     std::string         lenticular;
-    int                 quilt;
+    int                 quilt_resolution;
+    int                 quilt_tile;
 
     // States
     int                 frag_index;

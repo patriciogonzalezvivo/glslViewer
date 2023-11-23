@@ -460,9 +460,15 @@ int main(int argc, char **argv) {
         }
         else if (   argument == "-quilt"    || argument == "--quilt" ) {
             if (++i < argc)
-                sandbox.quilt = vera::toInt(argv[i]);
+                sandbox.quilt_resolution = vera::toInt(argv[i]);
             else
                 std::cout << "Argument '" << argument << "' should be followed by a <quilt index type>" << std::endl;
+        }
+        else if (   argument == "-quilt_tile"    || argument == "--quilt_tile" ) {
+            if (++i < argc)
+                sandbox.quilt_tile = vera::toInt(argv[i]);
+            else
+                std::cout << "Argument '" << argument << "' should be followed by a <tile index type>" << std::endl;
         }
         else if (   argument == "-lenticular"   || argument == "--lenticular" ) {
             std::string calibration_file = "default";
@@ -476,9 +482,10 @@ int main(int argc, char **argv) {
             else
                 std::cout << "Argument '" << argument << "' should be followed by a path to calibration JSON file" << std::endl;
 
+            sandbox.quilt_tile = -1;
             sandbox.lenticular = calibration_file;
-            if (sandbox.quilt == -1) 
-                sandbox.quilt = 0;
+            if (sandbox.quilt_resolution == -1) 
+                sandbox.quilt_resolution = 0;
         }
         
         else if (   argument == "-p"        || argument == "-port"  || argument == "--port" ) {
@@ -1937,8 +1944,9 @@ void printUsage(char * executableName) {
     std::cerr << "      --noncurses                 # disable ncurses command interface" << std::endl;
     std::cerr << "      --fps <fps>                 # fix the max FPS" << std::endl;
     std::cerr << "      --fxaa                      # set FXAA as postprocess filter" << std::endl;
-    std::cerr << "      --quilt <0-7>               # quilt render (HoloPlay)" << std::endl;
-    std::cerr << "      --lenticular <visual.json>  # lenticular calubration file, Looking Glass Model (HoloPlay)" << std::endl;
+    std::cerr << "      --quilt <0-15>              # quilt render (HoloPlay)" << std::endl;
+    std::cerr << "      --quilt_tile <N>            # render a particular tile of a quilt (HoloPlay)" << std::endl;
+    std::cerr << "      --lenticular <visual.json>  # lenticular calibration file, Looking Glass Model (HoloPlay)" << std::endl;
     std::cerr << "      -I<include_folder>          # add an include folder to default for #include files" << std::endl;
     std::cerr << "      -D<define>                  # add system #defines directly from the console argument" << std::endl;
     std::cerr << "      -p <OSC_port>               # open OSC listening port" << std::endl;
