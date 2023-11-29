@@ -1862,6 +1862,40 @@ void commandsInit() {
         return true;
     }, "icosphere[,<RESOLUTION>]", "add icosphere mesh"));
 
+
+    commands.push_back(Command("cylinder", [&](const std::string & line) {
+        std::vector<std::string> values = vera::split(line,',');
+        int resolutionR = 16;
+        int resolutionH = 3;
+        int resolutionC = 1;
+
+        if (values.size() > 1) {
+            resolutionR  = vera::toInt(values[1]);
+        }
+        if (values.size() > 2) {
+            resolutionH  = vera::toInt(values[2]);
+        }
+        if (values.size() > 3) {
+            resolutionC  = vera::toInt(values[3]);
+        }
+            
+        sandbox.loadModel( new vera::Model("c", vera::cylinderMesh(1.0, 1.0, resolutionR, resolutionH, resolutionC, resolutionC != 0) ) );
+
+        #if defined(__EMSCRIPTEN__)
+        // Commands are parse in the main GL loop in EMSCRIPTEN,
+        // there is no risk to reload shaders outside main GL thread
+        sandbox.resetShaders(files);
+        #else
+        // Reloading shaders can't be done directly on multi-thread (event thread)
+        // to solve that, we trigger reloading by flagging changes on all files
+        // witch signal the main GL thread to reload assets
+        for (size_t i = 0; i < files.size(); i++)
+            files[i].lastChange = 0;
+        #endif
+
+        return true;
+    }, "cylinder[,<RESOLUTION_RADIUS>,<RESOLUTION_HEIGHT>]]", "add cylinder mesh"));
+
     commands.push_back(Command("wait", [&](const std::string& _line){ 
         std::vector<std::string> values = vera::split(_line,',');
         if (values.size() == 2) {

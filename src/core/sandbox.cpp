@@ -1155,8 +1155,10 @@ void Sandbox::loadAssets(WatchFileList &_files) {
             uniforms.activeCamera->orbit(m_camera_elevation, m_camera_azimuth, m_sceneRender.getArea() * 8.5);
 
         if (lenticular.size() == 0) {
-            if (quilt_tile >= 0)
-                vera::setWindowSize(vera::getQuiltWidth()/vera::getQuiltColumns(), vera::getQuiltHeight()/vera::getQuiltRows());
+            if (quilt_tile >= 0) {
+                vera::setWindowSize(vera::getQuiltWidth()/vera::getQuiltColumns(), 
+                                    vera::getQuiltHeight()/vera::getQuiltRows());
+            }
             else
                 vera::setWindowSize(vera::getQuiltWidth(), vera::getQuiltHeight());
         }
