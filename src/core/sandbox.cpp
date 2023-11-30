@@ -2,6 +2,7 @@
 
 #include <sys/stat.h>   // stat
 #include <algorithm>    // std::find
+#include <numeric>
 #include <fstream>
 #include <math.h>
 #include <memory>
@@ -1949,343 +1950,277 @@ void Sandbox::renderPost() {
         console_uniforms_refresh();
 }
 
+namespace {
+namespace renderable_objects {
+struct render_ui_t {
+    glm::vec2 dimensions = {vera::getWindowWidth(), vera::getWindowHeight()};
+    float scale = 1;
+    glm::vec2 step = dimensions * scale;
+    glm::vec2 offset = dimensions - step;
+    float p = vera::getPixelDensity();
+    glm::vec2 pos = dimensions * glm::vec2{0.5, 1} + glm::vec2{0, 10};
+};
+
+void print_text(const std::string& prompt, const float offsetx, render_ui_t& uio) {
+    vera::text(prompt, offsetx, vera::getWindowHeight() - uio.offset.y + uio.step.y);
+    uio.offset.y -= uio.step.y * 2.0;
+}
+
+void print_fbo_text(const vera::Fbo& fbo, const std::string& prompt, render_ui_t& uio) {
+    vera::image(&fbo, uio.offset.x, uio.offset.y, uio.step.x, uio.step.y);
+    print_text(prompt, uio.offset.x - uio.step.x, uio);
+}
+
+void print_buffers_text(const vera::Fbo& uniforms_buffer, size_t i, const std::string& prompt, render_ui_t& uio) {
+    const auto scale = uio.step.y * glm::vec2{((float)uniforms_buffer.getWidth()/(float)uniforms_buffer.getHeight()), 1};
+    const auto offset = uio.offset + glm::vec2{uio.step.x - scale.x, 0};
+    vera::image(uniforms_buffer, offset.x, offset.y, scale.x, scale.y);
+    print_text(prompt + vera::toString(i), uio.offset.x - scale.x, uio);
+}
+
+namespace render_pass_actions {
+void do_pass_scene(const std::string& prompt_id, Uniforms& uniforms, const vera::Fbo& fbo, render_ui_t& uio) {
+    if (uniforms.functions[prompt_id].present) { print_fbo_text(fbo, prompt_id, uio); }
+}
+
+void do_pass_scenebuffer(const std::string& prompt_id, const BuffersList& fbolist, render_ui_t& uio) {
+    for(const auto& fbo : fbolist) { print_fbo_text(*fbo, prompt_id, uio); }
+}
+
+void do_pass_scenedepth(const std::string& prompt_id, Uniforms& uniforms, const vera::Fbo& fbo, render_ui_t& uio) {
+    if (!uniforms.functions[prompt_id].present) { return; }
+    if (uniforms.activeCamera)
+        vera::imageDepth(fbo, uio.offset.x, uio.offset.y, uio.step.x, uio.step.y, uniforms.activeCamera->getFarClip(), uniforms.activeCamera->getNearClip());
+    print_text(prompt_id, uio.offset.x - uio.step.x, uio);
+}
+
+void do_pass_lightmap(const std::string& prompt_id, Uniforms& uniforms, render_ui_t& uio) {
+    if (uniforms.models.empty()) { return; }
+    for (const auto& lightmap : uniforms.lights) {
+        if (!lightmap.second->getShadowMap()->getDepthTextureId()) { continue; }
+        vera::imageDepth(lightmap.second->getShadowMap(), uio.offset.x, uio.offset.y, uio.step.x, uio.step.y, lightmap.second->getShadowMapFar(), lightmap.second->getShadowMapNear());
+        // vera::image(it->second->getShadowMap(), xOffset, yOffset, xStep, yStep);
+        print_text(prompt_id, uio.offset.x - uio.step.x, uio);
+    }
+}
+
+void do_pass_pyramid(const std::string&, Uniforms& uniforms, render_ui_t& uio) {
+    for(const auto& pyramid : uniforms.pyramids) {
+        auto scale = uio.step.y * glm::vec2{((float)pyramid.getWidth()/(float)pyramid.getHeight()), 1};
+        auto offset = uio.offset  + glm::vec2{uio.step.x - scale.x, 0};
+        const auto w = scale.x;
+        for (size_t j = 0; j < pyramid.getDepth() * 2; j++ ) {
+            const auto is_lower_depth = (j < pyramid.getDepth());
+            const auto delta_offset = is_lower_depth ? offset.x : offset.x + w * 2.0f;
+            vera::image(pyramid.getResult(j), delta_offset, offset.y, scale.x, scale.y);
+            offset.x -= scale.x;
+            using _t = std::pair<glm::vec2, float>;
+            std::tie(scale, offset.y) = is_lower_depth ? _t{scale *= 0.5, uio.offset.y - uio.step.y * 0.5} : _t{scale *= 2.0, uio.offset.y + uio.step.y * 0.5};
+            offset.x -= scale.x;
+        }
+        // vera::text("u_pyramid0" + vera::toString(i), xOffset - scale.x * 2.0, vera::getWindowHeight() - yOffset + yStep);
+        uio.offset.y -= uio.step.y * 2.0;
+    }
+}
+
+void do_pass_doublebuffers(const std::string& prompt_id, Uniforms& uniforms, render_ui_t& uio) {
+    for (size_t i = 0; i < uniforms.doubleBuffers.size(); i++)
+        print_buffers_text(*uniforms.doubleBuffers[i]->src, i, prompt_id, uio);
+}
+
+void do_pass_singlebuffer(const std::string& prompt_id, Uniforms& uniforms, render_ui_t& uio) {
+    for (size_t i = 0; i < uniforms.buffers.size(); i++)
+        print_buffers_text(*uniforms.buffers[i], i, prompt_id, uio);
+}
+} // namespace [render_pass_actions]
+
+void set_common_text_attributes(float textangle, float textsize, vera::VerticalAlign v, vera::HorizontalAlign h){
+    vera::textAngle(textangle);
+    vera::textSize(textsize);
+    vera::textAlign(v);
+    vera::textAlign(h);
+}
+
+void process_render_passes(Uniforms& uniforms, const SceneRender& m_sceneRender, size_t nTotal){
+    using namespace render_pass_actions;
+    render_ui_t uio;
+    uio.scale = fmin(1.0f / (float)(nTotal), 0.25) * 0.5;
+    uio.step = uio.dimensions * uio.scale;
+    uio.offset = uio.dimensions - uio.step;
+    set_common_text_attributes(-HALF_PI, uio.step.y * 0.2f / vera::getPixelDensity(false), vera::ALIGN_BOTTOM, vera::ALIGN_LEFT);
+
+    do_pass_singlebuffer("u_buffer", uniforms, uio);
+    do_pass_doublebuffers("u_doubleBuffer", uniforms, uio);
+    do_pass_pyramid("u_pyramid0", uniforms, uio);
+    do_pass_lightmap("u_lightShadowMap", uniforms, uio);
+    do_pass_scene("u_scenePosition", uniforms, m_sceneRender.positionFbo, uio);
+    do_pass_scene("u_sceneNormal", uniforms, m_sceneRender.normalFbo, uio);
+    do_pass_scenebuffer("u_sceneBuffer", m_sceneRender.buffersFbo, uio);
+    do_pass_scene("u_scene", uniforms, m_sceneRender.renderFbo, uio);
+    do_pass_scenedepth("u_sceneDepth", uniforms, m_sceneRender.renderFbo, uio);
+}
+
+namespace overlay_actions {
+void overlay_show_textures(const Uniforms& uniforms) {
+    if (uniforms.textures.empty()) { return; }
+    glDisable(GL_DEPTH_TEST);
+    TRACK_BEGIN("renderUI:textures")
+    render_ui_t uio;
+    uio.scale = fmin(1.0f / (float)(uniforms.textures.size()), 0.25) * 0.5;
+    uio.step = uio.dimensions * uio.scale;
+    uio.offset = {uio.step.x, uio.dimensions.y - uio.step.y};
+    set_common_text_attributes(-HALF_PI, uio.step.y * 0.2f / vera::getPixelDensity(false), vera::ALIGN_TOP, vera::ALIGN_LEFT);
+
+    for(const auto& texture : uniforms.textures) {
+        const auto textureStream_match = std::find_if(std::begin(uniforms.streams), std::end(uniforms.streams)
+                                       , [&](vera::TextureStreamsMap::value_type stream){return texture.first == stream.first;});
+        if ( textureStream_match != std::end(uniforms.streams) )
+            vera::image((vera::TextureStream*)textureStream_match->second, uio.offset.x, uio.offset.y, uio.step.x, uio.step.y, true);
+        else
+            vera::image(texture.second, uio.offset.x, uio.offset.y, uio.step.x, uio.step.y);
+        print_text(texture.first, uio.offset.x + uio.step.x, uio);
+    }
+    TRACK_END("renderUI:textures")
+}
+
+void overlay_show_buffer_passes(Uniforms& uniforms, const SceneRender& m_sceneRender, bool m_postprocessing) {
+    glDisable(GL_DEPTH_TEST);
+    TRACK_BEGIN("renderUI:buffers")
+    // DEBUG BUFFERS
+    const auto is_postprocessing_with_uniforms = m_postprocessing && !uniforms.models.empty();
+    using num_of_passes_t = std::pair<bool, size_t>;
+    const auto nTotalArray = { num_of_passes_t
+        {true, uniforms.buffers.size()} //buffer
+        , {true, uniforms.doubleBuffers.size()}    // doublebuffer
+        , {true, uniforms.pyramids.size()} //pyramid
+        , {is_postprocessing_with_uniforms, 1}  // lightmap
+        , {true, uniforms.functions["u_scenePosition"].present}
+        , {true, uniforms.functions["u_sceneNormal"].present}
+        , {true, m_sceneRender.getBuffersTotal()}
+        , {is_postprocessing_with_uniforms, uniforms.functions["u_scene"].present}
+        , {is_postprocessing_with_uniforms, uniforms.functions["u_sceneDepth"].present}
+    };
+    const auto nTotal = std::accumulate(std::begin(nTotalArray), std::end(nTotalArray), int{}
+                                        , [](const size_t acc, const num_of_passes_t& kv) { return acc + ((kv.first) ? kv.second : 0); });
+    if (nTotal > 0) { process_render_passes(uniforms, m_sceneRender, nTotal); }
+    TRACK_END("renderUI:buffers")
+};
+
+void overlay_plot_data(vera::Shader& m_plot_shader, const vera::Texture* const m_plot_texture) {
+    glDisable(GL_DEPTH_TEST);
+    TRACK_BEGIN("renderUI:plot_data")
+    render_ui_t uio;
+    uio.dimensions = glm::vec2{100, 30} * uio.p;
+    uio.pos = {(float)(vera::getWindowWidth()) * 0.5, uio.dimensions.y + 10};
+
+    m_plot_shader.use();
+    m_plot_shader.setUniform("u_scale", uio.dimensions);
+    m_plot_shader.setUniform("u_translate", uio.pos);
+    m_plot_shader.setUniform("u_resolution", {vera::getWindowWidth(), vera::getWindowHeight()});
+    m_plot_shader.setUniform("u_viewport", uio.dimensions);
+    m_plot_shader.setUniform("u_model", glm::vec3(1.0f));
+    m_plot_shader.setUniform("u_modelMatrix", glm::mat4(1.0f));
+    m_plot_shader.setUniform("u_viewMatrix", glm::mat4(1.0f));
+    m_plot_shader.setUniform("u_projectionMatrix", glm::mat4(1.0f));
+    m_plot_shader.setUniform("u_modelViewProjectionMatrix", vera::getOrthoMatrix());
+    m_plot_shader.setUniformTexture("u_plotData", m_plot_texture, 0);
+
+    vera::getBillboard()->render(&m_plot_shader);
+    TRACK_END("renderUI:plot_data")
+}
+
+void overlay_cursor(std::unique_ptr<vera::Vbo>& m_cross_vbo) {
+    TRACK_BEGIN("renderUI:cursor")
+    if (m_cross_vbo == nullptr)
+        m_cross_vbo = std::unique_ptr<vera::Vbo>(new vera::Vbo( vera::crossMesh( glm::vec3(0.0f, 0.0f, 0.0f), 10.0f) ));
+
+    const auto fill = vera::getFillShader();
+    fill->use();
+    fill->setUniform("u_modelViewProjectionMatrix", glm::translate(vera::getOrthoMatrix(), glm::vec3(vera::getMouseX(), vera::getMouseY(), 0.0f) ) );
+    fill->setUniform("u_color", glm::vec4(1.0f));
+    m_cross_vbo->render(fill);
+    TRACK_END("renderUI:cursor")
+}
+
+vera::Camera* overlay_black_box(float textangle, float textsize, vera::VerticalAlign v, vera::HorizontalAlign h, render_ui_t& uio) {
+    uio.step = uio.dimensions * 0.05f;
+    uio.pos = uio.step * glm::vec2{2.0f, 3.0f};
+
+    const auto cam = vera::getCamera();
+    vera::resetCamera();
+    vera::fill(0.0f, 0.0f, 0.0f, 0.75f);
+    vera::noStroke();
+    vera::rect(uio.dimensions * 0.5f, uio.dimensions - uio.step * 2.0f);
+    vera::fill(1.0f);
+    set_common_text_attributes(textangle, textsize, v, h);
+    return cam;
+}
+
+void overlay_prompt_drag_and_drop() {
+    render_ui_t uio;
+    const auto cam = overlay_black_box(0.0f, 38.0f, vera::ALIGN_MIDDLE, vera::ALIGN_CENTER, uio);
+    vera::text("Drag & Drop", uio.dimensions.x * 0.5f, uio.dimensions.y * 0.45f);
+    vera::textSize(22.0f);
+    vera::text(".vert .frag .ply .lst .obj .gltf .glb", uio.dimensions.x * 0.5f, uio.dimensions.y * 0.55f);
+    vera::setCamera(cam);
+}
+
+void overlay_prompt_help(const Uniforms& uniforms, const SceneRender& m_sceneRender, int geom_index, bool help, bool verbose) {
+    render_ui_t uio;
+    const auto cam = overlay_black_box(0.0f, 22.0f, vera::ALIGN_MIDDLE, vera::ALIGN_LEFT, uio);
+    uio.step.y = vera::getFontHeight() * 1.5f;
+
+    const auto print_help_prompt = [&](const std::string& prompt){
+        vera::text(prompt, uio.pos);
+        uio.pos.y += uio.step.y;
+    };
+    const auto geometry_available = geom_index != -1;
+    const auto uniform_streams_available = !uniforms.streams.empty();
+
+    struct help_prompt_t {
+        const bool predicate;
+        const std::string message;
+    };
+    const auto help_prompts = { help_prompt_t
+        {geometry_available, "a - " + std::string( m_sceneRender.showAxis? "hide" : "show" ) + " axis"}
+        , {geometry_available, "b - " + std::string( m_sceneRender.showBBoxes? "hide" : "show" ) + " bounding boxes"}
+        , {true, "c - hide/show cursor"}
+        , {geometry_available, "d - " + std::string( m_sceneRender.dynamicShadows? "disable" : "enable" ) + " dynamic shadows"}
+        , {geometry_available, "f - hide/show floor"}
+        , {true, "F - " + std::string( vera::isFullscreen() ? "disable" : "enable" ) + " fullscreen"}
+        , {geometry_available, "g - " + std::string( m_sceneRender.showGrid? "hide" : "show" ) + " grid"}
+        , {true, "h - " + std::string( help? "hide" : "show" ) + " help"}
+        , {true, "i - hide/show extra info"}
+        , {true, "o - open shaders on default editor"}
+        , {true, "p - hide/show render passes/buffers"}
+        , {uniform_streams_available, "r - restart stream textures"}
+        , {geometry_available, "s - hide/show sky"}
+        , {true, "t - hide/show loaded textures"}
+        , {true, "v - " + std::string( verbose? "disable" : "enable" ) + " verbose"}
+        , {uniform_streams_available, "space - start/stop stream textures"}
+    };
+    for(const auto& _ : help_prompts) { if(_.predicate) print_help_prompt(_.message); }
+
+    vera::setCamera(cam);
+    glDisable(GL_DEPTH_TEST);
+}
+} // namespace [overlay_actions]
+} // namespace [renderable_objects]
+} // namespace [_]
 
 void Sandbox::renderUI() {
     TRACK_BEGIN("renderUI")
+    using namespace renderable_objects::overlay_actions;
+    const auto display_m_plots = m_plot != PLOT_OFF && m_plot_texture ;
+    const auto diplay_cursor = cursor && vera::getMouseEntered();
+    const auto no_geometry_available = frag_index == -1 && vert_index == -1 && geom_index == -1;
 
-    // // IN PUT TEXTURES
-    if (m_showTextures) {      
-
-        int nTotal = uniforms.textures.size();
-        if (nTotal > 0) {
-            glDisable(GL_DEPTH_TEST);
-            TRACK_BEGIN("renderUI:textures")
-            float w = (float)(vera::getWindowWidth());
-            float h = (float)(vera::getWindowHeight());
-            float a = h/w;
-            float scale = fmin(1.0f / (float)(nTotal), 0.25) * 0.5;
-            float xStep = w * scale * a;
-            float yStep = h * scale;
-            float xOffset = xStep;
-            float yOffset = h - yStep;
-            
-            vera::textAngle(0.0);
-            vera::textAlign(vera::ALIGN_TOP);
-            vera::textAlign(vera::ALIGN_LEFT);
-            vera::textSize(xStep * 0.2f / vera::getPixelDensity(false));
-
-            for (vera::TexturesMap::iterator it = uniforms.textures.begin(); it != uniforms.textures.end(); it++) {
-                float imgAspect = ((float)it->second->getWidth()/(float)it->second->getHeight());
-                float imgW = xStep * imgAspect;
-                vera::TextureStreamsMap::const_iterator slit = uniforms.streams.find(it->first);
-                if ( slit != uniforms.streams.end() )
-                    vera::image((vera::TextureStream*)slit->second, xStep * 0.5 + imgW * 0.5, yOffset, imgW, yStep, true);
-                else 
-                    vera::image(it->second, xStep * 0.5 + imgW * 0.5, yOffset, imgW, yStep);
-
-                vera::text(it->first, 0, vera::getWindowHeight() - yOffset - yStep);
-
-                yOffset -= yStep * 2.0;
-            }
-            TRACK_END("renderUI:textures")
-        }
-    }
-
-    // RESULTING BUFFERS
-    if (m_showPasses) {
-        glDisable(GL_DEPTH_TEST);
-        TRACK_BEGIN("renderUI:buffers")
-
-        // DEBUG BUFFERS
-        int nTotal = uniforms.buffers.size();
-        nTotal += uniforms.doubleBuffers.size();
-        nTotal += uniforms.pyramids.size();
-        nTotal += uniforms.floods.size();
-        if (m_postprocessing && uniforms.models.size() > 0 ) {
-            nTotal += 1;
-            nTotal += uniforms.functions["u_scene"].present;
-            nTotal += uniforms.functions["u_sceneDepth"].present;
-        }
-        nTotal += uniforms.functions["u_sceneNormal"].present;
-        nTotal += uniforms.functions["u_scenePosition"].present;
-        nTotal += m_sceneRender.getBuffersTotal();
-        
-        if (nTotal > 0) {
-            float w = (float)(vera::getWindowWidth());
-            float h = (float)(vera::getWindowHeight());
-            float scale = fmin(1.0f / (float)(nTotal), 0.25) * 0.5;
-            float xStep = w * scale;
-            float yStep = h * scale;
-            float xOffset = w - xStep;
-            float yOffset = h - yStep;
-
-            vera::textAngle(0.0);
-            vera::textSize(xStep * 0.2f / vera::getPixelDensity(false));
-            vera::textAlign(vera::ALIGN_TOP);
-            vera::textAlign(vera::ALIGN_LEFT);
-
-            for (size_t i = 0; i < uniforms.buffers.size(); i++) {
-                glm::vec2 offset = glm::vec2(xOffset, yOffset);
-                glm::vec2 scale = glm::vec2(yStep);
-                scale.x *= ((float)uniforms.buffers[i]->getWidth()/(float)uniforms.buffers[i]->getHeight());
-                offset.x += xStep - scale.x;
-
-                vera::image(uniforms.buffers[i], offset.x, offset.y, scale.x, scale.y);
-                vera::text("u_buffer" + vera::toString(i), xOffset - scale.x, vera::getWindowHeight() - yOffset - yStep);
-
-                yOffset -= yStep * 2.0;
-            }
-
-            for (size_t i = 0; i < uniforms.doubleBuffers.size(); i++) {
-                glm::vec2 offset = glm::vec2(xOffset, yOffset);
-                glm::vec2 scale = glm::vec2(yStep);
-                scale.x *= ((float)uniforms.doubleBuffers[i]->src->getWidth()/(float)uniforms.doubleBuffers[i]->src->getHeight());
-                offset.x += xStep - scale.x;
-
-                vera::image(uniforms.doubleBuffers[i]->src, offset.x, offset.y, scale.x, scale.y);
-                vera::text("u_doubleBuffer" + vera::toString(i), xOffset - scale.x, vera::getWindowHeight() - yOffset - yStep);
-
-                yOffset -= yStep * 2.0;
-            }
-
-            for (size_t i = 0; i < uniforms.pyramids.size(); i++) {
-                glm::vec2 offset = glm::vec2(xOffset, yOffset);
-                glm::vec2 scale = glm::vec2(yStep);
-                scale.x *= ((float)uniforms.pyramids[i].getWidth()/(float)uniforms.pyramids[i].getHeight());
-                float w = scale.x;
-                offset.x += xStep - w;
-                for (size_t j = 0; j < uniforms.pyramids[i].getDepth() * 2; j++ ) {
-
-                    if (j < uniforms.pyramids[i].getDepth())
-                        vera::image(uniforms.pyramids[i].getResult(j), offset.x, offset.y, scale.x, scale.y);
-                    else 
-                        vera::image(uniforms.pyramids[i].getResult(j), offset.x + w * 2.0f, offset.y, scale.x, scale.y);
-
-                    offset.x -= scale.x;
-                    if (j < uniforms.pyramids[i].getDepth()) {
-                        scale *= 0.5;
-                        offset.y = yOffset - yStep * 0.5;
-                    }
-                    else {
-                        offset.y = yOffset + yStep * 0.5;
-                        scale *= 2.0;
-                    }
-                    offset.x -= scale.x;
-
-                }
-
-                // vera::text("u_pyramid0" + vera::toString(i), xOffset - scale.x * 2.0, vera::getWindowHeight() - yOffset - yStep);
-                yOffset -= yStep * 2.0;
-
-            }
-
-            for (size_t i = 0; i < uniforms.floods.size(); i++) {
-                glm::vec2 offset = glm::vec2(xOffset, yOffset);
-                glm::vec2 scale = glm::vec2(yStep);
-                scale.x *= ((float)uniforms.floods[i].dst->getWidth()/(float)uniforms.floods[i].dst->getHeight());
-                offset.x += xStep - scale.x;
-
-                vera::image(uniforms.floods[i].dst, offset.x, offset.y, scale.x, scale.y);
-                vera::text("u_flood" + vera::toString(i), xOffset - scale.x, vera::getWindowHeight() - yOffset - yStep);
-
-                yOffset -= yStep * 2.0;
-            }
-
-            if (uniforms.models.size() > 0) {
-                vera::fill(0.0);
-                for (vera::LightsMap::iterator it = uniforms.lights.begin(); it != uniforms.lights.end(); ++it ) {
-                    if ( it->second->getShadowMap()->getDepthTextureId() ) {
-                        vera::imageDepth(it->second->getShadowMap(), xOffset, yOffset, xStep, yStep, it->second->getShadowMapFar(), it->second->getShadowMapNear());
-                        // vera::image(it->second->getShadowMap(), xOffset, yOffset, xStep, yStep);
-                        vera::text("u_lightShadowMap", xOffset - xStep, vera::getWindowHeight() - yOffset - yStep);
-                        yOffset -= yStep * 2.0;
-                    }
-                }
-                vera::fill(1.0);
-            }
-
-            if (uniforms.functions["u_scenePosition"].present) {
-                vera::image(&m_sceneRender.positionFbo, xOffset, yOffset, xStep, yStep);
-                vera::text("u_scenePosition", xOffset - xStep, vera::getWindowHeight() - yOffset - yStep);
-                yOffset -= yStep * 2.0;
-            }
-
-            if (uniforms.functions["u_sceneNormal"].present) {
-                vera::image(&m_sceneRender.normalFbo, xOffset, yOffset, xStep, yStep);
-                vera::text("u_sceneNormal", xOffset - xStep, vera::getWindowHeight() - yOffset - yStep);
-                yOffset -= yStep * 2.0;
-            }
-
-            for (size_t i = 0; i < m_sceneRender.buffersFbo.size(); i++) {
-                vera::image(m_sceneRender.buffersFbo[i], xOffset, yOffset, xStep, yStep);
-                vera::text("u_sceneBuffer" + vera::toString(i), xOffset - xStep, vera::getWindowHeight() - yOffset - yStep);
-                yOffset -= yStep * 2.0;
-            }
-
-            if (uniforms.functions["u_scene"].present) {
-                vera::image(&m_sceneRender.renderFbo, xOffset, yOffset, xStep, yStep);
-                vera::text("u_scene", xOffset - xStep, vera::getWindowHeight() - yOffset - yStep);
-                yOffset -= yStep * 2.0;
-            }
-
-            if (uniforms.functions["u_sceneDepth"].present) {
-                vera::fill(0.0);
-                if (uniforms.activeCamera)
-                    vera::imageDepth(&m_sceneRender.renderFbo, xOffset, yOffset, xStep, yStep, uniforms.activeCamera->getFarClip(), uniforms.activeCamera->getNearClip());
-                vera::text("u_sceneDepth", xOffset - xStep, vera::getWindowHeight() - yOffset - yStep);
-                yOffset -= yStep * 2.0;
-                vera::fill(1.0);
-            }
-        }
-        TRACK_END("renderUI:buffers")
-    }
-
-    if (m_plot != PLOT_OFF && m_plot_texture ) {
-        glDisable(GL_DEPTH_TEST);
-        TRACK_BEGIN("renderUI:plot_data")
-
-        float p = vera::getPixelDensity();
-        float w = 100 * p;
-        float h = 30 * p;
-        float x = (float)(vera::getWindowWidth()) * 0.5;
-        float y = h + 10;
-
-        m_plot_shader.use();
-        m_plot_shader.setUniform("u_scale", w, h);
-        m_plot_shader.setUniform("u_translate", x, y);
-        m_plot_shader.setUniform("u_resolution", (float)vera::getWindowWidth(), (float)vera::getWindowHeight());
-        m_plot_shader.setUniform("u_viewport", w, h);
-        m_plot_shader.setUniform("u_model", glm::vec3(1.0f));
-        m_plot_shader.setUniform("u_modelMatrix", glm::mat4(1.0f));
-        m_plot_shader.setUniform("u_viewMatrix", glm::mat4(1.0f));
-        m_plot_shader.setUniform("u_projectionMatrix", glm::mat4(1.0f));
-        m_plot_shader.setUniform("u_modelViewProjectionMatrix", vera::getOrthoMatrix());
-        m_plot_shader.setUniformTexture("u_plotData", m_plot_texture, 0);
-        
-        vera::getBillboard()->render(&m_plot_shader);
-        TRACK_END("renderUI:plot_data")
-    }
-
-    if (cursor && vera::getMouseEntered()) {
-        TRACK_BEGIN("renderUI:cursor")
-        if (m_cross_vbo == nullptr)
-            m_cross_vbo = std::unique_ptr<vera::Vbo>(new vera::Vbo( vera::crossMesh( glm::vec3(0.0f, 0.0f, 0.0f), 10.0f) ));
-
-        vera::Shader* fill = vera::getFillShader();
-        fill->use();
-        fill->setUniform("u_modelViewProjectionMatrix", glm::translate(vera::getOrthoMatrix(), glm::vec3(vera::getMouseX(), vera::getMouseY(), 0.0f) ) );
-        fill->setUniform("u_color", glm::vec4(1.0f));
-        m_cross_vbo->render(fill);
-        TRACK_END("renderUI:cursor")
-    }
-
-    if (frag_index == -1 && vert_index == -1 && geom_index == -1 && vera::getWindowStyle() != vera::EMBEDDED) {
-        float w = (float)(vera::getWindowWidth());
-        float h = (float)(vera::getWindowHeight());
-        float xStep = w * 0.05;
-        float yStep = h * 0.05;
-        float x = xStep * 2.0f;
-        float y = yStep * 3.0f;
-
-        vera::Camera *cam = vera::getCamera();
-        vera::resetCamera();
-
-        vera::fill(0.0f, 0.0f, 0.0f, 0.75f);
-        vera::noStroke();
-        vera::rect(glm::vec2(w * 0.5f, h * 0.5f), glm::vec2(w - xStep * 2.0f, h - yStep * 2.0f));
-
-        vera::fill(1.0f);
-
-        vera::textAngle(0.0f);
-        vera::textAlign(vera::ALIGN_MIDDLE);
-        vera::textAlign(vera::ALIGN_CENTER);
-
-        vera::textSize(38.0f);
-        vera::text("Drag & Drop", w * 0.5f, h * 0.45f);
-
-        vera::textSize(22.0f);
-        vera::text(".vert .frag .ply .lst .obj .gltf .glb", w * 0.5f, h * 0.55f);
-
-        vera::setCamera(cam);
-    }
-
-    if (help) {
-        float w = (float)(vera::getWindowWidth());
-        float h = (float)(vera::getWindowHeight());
-        float xStep = w * 0.05;
-        float yStep = h * 0.05;
-        float x = xStep * 2.0f;
-        float y = yStep * 3.0f;
-
-        vera::Camera *cam = vera::getCamera();
-        vera::resetCamera();
-
-        vera::fill(0.0f, 0.0f, 0.0f, 0.75f);
-        vera::noStroke();
-        vera::rect(glm::vec2(w * 0.5f, h * 0.5f), glm::vec2(w - xStep * 2.0f, h - yStep * 2.0f));
-
-        vera::fill(1.0f);
-        vera::textAlign(vera::ALIGN_MIDDLE);
-        vera::textAlign(vera::ALIGN_LEFT);
-        vera::textAngle(0.0f);
-        vera::textSize(22.0f);
-        yStep = vera::getFontHeight() * 1.5f;
-
-        if (geom_index != -1) {
-            vera::text("a - " + std::string( m_sceneRender.showAxis? "hide" : "show" ) + " axis", x, y);
-            y += yStep;
-            vera::text("b - " + std::string( m_sceneRender.showBBoxes? "hide" : "show" ) + " bounding boxes", x, y);
-            y += yStep;
-        }
-
-        vera::text("c - hide/show cursor", x, y);
-        y += yStep;
-
-        if (geom_index != -1) {
-            vera::text("d - " + std::string( m_sceneRender.dynamicShadows? "disable" : "enable" ) + " dynamic shadows", x, y);
-            y += yStep;
-            vera::text("f - hide/show floor", x, y);
-            y += yStep;
-        }
-        vera::text("F - " + std::string( vera::isFullscreen() ? "disable" : "enable" ) + " fullscreen", x, y);
-        y += yStep;
-        if (geom_index != -1) {
-            vera::text("g - " + std::string( m_sceneRender.showGrid? "hide" : "show" ) + " grid", x, y);
-            y += yStep;
-        }
-
-        vera::text("h - " + std::string( help? "hide" : "show" ) + " help", x, y);
-        y += yStep;
-        vera::text("i - hide/show extra info", x, y);
-        y += yStep;
-        vera::text("o - open shaders on default editor", x, y);
-        y += yStep;
-        vera::text("p - hide/show render passes/buffers", x, y);
-        y += yStep;
-
-        if (uniforms.streams.size() > 0) {
-            vera::text("r - restart stream textures", x, y);
-            y += yStep;
-        }
-
-        if (geom_index != -1) {
-            vera::text("s - hide/show sky", x, y);
-            y += yStep;
-        }
-
-        vera::text("t - hide/show loaded textures", x, y);
-        y += yStep;
-        vera::text("v - " + std::string( verbose? "disable" : "enable" ) + " verbose", x, y);
-        y += yStep;
-
-        if (uniforms.streams.size() > 0) {
-            vera::text("space - start/stop stream textures", x, y);
-            y += yStep;
-        }
-        
-        vera::setCamera(cam);
-        glDisable(GL_DEPTH_TEST);
-    }
+    if(m_showTextures) { overlay_show_textures (uniforms);}
+    if(m_showPasses) { overlay_show_buffer_passes(uniforms, m_sceneRender, m_postprocessing);}
+    if(display_m_plots){ overlay_plot_data(m_plot_shader, m_plot_texture);}
+    if(diplay_cursor) { overlay_cursor(m_cross_vbo);}
+    if(no_geometry_available) { overlay_prompt_drag_and_drop();}
+    if(help) { overlay_prompt_help(uniforms, m_sceneRender, geom_index, help, verbose);}
 
     TRACK_END("renderUI")
 }
