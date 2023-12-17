@@ -25,3 +25,6 @@ bool checkPostprocessing(const std::string& _source);
 bool checkPositionBuffer(const std::string& _source);
 bool checkNormalBuffer(const std::string& _source);
 int  countSceneBuffers(const std::string& _source);
+
+int  countDevLookBillboards(const std::string& _source);
+int  countDevLookSpheres(const std::string& _source);

@@ -44,7 +44,8 @@ public:
     void            printBuffers();
 
     void            render(Uniforms& _uniforms);
-    void            renderFloor(Uniforms& _uniforms, bool _lights = true);
+    void            renderFloor(Uniforms& _uniforms);
+    void            renderDevLook(Uniforms& _uniforms);
     void            renderBackground(Uniforms& _uniforms);
     void            renderDebug(Uniforms& _uniforms);
     void            renderShadowMap(Uniforms& _uniforms);
@@ -91,6 +92,10 @@ protected:
     float                       m_floor_height;
     int                         m_floor_subd_target;
     int                         m_floor_subd;
+
+    // DevLook
+    std::vector<vera::Model*>   m_devlook_spheres;
+    std::vector<vera::Model*>   m_devlook_billboards;
 
     // UI Grid
     std::unique_ptr<vera::Vbo>  m_grid_vbo;

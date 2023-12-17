@@ -387,6 +387,12 @@ void SceneRender::uniformsInit(Uniforms& _uniforms) {
 void SceneRender::addDefine(const std::string& _define, const std::string& _value) {
     m_background_shader.addDefine(_define, _value);
     m_floor.addDefine(_define, _value);
+
+    for (size_t i = 0; i < m_devlook_spheres.size(); i++)
+        m_devlook_spheres[i]->getShader()->addDefine(_define, _value);
+
+    for (size_t i = 0; i < m_devlook_billboards.size(); i++)
+        m_devlook_billboards[i]->getShader()->addDefine(_define, _value);
 }
 
 void SceneRender::delDefine(const std::string& _define) {
@@ -418,6 +424,20 @@ void SceneRender::printDefines() {
         std::cout << "+------------- " << std::endl;
         m_floor.getShader()->printDefines();
     }
+
+    for (size_t i = 0; i < m_devlook_spheres.size(); i++) {
+        std::cout << "." << std::endl;
+        std::cout << "| DEVLOOK SPHERE " << i << std::endl;
+        std::cout << "+------------- " << std::endl;
+        m_devlook_spheres[i]->getShader()->printDefines();
+    }
+
+    for (size_t i = 0; i < m_devlook_billboards.size(); i++) {
+        std::cout << "." << std::endl;
+        std::cout << "| DEVLOOK BILLBOARD " << i << std::endl;
+        std::cout << "+------------- " << std::endl;
+        m_devlook_billboards[i]->getShader()->printDefines();
+    }
 }
 
 bool SceneRender::loadScene(Uniforms& _uniforms) {
@@ -431,7 +451,6 @@ bool SceneRender::loadScene(Uniforms& _uniforms) {
     }
 
     m_area = glm::max(0.5f, glm::max(glm::length(bbox.min), glm::length(bbox.max)));
-    // m_origin.setPosition( -bbox.getCenter() );
     
     // Floor
     m_floor_height = bbox.min.y;
@@ -500,6 +519,11 @@ void SceneRender::setShaders(Uniforms& _uniforms, const std::string& _fragmentSh
     // Floor
     bool thereIsFloorDefine = checkFloor(_fragmentShader) || checkFloor(_vertexShader);
     if (thereIsFloorDefine) {
+        if (m_floor.getVbo() == nullptr) {
+            m_floor.setName("FLOOR");
+            m_floor.setGeom( vera::planeMesh(1.0f, 1.0f, 2, 2) );
+        }
+
         m_floor.setShader(_fragmentShader, _vertexShader);
 
         if (m_floor_subd == -1)
@@ -522,7 +546,38 @@ void SceneRender::setShaders(Uniforms& _uniforms, const std::string& _fragmentSh
         }
     }
 
-    return;
+    int devLookSpheres = countDevLookSpheres(_fragmentShader);
+    if (devLookSpheres != m_devlook_spheres.size()) {
+        m_devlook_spheres.clear();
+
+        for (int i = 0; i < devLookSpheres; i++) {
+            m_devlook_spheres.push_back( new vera::Model("DEVLOOK_SPHERE_" + vera::toString(i), vera::sphereMesh(24)) );
+
+            m_devlook_spheres[i]->setShader(_fragmentShader, vera::getDefaultSrc(vera::VERT_DEVLOOK_SPHERE));
+            m_devlook_spheres[i]->getShader()->addDefine("DEVLOOK_SPHERE_" + vera::toString(i));
+            m_devlook_spheres[i]->getShader()->addDefine("DEVLOOK_Y_OFFSET", 0.8 - i * 0.35);
+        }
+    }
+    else if (devLookSpheres > 0)
+        for (int i = 0; i < devLookSpheres; i++)
+            m_devlook_spheres[i]->setShader(_fragmentShader, vera::getDefaultSrc(vera::VERT_DEVLOOK_SPHERE));
+
+    int devLookBillboards = countDevLookBillboards(_fragmentShader);
+    if (devLookBillboards != m_devlook_billboards.size()) {
+        m_devlook_billboards.clear();
+
+        for (int i = 0; i < devLookBillboards; i++) {
+            m_devlook_billboards.push_back( new vera::Model("DEVLOOK_BILLBOARD_" + vera::toString(i), vera::planeMesh(1.0f, 1.0f, 2, 2)) );
+
+            m_devlook_billboards[i]->setShader(_fragmentShader, vera::getDefaultSrc(vera::VERT_DEVLOOK_BILLBOARD));
+            m_devlook_billboards[i]->getShader()->addDefine("DEVLOOK_BILLBOARD_" + vera::toString(i));
+            m_devlook_billboards[i]->getShader()->addDefine("DEVLOOK_Y_OFFSET", 0.8 - m_devlook_spheres.size() * 0.35 - i * 0.325);
+        }
+    }
+    else if (devLookBillboards > 0)
+        for (int i = 0; i < devLookBillboards; i++)
+            m_devlook_billboards[i]->setShader(_fragmentShader, vera::getDefaultSrc(vera::VERT_DEVLOOK_BILLBOARD));
+
 }
 
 void SceneRender::updateBuffers(Uniforms& _uniforms, int _width, int _height) {
@@ -585,6 +640,7 @@ void SceneRender::render(Uniforms& _uniforms) {
         // Update Uniforms and textures variables to the shader
         _uniforms.feedTo( it->second->getShader() );
 
+    TRACK_END("render:scene:floor")
         // Pass special uniforms
         it->second->getShader()->setUniform( "u_modelViewProjectionMatrix", vera::getProjectionViewWorldMatrix() * it->second->getTransformMatrix() );
         it->second->getShader()->setUniform( "u_modelMatrix", m_origin.getTransformMatrix() * it->second->getTransformMatrix() );
@@ -596,6 +652,10 @@ void SceneRender::render(Uniforms& _uniforms) {
 
         TRACK_END("render:scene:" + it->second->getName() )
     }
+
+    TRACK_BEGIN("render:scene:devlook")
+    renderDevLook(_uniforms);
+    TRACK_END("render:scene:devlook")
 
     if (m_depth_test)
         glDisable(GL_DEPTH_TEST);
@@ -920,7 +980,7 @@ void SceneRender::renderBackground(Uniforms& _uniforms) {
     }
 }
 
-void SceneRender::renderFloor(Uniforms& _uniforms, bool _lights) {
+void SceneRender::renderFloor(Uniforms& _uniforms) {
     if (m_floor_subd_target >= 0) {
         //  Floor
         if (m_floor_subd_target != m_floor_subd) {
@@ -933,7 +993,7 @@ void SceneRender::renderFloor(Uniforms& _uniforms, bool _lights) {
 
         if (m_floor.getVbo()) {
             m_floor.getShader()->use();
-            _uniforms.feedTo( m_floor.getShader(), _lights );
+            _uniforms.feedTo( m_floor.getShader() );
 
             m_floor.getShader()->setUniform("u_modelViewProjectionMatrix", vera::getProjectionViewWorldMatrix() * m_floor.getTransformMatrix() );
             m_floor.getShader()->setUniform("u_modelMatrix", m_origin.getTransformMatrix() * m_floor.getTransformMatrix() );
@@ -943,6 +1003,26 @@ void SceneRender::renderFloor(Uniforms& _uniforms, bool _lights) {
             
             m_floor.render();
         }
+    }
+}
+
+void SceneRender::renderDevLook(Uniforms& _uniforms) {
+    for (size_t i = 0; i < m_devlook_spheres.size(); i++) {
+        if (m_devlook_spheres[i]->getVbo() == nullptr)
+            continue;
+
+        m_devlook_spheres[i]->getShader()->use();
+        _uniforms.feedTo( m_devlook_spheres[i]->getShader() );
+        m_devlook_spheres[i]->render();
+    }
+
+    for (size_t i = 0; i < m_devlook_billboards.size(); i++) {
+        if (m_devlook_billboards[i]->getVbo() == nullptr)
+            continue;
+
+        m_devlook_billboards[i]->getShader()->use();
+        _uniforms.feedTo( m_devlook_billboards[i]->getShader() );
+        m_devlook_billboards[i]->render();
     }
 }
 
