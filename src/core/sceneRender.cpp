@@ -546,6 +546,7 @@ void SceneRender::setShaders(Uniforms& _uniforms, const std::string& _fragmentSh
         }
     }
 
+    // DevLook
     int devLookSpheres = countDevLookSpheres(_fragmentShader);
     if (devLookSpheres != m_devlook_spheres.size()) {
         m_devlook_spheres.clear();
@@ -889,19 +890,19 @@ void SceneRender::renderShadowMap(Uniforms& _uniforms) {
             
             lit->second->bindShadowMap();
 
-            shadowShader = m_floor.getBufferShader("shadow");
-            if (m_floor.getVbo() && shadowShader != nullptr) {
-                TRACK_BEGIN("render:scene:shadowmap:floor")
-                shadowShader->use();
-                _uniforms.feedTo( shadowShader, false );
-                shadowShader->setUniform( "u_modelViewProjectionMatrix", lit->second->getMVPMatrix( m_origin.getTransformMatrix() * m_floor.getTransformMatrix(), m_area ) );
-                shadowShader->setUniform( "u_projectionMatrix", lit->second->getProjectionMatrix() );
-                shadowShader->setUniform( "u_viewMatrix", lit->second->getViewMatrix() );
-                shadowShader->setUniform( "u_modelMatrix", m_origin.getTransformMatrix() * m_floor.getTransformMatrix() );
-                shadowShader->setUniform( "u_model", m_origin.getPosition() + m_floor.getPosition() );
-                m_floor.render(shadowShader);
-                TRACK_END("render:scene:shadowmap:floor")
-            }
+            // shadowShader = m_floor.getBufferShader("shadow");
+            // if (m_floor.getVbo() && shadowShader != nullptr) {
+            //     TRACK_BEGIN("render:scene:shadowmap:floor")
+            //     shadowShader->use();
+            //     _uniforms.feedTo( shadowShader, false );
+            //     shadowShader->setUniform( "u_modelViewProjectionMatrix", lit->second->getMVPMatrix( m_origin.getTransformMatrix() * m_floor.getTransformMatrix(), m_area ) );
+            //     shadowShader->setUniform( "u_projectionMatrix", lit->second->getProjectionMatrix() );
+            //     shadowShader->setUniform( "u_viewMatrix", lit->second->getViewMatrix() );
+            //     shadowShader->setUniform( "u_modelMatrix", m_origin.getTransformMatrix() * m_floor.getTransformMatrix() );
+            //     shadowShader->setUniform( "u_model", m_origin.getPosition() + m_floor.getPosition() );
+            //     m_floor.render(shadowShader);
+            //     TRACK_END("render:scene:shadowmap:floor")
+            // }
 
             for (vera::ModelsMap::iterator mit = _uniforms.models.begin(); mit != _uniforms.models.end(); ++mit) {
                 shadowShader = mit->second->getBufferShader("shadow");
