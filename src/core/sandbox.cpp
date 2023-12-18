@@ -1343,13 +1343,12 @@ void Sandbox::resetShaders( WatchFileList &_files ) {
     m_flood_total = countFlood( m_frag_source );
 
     // UPDATE Postprocessing
-    bool havePostprocessing = checkPostprocessing( getSource(FRAGMENT) );
-    if (havePostprocessing) {
+    if (checkPostprocessing( getSource(FRAGMENT) )) {
         // Specific defines for this buffer
         m_postprocessing_shader.addDefine("POSTPROCESSING");
         m_postprocessing_shader.setSource(m_frag_source, vera::getDefaultSrc(vera::VERT_BILLBOARD));
-        uniforms.functions["u_scene"].present = havePostprocessing;
-        m_postprocessing = havePostprocessing;
+        uniforms.functions["u_scene"].present = true;
+        m_postprocessing = true;
     }
     else if (lenticular.size() > 0) {
         m_postprocessing_shader.setSource(vera::getLenticularFragShader(vera::getVersion()), vera::getDefaultSrc(vera::VERT_BILLBOARD));
@@ -2001,7 +2000,7 @@ void Sandbox::renderUI() {
         nTotal += uniforms.doubleBuffers.size();
         nTotal += uniforms.pyramids.size();
         nTotal += uniforms.floods.size();
-        if (m_postprocessing && uniforms.models.size() > 0 ) {
+        if (uniforms.models.size() > 0 ) {
             nTotal += 1;
             nTotal += uniforms.functions["u_scene"].present;
             nTotal += uniforms.functions["u_sceneDepth"].present;
@@ -2074,7 +2073,7 @@ void Sandbox::renderUI() {
 
                 }
 
-                // vera::text("u_pyramid0" + vera::toString(i), xOffset - scale.x * 2.0, vera::getWindowHeight() - yOffset - yStep);
+                vera::text("u_pyramid0" + vera::toString(i), xOffset - scale.x * 2.0, vera::getWindowHeight() - yOffset - yStep);
                 yOffset -= yStep * 2.0;
 
             }
@@ -2094,7 +2093,7 @@ void Sandbox::renderUI() {
             if (uniforms.models.size() > 0) {
                 vera::fill(0.0);
                 for (vera::LightsMap::iterator it = uniforms.lights.begin(); it != uniforms.lights.end(); ++it ) {
-                    if ( it->second->getShadowMap()->getDepthTextureId() ) {
+                    if ( it->second->getShadowMap()->isAllocated() && it->second->getShadowMap()->getDepthTextureId() ) {
                         vera::imageDepth(it->second->getShadowMap(), xOffset, yOffset, xStep, yStep, it->second->getShadowMapFar(), it->second->getShadowMapNear());
                         // vera::image(it->second->getShadowMap(), xOffset, yOffset, xStep, yStep);
                         vera::text("u_lightShadowMap", xOffset - xStep, vera::getWindowHeight() - yOffset - yStep);
@@ -2498,12 +2497,10 @@ void Sandbox::onViewportResize(int _newWidth, int _newHeight) {
         }
     }
 
-    if (m_postprocessing || m_plot == PLOT_LUMA || m_plot == PLOT_RGB || m_plot == PLOT_RED || m_plot == PLOT_GREEN || m_plot == PLOT_BLUE ) {
-        if (quilt_resolution >= 0)
-            m_sceneRender.updateBuffers(uniforms, vera::getQuiltWidth(), vera::getQuiltHeight());
-        else 
-            m_sceneRender.updateBuffers(uniforms, _newWidth, _newHeight);
-    }
+    if (quilt_resolution >= 0)
+        m_sceneRender.updateBuffers(uniforms, vera::getQuiltWidth(), vera::getQuiltHeight());
+    else 
+        m_sceneRender.updateBuffers(uniforms, _newWidth, _newHeight);
 
     if (screenshotFile != "" || isRecording()) 
         m_record_fbo.allocate(_newWidth, _newHeight, vera::COLOR_TEXTURE_DEPTH_BUFFER);

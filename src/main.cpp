@@ -1838,6 +1838,32 @@ void commandsInit() {
         return true;
     }, "sphere[,<RESOLUTION>]", "add sphere mesh"));
 
+    commands.push_back(Command("pcl_sphere", [&](const std::string & line) {
+        std::vector<std::string> values = vera::split(line,',');
+        int resolution = 24;
+
+        if (values.size() > 1)
+            resolution  = vera::toInt(values[1]);
+        vera::Mesh mesh = vera::sphereMesh(resolution);
+        mesh.setDrawMode(vera::POINTS);
+
+        sandbox.loadModel( new vera::Model("pcl_sphere", mesh) );
+
+        #if defined(__EMSCRIPTEN__)
+        // Commands are parse in the main GL loop in EMSCRIPTEN,
+        // there is no risk to reload shaders outside main GL thread
+        sandbox.resetShaders(files);
+        #else
+        // Reloading shaders can't be done directly on multi-thread (event thread)
+        // to solve that, we trigger reloading by flagging changes on all files
+        // witch signal the main GL thread to reload assets
+        for (size_t i = 0; i < files.size(); i++)
+            files[i].lastChange = 0;
+        #endif
+
+        return true;
+    }, "pcl_sphere[,<RESOLUTION>]", "add sphere mesh"));
+
     commands.push_back(Command("icosphere", [&](const std::string & line) {
         std::vector<std::string> values = vera::split(line,',');
         int resolution = 3;

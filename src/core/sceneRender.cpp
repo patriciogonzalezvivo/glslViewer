@@ -458,7 +458,7 @@ bool SceneRender::loadScene(Uniforms& _uniforms) {
     m_floor.addDefine("MODEL_VERTEX_COLOR", "v_color");
     m_floor.addDefine("MODEL_VERTEX_NORMAL", "v_normal");
     m_floor.addDefine("MODEL_VERTEX_TEXCOORD","v_texcoord");
-    m_floor.setShader(vera::getDefaultSrc(vera::FRAG_DEFAULT_SCENE), vera::getDefaultSrc(vera::VERT_DEFAULT_SCENE));
+    // m_floor.setShader(vera::getDefaultSrc(vera::FRAG_DEFAULT_SCENE), vera::getDefaultSrc(vera::VERT_DEFAULT_SCENE));
 
     // Cubemap
     m_cubemap_shader.setSource(vera::getDefaultSrc(vera::FRAG_CUBEMAP), vera::getDefaultSrc(vera::VERT_CUBEMAP));
@@ -479,8 +479,6 @@ bool SceneRender::clearScene() {
 }
 
 void SceneRender::setShaders(Uniforms& _uniforms, const std::string& _fragmentShader, const std::string& _vertexShader) {
-    // bool something_fail = false;
-
     // Background
     m_background = checkBackground(_fragmentShader);
     if (m_background) {
@@ -490,16 +488,16 @@ void SceneRender::setShaders(Uniforms& _uniforms, const std::string& _fragmentSh
         m_background_shader.addDefine("GLSLVIEWER", vera::toString(GLSLVIEWER_VERSION_MAJOR) + vera::toString(GLSLVIEWER_VERSION_MINOR) + vera::toString(GLSLVIEWER_VERSION_PATCH) );
     }
 
+    bool position_buffer = findId(_fragmentShader, "u_scenePosition;");
+    bool normal_buffer = findId(_fragmentShader, "u_sceneNormal;");
     m_shadows = findId(_fragmentShader, "u_lightShadowMap;");
-    bool position_buffer = findId(_fragmentShader, "u_scenePosition;");// _uniforms.functions["u_scenePosition"].present;
-    bool normal_buffer = findId(_fragmentShader, "u_sceneNormal;"); //_uniforms.functions["u_sceneNormal"].present; 
     m_buffers_total = std::max( countSceneBuffers(_vertexShader), 
                                 countSceneBuffers(_fragmentShader) );
 
     for (vera::ModelsMap::iterator it = _uniforms.models.begin(); it != _uniforms.models.end(); ++it) {
         it->second->setShader( _fragmentShader, _vertexShader);
 
-        if (m_shadows) {}
+        if (m_shadows)
             it->second->setBufferShader("shadow", vera::getDefaultSrc(vera::FRAG_ERROR), _vertexShader);
 
         if (position_buffer)
@@ -601,8 +599,8 @@ void SceneRender::updateBuffers(Uniforms& _uniforms, int _width, int _height) {
         positionFbo.allocate(_width, _height, vera::GBUFFER_TEXTURE);
 
     for (size_t i = 0; i < buffersFbo.size(); i++)
-        if (buffersFbo[i]->isAllocated() ||
-            buffersFbo[i]->getWidth() != _width || buffersFbo[i]->getHeight() )
+        if ( !buffersFbo[i]->isAllocated() ||
+            buffersFbo[i]->getWidth() != _width || buffersFbo[i]->getHeight() != _height)
             buffersFbo[i]->allocate(_width, _height, vera::GBUFFER_TEXTURE);
 }
 
@@ -639,13 +637,13 @@ void SceneRender::render(Uniforms& _uniforms) {
         it->second->getShader()->use();
 
         // Update Uniforms and textures variables to the shader
-        _uniforms.feedTo( it->second->getShader() );
+        _uniforms.feedTo( it->second->getShader(), true, true );
 
-    TRACK_END("render:scene:floor")
         // Pass special uniforms
         it->second->getShader()->setUniform( "u_modelViewProjectionMatrix", vera::getProjectionViewWorldMatrix() * it->second->getTransformMatrix() );
         it->second->getShader()->setUniform( "u_modelMatrix", m_origin.getTransformMatrix() * it->second->getTransformMatrix() );
         it->second->getShader()->setUniform( "u_model", m_origin.getPosition() + m_floor.getPosition() );
+
         for (size_t i = 0; i < buffersFbo.size(); i++)
             it->second->getShader()->setUniformTexture("u_sceneBuffer" + vera::toString(i), buffersFbo[i], it->second->getShader()->textureIndex++);
 
@@ -810,7 +808,8 @@ void SceneRender::renderBuffers(Uniforms& _uniforms) {
     vera::Shader* bufferShader = nullptr;
     for (size_t i = 0; i < buffersFbo.size(); i++) {
         if (!buffersFbo[i]->isAllocated())
-            continue;;
+            buffersFbo[i]->allocate(vera::getWindowWidth(), vera::getWindowHeight(), vera::GBUFFER_TEXTURE);
+            // continue;;
 
         buffersFbo[i]->bind();
         std::string bufferName = "u_sceneBuffer" + vera::toString(i);
@@ -818,9 +817,6 @@ void SceneRender::renderBuffers(Uniforms& _uniforms) {
         // Begining of DEPTH for 3D 
         if (m_depth_test)
             glEnable(GL_DEPTH_TEST);
-
-        // if (_uniforms.activeCamera->bChange)
-        //     vera::setCamera( _uniforms.activeCamera );
 
         if (_uniforms.activeCamera->bChange || m_origin.bChange) {
             vera::setCamera( _uniforms.activeCamera );
@@ -890,19 +886,19 @@ void SceneRender::renderShadowMap(Uniforms& _uniforms) {
             
             lit->second->bindShadowMap();
 
-            // shadowShader = m_floor.getBufferShader("shadow");
-            // if (m_floor.getVbo() && shadowShader != nullptr) {
-            //     TRACK_BEGIN("render:scene:shadowmap:floor")
-            //     shadowShader->use();
-            //     _uniforms.feedTo( shadowShader, false );
-            //     shadowShader->setUniform( "u_modelViewProjectionMatrix", lit->second->getMVPMatrix( m_origin.getTransformMatrix() * m_floor.getTransformMatrix(), m_area ) );
-            //     shadowShader->setUniform( "u_projectionMatrix", lit->second->getProjectionMatrix() );
-            //     shadowShader->setUniform( "u_viewMatrix", lit->second->getViewMatrix() );
-            //     shadowShader->setUniform( "u_modelMatrix", m_origin.getTransformMatrix() * m_floor.getTransformMatrix() );
-            //     shadowShader->setUniform( "u_model", m_origin.getPosition() + m_floor.getPosition() );
-            //     m_floor.render(shadowShader);
-            //     TRACK_END("render:scene:shadowmap:floor")
-            // }
+            shadowShader = m_floor.getBufferShader("shadow");
+            if (m_floor.getVbo() && shadowShader != nullptr) {
+                TRACK_BEGIN("render:scene:shadowmap:floor")
+                shadowShader->use();
+                _uniforms.feedTo( shadowShader, false );
+                shadowShader->setUniform( "u_modelViewProjectionMatrix", lit->second->getMVPMatrix( m_origin.getTransformMatrix() * m_floor.getTransformMatrix(), m_area ) );
+                shadowShader->setUniform( "u_projectionMatrix", lit->second->getProjectionMatrix() );
+                shadowShader->setUniform( "u_viewMatrix", lit->second->getViewMatrix() );
+                shadowShader->setUniform( "u_modelMatrix", m_origin.getTransformMatrix() * m_floor.getTransformMatrix() );
+                shadowShader->setUniform( "u_model", m_origin.getPosition() + m_floor.getPosition() );
+                m_floor.render(shadowShader);
+                TRACK_END("render:scene:shadowmap:floor")
+            }
 
             for (vera::ModelsMap::iterator mit = _uniforms.models.begin(); mit != _uniforms.models.end(); ++mit) {
                 shadowShader = mit->second->getBufferShader("shadow");
@@ -941,8 +937,8 @@ void SceneRender::renderBackground(Uniforms& _uniforms) {
         m_background_shader.use();
         m_background_shader.setUniform("u_modelMatrix", glm::mat4(1.0));
         m_background_shader.setUniform("u_viewMatrix", glm::mat4(1.0));
-        // m_background_shader.setUniform("u_projectionMatrix", glm::mat4(1.0));
-        // m_background_shader.setUniform("u_modelViewProjectionMatrix", glm::mat4(1.0));
+        m_background_shader.setUniform("u_projectionMatrix", glm::mat4(1.0));
+        m_background_shader.setUniform("u_modelViewProjectionMatrix", glm::mat4(1.0));
 
         // Update Uniforms and textures
         _uniforms.feedTo( &m_background_shader );
@@ -994,14 +990,17 @@ void SceneRender::renderFloor(Uniforms& _uniforms) {
 
         if (m_floor.getVbo()) {
             m_floor.getShader()->use();
-            _uniforms.feedTo( m_floor.getShader() );
+
+            _uniforms.feedTo( m_floor.getShader(), true, true );
 
             m_floor.getShader()->setUniform("u_modelViewProjectionMatrix", vera::getProjectionViewWorldMatrix() * m_floor.getTransformMatrix() );
             m_floor.getShader()->setUniform("u_modelMatrix", m_origin.getTransformMatrix() * m_floor.getTransformMatrix() );
             m_floor.getShader()->setUniform("u_model", m_origin.getPosition() + m_floor.getPosition() );
-            // for (size_t i = 0; i < buffersFbo.size(); i++)
-            //     m_floor.getShader()->setUniformTexture("u_sceneBuffer" + vera::toString(i), &(buffersFbo[i]), m_floor.getShader()->textureIndex++);
-            
+
+            for (size_t i = 0; i < buffersFbo.size(); i++)
+                m_floor.getShader()->setUniformTexture("u_sceneBuffer" + vera::toString(i), buffersFbo[i], m_floor.getShader()->textureIndex++);
+
+
             m_floor.render();
         }
     }
@@ -1043,12 +1042,10 @@ void SceneRender::renderDebug(Uniforms& _uniforms) {
             vera::model( it->second->getVboBbox() );
         }
 
-        // if (vera::getWindowStyle() != vera::EMBEDDED) {
-            vera::resetMatrix();
-            vera::fill(.8f);
-            vera::textSize(24.0f);
-            vera::labels();
-        // }
+        vera::resetMatrix();
+        vera::fill(.8f);
+        vera::textSize(24.0f);
+        vera::labels();
     }
     
     // Axis
