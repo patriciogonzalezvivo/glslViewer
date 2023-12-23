@@ -1994,7 +1994,12 @@ void printUsage(char * executableName) {
     std::cerr << "      -s  or --size <pixels>      # set width and height of the window" << std::endl;
     std::cerr << "      -w  or --width <pixels>     # set the width of the window" << std::endl;
     std::cerr << "      -h  or --height <pixels>    # set the height of the window" << std::endl;
+#if defined(DRIVER_GBM) 
     std::cerr << "      -d  or --display <display>  # open specific display port. Ex: -d /dev/dri/card1" << std::endl;
+#endif
+#if !defined(DRIVER_GLFW)
+    std::cerr << "      -m  or --mouse <mouse>      # open specific mouse port. Ex: -d /dev/input/mice" << std::endl;
+#endif
     std::cerr << "      -f  or --fullscreen         # load the window in fullscreen" << std::endl;
     std::cerr << "      -l  or --life-coding        # live code mode, where the billboard is allways visible" << std::endl;
     std::cerr << "      -ss or --screensaver        # screensaver mode, any pressed key will exit" << std::endl;
