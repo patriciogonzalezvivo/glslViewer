@@ -251,7 +251,7 @@ int main(int argc, char **argv) {
             else
                 std::cout << "Argument '" << argument << "' should be followed by a <pixels>. Skipping argument." << std::endl;
         }
-        #if defined(DRIVER_GBM) 
+        #if defined(DRIVER_DRM) 
         else if (   argument == "-d"    || argument == "-display"       || argument == "--display") {
             if (++i < argc)
                 window_properties.display = std::string(argv[i]);
@@ -274,7 +274,7 @@ int main(int argc, char **argv) {
             std::cout << version << std::endl;
         }
         else if (   argument == "-l"        || argument == "-life-coding"   || argument == "--life-coding" ){
-            #if defined(DRIVER_BROADCOM) || defined(DRIVER_GBM) 
+            #if defined(DRIVER_BROADCOM) || defined(DRIVER_DRM) 
                 window_properties.screen_x = window_properties.screen_width - 512;
                 window_properties.screen_width = window_properties.screen_height = 512;
             #else
@@ -390,7 +390,7 @@ int main(int argc, char **argv) {
                     argument == "-s"        || argument == "-size"          || argument == "--size"     ||
                     argument == "-w"        || argument == "-width"         || argument == "--width"    ||
                     argument == "-h"        || argument == "-height"        || argument == "--height"   ||
-                #if defined(DRIVER_GBM) 
+                #if defined(DRIVER_DRM) 
                     argument == "-d"        || argument == "-display"       || argument == "--display"  ||
                 #endif
                 #if !defined(DRIVER_GLFW)
@@ -1994,7 +1994,7 @@ void printUsage(char * executableName) {
     std::cerr << "      -s  or --size <pixels>      # set width and height of the window" << std::endl;
     std::cerr << "      -w  or --width <pixels>     # set the width of the window" << std::endl;
     std::cerr << "      -h  or --height <pixels>    # set the height of the window" << std::endl;
-#if defined(DRIVER_GBM) 
+#if defined(DRIVER_DRM) 
     std::cerr << "      -d  or --display <display>  # open specific display port. Ex: -d /dev/dri/card1" << std::endl;
 #endif
 #if !defined(DRIVER_GLFW)
