@@ -20,7 +20,7 @@ if(MSVC)
     add_definitions( -DPLATFORM_WINDOWS )
 endif()
 
-if (NO_X11 OR FORCE_GBM)
+if (NO_X11 OR FORCE_DRM)
     add_compile_options(-std=c++14 -DGLM_FORCE_CXX14 -fpermissive -Wno-psabi -lpthread)
 endif()
 
