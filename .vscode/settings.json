@@ -104,7 +104,9 @@
         "__bits": "cpp",
         "coroutine": "cpp",
         "any": "cpp",
-        "charconv": "cpp"
+        "charconv": "cpp",
+        "span": "cpp",
+        "format": "cpp"
     },
     "cmake.configureOnOpen": false
 }

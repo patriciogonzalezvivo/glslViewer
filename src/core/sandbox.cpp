@@ -1165,18 +1165,16 @@ void Sandbox::loadAssets(WatchFileList &_files) {
     }
 
     // Prepare viewport
-    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
-
-    glDisable(GL_DEPTH_TEST);
+    vera::setDepthTest(false);
     glFrontFace(GL_CCW);
 
     // Turn on Alpha blending
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_DST_ALPHA);
+    // glEnable(GL_BLEND);
+    // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_DST_ALPHA);
+    vera::blendMode(vera::BLEND_ALPHA);
 
     // Clear the background
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    vera::clear(0.0f);
 
     addDefine("GLSLVIEWER", vera::toString(GLSLVIEWER_VERSION_MAJOR) + vera::toString(GLSLVIEWER_VERSION_MINOR) + vera::toString(GLSLVIEWER_VERSION_PATCH) );
     if (uniforms.activeCubemap) {
@@ -1682,8 +1680,7 @@ void Sandbox::_renderBuffers() {
 
         m_pyramid_fbos[i].unbind();
 
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        vera::blendMode(vera::BLEND_ALPHA);
         uniforms.pyramids[i].process(&m_pyramid_fbos[i]);
 
         TRACK_END("render:pyramid" + vera::toString(i))
@@ -1721,8 +1718,7 @@ void Sandbox::_renderBuffers() {
 
         uniforms.floods[i].dst->unbind();
 
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        vera::blendMode(vera::BLEND_ALPHA);
         uniforms.floods[i].process();
 
         TRACK_END("render:flood" + vera::toString(i))
@@ -1738,8 +1734,7 @@ void Sandbox::_renderBuffers() {
     
     m_update_buffers = false;
 
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    vera::blendMode(vera::BLEND_ALPHA);
 }
 
 void Sandbox::renderPrep() {
@@ -1952,12 +1947,14 @@ void Sandbox::renderPost() {
 void Sandbox::renderUI() {
     TRACK_BEGIN("renderUI")
 
+    vera::resetCamera();
+
     // // IN PUT TEXTURES
     if (m_showTextures) {      
 
         int nTotal = uniforms.textures.size();
         if (nTotal > 0) {
-            glDisable(GL_DEPTH_TEST);
+            vera::setDepthTest(false);
             TRACK_BEGIN("renderUI:textures")
             float w = (float)(vera::getWindowWidth());
             float h = (float)(vera::getWindowHeight());
@@ -1992,7 +1989,7 @@ void Sandbox::renderUI() {
 
     // RESULTING BUFFERS
     if (m_showPasses) {
-        glDisable(GL_DEPTH_TEST);
+        vera::setDepthTest(false);
         TRACK_BEGIN("renderUI:buffers")
 
         // DEBUG BUFFERS
@@ -2140,7 +2137,7 @@ void Sandbox::renderUI() {
     }
 
     if (m_plot != PLOT_OFF && m_plot_texture ) {
-        glDisable(GL_DEPTH_TEST);
+        vera::setDepthTest(false);
         TRACK_BEGIN("renderUI:plot_data")
 
         float p = vera::getPixelDensity();
@@ -2172,7 +2169,7 @@ void Sandbox::renderUI() {
 
         vera::Shader* fill = vera::getFillShader();
         fill->use();
-        fill->setUniform("u_modelViewProjectionMatrix", glm::translate(vera::getOrthoMatrix(), glm::vec3(vera::getMouseX(), vera::getMouseY(), 0.0f) ) );
+        fill->setUniform("u_modelViewProjectionMatrix", glm::translate(vera::getOrthoMatrix(), glm::vec3(vera::getMouseX(), vera::getWindowHeight() - vera::getMouseY(), 0.0f) ) );
         fill->setUniform("u_color", glm::vec4(1.0f));
         m_cross_vbo->render(fill);
         TRACK_END("renderUI:cursor")
@@ -2283,7 +2280,7 @@ void Sandbox::renderUI() {
         }
         
         vera::setCamera(cam);
-        glDisable(GL_DEPTH_TEST);
+        vera::setDepthTest(false);
     }
 
     TRACK_END("renderUI")

@@ -615,7 +615,7 @@ void SceneRender::render(Uniforms& _uniforms) {
 
     // Begining of DEPTH for 3D 
     if (m_depth_test)
-        glEnable(GL_DEPTH_TEST);
+        vera::setDepthTest(true);
 
     vera::blendMode(m_blend);
 
@@ -657,13 +657,13 @@ void SceneRender::render(Uniforms& _uniforms) {
     TRACK_END("render:scene:devlook")
 
     if (m_depth_test)
-        glDisable(GL_DEPTH_TEST);
+        vera::setDepthTest(false);
 
     if (m_blend != 0)
         vera::blendMode(vera::BLEND_ALPHA);
 
     if (m_culling != 0)
-        glDisable(GL_CULL_FACE);
+        vera::cullingMode(vera::CULL_NONE);
 }
 
 void SceneRender::renderNormalBuffer(Uniforms& _uniforms) {
@@ -674,7 +674,7 @@ void SceneRender::renderNormalBuffer(Uniforms& _uniforms) {
 
     // Begining of DEPTH for 3D 
     if (m_depth_test)
-        glEnable(GL_DEPTH_TEST);
+        vera::setDepthTest(true);
 
     if (_uniforms.activeCamera->bChange || m_origin.bChange) {
         vera::setCamera( _uniforms.activeCamera );
@@ -720,10 +720,10 @@ void SceneRender::renderNormalBuffer(Uniforms& _uniforms) {
     }
 
     if (m_depth_test)
-        glDisable(GL_DEPTH_TEST);
+        vera::setDepthTest(false);
 
     if (m_culling != 0)
-        glDisable(GL_CULL_FACE);
+        vera::cullingMode(vera::CULL_NONE);
 
     normalFbo.unbind();
 }
@@ -736,7 +736,7 @@ void SceneRender::renderPositionBuffer(Uniforms& _uniforms) {
 
     // Begining of DEPTH for 3D 
     if (m_depth_test)
-        glEnable(GL_DEPTH_TEST);
+        vera::setDepthTest(true);
 
     if (_uniforms.activeCamera->bChange || m_origin.bChange) {
         vera::setCamera( _uniforms.activeCamera );
@@ -782,10 +782,10 @@ void SceneRender::renderPositionBuffer(Uniforms& _uniforms) {
     }
 
     if (m_depth_test)
-        glDisable(GL_DEPTH_TEST);
+        vera::setDepthTest(false);
 
     if (m_culling != 0)
-        glDisable(GL_CULL_FACE);
+        vera::cullingMode(vera::CULL_NONE);
 
     positionFbo.unbind();
 }
@@ -816,7 +816,7 @@ void SceneRender::renderBuffers(Uniforms& _uniforms) {
 
         // Begining of DEPTH for 3D 
         if (m_depth_test)
-            glEnable(GL_DEPTH_TEST);
+            vera::setDepthTest(true);
 
         if (_uniforms.activeCamera->bChange || m_origin.bChange) {
             vera::setCamera( _uniforms.activeCamera );
@@ -862,10 +862,10 @@ void SceneRender::renderBuffers(Uniforms& _uniforms) {
         }
 
         if (m_depth_test)
-            glDisable(GL_DEPTH_TEST);
+            vera::setDepthTest(false);
 
         if (m_culling != 0)
-            glDisable(GL_CULL_FACE);
+            vera::cullingMode(vera::CULL_NONE);
 
         buffersFbo[i]->unbind();
     }
@@ -932,7 +932,7 @@ void SceneRender::renderShadowMap(Uniforms& _uniforms) {
 void SceneRender::renderBackground(Uniforms& _uniforms) {
     if (m_background) {
         TRACK_BEGIN("render:scene:background")
-        glDisable(GL_DEPTH_TEST);
+        vera::setDepthTest(false);
 
         m_background_shader.use();
         m_background_shader.setUniform("u_modelMatrix", glm::mat4(1.0));
@@ -952,7 +952,7 @@ void SceneRender::renderBackground(Uniforms& _uniforms) {
         if (showCubebox && _uniforms.activeCubemap->loaded()) {
             TRACK_BEGIN("render:scene:cubemap")
 
-            glDisable(GL_DEPTH_TEST);
+            vera::setDepthTest(false);
 
             if (!m_cubemap_vbo)
                 m_cubemap_vbo = std::unique_ptr<vera::Vbo>(new vera::Vbo( vera::cubeMesh(1.0f) ));
@@ -1027,7 +1027,7 @@ void SceneRender::renderDevLook(Uniforms& _uniforms) {
 }
 
 void SceneRender::renderDebug(Uniforms& _uniforms) {
-    glEnable(GL_DEPTH_TEST);
+    vera::setDepthTest(true);
     vera::blendMode(vera::BLEND_ALPHA);
 
     vera::Shader* fill = vera::getFillShader();
@@ -1087,5 +1087,5 @@ void SceneRender::renderDebug(Uniforms& _uniforms) {
     }
 
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glDisable(GL_DEPTH_TEST);
+    vera::setDepthTest(false);
 }
