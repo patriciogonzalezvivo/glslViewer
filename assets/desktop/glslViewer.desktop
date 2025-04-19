@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=3.1.0
+Name=GlslViewer
+Name[en_GB]=GlslViewer
+GenericName=Glsl shader sandbox
+GenericName[en_GB]=Glsl shader sandbox
+Comment=Shader sandbox for 2D and 3D
+Type=Application
+Exec=glslViewer %f --msaa -e dynamic_shadows,on
+Terminal=true
+MimeType=model/lst;model/ply;model/obj;model/gltf-binary;model/gltf+json
+Categories=Graphics;3DGraphics;Viewer;
+Icon=glslViewer
