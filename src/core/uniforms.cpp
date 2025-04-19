@@ -80,7 +80,7 @@ UniformFunction::UniformFunction(const std::string &_type, std::function<void(ve
 }
 
 
-Uniforms::Uniforms() : m_frame(0), m_play(true), m_change(false) {
+Uniforms::Uniforms() : m_frame(0), m_play(true) {
 
     activeCubemap = nullptr;
 
@@ -248,7 +248,7 @@ bool Uniforms::feedTo(vera::Shader *_shader, bool _lights, bool _buffers ) {
     }
 
     // Pass user defined uniforms (only if the shader code or scene had changed)
-    // if (m_change) 
+    // if (m_changed) 
     {
         for (UniformDataMap::iterator it = data.begin(); it != data.end(); ++it) {
             _shader->setUniform(it->first, it->second.value.data(), it->second.size);
@@ -346,51 +346,29 @@ bool Uniforms::feedTo(vera::Shader *_shader, bool _lights, bool _buffers ) {
 }
 
 void Uniforms::flagChange() {
-    m_change = true;
-
-    if (activeCamera)
-        activeCamera->bChange = true;
+    Scene::flagChange();
 
     // Flag all user uniforms as changed
     for (UniformDataMap::iterator it = data.begin(); it != data.end(); ++it)
         it->second.change = true;
 }
 
-void Uniforms::unflagChange() {
-    if (m_change) {
-        m_change = false;
-
-        // Flag all user uniforms as NOT changed
-        for (UniformDataMap::iterator it = data.begin(); it != data.end(); ++it)
-            m_change += it->second.check();
-    }
-
-    for (vera::LightsMap::iterator it = lights.begin(); it != lights.end(); ++it)
-        it->second->bChange = false;
-
-    if (activeCamera)
-        activeCamera->bChange = false;
+void Uniforms::resetChange() {
+    Scene::resetChange();
+    
+    // Flag all user uniforms as NOT changed
+    for (UniformDataMap::iterator it = data.begin(); it != data.end(); ++it)
+        m_changed += it->second.check();
 }
 
-bool Uniforms::haveChange() { 
-    if (activeCamera)
-        if (activeCamera->bChange)
-            return true;
-            
+bool Uniforms::haveChange() {             
     if (functions["u_time"].present || 
         functions["u_date"].present ||
         functions["u_delta"].present ||
         functions["u_mouse"].present)
         return true;
 
-    for (vera::LightsMap::const_iterator it = lights.begin(); it != lights.end(); ++it)
-        if (it->second->bChange)
-            return true;
-
-    if (m_change || streams.size() > 0)
-        return true;
-
-    return false;
+    return Scene::haveChange();
 }
 
 void Uniforms::checkUniforms( const std::string &_vert_src, const std::string &_frag_src ) {
@@ -401,7 +379,7 @@ void Uniforms::checkUniforms( const std::string &_vert_src, const std::string &_
         bool present = ( findId(_vert_src, name.c_str()) || findId(_frag_src, name.c_str()) || findId(_frag_src, arrayName.c_str()) );
         if ( it->second.present != present ) {
             it->second.present = present;
-            m_change = true;
+            m_changed = true;
         } 
     }
 }
@@ -410,7 +388,7 @@ void Uniforms::set(const std::string& _name, float _value) {
     UniformValue value;
     value[0] = _value;
     data[_name].set(value, 1, false);
-    m_change = true;
+    m_changed = true;
 }
 
 void Uniforms::set(const std::string& _name, float _x, float _y) {
@@ -418,7 +396,7 @@ void Uniforms::set(const std::string& _name, float _x, float _y) {
     value[0] = _x;
     value[1] = _y;
     data[_name].set(value, 2, false);
-    m_change = true;
+    m_changed = true;
 }
 
 void Uniforms::set(const std::string& _name, float _x, float _y, float _z) {
@@ -427,7 +405,7 @@ void Uniforms::set(const std::string& _name, float _x, float _y, float _z) {
     value[1] = _y;
     value[2] = _z;
     data[_name].set(value, 3, false);
-    m_change = true;
+    m_changed = true;
 }
 
 void Uniforms::set(const std::string& _name, float _x, float _y, float _z, float _w) {
@@ -437,7 +415,7 @@ void Uniforms::set(const std::string& _name, float _x, float _y, float _z, float
     value[2] = _z;
     value[3] = _w;
     data[_name].set(value, 4, false);
-    m_change = true;
+    m_changed = true;
 }
 
 void Uniforms::set( const std::string& _name, const std::vector<float>& _data, bool _queue) {
@@ -447,14 +425,14 @@ void Uniforms::set( const std::string& _name, const std::vector<float>& _data, b
     for (size_t i = 0; i < N; i++)
         value[i] = _data[i];
     data[_name].set(value, N, false, _queue);
-    m_change = true;
+    m_changed = true;
 }
 
 bool Uniforms::parseLine( const std::string &_line ) {
     std::vector<std::string> values = vera::split(_line,',');
     if (values.size() > 1) {
         data[ values[0] ].parse(values, 1);
-        m_change = true;
+        m_changed = true;
         return true;
     }
     return false;

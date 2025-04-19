@@ -44,7 +44,7 @@ void Engine::draw() {
     //     screenshotFile = "";
     // }
 
-    unflagChange();
+    resetChange();
 
     if (m_plot != PLOT_OFF)
         onPlot();

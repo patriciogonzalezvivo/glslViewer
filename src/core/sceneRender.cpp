@@ -400,16 +400,6 @@ void SceneRender::delDefine(const std::string& _define) {
     m_floor.delDefine(_define);
 }
 
-void SceneRender::flagChange() { 
-    m_origin.bChange = true; 
-}
-bool SceneRender::haveChange() const { 
-    return m_origin.bChange; 
-}
-void SceneRender::unflagChange() {  
-    m_origin.bChange = false; 
-}
-
 void SceneRender::printDefines() {
     if (m_background) {
         std::cout << "." << std::endl;
@@ -451,6 +441,7 @@ bool SceneRender::loadScene(Uniforms& _uniforms) {
     }
 
     m_area = glm::max(0.5f, glm::max(glm::length(bbox.min), glm::length(bbox.max)));
+    m_origin.bChange = true;
     
     // Floor
     m_floor_height = bbox.min.y;
@@ -878,7 +869,7 @@ void SceneRender::renderShadowMap(Uniforms& _uniforms) {
     TRACK_BEGIN("render:scene:shadowmap")
     vera::Shader* shadowShader = nullptr;
     for (vera::LightsMap::iterator lit = _uniforms.lights.begin(); lit != _uniforms.lights.end(); ++lit) {
-        if (dynamicShadows ||  lit->second->bChange || haveChange() ) {
+        if (dynamicShadows ||  lit->second->bChange || m_origin.bChange ) {
             // Temporally move the MVP matrix from the view of the light 
             glm::mat4 m = m_origin.getTransformMatrix();
             // glm::mat4 p = lit->second->getProjectionMatrix();

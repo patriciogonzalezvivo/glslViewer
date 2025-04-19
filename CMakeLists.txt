@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.2)
+cmake_minimum_required(VERSION 3.5)
 
 set(VERSION_MAJOR 3)
 set(VERSION_MINOR 3)
@@ -25,7 +25,7 @@ if (NO_X11 OR FORCE_GBM)
 endif()
 
 set(CORE_HEADERS
-    "${PROJECT_SOURCE_DIR}/src/core/sandbox.h"
+    "${PROJECT_SOURCE_DIR}/src/core/glslViewer.h"
     "${PROJECT_SOURCE_DIR}/src/core/sceneRender.h"
     "${PROJECT_SOURCE_DIR}/src/core/uniforms.h"
     "${PROJECT_SOURCE_DIR}/src/core/tools/command.h"
@@ -39,7 +39,7 @@ set(CORE_HEADERS
 )
 
 set(CORE_SOURCES 
-    "${PROJECT_SOURCE_DIR}/src/core/sandbox.cpp"
+    "${PROJECT_SOURCE_DIR}/src/core/glslViewer.cpp"
     "${PROJECT_SOURCE_DIR}/src/core/sceneRender.cpp"
     "${PROJECT_SOURCE_DIR}/src/core/uniforms.cpp"
     "${PROJECT_SOURCE_DIR}/src/core/tools/console.cpp"

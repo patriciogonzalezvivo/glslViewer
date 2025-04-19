@@ -25,10 +25,10 @@ const std::string plot_options[] = { "off", "luma", "red", "green", "blue", "rgb
 typedef std::vector<vera::Fbo>       FboList;
 typedef std::vector<vera::Shader>    ShaderList;
 
-class Sandbox {
+class GlslViewer {
 public:
-    Sandbox();
-    virtual ~Sandbox();
+    GlslViewer();
+    virtual ~GlslViewer();
     
     // Main stages
     void                loadAssets(WatchFileList &_files);
@@ -39,8 +39,6 @@ public:
     void                setSource(ShaderType _type, const std::string& _source);
     void                resetShaders(WatchFileList &_files);
 
-    void                flagChange();
-    void                unflagChange(); 
     bool                haveChange();
 
     void                renderPrep();
@@ -62,6 +60,7 @@ public:
     
     // Some events
     void                onScroll( float _yoffset );
+    void                onMouseMove( float _x, float _y );
     void                onMouseDrag( float _x, float _y, int _button );
     void                onViewportResize( int _newWidth, int _newHeight );
     void                onFileChange( WatchFileList &_files, int _index );
@@ -155,7 +154,6 @@ protected:
     float                           m_camera_azimuth;
     float                           m_camera_elevation;
     vera::ShaderErrorResolve        m_error_screen;
-    bool                            m_change;
     bool                            m_change_viewport;
     bool                            m_update_buffers;
 

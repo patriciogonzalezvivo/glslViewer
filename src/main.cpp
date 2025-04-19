@@ -21,6 +21,7 @@
 #include "vera/window.h"
 #include "vera/gl/gl.h"
 #include "vera/ops/fs.h"
+#include "vera/ops/draw.h"
 #include "vera/ops/math.h"
 #include "vera/ops/time.h"
 #include "vera/ops/pixel.h"
@@ -30,7 +31,7 @@
 #include "vera/xr/holoPlay.h"
 #include "vera/xr/xr.h"
 
-#include "core/sandbox.h"
+#include "core/glslViewer.h"
 #include "core/tools/files.h"
 #include "core/tools/text.h"
 #include "core/tools/record.h"
@@ -67,7 +68,7 @@ void                        onExit();
 //  - the main shader (in 2D)
 //  - the scene (when 3D geometry or vertex shaders are loaded)
 //  - uniforms (all data pass to the shaders)
-Sandbox                     sandbox;
+GlslViewer                  sandbox;
 
 //  List of FILES to watch (code, images/video or geometry). 
 // This will be use by the sandbox to hot reload or keep track of assets
@@ -137,10 +138,10 @@ EM_BOOL loop (double time, void* userData) {
 #else
 void loop() {
 #endif
-
     // update time/delta/date and input events
     vera::updateGL();
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+
 
     #ifdef __EMSCRIPTEN__
     // Excecute commands in the main loop in WASM/EMSCRIPTEN project because there is no multiple threads
@@ -744,6 +745,7 @@ int main(int argc, char **argv) {
 
     // EVENTs callbacks
     //
+    vera::setMouseMoveCallback(         [&](float _x, float _y) {  sandbox.onMouseMove(_x, _y); } );
     vera::setMouseDragCallback(         [&](float _x, float _y, int _button) {  sandbox.onMouseDrag(_x, _y, _button); } );
     vera::setScrollCallback(            [&](float _yOffset) {                   sandbox.onScroll(_yOffset); } );
     vera::setViewportResizeCallback(    [&](int _newWidth, int _newHeight) { 
@@ -958,7 +960,7 @@ int main(int argc, char **argv) {
     webxr_init(
         /* Frame callback */
         [](void* _userData, int, WebXRRigidTransform* _headPose, WebXRView* _views, int _viewCount) {
-            Sandbox* sbox = (Sandbox*)_userData;
+            GlslViewer* sbox = (GlslViewer*)_userData;
 
             vera::updateGL();
 
@@ -1008,7 +1010,7 @@ int main(int argc, char **argv) {
             std::cout << "Session START callback" << std::endl;
             vera::setXR((vera::XrMode)_mode);
 
-            Sandbox* sbox = (Sandbox*)_userData;
+            GlslViewer* sbox = (GlslViewer*)_userData;
             sbox->addDefine("PLATFORM_WEBXR", vera::toString(_mode));
 
             // // TODO: select START/END callbacks
@@ -1747,7 +1749,7 @@ void commandsInit() {
 
     commands.push_back(Command("update", [&](const std::string& _line){ 
         if (_line == "update") {
-            sandbox.flagChange();
+            vera::flagChange();
             return true;
         }
         return false;

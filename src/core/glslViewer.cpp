@@ -1,4 +1,4 @@
-#include "sandbox.h"
+#include "glslViewer.h"
 
 #include <sys/stat.h>   // stat
 #include <algorithm>    // std::find
@@ -39,7 +39,7 @@
 #endif
 
 // ------------------------------------------------------------------------- CONTRUCTOR
-Sandbox::Sandbox(): 
+GlslViewer::GlslViewer(): 
     screenshotFile(""), lenticular(""), quilt_resolution(-1), quilt_tile(-1), 
     frag_index(-1), vert_index(-1), geom_index(-1), 
     verbose(false), cursor(true), help(false), fxaa(false),
@@ -65,7 +65,7 @@ Sandbox::Sandbox():
 
     // Scene
     m_view2d(1.0), m_time_offset(0.0), m_camera_elevation(1.0), m_camera_azimuth(180.0), m_error_screen(vera::SHOW_MAGENTA_SHADER), 
-    m_change(true), m_change_viewport(true), m_update_buffers(true), m_initialized(false), 
+    m_change_viewport(true), m_update_buffers(true), m_initialized(false), 
 
     // Debug
     m_showTextures(false), m_showPasses(false)
@@ -120,9 +120,9 @@ Sandbox::Sandbox():
 
     // MOUSE
     uniforms.functions["u_mouse"] = UniformFunction("vec2", [](vera::Shader& _shader) {
-        _shader.setUniform("u_mouse", float(vera::getMouseX()), float(vera::getMouseY()));
+        _shader.setUniform("u_mouse", vera::getMousePositionFlipped());
     },
-    []() { return vera::toString(vera::getMouseX(),1) + "," + vera::toString(vera::getMouseY(),1); } );
+    []() { return vera::toString(vera::getMouseX(),1) + "," + vera::toString(vera::getMouseYFlipped(),1); } );
 
     // VIEWPORT
     uniforms.functions["u_resolution"]= UniformFunction("vec2", [](vera::Shader& _shader) {
@@ -147,7 +147,7 @@ Sandbox::Sandbox():
     uniforms.functions["u_modelViewProjectionMatrix"] = UniformFunction("mat4");
 }
 
-Sandbox::~Sandbox() {
+GlslViewer::~GlslViewer() {
     #if defined(SUPPORT_MULTITHREAD_RECORDING)
     /** make sure every frame is saved before exiting **/
     if (m_task_count > 0)
@@ -161,7 +161,7 @@ Sandbox::~Sandbox() {
 
 // ------------------------------------------------------------------------- SET
 
-void Sandbox::commandsInit(CommandList &_commands ) {
+void GlslViewer::commandsInit(CommandList &_commands ) {
 
     // Add Sandbox Commands
     // ----------------------------------------
@@ -1081,7 +1081,7 @@ void Sandbox::commandsInit(CommandList &_commands ) {
     }
 }
 
-void Sandbox::loadAssets(WatchFileList &_files) {
+void GlslViewer::loadAssets(WatchFileList &_files) {
     // LOAD SHACER 
     // -----------------------------------------------
     if (frag_index != -1) {
@@ -1184,19 +1184,20 @@ void Sandbox::loadAssets(WatchFileList &_files) {
 
     // LOAD SHADERS
     resetShaders( _files );
-    flagChange();
+    vera::flagChange();
 }
 
-void Sandbox::loadModel(vera::Model* _model) {
+void GlslViewer::loadModel(vera::Model* _model) {
     _model->setShader(m_frag_source, m_vert_source);
 
     uniforms.models[_model->getName()] = _model;
     m_sceneRender.loadScene(uniforms);
     uniforms.activeCamera->orbit(m_camera_azimuth, m_camera_elevation, m_sceneRender.getArea() * 2.0);
     uniforms.activeCamera->lookAt(uniforms.activeCamera->getTarget());
+    vera::flagChange();
 }
 
-void Sandbox::addDefine(const std::string &_define, const std::string &_value) {
+void GlslViewer::addDefine(const std::string &_define, const std::string &_value) {
     for (int i = 0; i < m_buffers_total; i++)
         m_buffers_shaders[i].addDefine(_define, _value);
 
@@ -1211,9 +1212,10 @@ void Sandbox::addDefine(const std::string &_define, const std::string &_value) {
         m_canvas_shader.addDefine(_define, _value);
 
     m_postprocessing_shader.addDefine(_define, _value);
+    vera::flagChange();
 }
 
-void Sandbox::delDefine(const std::string &_define) {
+void GlslViewer::delDefine(const std::string &_define) {
     for (int i = 0; i < m_buffers_total; i++)
         m_buffers_shaders[i].delDefine(_define);
 
@@ -1228,44 +1230,33 @@ void Sandbox::delDefine(const std::string &_define) {
         m_canvas_shader.delDefine(_define);
 
     m_postprocessing_shader.delDefine(_define);
+    vera::flagChange();
 }
 
 // ------------------------------------------------------------------------- GET
 
-bool Sandbox::isReady() {
+bool GlslViewer::isReady() {
     return m_initialized;
 }
 
-void Sandbox::flagChange() { 
-    m_change = true;
-}
-
-void Sandbox::unflagChange() {
-    m_change = false;
-    m_change_viewport = false;
-    m_sceneRender.unflagChange();
-    uniforms.unflagChange();
-}
-
-bool Sandbox::haveChange() { 
-    return  m_change ||
+bool GlslViewer::haveChange() { 
+    return  vera::haveChanged() ||
+            uniforms.haveChange() ||
             isRecording() ||
-            screenshotFile != "" ||
-            m_sceneRender.haveChange() ||
-            uniforms.haveChange();
+            screenshotFile != "";
 }
 
-const std::string& Sandbox::getSource(ShaderType _type) const {
+const std::string& GlslViewer::getSource(ShaderType _type) const {
     return (_type == FRAGMENT)? m_frag_source : m_vert_source;
 }
 
-void Sandbox::setFrame(size_t _frame) { 
+void GlslViewer::setFrame(size_t _frame) { 
     uniforms.setFrame(_frame);
 }
 
 // ------------------------------------------------------------------------- RELOAD SHADER
 
-void Sandbox::setSource(ShaderType _type, const std::string& _source) {
+void GlslViewer::setSource(ShaderType _type, const std::string& _source) {
     if (_type == FRAGMENT) {
         m_frag_dependencies.clear();
         m_frag_source = vera::resolveGlsl(_source, include_folders, &m_frag_dependencies);
@@ -1276,12 +1267,12 @@ void Sandbox::setSource(ShaderType _type, const std::string& _source) {
     }
 };
 
-void Sandbox::resetShaders( WatchFileList &_files ) {
+void GlslViewer::resetShaders( WatchFileList &_files ) {
 
     if (vera::getWindowStyle() != vera::EMBEDDED)
         console_clear();
         
-    flagChange();
+    vera::flagChange();
 
     // UPDATE scene shaders of models (materials)
     if (uniforms.models.size() > 0) {
@@ -1369,7 +1360,7 @@ void Sandbox::resetShaders( WatchFileList &_files ) {
 }
 
 // ------------------------------------------------------------------------- UPDATE
-void Sandbox::_updateBuffers() {
+void GlslViewer::_updateBuffers() {
     // Update Buffers
     if ( m_buffers_total != int(uniforms.buffers.size())) {
         if (verbose)
@@ -1580,7 +1571,7 @@ void Sandbox::_updateBuffers() {
 }
 
 // ------------------------------------------------------------------------- DRAW
-void Sandbox::_renderBuffers() {
+void GlslViewer::_renderBuffers() {
     glDisable(GL_BLEND);
 
     bool reset_viewport = false;
@@ -1737,7 +1728,7 @@ void Sandbox::_renderBuffers() {
     vera::blendMode(vera::BLEND_ALPHA);
 }
 
-void Sandbox::renderPrep() {
+void GlslViewer::renderPrep() {
     TRACK_BEGIN("render")
 
     // UPDATE STREAMING TEXTURES
@@ -1803,7 +1794,7 @@ void Sandbox::renderPrep() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
-void Sandbox::render() {
+void GlslViewer::render() {
     // RENDER CONTENT
     if (uniforms.models.size() == 0) {
         TRACK_BEGIN("render:2D_scene")
@@ -1875,7 +1866,7 @@ void Sandbox::render() {
     }
 }
 
-void Sandbox::renderPost() {
+void GlslViewer::renderPost() {
     // POST PROCESSING
     if (m_postprocessing) {
         TRACK_BEGIN("render:postprocessing")
@@ -1944,7 +1935,7 @@ void Sandbox::renderPost() {
 }
 
 
-void Sandbox::renderUI() {
+void GlslViewer::renderUI() {
     TRACK_BEGIN("renderUI")
 
     vera::resetCamera();
@@ -2169,7 +2160,7 @@ void Sandbox::renderUI() {
 
         vera::Shader* fill = vera::getFillShader();
         fill->use();
-        fill->setUniform("u_modelViewProjectionMatrix", glm::translate(vera::getOrthoMatrix(), glm::vec3(vera::getMouseX(), vera::getWindowHeight() - vera::getMouseY(), 0.0f) ) );
+        fill->setUniform("u_modelViewProjectionMatrix", glm::translate(vera::getOrthoMatrix(), glm::vec3(vera::getMousePositionFlipped(), 0.0f) ) );
         fill->setUniform("u_color", glm::vec4(1.0f));
         m_cross_vbo->render(fill);
         TRACK_END("renderUI:cursor")
@@ -2286,7 +2277,7 @@ void Sandbox::renderUI() {
     TRACK_END("renderUI")
 }
 
-void Sandbox::renderDone() {
+void GlslViewer::renderDone() {
     TRACK_BEGIN("update:post_render")
 
     // RECORD
@@ -2300,7 +2291,9 @@ void Sandbox::renderDone() {
         screenshotFile = "";
     }
 
-    unflagChange();
+    vera::resetChange();
+    uniforms.resetChange();
+    m_change_viewport = false;
 
     if (m_plot != PLOT_OFF)
         onPlot();
@@ -2308,14 +2301,14 @@ void Sandbox::renderDone() {
     if (!m_initialized) {
         m_initialized = true;
         vera::updateViewport();
-        flagChange();
+        vera::flagChange();
     }
 
     TRACK_END("update:post_render")
 }
 
 // ------------------------------------------------------------------------- ACTIONS
-void Sandbox::printDependencies(ShaderType _type) const {
+void GlslViewer::printDependencies(ShaderType _type) const {
     if (_type == FRAGMENT)
         for (size_t i = 0; i < m_frag_dependencies.size(); i++)
             std::cout << m_frag_dependencies[i] << std::endl;
@@ -2339,7 +2332,7 @@ namespace {
     }
 }
 
-void Sandbox::onFileChange(WatchFileList &_files, int index) {
+void GlslViewer::onFileChange(WatchFileList &_files, int index) {
     FileType type = _files[index].type;
     std::string filename = _files[index].path;
 
@@ -2382,10 +2375,12 @@ void Sandbox::onFileChange(WatchFileList &_files, int index) {
     default: //'GLSL_DEPENDENCY' and 'IMAGE_BUMPMAP' not handled in switch
         break;
     }
-    flagChange();
+
+    vera::flagChange();
+    uniforms.flagChange();
 }
 
-void Sandbox::onScroll(float _yoffset) {
+void GlslViewer::onScroll(float _yoffset) {
     // Vertical scroll button zooms u_view2d and view3d.
     /* zoomfactor 2^(1/4): 4 scroll wheel clicks to double in size. */
     constexpr float zoomfactor = 1.1892;
@@ -2399,11 +2394,15 @@ void Sandbox::onScroll(float _yoffset) {
         m_view2d = glm::scale(m_view2d, zoom);
         m_view2d = glm::translate(m_view2d, -origin);
         
-        flagChange();
+        vera::flagChange();
     }
 }
 
-void Sandbox::onMouseDrag(float _x, float _y, int _button) {
+void GlslViewer::onMouseMove(float _x, float _y) {
+    vera::flagChange();
+}
+
+void GlslViewer::onMouseDrag(float _x, float _y, int _button) {
     if (uniforms.activeCamera == nullptr)
         return;
 
@@ -2436,7 +2435,7 @@ void Sandbox::onMouseDrag(float _x, float _y, int _button) {
 
         if (fabs(vel_x) < 50.0 && fabs(vel_y) < 50.0) {
             m_camera_azimuth -= vel_x;
-            m_camera_elevation -= vel_y * 0.5;
+            m_camera_elevation += vel_y * 0.5;
             uniforms.activeCamera->orbit(m_camera_azimuth, m_camera_elevation, dist);
             uniforms.activeCamera->lookAt(glm::vec3(0.0));
         }
@@ -2452,9 +2451,7 @@ void Sandbox::onMouseDrag(float _x, float _y, int _button) {
     }
 }
 
-void Sandbox::onViewportResize(int _newWidth, int _newHeight) {
-    m_change_viewport = true;
-
+void GlslViewer::onViewportResize(int _newWidth, int _newHeight) {
     if (uniforms.activeCamera)
         uniforms.activeCamera->setViewport(_newWidth, _newHeight);
     
@@ -2502,10 +2499,11 @@ void Sandbox::onViewportResize(int _newWidth, int _newHeight) {
     if (screenshotFile != "" || isRecording()) 
         m_record_fbo.allocate(_newWidth, _newHeight, vera::COLOR_TEXTURE_DEPTH_BUFFER);
 
-    flagChange();
+    vera::flagChange();
+    m_change_viewport = true;
 }
 
-void Sandbox::onScreenshot(std::string _file) {
+void GlslViewer::onScreenshot(std::string _file) {
     #if defined(PYTHON_RENDER)
     if (_file != "") {
     #else
@@ -2576,7 +2574,7 @@ void Sandbox::onScreenshot(std::string _file) {
     }
 }
 
-void Sandbox::onPlot() {
+void GlslViewer::onPlot() {
     // if ( !vera::isGL() )
     //     return;
     if (!m_sceneRender.renderFbo.isAllocated())

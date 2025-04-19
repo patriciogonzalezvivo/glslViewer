@@ -370,7 +370,7 @@ void console_refresh() {
     #endif
 }
 
-bool console_getline(std::string& _cmd, CommandList& _commands, Sandbox& _sandbox) {
+bool console_getline(std::string& _cmd, CommandList& _commands, GlslViewer& _sandbox) {
     #if defined(SUPPORT_NCURSES)
 
     if (uniforms == nullptr)
