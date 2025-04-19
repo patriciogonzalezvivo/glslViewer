@@ -5,9 +5,9 @@
 #include <functional>
 
 #include "vera/types/camera.h"
-#include "../core/sandbox.h"
+#include "../core/glslViewer.h"
 
-class Engine : public Sandbox {
+class Engine : public GlslViewer {
 public:
 
     Engine();
