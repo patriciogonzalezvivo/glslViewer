@@ -71,7 +71,7 @@ GlslViewer::GlslViewer():
     m_showTextures(false), m_showPasses(false)
 {
     // set vera scene values to uniforms
-    vera::setScene( (vera::Scene*)&uniforms );
+    vera::scene( (vera::Scene*)&uniforms );
 
     // TIME UNIFORMS
     //
@@ -125,6 +125,10 @@ GlslViewer::GlslViewer():
     []() { return vera::toString(vera::getMouseX(),1) + "," + vera::toString(vera::getMouseYFlipped(),1); } );
 
     // VIEWPORT
+    uniforms.functions["u_pixelDensity"] = UniformFunction("float", [](vera::Shader& _shader) {
+        _shader.setUniform("u_pixelDensity", vera::pixelDensity());
+    },
+    []() { return vera::toString(vera::getViewport().x,1) + "," + vera::toString(vera::getViewport().y,1) + "," + vera::toString(vera::getViewport().z,1) + "," + vera::toString(vera::getViewport().w,1); });
     uniforms.functions["u_resolution"]= UniformFunction("vec2", [](vera::Shader& _shader) {
         _shader.setUniform("u_resolution", float(vera::getWindowWidth()), float(vera::getWindowHeight()));
     },
@@ -1473,7 +1477,7 @@ void GlslViewer::_updateBuffers() {
                 m_pyramid_shader.setUniform("u_resolution", ((float)_target->getWidth()), ((float)_target->getHeight()));
                 m_pyramid_shader.setUniform("u_pixel", 1.0f/((float)_target->getWidth()), 1.0f/((float)_target->getHeight()));
 
-                vera::getBillboard()->render( &m_pyramid_shader );
+                vera::billboard()->render( &m_pyramid_shader );
                 _target->unbind();
             };
 
@@ -1540,7 +1544,7 @@ void GlslViewer::_updateBuffers() {
                 m_flood_shader.textureIndex = (uniforms.models.size() == 0) ? 1 : 0;
                 m_flood_shader.setUniformTexture("u_floodSrc", _src);
 
-                vera::getBillboard()->render( &m_flood_shader );
+                vera::billboard()->render( &m_flood_shader );
                 _dst->unbind();
             };
         }
@@ -1608,7 +1612,7 @@ void GlslViewer::_renderBuffers() {
         // Update uniforms and textures
         uniforms.feedTo( &m_buffers_shaders[i], true, false);
 
-        vera::getBillboard()->render( &m_buffers_shaders[i] );
+        vera::billboard()->render( &m_buffers_shaders[i] );
         
         uniforms.buffers[i]->unbind();
 
@@ -1640,7 +1644,7 @@ void GlslViewer::_renderBuffers() {
         // Update uniforms and textures
         uniforms.feedTo( &m_doubleBuffers_shaders[i], true, false);
 
-        vera::getBillboard()->render( &m_doubleBuffers_shaders[i] );
+        vera::billboard()->render( &m_doubleBuffers_shaders[i] );
         
         uniforms.doubleBuffers[i]->dst->unbind();
         uniforms.doubleBuffers[i]->swap();
@@ -1667,7 +1671,7 @@ void GlslViewer::_renderBuffers() {
             if (m_sceneRender.buffersFbo[j]->isAllocated())
                 m_pyramid_subshaders[i].setUniformTexture("u_sceneBuffer" + vera::toString(j), m_sceneRender.buffersFbo[j] );
 
-        vera::getBillboard()->render( &m_pyramid_subshaders[i] );
+        vera::billboard()->render( &m_pyramid_subshaders[i] );
 
         m_pyramid_fbos[i].unbind();
 
@@ -1705,7 +1709,7 @@ void GlslViewer::_renderBuffers() {
         // Update uniforms and textures
         uniforms.feedTo( &m_flood_subshaders[i], true, false );
 
-        vera::getBillboard()->render( &m_flood_subshaders[i] );
+        vera::billboard()->render( &m_flood_subshaders[i] );
 
         uniforms.floods[i].dst->unbind();
 
@@ -1819,7 +1823,7 @@ void GlslViewer::render() {
                 m_canvas_shader.setUniform("u_viewMatrix", glm::mat4(1.0f));
                 m_canvas_shader.setUniform("u_projectionMatrix", glm::mat4(1.0f));
                 m_canvas_shader.setUniform("u_modelViewProjectionMatrix", glm::mat4(1.));
-                vera::getBillboard()->render( &m_canvas_shader );
+                vera::billboard()->render( &m_canvas_shader );
             }, quilt_tile, true);
         }
 
@@ -1833,7 +1837,7 @@ void GlslViewer::render() {
             m_canvas_shader.setUniform("u_viewMatrix", glm::mat4(1.0f));
             m_canvas_shader.setUniform("u_projectionMatrix", glm::mat4(1.0f));
             m_canvas_shader.setUniform("u_modelViewProjectionMatrix", glm::mat4(1.));
-            vera::getBillboard()->render( &m_canvas_shader );
+            vera::billboard()->render( &m_canvas_shader );
         }
 
         TRACK_END("render:2D_scene")
@@ -1899,7 +1903,7 @@ void GlslViewer::renderPost() {
         if (lenticular.size() > 0)
             feedLenticularUniforms(m_postprocessing_shader);
 
-        vera::getBillboard()->render( &m_postprocessing_shader );
+        vera::billboard()->render( &m_postprocessing_shader );
 
         TRACK_END("render:postprocessing")
     }
@@ -1959,7 +1963,7 @@ void GlslViewer::renderUI() {
             vera::textAngle(0.0);
             vera::textAlign(vera::ALIGN_TOP);
             vera::textAlign(vera::ALIGN_LEFT);
-            vera::textSize(xStep * 0.2f / vera::getPixelDensity(false));
+            vera::textSize(xStep * 0.2f / vera::pixelDensity());
 
             for (vera::TexturesMap::iterator it = uniforms.textures.begin(); it != uniforms.textures.end(); it++) {
                 float imgAspect = ((float)it->second->getWidth()/(float)it->second->getHeight());
@@ -2007,7 +2011,7 @@ void GlslViewer::renderUI() {
             float yOffset = h - yStep;
 
             vera::textAngle(0.0);
-            vera::textSize(xStep * 0.2f / vera::getPixelDensity(false));
+            vera::textSize(xStep * 0.2f / vera::pixelDensity());
             vera::textAlign(vera::ALIGN_TOP);
             vera::textAlign(vera::ALIGN_LEFT);
 
@@ -2131,7 +2135,7 @@ void GlslViewer::renderUI() {
         vera::setDepthTest(false);
         TRACK_BEGIN("renderUI:plot_data")
 
-        float p = vera::getPixelDensity();
+        float p = vera::pixelDensity();
         float w = 100 * p;
         float h = 30 * p;
         float x = (float)(vera::getWindowWidth()) * 0.5;
@@ -2149,7 +2153,7 @@ void GlslViewer::renderUI() {
         m_plot_shader.setUniform("u_modelViewProjectionMatrix", vera::getOrthoMatrix());
         m_plot_shader.setUniformTexture("u_plotData", m_plot_texture, 0);
         
-        vera::getBillboard()->render(&m_plot_shader);
+        vera::billboard()->render(&m_plot_shader);
         TRACK_END("renderUI:plot_data")
     }
 
@@ -2158,7 +2162,7 @@ void GlslViewer::renderUI() {
         if (m_cross_vbo == nullptr)
             m_cross_vbo = std::unique_ptr<vera::Vbo>(new vera::Vbo( vera::crossMesh( glm::vec3(0.0f, 0.0f, 0.0f), 10.0f) ));
 
-        vera::Shader* fill = vera::getFillShader();
+        vera::Shader* fill = vera::fillShader();
         fill->use();
         fill->setUniform("u_modelViewProjectionMatrix", glm::translate(vera::getOrthoMatrix(), glm::vec3(vera::getMousePositionFlipped(), 0.0f) ) );
         fill->setUniform("u_color", glm::vec4(1.0f));
@@ -2174,7 +2178,7 @@ void GlslViewer::renderUI() {
         float x = xStep * 2.0f;
         float y = yStep * 3.0f;
 
-        vera::Camera *cam = vera::getCamera();
+        vera::Camera *cam = vera::camera();
         vera::resetCamera();
 
         vera::fill(0.0f, 0.0f, 0.0f, 0.75f);
@@ -2204,7 +2208,7 @@ void GlslViewer::renderUI() {
         float x = xStep * 2.0f;
         float y = yStep * 3.0f;
 
-        vera::Camera *cam = vera::getCamera();
+        vera::Camera *cam = vera::camera();
         vera::resetCamera();
 
         vera::fill(0.0f, 0.0f, 0.0f, 0.75f);
@@ -2216,7 +2220,7 @@ void GlslViewer::renderUI() {
         vera::textAlign(vera::ALIGN_LEFT);
         vera::textAngle(0.0f);
         vera::textSize(22.0f);
-        yStep = vera::getFontHeight() * 1.5f;
+        yStep = vera::textHeight() * 1.5f;
 
         if (geom_index != -1) {
             vera::text("a - " + std::string( m_sceneRender.showAxis? "hide" : "show" ) + " axis", x, y);
@@ -2412,7 +2416,7 @@ void GlslViewer::onMouseDrag(float _x, float _y, int _button) {
         //
         float x = _x;
         float y = _y;
-        float pd = vera::getPixelDensity();
+        float pd = vera::getDisplayPixelRatio();
 
         if (x <= 0) x = vera::getWindowWidth() - 2;
         else if (x >= vera::getWindowWidth()) x = 2; 

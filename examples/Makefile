@@ -44,10 +44,10 @@ test_audio_amp:
 	glslViewer test_audio_amp.frag -l --audio
 
 test_video:
-	glslViewer test_video.frag in.mp4 -w 960 -h 540
+	glslViewer test_video.frag video.mp4 -w 960 -h 540
 
 test_video_prevs:
-	glslViewer test_video.frag in.mp4 -w 960 -h 540 -e streams,prevs,10 -e streams,speed,0.5
+	glslViewer test_video.frag video.mp4 -w 960 -h 540 -e streams,prevs,10 -e streams,speed,0.5
 
 test_buffers:
 	glslViewer test_buffers.frag -l

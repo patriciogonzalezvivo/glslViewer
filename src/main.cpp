@@ -1239,7 +1239,7 @@ void commandsInit() {
 
     commands.push_back(Command("screen_size", [&](const std::string& _line){ 
         if (_line == "screen_size") {
-            std::cout << vera::getScreenWidth() << ',' << vera::getScreenHeight()<< std::endl;
+            std::cout << vera::getDisplayWidth() << ',' << vera::getDisplayHeight()<< std::endl;
             return true;
         }
         return false;
@@ -1528,7 +1528,7 @@ void commandsInit() {
             settings.src_width = vera::getWindowWidth();
             settings.src_height = vera::getWindowHeight();
             settings.src_fps = vera::getFps();
-            float pd = vera::getPixelDensity();
+            float pd = vera::getDisplayPixelRatio();
 
             settings.trg_path = values[1];
             float from = 0;
@@ -1677,21 +1677,22 @@ void commandsInit() {
 
     commands.push_back(Command("pixel_density", [&](const std::string& _line){ 
         if (_line == "pixel_density") {
-            std::cout << vera::getPixelDensity() << std::endl;
+            std::cout << vera::getDisplayPixelRatio() << std::endl;
             return true;
         }
-        else {
-            std::vector<std::string> values = vera::split(_line,',');
-            if (values.size() == 2) {
-                commandsMutex.lock();
-                vera::setPixelDensity( vera::toFloat(values[1]) );
-                commandsMutex.unlock();
-                return true;
-            }
-        }
+        // else {
+        //     std::vector<std::string> values = vera::split(_line,',');
+        //     if (values.size() == 2) {
+        //         commandsMutex.lock();
+        //         vera::setPixelDensity( vera::toFloat(values[1]) );
+        //         commandsMutex.unlock();
+        //         return true;
+        //     }
+        // }
         return false;
     },
-    "pixel_density[,<pixel_density>]", "return or set pixel density", false));
+    // "pixel_density[,<pixel_density>]", "return or set pixel density", false));
+    "pixel_density", "return pixel density", false));
 
     // SET only commands
     //

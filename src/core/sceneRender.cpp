@@ -631,7 +631,7 @@ void SceneRender::render(Uniforms& _uniforms) {
         _uniforms.feedTo( it->second->getShader(), true, true );
 
         // Pass special uniforms
-        it->second->getShader()->setUniform( "u_modelViewProjectionMatrix", vera::getProjectionViewWorldMatrix() * it->second->getTransformMatrix() );
+        it->second->getShader()->setUniform( "u_modelViewProjectionMatrix", vera::projectionViewWorldMatrix() * it->second->getTransformMatrix() );
         it->second->getShader()->setUniform( "u_modelMatrix", m_origin.getTransformMatrix() * it->second->getTransformMatrix() );
         it->second->getShader()->setUniform( "u_model", m_origin.getPosition() + m_floor.getPosition() );
 
@@ -679,7 +679,7 @@ void SceneRender::renderNormalBuffer(Uniforms& _uniforms) {
             TRACK_BEGIN("render:sceneNormal:floor")
             normalShader->use();
             _uniforms.feedTo( normalShader, false );
-            normalShader->setUniform("u_modelViewProjectionMatrix", vera::getProjectionViewWorldMatrix() * m_floor.getTransformMatrix());
+            normalShader->setUniform("u_modelViewProjectionMatrix", vera::projectionViewWorldMatrix() * m_floor.getTransformMatrix());
             normalShader->setUniform("u_model", m_origin.getPosition() + m_floor.getPosition() );
             normalShader->setUniform("u_modelMatrix", m_origin.getTransformMatrix() * m_floor.getTransformMatrix() );
             m_floor.render(normalShader);
@@ -701,7 +701,7 @@ void SceneRender::renderNormalBuffer(Uniforms& _uniforms) {
             _uniforms.feedTo( normalShader, false );
 
             // Pass special uniforms
-            normalShader->setUniform( "u_modelViewProjectionMatrix", vera::getProjectionViewWorldMatrix() * it->second->getTransformMatrix());
+            normalShader->setUniform( "u_modelViewProjectionMatrix", vera::projectionViewWorldMatrix() * it->second->getTransformMatrix());
             normalShader->setUniform( "u_model", m_origin.getPosition() + it->second->getPosition() );
             normalShader->setUniform( "u_modelMatrix", m_origin.getTransformMatrix() * it->second->getTransformMatrix() );
             it->second->render(normalShader);
@@ -741,7 +741,7 @@ void SceneRender::renderPositionBuffer(Uniforms& _uniforms) {
             TRACK_BEGIN("render:scenePosition:floor")
             positionShader->use();
             _uniforms.feedTo( positionShader, false );
-            positionShader->setUniform("u_modelViewProjectionMatrix", vera::getProjectionViewWorldMatrix() *  m_floor.getTransformMatrix() );
+            positionShader->setUniform("u_modelViewProjectionMatrix", vera::projectionViewWorldMatrix() *  m_floor.getTransformMatrix() );
             positionShader->setUniform("u_model", m_origin.getPosition() + m_floor.getPosition() );
             positionShader->setUniform("u_modelMatrix", m_origin.getTransformMatrix() * m_floor.getTransformMatrix() );
             m_floor.render(positionShader);
@@ -763,7 +763,7 @@ void SceneRender::renderPositionBuffer(Uniforms& _uniforms) {
             _uniforms.feedTo( positionShader, false );
 
             // Pass special uniforms
-            positionShader->setUniform( "u_modelViewProjectionMatrix", vera::getProjectionViewWorldMatrix() *  it->second->getTransformMatrix() );
+            positionShader->setUniform( "u_modelViewProjectionMatrix", vera::projectionViewWorldMatrix() *  it->second->getTransformMatrix() );
             positionShader->setUniform( "u_model", m_origin.getPosition() + it->second->getPosition() );
             positionShader->setUniform( "u_modelMatrix", m_origin.getTransformMatrix() * it->second->getTransformMatrix() );
             it->second->render(positionShader);
@@ -820,7 +820,7 @@ void SceneRender::renderBuffers(Uniforms& _uniforms) {
                     TRACK_BEGIN("render:"+bufferName+":floor")
                     bufferShader->use();
                     _uniforms.feedTo( bufferShader, false );
-                    bufferShader->setUniform( "u_modelViewProjectionMatrix", vera::getProjectionViewWorldMatrix() * m_floor.getTransformMatrix() );
+                    bufferShader->setUniform( "u_modelViewProjectionMatrix", vera::projectionViewWorldMatrix() * m_floor.getTransformMatrix() );
                     bufferShader->setUniform( "u_model", m_origin.getPosition() + m_floor.getPosition() );
                     bufferShader->setUniform( "u_modelMatrix", m_origin.getTransformMatrix() * m_floor.getTransformMatrix() );
                     m_floor.render(bufferShader);
@@ -843,7 +843,7 @@ void SceneRender::renderBuffers(Uniforms& _uniforms) {
                 _uniforms.feedTo( bufferShader, false );
 
                 // Pass special uniforms
-                bufferShader->setUniform( "u_modelViewProjectionMatrix", vera::getProjectionViewWorldMatrix() * it->second->getTransformMatrix() );
+                bufferShader->setUniform( "u_modelViewProjectionMatrix", vera::projectionViewWorldMatrix() * it->second->getTransformMatrix() );
                 bufferShader->setUniform( "u_model", m_origin.getPosition() + it->second->getPosition() );
                 bufferShader->setUniform( "u_modelMatrix", m_origin.getTransformMatrix() * it->second->getTransformMatrix() );
                 it->second->render(bufferShader);
@@ -934,7 +934,7 @@ void SceneRender::renderBackground(Uniforms& _uniforms) {
         // Update Uniforms and textures
         _uniforms.feedTo( &m_background_shader );
 
-        vera::getBillboard()->render( &m_background_shader );
+        vera::billboard()->render( &m_background_shader );
 
         TRACK_END("render:scene:background")
     }
@@ -984,7 +984,7 @@ void SceneRender::renderFloor(Uniforms& _uniforms) {
 
             _uniforms.feedTo( m_floor.getShader(), true, true );
 
-            m_floor.getShader()->setUniform("u_modelViewProjectionMatrix", vera::getProjectionViewWorldMatrix() * m_floor.getTransformMatrix() );
+            m_floor.getShader()->setUniform("u_modelViewProjectionMatrix", vera::projectionViewWorldMatrix() * m_floor.getTransformMatrix() );
             m_floor.getShader()->setUniform("u_modelMatrix", m_origin.getTransformMatrix() * m_floor.getTransformMatrix() );
             m_floor.getShader()->setUniform("u_model", m_origin.getPosition() + m_floor.getPosition() );
 
@@ -1021,7 +1021,7 @@ void SceneRender::renderDebug(Uniforms& _uniforms) {
     vera::setDepthTest(true);
     vera::blendMode(vera::BLEND_ALPHA);
 
-    vera::Shader* fill = vera::getFillShader();
+    vera::Shader* fill = vera::fillShader();
     
     // Draw Bounding boxes
     if (showBBoxes) {
@@ -1068,7 +1068,7 @@ void SceneRender::renderDebug(Uniforms& _uniforms) {
         m_lightUI_shader.use();
         m_lightUI_shader.setUniform("u_scale", 2.0f, 2.0f);
         m_lightUI_shader.setUniform("u_viewMatrix", _uniforms.activeCamera->getViewMatrix());
-        m_lightUI_shader.setUniform("u_modelViewProjectionMatrix", vera::getProjectionViewWorldMatrix() );
+        m_lightUI_shader.setUniform("u_modelViewProjectionMatrix", vera::projectionViewWorldMatrix() );
 
         for (vera::LightsMap::iterator it = _uniforms.lights.begin(); it != _uniforms.lights.end(); ++it) {
             m_lightUI_shader.setUniform("u_translate", it->second->getPosition());
