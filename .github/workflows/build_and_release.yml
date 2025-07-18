@@ -84,7 +84,7 @@ jobs:
         run: ${{ matrix.build_command }}
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: glslViewer-${{ matrix.os }}-build
           path: build/${{ matrix.build_artifact }}
