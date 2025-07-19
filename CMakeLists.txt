@@ -1,7 +1,7 @@
-cmake_minimum_required(VERSION 3.2)
+cmake_minimum_required(VERSION 3.5)
 
 set(VERSION_MAJOR 3)
-set(VERSION_MINOR 3)
+set(VERSION_MINOR 4)
 set(VERSION_PATCH 0)
 set(VERSION "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}")
 
@@ -25,7 +25,7 @@ if (NO_X11 OR FORCE_GBM)
 endif()
 
 set(CORE_HEADERS
-    "${PROJECT_SOURCE_DIR}/src/core/sandbox.h"
+    "${PROJECT_SOURCE_DIR}/src/core/glslViewer.h"
     "${PROJECT_SOURCE_DIR}/src/core/sceneRender.h"
     "${PROJECT_SOURCE_DIR}/src/core/uniforms.h"
     "${PROJECT_SOURCE_DIR}/src/core/tools/command.h"
@@ -39,7 +39,7 @@ set(CORE_HEADERS
 )
 
 set(CORE_SOURCES 
-    "${PROJECT_SOURCE_DIR}/src/core/sandbox.cpp"
+    "${PROJECT_SOURCE_DIR}/src/core/glslViewer.cpp"
     "${PROJECT_SOURCE_DIR}/src/core/sceneRender.cpp"
     "${PROJECT_SOURCE_DIR}/src/core/uniforms.cpp"
     "${PROJECT_SOURCE_DIR}/src/core/tools/console.cpp"
@@ -80,7 +80,7 @@ if (EMSCRIPTEN)
     # set(LFLAGS "${LFLAGS} -s NO_DISABLE_EXCEPTION_CATCHING")
 
     # Copy the default index.html 
-    file(COPY   assets/index.html DESTINATION ${CMAKE_CURRENT_BINARY_DIR} )
+    file(COPY   assets/wasm/index.html DESTINATION ${CMAKE_CURRENT_BINARY_DIR} )
 
     # Add examples folder to the .data file system 
     file(COPY   examples DESTINATION ${CMAKE_CURRENT_BINARY_DIR} )
@@ -115,7 +115,7 @@ else()
     set(CPACK_PACKAGE_DESCRIPTION_FILE "${PROJECT_SOURCE_DIR}/DESCRIPTION")
     set(CPACK_RESOURCE_FILE_LICENSE "${PROJECT_SOURCE_DIR}/LICENSE")
     set(CPACK_RESOURCE_FILE_README "${PROJECT_SOURCE_DIR}/README.md")
-    set(CPACK_PACKAGE_ICON "${PROJECT_SOURCE_DIR}/assets/glslViewer.png")
+    set(CPACK_PACKAGE_ICON "${PROJECT_SOURCE_DIR}/assets/desktop/glslViewer.png")
 
     # resolve architecture. The reason i "change" i686 to i386 is that debian packages
     # require i386 so this is for the future
@@ -156,11 +156,11 @@ else()
             target_link_libraries(glslViewer PRIVATE atomic)
 
             # Install glslViewer Icon
-            install(FILES "${PROJECT_SOURCE_DIR}/assets/glslViewer.png" DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/pixmaps)
-            install(FILES "${PROJECT_SOURCE_DIR}/assets/glslViewer.desktop" DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/applications)
+            install(FILES "${PROJECT_SOURCE_DIR}/assets/desktop/glslViewer.png" DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/pixmaps)
+            install(FILES "${PROJECT_SOURCE_DIR}/assets/desktop/glslViewer.desktop" DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/applications)
             
             # Install supported MIME file types by GlslViewer
-            install(FILES "${PROJECT_SOURCE_DIR}/assets/glslViewer-types.xml" DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/mime/packages)
+            install(FILES "${PROJECT_SOURCE_DIR}/assets/desktop/glslViewer-types.xml" DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/mime/packages)
             find_program(XDG-MIME_EXECUTABLE xdg-mime)
             install(CODE "execute_process(COMMAND ${XDG-MIME_EXECUTABLE} install --novendor ${CMAKE_INSTALL_FULL_DATAROOTDIR}/mime/packages/glslViewer-types.xml)")
             install(CODE "execute_process(COMMAND ${XDG-MIME_EXECUTABLE} default ${CMAKE_INSTALL_FULL_DATAROOTDIR}/applications/glslViewer.desktop model/lst)")
@@ -174,19 +174,19 @@ else()
             install(CODE "execute_process(COMMAND ${UPDATE_DESKTOP_DATABASE} ${CMAKE_INSTALL_FULL_DATAROOTDIR}/applications)")
             
             # Add a thumbnailer for 3D Models
-            install(FILES "${PROJECT_SOURCE_DIR}/assets/glslViewer.thumbnailer" DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/thumbnailers)
-            install(FILES "${PROJECT_SOURCE_DIR}/assets/glslThumbnailer.sh"
+            install(FILES "${PROJECT_SOURCE_DIR}/assets/desktop/glslViewer.thumbnailer" DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/thumbnailers)
+            install(FILES "${PROJECT_SOURCE_DIR}/assets/desktop/glslThumbnailer.sh"
                     PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
                     DESTINATION ${CMAKE_INSTALL_BINDIR}
                     RENAME "glslThumbnailer")
 
             # Add ScreenSaver script
-            install(FILES "${PROJECT_SOURCE_DIR}/assets/glslScreenSaver.py"
+            install(FILES "${PROJECT_SOURCE_DIR}/assets/desktop/glslScreenSaver.py"
                     PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
                     DESTINATION ${CMAKE_INSTALL_BINDIR}
                     RENAME "glslScreenSaver")
-            install(FILES "${PROJECT_SOURCE_DIR}/assets/glslScreenSaver.frag" DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/glslViewer")
-            install(FILES "${PROJECT_SOURCE_DIR}/assets/glslScreenSaver.yaml" DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/glslViewer")
+            install(FILES "${PROJECT_SOURCE_DIR}/assets/desktop/glslScreenSaver.frag" DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/glslViewer")
+            install(FILES "${PROJECT_SOURCE_DIR}/assets/desktop/glslScreenSaver.yaml" DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/glslViewer")
 
             find_program(XDG-DESKTOP-MENU_EXECUTABLE xdg-desktop-menu)
             execute_process(COMMAND ${XDG-DESKTOP-MENU_EXECUTABLE} install --novendor ${CMAKE_INSTALL_FULL_DATAROOTDIR}/applications/glslViewer.desktop)

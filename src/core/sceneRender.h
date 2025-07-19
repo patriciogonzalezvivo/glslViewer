@@ -34,10 +34,6 @@ public:
     vera::CullingMode getCulling() { return m_culling; }
 
     float           getArea() const { return m_area; }
-
-    void            flagChange();
-    void            unflagChange();
-    bool            haveChange() const;
     
     size_t          getBuffersTotal() const { return m_buffers_total; }
     void            updateBuffers(Uniforms& _uniforms, int _width, int _height);

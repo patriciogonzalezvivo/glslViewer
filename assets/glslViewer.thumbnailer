@@ -1,4 +1,0 @@
-[Thumbnailer Entry]
-TryExec=glslThumbnailer
-Exec=glslThumbnailer %i %s %o
-MimeType=model/lst;model/ply;model/obj;model/gltf-binary;model/gltf+json

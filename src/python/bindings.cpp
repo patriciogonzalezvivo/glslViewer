@@ -228,7 +228,7 @@ PYBIND11_MODULE(PyGlslViewer, m) {
 
         .def("clear", &Uniforms::clear)
         .def("flagChange", &Uniforms::flagChange)
-        .def("unflagChange", &Uniforms::unflagChange)
+        .def("resetChange", &Uniforms::resetChange)
         .def("haveChange", &Uniforms::haveChange)
 
         .def("addDefine",&Uniforms::addDefine, py::arg("_define"), py::arg("_value"))

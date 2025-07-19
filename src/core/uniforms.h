@@ -73,7 +73,7 @@ public:
     
     // Change state
     virtual void        flagChange();
-    virtual void        unflagChange();
+    virtual void        resetChange();
     virtual bool        haveChange();
 
     // Feed uniforms to a specific shader
@@ -131,8 +131,6 @@ public:
 protected:
     size_t              m_frame;
     bool                m_play;
-    bool                m_change;
-
 };
 
 

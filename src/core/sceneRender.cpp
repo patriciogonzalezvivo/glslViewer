@@ -400,16 +400,6 @@ void SceneRender::delDefine(const std::string& _define) {
     m_floor.delDefine(_define);
 }
 
-void SceneRender::flagChange() { 
-    m_origin.bChange = true; 
-}
-bool SceneRender::haveChange() const { 
-    return m_origin.bChange; 
-}
-void SceneRender::unflagChange() {  
-    m_origin.bChange = false; 
-}
-
 void SceneRender::printDefines() {
     if (m_background) {
         std::cout << "." << std::endl;
@@ -451,6 +441,7 @@ bool SceneRender::loadScene(Uniforms& _uniforms) {
     }
 
     m_area = glm::max(0.5f, glm::max(glm::length(bbox.min), glm::length(bbox.max)));
+    m_origin.bChange = true;
     
     // Floor
     m_floor_height = bbox.min.y;
@@ -615,7 +606,7 @@ void SceneRender::render(Uniforms& _uniforms) {
 
     // Begining of DEPTH for 3D 
     if (m_depth_test)
-        glEnable(GL_DEPTH_TEST);
+        vera::setDepthTest(true);
 
     vera::blendMode(m_blend);
 
@@ -640,7 +631,7 @@ void SceneRender::render(Uniforms& _uniforms) {
         _uniforms.feedTo( it->second->getShader(), true, true );
 
         // Pass special uniforms
-        it->second->getShader()->setUniform( "u_modelViewProjectionMatrix", vera::getProjectionViewWorldMatrix() * it->second->getTransformMatrix() );
+        it->second->getShader()->setUniform( "u_modelViewProjectionMatrix", vera::projectionViewWorldMatrix() * it->second->getTransformMatrix() );
         it->second->getShader()->setUniform( "u_modelMatrix", m_origin.getTransformMatrix() * it->second->getTransformMatrix() );
         it->second->getShader()->setUniform( "u_model", m_origin.getPosition() + m_floor.getPosition() );
 
@@ -657,13 +648,13 @@ void SceneRender::render(Uniforms& _uniforms) {
     TRACK_END("render:scene:devlook")
 
     if (m_depth_test)
-        glDisable(GL_DEPTH_TEST);
+        vera::setDepthTest(false);
 
     if (m_blend != 0)
         vera::blendMode(vera::BLEND_ALPHA);
 
     if (m_culling != 0)
-        glDisable(GL_CULL_FACE);
+        vera::cullingMode(vera::CULL_NONE);
 }
 
 void SceneRender::renderNormalBuffer(Uniforms& _uniforms) {
@@ -674,7 +665,7 @@ void SceneRender::renderNormalBuffer(Uniforms& _uniforms) {
 
     // Begining of DEPTH for 3D 
     if (m_depth_test)
-        glEnable(GL_DEPTH_TEST);
+        vera::setDepthTest(true);
 
     if (_uniforms.activeCamera->bChange || m_origin.bChange) {
         vera::setCamera( _uniforms.activeCamera );
@@ -688,7 +679,7 @@ void SceneRender::renderNormalBuffer(Uniforms& _uniforms) {
             TRACK_BEGIN("render:sceneNormal:floor")
             normalShader->use();
             _uniforms.feedTo( normalShader, false );
-            normalShader->setUniform("u_modelViewProjectionMatrix", vera::getProjectionViewWorldMatrix() * m_floor.getTransformMatrix());
+            normalShader->setUniform("u_modelViewProjectionMatrix", vera::projectionViewWorldMatrix() * m_floor.getTransformMatrix());
             normalShader->setUniform("u_model", m_origin.getPosition() + m_floor.getPosition() );
             normalShader->setUniform("u_modelMatrix", m_origin.getTransformMatrix() * m_floor.getTransformMatrix() );
             m_floor.render(normalShader);
@@ -710,7 +701,7 @@ void SceneRender::renderNormalBuffer(Uniforms& _uniforms) {
             _uniforms.feedTo( normalShader, false );
 
             // Pass special uniforms
-            normalShader->setUniform( "u_modelViewProjectionMatrix", vera::getProjectionViewWorldMatrix() * it->second->getTransformMatrix());
+            normalShader->setUniform( "u_modelViewProjectionMatrix", vera::projectionViewWorldMatrix() * it->second->getTransformMatrix());
             normalShader->setUniform( "u_model", m_origin.getPosition() + it->second->getPosition() );
             normalShader->setUniform( "u_modelMatrix", m_origin.getTransformMatrix() * it->second->getTransformMatrix() );
             it->second->render(normalShader);
@@ -720,10 +711,10 @@ void SceneRender::renderNormalBuffer(Uniforms& _uniforms) {
     }
 
     if (m_depth_test)
-        glDisable(GL_DEPTH_TEST);
+        vera::setDepthTest(false);
 
     if (m_culling != 0)
-        glDisable(GL_CULL_FACE);
+        vera::cullingMode(vera::CULL_NONE);
 
     normalFbo.unbind();
 }
@@ -736,7 +727,7 @@ void SceneRender::renderPositionBuffer(Uniforms& _uniforms) {
 
     // Begining of DEPTH for 3D 
     if (m_depth_test)
-        glEnable(GL_DEPTH_TEST);
+        vera::setDepthTest(true);
 
     if (_uniforms.activeCamera->bChange || m_origin.bChange) {
         vera::setCamera( _uniforms.activeCamera );
@@ -750,7 +741,7 @@ void SceneRender::renderPositionBuffer(Uniforms& _uniforms) {
             TRACK_BEGIN("render:scenePosition:floor")
             positionShader->use();
             _uniforms.feedTo( positionShader, false );
-            positionShader->setUniform("u_modelViewProjectionMatrix", vera::getProjectionViewWorldMatrix() *  m_floor.getTransformMatrix() );
+            positionShader->setUniform("u_modelViewProjectionMatrix", vera::projectionViewWorldMatrix() *  m_floor.getTransformMatrix() );
             positionShader->setUniform("u_model", m_origin.getPosition() + m_floor.getPosition() );
             positionShader->setUniform("u_modelMatrix", m_origin.getTransformMatrix() * m_floor.getTransformMatrix() );
             m_floor.render(positionShader);
@@ -772,7 +763,7 @@ void SceneRender::renderPositionBuffer(Uniforms& _uniforms) {
             _uniforms.feedTo( positionShader, false );
 
             // Pass special uniforms
-            positionShader->setUniform( "u_modelViewProjectionMatrix", vera::getProjectionViewWorldMatrix() *  it->second->getTransformMatrix() );
+            positionShader->setUniform( "u_modelViewProjectionMatrix", vera::projectionViewWorldMatrix() *  it->second->getTransformMatrix() );
             positionShader->setUniform( "u_model", m_origin.getPosition() + it->second->getPosition() );
             positionShader->setUniform( "u_modelMatrix", m_origin.getTransformMatrix() * it->second->getTransformMatrix() );
             it->second->render(positionShader);
@@ -782,10 +773,10 @@ void SceneRender::renderPositionBuffer(Uniforms& _uniforms) {
     }
 
     if (m_depth_test)
-        glDisable(GL_DEPTH_TEST);
+        vera::setDepthTest(false);
 
     if (m_culling != 0)
-        glDisable(GL_CULL_FACE);
+        vera::cullingMode(vera::CULL_NONE);
 
     positionFbo.unbind();
 }
@@ -816,7 +807,7 @@ void SceneRender::renderBuffers(Uniforms& _uniforms) {
 
         // Begining of DEPTH for 3D 
         if (m_depth_test)
-            glEnable(GL_DEPTH_TEST);
+            vera::setDepthTest(true);
 
         if (_uniforms.activeCamera->bChange || m_origin.bChange) {
             vera::setCamera( _uniforms.activeCamera );
@@ -829,7 +820,7 @@ void SceneRender::renderBuffers(Uniforms& _uniforms) {
                     TRACK_BEGIN("render:"+bufferName+":floor")
                     bufferShader->use();
                     _uniforms.feedTo( bufferShader, false );
-                    bufferShader->setUniform( "u_modelViewProjectionMatrix", vera::getProjectionViewWorldMatrix() * m_floor.getTransformMatrix() );
+                    bufferShader->setUniform( "u_modelViewProjectionMatrix", vera::projectionViewWorldMatrix() * m_floor.getTransformMatrix() );
                     bufferShader->setUniform( "u_model", m_origin.getPosition() + m_floor.getPosition() );
                     bufferShader->setUniform( "u_modelMatrix", m_origin.getTransformMatrix() * m_floor.getTransformMatrix() );
                     m_floor.render(bufferShader);
@@ -852,7 +843,7 @@ void SceneRender::renderBuffers(Uniforms& _uniforms) {
                 _uniforms.feedTo( bufferShader, false );
 
                 // Pass special uniforms
-                bufferShader->setUniform( "u_modelViewProjectionMatrix", vera::getProjectionViewWorldMatrix() * it->second->getTransformMatrix() );
+                bufferShader->setUniform( "u_modelViewProjectionMatrix", vera::projectionViewWorldMatrix() * it->second->getTransformMatrix() );
                 bufferShader->setUniform( "u_model", m_origin.getPosition() + it->second->getPosition() );
                 bufferShader->setUniform( "u_modelMatrix", m_origin.getTransformMatrix() * it->second->getTransformMatrix() );
                 it->second->render(bufferShader);
@@ -862,10 +853,10 @@ void SceneRender::renderBuffers(Uniforms& _uniforms) {
         }
 
         if (m_depth_test)
-            glDisable(GL_DEPTH_TEST);
+            vera::setDepthTest(false);
 
         if (m_culling != 0)
-            glDisable(GL_CULL_FACE);
+            vera::cullingMode(vera::CULL_NONE);
 
         buffersFbo[i]->unbind();
     }
@@ -878,7 +869,7 @@ void SceneRender::renderShadowMap(Uniforms& _uniforms) {
     TRACK_BEGIN("render:scene:shadowmap")
     vera::Shader* shadowShader = nullptr;
     for (vera::LightsMap::iterator lit = _uniforms.lights.begin(); lit != _uniforms.lights.end(); ++lit) {
-        if (dynamicShadows ||  lit->second->bChange || haveChange() ) {
+        if (dynamicShadows ||  lit->second->bChange || m_origin.bChange ) {
             // Temporally move the MVP matrix from the view of the light 
             glm::mat4 m = m_origin.getTransformMatrix();
             // glm::mat4 p = lit->second->getProjectionMatrix();
@@ -932,7 +923,7 @@ void SceneRender::renderShadowMap(Uniforms& _uniforms) {
 void SceneRender::renderBackground(Uniforms& _uniforms) {
     if (m_background) {
         TRACK_BEGIN("render:scene:background")
-        glDisable(GL_DEPTH_TEST);
+        vera::setDepthTest(false);
 
         m_background_shader.use();
         m_background_shader.setUniform("u_modelMatrix", glm::mat4(1.0));
@@ -943,7 +934,7 @@ void SceneRender::renderBackground(Uniforms& _uniforms) {
         // Update Uniforms and textures
         _uniforms.feedTo( &m_background_shader );
 
-        vera::getBillboard()->render( &m_background_shader );
+        vera::billboard()->render( &m_background_shader );
 
         TRACK_END("render:scene:background")
     }
@@ -952,7 +943,7 @@ void SceneRender::renderBackground(Uniforms& _uniforms) {
         if (showCubebox && _uniforms.activeCubemap->loaded()) {
             TRACK_BEGIN("render:scene:cubemap")
 
-            glDisable(GL_DEPTH_TEST);
+            vera::setDepthTest(false);
 
             if (!m_cubemap_vbo)
                 m_cubemap_vbo = std::unique_ptr<vera::Vbo>(new vera::Vbo( vera::cubeMesh(1.0f) ));
@@ -993,7 +984,7 @@ void SceneRender::renderFloor(Uniforms& _uniforms) {
 
             _uniforms.feedTo( m_floor.getShader(), true, true );
 
-            m_floor.getShader()->setUniform("u_modelViewProjectionMatrix", vera::getProjectionViewWorldMatrix() * m_floor.getTransformMatrix() );
+            m_floor.getShader()->setUniform("u_modelViewProjectionMatrix", vera::projectionViewWorldMatrix() * m_floor.getTransformMatrix() );
             m_floor.getShader()->setUniform("u_modelMatrix", m_origin.getTransformMatrix() * m_floor.getTransformMatrix() );
             m_floor.getShader()->setUniform("u_model", m_origin.getPosition() + m_floor.getPosition() );
 
@@ -1027,10 +1018,10 @@ void SceneRender::renderDevLook(Uniforms& _uniforms) {
 }
 
 void SceneRender::renderDebug(Uniforms& _uniforms) {
-    glEnable(GL_DEPTH_TEST);
+    vera::setDepthTest(true);
     vera::blendMode(vera::BLEND_ALPHA);
 
-    vera::Shader* fill = vera::getFillShader();
+    vera::Shader* fill = vera::fillShader();
     
     // Draw Bounding boxes
     if (showBBoxes) {
@@ -1077,7 +1068,7 @@ void SceneRender::renderDebug(Uniforms& _uniforms) {
         m_lightUI_shader.use();
         m_lightUI_shader.setUniform("u_scale", 2.0f, 2.0f);
         m_lightUI_shader.setUniform("u_viewMatrix", _uniforms.activeCamera->getViewMatrix());
-        m_lightUI_shader.setUniform("u_modelViewProjectionMatrix", vera::getProjectionViewWorldMatrix() );
+        m_lightUI_shader.setUniform("u_modelViewProjectionMatrix", vera::projectionViewWorldMatrix() );
 
         for (vera::LightsMap::iterator it = _uniforms.lights.begin(); it != _uniforms.lights.end(); ++it) {
             m_lightUI_shader.setUniform("u_translate", it->second->getPosition());
@@ -1087,5 +1078,5 @@ void SceneRender::renderDebug(Uniforms& _uniforms) {
     }
 
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glDisable(GL_DEPTH_TEST);
+    vera::setDepthTest(false);
 }

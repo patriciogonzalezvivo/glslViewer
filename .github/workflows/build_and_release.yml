@@ -39,7 +39,7 @@ jobs:
             build_artifact: glslViewer-*-x86_64.zip
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           submodules: true
 
@@ -84,7 +84,7 @@ jobs:
         run: ${{ matrix.build_command }}
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: glslViewer-${{ matrix.os }}-build
           path: build/${{ matrix.build_artifact }}
