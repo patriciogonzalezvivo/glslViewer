@@ -292,7 +292,7 @@ void GlslViewer::commandsInit(CommandList &_commands ) {
     _commands.push_back(Command("glsl_version", [&](const std::string& _line){ 
         if (_line == "glsl_version") {
             // Force the output in floats
-            std::cout << vera::getVersion() << std::endl;
+            std::cout << vera::getVersionNumber() << std::endl;
             return true;
         }
         return false;
@@ -1344,7 +1344,7 @@ void GlslViewer::resetShaders( WatchFileList &_files ) {
         m_postprocessing = true;
     }
     else if (lenticular.size() > 0) {
-        m_postprocessing_shader.setSource(vera::getLenticularFragShader(vera::getVersion()), vera::getDefaultSrc(vera::VERT_BILLBOARD));
+        m_postprocessing_shader.setSource(vera::getLenticularFragShader(vera::getVersionNumber()), vera::getDefaultSrc(vera::VERT_BILLBOARD));
         uniforms.functions["u_scene"].present = true;
         m_postprocessing = true;
     }
