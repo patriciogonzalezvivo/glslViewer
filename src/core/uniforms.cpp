@@ -10,6 +10,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "tools/text.h"
+#include "vera/ops/draw.h"
 #include "vera/ops/string.h"
 #include "vera/xr/xr.h"
 
@@ -479,6 +480,12 @@ void Uniforms::setStreamsPlay() {
     m_play = true;
 }
 
+void Uniforms::setStreamsFrame(size_t _frame) {
+    Scene::setStreamsFrame(_frame);
+    m_frame = _frame;
+    m_play = false;
+}
+
 void Uniforms::setStreamsStop() {
     Scene::setStreamsStop();
     m_play = false;
@@ -604,21 +611,12 @@ void Uniforms::clearUniforms() {
         it->second.present = false;
 }
 
-bool Uniforms::addCameraPath( const std::string& _filename ) {
+bool Uniforms::addCameras( const std::string& _filename ) {
     std::fstream is( _filename.c_str(), std::ios::in);
     if (is.is_open()) {
 
-        glm::vec3 position;
-        cameraPath.clear();
-
         std::string line;
-        // glm::mat4 rot = glm::mat4(
-        //         1.0f,   0.0f,   0.0f,   0.0f,
-        //         0.0f,  1.0f,    0.0f,   0.0f,
-        //         0.0f,   0.0f,   -1.0f,   0.0f,
-        //         0.0f,   0.0f,   0.0f,   1.0f
-        //     );
-
+        size_t counter = 0;
         while (std::getline(is, line)) {
             // If line not commented 
             if (line[0] == '#')
@@ -627,60 +625,83 @@ bool Uniforms::addCameraPath( const std::string& _filename ) {
             // parse through row spliting into commas
             std::vector<std::string> params = vera::split(line, ',', true);
 
-            CameraData frame;
-            float fL = vera::toFloat(params[0]);
-            float cx = vera::toFloat(params[1]);
-            float cy = vera::toFloat(params[2]);
+            // CameraData frame;
+            float fL = vera::toFloat(params[0]);  // focal length
+            float cx = vera::toFloat(params[1]);  // principal point x
+            float cy = vera::toFloat(params[2]);  // principal point y
 
-            float near = 0.0f;
+            // Camera extrinsics (rotation + translation from COLMAP)
+            glm::mat4 colmap_transform = glm::mat4(
+                glm::vec4( vera::toFloat(params[3]),  vera::toFloat(params[4]),  vera::toFloat(params[5]),  0.0f),
+                glm::vec4( vera::toFloat(params[6]),  vera::toFloat(params[7]),  vera::toFloat(params[8]),  0.0f),
+                glm::vec4( vera::toFloat(params[9]),  vera::toFloat(params[10]), vera::toFloat(params[11]), 0.0f),
+                glm::vec4( vera::toFloat(params[12]), vera::toFloat(params[13]), vera::toFloat(params[14]), 1.0f)
+            );
+
+            // Convert from COLMAP coordinate system to OpenGL
+            // COLMAP: +X right, +Y down, +Z forward (camera looking down +Z)
+            // OpenGL: +X right, +Y up, +Z backward (camera looking down -Z)
+            glm::mat4 coord_conversion = glm::mat4(
+                1.0f,  0.0f,  0.0f, 0.0f,
+                0.0f,  1.0f,  0.0f, 0.0f,
+                0.0f,  0.0f, -1.0f, 0.0f,
+                0.0f,  0.0f,  0.0f, 1.0f
+            );
+            
+            glm::mat4 transform = colmap_transform * coord_conversion;
+
+            float near = 0.1f;
             float far = 1000.0;
-
             if (activeCamera) {
                 near = activeCamera->getNearClip();
                 far = activeCamera->getFarClip();
             }
 
+            // Assume image dimensions (you might want to pass these as parameters)
+            float w = cx * 2.0f;  // image width
+            float h = cy * 2.0f;  // image height
+            
+            // Create proper projection matrix from intrinsics
             float delta = far-near;
-            float w = cx*2.0f;
-            float h = cy*2.0f;
-
-            // glm::mat4 projection = glm::ortho(0.0f, w, h, 0.0f, near, far);
-            // glm::mat4 ndc = glm::mat4(
-            //     fL,     0.0f,   0.0f,   0.0f,
-            //     0.0f,   fL,     0.0f,   0.0f, 
-            //     cx,     cy,     1.0f,   0.0f,
-            //     0.0f,   0.0f,   0.0f,   1.0f  
+            // glm::mat4 projection = glm::mat4(
+            //     2.0f * fL / w,      0.0f,                  (2.0f * cx - w) / w,        0.0f,
+            //     0.0f,               -2.0f * fL / h,        (h - 2.0f * cy) / h,        0.0f,
+            //     0.0f,               0.0f,                  (far + near) / delta,      -0.1f,
+            //     0.0f,               0.0f,                  2.0f * far * near / delta,  1.0f
             // );
-            // frame.projection = projection * ndc;
-
-            frame.projection = glm::mat4(
+            
+            glm::mat4 projection = glm::mat4(
                 2.0f*fL/w,          0.0f,               0.0f,                       0.0f,
-                0.0f,               -2.0f*fL/h,         0.0f,                       0.0f,
-                (w - 2.0f*cx)/w,    (h-2.0f*cy)/h,      (-far-near)/delta,         -1.0f,
-                0.0f,               0.0f,               -2.0f*far*near/delta,       0.0f
+                0.0f,              -2.0f*fL/h,         0.0f,                        0.0f,
+               (2.0f*cx-w)/w,      (h-2.0f*cy)/h,       -(far+near)/delta,         -1.0f,
+                0.0f,               0.0f,               -2.0f*far*near/delta,       1.0f
             );
             
-            // frame.projection = glm::mat4(
-            //     fL/cx,      0.0f,   0.0f,                   0.0f,
-            //     0.0f,       fL/cy,  0.0f,                   0.0f,
-            //     0.0f,       0.0f,   -(far+near)/delta,      -1.0,
-            //     0.0f,       0.0f,   -2.0*far*near/delta,    0.0f
-            // );
+            vera::Camera* camera = new vera::Camera();
+            
+             // Set transform (convert from COLMAP to OpenGL coordinate system if needed)
+            camera->setTransformMatrix(transform);
+            camera->setProjection(projection);
 
-            frame.transform = glm::mat4(
-                glm::vec4( vera::toFloat(params[3]), vera::toFloat(params[ 4]), vera::toFloat(params[ 5]), 0.0),
-                glm::vec4( vera::toFloat(params[6]), -vera::toFloat(params[ 7]), vera::toFloat(params[ 8]), 0.0),
-                glm::vec4( vera::toFloat(params[9]), vera::toFloat(params[10]), vera::toFloat(params[11]), 0.0),
-                glm::vec4( vera::toFloat(params[12]), vera::toFloat(params[13]), -vera::toFloat(params[14]), 1.0)
-            );
+            float distance = glm::length( glm::vec3(transform[3]) );
+            
+            // Set target based on camera orientation
+            glm::vec3 position = camera->getPosition();
+            glm::vec3 forward = -camera->getZAxis();  // Camera looks down -Z axis
+            glm::vec3 target = position + forward * distance;
+            
+            // camera->setTarget(target);
+            // camera->setDistance( distance );
+            
+            // Adding to VERA scene cameras
+            vera::addCamera( vera::toString(counter), camera );
+            // Adding to Uniforms cameras map
+            cameras[ vera::toString(counter) ] = camera;
 
-            // position += frame.translation;
-            cameraPath.push_back(frame);
+            counter++;
         }
 
-        std::cout << "// Added " << cameraPath.size() << " camera frames" << std::endl;
-
-        position = position / float(cameraPath.size());
+        std::cout << "// Added " << counter << " camera frames: " << std::endl;
         return true;
     }
 

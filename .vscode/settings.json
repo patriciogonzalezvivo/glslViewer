@@ -106,7 +106,9 @@
         "any": "cpp",
         "charconv": "cpp",
         "span": "cpp",
-        "format": "cpp"
+        "format": "cpp",
+        "source_location": "cpp",
+        "expected": "cpp"
     },
     "cmake.configureOnOpen": false
 }

@@ -671,7 +671,7 @@ int main(int argc, char **argv) {
 
         // load CSV data for camera path 
         else if ( vera::haveExt(argument,"csv") || vera::haveExt(argument,"CSV") ) {
-            sandbox.uniforms.addCameraPath(argument);
+            sandbox.uniforms.addCameras(argument);
         }
         
         // load specific textures image/video but with a custom name
@@ -692,6 +692,10 @@ int main(int argc, char **argv) {
                     vera::haveWildcard(argument) ) {
                     sandbox.uniforms.addStreamingTexture(parameterPair, argument, vFlip, false);
                 }
+
+                // if points to a folder
+                else if ( vera::isFolder(argument) ) 
+                    sandbox.uniforms.addStreamingTexture(parameterPair, argument, vFlip, false);
 
                 // Load a sequence of uniform data
                 else if ( vera::haveExt(argument,"csv") || vera::haveExt(argument,"CSV") )
@@ -751,6 +755,7 @@ int main(int argc, char **argv) {
     vera::setViewportResizeCallback(    [&](int _newWidth, int _newHeight) { 
         sandbox.onViewportResize(_newWidth, _newHeight);
     } );
+
     vera::setMouseMoveCallback(         [&](float _x, float _y) { 
         if (bScreensaverMode) {
             if (sandbox.isReady()) {
@@ -759,6 +764,7 @@ int main(int argc, char **argv) {
             }
         }
     } );
+
     vera::setKeyPressCallback(          [&](int _key) { 
         if (bScreensaverMode) {
             bKeepRunnig = false;
@@ -841,6 +847,16 @@ int main(int argc, char **argv) {
             else if (_key == 32) {
                 commandsRun(std::string("streams,") + std::string( bStreamsPlaying ? "stop" : "play" ));
                 bStreamsPlaying = !bStreamsPlaying;
+            }
+            else if (_key == 48) {
+                commandsRun("camera,default");
+                commandsRun("update");
+            }
+            else if (_key >= 49 && _key <= 57) {
+                commandsRun(std::string("camera,") + vera::toString(_key - 49));
+                commandsRun("streams,stop");
+                commandsRun("streams,frame," + vera::toString(_key - 49));
+                commandsRun("update");
             }
         }
     } );
@@ -1172,8 +1188,9 @@ void commandsRun(const std::string &_cmd, std::mutex &_mutex) {
 }
 
 void commandsInit() {
-    // GET only commands
-    //
+    
+    // Scene commands
+    // 
     commands.push_back(Command("help", [&](const std::string& _line){
         if (_line == "help") {
             std::cout << "Use:\n        help,<one_of_the_following_commands>" << std::endl;
@@ -1301,108 +1318,7 @@ void commandsInit() {
         return false;
     },
     "files", "return a list of files", false));
-
-    commands.push_back( Command("dependencies", [&](const std::string& _line){ 
-        if (_line == "dependencies") {
-            for (size_t i = 0; i < files.size(); i++) { 
-                if (files[i].type == GLSL_DEPENDENCY) {
-                    std::cout << files[i].path << std::endl;
-                }   
-            }
-            return true;
-        }
-        else if (_line == "dependencies,frag") {
-            sandbox.printDependencies(FRAGMENT);
-            return true;
-        }
-        else if (_line == "dependencies,vert") {
-            sandbox.printDependencies(VERTEX);
-            return true;
-        }
-        return false;
-    },
-    "dependencies[,<vert|frag>]", "returns all the dependencies of the vertex o fragment shader or both", false));
-
-    // GET / EXPORT commands
-    //
-    commands.push_back(Command("frag", [&](const std::string& _line){ 
-        if (_line == "frag") {
-            std::cout << sandbox.getSource(FRAGMENT) << std::endl;
-            return true;
-        }
-        else {
-            std::vector<std::string> values = vera::split(_line,',');
-            if (values.size() == 2) {
-                if (vera::isDigit(values[1])) {
-                    // Line number
-                    size_t lineNumber = vera::toInt(values[1]) - 1;
-                    std::vector<std::string> lines = vera::split(sandbox.getSource(FRAGMENT),'\n', true);
-                    if (lineNumber < lines.size()) {
-                        std::cout << lineNumber + 1 << " " << lines[lineNumber] << std::endl; 
-                    }
-                    
-                }
-                else {
-                    // Write shader into a file
-                    std::ofstream out(values[1]);
-                    out << sandbox.getSource(FRAGMENT);
-                    out.close();
-                }
-                return true;
-            }
-            else if (values.size() > 2) {
-                std::vector<std::string> lines = vera::split(sandbox.getSource(FRAGMENT),'\n', true);
-                for (size_t i = 1; i < values.size(); i++) {
-                    size_t lineNumber = vera::toInt(values[i]) - 1;
-                    if (lineNumber < lines.size()) {
-                        std::cout << lineNumber + 1 << " " << lines[lineNumber] << std::endl; 
-                    }
-                }
-            }
-        }
-        return false;
-    },
-    "frag[,<filename>]", "returns or save the fragment shader source code", false));
-
-    commands.push_back(Command("vert", [&](const std::string& _line){ 
-        if (_line == "vert") {
-            std::cout << sandbox.getSource(VERTEX) << std::endl;
-            return true;
-        }
-        else {
-            std::vector<std::string> values = vera::split(_line,',');
-            if (values.size() == 2) {
-                if (vera::isDigit(values[1])) {
-                    // Line number
-                    size_t lineNumber = vera::toInt(values[1]) - 1;
-                    std::vector<std::string> lines = vera::split(sandbox.getSource(VERTEX),'\n', true);
-                    if (lineNumber < lines.size()) {
-                        std::cout << lineNumber + 1 << " " << lines[lineNumber] << std::endl; 
-                    }
-                    
-                }
-                else {
-                    // Write shader into a file
-                    std::ofstream out(values[1]);
-                    out << sandbox.getSource(VERTEX);
-                    out.close();
-                }
-                return true;
-            }
-            else if (values.size() > 2) {
-                std::vector<std::string> lines = vera::split(sandbox.getSource(VERTEX),'\n', true);
-                for (size_t i = 1; i < values.size(); i++) {
-                    size_t lineNumber = vera::toInt(values[i]) - 1;
-                    if (lineNumber < lines.size()) {
-                        std::cout << lineNumber + 1 << " " << lines[lineNumber] << std::endl; 
-                    }
-                }
-            }
-        }
-        return false;
-    },
-    "vert[,<filename>]", "returns or save the vertex shader source code", false));
-
+    
     commands.push_back(Command("screenshot", [&](const std::string& _line){ 
         std::vector<std::string> values = vera::split(_line,',');
         if (values.size() == 2) {
@@ -1608,7 +1524,7 @@ void commandsInit() {
     "record,<file>,<A>,<B>[,<fps>]","record a video from second <A> to second <B> at <fps> (default: 24.0f)", false));
     #endif
 
-    // GET / SET commands
+    // General environment commands
     //
     commands.push_back(Command("fullFps", [&](const std::string& _line){
         if (_line == "fullFps") {
@@ -1694,8 +1610,108 @@ void commandsInit() {
     // "pixel_density[,<pixel_density>]", "return or set pixel density", false));
     "pixel_density", "return pixel density", false));
 
-    // SET only commands
+    // Shader commands
     //
+
+    commands.push_back( Command("dependencies", [&](const std::string& _line){ 
+        if (_line == "dependencies") {
+            for (size_t i = 0; i < files.size(); i++) { 
+                if (files[i].type == GLSL_DEPENDENCY) {
+                    std::cout << files[i].path << std::endl;
+                }   
+            }
+            return true;
+        }
+        else if (_line == "dependencies,frag") {
+            sandbox.printDependencies(FRAGMENT);
+            return true;
+        }
+        else if (_line == "dependencies,vert") {
+            sandbox.printDependencies(VERTEX);
+            return true;
+        }
+        return false;
+    },
+    "dependencies[,<vert|frag>]", "returns all the dependencies of the vertex o fragment shader or both", false));
+
+    commands.push_back(Command("frag", [&](const std::string& _line){ 
+        if (_line == "frag") {
+            std::cout << sandbox.getSource(FRAGMENT) << std::endl;
+            return true;
+        }
+        else {
+            std::vector<std::string> values = vera::split(_line,',');
+            if (values.size() == 2) {
+                if (vera::isDigit(values[1])) {
+                    // Line number
+                    size_t lineNumber = vera::toInt(values[1]) - 1;
+                    std::vector<std::string> lines = vera::split(sandbox.getSource(FRAGMENT),'\n', true);
+                    if (lineNumber < lines.size()) {
+                        std::cout << lineNumber + 1 << " " << lines[lineNumber] << std::endl; 
+                    }
+                    
+                }
+                else {
+                    // Write shader into a file
+                    std::ofstream out(values[1]);
+                    out << sandbox.getSource(FRAGMENT);
+                    out.close();
+                }
+                return true;
+            }
+            else if (values.size() > 2) {
+                std::vector<std::string> lines = vera::split(sandbox.getSource(FRAGMENT),'\n', true);
+                for (size_t i = 1; i < values.size(); i++) {
+                    size_t lineNumber = vera::toInt(values[i]) - 1;
+                    if (lineNumber < lines.size()) {
+                        std::cout << lineNumber + 1 << " " << lines[lineNumber] << std::endl; 
+                    }
+                }
+            }
+        }
+        return false;
+    },
+    "frag[,<filename>]", "returns or save the fragment shader source code", false));
+
+    commands.push_back(Command("vert", [&](const std::string& _line){ 
+        if (_line == "vert") {
+            std::cout << sandbox.getSource(VERTEX) << std::endl;
+            return true;
+        }
+        else {
+            std::vector<std::string> values = vera::split(_line,',');
+            if (values.size() == 2) {
+                if (vera::isDigit(values[1])) {
+                    // Line number
+                    size_t lineNumber = vera::toInt(values[1]) - 1;
+                    std::vector<std::string> lines = vera::split(sandbox.getSource(VERTEX),'\n', true);
+                    if (lineNumber < lines.size()) {
+                        std::cout << lineNumber + 1 << " " << lines[lineNumber] << std::endl; 
+                    }
+                    
+                }
+                else {
+                    // Write shader into a file
+                    std::ofstream out(values[1]);
+                    out << sandbox.getSource(VERTEX);
+                    out.close();
+                }
+                return true;
+            }
+            else if (values.size() > 2) {
+                std::vector<std::string> lines = vera::split(sandbox.getSource(VERTEX),'\n', true);
+                for (size_t i = 1; i < values.size(); i++) {
+                    size_t lineNumber = vera::toInt(values[i]) - 1;
+                    if (lineNumber < lines.size()) {
+                        std::cout << lineNumber + 1 << " " << lines[lineNumber] << std::endl; 
+                    }
+                }
+            }
+        }
+        return false;
+    },
+    "vert[,<filename>]", "returns or save the vertex shader source code", false));
+
     commands.push_back( Command("define", [&](const std::string& _line){ 
         std::vector<std::string> values = vera::split(_line,',');
         if (values.size() == 2) {
@@ -1725,38 +1741,8 @@ void commandsInit() {
     "undefine,<KEYWORD>", "remove a define on the shader", false));
 
 
-    // ACTIONS commands
+    // Add 3D objects
     //
-    commands.push_back(Command("reload", [&](const std::string& _line){ 
-        if (_line == "reload" || _line == "reload,all") {
-            for (size_t i = 0; i < files.size(); i++) 
-                sandbox.onFileChange( files, i );
-            return true;
-        }
-        else {
-            std::vector<std::string> values = vera::split(_line,',');
-            if (values.size() == 2 && values[0] == "reload") {
-                for (size_t i = 0; i < files.size(); i++) {
-                    if (files[i].path == values[1]) {
-                        sandbox.onFileChange( files, i );
-                        return true;
-                    } 
-                }
-            }
-        }
-        return false;
-    },
-    "reload[,<filename>]", "reload one or all files", false));
-
-    commands.push_back(Command("update", [&](const std::string& _line){ 
-        if (_line == "update") {
-            vera::flagChange();
-            return true;
-        }
-        return false;
-    },
-    "update", "force all uniforms to be updated", false));
-
     commands.push_back(Command("plane", [&](const std::string & line) {
         std::vector<std::string> values = vera::split(line,',');
         int resolution = 512;
@@ -1941,6 +1927,38 @@ void commandsInit() {
         return false;
     },
     "wait,<seconds>", "wait for X <seconds> before excecuting another command", false));
+
+    // ACTIONS commands
+    //
+    commands.push_back(Command("reload", [&](const std::string& _line){ 
+        if (_line == "reload" || _line == "reload,all") {
+            for (size_t i = 0; i < files.size(); i++) 
+                sandbox.onFileChange( files, i );
+            return true;
+        }
+        else {
+            std::vector<std::string> values = vera::split(_line,',');
+            if (values.size() == 2 && values[0] == "reload") {
+                for (size_t i = 0; i < files.size(); i++) {
+                    if (files[i].path == values[1]) {
+                        sandbox.onFileChange( files, i );
+                        return true;
+                    } 
+                }
+            }
+        }
+        return false;
+    },
+    "reload[,<filename>]", "reload one or all files", false));
+
+    commands.push_back(Command("update", [&](const std::string& _line){ 
+        if (_line == "update") {
+            vera::flagChange();
+            return true;
+        }
+        return false;
+    },
+    "update", "force all uniforms to be updated", false));
 
     commands.push_back(Command("exit", [&](const std::string& _line){ 
         if (_line == "exit") {

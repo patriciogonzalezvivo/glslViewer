@@ -775,6 +775,11 @@ void GlslViewer::commandsInit(CommandList &_commands ) {
 
         std::vector<std::string> values = vera::split(_line,',');
         if (values.size() == 2) {
+            if (uniforms.activeCamera != uniforms.cameras["default"]) {
+                uniforms.cameras["default"]->setTransformMatrix(uniforms.activeCamera->getTransformMatrix());
+                uniforms.cameras["default"]->setProjection(uniforms.activeCamera->getProjectionMatrix());
+                uniforms.activeCamera = uniforms.cameras["default"];
+            }
             uniforms.activeCamera->setDistance(vera::toFloat(values[1]));
             return true;
         }
@@ -793,6 +798,11 @@ void GlslViewer::commandsInit(CommandList &_commands ) {
 
         std::vector<std::string> values = vera::split(_line,',');
         if (values.size() == 2) {
+            if (uniforms.activeCamera != uniforms.cameras["default"]) {
+                uniforms.cameras["default"]->setTransformMatrix(uniforms.activeCamera->getTransformMatrix());
+                uniforms.cameras["default"]->setProjection(uniforms.activeCamera->getProjectionMatrix());
+                uniforms.activeCamera = uniforms.cameras["default"];
+            }
             if (values[1] == "ortho")
                 uniforms.activeCamera->setProjection(vera::ProjectionType::ORTHO);
             else if (values[1] == "perspective")
@@ -835,6 +845,11 @@ void GlslViewer::commandsInit(CommandList &_commands ) {
 
         std::vector<std::string> values = vera::split(_line,',');
         if (values.size() == 4) {
+            if (uniforms.activeCamera != uniforms.cameras["default"]) {
+                uniforms.cameras["default"]->setTransformMatrix(uniforms.activeCamera->getTransformMatrix());
+                uniforms.cameras["default"]->setProjection(uniforms.activeCamera->getProjectionMatrix());
+                uniforms.activeCamera = uniforms.cameras["default"];
+            }
             uniforms.activeCamera->setPosition( -glm::vec3(vera::toFloat(values[1]), vera::toFloat(values[2]), vera::toFloat(values[3])));
             uniforms.activeCamera->lookAt( uniforms.activeCamera->getTarget() );
             glm::vec3 v = uniforms.activeCamera->getPosition();
@@ -868,7 +883,35 @@ void GlslViewer::commandsInit(CommandList &_commands ) {
     },
     "camera_exposure[,<aper.>,<shutter>,<sensit.>]", "get or set the camera exposure values."));
 
-     _commands.push_back(Command("stream", [&](const std::string& _line) { 
+    _commands.push_back(Command("camera", [&](const std::string& _line){ 
+        if (_line == "camera") {
+            // TODO: print active camera name
+            return false;
+        }
+        else {
+            std::vector<std::string> values = vera::split(_line,',');
+            if (values.size() == 2) {
+                if (values[1] == "list") {
+                    uniforms.printCameras();
+                    return true;
+                }
+                else if (values[1] == "default") {
+                    if (uniforms.cameras.find("default") != uniforms.cameras.end()) {
+                        uniforms.activeCamera = uniforms.cameras["default"];
+                        return true;
+                    }
+                }
+                else if (uniforms.cameras.find(values[1]) != uniforms.cameras.end()) {
+                    uniforms.activeCamera = uniforms.cameras[ values[1] ];
+                    return true;
+                }
+            }
+        }
+        return false;
+    },
+    "camera[,<name>|default|none|list]", "get or set the active camera."));
+
+    _commands.push_back(Command("stream", [&](const std::string& _line) { 
         std::vector<std::string> values = vera::split(_line,',');
 
         if (values.size() == 3) {
@@ -949,6 +992,13 @@ void GlslViewer::commandsInit(CommandList &_commands ) {
                 uniforms.setStreamsPct( vera::toFloat(values[2]) );
                 return true;
             }
+            else if ( values[1] == "frame") {
+                uniforms.setStreamsStop();
+                int frame = vera::toInt(values[2]);
+                uniforms.setStreamsFrame( frame );
+                addDefine("STREAMS_FRAME", values[2]);
+                return true;
+            }
             else if ( values[1] == "prevs") {
                 int prevs = vera::toInt(values[2]);
 
@@ -966,7 +1016,7 @@ void GlslViewer::commandsInit(CommandList &_commands ) {
 
         return false;
     },
-    "streams[,stop|play|restart|speed|prevs[,<value>]]", "print all streams or get/set streams speed and previous frames"));
+    "streams[,stop|play|restart|frame|speed|prevs[,<value>]]", "print all streams or get/set streams speed and previous frames"));
 
     _commands.push_back(Command("models", [&](const std::string& _line){ 
         std::vector<std::string> values = vera::split(_line,',');
@@ -2440,6 +2490,12 @@ void GlslViewer::onMouseDrag(float _x, float _y, int _button) {
         if (fabs(vel_x) < 50.0 && fabs(vel_y) < 50.0) {
             m_camera_azimuth -= vel_x;
             m_camera_elevation += vel_y * 0.5;
+            
+            if (uniforms.activeCamera != uniforms.cameras["default"]) {
+                uniforms.cameras["default"]->setTransformMatrix(uniforms.activeCamera->getTransformMatrix());
+                uniforms.cameras["default"]->setProjection(uniforms.activeCamera->getProjectionMatrix());
+                uniforms.activeCamera = uniforms.cameras["default"];
+            }
             uniforms.activeCamera->orbit(m_camera_azimuth, m_camera_elevation, dist);
             uniforms.activeCamera->lookAt(glm::vec3(0.0));
         }
@@ -2449,6 +2505,11 @@ void GlslViewer::onMouseDrag(float _x, float _y, int _button) {
         float dist = uniforms.activeCamera->getDistance();
         dist += (-.008f * vera::getMouseVelY());
         if (dist > 0.0f) {
+            if (uniforms.activeCamera != uniforms.cameras["default"]) {
+                uniforms.cameras["default"]->setTransformMatrix(uniforms.activeCamera->getTransformMatrix());
+                uniforms.cameras["default"]->setProjection(uniforms.activeCamera->getProjectionMatrix());
+                uniforms.activeCamera = uniforms.cameras["default"];
+            }
             uniforms.activeCamera->orbit(m_camera_azimuth, m_camera_elevation, dist);
             uniforms.activeCamera->lookAt(glm::vec3(0.0));
         }
@@ -2456,8 +2517,14 @@ void GlslViewer::onMouseDrag(float _x, float _y, int _button) {
 }
 
 void GlslViewer::onViewportResize(int _newWidth, int _newHeight) {
-    if (uniforms.activeCamera)
+    if (uniforms.activeCamera) {
+        if (uniforms.activeCamera != uniforms.cameras["default"]) {
+                uniforms.cameras["default"]->setTransformMatrix(uniforms.activeCamera->getTransformMatrix());
+                uniforms.cameras["default"]->setProjection(uniforms.activeCamera->getProjectionMatrix());
+                uniforms.activeCamera = uniforms.cameras["default"];
+            }
         uniforms.activeCamera->setViewport(_newWidth, _newHeight);
+    }
     
     for (size_t i = 0; i < uniforms.buffers.size(); i++) 
         if (uniforms.buffers[i]->scale > 0.0)

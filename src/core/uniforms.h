@@ -15,12 +15,12 @@
 #include "vera/types/scene.h"
 #include "vera/types/image.h"
 
-struct CameraData {
-    glm::mat4   projection;
-    glm::mat4   transform;
-};
+// struct CameraData {
+//     glm::mat4   projection;
+//     glm::mat4   transform;
+// };
 
-typedef std::vector<CameraData> CameraPath;
+// typedef std::vector<CameraData> Cameras;
 
 typedef std::array<float, 4> UniformValue;
 
@@ -111,11 +111,11 @@ public:
     UniformSequenceMap  sequences;
     virtual bool        addSequence( const std::string& _name, const std::string& _filename);
     virtual void        setStreamsPlay();
+    virtual void        setStreamsFrame(size_t _frame);
     virtual void        setStreamsStop();
     virtual void        setStreamsRestart();
 
-    CameraPath          cameraPath;
-    virtual bool        addCameraPath( const std::string& _filename );
+    virtual bool        addCameras( const std::string& _filename );
 
     virtual void        clearUniforms();
     virtual void        printAvailableUniforms(bool _non_active);
