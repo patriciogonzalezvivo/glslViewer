@@ -904,6 +904,12 @@ void GlslViewer::commandsInit(CommandList &_commands ) {
                 else if (uniforms.cameras.find(values[1]) != uniforms.cameras.end()) {
                     uniforms.activeCamera = uniforms.cameras[ values[1] ];
                     uniforms.cameras[ "default" ]->setTransformMatrix(uniforms.activeCamera->getTransformMatrix());
+
+                    float distance = glm::length( glm::vec3(uniforms.cameras[ values[1] ]->getTransformMatrix()[3]) );
+                    glm::vec3 position = uniforms.cameras[ values[1] ]->getPosition();
+                    glm::vec3 forward = -uniforms.cameras[ values[1] ]->getZAxis();  // Camera looks down -Z axis
+                    glm::vec3 target = position + forward * distance;
+                    uniforms.cameras[ "default" ]->setTarget(target);
                     uniforms.cameras[ "default" ]->setProjection(uniforms.activeCamera->getProjectionMatrix());
 
                     if (uniforms.textures.find("camera"+values[1]) != uniforms.textures.end()) {

@@ -670,16 +670,18 @@ bool Uniforms::addCameras( const std::string& _filename ) {
             std::string image_filename = (params.size() > 12) ? params[12] : "";
 
             vera::Camera* camera = new vera::Camera();
-            camera->setTransformMatrix(R * T);
-            camera->setProjection(projection);
+            T = R * T;
+            camera->setTransformMatrix(T);
 
-            
             // Set target based on camera orientation
-            // float distance = glm::length( glm::vec3(camera->getTransformMatrix()[3]) );
-            // glm::vec3 position = camera->getPosition();
-            // glm::vec3 forward = -camera->getZAxis();  // Camera looks down -Z axis
-            // glm::vec3 target = position + forward * distance;
-            // camera->setTarget(target);
+            float distance = glm::length( glm::vec3(T[3]) );
+            glm::vec3 position = camera->getPosition();
+            glm::vec3 forward = -camera->getZAxis();  // Camera looks down -Z axis
+            glm::vec3 target = position + forward * distance;
+            camera->setTarget(target);
+
+            camera->setProjection(projection);
+            
             // camera->setDistance( distance );
             
             // Adding to VERA scene cameras
@@ -687,9 +689,7 @@ bool Uniforms::addCameras( const std::string& _filename ) {
             // Adding to Uniforms cameras map
             cameras[ vera::toString(counter) ] = camera;
             
-
             std::string path = folder_path + image_filename;
-            std::cout << "// load image: " << path << std::endl;
             if (image_filename != "" && vera::urlExists(path)) {
                 addTexture("camera" + vera::toString(counter), path);
             }
