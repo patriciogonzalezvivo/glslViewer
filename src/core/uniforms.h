@@ -15,13 +15,6 @@
 #include "vera/types/scene.h"
 #include "vera/types/image.h"
 
-// struct CameraData {
-//     glm::mat4   projection;
-//     glm::mat4   transform;
-// };
-
-// typedef std::vector<CameraData> Cameras;
-
 typedef std::array<float, 4> UniformValue;
 
 struct UniformData {

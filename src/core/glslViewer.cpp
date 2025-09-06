@@ -903,6 +903,13 @@ void GlslViewer::commandsInit(CommandList &_commands ) {
                 }
                 else if (uniforms.cameras.find(values[1]) != uniforms.cameras.end()) {
                     uniforms.activeCamera = uniforms.cameras[ values[1] ];
+                    uniforms.cameras[ "default" ]->setTransformMatrix(uniforms.activeCamera->getTransformMatrix());
+                    uniforms.cameras[ "default" ]->setProjection(uniforms.activeCamera->getProjectionMatrix());
+
+                    if (uniforms.textures.find("camera"+values[1]) != uniforms.textures.end()) {
+                        uniforms.textures["u_cameraTex"] = uniforms.textures["camera"+values[1]];
+                    }
+
                     return true;
                 }
             }

@@ -854,8 +854,6 @@ int main(int argc, char **argv) {
             }
             else if (_key >= 49 && _key <= 57) {
                 commandsRun(std::string("camera,") + vera::toString(_key - 49));
-                commandsRun("streams,stop");
-                commandsRun("streams,frame," + vera::toString(_key - 49));
                 commandsRun("update");
             }
         }

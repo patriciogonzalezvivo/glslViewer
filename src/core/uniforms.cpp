@@ -10,6 +10,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "tools/text.h"
+#include "vera/ops/fs.h"
 #include "vera/ops/draw.h"
 #include "vera/ops/string.h"
 #include "vera/xr/xr.h"
@@ -612,6 +613,8 @@ void Uniforms::clearUniforms() {
 }
 
 bool Uniforms::addCameras( const std::string& _filename ) {
+    std::string folder_path = vera::getBaseDir(_filename);
+
     std::fstream is( _filename.c_str(), std::ios::in);
     if (is.is_open()) {
 
@@ -625,71 +628,57 @@ bool Uniforms::addCameras( const std::string& _filename ) {
             // parse through row spliting into commas
             std::vector<std::string> params = vera::split(line, ',', true);
 
-            // CameraData frame;
-            float fL = vera::toFloat(params[0]);  // focal length
-            float cx = vera::toFloat(params[1]);  // principal point x
-            float cy = vera::toFloat(params[2]);  // principal point y
-
-            // Camera extrinsics (rotation + translation from COLMAP)
-            glm::mat4 colmap_transform = glm::mat4(
-                glm::vec4( vera::toFloat(params[3]),  vera::toFloat(params[4]),  vera::toFloat(params[5]),  0.0f),
-                glm::vec4( vera::toFloat(params[6]),  vera::toFloat(params[7]),  vera::toFloat(params[8]),  0.0f),
-                glm::vec4( vera::toFloat(params[9]),  vera::toFloat(params[10]), vera::toFloat(params[11]), 0.0f),
-                glm::vec4( vera::toFloat(params[12]), vera::toFloat(params[13]), vera::toFloat(params[14]), 1.0f)
-            );
-
-            // Convert from COLMAP coordinate system to OpenGL
-            // COLMAP: +X right, +Y down, +Z forward (camera looking down +Z)
-            // OpenGL: +X right, +Y up, +Z backward (camera looking down -Z)
-            glm::mat4 coord_conversion = glm::mat4(
-                1.0f,  0.0f,  0.0f, 0.0f,
-                0.0f,  1.0f,  0.0f, 0.0f,
-                0.0f,  0.0f, -1.0f, 0.0f,
-                0.0f,  0.0f,  0.0f, 1.0f
-            );
-            
-            glm::mat4 transform = colmap_transform * coord_conversion;
-
-            float near = 0.1f;
-            float far = 1000.0;
-            if (activeCamera) {
-                near = activeCamera->getNearClip();
-                far = activeCamera->getFarClip();
-            }
-
-            // Assume image dimensions (you might want to pass these as parameters)
-            float w = cx * 2.0f;  // image width
-            float h = cy * 2.0f;  // image height
-            
-            // Create proper projection matrix from intrinsics
-            float delta = far-near;
+            // Fx,Fy,Ox,Oy,S,Qw,Qx,Qy,Qz,Tx,Ty,Tz,FILENAME
+            float Fx = vera::toFloat(params[0]);  // focal length x
+            float Fy = vera::toFloat(params[1]);  // focal length y
+            float Ox = vera::toFloat(params[2]);  // principal point x
+            float Oy = vera::toFloat(params[3]);  // principal point y
+            float S = vera::toFloat(params[4]); // skew
             // glm::mat4 projection = glm::mat4(
-            //     2.0f * fL / w,      0.0f,                  (2.0f * cx - w) / w,        0.0f,
-            //     0.0f,               -2.0f * fL / h,        (h - 2.0f * cy) / h,        0.0f,
-            //     0.0f,               0.0f,                  (far + near) / delta,      -0.1f,
-            //     0.0f,               0.0f,                  2.0f * far * near / delta,  1.0f
+            //     2.0 * Fx, S, 0.0, 0.0,
+            //     0.0, 2.0 * Fy, 0.0, 0.0,
+            //     2.0 * Ox - 1.0, 2.0 * Oy - 1.0, -1.0, -1.0,
+            //     0.0, 0.0, -0.1, 0.0
             // );
             
             glm::mat4 projection = glm::mat4(
-                2.0f*fL/w,          0.0f,               0.0f,                       0.0f,
-                0.0f,              -2.0f*fL/h,         0.0f,                        0.0f,
-               (2.0f*cx-w)/w,      (h-2.0f*cy)/h,       -(far+near)/delta,         -1.0f,
-                0.0f,               0.0f,               -2.0f*far*near/delta,       1.0f
+                -2.0f*Fx,           S,              0.0f,       0.0f,
+                0.0f,              -2.0f*Fy,        0.0f,       0.0f,
+                2.0f*Ox-1.0f,       2.0f*Oy-1.0f,  -1.0f,      -1.0f,
+                0.0f,               0.0f,          -0.1f,      0.0f
+            );
+
+            // Quaternion rotation
+            float Qw = vera::toFloat(params[5]);
+            float Qx = vera::toFloat(params[6]);
+            float Qy = vera::toFloat(params[7]);
+            float Qz = vera::toFloat(params[8]);
+            glm::quat Q = glm::quat(Qx, Qy, Qz, Qw);
+            glm::mat4 R = glm::mat4_cast(Q);
+            // Translation
+            float Tx = vera::toFloat(params[9]);
+            float Ty = vera::toFloat(params[10]);
+            float Tz = vera::toFloat(params[11]);
+            glm::mat4 T = glm::mat4(
+                1.0f, 0.0f, 0.0f, 0.0f,
+                0.0f,-1.0f, 0.0f, 0.0f,
+                0.0f, 0.0f,-1.0f, 0.0f,
+                Tx,   Ty,   Tz,   1.0f
             );
             
+            // Image filename (optional)
+            std::string image_filename = (params.size() > 12) ? params[12] : "";
+
             vera::Camera* camera = new vera::Camera();
-            
-             // Set transform (convert from COLMAP to OpenGL coordinate system if needed)
-            camera->setTransformMatrix(transform);
+            camera->setTransformMatrix(R * T);
             camera->setProjection(projection);
 
-            float distance = glm::length( glm::vec3(transform[3]) );
             
             // Set target based on camera orientation
-            glm::vec3 position = camera->getPosition();
-            glm::vec3 forward = -camera->getZAxis();  // Camera looks down -Z axis
-            glm::vec3 target = position + forward * distance;
-            
+            // float distance = glm::length( glm::vec3(camera->getTransformMatrix()[3]) );
+            // glm::vec3 position = camera->getPosition();
+            // glm::vec3 forward = -camera->getZAxis();  // Camera looks down -Z axis
+            // glm::vec3 target = position + forward * distance;
             // camera->setTarget(target);
             // camera->setDistance( distance );
             
@@ -697,7 +686,13 @@ bool Uniforms::addCameras( const std::string& _filename ) {
             vera::addCamera( vera::toString(counter), camera );
             // Adding to Uniforms cameras map
             cameras[ vera::toString(counter) ] = camera;
+            
 
+            std::string path = folder_path + image_filename;
+            std::cout << "// load image: " << path << std::endl;
+            if (image_filename != "" && vera::urlExists(path)) {
+                addTexture("camera" + vera::toString(counter), path);
+            }
             counter++;
         }
 
