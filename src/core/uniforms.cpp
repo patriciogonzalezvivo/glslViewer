@@ -634,19 +634,19 @@ bool Uniforms::addCameras( const std::string& _filename ) {
             float Ox = vera::toFloat(params[2]);  // principal point x
             float Oy = vera::toFloat(params[3]);  // principal point y
             float S = vera::toFloat(params[4]); // skew
-            // glm::mat4 projection = glm::mat4(
-            //     2.0 * Fx, S, 0.0, 0.0,
-            //     0.0, 2.0 * Fy, 0.0, 0.0,
-            //     2.0 * Ox - 1.0, 2.0 * Oy - 1.0, -1.0, -1.0,
-            //     0.0, 0.0, -0.1, 0.0
-            // );
-            
             glm::mat4 projection = glm::mat4(
-                -2.0f*Fx,           S,              0.0f,       0.0f,
-                0.0f,              -2.0f*Fy,        0.0f,       0.0f,
-                2.0f*Ox-1.0f,       2.0f*Oy-1.0f,  -1.0f,      -1.0f,
-                0.0f,               0.0f,          -0.1f,      0.0f
+                2.0 * Fx, S, 0.0, 0.0,
+                0.0, 2.0 * Fy, 0.0, 0.0,
+                2.0 * Ox - 1.0, 2.0 * Oy - 1.0, -1.0, -1.0,
+                0.0, 0.0, -0.1, 0.0
             );
+            
+            // glm::mat4 projection = glm::mat4(
+            //     -2.0f*Fx,           S,              0.0f,       0.0f,
+            //     0.0f,              -2.0f*Fy,        0.0f,       0.0f,
+            //     2.0f*Ox-1.0f,       2.0f*Oy-1.0f,  -1.0f,      -1.0f,
+            //     0.0f,               0.0f,          -0.1f,      0.0f
+            // );
 
             // Quaternion rotation
             float Qw = vera::toFloat(params[5]);
@@ -672,17 +672,7 @@ bool Uniforms::addCameras( const std::string& _filename ) {
             vera::Camera* camera = new vera::Camera();
             T = R * T;
             camera->setTransformMatrix(T);
-
-            // Set target based on camera orientation
-            float distance = glm::length( glm::vec3(T[3]) );
-            glm::vec3 position = camera->getPosition();
-            glm::vec3 forward = -camera->getZAxis();  // Camera looks down -Z axis
-            glm::vec3 target = position + forward * distance;
-            camera->setTarget(target);
-
             camera->setProjection(projection);
-            
-            // camera->setDistance( distance );
             
             // Adding to VERA scene cameras
             vera::addCamera( vera::toString(counter), camera );

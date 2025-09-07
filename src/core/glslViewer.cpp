@@ -64,7 +64,9 @@ GlslViewer::GlslViewer():
     #endif
 
     // Scene
-    m_view2d(1.0), m_time_offset(0.0), m_camera_elevation(1.0), m_camera_azimuth(180.0), m_error_screen(vera::SHOW_MAGENTA_SHADER), 
+    m_view2d(1.0), m_time_offset(0.0), 
+    m_camera_elevation(1.0), m_camera_azimuth(180.0), 
+    m_error_screen(vera::SHOW_MAGENTA_SHADER), 
     m_change_viewport(true), m_update_buffers(true), m_initialized(false), 
 
     // Debug
@@ -780,7 +782,9 @@ void GlslViewer::commandsInit(CommandList &_commands ) {
                 uniforms.cameras["default"]->setProjection(uniforms.activeCamera->getProjectionMatrix());
                 uniforms.activeCamera = uniforms.cameras["default"];
             }
-            uniforms.activeCamera->setDistance(vera::toFloat(values[1]));
+            float dist = vera::toFloat(values[1]);
+            uniforms.activeCamera->orbit(m_camera_azimuth, m_camera_elevation, dist);
+
             return true;
         }
         else {
@@ -851,8 +855,7 @@ void GlslViewer::commandsInit(CommandList &_commands ) {
                 uniforms.activeCamera = uniforms.cameras["default"];
             }
             uniforms.activeCamera->setPosition( -glm::vec3(vera::toFloat(values[1]), vera::toFloat(values[2]), vera::toFloat(values[3])));
-            uniforms.activeCamera->lookAt( uniforms.activeCamera->getTarget() );
-            glm::vec3 v = uniforms.activeCamera->getPosition();
+            glm::vec3 v = uniforms.activeCamera->getPosition() - uniforms.activeCamera->getTarget();
             m_camera_azimuth = glm::degrees( atan2(v.x, v.z) );
             m_camera_elevation = glm::degrees( atan2(-v.y, sqrt(v.x * v.x + v.z * v.z)) );
             return true;
@@ -903,13 +906,8 @@ void GlslViewer::commandsInit(CommandList &_commands ) {
                 }
                 else if (uniforms.cameras.find(values[1]) != uniforms.cameras.end()) {
                     uniforms.activeCamera = uniforms.cameras[ values[1] ];
+                    uniforms.cameras[ "default" ]->setTarget(uniforms.activeCamera->getTarget());
                     uniforms.cameras[ "default" ]->setTransformMatrix(uniforms.activeCamera->getTransformMatrix());
-
-                    float distance = glm::length( glm::vec3(uniforms.cameras[ values[1] ]->getTransformMatrix()[3]) );
-                    glm::vec3 position = uniforms.cameras[ values[1] ]->getPosition();
-                    glm::vec3 forward = -uniforms.cameras[ values[1] ]->getZAxis();  // Camera looks down -Z axis
-                    glm::vec3 target = position + forward * distance;
-                    uniforms.cameras[ "default" ]->setTarget(target);
                     uniforms.cameras[ "default" ]->setProjection(uniforms.activeCamera->getProjectionMatrix());
 
                     if (uniforms.textures.find("camera"+values[1]) != uniforms.textures.end()) {
@@ -1189,14 +1187,13 @@ void GlslViewer::loadAssets(WatchFileList &_files) {
     if (geom_index != -1) {
         uniforms.load(_files[geom_index].path, verbose);
         m_sceneRender.loadScene(uniforms);
+        // uniforms.activeCamera->setTarget(m_sceneRender.getCenter());
         uniforms.activeCamera->orbit(m_camera_azimuth, m_camera_elevation, m_sceneRender.getArea() * 2.0);
     }
     else {
         m_canvas_shader.addDefine("MODEL_VERTEX_TEXCOORD", "v_texcoord");
         uniforms.activeCamera->orbit(m_camera_azimuth, m_camera_elevation, 2.0);
     }
-
-    uniforms.activeCamera->lookAt( uniforms.activeCamera->getTarget() );
 
     // FINISH SCENE SETUP
     // -------------------------------------------------
@@ -1260,7 +1257,6 @@ void GlslViewer::loadModel(vera::Model* _model) {
     uniforms.models[_model->getName()] = _model;
     m_sceneRender.loadScene(uniforms);
     uniforms.activeCamera->orbit(m_camera_azimuth, m_camera_elevation, m_sceneRender.getArea() * 2.0);
-    uniforms.activeCamera->lookAt(uniforms.activeCamera->getTarget());
     vera::flagChange();
 }
 
@@ -2463,6 +2459,33 @@ void GlslViewer::onScroll(float _yoffset) {
         
         vera::flagChange();
     }
+
+    // zoom view3d
+    if (uniforms.activeCamera) {
+        if (uniforms.activeCamera != uniforms.cameras["default"]) {
+            glm::vec3 currentTarget = uniforms.activeCamera->getTarget();
+            float currentDistance = uniforms.activeCamera->getDistance();
+
+            uniforms.cameras["default"]->setTarget(currentTarget);
+            uniforms.cameras["default"]->setTransformMatrix(uniforms.activeCamera->getTransformMatrix());
+            uniforms.cameras["default"]->setProjection(uniforms.activeCamera->getProjectionMatrix());
+            uniforms.activeCamera = uniforms.cameras["default"];
+        }
+
+        float currentDistance = uniforms.activeCamera->getDistance();
+        if (currentDistance <= 0.0f) {
+            currentDistance = glm::length(uniforms.activeCamera->getPosition() - uniforms.activeCamera->getTarget());
+        }
+        
+        // Logarithmic zoom for better control
+        float zoomSpeed = currentDistance * 0.1f;
+        currentDistance *= pow(0.9f, _yoffset);
+        
+        // Clamp distance
+        currentDistance = glm::clamp(currentDistance, 0.1f, 1000.0f);
+        uniforms.activeCamera->orbit(m_camera_azimuth, m_camera_elevation, currentDistance);
+    }
+
 }
 
 void GlslViewer::onMouseMove(float _x, float _y) {
@@ -2470,6 +2493,7 @@ void GlslViewer::onMouseMove(float _x, float _y) {
 }
 
 void GlslViewer::onMouseDrag(float _x, float _y, int _button) {
+     // If no active camera, do nothing
     if (uniforms.activeCamera == nullptr)
         return;
 
@@ -2490,43 +2514,62 @@ void GlslViewer::onMouseDrag(float _x, float _y, int _button) {
         if (x != _x || y != _y) vera::setMousePosition(x, y);
     }
 
-    if (_button == 1) {
+    bool shiftPressed = vera::isShiftPressed();
+    bool ctrlPressed = vera::isControlPressed();
+
+    // Get current camera state
+    glm::vec3 currentTarget = uniforms.activeCamera->getTarget();
+    float currentDistance = uniforms.activeCamera->getDistance();
+    
+    if (uniforms.activeCamera != uniforms.cameras["default"]) {
+        uniforms.cameras["default"]->setTarget(currentTarget);
+        uniforms.cameras["default"]->setTransformMatrix(uniforms.activeCamera->getTransformMatrix());
+        uniforms.cameras["default"]->setProjection(uniforms.activeCamera->getProjectionMatrix());
+        uniforms.activeCamera = uniforms.cameras["default"];
+    }
+
+    float vel_x = vera::getMouseVelX();
+    float vel_y = vera::getMouseVelY();
+
+    // Clamp velocity to prevent jumps
+    vel_x = glm::clamp(vel_x, -50.0f, 50.0f);
+    vel_y = glm::clamp(vel_y, -50.0f, 50.0f);
+    
+    if (_button == 1 && !shiftPressed && !ctrlPressed) {
         // Left-button drag is used to pan u_view2d.
         m_view2d = glm::translate(m_view2d, glm::vec2(-vera::getMouseVelX(),-vera::getMouseVelY()) );
-
-        // Left-button drag is used to rotate geometry.
-        float dist = uniforms.activeCamera->getDistance();
-
-        float vel_x = vera::getMouseVelX();
-        float vel_y = vera::getMouseVelY();
-
-        if (fabs(vel_x) < 50.0 && fabs(vel_y) < 50.0) {
-            m_camera_azimuth -= vel_x;
-            m_camera_elevation += vel_y * 0.5;
-            
-            if (uniforms.activeCamera != uniforms.cameras["default"]) {
-                uniforms.cameras["default"]->setTransformMatrix(uniforms.activeCamera->getTransformMatrix());
-                uniforms.cameras["default"]->setProjection(uniforms.activeCamera->getProjectionMatrix());
-                uniforms.activeCamera = uniforms.cameras["default"];
-            }
-            uniforms.activeCamera->orbit(m_camera_azimuth, m_camera_elevation, dist);
-            uniforms.activeCamera->lookAt(glm::vec3(0.0));
-        }
+        
+         // Update orbital angles
+        m_camera_azimuth -= vel_x * 0.5f;
+        m_camera_elevation += vel_y * 0.5f;
+        
+        // Clamp elevation to prevent gimbal lock
+        m_camera_elevation = glm::clamp(m_camera_elevation, -89.0f, 89.0f);
+        uniforms.activeCamera->orbit(m_camera_azimuth, m_camera_elevation, currentDistance);
     } 
-    else {
-        // Right-button drag is used to zoom geometry.
-        float dist = uniforms.activeCamera->getDistance();
-        dist += (-.008f * vera::getMouseVelY());
-        if (dist > 0.0f) {
-            if (uniforms.activeCamera != uniforms.cameras["default"]) {
-                uniforms.cameras["default"]->setTransformMatrix(uniforms.activeCamera->getTransformMatrix());
-                uniforms.cameras["default"]->setProjection(uniforms.activeCamera->getProjectionMatrix());
-                uniforms.activeCamera = uniforms.cameras["default"];
-            }
-            uniforms.activeCamera->orbit(m_camera_azimuth, m_camera_elevation, dist);
-            uniforms.activeCamera->lookAt(glm::vec3(0.0));
-        }
+    else if (_button == 1 && shiftPressed) {
+        uniforms.activeCamera->moveTarget(-vel_x * 0.01f, vel_y * 0.01f);
+        
     }
+    else if (_button == 1 && ctrlPressed) {
+        uniforms.activeCamera->truck(.01f * vel_x);
+        uniforms.activeCamera->boom(.01f * -vel_y);
+        uniforms.activeCamera->moveTarget(-vel_x * 0.01f, vel_y * 0.01f);
+    }
+    else if (_button == 2) {
+        // Right-button or Shift+Ctrl+Left: Zoom (change distance)
+        float zoomSpeed = currentDistance * 0.01f; // Zoom speed relative to distance
+        currentDistance += vel_y * zoomSpeed;
+        
+        // Clamp distance to reasonable bounds
+        currentDistance = glm::clamp(currentDistance, 0.1f, 1000.0f);
+        uniforms.activeCamera->orbit(m_camera_azimuth, m_camera_elevation, currentDistance);
+    }
+    else if (_button == 3) {
+        uniforms.activeCamera->pan(-vel_x * 0.05f);
+        uniforms.activeCamera->tilt(-vel_y * 0.05f);
+    }
+    
 }
 
 void GlslViewer::onViewportResize(int _newWidth, int _newHeight) {

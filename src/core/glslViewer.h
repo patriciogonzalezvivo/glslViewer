@@ -151,8 +151,11 @@ protected:
     // Other state properties
     glm::mat3                       m_view2d;
     float                           m_time_offset;
+    
+    glm::vec3                       m_camera_target;
     float                           m_camera_azimuth;
     float                           m_camera_elevation;
+
     vera::ShaderErrorResolve        m_error_screen;
     bool                            m_change_viewport;
     bool                            m_update_buffers;

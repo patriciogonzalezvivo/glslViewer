@@ -33,6 +33,7 @@ public:
     void            setCulling(vera::CullingMode _culling) { m_culling = _culling; }
     vera::CullingMode getCulling() { return m_culling; }
 
+    glm::vec3       getCenter() const { return m_center; }
     float           getArea() const { return m_area; }
     
     size_t          getBuffersTotal() const { return m_buffers_total; }
@@ -63,6 +64,7 @@ public:
 
 protected:
     vera::Node                  m_origin;
+    glm::vec3                   m_center;
     float                       m_area;
 
     // Camera

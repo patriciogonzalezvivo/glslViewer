@@ -441,6 +441,7 @@ bool SceneRender::loadScene(Uniforms& _uniforms) {
     }
 
     m_area = glm::max(0.5f, glm::max(glm::length(bbox.min), glm::length(bbox.max)));
+    m_center = 0.5f * (bbox.min + bbox.max);
     m_origin.bChange = true;
     
     // Floor
@@ -1045,8 +1046,18 @@ void SceneRender::renderDebug(Uniforms& _uniforms) {
             m_axis_vbo = std::unique_ptr<vera::Vbo>(new vera::Vbo( vera::axisMesh(_uniforms.activeCamera->getFarClip(), m_floor_height) ));
 
         vera::strokeWeight(2.0f);
-        vera::stroke( glm::vec4(1.0f) );
+        vera::stroke( glm::vec4(1.0f, 0.0f, 0.0f, 1.0f) );
         vera::model( m_axis_vbo.get() );
+
+        // draw camera_target
+        if (_uniforms.activeCamera ) {;
+            vera::push();
+            vera::translate( _uniforms.activeCamera->getTarget() );
+            vera::stroke( glm::vec4(1.0f) );
+            vera::strokeWeight(2.0f);
+            vera::model( m_axis_vbo.get() );
+            vera::pop();
+        }
     }
     
     // Grid
