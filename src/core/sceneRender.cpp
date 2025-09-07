@@ -436,7 +436,7 @@ bool SceneRender::loadScene(Uniforms& _uniforms) {
     // Calculate the total area
     vera::BoundingBox bbox;
     for (vera::ModelsMap::iterator it = _uniforms.models.begin(); it != _uniforms.models.end(); ++it) {
-        vera::addLabel( it->second->getName(), it->second, vera::LABEL_RIGHT);
+        vera::addLabel( it->second->getName(), it->second, vera::LABEL_UP, 30.0f);
         bbox.expand( it->second->getBoundingBox() );
     }
 
@@ -1027,8 +1027,7 @@ void SceneRender::renderDebug(Uniforms& _uniforms) {
     // Draw Bounding boxes
     if (showBBoxes) {
         vera::strokeWeight(2.0f);
-
-        vera::stroke(glm::vec3(1.0f, 0.0f, 0.0f));
+        vera::stroke(glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
         for (vera::ModelsMap::iterator it = _uniforms.models.begin(); it != _uniforms.models.end(); ++it) {
             vera::applyMatrix( it->second->getTransformMatrix() );
             vera::model( it->second->getVboBbox() );

@@ -628,37 +628,39 @@ bool Uniforms::addCameras( const std::string& _filename ) {
             // parse through row spliting into commas
             std::vector<std::string> params = vera::split(line, ',', true);
 
+            size_t id = vera::toInt(params[0]);
+            std::string model = params[1];
+
             // Fx,Fy,Ox,Oy,S,Qw,Qx,Qy,Qz,Tx,Ty,Tz,FILENAME
-            float Fx = vera::toFloat(params[0]);  // focal length x
-            float Fy = vera::toFloat(params[1]);  // focal length y
-            float Ox = vera::toFloat(params[2]);  // principal point x
-            float Oy = vera::toFloat(params[3]);  // principal point y
-            float S = vera::toFloat(params[4]); // skew
-            glm::mat4 projection = glm::mat4(
-                2.0 * Fx, S, 0.0, 0.0,
-                0.0, 2.0 * Fy, 0.0, 0.0,
-                2.0 * Ox - 1.0, 2.0 * Oy - 1.0, -1.0, -1.0,
-                0.0, 0.0, -0.1, 0.0
-            );
-            
+            float Fx = vera::toFloat(params[2]);  // focal length x
+            float Fy = vera::toFloat(params[3]);  // focal length y
+            float Ox = vera::toFloat(params[4]);  // principal point x
+            float Oy = vera::toFloat(params[5]);  // principal point y
             // glm::mat4 projection = glm::mat4(
-            //     -2.0f*Fx,           S,              0.0f,       0.0f,
-            //     0.0f,              -2.0f*Fy,        0.0f,       0.0f,
-            //     2.0f*Ox-1.0f,       2.0f*Oy-1.0f,  -1.0f,      -1.0f,
-            //     0.0f,               0.0f,          -0.1f,      0.0f
+            //     2.0f * Fx, 0.0f, 0.0f, 0.0f,
+            //     0.0f, 2.0f * Fy, 0.0f, 0.0f,
+            //     2.0f * Ox - 1.0f, 2.0f * Oy - 1.0f, -1.0f, -1.0f,
+            //     0.0f, 0.0f, -0.1f, 0.0f
             // );
+            
+            glm::mat4 projection = glm::mat4(
+                -2.0f*Fx,           0.0f,           0.0f,       0.0f,
+                0.0f,              -2.0f*Fy,        0.0f,       0.0f,
+                2.0f*Ox-1.0f,       2.0f*Oy-1.0f,  -1.0f,      -1.0f,
+                0.0f,               0.0f,          -0.1f,      0.0f
+            );
 
             // Quaternion rotation
-            float Qw = vera::toFloat(params[5]);
-            float Qx = vera::toFloat(params[6]);
-            float Qy = vera::toFloat(params[7]);
-            float Qz = vera::toFloat(params[8]);
+            float Qw = vera::toFloat(params[6]);
+            float Qx = vera::toFloat(params[7]);
+            float Qy = vera::toFloat(params[8]);
+            float Qz = vera::toFloat(params[9]);
             glm::quat Q = glm::quat(Qx, Qy, Qz, Qw);
             glm::mat4 R = glm::mat4_cast(Q);
             // Translation
-            float Tx = vera::toFloat(params[9]);
-            float Ty = vera::toFloat(params[10]);
-            float Tz = vera::toFloat(params[11]);
+            float Tx = vera::toFloat(params[10]);
+            float Ty = vera::toFloat(params[11]);
+            float Tz = vera::toFloat(params[12]);
             glm::mat4 T = glm::mat4(
                 1.0f, 0.0f, 0.0f, 0.0f,
                 0.0f,-1.0f, 0.0f, 0.0f,
@@ -667,11 +669,10 @@ bool Uniforms::addCameras( const std::string& _filename ) {
             );
             
             // Image filename (optional)
-            std::string image_filename = (params.size() > 12) ? params[12] : "";
+            std::string image_filename = (params.size() > 12) ? params[13] : "";
 
             vera::Camera* camera = new vera::Camera();
-            T = R * T;
-            camera->setTransformMatrix(T);
+            camera->setTransformMatrix(R * T);
             camera->setProjection(projection);
             
             // Adding to VERA scene cameras
@@ -681,7 +682,7 @@ bool Uniforms::addCameras( const std::string& _filename ) {
             
             std::string path = folder_path + image_filename;
             if (image_filename != "" && vera::urlExists(path)) {
-                addTexture("camera" + vera::toString(counter), path);
+                addTexture("_camera" + vera::toString(counter), path);
             }
             counter++;
         }
