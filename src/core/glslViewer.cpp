@@ -916,6 +916,21 @@ void GlslViewer::commandsInit(CommandList &_commands ) {
                     uniforms.cameras["default"]->setTransformMatrix(uniforms.activeCamera->getTransformMatrix());
                     uniforms.cameras["default"]->setProjection(uniforms.activeCamera->getProjectionMatrix());
 
+                    // convert camera_transform to vector<float>
+                    std::vector<float> camera_transform(16);
+                    const glm::mat4& tm = uniforms.activeCamera->getTransformMatrix();
+                    for (int i = 0; i < 4; i++)
+                        for (int j = 0; j < 4; j++)
+                            camera_transform[i * 4 + j] = tm[j][i];
+                    uniforms.set("u_cameraTransformMatrix", camera_transform);
+
+                    std::vector<float> camera_projection(16);
+                    const glm::mat4& pm = uniforms.activeCamera->getProjectionMatrix();
+                    for (int i = 0; i < 4; i++)
+                        for (int j = 0; j < 4; j++)
+                            camera_projection[i * 4 + j] = pm[j][i];
+                    uniforms.set("u_cameraProjectionMatrix", camera_projection);
+
                     // extract camera m_camera_azimuth and m_camera_elevation
                     glm::vec3 v = uniforms.activeCamera->getPosition() - target;
                     m_camera_azimuth = glm::degrees( atan2(v.x, v.z) ) - 180.0f;

@@ -15,7 +15,7 @@
 #include "vera/types/scene.h"
 #include "vera/types/image.h"
 
-typedef std::array<float, 4> UniformValue;
+typedef std::array<float, 16> UniformValue;
 
 struct UniformData {
     std::string getType();

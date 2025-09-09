@@ -420,9 +420,9 @@ void Uniforms::set(const std::string& _name, float _x, float _y, float _z, float
     m_changed = true;
 }
 
-void Uniforms::set( const std::string& _name, const std::vector<float>& _data, bool _queue) {
+void Uniforms::set(const std::string& _name, const std::vector<float>& _data, bool _queue) {
     UniformValue value;
-    int N = std::min((int)_data.size(), 4);
+    int N = std::min((int)_data.size(), 16);
     // memcpy(&value, _data.data(), N * sizeof(float) );
     for (size_t i = 0; i < N; i++)
         value[i] = _data[i];
