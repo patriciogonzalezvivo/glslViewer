@@ -915,6 +915,7 @@ void GlslViewer::commandsInit(CommandList &_commands ) {
                     uniforms.activeCamera = uniforms.cameras[ values[1] ];
                     uniforms.cameras["default"]->setTransformMatrix(uniforms.activeCamera->getTransformMatrix());
                     uniforms.cameras["default"]->setProjection(uniforms.activeCamera->getProjectionMatrix());
+                    uniforms.cameras["default"]->bFlipped = uniforms.activeCamera->bFlipped;
 
                     // convert camera_transform to vector<float>
                     std::vector<float> camera_transform(16);

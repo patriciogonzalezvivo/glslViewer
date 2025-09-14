@@ -110,6 +110,16 @@ Uniforms::Uniforms() : m_frame(0), m_play(true) {
         return std::string("");
     });
 
+    functions["u_cameraTarget"] = UniformFunction("vec3", [this](vera::Shader& _shader) {
+        if (activeCamera)
+            _shader.setUniform("u_cameraTarget", - (activeCamera->getTarget()) );
+    },
+    [this]() {
+        if (activeCamera)
+            return vera::toString(-activeCamera->getTarget(), ',');
+        return std::string("");
+    });
+
     functions["u_cameraDistance"] = UniformFunction("float", [this](vera::Shader& _shader) {
         if (activeCamera)
             _shader.setUniform("u_cameraDistance", activeCamera->getDistance());
@@ -674,6 +684,7 @@ bool Uniforms::addCameras( const std::string& _filename ) {
             vera::Camera* camera = new vera::Camera();
             camera->setTransformMatrix(R * T);
             camera->setProjection(projection);
+            camera->bFlipped = true;
             
             // Adding to VERA scene cameras
             vera::addCamera( vera::toString(counter), camera );
