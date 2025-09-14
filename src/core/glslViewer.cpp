@@ -2509,11 +2509,6 @@ void GlslViewer::onScroll(float _yoffset) {
         // Logarithmic zoom for better control
         currentDistance *= pow(0.9f, _yoffset);
         
-        // // calulate camera azimuth and elevation from current transform matrix
-        // glm::vec3 z = glm::normalize(-uniforms.activeCamera->getTransformMatrix()[2]);
-        // m_camera_elevation = glm::degrees(asin(z.y));
-        // m_camera_azimuth = glm::degrees(atan2(z.x, z.z));
-        
         if (currentDistance < 0.0f) {
             m_camera_azimuth += 180.0f;
         }
@@ -2567,6 +2562,12 @@ void GlslViewer::onMouseDrag(float _x, float _y, int _button) {
     // Clamp velocity to prevent jumps
     vel_x = glm::clamp(vel_x, -50.0f, 50.0f);
     vel_y = glm::clamp(vel_y, -50.0f, 50.0f);
+
+    if (uniforms.activeCamera->bFlipped) {
+        vel_x = -vel_x;
+        vel_y = -vel_y;
+    }
+
     
     if (_button == 1 && !shiftPressed && !ctrlPressed) {
         // Left-button drag is used to pan u_view2d.
