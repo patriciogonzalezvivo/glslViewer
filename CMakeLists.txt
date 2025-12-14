@@ -1,11 +1,11 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.10)
 
 set(VERSION_MAJOR 3)
 set(VERSION_MINOR 4)
 set(VERSION_PATCH 0)
 set(VERSION "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}")
 
-project(glslViewer 
+project(glslViewer
         VERSION ${VERSION}
         LANGUAGES C CXX )
 
@@ -13,7 +13,7 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# The compiled vera 
+# The compiled vera
 add_subdirectory(deps)
 
 if(MSVC)
@@ -38,7 +38,7 @@ set(CORE_HEADERS
     "${PROJECT_SOURCE_DIR}/src/core/tools/tracker.h"
 )
 
-set(CORE_SOURCES 
+set(CORE_SOURCES
     "${PROJECT_SOURCE_DIR}/src/core/glslViewer.cpp"
     "${PROJECT_SOURCE_DIR}/src/core/sceneRender.cpp"
     "${PROJECT_SOURCE_DIR}/src/core/uniforms.cpp"
@@ -48,7 +48,7 @@ set(CORE_SOURCES
     "${PROJECT_SOURCE_DIR}/src/core/tools/tracker.cpp"
 )
 
-add_executable(glslViewer 
+add_executable(glslViewer
     "${PROJECT_SOURCE_DIR}/src/main.cpp"
     ${CORE_SOURCES}
 )
@@ -63,8 +63,8 @@ target_compile_definitions(glslViewer PRIVATE GLSLVIEWER_VERSION_MAJOR=${VERSION
 target_compile_definitions(glslViewer PRIVATE GLSLVIEWER_VERSION_MINOR=${VERSION_MINOR})
 target_compile_definitions(glslViewer PRIVATE GLSLVIEWER_VERSION_PATCH=${VERSION_PATCH})
 
-if (EMSCRIPTEN)    
-    
+if (EMSCRIPTEN)
+
     set(LFLAGS "${LFLAGS} -s USE_GLFW=3")
     # set(LFLAGS "${LFLAGS} -s FULL_ES2=1")
     # set(LFLAGS "${LFLAGS} -s FULL_ES3=1")
@@ -79,16 +79,16 @@ if (EMSCRIPTEN)
     set(LFLAGS "${LFLAGS} -s NO_DYNAMIC_EXECUTION=1")
     # set(LFLAGS "${LFLAGS} -s NO_DISABLE_EXCEPTION_CATCHING")
 
-    # Copy the default index.html 
+    # Copy the default index.html
     file(COPY   assets/wasm/index.html DESTINATION ${CMAKE_CURRENT_BINARY_DIR} )
 
-    # Add examples folder to the .data file system 
+    # Add examples folder to the .data file system
     file(COPY   examples DESTINATION ${CMAKE_CURRENT_BINARY_DIR} )
     set(LFLAGS "${LFLAGS} --preload-file examples")
 
     set_target_properties(glslViewer PROPERTIES LINK_FLAGS "${LFLAGS}")
     target_link_libraries(glslViewer PRIVATE glfw webxr)
-    
+
 else()
     find_package(Curses)
     if (CURSES_FOUND)
@@ -97,8 +97,8 @@ else()
         target_link_libraries(glslViewer PRIVATE ${CURSES_LIBRARY})
     endif()
 
-    target_compile_definitions(glslViewer PUBLIC 
-        SUPPORT_MULTITHREAD_RECORDING 
+    target_compile_definitions(glslViewer PUBLIC
+        SUPPORT_MULTITHREAD_RECORDING
         SUPPORT_OSC
     )
 
@@ -139,9 +139,9 @@ else()
     set(CPACK_PACKAGE_FILE_NAME "${CMAKE_PROJECT_NAME}-${VERSION}-${SYSTEM_NAME}-${SYSTEM_ARCH}")
 
     if (MSVC)
-	    target_link_libraries(glslViewer PRIVATE 
-            lo_static 
-            Ws2_32.lib 
+	    target_link_libraries(glslViewer PRIVATE
+            lo_static
+            Ws2_32.lib
             Iphlpapi.lib
         )
 
@@ -151,14 +151,14 @@ else()
     else()
         target_link_libraries(glslViewer PRIVATE pthread dl lo_static)
         install(TARGETS glslViewer DESTINATION ${CMAKE_INSTALL_BINDIR})
-        
+
         if (NOT APPLE)
             target_link_libraries(glslViewer PRIVATE atomic)
 
             # Install glslViewer Icon
             install(FILES "${PROJECT_SOURCE_DIR}/assets/desktop/glslViewer.png" DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/pixmaps)
             install(FILES "${PROJECT_SOURCE_DIR}/assets/desktop/glslViewer.desktop" DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/applications)
-            
+
             # Install supported MIME file types by GlslViewer
             install(FILES "${PROJECT_SOURCE_DIR}/assets/desktop/glslViewer-types.xml" DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/mime/packages)
             find_program(XDG-MIME_EXECUTABLE xdg-mime)
@@ -172,7 +172,7 @@ else()
             install(CODE "execute_process(COMMAND ${UPDATE_MIME_DATABASE} ${CMAKE_INSTALL_FULL_DATAROOTDIR}/mime )")
             find_program(UPDATE_DESKTOP_DATABASE update-desktop-database)
             install(CODE "execute_process(COMMAND ${UPDATE_DESKTOP_DATABASE} ${CMAKE_INSTALL_FULL_DATAROOTDIR}/applications)")
-            
+
             # Add a thumbnailer for 3D Models
             install(FILES "${PROJECT_SOURCE_DIR}/assets/desktop/glslViewer.thumbnailer" DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/thumbnailers)
             install(FILES "${PROJECT_SOURCE_DIR}/assets/desktop/glslThumbnailer.sh"
@@ -200,7 +200,7 @@ else()
             set(CPACK_DEBIAN_PACKAGE_DEPENDS)
             foreach(DEP ${DEBSRC_PACKAGE_DEPENDS})
             set(CPACK_DEBIAN_PACKAGE_DEPEND "${CPACK_DEBIAN_PACKAGE_DEPENDS}, ${DEP}")
-            endforeach(DEP ${DEBSRC_PACKAGE_DEPENDS})  
+            endforeach(DEP ${DEBSRC_PACKAGE_DEPENDS})
 
             set(CPACK_DEBIAN_BUILD_DEPENDS)
             foreach(DEP ${DEBSRC_BUILD_DEPENDS})
@@ -211,7 +211,7 @@ else()
             execute_process(
                 COMMAND dpkg --print-architecture
                 OUTPUT_VARIABLE DEB_ARCHITECTURE
-                OUTPUT_STRIP_TRAILING_WHITESPACE            
+                OUTPUT_STRIP_TRAILING_WHITESPACE
             )
             message(STATUS "package_details.cmake: your architecture is ${DEB_ARCHITECTURE}")
 
@@ -220,13 +220,13 @@ else()
             set(CPACK_DEBIAN_PACKAGE_PRIORITY extra )
             set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Patricio Gonzalez Vivo <patriciogonzalezvivo@gmail.com>")
             set(CPACK_DEBIAN_DISTRIBUTION_NAME ubuntu )
-            set(CPACK_DEBIAN_DISTRIBUTION_RELEASES bionic focal ) 
+            set(CPACK_DEBIAN_DISTRIBUTION_RELEASES bionic focal )
             set(CPACK_DEBIAN_CHANGELOG "  * Latest development version.")
             # set(CPACK_DEBIAN_RESOURCE_FILE_CHANGELOG ${PROJECT_SOURCE_DIR}/changelog)
             # set(CPACK_DEBIAN_UPDATE_CHANGELOG ON)
             set(CPACK_PACKAGE_FILE_NAME "${CMAKE_PROJECT_NAME}-${VERSION}-${DEB_ARCHITECTURE}")
         endif()
-        
+
     endif()
 
     include(CPack)

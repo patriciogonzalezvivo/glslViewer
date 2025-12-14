@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.10)
 
 option(WITH_TOOLS "Enable building tools." OFF)
 option(WITH_TESTS "Enable building tests." OFF)
