@@ -62,7 +62,7 @@ public:
     void                onScroll( float _yoffset );
     void                onMouseMove( float _x, float _y );
     void                onMouseDrag( float _x, float _y, int _button );
-    void                onViewportResize( int _newWidth, int _newHeight );
+    void                onWindowResize( int _newWidth, int _newHeight );
     void                onFileChange( WatchFileList &_files, int _index );
     void                onScreenshot( std::string _file );
     void                onPlot();

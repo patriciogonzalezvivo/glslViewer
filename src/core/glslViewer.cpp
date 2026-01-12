@@ -874,6 +874,30 @@ void GlslViewer::commandsInit(CommandList &_commands ) {
     },
     "camera_position[,<x>,<y>,<z>]", "get or set the camera position."));
 
+
+    _commands.push_back(Command("camera_look_at", [&](const std::string& _line) {
+        if (!uniforms.activeCamera) 
+            return false;
+
+        std::vector<std::string> values = vera::split(_line,',');
+        if (values.size() == 4) {
+            glm::vec3 position = uniforms.activeCamera->getPosition();
+            if (uniforms.activeCamera != uniforms.cameras["default"]) {
+                uniforms.cameras["default"]->setTransformMatrix(uniforms.activeCamera->getTransformMatrix());
+                uniforms.cameras["default"]->setProjection(uniforms.activeCamera->getProjectionMatrix());
+                uniforms.activeCamera = uniforms.cameras["default"];
+            }
+            uniforms.activeCamera->setTarget( glm::vec3(vera::toFloat(values[1]), vera::toFloat(values[2]), vera::toFloat(values[3])) );
+            glm::vec3 v = uniforms.activeCamera->getPosition() - uniforms.activeCamera->getTarget();
+            m_camera_azimuth = glm::degrees( atan2(v.x, v.z) );
+            m_camera_elevation = glm::degrees( atan2(-v.y, sqrt(v.x * v.x + v.z * v.z)) );
+
+            return true;
+        }
+        return false;
+    },
+    "camera_look_at[,<x>,<y>,<z>]", "point the camera towards the direction of a particular position."));
+
     _commands.push_back(Command("camera_exposure", [&](const std::string& _line) { 
         if (!uniforms.activeCamera) 
             return false;
@@ -2612,7 +2636,7 @@ void GlslViewer::onMouseDrag(float _x, float _y, int _button) {
     
 }
 
-void GlslViewer::onViewportResize(int _newWidth, int _newHeight) {
+void GlslViewer::onWindowResize(int _newWidth, int _newHeight) {
     if (uniforms.activeCamera) {
         if (uniforms.activeCamera != uniforms.cameras["default"]) {
                 uniforms.cameras["default"]->setTransformMatrix(uniforms.activeCamera->getTransformMatrix());
