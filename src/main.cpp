@@ -749,6 +749,7 @@ int main(int argc, char **argv) {
 
     // EVENTs callbacks
     //
+    vera::setMousePressCallback(        [&](float _x, float _y, int _button) {  sandbox.onMousePress(_x, _y, _button); } );
     vera::setMouseMoveCallback(         [&](float _x, float _y) {  sandbox.onMouseMove(_x, _y); } );
     vera::setMouseDragCallback(         [&](float _x, float _y, int _button) {  sandbox.onMouseDrag(_x, _y, _button); } );
     vera::setScrollCallback(            [&](float _yOffset) {                   sandbox.onScroll(_yOffset); } );

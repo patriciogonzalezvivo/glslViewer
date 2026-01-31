@@ -60,6 +60,7 @@ public:
     
     // Some events
     void                onScroll( float _yoffset );
+    void                onMousePress( float _x, float _y, int _button );
     void                onMouseMove( float _x, float _y );
     void                onMouseDrag( float _x, float _y, int _button );
     void                onWindowResize( int _newWidth, int _newHeight );
