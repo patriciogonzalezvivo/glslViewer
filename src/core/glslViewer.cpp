@@ -2315,7 +2315,7 @@ void GlslViewer::renderUI() {
         vera::text("Drag & Drop", w * 0.5f, h * 0.45f);
 
         vera::textSize(22.0f);
-        vera::text(".vert .frag .ply .lst .obj .gltf .glb", w * 0.5f, h * 0.55f);
+        vera::text(".vert .frag .ply .lst .obj .gltf .glb .splat", w * 0.5f, h * 0.55f);
 
         vera::setCamera(cam);
     }

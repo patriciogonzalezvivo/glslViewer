@@ -321,7 +321,8 @@ int main(int argc, char **argv) {
                     vera::haveExt(argument,"obj") || vera::haveExt(argument,"OBJ") ||
                     vera::haveExt(argument,"stl") || vera::haveExt(argument,"STL") ||
                     vera::haveExt(argument,"glb") || vera::haveExt(argument,"GLB") ||
-                    vera::haveExt(argument,"gltf") || vera::haveExt(argument,"GLTF") ) ) {
+                    vera::haveExt(argument,"gltf") || vera::haveExt(argument,"GLTF") ||
+                    vera::haveExt(argument,"splat") || vera::haveExt(argument,"SPLAT") ) ) {
             haveGeometry = true;
         }
         else if (   argument == "-noncurses"|| argument == "--noncurses"    )   commands_ncurses = false;
