@@ -80,6 +80,9 @@ jobs:
 
           echo "CMAKE_PREFIX_PATH=$FfmpegPath" >>$Env:GITHUB_ENV
 
+      - name: Configure Git to use HTTPS
+        run: git config --global url."https://github.com/".insteadOf git@github.com:
+
       - name: Build
         run: ${{ matrix.build_command }}
 
