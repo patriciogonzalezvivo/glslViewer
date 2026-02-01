@@ -64,7 +64,7 @@ jobs:
       - name: Install dependencies (Windows)
         if: matrix.os == 'windows-latest'
         run: |
-          $FfmpegUri = 'https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-n4.4-latest-win64-lgpl-shared-4.4.zip'
+          $FfmpegUri = 'https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-lgpl-shared.zip'
           $FfmpegZipPath = "$Env:GITHUB_WORKSPACE\ffmpeg.zip"
           $ZlibUri = 'https://sourceforge.net/projects/gnuwin32/files/zlib/1.2.3/zlib-1.2.3-lib.zip/download'
           $ZlibZipPath = "$Env:GITHUB_WORKSPACE\zlib.zip"
