@@ -875,6 +875,25 @@ void GlslViewer::commandsInit(CommandList &_commands ) {
     "camera_position[,<x>,<y>,<z>]", "get or set the camera position."));
 
 
+    _commands.push_back(Command("camera_move", [&](const std::string& _line) {
+        if (!uniforms.activeCamera) 
+            return false;
+
+        std::vector<std::string> values = vera::split(_line,',');
+        if (values.size() == 4) {
+            if (uniforms.activeCamera != uniforms.cameras["default"]) {
+                uniforms.cameras["default"]->setTransformMatrix(uniforms.activeCamera->getTransformMatrix());
+                uniforms.cameras["default"]->setProjection(uniforms.activeCamera->getProjectionMatrix());
+                uniforms.activeCamera = uniforms.cameras["default"];
+            }
+            uniforms.activeCamera->move(vera::toFloat(values[1]), vera::toFloat(values[2]), vera::toFloat(values[3]));
+            return true;
+        }
+        return false;
+    },
+    "camera_move,<x>,<y>,<z>", "move camera camera position."));
+
+
     _commands.push_back(Command("camera_look_at", [&](const std::string& _line) {
         if (!uniforms.activeCamera) 
             return false;

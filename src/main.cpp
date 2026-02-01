@@ -859,6 +859,16 @@ int main(int argc, char **argv) {
                 commandsRun(std::string("camera,") + vera::toString(_key - 49));
                 commandsRun("update");
             }
+            // Basic camera controls 
+            else if (_key == VERA_KEY_LEFT) {
+                commandsRun("camera_move,-0.1, 0, 0");
+            } else if (_key == VERA_KEY_RIGHT) {
+                commandsRun("camera_move,0.1, 0, 0");
+            } else if (_key == VERA_KEY_UP) {
+                commandsRun("camera_move,0, 0, 0.1");   
+            } else if (_key == VERA_KEY_DOWN) {
+                commandsRun("camera_move,0, 0, -0.1");
+            }
         }
     } );
     vera::setDropCallback(    [&](int _count, const char** _paths) {    
