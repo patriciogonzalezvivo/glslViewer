@@ -1234,8 +1234,11 @@ void GlslViewer::loadAssets(WatchFileList &_files) {
         // If there is no use the default one
         if (geom_index == -1)
             m_frag_source = vera::getDefaultSrc(vera::FRAG_DEFAULT);
-        else
-            m_frag_source = vera::getDefaultSrc(vera::FRAG_DEFAULT_SCENE);
+        else {
+            std::string defaultFrag = vera::getDefaultSrc(vera::FRAG_DEFAULT_SCENE);
+            m_frag_source = vera::resolveGlsl(defaultFrag, include_folders, &m_frag_dependencies);
+            m_frag_dependencies.clear();
+        }
     }
 
     if (vert_index != -1) {
@@ -1247,10 +1250,14 @@ void GlslViewer::loadAssets(WatchFileList &_files) {
     }
     else {
         // If there is no use the default one
-        if (geom_index == -1)
+        if (geom_index == -1) {
             m_vert_source = vera::getDefaultSrc(vera::VERT_DEFAULT);
-        else
-            m_vert_source = vera::getDefaultSrc(vera::VERT_DEFAULT_SCENE);
+        }
+        else {
+            std::string defaultVert = vera::getDefaultSrc(vera::VERT_DEFAULT_SCENE);
+            m_vert_source = vera::resolveGlsl(defaultVert, include_folders, &m_vert_dependencies);
+            m_vert_dependencies.clear();
+        }
     }
 
     // LOAD GEOMETRY
@@ -1407,7 +1414,6 @@ void GlslViewer::setSource(ShaderType _type, const std::string& _source) {
 };
 
 void GlslViewer::resetShaders( WatchFileList &_files ) {
-
     if (vera::getWindowStyle() != vera::EMBEDDED)
         console_clear();
         
