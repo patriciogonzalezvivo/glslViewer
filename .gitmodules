@@ -6,7 +6,3 @@
 	path = deps/pybind11
 	url = https://github.com/pybind/pybind11.git
 	# url = git@github.com:pybind/pybind11.git
-[submodule "deps/lygia"]
-	path = deps/lygia
-	url = https://github.com/patriciogonzalezvivo/lygia.git
-	#url = git@github.com:patriciogonzalezvivo/lygia.git
