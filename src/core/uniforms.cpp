@@ -102,21 +102,21 @@ Uniforms::Uniforms() : m_frame(0), m_play(true) {
     //
     functions["u_camera"] = UniformFunction("vec3", [this](vera::Shader& _shader) {
         if (activeCamera)
-            _shader.setUniform("u_camera", - (activeCamera->getPosition()) );
+            _shader.setUniform("u_camera", activeCamera->getPosition() );
     },
     [this]() {
         if (activeCamera)
-            return vera::toString(-activeCamera->getPosition(), ',');
+            return vera::toString(activeCamera->getPosition(), ',');
         return std::string("");
     });
-
+    
     functions["u_cameraTarget"] = UniformFunction("vec3", [this](vera::Shader& _shader) {
         if (activeCamera)
-            _shader.setUniform("u_cameraTarget", - (activeCamera->getTarget()) );
+            _shader.setUniform("u_cameraTarget", activeCamera->getTarget() );
     },
     [this]() {
         if (activeCamera)
-            return vera::toString(-activeCamera->getTarget(), ',');
+            return vera::toString(activeCamera->getTarget(), ',');
         return std::string("");
     });
 

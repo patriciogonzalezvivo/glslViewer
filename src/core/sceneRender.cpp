@@ -949,7 +949,7 @@ void SceneRender::renderBackground(Uniforms& _uniforms) {
             if (!m_cubemap_vbo)
                 m_cubemap_vbo = std::unique_ptr<vera::Vbo>(new vera::Vbo( vera::cubeMesh(1.0f) ));
 
-            glm::mat4 ori = _uniforms.activeCamera->getOrientationMatrix();
+            glm::mat4 ori = glm::inverse(_uniforms.activeCamera->getOrientationMatrix());
 
             #if defined(__EMSCRIPTEN__)
             if (vera::getXR() == vera::VR_MODE)
