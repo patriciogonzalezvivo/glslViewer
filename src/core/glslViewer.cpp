@@ -1240,7 +1240,12 @@ void GlslViewer::loadAssets(WatchFileList &_files) {
         uniforms.load(_files[geom_index].path, verbose);
         m_sceneRender.loadScene(uniforms);
         uniforms.activeCamera->setTarget(m_sceneRender.getCenter());
-        uniforms.activeCamera->orbit(m_camera_azimuth, m_camera_elevation, m_sceneRender.getArea() * 2.0);
+        
+        float dist = m_sceneRender.getArea() * 2.0; 
+        if (vera::getExt(_files[geom_index].path) == "splat")
+            dist = m_sceneRender.getArea() * 1.5;
+
+        uniforms.activeCamera->orbit(m_camera_azimuth, m_camera_elevation, dist);
     }
     else {
         m_canvas_shader.addDefine("MODEL_VERTEX_TEXCOORD", "v_texcoord");

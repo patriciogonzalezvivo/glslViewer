@@ -1031,6 +1031,10 @@ void SceneRender::renderDebug(Uniforms& _uniforms) {
         for (vera::ModelsMap::iterator it = _uniforms.models.begin(); it != _uniforms.models.end(); ++it) {
             vera::applyMatrix( it->second->getTransformMatrix() );
             vera::model( it->second->getVboBbox() );
+
+            if (it->second->getGsplat() != nullptr) {
+                it->second->getGsplat()->renderBlocks(_uniforms.activeCamera);
+            }
         }
 
         vera::resetMatrix();
