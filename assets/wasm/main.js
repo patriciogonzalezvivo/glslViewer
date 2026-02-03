@@ -53,6 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
         frag: defaultFragment,
         vert: defaultVertex
     };
+    let externalAssets = {};
     
     // DeBounce timeout
     let updateTimeout = null;
@@ -492,14 +493,104 @@ document.addEventListener('DOMContentLoaded', () => {
             if (shaderFile && shaderFile.content) {
                 try {
                     const json = JSON.parse(shaderFile.content);
+                    
                     if (json.frag) content.frag = json.frag;
                     if (json.vert) content.vert = json.vert;
+
+                    let assetPromises = [];
+
+                    if (json.assets) {
+                        externalAssets = json.assets;
+                        for (const [name, url] of Object.entries(externalAssets)) {
+                            logToConsole('Loading asset: ' + name);
+                            
+                            let p;
+                            if (url.startsWith('data:')) {
+                                p = new Promise((resolve) => {
+                                    const tryWrite = () => {
+                                        if (window.Module && window.Module.FS && window.module_loaded) {
+                                            try {
+                                                const base64 = url.split(',')[1];
+                                                const binaryString = window.atob(base64);
+                                                const len = binaryString.length;
+                                                const data = new Uint8Array(len);
+                                                for (let k = 0; k < len; k++) {
+                                                    data[k] = binaryString.charCodeAt(k);
+                                                }
+                                                
+                                                window.Module.FS.writeFile(name, data);
+                                                logToConsole("Loaded asset: " + name);
+                                                
+                                                const ext = name.split('.').pop().toLowerCase();
+                                                if (['ply', 'obj', 'gltf', 'glb', 'splat'].includes(ext)) {
+                                                        if (window.module_loaded) {
+                                                            fetchShadersFromBackend();
+                                                        }
+                                                }
+                                                resolve();
+                                            } catch (e) {
+                                                console.error("FS error", e);
+                                                setTimeout(tryWrite, 500);
+                                            }
+                                        } else {
+                                            setTimeout(tryWrite, 500);
+                                        }
+                                    };
+                                    tryWrite();
+                                });
+                            } else {
+                                p = fetch(url)
+                                .then(res => {
+                                    if (!res.ok) throw new Error(res.statusText);
+                                    return res.arrayBuffer();
+                                })
+                                .then(buffer => {
+                                    return new Promise((resolve) => {
+                                        const tryWrite = () => {
+                                            if (window.Module && window.Module.FS && window.module_loaded) {
+                                                try {
+                                                    const data = new Uint8Array(buffer);
+                                                    window.Module.FS.writeFile(name, data);
+                                                    logToConsole("Loaded asset: " + name);
+                                                    
+                                                    const ext = name.split('.').pop().toLowerCase();
+                                                    if (['ply', 'obj', 'gltf', 'glb', 'splat'].includes(ext)) {
+                                                            if (window.module_loaded) {
+                                                                fetchShadersFromBackend();
+                                                            }
+                                                    }
+                                                    resolve();
+                                                } catch (e) {
+                                                    console.error("FS error", e);
+                                                    setTimeout(tryWrite, 500);
+                                                }
+                                            } else {
+                                                setTimeout(tryWrite, 500);
+                                            }
+                                        };
+                                        tryWrite();
+                                    });
+                                })
+                                .catch(err => {
+                                    logToConsole('Error loading asset ' + name + ': ' + err.message, true);
+                                });
+                            }
+                            assetPromises.push(p);
+                        }
+                    } else {
+                        externalAssets = {};
+                    }
                     
                     editor.setValue(content[activeTab]);
-                    if (window.module_loaded) {
-                        updateShader();
-                    }
-                    console.log('Gist loaded successfully');
+                    
+                    Promise.all(assetPromises).then(() => {
+                        if (window.module_loaded) {
+                             // Force reload by appending a space to ensure the shader recompiles and finds the new assets
+                             if (content.frag) window.Module.ccall('setFrag', null, ['string'], [content.frag + " "]);
+                             if (content.vert) window.Module.ccall('setVert', null, ['string'], [content.vert + " "]);
+                        }
+                        console.log('Gist loaded successfully');
+                    });
                 } catch (e) {
                     console.error('Error parsing Gist content:', e);
                     logToConsole('Error parsing Gist JSON', true);
@@ -531,12 +622,18 @@ document.addEventListener('DOMContentLoaded', () => {
         // Ensure current editor content is saved to content object
         content[activeTab] = editor.getValue();
 
+        const payload = {
+            frag: content.frag,
+            vert: content.vert
+        };
+
+        if (Object.keys(externalAssets).length > 0) {
+            payload.assets = externalAssets;
+        }
+
         let files = {};
         files[filename] = {
-            "content": JSON.stringify({
-                frag: content.frag,
-                vert: content.vert
-            }, null, 2)
+            "content": JSON.stringify(payload, null, 2)
         };
 
         const data = {
@@ -630,14 +727,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Binary or other assets
                 const reader = new FileReader();
                 reader.onload = (event) => {
-                    const data = new Uint8Array(event.target.result);
+                    const dataURL = event.target.result;
+                    
+                    // Store Base64 for Gist saving (Images only)
+                    if (['png', 'jpg', 'jpeg', 'hdr', 'bmp', 'gif', 'tga'].includes(ext)) {
+                        externalAssets[name] = dataURL;
+                    }
+
+                    // Convert Base64 back to Uint8Array for WASM FS
+                    const base64 = dataURL.split(',')[1];
+                    const binaryString = window.atob(base64);
+                    const len = binaryString.length;
+                    const bytes = new Uint8Array(len);
+                    for (let k = 0; k < len; k++) {
+                        bytes[k] = binaryString.charCodeAt(k);
+                    }
+
                     if (window.Module && window.Module.FS) {
                         try {
-                            window.Module.FS.writeFile(name, data);
+                            window.Module.FS.writeFile(name, bytes);
                             logToConsole("Loaded file: " + name);
 
                             // Files like ply, obj, gltf might reset shaders. Fetch them.
-
                             if (ext === 'ply' || ext === 'obj' || ext === 'gltf' || ext === 'glb' || ext === 'splat') {
                                 // Small delay to ensure file is processed
                                 setTimeout(() => {
@@ -650,7 +761,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     }
                 };
-                reader.readAsArrayBuffer(file);
+                reader.readAsDataURL(file);
             }
         }
     }
