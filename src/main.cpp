@@ -136,6 +136,46 @@ void setVert(char* c) {
 #ifdef __EMSCRIPTEN__
 EMSCRIPTEN_KEEPALIVE
 #endif
+void loadAsset(char* name, char* type) {
+    std::string sName = std::string(name);
+    std::string sType = std::string(type);
+
+    int index = -1;
+    for (size_t i = 0; i < files.size(); i++) {
+        if (files[i].path == sName) {
+            index = i;
+            break;
+        }
+    }
+
+    if (index == -1) {
+        WatchFile file;
+        file.path = sName;
+        file.lastChange = -1;
+        file.vFlip = vFlip;
+        if (sType == "image" || sType == "png" || sType == "jpg" || sType == "jpeg" || sType == "hdr") {
+            file.type = IMAGE;
+            if (sandbox.uniforms.addTexture("u_tex" + vera::toString(textureCounter), sName, vFlip)) {
+                std::cout << "Loading asset: " << sName << " as u_tex" << textureCounter << std::endl;
+                textureCounter++;
+            }
+        } else if (sType == "geometry" || sType == "ply" || sType == "obj" || sType == "glb" || sType == "gltf" || sType == "splat") {
+            file.type = GEOMETRY;
+        } else {
+            return;
+        }
+        files.push_back(file);
+        std::cout << "Added to watch list: " << sName << std::endl;
+    }
+    else {
+        std::cout << "Reloading asset: " << sName << std::endl;
+        sandbox.onFileChange(files, index);
+    }
+}
+
+#ifdef __EMSCRIPTEN__
+EMSCRIPTEN_KEEPALIVE
+#endif
 char* getFrag() {
     return (char*)sandbox.getSource(FRAGMENT).c_str();
 }

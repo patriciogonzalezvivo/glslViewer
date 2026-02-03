@@ -9821,6 +9821,7 @@ function checkIncomingModuleAPI() {
 var _command = Module['_command'] = makeInvalidEarlyAccess('_command');
 var _setFrag = Module['_setFrag'] = makeInvalidEarlyAccess('_setFrag');
 var _setVert = Module['_setVert'] = makeInvalidEarlyAccess('_setVert');
+var _loadAsset = Module['_loadAsset'] = makeInvalidEarlyAccess('_loadAsset');
 var _getFrag = Module['_getFrag'] = makeInvalidEarlyAccess('_getFrag');
 var _getVert = Module['_getVert'] = makeInvalidEarlyAccess('_getVert');
 var _getDefaultSceneFrag = Module['_getDefaultSceneFrag'] = makeInvalidEarlyAccess('_getDefaultSceneFrag');
@@ -9847,6 +9848,7 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['command'] != 'undefined', 'missing Wasm export: command');
   assert(typeof wasmExports['setFrag'] != 'undefined', 'missing Wasm export: setFrag');
   assert(typeof wasmExports['setVert'] != 'undefined', 'missing Wasm export: setVert');
+  assert(typeof wasmExports['loadAsset'] != 'undefined', 'missing Wasm export: loadAsset');
   assert(typeof wasmExports['getFrag'] != 'undefined', 'missing Wasm export: getFrag');
   assert(typeof wasmExports['getVert'] != 'undefined', 'missing Wasm export: getVert');
   assert(typeof wasmExports['getDefaultSceneFrag'] != 'undefined', 'missing Wasm export: getDefaultSceneFrag');
@@ -9869,6 +9871,7 @@ function assignWasmExports(wasmExports) {
   _command = Module['_command'] = createExportWrapper('command', 1);
   _setFrag = Module['_setFrag'] = createExportWrapper('setFrag', 1);
   _setVert = Module['_setVert'] = createExportWrapper('setVert', 1);
+  _loadAsset = Module['_loadAsset'] = createExportWrapper('loadAsset', 2);
   _getFrag = Module['_getFrag'] = createExportWrapper('getFrag', 0);
   _getVert = Module['_getVert'] = createExportWrapper('getVert', 0);
   _getDefaultSceneFrag = Module['_getDefaultSceneFrag'] = createExportWrapper('getDefaultSceneFrag', 0);

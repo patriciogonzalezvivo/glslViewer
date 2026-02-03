@@ -516,8 +516,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (json.assets) {
                         externalAssets = json.assets;
                         for (const [name, url] of Object.entries(externalAssets)) {
-                            logToConsole('Loading asset: ' + name);
-                            
+                            // logToConsole('Loading asset: ' + name);
                             let p;
                             if (url.startsWith('data:')) {
                                 p = new Promise((resolve) => {
@@ -533,9 +532,11 @@ document.addEventListener('DOMContentLoaded', () => {
                                                 }
                                                 
                                                 window.Module.FS.writeFile(name, data);
-                                                logToConsole("Loaded asset: " + name);
+                                                // logToConsole("Loaded asset: " + name);
                                                 
                                                 const ext = name.split('.').pop().toLowerCase();
+                                                window.Module.ccall('loadAsset', null, ['string', 'string'], [name, ext]);
+
                                                 if (['ply', 'obj', 'gltf', 'glb', 'splat'].includes(ext)) {
                                                         if (window.module_loaded) {
                                                             fetchShadersFromBackend();
@@ -565,9 +566,11 @@ document.addEventListener('DOMContentLoaded', () => {
                                                 try {
                                                     const data = new Uint8Array(buffer);
                                                     window.Module.FS.writeFile(name, data);
-                                                    logToConsole("Loaded asset: " + name);
+                                                    // logToConsole("Loaded asset: " + name);
                                                     
                                                     const ext = name.split('.').pop().toLowerCase();
+                                                    window.Module.ccall('loadAsset', null, ['string', 'string'], [name, ext]);
+
                                                     if (['ply', 'obj', 'gltf', 'glb', 'splat'].includes(ext)) {
                                                             if (window.module_loaded) {
                                                                 fetchShadersFromBackend();
@@ -596,13 +599,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                     
                     editor.setValue(content[activeTab]);
-                    
+                    updateShader();
+
                     Promise.all(assetPromises).then(() => {
-                        if (window.module_loaded) {
-                             // Force reload by appending a space to ensure the shader recompiles and finds the new assets
-                             if (content.frag) window.Module.ccall('setFrag', null, ['string'], [content.frag + " "]);
-                             if (content.vert) window.Module.ccall('setVert', null, ['string'], [content.vert + " "]);
-                        }
+                        updateShader();
                         console.log('Gist loaded successfully');
                     });
                 } catch (e) {
