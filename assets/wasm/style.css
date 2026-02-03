@@ -562,8 +562,8 @@ body.windowed-mode .github-embed {
 /* Floating Window for Canvas */
 #wrapper.windowed {
     position: absolute;
-    top: 20px;
-    right: 20px;
+    top: 30px;
+    right: 0px;
     left: auto; /* Ensure left is not set from mobile styles */
     transform: none; /* Disable centering transform */
     width: 512px;
