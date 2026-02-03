@@ -102,45 +102,6 @@ document.addEventListener('DOMContentLoaded', () => {
     wrapper.classList.add('windowed');
     document.body.classList.add('windowed-mode');
 
-    // Drag and Drop files
-    wrapper.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-    });
-
-    wrapper.addEventListener('drop', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-
-        if (window.Module && window.Module.ccall) {
-            const files = e.dataTransfer.files;
-            for (let i = 0; i < files.length; i++) {
-                const file = files[i];
-                const reader = new FileReader();
-                
-                reader.onload = (event) => {
-                    const data = new Uint8Array(event.target.result);
-                    const filename = file.name;
-                    
-                    try {
-                        // Write file to Emscripten FS
-                        window.Module.FS.writeFile(filename, data);
-                        // Notify C++
-                        window.Module.ccall('loadFile', null, ['string'], [filename]);
-                        console.log("Loaded file:", filename);
-                    } catch (err) {
-                        console.error("Error loading file:", err);
-                    }
-                };
-                reader.readAsArrayBuffer(file);
-            }
-        }
-    });
-
-    function setTranslate(xPos, yPos, el) {
-        el.style.transform = "translate3d(" + xPos + "px, " + yPos + "px, 0)";
-    }
-
     btn.addEventListener('click', () => {
         isFullscreen = !isFullscreen;
 

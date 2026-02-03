@@ -9818,7 +9818,6 @@ function checkIncomingModuleAPI() {
 }
 
 // Imports from the Wasm binary.
-var _loadFile = Module['_loadFile'] = makeInvalidEarlyAccess('_loadFile');
 var _command = Module['_command'] = makeInvalidEarlyAccess('_command');
 var _setFrag = Module['_setFrag'] = makeInvalidEarlyAccess('_setFrag');
 var _setVert = Module['_setVert'] = makeInvalidEarlyAccess('_setVert');
@@ -9843,7 +9842,6 @@ var wasmMemory = makeInvalidEarlyAccess('wasmMemory');
 var wasmTable = makeInvalidEarlyAccess('wasmTable');
 
 function assignWasmExports(wasmExports) {
-  assert(typeof wasmExports['loadFile'] != 'undefined', 'missing Wasm export: loadFile');
   assert(typeof wasmExports['command'] != 'undefined', 'missing Wasm export: command');
   assert(typeof wasmExports['setFrag'] != 'undefined', 'missing Wasm export: setFrag');
   assert(typeof wasmExports['setVert'] != 'undefined', 'missing Wasm export: setVert');
@@ -9864,7 +9862,6 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['emscripten_stack_get_current'] != 'undefined', 'missing Wasm export: emscripten_stack_get_current');
   assert(typeof wasmExports['memory'] != 'undefined', 'missing Wasm export: memory');
   assert(typeof wasmExports['__indirect_function_table'] != 'undefined', 'missing Wasm export: __indirect_function_table');
-  _loadFile = Module['_loadFile'] = createExportWrapper('loadFile', 1);
   _command = Module['_command'] = createExportWrapper('command', 1);
   _setFrag = Module['_setFrag'] = createExportWrapper('setFrag', 1);
   _setVert = Module['_setVert'] = createExportWrapper('setVert', 1);
