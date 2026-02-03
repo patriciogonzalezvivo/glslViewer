@@ -251,7 +251,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (window.Module && window.module_loaded) {
             clearInterval(checkModule);
             console.log("Module loaded, sending initial shader.");
-            updateShader();
+
+            const gistId = getQueryVariable('gist');
+            if (gistId) {
+                loadGist(gistId);
+            } else {
+                updateShader();
+            }
         }
     }, 500);
 
@@ -470,7 +476,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    let currentGistId = null;
+
     function loadGist(id) {
+        if (currentGistId === id) {
+            console.log('Gist ' + id + ' already loading/loaded.');
+            return;
+        }
+        currentGistId = id;
+        
         console.log('Loading Gist:', id);
         fetch('https://api.github.com/gists/' + id)
         .then(response => response.json())
@@ -551,7 +565,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                                 try {
                                                     const data = new Uint8Array(buffer);
                                                     window.Module.FS.writeFile(name, data);
-                                                    logToConsole("Loaded asset: " + name);
+                                                    // logToConsole("Loaded asset: " + name);
                                                     
                                                     const ext = name.split('.').pop().toLowerCase();
                                                     if (['ply', 'obj', 'gltf', 'glb', 'splat'].includes(ext)) {
@@ -592,6 +606,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         console.log('Gist loaded successfully');
                     });
                 } catch (e) {
+                    currentGistId = null; 
                     console.error('Error parsing Gist content:', e);
                     logToConsole('Error parsing Gist JSON', true);
                 }
@@ -680,11 +695,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initial check
     checkGithubToken();
-    const gistId = getQueryVariable('gist');
-    if (gistId) {
-        loadGist(gistId);
-    }
-
+    
     // --- File Drag & Drop ---
     function handleDrop(e) {
         e.preventDefault();
