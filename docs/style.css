@@ -506,9 +506,44 @@ body.windowed-mode .github-embed {
     color: red;
 }
 /* Editor Styles */
-#editor-container {
+#editor-tabs {
     position: absolute;
     top: 0;
+    left: 0;
+    width: 100%;
+    height: 30px;
+    z-index: 6;
+    background: #1a1a1a;
+    display: flex;
+}
+
+.tab {
+    background: #272822;
+    border: none;
+    color: #888;
+    padding: 0 15px;
+    height: 100%;
+    cursor: pointer;
+    font-family: monospace;
+    font-size: 12px;
+    border-right: 1px solid #1a1a1a;
+    outline: none;
+}
+
+.tab:hover {
+    color: #ddd;
+    background: #333;
+}
+
+.tab.active {
+    color: #f8f8f2;
+    background: #272822;
+    /* border-bottom: 2px solid #66d9ef; */
+}
+
+#editor-container {
+    position: absolute;
+    top: 30px; /* Offset for tabs */
     left: 0;
     width: 100%;
     bottom: 200px; /* Use bottom instead of height calc for better resize handling */

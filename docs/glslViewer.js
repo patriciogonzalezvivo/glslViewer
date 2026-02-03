@@ -9823,6 +9823,8 @@ var _setFrag = Module['_setFrag'] = makeInvalidEarlyAccess('_setFrag');
 var _setVert = Module['_setVert'] = makeInvalidEarlyAccess('_setVert');
 var _getFrag = Module['_getFrag'] = makeInvalidEarlyAccess('_getFrag');
 var _getVert = Module['_getVert'] = makeInvalidEarlyAccess('_getVert');
+var _getDefaultSceneFrag = Module['_getDefaultSceneFrag'] = makeInvalidEarlyAccess('_getDefaultSceneFrag');
+var _getDefaultSceneVert = Module['_getDefaultSceneVert'] = makeInvalidEarlyAccess('_getDefaultSceneVert');
 var _main = Module['_main'] = makeInvalidEarlyAccess('_main');
 var _free = makeInvalidEarlyAccess('_free');
 var _malloc = Module['_malloc'] = makeInvalidEarlyAccess('_malloc');
@@ -9847,6 +9849,8 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['setVert'] != 'undefined', 'missing Wasm export: setVert');
   assert(typeof wasmExports['getFrag'] != 'undefined', 'missing Wasm export: getFrag');
   assert(typeof wasmExports['getVert'] != 'undefined', 'missing Wasm export: getVert');
+  assert(typeof wasmExports['getDefaultSceneFrag'] != 'undefined', 'missing Wasm export: getDefaultSceneFrag');
+  assert(typeof wasmExports['getDefaultSceneVert'] != 'undefined', 'missing Wasm export: getDefaultSceneVert');
   assert(typeof wasmExports['__main_argc_argv'] != 'undefined', 'missing Wasm export: __main_argc_argv');
   assert(typeof wasmExports['free'] != 'undefined', 'missing Wasm export: free');
   assert(typeof wasmExports['malloc'] != 'undefined', 'missing Wasm export: malloc');
@@ -9867,6 +9871,8 @@ function assignWasmExports(wasmExports) {
   _setVert = Module['_setVert'] = createExportWrapper('setVert', 1);
   _getFrag = Module['_getFrag'] = createExportWrapper('getFrag', 0);
   _getVert = Module['_getVert'] = createExportWrapper('getVert', 0);
+  _getDefaultSceneFrag = Module['_getDefaultSceneFrag'] = createExportWrapper('getDefaultSceneFrag', 0);
+  _getDefaultSceneVert = Module['_getDefaultSceneVert'] = createExportWrapper('getDefaultSceneVert', 0);
   _main = Module['_main'] = createExportWrapper('__main_argc_argv', 2);
   _free = createExportWrapper('free', 1);
   _malloc = Module['_malloc'] = createExportWrapper('malloc', 1);

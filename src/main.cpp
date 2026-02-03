@@ -133,12 +133,34 @@ void setVert(char* c) {
     sandbox.resetShaders(files);
 }
 
+#ifdef __EMSCRIPTEN__
+EMSCRIPTEN_KEEPALIVE
+#endif
 char* getFrag() {
     return (char*)sandbox.getSource(FRAGMENT).c_str();
 }
 
+#ifdef __EMSCRIPTEN__
+EMSCRIPTEN_KEEPALIVE
+#endif
 char* getVert() {
     return (char*)sandbox.getSource(VERTEX).c_str();
+}
+
+#ifdef __EMSCRIPTEN__
+EMSCRIPTEN_KEEPALIVE
+#endif
+char* getDefaultSceneFrag() {
+    static std::string s = vera::getDefaultSrc(vera::FRAG_DEFAULT_SCENE);
+    return (char*)s.c_str();      
+}
+
+#ifdef __EMSCRIPTEN__
+EMSCRIPTEN_KEEPALIVE
+#endif
+char* getDefaultSceneVert() {
+    static std::string s = vera::getDefaultSrc(vera::VERT_DEFAULT_SCENE);
+    return (char*)s.c_str();
 }
 
 }
@@ -945,6 +967,7 @@ int main(int argc, char **argv) {
                 }
                 sandbox.loadAssets(files);
                 sandbox.getSceneRender().commandsInit(commands, sandbox.uniforms);
+                sandbox.getSceneRender().uniformsInit(sandbox.uniforms);
 
                 // if (init_lights) {
                 //     float area = sandbox.getSceneRender().getArea();
@@ -1080,7 +1103,7 @@ int main(int argc, char **argv) {
         [](void* _userData, int _error) {
             switch (_error){
                 case WEBXR_ERR_API_UNSUPPORTED:
-                    std::cout << "WebXR unsupported in this browser." << std::endl;
+                    // std::cout << "WebXR unsupported in this browser." << std::endl;
                     break;
                 case WEBXR_ERR_GL_INCAPABLE:
                     std::cout << "GL context cannot be used to render to WebXR" << std::endl;

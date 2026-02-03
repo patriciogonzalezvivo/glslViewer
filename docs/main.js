@@ -1,6 +1,6 @@
 import './wasm-loader.js';
 
-const defaultShader = `
+const defaultFragment = `
 #ifdef GL_ES
 precision mediump float;
 #endif
@@ -19,17 +19,83 @@ void main() {
 }
 `;
 
+const defaultVertex = `
+#ifdef GL_ES
+precision mediump float;
+#endif
+
+attribute vec4 a_position;
+varying vec4 v_position;
+
+void main() {
+    v_position = a_position;
+    gl_Position = a_position;
+}
+`;
+
 document.addEventListener('DOMContentLoaded', () => {
+    // State
+    let activeTab = 'frag';
+    let content = {
+        frag: defaultFragment,
+        vert: defaultVertex
+    };
+    
+    // DeBounce timeout
+    let updateTimeout = null;
+
     // Editor Setup
     const editorContainer = document.getElementById('editor-container');
     const editor = CodeMirror(editorContainer, {
-        value: defaultShader,
+        value: content.frag,
         mode: 'x-shader/x-fragment',
         theme: 'monokai',
         lineNumbers: true,
         matchBrackets: true
     });
     editor.setSize(null, "100%");
+
+    // Tabs logic
+    const tabFrag = document.querySelector('.tab[data-type="frag"]');
+    const tabVert = document.querySelector('.tab[data-type="vert"]');
+
+    function switchTab(type) {
+        if (type === activeTab) return;
+        
+        // Flush pending updates
+        if (updateTimeout) {
+            clearTimeout(updateTimeout);
+            updateShader();
+        }
+
+        // Save current content
+        content[activeTab] = editor.getValue();
+        
+        // Switch state
+        activeTab = type;
+        
+        // Update UI
+        if (type === 'frag') {
+            if (tabFrag) tabFrag.classList.add('active');
+            if (tabVert) tabVert.classList.remove('active');
+            editor.setOption('mode', 'x-shader/x-fragment');
+        } else {
+            if (tabFrag) tabFrag.classList.remove('active');
+            if (tabVert) tabVert.classList.add('active');
+            editor.setOption('mode', 'x-shader/x-vertex');
+        }
+        
+        // Set new content
+        editor.setValue(content[activeTab]);
+    }
+
+    if (tabFrag) {
+        tabFrag.addEventListener('click', () => switchTab('frag'));
+    }
+    if (tabVert) {
+        tabVert.style.display = 'inline-block';
+        tabVert.addEventListener('click', () => switchTab('vert'));
+    }
 
     // Canvas focus management
     const canvas = document.getElementById('canvas');
@@ -48,7 +114,9 @@ document.addEventListener('DOMContentLoaded', () => {
             canvas.focus();
         });
         wrapper.addEventListener('mouseleave', () => {
-            canvas.blur();
+            if (document.activeElement === canvas) {
+                canvas.blur();
+            }
         });
     }
 
@@ -74,10 +142,36 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateShader() {
         if (window.Module && window.Module.ccall) {
             const code = editor.getValue();
+            // Update stored content
+            content[activeTab] = code;
+
             try {
-                window.Module.ccall('setFrag', null, ['string'], [code]);
+                if (activeTab === 'frag') {
+                    window.Module.ccall('setFrag', null, ['string'], [code]);
+                } else if (activeTab === 'vert') {
+                    window.Module.ccall('setVert', null, ['string'], [code]);
+                }
             } catch (e) {
                 console.error("Error setting shader:", e);
+            }
+        }
+    }
+
+    // Fetch Shaders from Backend
+    function fetchShadersFromBackend() {
+        if (window.Module && window.Module.ccall) {
+            try {
+                 const cFrag = window.Module.ccall('getDefaultSceneFrag', 'string', [], []);
+                 const cVert = window.Module.ccall('getDefaultSceneVert', 'string', [], []);
+
+                 if (cFrag && cFrag.length > 0) content.frag = cFrag;
+                 if (cVert && cVert.length > 0) content.vert = cVert;
+                 
+                 if (editor.getValue() !== content[activeTab]) {
+                    editor.setValue(content[activeTab]);
+                 }
+            } catch(e) {
+                 console.log("Could not fetch shaders: " + e);
             }
         }
     }
@@ -92,80 +186,61 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 500);
 
     const btn = document.getElementById('resize-btn');
-    if (!btn) return;
+    if (btn && wrapper) {
+        // Always start in windowed mode regardless of device
+        let isFullscreen = false;
+        wrapper.classList.remove('fullscreen');
+        wrapper.classList.add('windowed');
+        document.body.classList.add('windowed-mode');
 
-    if (!wrapper) return;
-    
-    // Always start in windowed mode regardless of device
-    let isFullscreen = false;
-    wrapper.classList.remove('fullscreen');
-    wrapper.classList.add('windowed');
-    document.body.classList.add('windowed-mode');
+        btn.addEventListener('click', () => {
+            isFullscreen = !isFullscreen;
 
-    btn.addEventListener('click', () => {
-        isFullscreen = !isFullscreen;
-
-        if (isFullscreen) {
-            wrapper.classList.add('fullscreen');
-            wrapper.classList.remove('windowed');
-            document.body.classList.remove('windowed-mode');
-            
-            // Reset position on fullscreen
-            wrapper.style.transform = "none";
-            
-            // Forces update size
-            setTimeout(() => {
-                if (window.Module && window.Module.ccall) {
-                       const w = window.innerWidth;
-                       const h = window.innerHeight;
-                       const canvas = document.getElementById('canvas');
-                       if (canvas) {
-                           canvas.width = w;
-                           canvas.height = h;
-                       }
-                }
-            }, 100);
-
-            // Hide editor and console
-            if (editorContainer) editorContainer.style.display = 'none';
-            if (consoleOutput && consoleOutput.parentElement) 
-                consoleOutput.parentElement.style.display = 'none';
-
-        } else {
-            wrapper.classList.remove('fullscreen');
-            wrapper.classList.add('windowed');
-            document.body.classList.add('windowed-mode');
-
-            // Show editor and console
-            if (editorContainer) editorContainer.style.display = 'block';
-            if (consoleOutput && consoleOutput.parentElement) 
-                consoleOutput.parentElement.style.display = 'flex';
-        }
-    });
+            if (isFullscreen) {
+                wrapper.classList.add('fullscreen');
+                wrapper.classList.remove('windowed');
+                document.body.classList.remove('windowed-mode');
+                wrapper.style.transform = "none";
+                setTimeout(() => {
+                    if (window.Module && window.Module.ccall) {
+                        const w = window.innerWidth;
+                        const h = window.innerHeight;
+                        const cnv = document.getElementById('canvas');
+                        if (cnv) { cnv.width = w; cnv.height = h; }
+                    }
+                }, 100);
+                if (editorContainer) editorContainer.style.display = 'none';
+                if (consoleOutput && consoleOutput.parentElement) 
+                    consoleOutput.parentElement.style.display = 'none';
+            } else {
+                wrapper.classList.remove('fullscreen');
+                wrapper.classList.add('windowed');
+                document.body.classList.add('windowed-mode');
+                if (editorContainer) editorContainer.style.display = 'block';
+                if (consoleOutput && consoleOutput.parentElement) 
+                    consoleOutput.parentElement.style.display = 'flex';
+            }
+        });
+    }
 
     // Use ResizeObserver to handle the CSS transition smoothly
-    const resizeObserver = new ResizeObserver(() => {
-        window.dispatchEvent(new Event('resize'));
-        
-        // Update C++ window size
-        if (window.Module && window.Module.ccall) {
-            const canvas = document.getElementById('canvas');
-            if (canvas) {
-                const rect = canvas.getBoundingClientRect();
-                
-                // Explicitly set the canvas buffer size to match the displayed size
-                // This ensures the viewport has the correct physical pixels to work with
-                canvas.width = rect.width;
-                canvas.height = rect.height;
+    if (wrapper) {
+        const resizeObserver = new ResizeObserver(() => {
+            window.dispatchEvent(new Event('resize'));
+            if (window.Module && window.Module.ccall) {
+                const cnv = document.getElementById('canvas');
+                if (cnv) {
+                    const rect = cnv.getBoundingClientRect();
+                    cnv.width = rect.width;
+                    cnv.height = rect.height;
+                }
             }
-        }
-    });
-    resizeObserver.observe(wrapper);
+        });
+        resizeObserver.observe(wrapper);
+    }
 
     // --- Console & Error Handling ---
     const consoleOutput = document.getElementById('console-output');
-    // consoleInput is already declared above
-    
     function logToConsole(text, isError = false) {
         if (!consoleOutput) return;
         const msg = document.createElement('div');
@@ -175,58 +250,51 @@ document.addEventListener('DOMContentLoaded', () => {
         consoleOutput.scrollTop = consoleOutput.scrollHeight;
     }
 
-    // Capture standard output
     window.addEventListener('wasm-stdout', (e) => {
         logToConsole(e.detail, false);
     });
 
-    // Capture standard error and parse for GLSL errors
     window.addEventListener('wasm-stderr', (e) => {
         const text = e.detail;
         logToConsole(text, true);
 
-        // Regex to match GLSL errors: "0:LINE: ERROR: ..."
-        // Example: 0:13: S0001: Type mismatch, cannot convert from 'int' to 'float'
+        // Regex to match GLSL errors
         const errorRegex = /^0:(\d+):(.*)$/;
         const match = text.match(errorRegex);
         
         if (match) {
             const line = parseInt(match[1], 10);
-            const message = match[2];
-            
-            // Mark the error in CodeMirror
-            // CodeMirror lines are 0-based, GLSL usually 1-based
             const cmLine = line - 1; 
             
             if (editor) {
-               // Verify line exists
                if (cmLine >= 0 && cmLine < editor.lineCount()) {
-                   // Add a class to highlighting the line
                    editor.addLineClass(cmLine, 'background', 'error-line');
-                   
-                   // Optionally add a widget or tooltip. For now, let's just highlight.
-                   // We'll clear errors on next change.
                }
             }
         }
     });
 
-    // Clear errors on change
     editor.on('change', () => {
-        // Remove all error line classes
         editor.eachLine((lineHandle) => {
              editor.removeLineClass(lineHandle, 'background', 'error-line');
         });
-        updateShader();
+
+        // Clear existing timeout
+        if (updateTimeout) clearTimeout(updateTimeout);
+
+        // Set new timeout using stored content to detect changes
+        updateTimeout = setTimeout(() => {
+            const currentCode = editor.getValue();
+            if (currentCode !== content[activeTab]) {
+                updateShader();
+            }
+            updateTimeout = null;
+        }, 300);
     });
 
-    // Handle character deletion issue by ensuring input isn't blocked by other events
-    // (Usually CodeMirror just works, if deletion fails check if something is capturing keydown)
-    
     // Console Input
     const consoleDiv = document.getElementById('console');
-    if (consoleInput) {
-        // Blur canvas when clicking on console
+    if (consoleDiv && consoleInput) {
         consoleDiv.addEventListener('mousedown', () => {
             if (canvas) canvas.blur();
         });
@@ -250,5 +318,74 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+    
+    // --- File Drag & Drop ---
+    function handleDrop(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const files = e.dataTransfer.files;
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            const name = file.name;
+            const ext = name.split('.').pop().toLowerCase();
+            
+            if (ext === 'frag' || ext === 'fs' || ext === 'vert' || ext === 'vs') {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const data = event.target.result;
+                    if (ext === 'frag' || ext === 'fs') {
+                        content.frag = data;
+                        if (activeTab === 'frag') {
+                            editor.setValue(data);
+                        } else {
+                             // Push update without Editor change
+                             if (window.Module && window.Module.ccall) {
+                                window.Module.ccall('setFrag', null, ['string'], [data]);
+                             }
+                        }
+                    } else {
+                        content.vert = data;
+                        if (activeTab === 'vert') {
+                            editor.setValue(data);
+                        } else {
+                             // Push update without Editor change
+                             if (window.Module && window.Module.ccall) {
+                                window.Module.ccall('setVert', null, ['string'], [data]);
+                             }
+                        }
+                    }
+                };
+                reader.readAsText(file);
+            } else {
+                // Binary or other assets
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const data = new Uint8Array(event.target.result);
+                    if (window.Module && window.Module.FS) {
+                        try {
+                            window.Module.FS.writeFile(name, data);
+                            logToConsole("Loaded file: " + name);
 
+                            // Files like ply, obj, gltf might reset shaders. Fetch them.
+
+                            if (ext === 'ply' || ext === 'obj' || ext === 'gltf' || ext === 'glb' || ext === 'splat') {
+                                // Small delay to ensure file is processed
+                                setTimeout(() => {
+                                    fetchShadersFromBackend();
+                                }, 100);
+                            }
+
+                        } catch (err) {
+                            logToConsole("Error saving file: " + err, true);
+                        }
+                    }
+                };
+                reader.readAsArrayBuffer(file);
+            }
+        }
+    }
+    
+    document.body.addEventListener('dragover', (e) => { e.preventDefault(); e.stopPropagation(); });
+    document.body.addEventListener('drop', handleDrop);
 });
