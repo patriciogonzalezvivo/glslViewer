@@ -966,6 +966,7 @@ int main(int argc, char **argv) {
             }
         }
     } );
+#ifndef __EMSCRIPTEN__
     vera::setDropCallback(    [&](int _count, const char** _paths) {    
         for (int i = 0;  i < _count;  i++) {
             std::string path = std::string( _paths[i] ); 
@@ -1066,6 +1067,7 @@ int main(int argc, char **argv) {
             }
         }
     } );
+#endif
 
 #if defined(__EMSCRIPTEN__)
     // On the browser (WASM/EMSCRIPTEN)
