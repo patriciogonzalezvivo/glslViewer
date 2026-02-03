@@ -51,7 +51,12 @@ document.addEventListener('DOMContentLoaded', () => {
         mode: 'x-shader/x-fragment',
         theme: 'monokai',
         lineNumbers: true,
-        matchBrackets: true
+        matchBrackets: true,
+        keyMap: 'sublime',
+        extraKeys: {
+            "Cmd-/": "toggleComment",
+            "Ctrl-/": "toggleComment"
+        }
     });
     editor.setSize(null, "100%");
 
