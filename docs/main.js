@@ -388,6 +388,206 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
+    // --- GitHub Integration ---
+    function getQueryVariable(variable) {
+        var query = window.location.search.substring(1);
+        var vars = query.split('&');
+        for (var i = 0; i < vars.length; i++) {
+            var pair = vars[i].split('=');
+            if (decodeURIComponent(pair[0]) == variable) {
+                return decodeURIComponent(pair[1]);
+            }
+        }
+        return null;
+    }
+
+    const loginBtn = document.getElementById('login-btn');
+    const saveBtn = document.getElementById('save-btn');
+    const openBtn = document.getElementById('open-btn');
+    let githubToken = localStorage.getItem('github_token');
+    let githubUser = null;
+
+    function updateGithubUI() {
+        if (githubUser) {
+            loginBtn.textContent = 'Log out (' + githubUser + ')';
+            saveBtn.style.display = 'block';
+        } else {
+            loginBtn.textContent = 'Login';
+            saveBtn.style.display = 'none';
+        }
+    }
+
+    function checkGithubToken() {
+        if (githubToken) {
+            fetch('https://api.github.com/user', {
+                headers: { 'Authorization': 'token ' + githubToken }
+            })
+            .then(response => {
+                if (response.ok) return response.json();
+                throw new Error('Invalid token');
+            })
+            .then(data => {
+                githubUser = data.login;
+                updateGithubUI();
+            })
+            .catch(err => {
+                console.warn('GitHub token invalid:', err);
+                logoutGithub();
+            });
+        } else {
+            updateGithubUI();
+        }
+    }
+
+    function loginGithub() {
+        if (githubUser) {
+            // Logout
+            logoutGithub();
+        } else {
+            const token = prompt('Please enter your GitHub Personal Access Token:');
+            if (token) {
+                githubToken = token;
+                localStorage.setItem('github_token', token);
+                checkGithubToken();
+            }
+        }
+    }
+
+    function logoutGithub() {
+        githubToken = null;
+        githubUser = null;
+        localStorage.removeItem('github_token');
+        updateGithubUI();
+    }
+
+    function openGist() {
+        const id = prompt('Please enter Gist ID or URL:');
+        if (id) {
+            // Extract ID if full URL
+            const gistId = id.split('/').pop();
+            window.location.search = '?gist=' + gistId;
+        }
+    }
+
+    function loadGist(id) {
+        console.log('Loading Gist:', id);
+        fetch('https://api.github.com/gists/' + id)
+        .then(response => response.json())
+        .then(data => {
+            // Look for shader.json
+            let shaderFile = null;
+            if (data.files['shader.json']) {
+                shaderFile = data.files['shader.json'];
+            } else {
+                // Fallback: look for first .json file
+                const names = Object.keys(data.files);
+                for (let name of names) {
+                    if (name.endsWith('.json')) {
+                        shaderFile = data.files[name];
+                        break;
+                    }
+                }
+            }
+
+            if (shaderFile && shaderFile.content) {
+                try {
+                    const json = JSON.parse(shaderFile.content);
+                    if (json.frag) content.frag = json.frag;
+                    if (json.vert) content.vert = json.vert;
+                    
+                    editor.setValue(content[activeTab]);
+                    if (window.module_loaded) {
+                        updateShader();
+                    }
+                    console.log('Gist loaded successfully');
+                } catch (e) {
+                    console.error('Error parsing Gist content:', e);
+                    logToConsole('Error parsing Gist JSON', true);
+                }
+            } else {
+                logToConsole('No valid shader JSON found in Gist', true);
+            }
+        })
+        .catch(err => {
+            console.error('Error loading Gist:', err);
+            logToConsole('Error loading Gist: ' + err, true);
+        });
+    }
+
+    function saveGist() {
+        if (!githubToken) {
+            alert('Please login first');
+            return;
+        }
+
+        // Ask for a filename
+        let filename = prompt("Enter a name for your shader:", "shader");
+        if (!filename) return; // Cancelled
+
+        if (!filename.endsWith('.json')) {
+            filename += '.json';
+        }
+
+        // Ensure current editor content is saved to content object
+        content[activeTab] = editor.getValue();
+
+        let files = {};
+        files[filename] = {
+            "content": JSON.stringify({
+                frag: content.frag,
+                vert: content.vert
+            }, null, 2)
+        };
+
+        const data = {
+            "description": "glslViewer Shader: " + filename.replace('.json', ''),
+            "public": true,
+            "files": files
+        };
+
+        const currentGistId = getQueryVariable('gist');
+        const method = 'POST'; 
+        
+        const url = 'https://api.github.com/gists';
+
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Authorization': 'token ' + githubToken,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => {
+             if (response.ok) return response.json();
+             throw new Error('Save failed: ' + response.statusText);
+        })
+        .then(data => {
+            const id = data.id;
+            console.log('Saved Gist:', id);
+            logToConsole('Saved to Gist: ' + id);
+            
+            // Update URL
+            const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?gist=' + id;
+            window.history.pushState({path:newUrl},'',newUrl);
+        })
+        .catch(err => {
+            console.error(err);
+            logToConsole(err.message, true);
+        });
+    }
+
+    if (loginBtn) loginBtn.addEventListener('click', loginGithub);
+    if (saveBtn) saveBtn.addEventListener('click', saveGist);
+    if (openBtn) openBtn.addEventListener('click', openGist);
+
+    // Initial check
+    checkGithubToken();
+    const gistId = getQueryVariable('gist');
+    if (gistId) {
+        loadGist(gistId);
+    }
+
     // --- File Drag & Drop ---
     function handleDrop(e) {
         e.preventDefault();

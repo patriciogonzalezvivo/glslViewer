@@ -11,6 +11,7 @@
     <meta property='og:image:height' content='512'/>
     <meta property='og:site_name' content='Patricio Gonzalez Vivo'/>
     <link rel="stylesheet" href="style.css" type="text/css" />
+    <link rel="stylesheet" href="menu.css" type="text/css" />
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
@@ -24,6 +25,11 @@
   </head>
 
   <body class="windowed-mode">
+    <div id="menu">
+        <button id="login-btn" class="menu-btn">Login</button>
+        <button id="save-btn" class="menu-btn" style="display:none;">Save</button>
+        <button id="open-btn" class="menu-btn">Open</button>
+    </div>
     <div id="wrapper" class="windowed">
       <canvas class='emscripten' id='canvas' oncontextmenu='event.preventDefault()' tabindex='0'></canvas>
     </div>
