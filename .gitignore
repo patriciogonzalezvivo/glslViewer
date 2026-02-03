@@ -44,7 +44,7 @@ docs/CMakeFiles
 docs/cmake_install.cmake
 docs/CMakeCache.txt
 docs/deps
-# docs/examples
+docs/examples
 
 Debug/
 Release/

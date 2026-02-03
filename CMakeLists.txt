@@ -64,9 +64,6 @@ target_compile_definitions(glslViewer PRIVATE GLSLVIEWER_VERSION_MINOR=${VERSION
 target_compile_definitions(glslViewer PRIVATE GLSLVIEWER_VERSION_PATCH=${VERSION_PATCH})
 
 if (EMSCRIPTEN)
-        # create a glslViewer.html 
-    set_target_properties(glslViewer PROPERTIES SUFFIX ".html")
-
     # copy the index.html 
     file(COPY   assets/wasm/index.html DESTINATION ${CMAKE_CURRENT_BINARY_DIR} )
     file(COPY   assets/wasm/main.js DESTINATION ${CMAKE_CURRENT_BINARY_DIR} )
@@ -74,8 +71,8 @@ if (EMSCRIPTEN)
     file(COPY   assets/wasm/style.css DESTINATION ${CMAKE_CURRENT_BINARY_DIR} )
     
     # Add examples folder to the .data file system
-    file(COPY   examples DESTINATION ${CMAKE_CURRENT_BINARY_DIR} )
-    set(LFLAGS "${LFLAGS} --preload-file examples")
+    # file(COPY   examples DESTINATION ${CMAKE_CURRENT_BINARY_DIR} )
+    # set(LFLAGS "${LFLAGS} --preload-file examples")
 
     set(LFLAGS "${LFLAGS} -s WASM=3")
     set(LFLAGS "${LFLAGS} -s USE_GLFW=3")
