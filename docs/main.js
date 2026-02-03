@@ -102,50 +102,40 @@ document.addEventListener('DOMContentLoaded', () => {
     wrapper.classList.add('windowed');
     document.body.classList.add('windowed-mode');
 
-    // Make wrapper draggable
-    let isDragging = false;
-    let currentX;
-    let currentY;
-    let initialX;
-    let initialY;
-    let xOffset = 0;
-    let yOffset = 0;
+    // Drag and Drop files
+    wrapper.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+    });
 
-    wrapper.addEventListener("mousedown", dragStart);
-    document.addEventListener("mouseup", dragEnd);
-    document.addEventListener("mousemove", drag);
+    wrapper.addEventListener('drop', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
 
-    function dragStart(e) {
-        if (isFullscreen) return;
-        if (e.target.closest('#resize-btn')) return; // Don't drag if clicking resize button
-
-        initialX = e.clientX - xOffset;
-        initialY = e.clientY - yOffset;
-
-        if (e.target === wrapper || e.target.closest('.emscripten')) {
-            isDragging = true;
+        if (window.Module && window.Module.ccall) {
+            const files = e.dataTransfer.files;
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const reader = new FileReader();
+                
+                reader.onload = (event) => {
+                    const data = new Uint8Array(event.target.result);
+                    const filename = file.name;
+                    
+                    try {
+                        // Write file to Emscripten FS
+                        window.Module.FS.writeFile(filename, data);
+                        // Notify C++
+                        window.Module.ccall('loadFile', null, ['string'], [filename]);
+                        console.log("Loaded file:", filename);
+                    } catch (err) {
+                        console.error("Error loading file:", err);
+                    }
+                };
+                reader.readAsArrayBuffer(file);
+            }
         }
-    }
-
-    function dragEnd(e) {
-        initialX = currentX;
-        initialY = currentY;
-        isDragging = false;
-    }
-
-    function drag(e) {
-        if (isDragging) {
-            e.preventDefault();
-            currentX = e.clientX - initialX;
-            currentY = e.clientY - initialY;
-
-            xOffset = currentX;
-            yOffset = currentY;
-
-            // Apply transform instead of top/left to keep performance high
-            setTranslate(currentX, currentY, wrapper);
-        }
-    }
+    });
 
     function setTranslate(xPos, yPos, el) {
         el.style.transform = "translate3d(" + xPos + "px, " + yPos + "px, 0)";
@@ -184,10 +174,6 @@ document.addEventListener('DOMContentLoaded', () => {
             wrapper.classList.remove('fullscreen');
             wrapper.classList.add('windowed');
             document.body.classList.add('windowed-mode');
-            
-            // Restore position if we want, or reset? 
-            // For now, let's restore drag persistence
-            setTranslate(xOffset, yOffset, wrapper);
 
             // Show editor and console
             if (editorContainer) editorContainer.style.display = 'block';

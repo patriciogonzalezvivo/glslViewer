@@ -55,10 +55,13 @@ std::string                 version = vera::toString(GLSLVIEWER_VERSION_MAJOR) +
 std::string                 about   = "GlslViewer " + version + " by Patricio Gonzalez Vivo ( http://patriciogonzalezvivo.com )"; 
 std::string                 icon_base64 = "iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAACzklEQVR4XmMYBaMhMBoCoyEwkkOAkV6e/w8EpNjFCAT0cBtNA4BUT+PyMC0Dg+oBQC1P0yswqBYAxHic2JikplmEshFVAgCfgylNvrQ0GxQ4FAUALsfRKs/Swj6yA4DenoclZWrbS1YAYHMEvaotfAFBjhtIDoDB4HlqBgJJAUBtz8PMoyT1UOomogOAVp6HxeZABQITuc1NajsYV+FGjPsocQtRKQDdcdT2PLInqWk2MWYRDABaeh7mQHrYgSslMTHQCeDzJHpMUZIdSPUO3hRArZgh1hx62wcKLKJTALl5kxRPUSslkOJWmmYBcmKU3tkBZwBQmg8pSc7UDgR8fmGidT0LM5+UAKU08EF2EpsNaJYFsDmAGI9hU0NJ24BQBGMNAGrEAK5YwGc2LT2Py16CKYDS0Cc2JdDC88S4nSpZgFCKIRQI5HieWqmU4gCAOYTcQKDE89QIBIoCAN0B5AQCeiFFKNmSaidZhSAxVSMuz1ISCKR6npwqFt1vNKkGyQkEcj3PQCGg2YAIKYFAqecpqakoSgHUcPhAep6k3iCulEbLpEuNQpVmhSCywbQIBHp4nqgUQMghsICgZiBQy/PEuB1rGUBuoUKNQKBVzONyG9WrQUoCgV7JHjn7MlHS6KFmwUhtzxObdZnI9QShgCMlJdA65vG5hSYtQVIKxoFI9iRnAZAGYpMUesqgpJVGrl5S3Eq3mSFSA5BanidkDk2zACmNJXLVMlAIRidHiQ1A9CRMSd7GlR2oaSaxZpGdBcgtFEEBjs1xtAhQYiJ3dIkMqWUItpinJPYoKcOo4RZGchwwGAKBWm5gJDcGaFGQEeMWatvLSO0kiKuQY6ACoEWgM9LSYdQIDHy1DTXKHqoEAMijxFSLxDqYmmYRimCqBQDMImIcT0mqo3aNQ/UAQPYctQKDltUsTQOAksAYqLYFwygYDYHREBgNgZEUAgDEsgRgHB+UVwAAAABJRU5ErkJggg==";
 std::atomic<bool>           bKeepRunnig(true);
+int                         textureCounter  = 0;        // number of textures to load
+bool                        vFlip           = true;     // texture flip state 
 bool                        bScreensaverMode = false;
 bool                        bRunAtFullFps = false;
 bool                        bTerminate = false;
 bool                        bStreamsPlaying = true;
+
 #if !defined(__EMSCRIPTEN__)
 void                        printUsage(char * executableName);
 void                        onExit();
@@ -93,13 +96,98 @@ bool                        commands_ncurses = false;
 void                        commandsRun(const std::string &_cmd);
 void                        commandsRun(const std::string &_cmd, std::mutex &_mutex);
 void                        commandsInit();
+
 #if !defined(__EMSCRIPTEN__)
 // Console IN thread
 void                        cinWatcherThread();
 #else
+
 // In WASM / EMSCRIPTEN projects there is nothreads, so instead of a Console IN rutine
 // we expose a command function for the client, and commands are excecute in the main loop
 extern "C"  {
+
+#ifdef __EMSCRIPTEN__
+EMSCRIPTEN_KEEPALIVE
+#endif
+void loadFile(char* _path) {
+    std::string path = std::string(_path);
+    if ( vera::haveExt(path,"frag") || vera::haveExt(path,"fs")  ) {
+        if (sandbox.frag_index == -1) {
+            WatchFile file;
+            file.type = FRAG_SHADER;
+            file.path = path;
+            file.lastChange = 0;
+            files.push_back(file);
+            sandbox.frag_index = files.size()-1;
+        }
+        else {
+            files[sandbox.frag_index].path = path;
+            files[sandbox.frag_index].lastChange = 0;
+        }
+        sandbox.resetShaders(files);
+    }
+    // load vertex shader
+    else if (   vera::haveExt(path,"vert") || vera::haveExt(path,"vs") ) {
+        if (sandbox.vert_index == -1) {
+            WatchFile file;
+            file.type = VERT_SHADER;
+            file.path = path;
+            file.lastChange = 0;
+            files.push_back(file);
+            sandbox.vert_index = files.size()-1;
+        }
+        else {
+            files[sandbox.vert_index].path = path;
+            files[sandbox.vert_index].lastChange = 0;
+        }
+        sandbox.resetShaders(files);
+    }
+    // load geometry
+    else if (   vera::haveExt(path,"ply") || vera::haveExt(path,"PLY") ||
+                vera::haveExt(path,"obj") || vera::haveExt(path,"OBJ") ||
+                vera::haveExt(path,"stl") || vera::haveExt(path,"STL") ||
+                vera::haveExt(path,"glb") || vera::haveExt(path,"GLB") ||
+                vera::haveExt(path,"gltf") || vera::haveExt(path,"GLTF") ||
+                vera::haveExt(path,"splat") || vera::haveExt(path,"SPLAT")
+            ) {
+
+        if (sandbox.geom_index == -1) {
+            WatchFile file;
+            file.type = GEOMETRY;
+            file.path = path;
+            file.lastChange = 0;
+            files.push_back(file); 
+            sandbox.geom_index = files.size()-1;
+        }
+        else {
+            commandsRun("models,clear");
+            files[sandbox.geom_index].path = path;
+            files[sandbox.geom_index].lastChange = 0;
+        }
+        sandbox.loadAssets(files);
+        commandsRun("update");
+    }
+    // load cubemap
+    else if (   vera::haveExt(path,"hdr") || vera::haveExt(path,"HDR") ) {
+        sandbox.uniforms.addCubemap("enviroment", path);
+        sandbox.uniforms.activeCubemap = sandbox.uniforms.cubemaps["enviroment"];
+        sandbox.getSceneRender().showCubebox = true;
+        commandsRun("cubemap,on");
+        commandsRun("update");
+    }
+    // load image 
+    else if (   vera::haveExt(path,"png") || vera::haveExt(path,"PNG") ||
+                vera::haveExt(path,"tga") || vera::haveExt(path,"TGA") ||
+                vera::haveExt(path,"psd") || vera::haveExt(path,"PSD") ||
+                vera::haveExt(path,"gif") || vera::haveExt(path,"GIF") ||
+                vera::haveExt(path,"bmp") || vera::haveExt(path,"BMP") ||
+                vera::haveExt(path,"jpg") || vera::haveExt(path,"JPG") ||
+                vera::haveExt(path,"jpeg") || vera::haveExt(path,"JPEG")) {
+
+        if ( sandbox.uniforms.addTexture("u_tex" + vera::toString(textureCounter), path, vFlip) )
+            textureCounter++;
+    }
+}
 
 #ifdef __EMSCRIPTEN__
 EMSCRIPTEN_KEEPALIVE
@@ -388,8 +476,6 @@ int main(int argc, char **argv) {
     #endif
 
     struct stat st;                         // for files to watch
-    int         textureCounter  = 0;        // number of textures to load
-    bool        vFlip           = true;     // texture flip state 
 
     // SECOND parsing pass of arguments focus on the SANDBOX, 
     // by loading assets, setting up properties and excecuting commands
