@@ -1,7 +1,6 @@
 import './wasm-loader.js';
 
-const defaultFragment = `
-#ifdef GL_ES
+const defaultFragment = `#ifdef GL_ES
 precision mediump float;
 #endif
 
@@ -19,8 +18,7 @@ void main() {
 }
 `;
 
-const defaultVertex = `
-#ifdef GL_ES
+const defaultVertex = `#ifdef GL_ES
 precision mediump float;
 #endif
 
@@ -32,6 +30,21 @@ void main() {
     gl_Position = a_position;
 }
 `;
+
+function getJSON(url, callback) {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', url, true);
+    xhr.responseType = 'json';
+    xhr.onload = function() {
+      var status = xhr.status;
+      if (status === 200) {
+        callback(null, xhr.response);
+      } else {
+        callback(status, xhr.response);
+      }
+    };
+    xhr.send();
+};
 
 document.addEventListener('DOMContentLoaded', () => {
     // State
@@ -59,6 +72,57 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
     editor.setSize(null, "100%");
+
+    // Lygia Autocomplete
+    let lygia_glob = null;
+    let lygia_fetching = false;
+    editor.on('inputRead', (cm, change) => {
+        let cur = cm.getCursor();
+        let line = cm.getLine(cur.line);
+        let trimmedLine = line.trim();
+          
+        if (trimmedLine.startsWith('#include')) {
+            let path = line.substring(10);
+            if (lygia_glob === null) {
+            getJSON('https://lygia.xyz/glsl.json', (err, data) => {
+                if (err === null) {
+                lygia_glob = data;
+                }
+            });
+            }
+            console.log('autocomplete for', path);
+
+            let result = []
+
+            if (lygia_glob !== null) {
+                lygia_glob.forEach((w) => {
+                    if (w.startsWith(path)) {
+                        result.push('#include "' + w + '"');
+                    }
+                });
+                result.sort();
+            }
+
+            if (result.length > 0) {
+                CodeMirror.showHint(cm, () => {
+                    let start = line.indexOf('#include');
+                    let end = cur.ch;
+                    if (line.length > end && line[end] === '"') {
+                        end++;
+                    }
+
+                    let rta = {
+                        list: result, 
+                        from: CodeMirror.Pos(cur.line, start),
+                        to: CodeMirror.Pos(cur.line, end)
+                    };
+                    
+                    console.log(rta);
+                    return rta;
+                }, {completeSingle: true, alignWithWord: true});
+            }
+        }
+    });
 
     // Tabs logic
     const tabFrag = document.querySelector('.tab[data-type="frag"]');
