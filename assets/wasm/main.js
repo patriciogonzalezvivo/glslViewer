@@ -603,6 +603,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     Promise.all(assetPromises).then(() => {
                         updateShader();
+                        
+                        if (json.commands && Array.isArray(json.commands)) {
+                             json.commands.forEach((cmd) => {
+                                 if (window.Module && window.Module.ccall) {
+                                     try {
+                                         window.Module.ccall('command', null, ['string'], [cmd]);
+                                         logToConsole('Executed command: ' + cmd);
+                                     } catch(e) {
+                                         console.error("Error executing command: " + cmd, e);
+                                     }
+                                 }
+                             });
+                        }
+                        
                         console.log('Gist loaded successfully');
                     });
                 } catch (e) {
