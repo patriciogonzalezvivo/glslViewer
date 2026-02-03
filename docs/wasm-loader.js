@@ -5,6 +5,37 @@ class WasmLoader extends HTMLElement {
     }
   
     connectedCallback() {
+        // Intercept global event listener registration to constrain WASM keyboard input
+        // This must be done before the WASM script is loaded.
+        const originalAddEventListener = window.addEventListener;
+        window.addEventListener = function(type, listener, options) {
+            if ((type === 'keydown' || type === 'keyup' || type === 'keypress') && typeof listener === 'function') {
+                const wrappedListener = function(e) {
+                    const canvas = document.getElementById('canvas');
+                    const wrapper = document.getElementById('wrapper');
+                    
+                    // 1. Never intercept if the target is an input field (Editor/Console)
+                    const target = e.target;
+                    const isInput = target.tagName === 'INPUT' || 
+                                  target.tagName === 'TEXTAREA' || 
+                                  target.isContentEditable ||
+                                  (target.closest && target.closest('.CodeMirror')); // Check CodeMirror
+                    
+                    if (isInput) return; // Let it bubble naturally, don't pass to WASM if it's GLOBAL listener
+                    
+                    // 2. Only allow WASM to see keys if mouse is over the wrapper OR canvas is focused
+                    const isHovering = wrapper && wrapper.matches && wrapper.matches(':hover');
+                    const isFocused = document.activeElement === canvas;
+                    
+                    if (isHovering || isFocused) {
+                        listener.call(this, e);
+                    }
+                };
+                return originalAddEventListener.call(this, type, wrappedListener, options);
+            }
+            return originalAddEventListener.call(this, type, listener, options);
+        };
+
         // Create loader elements
         const loader = document.createElement('div');
         loader.className = 'emscripten_loader';
@@ -122,6 +153,7 @@ class WasmLoader extends HTMLElement {
         window.Module = {
             preRun: [],
             keyboardListeningElement: canvas,
+            doNotCaptureKeyboard: true,
             // canvas: canvas,
             onRuntimeInitialized: function() {
                 console.log('WASM Runtime Initialized');

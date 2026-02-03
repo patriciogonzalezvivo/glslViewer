@@ -29,6 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
         lineNumbers: true,
         matchBrackets: true
     });
+    editor.setSize(null, "100%");
 
     // Canvas focus management
     const canvas = document.getElementById('canvas');
@@ -39,6 +40,34 @@ document.addEventListener('DOMContentLoaded', () => {
         editorContainer.addEventListener('mousedown', () => {
             if (canvas) canvas.blur();
         });
+    }
+
+    // Focus canvas when mouse is over it or wrapper
+    if (wrapper && canvas) {
+        wrapper.addEventListener('mouseenter', () => {
+            canvas.focus();
+        });
+        wrapper.addEventListener('mouseleave', () => {
+            canvas.blur();
+        });
+    }
+
+    // Stop keyboard events from propagating to the module when in editor/console
+    function stopPropagation(e) {
+        e.stopPropagation();
+    }
+
+    if (editorContainer) {
+        editorContainer.addEventListener('keydown', stopPropagation);
+        editorContainer.addEventListener('keypress', stopPropagation);
+        editorContainer.addEventListener('keyup', stopPropagation);
+    }
+
+    const consoleInput = document.getElementById('console-input');
+    if (consoleInput) {
+        consoleInput.addEventListener('keydown', stopPropagation);
+        consoleInput.addEventListener('keypress', stopPropagation);
+        consoleInput.addEventListener('keyup', stopPropagation);
     }
 
     // Update Shader function
@@ -143,7 +172,6 @@ document.addEventListener('DOMContentLoaded', () => {
                            canvas.width = w;
                            canvas.height = h;
                        }
-                       window.Module.ccall('resize', null, ['number', 'number'], [w, h]);
                 }
             }, 100);
 
@@ -182,12 +210,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 // This ensures the viewport has the correct physical pixels to work with
                 canvas.width = rect.width;
                 canvas.height = rect.height;
-
-                try {
-                    window.Module.ccall('resize', null, ['number', 'number'], [rect.width, rect.height]);
-                } catch(e) {
-                   // Module might not be ready
-                }
             }
         }
     });
@@ -195,7 +217,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Console & Error Handling ---
     const consoleOutput = document.getElementById('console-output');
-    const consoleInput = document.getElementById('console-input');
+    // consoleInput is already declared above
     
     function logToConsole(text, isError = false) {
         if (!consoleOutput) return;
