@@ -100,15 +100,30 @@ void                        cinWatcherThread();
 // In WASM / EMSCRIPTEN projects there is nothreads, so instead of a Console IN rutine
 // we expose a command function for the client, and commands are excecute in the main loop
 extern "C"  {
-    
+
+#ifdef __EMSCRIPTEN__
+EMSCRIPTEN_KEEPALIVE
+#endif
 void command(char* c) {
     commandsArgs.push_back( std::string(c) );
 }
 
+#ifdef __EMSCRIPTEN__
+EMSCRIPTEN_KEEPALIVE
+#endif
 void setFrag(char* c) {
     sandbox.setSource(FRAGMENT, std::string(c) );
     sandbox.resetShaders(files);
 }
+
+#ifdef __EMSCRIPTEN__
+EMSCRIPTEN_KEEPALIVE
+#endif
+void resize(int width, int height) {
+    vera::setWindowSize(width, height);
+    // sandbox.onWindowResize(width, height);
+}
+
 
 void setVert(char* c) {
     sandbox.setSource(VERTEX, std::string(c) );

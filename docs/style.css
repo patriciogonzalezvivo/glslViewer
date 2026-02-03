@@ -1,0 +1,605 @@
+html,
+body {
+    margin: 0;
+    padding: 0;
+}
+    
+body {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    background: black;
+    font-family: 'Lucida Console', Monaco, monospace;
+    transition: background 0.3s ease-in-out;
+}
+
+body.windowed-mode {
+    background: white;
+    overflow-y: auto;
+    height: auto;
+}
+
+* {
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+}
+
+/* Wrapper */
+#wrapper {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    overflow: hidden;
+    transition: all 0.3s ease-in-out;
+}
+
+/* Fullscreen State */
+#wrapper.fullscreen {
+    width: 100vw;
+    height: 100vh;
+    z-index: 100; /* Ensure on top of everything */
+}
+
+#wrapper.fullscreen .frame {
+    display: none;
+}
+
+/* Windowed State */
+#wrapper.windowed {
+    width: 516px;
+    height: 810px;
+}
+/* 
+#wrapper.windowed .frame {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    display: block;
+}
+
+#wrapper.windowed #frame-back {
+    z-index: 0;
+}
+
+#wrapper.windowed #frame-front {
+    z-index: 2;
+} */
+
+/* Canvas */
+.emscripten { 
+    padding-right: 0; 
+    margin-left: auto; 
+    margin-right: auto; 
+    display: block; 
+    z-index: 1;
+
+    position: relative;
+    top: 0px;
+    left: 0px;
+    margin: 0px;
+    border: 0;
+    overflow: hidden;
+    display: block;
+    image-rendering: optimizeSpeed;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: -o-crisp-edges;
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: optimize-contrast;
+    image-rendering: crisp-edges;
+    image-rendering: pixelated;
+    -ms-interpolation-mode: nearest-neighbor;
+}
+
+/* div.emscripten { text-align: center; } */
+
+/* #wrapper.windowed canvas.emscripten {
+    margin-left: 2px;
+    margin-top: 0px;
+} */
+
+
+/* canvas.emscripten {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%,-50%);
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+} */
+
+/* UI */
+#ui {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 100;
+}
+
+#resize-btn {
+    background: rgba(0,0,0,0.5);
+    border: 1px solid white;
+    color: white;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    outline: none;
+    transition: background 0.2s;
+}
+
+#resize-btn:hover {
+    background: rgba(0,0,0,0.8);
+}
+
+/* Info */
+#info {
+    /* position: fixed; */
+    position: absolute;
+    top: 50%;
+    left: 20px;
+    transform: translateY(-50%);
+    width: 300px;
+    font-family: inherit;
+    color: black;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+    z-index: 10;
+}
+
+body.windowed-mode #info {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+#info h1 {
+    font-size: 24px;
+    margin: 0 0 10px 0;
+    text-transform: uppercase;
+}
+
+#info h2 {
+    font-size: 14px;
+    margin: 0 0 20px 0;
+    font-weight: normal;
+    color: #666;
+}
+
+#info p {
+    font-size: 14px;
+    line-height: 1.5;
+    margin-bottom: 10px;
+    color: #333;
+}
+
+/* Github Embed */
+.code, .github-embed {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease-in-out;
+    width: 100%;
+    max-width: 690px;
+    height: 600px; /* Explicit height required for github-embed */
+    margin: 0 auto;
+    padding-bottom: 50px;
+    /* text-align: center; */
+}
+
+
+.code p, .github-embed p {
+    font-size: 14px;
+    line-height: 1.5;
+    margin-bottom: 10px;
+    color: #333;
+}
+
+
+/* Desktop Windowed Mode Logic */
+/* DISABLED: body.windowed-mode #wrapper.windowed {
+    position: relative;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-top: 40px;
+    margin-bottom: 20px;
+} */
+
+/* body.windowed-mode #info {
+    opacity: 1;
+    pointer-events: auto;
+    position: relative;
+    top: auto;
+    left: auto;
+    transform: none;
+    width: 100%;
+    max-width: 500px;
+    margin: 20px auto;
+    padding: 0 20px;
+} */
+
+body.windowed-mode .code,
+body.windowed-mode .github-embed {
+    opacity: 1;
+    pointer-events: auto;
+    position: relative;
+}
+
+@media (max-width: 800px) {
+    body.windowed-mode {
+        overflow-y: auto;
+        height: auto;
+        min-height: 100vh;
+    }
+
+    /* body.windowed-mode #wrapper.windowed {
+        position: relative;
+        top: 0;
+        left: 0;
+        transform: none;
+        width: 100%;
+        max-width: 500px;
+        height: auto; 
+        margin: 20px auto;
+    } */
+
+    /* Use relative positioning for the background frame to establish height without aspect-ratio */
+    #wrapper.windowed #frame-back {
+        position: relative;
+        width: 100%;
+        height: auto;
+    }
+
+    #wrapper.windowed canvas.emscripten {
+        width: 81.7%;
+        height: 89.8%;
+        margin: 0;
+    }
+
+    body.windowed-mode #info {
+        position: relative;
+        top: auto;
+        left: auto;
+        transform: none;
+        width: 100%;
+        max-width: 500px;
+        margin: 20px auto;
+        padding: 0 20px 40px 20px;
+    }
+
+    body.windowed-mode #longer-info {
+        max-width: 500px;
+        padding: 0 20px 40px 20px;
+    }
+}
+
+
+
+.github-embed-loader {
+    position: relative;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+
+    &::after {
+        content: '';
+        top: 50%;
+        display: block;
+        margin: auto;
+        font-size: 7px;
+        width: 1em;
+        height: 1em;
+        border-radius: 50%;
+        position: relative;
+        text-indent: -9999em;
+        animation: github-embed-loader 1.1s infinite ease;
+        transform: translateZ(0);
+    }
+
+}
+
+@keyframes github-embed-loader {
+    0%,
+    100% {
+    box-shadow: 0em -2.6em 0em 0em #000000, 1.8em -1.8em 0 0em rgba(0, 0, 0, 0.2), 2.5em 0em 0 0em rgba(0, 0, 0, 0.2), 1.75em 1.75em 0 0em rgba(0, 0, 0, 0.2), 0em 2.5em 0 0em rgba(0, 0, 0, 0.2), -1.8em 1.8em 0 0em rgba(0, 0, 0, 0.2), -2.6em 0em 0 0em rgba(0, 0, 0, 0.5), -1.8em -1.8em 0 0em rgba(0, 0, 0, 0.7);
+    }
+    12.5% {
+    box-shadow: 0em -2.6em 0em 0em rgba(0, 0, 0, 0.7), 1.8em -1.8em 0 0em #000000, 2.5em 0em 0 0em rgba(0, 0, 0, 0.2), 1.75em 1.75em 0 0em rgba(0, 0, 0, 0.2), 0em 2.5em 0 0em rgba(0, 0, 0, 0.2), -1.8em 1.8em 0 0em rgba(0, 0, 0, 0.2), -2.6em 0em 0 0em rgba(0, 0, 0, 0.2), -1.8em -1.8em 0 0em rgba(0, 0, 0, 0.5);
+    }
+    25% {
+    box-shadow: 0em -2.6em 0em 0em rgba(0, 0, 0, 0.5), 1.8em -1.8em 0 0em rgba(0, 0, 0, 0.7), 2.5em 0em 0 0em #000000, 1.75em 1.75em 0 0em rgba(0, 0, 0, 0.2), 0em 2.5em 0 0em rgba(0, 0, 0, 0.2), -1.8em 1.8em 0 0em rgba(0, 0, 0, 0.2), -2.6em 0em 0 0em rgba(0, 0, 0, 0.2), -1.8em -1.8em 0 0em rgba(0, 0, 0, 0.2);
+    }
+    37.5% {
+    box-shadow: 0em -2.6em 0em 0em rgba(0, 0, 0, 0.2), 1.8em -1.8em 0 0em rgba(0, 0, 0, 0.5), 2.5em 0em 0 0em rgba(0, 0, 0, 0.7), 1.75em 1.75em 0 0em #000000, 0em 2.5em 0 0em rgba(0, 0, 0, 0.2), -1.8em 1.8em 0 0em rgba(0, 0, 0, 0.2), -2.6em 0em 0 0em rgba(0, 0, 0, 0.2), -1.8em -1.8em 0 0em rgba(0, 0, 0, 0.2);
+    }
+    50% {
+    box-shadow: 0em -2.6em 0em 0em rgba(0, 0, 0, 0.2), 1.8em -1.8em 0 0em rgba(0, 0, 0, 0.2), 2.5em 0em 0 0em rgba(0, 0, 0, 0.5), 1.75em 1.75em 0 0em rgba(0, 0, 0, 0.7), 0em 2.5em 0 0em #000000, -1.8em 1.8em 0 0em rgba(0, 0, 0, 0.2), -2.6em 0em 0 0em rgba(0, 0, 0, 0.2), -1.8em -1.8em 0 0em rgba(0, 0, 0, 0.2);
+    }
+    62.5% {
+    box-shadow: 0em -2.6em 0em 0em rgba(0, 0, 0, 0.2), 1.8em -1.8em 0 0em rgba(0, 0, 0, 0.2), 2.5em 0em 0 0em rgba(0, 0, 0, 0.2), 1.75em 1.75em 0 0em rgba(0, 0, 0, 0.5), 0em 2.5em 0 0em rgba(0, 0, 0, 0.7), -1.8em 1.8em 0 0em #000000, -2.6em 0em 0 0em rgba(0, 0, 0, 0.2), -1.8em -1.8em 0 0em rgba(0, 0, 0, 0.2);
+    }
+    75% {
+    box-shadow: 0em -2.6em 0em 0em rgba(0, 0, 0, 0.2), 1.8em -1.8em 0 0em rgba(0, 0, 0, 0.2), 2.5em 0em 0 0em rgba(0, 0, 0, 0.2), 1.75em 1.75em 0 0em rgba(0, 0, 0, 0.2), 0em 2.5em 0 0em rgba(0, 0, 0, 0.5), -1.8em 1.8em 0 0em rgba(0, 0, 0, 0.7), -2.6em 0em 0 0em #000000, -1.8em -1.8em 0 0em rgba(0, 0, 0, 0.2);
+    }
+    87.5% {
+    box-shadow: 0em -2.6em 0em 0em rgba(0, 0, 0, 0.2), 1.8em -1.8em 0 0em rgba(0, 0, 0, 0.2), 2.5em 0em 0 0em rgba(0, 0, 0, 0.2), 1.75em 1.75em 0 0em rgba(0, 0, 0, 0.2), 0em 2.5em 0 0em rgba(0, 0, 0, 0.2), -1.8em 1.8em 0 0em rgba(0, 0, 0, 0.5), -2.6em 0em 0 0em rgba(0, 0, 0, 0.7), -1.8em -1.8em 0 0em #000000;
+    }
+}
+/* http://jmblog.github.com/color-themes-for-google-code-highlightjs */
+
+/* Tomorrow Comment */
+.hljs-comment,
+.hljs-quote {
+    color: #8e908c;
+}
+
+/* Tomorrow Red */
+.hljs-variable,
+.hljs-template-variable,
+.hljs-tag,
+.hljs-name,
+.hljs-selector-id,
+.hljs-selector-class,
+.hljs-regexp,
+.hljs-deletion {
+    color: #c82829;
+}
+
+/* Tomorrow Orange */
+.hljs-number,
+.hljs-built_in,
+.hljs-builtin-name,
+.hljs-literal,
+.hljs-type,
+.hljs-params,
+.hljs-meta,
+.hljs-link {
+    color: #f5871f;
+}
+
+/* Tomorrow Yellow */
+.hljs-attribute {
+    color: #eab700;
+}
+
+/* Tomorrow Green */
+.hljs-string,
+.hljs-symbol,
+.hljs-bullet,
+.hljs-addition {
+    color: #718c00;
+}
+
+/* Tomorrow Blue */
+.hljs-title,
+.hljs-section {
+    color: #4271ae;
+}
+
+/* Tomorrow Purple */
+.hljs-keyword,
+.hljs-selector-tag {
+    color: #8959a8;
+}
+
+.hljs {
+    display: block;
+    overflow-x: auto;
+    background: white;
+    color: #4d4d4c;
+    padding: 0.5em;
+}
+
+.hljs-emphasis {
+    font-style: italic;
+}
+
+.hljs-strong {
+    font-weight: bold;
+}
+.github-embed-main {
+    width: 100%;
+    height: 100%;
+    border: solid 1px #C6CACD;
+    /* position: relative; */
+    box-sizing: border-box;
+}
+
+.github-embed-main * {
+    box-sizing: border-box;
+}
+
+.github-embed-nav {
+    border-bottom: solid 1px #C6CACD;
+    z-index: 1;
+    overflow-x: auto;
+    overflow-y: hidden;
+    white-space: nowrap;
+    width: 100%;
+    position: absolute;
+    top: 0;
+    height: 40px;
+    height: 2.5rem;
+}
+
+.github-embed-nav-link {
+    line-height: 40px;
+    line-height: 2.5rem;
+    padding: 0 16px;
+    padding: 0 1rem;
+    color: #525252;
+    cursor: pointer;
+}
+
+.github-embed-nav-link-shown {
+    font-weight: bold;
+}
+
+.github-embed-nav-on-github {
+    float: right;
+    padding: 0 16px;
+    padding: 0 1rem;
+    line-height: 40px;
+    line-height: 2.5rem;
+}
+
+.github-embed-frames {
+    padding: 40px 0;
+    padding: 2.5rem 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    position: absolute;
+}
+
+.github-embed-frames iframe, .github-embed-frames pre {
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    margin: 0;
+}
+
+.github-embed-frames iframe {
+    border: none;
+}
+
+.github-embed-frames pre {
+    padding: 16px;
+    padding: 1rem;
+}
+
+.github-embed-footer {
+    border-top: solid 1px #C6CACD;
+    padding: 0 16px;
+    padding: 0 1rem;
+    line-height: 40px;
+    line-height: 2.5rem;
+    z-index: 1;
+    overflow-x: auto;
+    white-space: nowrap;
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    z-index: 1;
+    text-align: right;
+}
+
+.github-embed-error {
+    position: absolute;
+    z-index: 1;
+    top: 50%;
+    width: 100%;
+    text-align: center;
+    color: red;
+}
+/* Editor Styles */
+#editor-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    bottom: 200px; /* Use bottom instead of height calc for better resize handling */
+    height: auto;
+    z-index: 5; /* Ensure above body but below canvas/console */
+    background: #272822;
+}
+
+.CodeMirror {
+    height: 100%;
+    font-size: 14px;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'source-code-pro', monospace;
+    z-index: 1; /* Ensure Editor keeps internal layering */
+}
+
+/* Floating Window for Canvas */
+#wrapper.windowed {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    left: auto; /* Ensure left is not set from mobile styles */
+    transform: none; /* Disable centering transform */
+    width: 512px;
+    height: 512px;
+    z-index: 20;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+    border: 1px solid #444;
+    background: #000;
+    cursor: move; /* Indication that it can be dragged */
+}
+
+#wrapper.windowed .frame {
+    /* Hide the frame images in this floating mode if desired, or adjust them */
+    display: none; 
+}
+
+/* Make canvas fill the wrapper */
+.emscripten { 
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+/* Console Styles */
+#console {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 200px;
+    background: #111;
+    color: #eee;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'source-code-pro', monospace;
+    font-size: 12px;
+    z-index: 30;
+    border-top: 1px solid #444;
+    display: flex;
+    flex-direction: column;
+}
+
+#console-output {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px;
+    white-space: pre-wrap;
+}
+
+#console-input-container {
+    display: flex;
+    border-top: 1px solid #333;
+    padding: 5px;
+    background: #222;
+}
+
+#console-prompt {
+    color: #888;
+    margin-right: 5px;
+    user-select: none;
+}
+
+#console-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: white;
+    font-family: inherit;
+    font-size: inherit;
+    outline: none;
+}
+
+/* Error highlighting in CodeMirror */
+.error-line {
+    background-color: rgba(255, 0, 0, 0.3);
+}

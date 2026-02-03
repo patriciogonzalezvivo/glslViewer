@@ -143,6 +143,19 @@ webxr/fast:
 .PHONY : webxr/fast
 
 #=============================================================================
+# Target rules for targets named lygia
+
+# Build rule for target.
+lygia: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 lygia
+.PHONY : lygia
+
+# fast build rule for target.
+lygia/fast:
+	$(MAKE) $(MAKESILENT) -f deps/vera/deps/lygia/CMakeFiles/lygia.dir/build.make deps/vera/deps/lygia/CMakeFiles/lygia.dir/build
+.PHONY : lygia/fast
+
+#=============================================================================
 # Target rules for targets named vera
 
 # Build rule for target.
@@ -356,6 +369,7 @@ help:
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
 	@echo "... glslViewer"
+	@echo "... lygia"
 	@echo "... vera"
 	@echo "... webxr"
 	@echo "... src/core/glslViewer.o"

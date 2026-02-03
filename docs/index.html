@@ -4,248 +4,38 @@
     <meta charset="utf-8" />
     <title>GlslViewer</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta property="og:title" content="GlslViewer" />
-    <meta property="og:image" content="glslViewer.png" />
+    <meta property="og:image" content="thumbnail.png" />
+    <meta property="og:title" content="Astros" />
     <meta property='og:description' content=''/>
     <meta property='og:image:width' content='512'/>
     <meta property='og:image:height' content='512'/>
-    <meta property='og:site_name' content='GlslViewer by Patricio Gonzalez Vivo'/>
-    <style>
-      html,
-      body {
-        margin: 0;
-        padding: 0;
-      }
-      
-      body {
-        width: 100vw;
-        height: 100vh;
-        overflow: hidden;
-        background: black;
-        font-family: 'Lucida Console', Monaco, monospace;
-      }
+    <meta property='og:site_name' content='Patricio Gonzalez Vivo'/>
+    <link rel="stylesheet" href="style.css" type="text/css" />
 
-      * {
-        -webkit-box-sizing: border-box;
-        box-sizing: border-box;
-        -moz-osx-font-smoothing: grayscale;
-        -webkit-font-smoothing: antialiased;
-        -webkit-tap-highlight-color: transparent;
-        -webkit-touch-callout: none;
-      }
-
-      .emscripten { 
-        padding-right: 0; 
-        margin-left: auto; 
-        margin-right: auto; 
-        display: block; 
-
-        position: relative;
-        top: 0px;
-        left: 0px;
-        margin: 0px;
-        border: 0;
-        /*width: 100%; //this will set canvas size full screen
-        height: 100%;*/
-        overflow: hidden;
-        display: block;
-        image-rendering: optimizeSpeed;
-        image-rendering: -moz-crisp-edges;
-        image-rendering: -o-crisp-edges;
-        image-rendering: -webkit-optimize-contrast;
-        image-rendering: optimize-contrast;
-        image-rendering: crisp-edges;
-        image-rendering: pixelated;
-        -ms-interpolation-mode: nearest-neighbor;
-      }
-      div.emscripten { text-align: center; }
-      canvas.emscripten {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%,-50%);
-        width:100%;
-        height:100%;
-      }​
-
-      #emscripten_loader {
-        width: 100%;
-        height: 100%;
-      }
-
-      .emscripten_loader {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%,-50%);
-        width: 100%;
-        height: 100%;
-      }
-
-      #spinner {
-        height: 100px;
-        width: 100px;
-        margin: 0;
-        margin-top: -50px;
-        margin-left: -50px;
-        display: inline-block;
-        vertical-align: top;
-
-        -webkit-animation: rotation .8s linear infinite;
-        -moz-animation: rotation .8s linear infinite;
-        -o-animation: rotation .8s linear infinite;
-        animation: rotation 0.8s linear infinite;
-
-        border-left: 5px solid rgb(200, 200, 200);
-        border-right: 5px solid rgb(200, 200, 200);
-        border-bottom: 5px solid rgba(0, 0, 0, 0);
-        border-top: 5px solid rgba(0, 0, 0, 0);
-        
-        border-radius: 100%;
-        background-color: rgba(0, 0, 0, 0);
-      }
-
-      @-webkit-keyframes rotation {
-        from {-webkit-transform: rotate(0deg);}
-        to {-webkit-transform: rotate(360deg);}
-      }
-      @-moz-keyframes rotation {
-        from {-moz-transform: rotate(0deg);}
-        to {-moz-transform: rotate(360deg);}
-      }
-      @-o-keyframes rotation {
-        from {-o-transform: rotate(0deg);}
-        to {-o-transform: rotate(360deg);}
-      }
-      @keyframes rotation {
-        from {transform: rotate(0deg);}
-        to {transform: rotate(360deg);}
-      }
-
-      #status {
-        display: inline-block;
-        vertical-align: top;
-        margin-top: 30px;
-        margin-left: 20px;
-        color: rgb(200, 200, 200);
-        font-family: monospace;
-      }
-
-      #progress {
-        height: 10px;
-        width: 200px;
-        margin-top: 90px;
-      }
-
-      #emscripten_background {
-        width: 100%;
-        position:absolute; 
-        top:50%; 
-        transform: translateY(-50%);
-        z-index: -100;
-        opacity: 0.25;
-        filter: blur(8px);
-        -webkit-filter: blur(8px);
-        height: 100%;
-        background-position: center;
-        background-repeat: no-repeat;
-        background-size: cover;
-      }
-
-    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/monokai.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/clike/clike.min.js"></script>
   </head>
-  <body>
-    <div class='emscripten_loader' id='emscripten_loader'>
-      <div class='emscripten_loader' id='spinner'></div>
-      <div class='emscripten_loader' id='status'>Downloading...</div>
-      <progress class='emscripten_loader' value='50' max='100' id='progress' ></progress>
-      <!-- <img src='thumbnail.gif' loop='infinite' id='emscripten_background'/> -->
+
+  <body class="windowed-mode">
+    <div id="wrapper" class="windowed">
+      <canvas class='emscripten' id='canvas' oncontextmenu='event.preventDefault()' tabindex='0'></canvas>
     </div>
-    <canvas class='emscripten' id='canvas' oncontextmenu='event.preventDefault()' tabindex=-1></canvas>
+    <div id="ui">
+      <button id="resize-btn">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg>
+      </button>
+    </div>
+    <div id="editor-container"></div>
+    <div id="console">
+        <div id="console-output"></div>
+        <div id="console-input-container">
+            <span id="console-prompt">&gt;</span>
+            <input type="text" id="console-input" placeholder="Type a command (e.g. u_time,1.0)..." autocomplete="off" spellcheck="false">
+        </div>
+    </div>
+    <wasm-loader></wasm-loader>
   </body>
-  
-  <script type='text/javascript'>
-    var statusElement = document.getElementById('status');
-    var progressElement = document.getElementById('progress');
-    var spinnerElement = document.getElementById('spinner');
-
-    var Module = {
-      preRun: [],
-      postRun: function() {
-        Module.command =  Module.cwrap('command', 'void', ['string']);
-        Module.setFrag =  Module.cwrap('setFrag', 'void', ['string']);
-        Module.setVert =  Module.cwrap('setVert', 'void', ['string']);
-        Module.getFrag =  Module.cwrap('getFrag', 'string', []);
-        Module.getVert =  Module.cwrap('getVert', 'string', []);
-      },
-      // Here you add the arguments just like you load them on the console but as an array of strings. One per word argument.
-      // arguments: ["examples/test.frag",  "examples/image.png"],
-      arguments: ["examples/test_postprocessing.frag", "examples/head.ply"],
-     
-      print: (function() {
-        var element = document.getElementById('output');
-        if (element) element.value = ''; // clear browser cache
-        return function(text) {
-          if (arguments.length > 1) text = Array.prototype.slice.call(arguments).join(' ');
-          // These replacements are necessary if you render to raw HTML
-          console.log(text);
-          if (element) {
-            element.value += text + "\n";
-            element.scrollTop = element.scrollHeight; // focus on bottom
-          }
-        };
-      })(),
-      printErr: function(text) {
-        if (arguments.length > 1) text = Array.prototype.slice.call(arguments).join(' ');
-        console.error(text);
-      },
-      canvas: (function() {
-        var canvas = document.getElementById('canvas');
-
-        // As a default initial behavior, pop up an alert when webgl context is lost. To make your
-        // application robust, you may want to override this behavior before shipping!
-        // See http://www.khronos.org/registry/webgl/specs/latest/1.0/#5.15.2
-        canvas.addEventListener("webglcontextlost", function(e) { 
-          e.preventDefault(); 
-          // alert('WebGL context lost. You will need to reload the page.'); 
-          location.reload();
-        }, false);
-
-        return canvas;
-      })(),
-      setStatus: function(text) {
-          if (!Module.setStatus.last) Module.setStatus.last = { time: Date.now(), text: '' };
-          if (text === Module.setStatus.last.text) return;
-          var m = text.match(/([^(]+)\((\d+(\.\d+)?)\/(\d+)\)/);
-          var now = Date.now();
-          if (m && now - Module.setStatus.last.time < 30) return; // if this is a progress update, skip it if too soon
-          Module.setStatus.last.time = now;
-          Module.setStatus.last.text = text;
-          if (m) {
-            text = m[1];
-            progressElement.value = parseInt(m[2])*100;
-            progressElement.max = parseInt(m[4])*100;
-            progressElement.hidden = false;
-            spinnerElement.hidden = false;
-          } else {
-            progressElement.value = null;
-            progressElement.max = null;
-            progressElement.hidden = true;
-            if (!text) spinnerElement.style.display = 'none';
-          }
-          statusElement.innerHTML = text;
-        },
-        totalDependencies: 0,
-        monitorRunDependencies: function(left) {
-          this.totalDependencies = Math.max(this.totalDependencies, left);
-          Module.setStatus(left ? 'Preparing... (' + (this.totalDependencies-left) + '/' + this.totalDependencies + ')' : 'All downloads complete.');
-        }
-    };
-    Module.setStatus('Downloading...');
-    // window.onerror = function(event) {
-      // location.reload();
-    // };
-
-  </script>
-  <script async type="text/javascript" src="glslViewer.js"></script>
+  <script type="module" src="main.js"></script>
 </html>

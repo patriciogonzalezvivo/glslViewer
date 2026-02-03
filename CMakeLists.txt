@@ -64,27 +64,33 @@ target_compile_definitions(glslViewer PRIVATE GLSLVIEWER_VERSION_MINOR=${VERSION
 target_compile_definitions(glslViewer PRIVATE GLSLVIEWER_VERSION_PATCH=${VERSION_PATCH})
 
 if (EMSCRIPTEN)
+        # create a glslViewer.html 
+    set_target_properties(glslViewer PROPERTIES SUFFIX ".html")
 
+    # copy the index.html 
+    file(COPY   assets/wasm/index.html DESTINATION ${CMAKE_CURRENT_BINARY_DIR} )
+    file(COPY   assets/wasm/main.js DESTINATION ${CMAKE_CURRENT_BINARY_DIR} )
+    file(COPY   assets/wasm/wasm-loader.js DESTINATION ${CMAKE_CURRENT_BINARY_DIR} )
+    file(COPY   assets/wasm/style.css DESTINATION ${CMAKE_CURRENT_BINARY_DIR} )
+    
+    # Add examples folder to the .data file system
+    file(COPY   examples DESTINATION ${CMAKE_CURRENT_BINARY_DIR} )
+    set(LFLAGS "${LFLAGS} --preload-file examples")
+
+    set(LFLAGS "${LFLAGS} -s WASM=3")
     set(LFLAGS "${LFLAGS} -s USE_GLFW=3")
+    set(LFLAGS "${LFLAGS} -s USE_WEBGL2=1")
     # set(LFLAGS "${LFLAGS} -s FULL_ES2=1")
-    # set(LFLAGS "${LFLAGS} -s FULL_ES3=1")
+    set(LFLAGS "${LFLAGS} -s FULL_ES3=1")
     # set(LFLAGS "${LFLAGS} -s MIN_WEBGL_VERSION=2")
-    set(LFLAGS "${LFLAGS} -s MAX_WEBGL_VERSION=2")
+    # set(LFLAGS "${LFLAGS} -s MAX_WEBGL_VERSION=2")
     # set(LFLAGS "${LFLAGS} -s WEBGL2_BACKWARDS_COMPATIBILITY_EMULATION=1")
-
-    set(LFLAGS "${LFLAGS} -s EXPORTED_FUNCTIONS='[ \"_command\", \"_setFrag\", \"_setVert\", \"_getFrag\", \"_getVert\", \"_main\" ]' ")
-    set(LFLAGS "${LFLAGS} -s EXPORTED_RUNTIME_METHODS='[\"ccall\",\"cwrap\"]' ")
-
     set(LFLAGS "${LFLAGS} -s ALLOW_MEMORY_GROWTH=1")
     set(LFLAGS "${LFLAGS} -s NO_DYNAMIC_EXECUTION=1")
     # set(LFLAGS "${LFLAGS} -s NO_DISABLE_EXCEPTION_CATCHING")
 
-    # Copy the default index.html
-    file(COPY   assets/wasm/index.html DESTINATION ${CMAKE_CURRENT_BINARY_DIR} )
-
-    # Add examples folder to the .data file system
-    file(COPY   examples DESTINATION ${CMAKE_CURRENT_BINARY_DIR} )
-    set(LFLAGS "${LFLAGS} --preload-file examples")
+    set(LFLAGS "${LFLAGS} -s EXPORTED_FUNCTIONS='[ \"_command\", \"_setFrag\", \"_setVert\", \"_getFrag\", \"_getVert\", \"_main\", \"_malloc\"  ]' ")
+    set(LFLAGS "${LFLAGS} -s EXPORTED_RUNTIME_METHODS='[\"ccall\",\"cwrap\"]' ")
 
     set_target_properties(glslViewer PROPERTIES LINK_FLAGS "${LFLAGS}")
     target_link_libraries(glslViewer PRIVATE glfw webxr)

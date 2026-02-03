@@ -1237,6 +1237,7 @@ void GlslViewer::loadAssets(WatchFileList &_files) {
         else {
             std::string defaultFrag = vera::getDefaultSrc(vera::FRAG_DEFAULT_SCENE);
             m_frag_source = vera::resolveGlsl(defaultFrag, include_folders, &m_frag_dependencies);
+            // there is no need to track default dependencies because they won't change, also may come from memory and not from file
             m_frag_dependencies.clear();
         }
     }
@@ -1245,7 +1246,6 @@ void GlslViewer::loadAssets(WatchFileList &_files) {
         // If there is a Vertex shader load it
         m_vert_source = "";
         m_vert_dependencies.clear();
-
         vera::loadGlslFrom(_files[vert_index].path, &m_vert_source, include_folders, &m_vert_dependencies);
     }
     else {
@@ -1256,7 +1256,21 @@ void GlslViewer::loadAssets(WatchFileList &_files) {
         else {
             std::string defaultVert = vera::getDefaultSrc(vera::VERT_DEFAULT_SCENE);
             m_vert_source = vera::resolveGlsl(defaultVert, include_folders, &m_vert_dependencies);
+            // there is no need to track default dependencies because they won't change, also may come from memory and not from file
             m_vert_dependencies.clear();
+        }
+    }
+
+    // purge all dependecies that are not present in the file system
+    for (int i = 0; i < m_frag_dependencies.size(); i++) {
+        if (!vera::urlExists( m_frag_dependencies[i] )) {
+            m_frag_dependencies.erase( m_frag_dependencies.begin() + i);
+        }
+    }
+    
+    for (int i = 0; i < m_vert_dependencies.size(); i++) {  
+        if (!vera::urlExists( m_vert_dependencies[i] )) {
+            m_vert_dependencies.erase( m_vert_dependencies.begin() + i);
         }
     }
 
@@ -1411,6 +1425,19 @@ void GlslViewer::setSource(ShaderType _type, const std::string& _source) {
         m_vert_dependencies.clear();
         m_vert_source = vera::resolveGlsl(_source, include_folders, &m_vert_dependencies);;
     }
+
+    // purge all dependecies that are not present in the file system
+    for (int i = 0; i < m_frag_dependencies.size(); i++) {
+        if (!vera::urlExists( m_frag_dependencies[i] )) {
+            m_frag_dependencies.erase( m_frag_dependencies.begin() + i);
+        }
+    }
+    
+    for (int i = 0; i < m_vert_dependencies.size(); i++) {  
+        if (!vera::urlExists( m_vert_dependencies[i] )) {
+            m_vert_dependencies.erase( m_vert_dependencies.begin() + i);
+        }
+    }
 };
 
 void GlslViewer::resetShaders( WatchFileList &_files ) {
@@ -1444,6 +1471,19 @@ void GlslViewer::resetShaders( WatchFileList &_files ) {
 
     // UPDATE shaders dependencies
     {
+        // purge all dependecies that are not present in the file system
+        for (int i = 0; i < m_frag_dependencies.size(); i++) {
+            if (!vera::urlExists( m_frag_dependencies[i] )) {
+                m_frag_dependencies.erase( m_frag_dependencies.begin() + i);
+            }
+        }
+        
+        for (int i = 0; i < m_vert_dependencies.size(); i++) {  
+            if (!vera::urlExists( m_vert_dependencies[i] )) {
+                m_vert_dependencies.erase( m_vert_dependencies.begin() + i);
+            }
+        }
+
         vera::StringList new_dependencies = vera::mergeLists(m_frag_dependencies, m_vert_dependencies);
 
         // remove old dependencies
@@ -2315,6 +2355,7 @@ void GlslViewer::renderUI() {
         TRACK_END("renderUI:cursor")
     }
 
+    #if !defined(__EMSCRIPTEN__)
     if (frag_index == -1 && vert_index == -1 && geom_index == -1 && vera::getWindowStyle() != vera::EMBEDDED) {
         float w = (float)(vera::getWindowWidth());
         float h = (float)(vera::getWindowHeight());
@@ -2344,6 +2385,7 @@ void GlslViewer::renderUI() {
 
         vera::setCamera(cam);
     }
+    #endif
 
     if (help) {
         float w = (float)(vera::getWindowWidth());
