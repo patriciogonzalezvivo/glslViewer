@@ -944,6 +944,7 @@ int main(int argc, char **argv) {
                     files[sandbox.geom_index].lastChange = 0;
                 }
                 sandbox.loadAssets(files);
+                sandbox.getSceneRender().commandsInit(commands, sandbox.uniforms);
 
                 // if (init_lights) {
                 //     float area = sandbox.getSceneRender().getArea();

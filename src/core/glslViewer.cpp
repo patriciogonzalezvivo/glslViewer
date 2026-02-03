@@ -2044,8 +2044,9 @@ void GlslViewer::render() {
 
         else {
             m_sceneRender.render(uniforms);
-            if (m_sceneRender.showGrid || m_sceneRender.showAxis || m_sceneRender.showBBoxes)
+            if (m_sceneRender.showGrid || m_sceneRender.showAxis || m_sceneRender.showBBoxes) {
                 m_sceneRender.renderDebug(uniforms);
+            }
         }
         TRACK_END("render:3D_scene")
     }
