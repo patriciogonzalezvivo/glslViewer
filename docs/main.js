@@ -504,9 +504,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
 
-            if (shaderFile && shaderFile.content) {
+            const processShader = (jsonContent) => {
                 try {
-                    const json = JSON.parse(shaderFile.content);
+                    const json = JSON.parse(jsonContent);
                     
                     if (json.frag) content.frag = json.frag;
                     if (json.vert) content.vert = json.vert;
@@ -624,6 +624,19 @@ document.addEventListener('DOMContentLoaded', () => {
                     console.error('Error parsing Gist content:', e);
                     logToConsole('Error parsing Gist JSON', true);
                 }
+            };
+
+            if (shaderFile) {
+                if (shaderFile.truncated) {
+                    fetch(shaderFile.raw_url)
+                    .then(r => r.text())
+                    .then(text => processShader(text))
+                    .catch(e => {
+                        logToConsole('Error fetching raw gist: ' + e, true);
+                    });
+                } else {
+                    processShader(shaderFile.content);
+                } 
             } else {
                 logToConsole('No valid shader JSON found in Gist', true);
             }
@@ -660,9 +673,17 @@ document.addEventListener('DOMContentLoaded', () => {
             payload.assets = externalAssets;
         }
 
+        let contentString = "";
+        try {
+            contentString = JSON.stringify(payload, null, 2);
+        } catch (e) {
+            logToConsole('Error preparing JSON: ' + e.toString(), true);
+            return;
+        }
+
         let files = {};
         files[filename] = {
-            "content": JSON.stringify(payload, null, 2)
+            "content": contentString
         };
 
         const data = {
