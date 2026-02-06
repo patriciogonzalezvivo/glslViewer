@@ -152,6 +152,7 @@ void loadFile(std::string path) {
         sandbox.getSceneRender().commandsInit(commands, sandbox.uniforms);
         sandbox.getSceneRender().uniformsInit(sandbox.uniforms);
 
+
         commandsRun("update");
     }
     // load cubemap

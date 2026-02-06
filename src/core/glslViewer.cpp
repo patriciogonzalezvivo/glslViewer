@@ -1343,6 +1343,11 @@ void GlslViewer::loadAssets(WatchFileList &_files) {
         addDefine("SCENE_CUBEMAP", "u_cubeMap");
     }
 
+    if (uniforms.models.size() > 0 ) {
+        float area = getSceneRender().getArea();
+        uniforms.setSunPosition( glm::vec3(0.0,area*10.0,area*10.0) );
+    }
+
     // LOAD SHADERS
     resetShaders( _files );
     vera::flagChange();
