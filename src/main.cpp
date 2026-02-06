@@ -97,6 +97,99 @@ void                        commandsRun(const std::string &_cmd);
 void                        commandsRun(const std::string &_cmd, std::mutex &_mutex);
 void                        commandsInit();
 
+void loadFile(std::string path) {
+    if ( vera::haveExt(path,"frag") || vera::haveExt(path,"fs")  ) {
+        if (sandbox.frag_index == -1) {
+            WatchFile file;
+            file.type = FRAG_SHADER;
+            file.path = path;
+            file.lastChange = 0;
+            files.push_back(file);
+            sandbox.frag_index = files.size()-1;
+        }
+        else {
+            files[sandbox.frag_index].path = path;
+            files[sandbox.frag_index].lastChange = 0;
+        }
+    }
+    // load vertex shader
+    else if (   vera::haveExt(path,"vert") || vera::haveExt(path,"vs") ) {
+        if (sandbox.vert_index == -1) {
+            WatchFile file;
+            file.type = VERT_SHADER;
+            file.path = path;
+            file.lastChange = 0;
+            files.push_back(file);
+            sandbox.vert_index = files.size()-1;
+        }
+        else {
+            files[sandbox.vert_index].path = path;
+            files[sandbox.vert_index].lastChange = 0;
+        }
+    }
+    // load geometry
+    else if (   vera::haveExt(path,"ply") || vera::haveExt(path,"PLY") ||
+                vera::haveExt(path,"obj") || vera::haveExt(path,"OBJ") ||
+                vera::haveExt(path,"stl") || vera::haveExt(path,"STL") ||
+                vera::haveExt(path,"glb") || vera::haveExt(path,"GLB") ||
+                vera::haveExt(path,"gltf") || vera::haveExt(path,"GLTF") ||
+                vera::haveExt(path,"splat") || vera::haveExt(path,"SPLAT") ) {
+
+        if (sandbox.geom_index == -1) {
+            WatchFile file;
+            file.type = GEOMETRY;
+            file.path = path;
+            file.lastChange = 0;
+            files.push_back(file); 
+            sandbox.geom_index = files.size()-1;
+        }
+        else {
+            commandsRun("models,clear");
+            files[sandbox.geom_index].path = path;
+            files[sandbox.geom_index].lastChange = 0;
+        }
+        sandbox.loadAssets(files);
+        sandbox.getSceneRender().commandsInit(commands, sandbox.uniforms);
+        sandbox.getSceneRender().uniformsInit(sandbox.uniforms);
+
+        commandsRun("update");
+    }
+    // load cubemap
+    else if (   vera::haveExt(path,"hdr") || vera::haveExt(path,"HDR") ) {
+        sandbox.uniforms.addCubemap("enviroment", path);
+        sandbox.uniforms.activeCubemap = sandbox.uniforms.cubemaps["enviroment"];
+        sandbox.getSceneRender().showCubebox = true;
+        commandsRun("cubemap,on");
+        commandsRun("update");
+    }
+    // load image 
+    else if (   vera::haveExt(path,"png") || vera::haveExt(path,"PNG") ||
+                vera::haveExt(path,"tga") || vera::haveExt(path,"TGA") ||
+                vera::haveExt(path,"psd") || vera::haveExt(path,"PSD") ||
+                vera::haveExt(path,"gif") || vera::haveExt(path,"GIF") ||
+                vera::haveExt(path,"bmp") || vera::haveExt(path,"BMP") ||
+                vera::haveExt(path,"jpg") || vera::haveExt(path,"JPG") ||
+                vera::haveExt(path,"jpeg") || vera::haveExt(path,"JPEG")) {
+
+        if ( sandbox.uniforms.addTexture("u_tex" + vera::toString(textureCounter), path, vFlip) )
+            textureCounter++;
+
+        commandsRun("update");
+    }
+    // load video file
+    else if (   vera::haveExt(path,"mov") || vera::haveExt(path,"MOV") ||
+                vera::haveExt(path,"mp4") || vera::haveExt(path,"MP4") ||
+                vera::haveExt(path,"mkv") || vera::haveExt(path,"MKV") ||
+                vera::haveExt(path,"mpg") || vera::haveExt(path,"MPG") ||
+                vera::haveExt(path,"mpeg") || vera::haveExt(path,"MPEG") ||
+                vera::haveExt(path,"h264") ) {
+        if ( sandbox.uniforms.addStreamingTexture("u_tex" + vera::toString(textureCounter), path, vFlip, false) )
+            textureCounter++;
+
+        commandsRun("update");
+    }
+}
+
 #if !defined(__EMSCRIPTEN__)
 // Console IN thread
 void                        cinWatcherThread();
@@ -137,40 +230,7 @@ void setVert(char* c) {
 EMSCRIPTEN_KEEPALIVE
 #endif
 void loadAsset(char* name, char* type) {
-    std::string sName = std::string(name);
-    std::string sType = std::string(type);
-
-    int index = -1;
-    for (size_t i = 0; i < files.size(); i++) {
-        if (files[i].path == sName) {
-            index = i;
-            break;
-        }
-    }
-
-    if (index == -1) {
-        WatchFile file;
-        file.path = sName;
-        file.lastChange = -1;
-        file.vFlip = vFlip;
-        if (sType == "image" || sType == "png" || sType == "jpg" || sType == "jpeg" || sType == "hdr") {
-            file.type = IMAGE;
-            if (sandbox.uniforms.addTexture("u_tex" + vera::toString(textureCounter), sName, vFlip)) {
-                std::cout << "Loading asset: " << sName << " as u_tex" << textureCounter << std::endl;
-                textureCounter++;
-            }
-        } else if (sType == "geometry" || sType == "ply" || sType == "obj" || sType == "glb" || sType == "gltf" || sType == "splat") {
-            file.type = GEOMETRY;
-        } else {
-            return;
-        }
-        files.push_back(file);
-        std::cout << "Added to watch list: " << sName << std::endl;
-    }
-    else {
-        std::cout << "Reloading asset: " << sName << std::endl;
-        sandbox.onFileChange(files, index);
-    }
+    loadFile(std::string(name));
 }
 
 #ifdef __EMSCRIPTEN__
@@ -951,105 +1011,7 @@ int main(int argc, char **argv) {
     } );
     vera::setDropCallback(    [&](int _count, const char** _paths) {    
         for (int i = 0;  i < _count;  i++) {
-            std::string path = std::string( _paths[i] ); 
-
-            if ( vera::haveExt(path,"frag") || vera::haveExt(path,"fs")  ) {
-                if (sandbox.frag_index == -1) {
-                    WatchFile file;
-                    file.type = FRAG_SHADER;
-                    file.path = path;
-                    file.lastChange = 0;
-                    files.push_back(file);
-                    sandbox.frag_index = files.size()-1;
-                }
-                else {
-                    files[sandbox.frag_index].path = path;
-                    files[sandbox.frag_index].lastChange = 0;
-                }
-            }
-            // load vertex shader
-            else if (   vera::haveExt(path,"vert") || vera::haveExt(path,"vs") ) {
-                if (sandbox.vert_index == -1) {
-                    WatchFile file;
-                    file.type = VERT_SHADER;
-                    file.path = path;
-                    file.lastChange = 0;
-                    files.push_back(file);
-                    sandbox.vert_index = files.size()-1;
-                }
-                else {
-                    files[sandbox.vert_index].path = path;
-                    files[sandbox.vert_index].lastChange = 0;
-                }
-            }
-            // load geometry
-            else if (   vera::haveExt(path,"ply") || vera::haveExt(path,"PLY") ||
-                        vera::haveExt(path,"obj") || vera::haveExt(path,"OBJ") ||
-                        vera::haveExt(path,"stl") || vera::haveExt(path,"STL") ||
-                        vera::haveExt(path,"glb") || vera::haveExt(path,"GLB") ||
-                        vera::haveExt(path,"gltf") || vera::haveExt(path,"GLTF") ||
-                        vera::haveExt(path,"splat") || vera::haveExt(path,"SPLAT") ) {
-
-                bool init_lights = sandbox.uniforms.models.size() == 0;
-
-                if (sandbox.geom_index == -1) {
-                    WatchFile file;
-                    file.type = GEOMETRY;
-                    file.path = path;
-                    file.lastChange = 0;
-                    files.push_back(file); 
-                    sandbox.geom_index = files.size()-1;
-                }
-                else {
-                    commandsRun("models,clear");
-                    files[sandbox.geom_index].path = path;
-                    files[sandbox.geom_index].lastChange = 0;
-                }
-                sandbox.loadAssets(files);
-                sandbox.getSceneRender().commandsInit(commands, sandbox.uniforms);
-                sandbox.getSceneRender().uniformsInit(sandbox.uniforms);
-
-                // if (init_lights) {
-                //     float area = sandbox.getSceneRender().getArea();
-                //     sandbox.uniforms.setSunPosition( glm::vec3(0.0,area*10.0,area*10.0) );
-                // }
-
-                commandsRun("update");
-            }
-            // load cubemap
-            else if (   vera::haveExt(path,"hdr") || vera::haveExt(path,"HDR") ) {
-                sandbox.uniforms.addCubemap("enviroment", path);
-                sandbox.uniforms.activeCubemap = sandbox.uniforms.cubemaps["enviroment"];
-                sandbox.getSceneRender().showCubebox = true;
-                commandsRun("cubemap,on");
-                commandsRun("update");
-            }
-            // load image 
-            else if (   vera::haveExt(path,"png") || vera::haveExt(path,"PNG") ||
-                        vera::haveExt(path,"tga") || vera::haveExt(path,"TGA") ||
-                        vera::haveExt(path,"psd") || vera::haveExt(path,"PSD") ||
-                        vera::haveExt(path,"gif") || vera::haveExt(path,"GIF") ||
-                        vera::haveExt(path,"bmp") || vera::haveExt(path,"BMP") ||
-                        vera::haveExt(path,"jpg") || vera::haveExt(path,"JPG") ||
-                        vera::haveExt(path,"jpeg") || vera::haveExt(path,"JPEG")) {
-
-                if ( sandbox.uniforms.addTexture("u_tex" + vera::toString(textureCounter), path, vFlip) )
-                    textureCounter++;
-
-                commandsRun("update");
-            }
-            // load video file
-            else if (   vera::haveExt(path,"mov") || vera::haveExt(path,"MOV") ||
-                        vera::haveExt(path,"mp4") || vera::haveExt(path,"MP4") ||
-                        vera::haveExt(path,"mkv") || vera::haveExt(path,"MKV") ||
-                        vera::haveExt(path,"mpg") || vera::haveExt(path,"MPG") ||
-                        vera::haveExt(path,"mpeg") || vera::haveExt(path,"MPEG") ||
-                        vera::haveExt(path,"h264") ) {
-                if ( sandbox.uniforms.addStreamingTexture("u_tex" + vera::toString(textureCounter), path, vFlip, false) )
-                    textureCounter++;
-
-                commandsRun("update");
-            }
+            loadFile( std::string(_paths[i]) );
         }
     } );
 

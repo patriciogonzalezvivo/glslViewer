@@ -4,17 +4,17 @@ const defaultFragment = `#ifdef GL_ES
 precision mediump float;
 #endif
 
-uniform float u_time;
-uniform vec2 u_resolution;
+uniform float   	u_time;
+uniform vec2    	u_resolution;
 
 void main() {
-    vec2 st = gl_FragCoord.xy/u_resolution.xy;
-    st.x *= u_resolution.x/u_resolution.y;
+    vec4 color = vec4(vec3(0.0), 1.0);
+    vec2 pixel = 1.0/u_resolution;
+    vec2 st = gl_FragCoord.xy * pixel;
 
-    vec3 color = vec3(0.0);
-    color = vec3(st.x, st.y, abs(sin(u_time)));
+    color.rgb = vec3(st.x, st.y, abs(sin(u_time)));
 
-    gl_FragColor = vec4(color,1.0);
+    gl_FragColor = color;
 }
 `;
 
@@ -22,8 +22,8 @@ const defaultVertex = `#ifdef GL_ES
 precision mediump float;
 #endif
 
-attribute vec4 a_position;
-varying vec4 v_position;
+attribute vec4  a_position;
+varying vec4    v_position;
 
 void main() {
     v_position = a_position;
@@ -54,6 +54,19 @@ document.addEventListener('DOMContentLoaded', () => {
         vert: defaultVertex
     };
     let externalAssets = {};
+    const loader = document.getElementById('loader');
+    let loaderCount = 0;
+    const showLoader = () => {
+        loaderCount++;
+        if (loader && loaderCount > 0) loader.classList.add('visible');
+    };
+    const hideLoader = () => {
+        loaderCount--;
+        if (loader && loaderCount <= 0) {
+            loader.classList.remove('visible');
+            loaderCount = 0;
+        }
+    };
     
     // DeBounce timeout
     let updateTimeout = null;
@@ -67,9 +80,13 @@ document.addEventListener('DOMContentLoaded', () => {
         lineNumbers: true,
         matchBrackets: true,
         keyMap: 'sublime',
+        tabSize: 4,
+        indentUnit: 4,
         extraKeys: {
             "Cmd-/": "toggleComment",
-            "Ctrl-/": "toggleComment"
+            "Ctrl-/": "toggleComment",
+            "Alt-Up": "swapLineUp",
+            "Alt-Down": "swapLineDown"
         }
     });
     editor.setSize(null, "100%");
@@ -478,12 +495,60 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let currentGistId = null;
 
+    const decodeBase64 = (dataUrl) => {
+        const base64 = dataUrl.split(',')[1];
+        const binaryString = window.atob(base64);
+        const len = binaryString.length;
+        const data = new Uint8Array(len);
+        for (let k = 0; k < len; k++) {
+            data[k] = binaryString.charCodeAt(k);
+        }
+        return data;
+    };
+
+    const downloadAsset = (url) => {
+        return fetch(url)
+            .then(res => {
+                if (!res.ok) throw new Error(res.statusText);
+                return res.arrayBuffer();
+            })
+            .then(buffer => new Uint8Array(buffer));
+    };
+
+    const loadToWasm = (name, data) => {
+        showLoader();
+        return new Promise((resolve) => {
+            const tryWrite = () => {
+                if (window.Module && window.Module.FS && window.module_loaded) {
+                    try {
+                        window.Module.FS.writeFile(name, data);
+                        // console.log("Loaded asset: " + name);
+                        logToConsole("Loaded asset: " + name);
+                        
+                        const ext = name.split('.').pop().toLowerCase();
+                        window.Module.ccall('loadAsset', null, ['string', 'string'], [name, ext]);
+
+                        hideLoader();
+                        resolve();
+                    } catch (e) {
+                        console.error("FS error", e);
+                        setTimeout(tryWrite, 500);
+                    }
+                } else {
+                    setTimeout(tryWrite, 500);
+                }
+            };
+            tryWrite();
+        });
+    };
+
     function loadGist(id) {
         if (currentGistId === id) {
             console.log('Gist ' + id + ' already loading/loaded.');
             return;
         }
         currentGistId = id;
+        showLoader();
         
         console.log('Loading Gist:', id);
         fetch('https://api.github.com/gists/' + id)
@@ -515,80 +580,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     if (json.assets) {
                         externalAssets = json.assets;
+                        // console.log('Gist assets:', externalAssets);
                         for (const [name, url] of Object.entries(externalAssets)) {
-                            // logToConsole('Loading asset: ' + name);
                             let p;
                             if (url.startsWith('data:')) {
-                                p = new Promise((resolve) => {
-                                    const tryWrite = () => {
-                                        if (window.Module && window.Module.FS && window.module_loaded) {
-                                            try {
-                                                const base64 = url.split(',')[1];
-                                                const binaryString = window.atob(base64);
-                                                const len = binaryString.length;
-                                                const data = new Uint8Array(len);
-                                                for (let k = 0; k < len; k++) {
-                                                    data[k] = binaryString.charCodeAt(k);
-                                                }
-                                                
-                                                window.Module.FS.writeFile(name, data);
-                                                // logToConsole("Loaded asset: " + name);
-                                                
-                                                const ext = name.split('.').pop().toLowerCase();
-                                                window.Module.ccall('loadAsset', null, ['string', 'string'], [name, ext]);
-
-                                                if (['ply', 'obj', 'gltf', 'glb', 'splat'].includes(ext)) {
-                                                        if (window.module_loaded) {
-                                                            fetchShadersFromBackend();
-                                                        }
-                                                }
-                                                resolve();
-                                            } catch (e) {
-                                                console.error("FS error", e);
-                                                setTimeout(tryWrite, 500);
-                                            }
-                                        } else {
-                                            setTimeout(tryWrite, 500);
-                                        }
-                                    };
-                                    tryWrite();
-                                });
+                                try {
+                                    const data = decodeBase64(url);
+                                    p = loadToWasm(name, data);
+                                } catch (e) {
+                                    console.error("Error decoding base64", e);
+                                    p = Promise.resolve();
+                                }
                             } else {
-                                p = fetch(url)
-                                .then(res => {
-                                    if (!res.ok) throw new Error(res.statusText);
-                                    return res.arrayBuffer();
-                                })
-                                .then(buffer => {
-                                    return new Promise((resolve) => {
-                                        const tryWrite = () => {
-                                            if (window.Module && window.Module.FS && window.module_loaded) {
-                                                try {
-                                                    const data = new Uint8Array(buffer);
-                                                    window.Module.FS.writeFile(name, data);
-                                                    // logToConsole("Loaded asset: " + name);
-                                                    
-                                                    const ext = name.split('.').pop().toLowerCase();
-                                                    window.Module.ccall('loadAsset', null, ['string', 'string'], [name, ext]);
-
-                                                    if (['ply', 'obj', 'gltf', 'glb', 'splat'].includes(ext)) {
-                                                            if (window.module_loaded) {
-                                                                fetchShadersFromBackend();
-                                                            }
-                                                    }
-                                                    resolve();
-                                                } catch (e) {
-                                                    console.error("FS error", e);
-                                                    setTimeout(tryWrite, 500);
-                                                }
-                                            } else {
-                                                setTimeout(tryWrite, 500);
-                                            }
-                                        };
-                                        tryWrite();
-                                    });
+                                showLoader();
+                                p = downloadAsset(url)
+                                .then(data => {
+                                    hideLoader();
+                                    return loadToWasm(name, data);
                                 })
                                 .catch(err => {
+                                    hideLoader();
                                     logToConsole('Error loading asset ' + name + ': ' + err.message, true);
                                 });
                             }
@@ -630,20 +641,27 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (shaderFile.truncated) {
                     fetch(shaderFile.raw_url)
                     .then(r => r.text())
-                    .then(text => processShader(text))
+                    .then(text => {
+                        processShader(text);
+                        hideLoader();
+                    })
                     .catch(e => {
                         logToConsole('Error fetching raw gist: ' + e, true);
+                        hideLoader();
                     });
                 } else {
                     processShader(shaderFile.content);
+                    hideLoader();
                 } 
             } else {
                 logToConsole('No valid shader JSON found in Gist', true);
+                hideLoader();
             }
         })
         .catch(err => {
             console.error('Error loading Gist:', err);
             logToConsole('Error loading Gist: ' + err, true);
+            hideLoader();
         });
     }
 
@@ -742,6 +760,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const name = file.name;
             const ext = name.split('.').pop().toLowerCase();
             
+            showLoader();
             if (ext === 'frag' || ext === 'fs' || ext === 'vert' || ext === 'vs') {
                 const reader = new FileReader();
                 reader.onload = (event) => {
@@ -767,46 +786,37 @@ document.addEventListener('DOMContentLoaded', () => {
                              }
                         }
                     }
+                    hideLoader();
                 };
+                reader.onerror = () => hideLoader();
                 reader.readAsText(file);
-            } else {
+            } 
+            else {
                 // Binary or other assets
                 const reader = new FileReader();
                 reader.onload = (event) => {
                     const dataURL = event.target.result;
                     
-                    // Store Base64 for Gist saving (Images only)
-                    if (['png', 'jpg', 'jpeg', 'hdr', 'bmp', 'gif', 'tga'].includes(ext)) {
-                        externalAssets[name] = dataURL;
-                    }
+                    externalAssets[name] = dataURL;
 
-                    // Convert Base64 back to Uint8Array for WASM FS
-                    const base64 = dataURL.split(',')[1];
-                    const binaryString = window.atob(base64);
-                    const len = binaryString.length;
-                    const bytes = new Uint8Array(len);
-                    for (let k = 0; k < len; k++) {
-                        bytes[k] = binaryString.charCodeAt(k);
-                    }
+            //         try {
+            //             const data = decodeBase64(dataURL);
+            //             loadToWasm(name, data).catch(err => {
+            //                 logToConsole("Error saving file: " + err, true);
+            //             });
+            //         } catch (e) {
+            //              logToConsole("Error processing file: " + e, true);
+            //         }
 
-                    if (window.Module && window.Module.FS) {
-                        try {
-                            window.Module.FS.writeFile(name, bytes);
-                            logToConsole("Loaded file: " + name);
-
-                            // Files like ply, obj, gltf might reset shaders. Fetch them.
-                            if (ext === 'ply' || ext === 'obj' || ext === 'gltf' || ext === 'glb' || ext === 'splat') {
-                                // Small delay to ensure file is processed
-                                setTimeout(() => {
-                                    fetchShadersFromBackend();
-                                }, 100);
-                            }
-
-                        } catch (err) {
-                            logToConsole("Error saving file: " + err, true);
+                    if (['ply', 'obj', 'gltf', 'glb', 'splat'].includes(ext)) {
+                        if (window.module_loaded) {
+                            fetchShadersFromBackend();
                         }
                     }
+
+                    hideLoader();
                 };
+                reader.onerror = () => hideLoader();
                 reader.readAsDataURL(file);
             }
         }

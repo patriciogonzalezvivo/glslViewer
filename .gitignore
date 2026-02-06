@@ -30,6 +30,9 @@ debian/glslviewer.substvars
 .vs/VSWorkspaceState.json
 premake5.exe
 
+deps/ffmpeg/
+scripts/deps/
+
 build/
 build_wasm/
 
