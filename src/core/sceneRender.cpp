@@ -868,6 +868,7 @@ void SceneRender::renderShadowMap(Uniforms& _uniforms) {
         return;
 
     TRACK_BEGIN("render:scene:shadowmap")
+
     vera::Shader* shadowShader = nullptr;
     for (vera::LightsMap::iterator lit = _uniforms.lights.begin(); lit != _uniforms.lights.end(); ++lit) {
         if (dynamicShadows ||  lit->second->bChange || m_origin.bChange ) {

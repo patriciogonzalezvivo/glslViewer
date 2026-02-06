@@ -2273,7 +2273,6 @@ void GlslViewer::renderUI() {
                 for (vera::LightsMap::iterator it = uniforms.lights.begin(); it != uniforms.lights.end(); ++it ) {
                     if ( it->second->getShadowMap()->isAllocated() && it->second->getShadowMap()->getDepthTextureId() ) {
                         vera::imageDepth(it->second->getShadowMap(), xOffset, yOffset, xStep, yStep, it->second->getShadowMapFar(), it->second->getShadowMapNear());
-                        // vera::image(it->second->getShadowMap(), xOffset, yOffset, xStep, yStep);
                         vera::text("u_lightShadowMap", xOffset - xStep, vera::getWindowHeight() - yOffset - yStep);
                         yOffset -= yStep * 2.0;
                     }

@@ -640,14 +640,15 @@ body.windowed-mode .github-embed {
 .loader-content::after {
     content: '';
     display: block;
-    font-size: 10px;
-    width: 1em;
-    height: 1em;
-    border-radius: 50%;
+    font-size: 5px;
+    width: .5em;
+    height: .5em;
+    border-radius: 21%;
     position: relative;
     text-indent: -9999em;
     animation: loader-anim 1.1s infinite ease;
     transform: translateZ(0);
+    top: -5px;
 }
 
 @keyframes loader-anim {

@@ -325,6 +325,7 @@ bool Uniforms::feedTo(vera::Shader *_shader, bool _lights, bool _buffers ) {
                 _shader->setUniform("u_lightDirection", it->second->direction);
             if (it->second->falloff > 0)
                 _shader->setUniform("u_lightFalloff", it->second->falloff);
+
             _shader->setUniform("u_lightMatrix", it->second->getBiasMVPMatrix() );
             _shader->setUniformDepthTexture("u_lightShadowMap", it->second->getShadowMap(), _shader->textureIndex++ );
         }

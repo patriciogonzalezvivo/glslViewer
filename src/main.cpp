@@ -882,10 +882,10 @@ int main(int argc, char **argv) {
 
     // Load files to sandbox
     sandbox.loadAssets(files);
-    if (sandbox.uniforms.models.size() > 0 ) {
-        float area = sandbox.getSceneRender().getArea();
-        sandbox.uniforms.setSunPosition( glm::vec3(0.0,area*10.0,area*10.0) );
-    }
+    // if (sandbox.uniforms.models.size() > 0 ) {
+    //     float area = sandbox.getSceneRender().getArea();
+    //     sandbox.uniforms.setSunPosition( glm::vec3(0.0,area*10.0,area*10.0) );
+    // }
 
     // EVENTs callbacks
     //
