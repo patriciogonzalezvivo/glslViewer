@@ -10,7 +10,7 @@ uniform sampler2D   u_buffer1;
 
 uniform vec2        u_resolution;
 
-#include "../deps/lygia/draw/stroke.glsl"
+#include "lygia/draw/stroke.glsl"
 
 void main() {
     vec3 color = vec3(0.0);

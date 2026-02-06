@@ -6194,6 +6194,9 @@ async function createWasm() {
     };
   var _glGenVertexArrays = _emscripten_glGenVertexArrays;
 
+  var _emscripten_glGenerateMipmap = (x0) => GLctx.generateMipmap(x0);
+  var _glGenerateMipmap = _emscripten_glGenerateMipmap;
+
   
   var _emscripten_glGetAttribLocation = (program, name) =>
       GLctx.getAttribLocation(GL.programs[program], UTF8ToString(name));
@@ -10314,6 +10317,8 @@ var wasmImports = {
   glGenTextures: _glGenTextures,
   /** @export */
   glGenVertexArrays: _glGenVertexArrays,
+  /** @export */
+  glGenerateMipmap: _glGenerateMipmap,
   /** @export */
   glGetAttribLocation: _glGetAttribLocation,
   /** @export */

@@ -7,8 +7,8 @@ uniform vec2        u_tex0Resolution;
 
 uniform vec2        u_resolution;
 
-#include "../deps/lygia/color/palette/heatmap.glsl"
-#include "../deps/lygia/math/decimate.glsl"
+#include "lygia/color/palette/heatmap.glsl"
+#include "lygia/math/decimate.glsl"
 
 void main (void) {
     vec3 color = vec3(0.0);

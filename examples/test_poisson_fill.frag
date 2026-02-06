@@ -16,7 +16,7 @@ const vec3  h1      = vec3(1.0334, 0.6836, 0.1507);
 const float h2      = 0.0270;
 const vec2  g       = vec2(0.7753, 0.0312);
 
-#include "../deps/lygia/math/saturate.glsl"
+#include "lygia/math/saturate.glsl"
 
 void main (void) {
     vec4 color = vec4(0.0);

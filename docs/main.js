@@ -799,15 +799,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                     externalAssets[name] = dataURL;
 
-            //         try {
-            //             const data = decodeBase64(dataURL);
-            //             loadToWasm(name, data).catch(err => {
-            //                 logToConsole("Error saving file: " + err, true);
-            //             });
-            //         } catch (e) {
-            //              logToConsole("Error processing file: " + e, true);
-            //         }
-
                     if (['ply', 'obj', 'gltf', 'glb', 'splat'].includes(ext)) {
                         if (window.module_loaded) {
                             fetchShadersFromBackend();

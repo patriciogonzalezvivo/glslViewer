@@ -37,8 +37,8 @@ varying vec4    v_color;
 varying vec3    v_normal;
 #endif
 
-#include "../deps/lygia/space/ratio.glsl"
-#include "../deps/lygia/space/linearizeDepth.glsl"
+#include "lygia/space/ratio.glsl"
+#include "lygia/space/linearizeDepth.glsl"
 
 void main(void) {
    vec3 color = vec3(1.0);

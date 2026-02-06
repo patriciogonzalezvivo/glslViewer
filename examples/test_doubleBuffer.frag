@@ -22,9 +22,9 @@ uniform vec2        u_mouse;
 uniform float       u_time;
 uniform int         u_frame;
 
-#include "../deps/lygia/generative/random.glsl"
-#include "../deps/lygia/draw/stroke.glsl"
-#include "../deps/lygia/sdf/circleSDF.glsl"
+#include "lygia/generative/random.glsl"
+#include "lygia/draw/stroke.glsl"
+#include "lygia/sdf/circleSDF.glsl"
 
 void main() {
     vec3 color = vec3(0.0);

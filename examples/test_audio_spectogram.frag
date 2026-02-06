@@ -9,7 +9,7 @@ uniform sampler2D   u_doubleBuffer0;
 
 uniform vec2        u_resolution;
 
-#include "../deps/lygia/color/palette/heatmap.glsl"
+#include "lygia/color/palette/heatmap.glsl"
 
 void main (void) {
     vec3 color = vec3(0.0);
