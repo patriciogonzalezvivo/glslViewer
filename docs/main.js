@@ -522,11 +522,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (window.Module && window.Module.FS && window.module_loaded) {
                     try {
                         window.Module.FS.writeFile(name, data);
-                        // console.log("Loaded asset: " + name);
                         logToConsole("Loaded asset: " + name);
                         
                         const ext = name.split('.').pop().toLowerCase();
+                        console.log("Notifying backend about asset: ", name, ext);
                         window.Module.ccall('loadAsset', null, ['string', 'string'], [name, ext]);
+                        if (['ply', 'obj', 'gltf', 'glb', 'splat'].includes(ext)) {
+                            console.log("Sky command for asset: " + name);
+                            try {
+                                window.Module.ccall('command', null, ['string'], ['sky,on']);
+                            } catch(e) {
+                                console.error("Error executing command: sky,on", e);
+                            }
+                        }
 
                         hideLoader();
                         resolve();
@@ -802,6 +810,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (['ply', 'obj', 'gltf', 'glb', 'splat'].includes(ext)) {
                         if (window.module_loaded) {
                             fetchShadersFromBackend();
+                            // command "sky,on"
+                            if (window.Module && window.Module.ccall) {
+                                try {
+                                    window.Module.ccall('command', null, ['string'], ['sky,on']);
+                                } catch(e) {
+                                    console.error("Error executing command: sky,on", e);
+                                }
+                            }
                         }
                     }
 
