@@ -17,6 +17,7 @@
 #include <atomic>
 #include <iostream>
 #include <fstream>
+#include <sstream>
 
 #include "vera/window.h"
 #include "vera/gl/gl.h"
@@ -209,6 +210,28 @@ EMSCRIPTEN_KEEPALIVE
 #endif
 void command(char* c) {
     commandsArgs.push_back( std::string(c) );
+}
+
+#ifdef __EMSCRIPTEN__
+EMSCRIPTEN_KEEPALIVE
+#endif
+char* query(char* c) {
+    std::string cmd(c);
+    std::stringstream buffer;
+    std::streambuf* old = std::cout.rdbuf(buffer.rdbuf());
+    
+    commandsRun(cmd);
+    
+    std::cout.rdbuf(old);
+    
+    static std::string lastResult;
+    lastResult = buffer.str();
+    
+    if (!lastResult.empty() && lastResult.back() == '\n') {
+        lastResult.pop_back();
+    }
+    
+    return (char*)lastResult.c_str();
 }
 
 #ifdef __EMSCRIPTEN__

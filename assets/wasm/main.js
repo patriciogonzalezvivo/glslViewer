@@ -31,7 +31,7 @@ void main() {
 }
 `;
 
-// const commandsToRetainState = 
+const commandsToRetainState = ['fullscreen', 'sky', 'cubemap', 'camera_position', 'grid', 'bboxes', 'plot'];
 
 function getJSON(url, callback) {
     var xhr = new XMLHttpRequest();
@@ -282,6 +282,31 @@ document.addEventListener('DOMContentLoaded', () => {
             logToConsole('Module not ready.', true);
         }
     };
+
+    const getRetainedState = function() {
+        let results = [];
+        if (typeof commandsToRetainState !== 'undefined') {
+            commandsToRetainState.forEach((cmd) => {
+                let answer = null;
+                if (cmd === 'fullscreen') {
+                    answer = getFullscreen() ? 'on' : 'off';
+                } else if (window.Module && window.Module.ccall) {
+                    try {
+                        answer = window.Module.ccall('query', 'string', ['string'], [cmd]);
+                    } catch(err) {
+                        console.error('Error getting retained state for ' + cmd + ': ' + err);
+                    }
+                }
+                
+                if (answer) {
+                    results.push(cmd + ',' + answer);
+                }
+            });
+        }
+        return results;
+    };
+
+    window.getRetainedState = getRetainedState;
 
     const setFrag = function(code) {
         if (window.Module && window.Module.ccall) {
@@ -707,7 +732,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const payload = {
             frag: content.frag,
-            vert: content.vert
+            vert: content.vert,
+            commands: getRetainedState()
         };
 
         if (Object.keys(externalAssets).length > 0) {

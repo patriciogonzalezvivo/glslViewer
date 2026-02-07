@@ -10049,6 +10049,7 @@ var ASM_CONSTS = {
 
 // Imports from the Wasm binary.
 var _command = Module['_command'] = makeInvalidEarlyAccess('_command');
+var _query = Module['_query'] = makeInvalidEarlyAccess('_query');
 var _setFrag = Module['_setFrag'] = makeInvalidEarlyAccess('_setFrag');
 var _setVert = Module['_setVert'] = makeInvalidEarlyAccess('_setVert');
 var _loadAsset = Module['_loadAsset'] = makeInvalidEarlyAccess('_loadAsset');
@@ -10079,6 +10080,7 @@ var wasmTable = makeInvalidEarlyAccess('wasmTable');
 
 function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['command'] != 'undefined', 'missing Wasm export: command');
+  assert(typeof wasmExports['query'] != 'undefined', 'missing Wasm export: query');
   assert(typeof wasmExports['setFrag'] != 'undefined', 'missing Wasm export: setFrag');
   assert(typeof wasmExports['setVert'] != 'undefined', 'missing Wasm export: setVert');
   assert(typeof wasmExports['loadAsset'] != 'undefined', 'missing Wasm export: loadAsset');
@@ -10105,6 +10107,7 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['__indirect_function_table'] != 'undefined', 'missing Wasm export: __indirect_function_table');
   assert(typeof wasmExports['ff_h264_cabac_tables'] != 'undefined', 'missing Wasm export: ff_h264_cabac_tables');
   _command = Module['_command'] = createExportWrapper('command', 1);
+  _query = Module['_query'] = createExportWrapper('query', 1);
   _setFrag = Module['_setFrag'] = createExportWrapper('setFrag', 1);
   _setVert = Module['_setVert'] = createExportWrapper('setVert', 1);
   _loadAsset = Module['_loadAsset'] = createExportWrapper('loadAsset', 2);

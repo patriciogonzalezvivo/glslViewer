@@ -31,7 +31,7 @@ void main() {
 }
 `;
 
-// const commandsToRetainState = 
+const commandsToRetainState = ['fullscreen', 'sky', 'camera_position', 'floor'];
 
 function getJSON(url, callback) {
     var xhr = new XMLHttpRequest();
@@ -255,6 +255,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const sendCommand = function(cmd) {
+        logToConsole('> ' + cmd);
         if (cmd === 'fullscreen,on') {
             setFullscreen(true);
             return 'on';
@@ -267,10 +268,11 @@ document.addEventListener('DOMContentLoaded', () => {
             return getFullscreen() ? 'on' : 'off';
         }
         else if (cmd === 'fullscreen') {
-            return getFullscreen() ? 'on' : 'off';
+            let state = getFullscreen() ? 'on' : 'off';
+            logToConsole(state);
+            return state;
         }
         if (window.Module && window.Module.ccall) {
-            logToConsole('> ' + cmd);
             try {
                 window.Module.ccall('command', null, ['string'], [cmd]);
             } catch(err) {
@@ -280,6 +282,31 @@ document.addEventListener('DOMContentLoaded', () => {
             logToConsole('Module not ready.', true);
         }
     };
+
+    const getRetainedState = function() {
+        let results = [];
+        if (typeof commandsToRetainState !== 'undefined') {
+            commandsToRetainState.forEach((cmd) => {
+                let answer = null;
+                if (cmd === 'fullscreen') {
+                    answer = getFullscreen() ? 'on' : 'off';
+                } else if (window.Module && window.Module.ccall) {
+                    try {
+                        answer = window.Module.ccall('query', 'string', ['string'], [cmd]);
+                    } catch(err) {
+                        console.error('Error getting retained state for ' + cmd + ': ' + err);
+                    }
+                }
+                
+                if (answer) {
+                    results.push(cmd + ',' + answer);
+                }
+            });
+        }
+        return results;
+    };
+
+    window.getRetainedState = getRetainedState;
 
     const setFrag = function(code) {
         if (window.Module && window.Module.ccall) {
