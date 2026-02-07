@@ -31,6 +31,8 @@ void main() {
 }
 `;
 
+// const commandsToRetainState = 
+
 function getJSON(url, callback) {
     var xhr = new XMLHttpRequest();
     xhr.open('GET', url, true);
@@ -225,27 +227,95 @@ document.addEventListener('DOMContentLoaded', () => {
         consoleInput.addEventListener('keyup', stopPropagation);
     }
 
+    // send command
+    const getFullscreen = function() {
+        return wrapper && wrapper.classList.contains('fullscreen');
+    }
+    const setFullscreen = function(isFullscreen) {
+        if (wrapper) {
+            if (isFullscreen) {
+                wrapper.classList.add('fullscreen');
+                wrapper.classList.remove('windowed');
+                document.body.classList.remove('windowed-mode');
+                wrapper.style.transform = "none";
+                if (editorContainer) editorContainer.style.display = 'none';
+                const consoleOutput = document.getElementById('console-output');
+                if (consoleOutput && consoleOutput.parentElement) 
+                    consoleOutput.parentElement.style.display = 'none';
+            } else {
+                wrapper.classList.remove('fullscreen');
+                wrapper.classList.add('windowed');
+                document.body.classList.add('windowed-mode');
+                if (editorContainer) editorContainer.style.display = 'block';
+                const consoleOutput = document.getElementById('console-output');
+                if (consoleOutput && consoleOutput.parentElement) 
+                    consoleOutput.parentElement.style.display = 'flex';
+            }
+        }
+    };
+
+    const sendCommand = function(cmd) {
+        if (cmd === 'fullscreen,on') {
+            setFullscreen(true);
+            return 'on';
+        } else if (cmd === 'fullscreen,off') {
+            setFullscreen(false);
+            return 'off';
+        }
+        else if (cmd === 'fullscreen,toggle') {
+            setFullscreen(!getFullscreen());
+            return getFullscreen() ? 'on' : 'off';
+        }
+        else if (cmd === 'fullscreen') {
+            return getFullscreen() ? 'on' : 'off';
+        }
+        if (window.Module && window.Module.ccall) {
+            logToConsole('> ' + cmd);
+            try {
+                window.Module.ccall('command', null, ['string'], [cmd]);
+            } catch(err) {
+                logToConsole('Error sending command: ' + err, true);
+            }
+        } else {
+            logToConsole('Module not ready.', true);
+        }
+    };
+
+    const setFrag = function(code) {
+        if (window.Module && window.Module.ccall) {
+            try {
+                window.Module.ccall('setFrag', null, ['string'], [code]);
+            } catch (e) {
+                console.error("Error setting fragment shader:", e);
+            }
+        }
+    };
+
+    const setVert = function(code) {
+        if (window.Module && window.Module.ccall) {
+            try {
+                window.Module.ccall('setVert', null, ['string'], [code]);
+            } catch (e) {
+                console.error("Error setting vertex shader:", e);
+            }
+        }
+    };
+
     // Update Shader function
     function updateShader() {
-        if (window.Module && window.Module.ccall) {
-            const code = editor.getValue();
-            // Update stored content
-            content[activeTab] = code;
+        const code = editor.getValue();
+        // Update stored content
+        content[activeTab] = code;
 
-            try {
-                if (activeTab === 'frag') {
-                    window.Module.ccall('setFrag', null, ['string'], [code]);
-                } else if (activeTab === 'vert') {
-                    window.Module.ccall('setVert', null, ['string'], [code]);
-                }
-            } catch (e) {
-                console.error("Error setting shader:", e);
-            }
+        if (activeTab === 'frag') {
+            setFrag(code);
+        } else if (activeTab === 'vert') {
+            setVert(code);
         }
     }
 
     // Fetch Shaders from Backend
-    function fetchShadersFromBackend() {
+    const fetchShadersFromBackend = function() {
         if (window.Module && window.Module.ccall) {
             try {
                  const cFrag = window.Module.ccall('getDefaultSceneFrag', 'string', [], []);
@@ -280,31 +350,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const btn = document.getElementById('resize-btn');
     if (btn && wrapper) {
-        // Always start in windowed mode regardless of device
-        let isFullscreen = false;
         wrapper.classList.remove('fullscreen');
         wrapper.classList.add('windowed');
         document.body.classList.add('windowed-mode');
 
         btn.addEventListener('click', () => {
-            isFullscreen = !isFullscreen;
-
-            if (isFullscreen) {
-                wrapper.classList.add('fullscreen');
-                wrapper.classList.remove('windowed');
-                document.body.classList.remove('windowed-mode');
-                wrapper.style.transform = "none";
-                if (editorContainer) editorContainer.style.display = 'none';
-                if (consoleOutput && consoleOutput.parentElement) 
-                    consoleOutput.parentElement.style.display = 'none';
-            } else {
-                wrapper.classList.remove('fullscreen');
-                wrapper.classList.add('windowed');
-                document.body.classList.add('windowed-mode');
-                if (editorContainer) editorContainer.style.display = 'block';
-                if (consoleOutput && consoleOutput.parentElement) 
-                    consoleOutput.parentElement.style.display = 'flex';
-            }
+            setFullscreen(!getFullscreen());
         });
     }
 
@@ -380,16 +431,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (e.key === 'Enter') {
                 const cmd = consoleInput.value.trim();
                 if (cmd) {
-                    logToConsole('> ' + cmd);
-                    if (window.Module && window.Module.ccall) {
-                        try {
-                            window.Module.ccall('command', null, ['string'], [cmd]);
-                        } catch(err) {
-                            logToConsole('Error sending command: ' + err, true);
-                        }
-                    } else {
-                        logToConsole('Module not ready.', true);
-                    }
+                    sendCommand(cmd);
                     consoleInput.value = '';
                 }
             }
@@ -511,11 +553,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         const ext = name.split('.').pop().toLowerCase();
                         window.Module.ccall('loadAsset', null, ['string', 'string'], [name, ext]);
                         if (['ply', 'obj', 'gltf', 'glb', 'splat'].includes(ext)) {
-                            try {
-                                window.Module.ccall('command', null, ['string'], ['sky,on']);
-                            } catch(e) {
-                                console.error("Error executing command: sky,on", e);
-                            }
+                            sendCommand('sky,on');
                         }
 
                         hideLoader();
@@ -607,14 +645,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         
                         if (json.commands && Array.isArray(json.commands)) {
                              json.commands.forEach((cmd) => {
-                                 if (window.Module && window.Module.ccall) {
-                                     try {
-                                         window.Module.ccall('command', null, ['string'], [cmd]);
-                                         logToConsole('Executed command: ' + cmd);
-                                     } catch(e) {
-                                         console.error("Error executing command: " + cmd, e);
-                                     }
-                                 }
+                                sendCommand(cmd);
                              });
                         }
                         
@@ -760,20 +791,14 @@ document.addEventListener('DOMContentLoaded', () => {
                         if (activeTab === 'frag') {
                             editor.setValue(data);
                         } else {
-                             // Push update without Editor change
-                             if (window.Module && window.Module.ccall) {
-                                window.Module.ccall('setFrag', null, ['string'], [data]);
-                             }
+                             setFrag(data);
                         }
                     } else {
                         content.vert = data;
                         if (activeTab === 'vert') {
                             editor.setValue(data);
                         } else {
-                             // Push update without Editor change
-                             if (window.Module && window.Module.ccall) {
-                                window.Module.ccall('setVert', null, ['string'], [data]);
-                             }
+                             setVert(data);
                         }
                     }
                     hideLoader();
@@ -789,20 +814,28 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                     externalAssets[name] = dataURL;
 
-                    if (['ply', 'obj', 'gltf', 'glb', 'splat'].includes(ext)) {
-                        if (window.module_loaded) {
-                            fetchShadersFromBackend();
-                            // command "sky,on"
-                            if (window.Module && window.Module.ccall) {
-                                try {
-                                    window.Module.ccall('command', null, ['string'], ['sky,on']);
-                                } catch(e) {
-                                    console.error("Error executing command: sky,on", e);
-                                }
+                    // if the vert and frag are the same as default, update them
+                    if (content.frag === defaultFragment && content.vert === defaultVertex)  {
+                        if (['ply', 'obj', 'gltf', 'glb', 'splat'].includes(ext)) {
+                            if (window.module_loaded) {
+                                fetchShadersFromBackend();
+                                sendCommand('sky,on');
                             }
                         }
                     }
-
+                    else {
+                        // re send current shaders to trigger reload with new asset
+                        // clean console
+                        if (consoleOutput)
+                            consoleOutput.innerHTML = '';
+                        
+                        try {
+                            setFrag(content.frag);
+                            setVert(content.vert);   
+                        } catch (e) {
+                            console.error("Error reloading shaders after asset drop:", e);
+                        }
+                    }
                     hideLoader();
                 };
                 reader.onerror = () => hideLoader();
