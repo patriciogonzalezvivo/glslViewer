@@ -31,7 +31,7 @@ void main() {
 }
 `;
 
-const commandsToRetainState = ['fullscreen', 'camera_position', 'camera_look_at', 'grid', 'bboxes', 'plot'];
+const commandsToRetainState = ['fullscreen', 'camera_position', 'camera_look_at', 'grid', 'bboxes', 'plot', 'sky', 'cubemap'];
 
 function getJSON(url, callback) {
     var xhr = new XMLHttpRequest();

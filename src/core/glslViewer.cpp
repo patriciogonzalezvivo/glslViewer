@@ -575,7 +575,7 @@ void GlslViewer::commandsInit(CommandList &_commands ) {
 
     _commands.push_back(Command("sky", [&](const std::string& _line){
         if (_line == "sky") {
-            std::string rta = m_sceneRender.showCubebox ? "on" : "off";
+            std::string rta = (m_sceneRender.showCubebox && uniforms.activeCubemap == uniforms.cubemaps["default"]) ? "on" : "off";
             std::cout << rta << std::endl; 
             return true;
         }
@@ -584,6 +584,7 @@ void GlslViewer::commandsInit(CommandList &_commands ) {
             if (values.size() == 2) {
                 if (values[1] == "toggle")
                     values[1] = m_sceneRender.showCubebox ? "off" : "on";
+                    // values[1] = (m_sceneRender.showCubebox && uniforms.activeCubemap == uniforms.cubemaps["default"]) ? "off" : "on";
 
                 m_sceneRender.showCubebox = values[1] == "on";
                 if (values[1] == "on") {
