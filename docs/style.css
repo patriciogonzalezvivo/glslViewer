@@ -49,11 +49,11 @@ body.windowed-mode {
     display: none;
 }
 
-/* Windowed State */
+/* Windowed State
 #wrapper.windowed {
     width: 516px;
     height: 810px;
-}
+} */
 /* 
 #wrapper.windowed .frame {
     position: absolute;

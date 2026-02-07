@@ -294,14 +294,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 wrapper.classList.remove('windowed');
                 document.body.classList.remove('windowed-mode');
                 wrapper.style.transform = "none";
-                setTimeout(() => {
-                    if (window.Module && window.Module.ccall) {
-                        const w = window.innerWidth;
-                        const h = window.innerHeight;
-                        const cnv = document.getElementById('canvas');
-                        if (cnv) { cnv.width = w; cnv.height = h; }
-                    }
-                }, 100);
                 if (editorContainer) editorContainer.style.display = 'none';
                 if (consoleOutput && consoleOutput.parentElement) 
                     consoleOutput.parentElement.style.display = 'none';
@@ -320,14 +312,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (wrapper) {
         const resizeObserver = new ResizeObserver(() => {
             window.dispatchEvent(new Event('resize'));
-            if (window.Module && window.Module.ccall) {
-                const cnv = document.getElementById('canvas');
-                if (cnv) {
-                    const rect = cnv.getBoundingClientRect();
-                    cnv.width = rect.width;
-                    cnv.height = rect.height;
-                }
-            }
         });
         resizeObserver.observe(wrapper);
     }
