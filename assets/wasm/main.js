@@ -31,7 +31,7 @@ void main() {
 }
 `;
 
-const commandsToRetainState = ['fullscreen', 'sky', 'cubemap', 'camera_position', 'grid', 'bboxes', 'plot'];
+const commandsToRetainState = ['fullscreen', 'camera_position', 'camera_look_at', 'grid', 'bboxes', 'plot'];
 
 function getJSON(url, callback) {
     var xhr = new XMLHttpRequest();
@@ -298,7 +298,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
                 
-                if (answer) {
+                if (answer && answer !== 'off') {
                     results.push(cmd + ',' + answer);
                 }
             });
@@ -579,9 +579,14 @@ document.addEventListener('DOMContentLoaded', () => {
                         
                         const ext = name.split('.').pop().toLowerCase();
                         window.Module.ccall('loadAsset', null, ['string', 'string'], [name, ext]);
-                        if (['ply', 'obj', 'gltf', 'glb', 'splat'].includes(ext)) {
-                            sendCommand('sky,on');
+                        // if (['ply', 'obj', 'gltf', 'glb', 'splat'].includes(ext)) {
+                            // sendCommand('sky,on');
+                            // sendCommand('cubemap,on');
+                        // }
+                        if (['hdr'].includes(ext)) {
+                            sendCommand('cubemap,on');
                         }
+
 
                         hideLoader();
                         resolve();

@@ -320,7 +320,7 @@ void GlslViewer::commandsInit(CommandList &_commands ) {
 
     _commands.push_back(Command("plot", [&](const std::string& _line){
         if (_line == "plot") {
-            std::cout << "plot," << plot_options[m_plot] << std::endl; 
+            std::cout << plot_options[m_plot] << std::endl; 
             return true;
         }
         else {
@@ -911,6 +911,11 @@ void GlslViewer::commandsInit(CommandList &_commands ) {
             m_camera_azimuth = glm::degrees( atan2(v.x, v.z) );
             m_camera_elevation = glm::degrees( atan2(-v.y, sqrt(v.x * v.x + v.z * v.z)) );
 
+            return true;
+        }
+        else {
+            glm::vec3 target = uniforms.activeCamera->getTarget();
+            std::cout << target.x << ',' << target.y << ',' << target.z << std::endl;
             return true;
         }
         return false;
