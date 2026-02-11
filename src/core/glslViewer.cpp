@@ -473,6 +473,10 @@ void GlslViewer::commandsInit(CommandList &_commands ) {
 
     _commands.push_back(Command("textures", [&](const std::string& _line){ 
         if (_line == "textures") {
+            std::cout << (m_showTextures ? "on" : "off") << std::endl;
+            return true;
+        }
+        else if (_line == "textures,list") {
             uniforms.printTextures();
             uniforms.printStreams();
             return true;
@@ -489,10 +493,14 @@ void GlslViewer::commandsInit(CommandList &_commands ) {
         }
         return false;
     },
-    "textures[,on|off]", "return a list of textures as their uniform name and path. Or show/hide textures on viewport.", false));
+    "textures[,on|off|list]", "Show/hide textures on viewport, or return the list of textures", false));
 
     _commands.push_back(Command("buffer", [&](const std::string& _line){ 
         if (_line == "buffers") {
+            std::cout << (m_showPasses ? "on" : "off") << std::endl;
+            return true;
+        }
+        else if (_line == "buffers,list") {
             uniforms.printBuffers();
             m_sceneRender.printBuffers();
             if (m_postprocessing) {
@@ -526,7 +534,7 @@ void GlslViewer::commandsInit(CommandList &_commands ) {
         }
         return false;
     },
-    "buffers[,show|hide]", "return a list of buffers as their uniform name. Or show/hide buffer on viewport.", false));
+    "buffers[,show|hide|list]", "Show/hide buffer on viewport, or return the list of buffers", false));
 
     // CUBEMAPS
     _commands.push_back(Command("cubemaps", [&](const std::string& _line){
@@ -539,10 +547,7 @@ void GlslViewer::commandsInit(CommandList &_commands ) {
     "cubemaps", "print all cubemaps"));
 
     _commands.push_back(Command("cubemap", [&](const std::string& _line){
-        if (_line == "cubemaps") {
-            uniforms.printCubemaps();
-            return true;
-        } else if (_line == "cubemap") {
+        if (_line == "cubemap") {
             std::string rta = m_sceneRender.showCubebox ? "on" : "off";
             std::cout << rta << std::endl; 
             return true;
