@@ -32,6 +32,10 @@ void main() {
 `;
 
 const commandsToRetainState = ['fullscreen', 'camera_position', 'camera_look_at', 'grid', 'bboxes', 'plot', 'sky', 'cubemap', 'textures', 'buffers'];
+const cmds_state = ['fullscreen', 'grid', 'bboxes', 'plot', 'sky', 'cubemap', 'textures', 'buffers'];
+const cmds_camera = ['camera_position', 'camera_look_at'];
+const cmds_listen = ['plane', 'pcl_plane', 'sphere', 'pcl_sphere', 'icosphere', 'cylinder'];
+let cmds_history = [];
 
 function getJSON(url, callback) {
     var xhr = new XMLHttpRequest();
@@ -255,6 +259,12 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const sendCommand = function(cmd) {
+        // log command if it starts with any of the cmds_listen
+        if (cmds_listen.some(c => cmd.startsWith(c))) {
+            console.log('Command added to history:', cmd);
+            cmds_history.push(cmd);
+        }
+
         logToConsole('> ' + cmd);
         if (cmd === 'fullscreen,on') {
             setFullscreen(true);
@@ -284,25 +294,30 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const getRetainedState = function() {
-        let results = [];
-        if (typeof commandsToRetainState !== 'undefined') {
-            commandsToRetainState.forEach((cmd) => {
-                let answer = null;
-                if (cmd === 'fullscreen') {
-                    answer = getFullscreen() ? 'on' : 'off';
-                } else if (window.Module && window.Module.ccall) {
-                    try {
-                        answer = window.Module.ccall('query', 'string', ['string'], [cmd]);
-                    } catch(err) {
-                        console.error('Error getting retained state for ' + cmd + ': ' + err);
-                    }
+        let results = [...cmds_history];
+
+        // merge cmds_state and cmds_camera into a single loop based on commandsToRetainState
+        const cmds_to_check = [...new Set([...cmds_state, ...cmds_camera])];
+        cmds_to_check.forEach((cmd) => {
+            let answer = null;
+            if (cmd === 'fullscreen') {
+                answer = getFullscreen() ? 'on' : 'off';
+            } else if (window.Module && window.Module.ccall) {
+                try {
+                    answer = window.Module.ccall('query', 'string', ['string'], [cmd]);
+                } catch(err) {
+                    console.error('Error getting retained state for ' + cmd + ': ' + err);
                 }
-                
-                if (answer && answer !== 'off') {
-                    results.push(cmd + ',' + answer);
-                }
-            });
-        }
+            }
+            
+            if (answer && answer !== 'off') {
+                results.push(cmd + ',' + answer);
+            }
+        });
+
+        // remove duplicates while preserving order
+        results = [...new Set(results)];
+    
         return results;
     };
 
@@ -330,6 +345,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Update Shader function
     function updateShader() {
+
         const code = editor.getValue();
         // Update stored content
         content[activeTab] = code;
@@ -674,12 +690,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     Promise.all(assetPromises).then(() => {
                         updateShader();
-                        
                         if (json.commands && Array.isArray(json.commands)) {
-                             json.commands.forEach((cmd) => {
+                            json.commands.forEach((cmd) => {
                                 sendCommand(cmd);
-                             });
+                            });
                         }
+
+                        // set both vert and frag to trigger reload with new assets
+                        setFrag(content.frag);
+                        setVert(content.vert);
                         
                         console.log('Gist loaded successfully');
                     });
