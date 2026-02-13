@@ -1375,10 +1375,12 @@ void GlslViewer::loadModel(vera::Model* _model) {
 
 void GlslViewer::addDefine(const std::string &_define, const std::string &_value) {
     for (int i = 0; i < m_buffers_total; i++)
-        m_buffers_shaders[i].addDefine(_define, _value);
+        if (i < m_buffers_shaders.size())
+            m_buffers_shaders[i].addDefine(_define, _value);
 
     for (int i = 0; i < m_doubleBuffers_total; i++)
-        m_doubleBuffers_shaders[i].addDefine(_define, _value);
+        if (i < m_doubleBuffers_shaders.size())
+            m_doubleBuffers_shaders[i].addDefine(_define, _value);
 
     if (uniforms.models.size() > 0) {
         uniforms.addDefine(_define, _value);
@@ -1393,10 +1395,12 @@ void GlslViewer::addDefine(const std::string &_define, const std::string &_value
 
 void GlslViewer::delDefine(const std::string &_define) {
     for (int i = 0; i < m_buffers_total; i++)
-        m_buffers_shaders[i].delDefine(_define);
+        if (i < m_buffers_shaders.size())
+            m_buffers_shaders[i].delDefine(_define);
 
     for (int i = 0; i < m_doubleBuffers_total; i++)
-        m_doubleBuffers_shaders[i].delDefine(_define);
+        if (i < m_doubleBuffers_shaders.size())
+            m_doubleBuffers_shaders[i].delDefine(_define);
 
     if (uniforms.models.size() > 0) {
         uniforms.delDefine(_define);
@@ -1576,6 +1580,8 @@ void GlslViewer::_updateBuffers() {
 
         uniforms.buffers.clear();
         m_buffers_shaders.clear();
+        if (m_buffers_total > 0)
+            m_buffers_shaders.reserve(m_buffers_total);
 
         for (int i = 0; i < m_buffers_total; i++) {
             // New FBO
@@ -1609,6 +1615,8 @@ void GlslViewer::_updateBuffers() {
 
         uniforms.doubleBuffers.clear();
         m_doubleBuffers_shaders.clear();
+        if (m_doubleBuffers_total > 0)
+            m_doubleBuffers_shaders.reserve(m_doubleBuffers_total);
 
         for (int i = 0; i < m_doubleBuffers_total; i++) {
             // New FBO
@@ -1642,6 +1650,8 @@ void GlslViewer::_updateBuffers() {
         uniforms.pyramids.clear();
         m_pyramid_fbos.clear();
         m_pyramid_subshaders.clear();
+        if (m_pyramid_total > 0)
+            m_pyramid_subshaders.reserve(m_pyramid_total);
 
         for (int i = 0; i < m_pyramid_total; i++) {
             glm::vec3 size = getBufferSize(m_frag_source, "u_pyramid" + vera::toString(i));
@@ -1713,6 +1723,8 @@ void GlslViewer::_updateBuffers() {
 
         uniforms.floods.clear();
         m_flood_subshaders.clear();
+        if (m_flood_total > 0)
+            m_flood_subshaders.reserve(m_flood_total);
 
         for (int i = 0; i < m_flood_total; i++) {
             glm::vec3 size = getBufferSize(m_frag_source, "u_flood" + vera::toString(i));

@@ -696,11 +696,9 @@ document.addEventListener('DOMContentLoaded', () => {
                             });
                         }
 
-                        // set both vert and frag to trigger reload with new assets
+                        // set both vert and frag to trigger reload with new asse
                         setFrag(content.frag);
                         setVert(content.vert);
-                        
-                        console.log('Gist loaded successfully');
                     });
                 } catch (e) {
                     currentGistId = null; 
