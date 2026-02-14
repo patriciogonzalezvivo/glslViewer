@@ -2904,25 +2904,33 @@ void GlslViewer::onPlot() {
         glReadPixels(0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-        // Count frequencies of appearances 
+        // Count frequencies of appearances (weighted by alpha, ignoring transparent pixels)
         float max_rgb_freq = 0;
         float max_luma_freq = 0;
         glm::vec4 freqs[256];
         for (int i = 0; i < total; i += c) {
-            m_plot_values[pixels[i]].r++;
+            // Skip fully transparent pixels
+            unsigned char alpha = pixels[i+3];
+            if (alpha == 0)
+                continue;
+            
+            // Weight contributions by alpha to properly average visible geometry
+            float alpha_weight = alpha / 255.0f;
+            
+            m_plot_values[pixels[i]].r += alpha_weight;
             if (m_plot_values[pixels[i]].r > max_rgb_freq)
                 max_rgb_freq = m_plot_values[pixels[i]].r;
 
-            m_plot_values[pixels[i+1]].g++;
+            m_plot_values[pixels[i+1]].g += alpha_weight;
             if (m_plot_values[pixels[i+1]].g > max_rgb_freq)
                 max_rgb_freq = m_plot_values[pixels[i+1]].g;
 
-            m_plot_values[pixels[i+2]].b++;
+            m_plot_values[pixels[i+2]].b += alpha_weight;
             if (m_plot_values[pixels[i+2]].b > max_rgb_freq)
                 max_rgb_freq = m_plot_values[pixels[i+2]].b;
 
             int luma = 0.299 * pixels[i] + 0.587 * pixels[i+1] + 0.114 * pixels[i+2];
-            m_plot_values[luma].a++;
+            m_plot_values[luma].a += alpha_weight;
             if (m_plot_values[luma].a > max_luma_freq)
                 max_luma_freq = m_plot_values[luma].a;
         }
