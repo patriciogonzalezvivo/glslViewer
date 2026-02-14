@@ -32,7 +32,7 @@ void main() {
 `;
 
 const cmds_state = ['plot', 'textures', 'buffers', 'floor', 'sky', 'cubemap', 'axis', 'grid', 'bboxes', 'fullscreen'];
-const cmds_plot_modes = ['off', 'fps', 'ms', 'rgb', 'luma', 'green', 'red', 'blue'];
+const cmds_plot_modes = ['off', 'fps', 'ms', 'rgb', 'luma'];
 const cmds_camera = ['camera_position', 'camera_look_at'];
 const cmds_listen = ['plane', 'pcl_plane', 'sphere', 'pcl_sphere', 'icosphere', 'cylinder'];
 let cmds_history = [];
@@ -876,7 +876,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 item.addEventListener('click', () => {
                     if (cmd === 'plot') {
-                        // Special handling for plot: cycle through off, fps, rgb, gray
+                        // Special handling for plot: cycle through all plot modes
                         let currentState = 'off';
                         if (window.Module && window.Module.ccall) {
                             try {
@@ -887,10 +887,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                         
                         // Cycle to next state
-                        const plotStates = ['off', 'fps', 'rgb'];
-                        const currentIndex = plotStates.indexOf(currentState);
-                        const nextIndex = (currentIndex + 1) % plotStates.length;
-                        const newState = plotStates[nextIndex];
+                        const currentIndex = cmds_plot_modes.indexOf(currentState);
+                        const nextIndex = (currentIndex + 1) % cmds_plot_modes.length;
+                        const newState = cmds_plot_modes[nextIndex];
                         
                         sendCommand(cmd + ',' + newState);
                     } else {

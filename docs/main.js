@@ -876,7 +876,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 item.addEventListener('click', () => {
                     if (cmd === 'plot') {
-                        // Special handling for plot: cycle through off, fps, rgb, gray
+                        // Special handling for plot: cycle through all plot modes
                         let currentState = 'off';
                         if (window.Module && window.Module.ccall) {
                             try {
@@ -887,10 +887,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                         
                         // Cycle to next state
-                        const plotStates = ['off', 'fps', 'rgb'];
-                        const currentIndex = plotStates.indexOf(currentState);
-                        const nextIndex = (currentIndex + 1) % plotStates.length;
-                        const newState = plotStates[nextIndex];
+                        const currentIndex = cmds_plot_modes.indexOf(currentState);
+                        const nextIndex = (currentIndex + 1) % cmds_plot_modes.length;
+                        const newState = cmds_plot_modes[nextIndex];
                         
                         sendCommand(cmd + ',' + newState);
                     } else {
