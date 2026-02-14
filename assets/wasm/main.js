@@ -31,8 +31,7 @@ void main() {
 }
 `;
 
-const commandsToRetainState = ['fullscreen', 'camera_position', 'camera_look_at', 'grid', 'bboxes', 'plot', 'sky', 'cubemap', 'textures', 'buffers'];
-const cmds_state = ['fullscreen', 'grid', 'bboxes', 'plot', 'sky', 'cubemap', 'textures', 'buffers'];
+const cmds_state = ['grid', 'bboxes', 'plot', 'sky', 'cubemap', 'textures', 'buffers', 'fullscreen'];
 const cmds_camera = ['camera_position', 'camera_look_at'];
 const cmds_listen = ['plane', 'pcl_plane', 'sphere', 'pcl_sphere', 'icosphere', 'cylinder'];
 let cmds_history = [];
@@ -161,6 +160,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function switchTab(type) {
         if (type === activeTab) return;
+        
+        // Turn off fullscreen if it's on (user wants to edit code)
+        if (getFullscreen()) {
+            setFullscreen(false);
+        }
         
         // Flush pending updates
         if (updateTimeout) {
