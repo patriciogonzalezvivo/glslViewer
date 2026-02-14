@@ -508,9 +508,12 @@ document.addEventListener('DOMContentLoaded', () => {
         return null;
     }
 
+    const newBtn = document.getElementById('new-btn');
     const loginBtn = document.getElementById('login-btn');
     const saveBtn = document.getElementById('save-btn');
     const openBtn = document.getElementById('open-btn');
+    const viewBtn = document.getElementById('view-btn');
+    const viewDropdown = document.getElementById('view-dropdown');
     let githubToken = localStorage.getItem('github_token');
     let githubUser = null;
 
@@ -841,9 +844,128 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    if (newBtn) newBtn.addEventListener('click', () => {
+        if (confirm('Create a new shader? This will clear your current work.')) {
+            window.location.href = window.location.pathname;
+        }
+    });
+    
     if (loginBtn) loginBtn.addEventListener('click', loginGithub);
     if (saveBtn) saveBtn.addEventListener('click', saveGist);
     if (openBtn) openBtn.addEventListener('click', openGist);
+    
+    // View dropdown menu
+    if (viewBtn && viewDropdown) {
+        // Initialize dropdown items
+        function updateViewDropdown() {
+            viewDropdown.innerHTML = '';
+            cmds_state.forEach((cmd) => {
+                const item = document.createElement('div');
+                item.className = 'dropdown-item';
+                
+                const checkbox = document.createElement('span');
+                checkbox.className = 'checkbox';
+                checkbox.textContent = '☐';
+                
+                const label = document.createElement('span');
+                label.textContent = cmd.replace('_', ' ');
+                
+                item.appendChild(checkbox);
+                item.appendChild(label);
+                
+                item.addEventListener('click', () => {
+                    if (cmd === 'plot') {
+                        // Special handling for plot: cycle through off, fps, rgb, gray
+                        let currentState = 'off';
+                        if (window.Module && window.Module.ccall) {
+                            try {
+                                currentState = window.Module.ccall('query', 'string', ['string'], [cmd]);
+                            } catch (e) {
+                                console.error('Error querying state:', e);
+                            }
+                        }
+                        
+                        // Cycle to next state
+                        const plotStates = ['off', 'fps', 'rgb', 'gray'];
+                        const currentIndex = plotStates.indexOf(currentState);
+                        const nextIndex = (currentIndex + 1) % plotStates.length;
+                        const newState = plotStates[nextIndex];
+                        
+                        sendCommand(cmd + ',' + newState);
+                    } else {
+                        // Query current state
+                        let currentState = 'off';
+                        if (cmd === 'fullscreen') {
+                            currentState = getFullscreen() ? 'on' : 'off';
+                        } else if (window.Module && window.Module.ccall) {
+                            try {
+                                currentState = window.Module.ccall('query', 'string', ['string'], [cmd]);
+                            } catch (e) {
+                                console.error('Error querying state:', e);
+                            }
+                        }
+                        
+                        // Toggle state
+                        const newState = (currentState === 'on') ? 'off' : 'on';
+                        sendCommand(cmd + ',' + newState);
+                    }
+                    
+                    // Update checkbox immediately
+                    setTimeout(updateViewDropdownStates, 100);
+                });
+                
+                viewDropdown.appendChild(item);
+            });
+            updateViewDropdownStates();
+        }
+        
+        function updateViewDropdownStates() {
+            const items = viewDropdown.querySelectorAll('.dropdown-item');
+            items.forEach((item, index) => {
+                const cmd = cmds_state[index];
+                const checkbox = item.querySelector('.checkbox');
+                
+                let state = 'off';
+                if (cmd === 'fullscreen') {
+                    state = getFullscreen() ? 'on' : 'off';
+                } else if (window.Module && window.Module.ccall) {
+                    try {
+                        state = window.Module.ccall('query', 'string', ['string'], [cmd]);
+                    } catch (e) {
+                        // Module might not be ready yet
+                    }
+                }
+                
+                if (cmd === 'plot') {
+                    // Show current state as text for plot
+                    checkbox.textContent = state;
+                } else {
+                    // Show checkbox for other commands
+                    checkbox.textContent = (state === 'on') ? '☑' : '☐';
+                }
+            });
+        }
+        
+        // Toggle dropdown visibility
+        viewBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isVisible = viewDropdown.style.display === 'block';
+            viewDropdown.style.display = isVisible ? 'none' : 'block';
+            if (!isVisible) {
+                updateViewDropdown();
+            }
+        });
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!viewBtn.contains(e.target) && !viewDropdown.contains(e.target)) {
+                viewDropdown.style.display = 'none';
+            }
+        });
+        
+        // Initialize on module load
+        const originalCheckModule = checkModule;
+    }
 
     // Initial check
     checkGithubToken();

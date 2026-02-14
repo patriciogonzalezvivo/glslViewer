@@ -31,8 +31,13 @@
     </div>
     <div id="menu">
         <button id="login-btn" class="menu-btn">Login</button>
+        <button id="new-btn" class="menu-btn">New</button>
         <button id="save-btn" class="menu-btn" style="display:none;">Save</button>
         <button id="open-btn" class="menu-btn">Open</button>
+        <div class="dropdown">
+            <button id="view-btn" class="menu-btn">View</button>
+            <div id="view-dropdown" class="dropdown-content"></div>
+        </div>
     </div>
     <div id="wrapper" class="windowed">
       <canvas class='emscripten' id='canvas' oncontextmenu='event.preventDefault()' tabindex='0'></canvas>
