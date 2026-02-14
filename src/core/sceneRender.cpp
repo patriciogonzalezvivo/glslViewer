@@ -234,16 +234,19 @@ void SceneRender::commandsInit(CommandList& _commands, Uniforms& _uniforms) {
             std::vector<std::string> values = vera::split(_line,',');
 
             if (_line == "floor") {
-                std::string rta = m_floor_subd > 0 ? vera::toString(m_floor_subd) : "off";
+                // std::string rta = m_floor_subd > 0 ? vera::toString(m_floor_subd) : "off";
+
+                std::string rta = m_floor_subd > 0 ? "on" : "off";
                 std::cout << rta << std::endl; 
                 return true;
             }
             else {
                 if (values.size() == 2) {
-                    if (values[1] == "toggle")
+                    if (values[1] == "res")
+                        std::cout << m_floor_subd_target << std::endl;
+                    else if (values[1] == "toggle")
                         values[1] = m_floor_subd_target >= 0 ? "off" : "on";
-
-                    if (values[1] == "off")
+                    else if (values[1] == "off")
                         m_floor_subd_target = -1;
                     else if (values[1] == "on") {
                         if (m_floor_subd_target == -1)
@@ -251,12 +254,13 @@ void SceneRender::commandsInit(CommandList& _commands, Uniforms& _uniforms) {
                     }
                     else
                         m_floor_subd_target = vera::toInt(values[1]);
+
                     return true;
                 }
             }
             return false;
         },
-        "floor[,on|off|<subD_level>]", "show/hide floor or presice the subdivision level"));
+        "floor[,on|off|toggle|res|<subD_level>]", "show/hide floor or presice the subdivision level"));
 
         _commands.push_back(Command("grid", [&](const std::string& _line){
             if (_line == "grid") {
@@ -279,7 +283,7 @@ void SceneRender::commandsInit(CommandList& _commands, Uniforms& _uniforms) {
         "grid[,on|off]", "show/hide grid"));
 
         _commands.push_back(Command("axis", [&](const std::string& _line){
-            if (_line == "grid") {
+            if (_line == "axis") {
                 std::string rta = showAxis ? "on" : "off";
                 std::cout << rta << std::endl; 
                 return true;

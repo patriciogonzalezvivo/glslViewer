@@ -31,7 +31,8 @@ void main() {
 }
 `;
 
-const cmds_state = ['grid', 'bboxes', 'plot', 'sky', 'cubemap', 'textures', 'buffers', 'fullscreen'];
+const cmds_state = ['plot', 'textures', 'buffers', 'floor', 'sky', 'cubemap', 'axis', 'grid', 'bboxes', 'fullscreen'];
+const cmds_plot_modes = ['off', 'fps', 'ms', 'rgb', 'luma', 'green', 'red', 'blue'];
 const cmds_camera = ['camera_position', 'camera_look_at'];
 const cmds_listen = ['plane', 'pcl_plane', 'sphere', 'pcl_sphere', 'icosphere', 'cylinder'];
 let cmds_history = [];
@@ -886,7 +887,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                         
                         // Cycle to next state
-                        const plotStates = ['off', 'fps', 'rgb', 'gray'];
+                        const plotStates = ['off', 'fps', 'rgb'];
                         const currentIndex = plotStates.indexOf(currentState);
                         const nextIndex = (currentIndex + 1) % plotStates.length;
                         const newState = plotStates[nextIndex];

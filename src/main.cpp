@@ -1854,7 +1854,13 @@ void commandsInit() {
         // Commands are parse in the main GL loop in EMSCRIPTEN,
         // there is no risk to reload shaders outside main GL thread
         sandbox.resetShaders(files);
+        sandbox.getSceneRender().commandsInit(commands, sandbox.uniforms);
+        sandbox.getSceneRender().uniformsInit(sandbox.uniforms);
+        sandbox.getSceneRender().loadScene(sandbox.uniforms);
         #else
+        // Initialize SceneRender commands before triggering reload
+        sandbox.getSceneRender().commandsInit(commands, sandbox.uniforms);
+        sandbox.getSceneRender().uniformsInit(sandbox.uniforms);
         // Reloading shaders can't be done directly on multi-thread (event thread)
         // to solve that, we trigger reloading by flagging changes on all files
         // witch signal the main GL thread to reload assets
@@ -1886,7 +1892,13 @@ void commandsInit() {
         // Commands are parse in the main GL loop in EMSCRIPTEN,
         // there is no risk to reload shaders outside main GL thread
         sandbox.resetShaders(files);
+        sandbox.getSceneRender().commandsInit(commands, sandbox.uniforms);
+        sandbox.getSceneRender().uniformsInit(sandbox.uniforms);
+        sandbox.getSceneRender().loadScene(sandbox.uniforms);
         #else
+        // Initialize SceneRender commands before triggering reload
+        sandbox.getSceneRender().commandsInit(commands, sandbox.uniforms);
+        sandbox.getSceneRender().uniformsInit(sandbox.uniforms);
         // Reloading shaders can't be done directly on multi-thread (event thread)
         // to solve that, we trigger reloading by flagging changes on all files
         // witch signal the main GL thread to reload assets
@@ -1910,7 +1922,13 @@ void commandsInit() {
         // Commands are parse in the main GL loop in EMSCRIPTEN,
         // there is no risk to reload shaders outside main GL thread
         sandbox.resetShaders(files);
+        sandbox.getSceneRender().commandsInit(commands, sandbox.uniforms);
+        sandbox.getSceneRender().uniformsInit(sandbox.uniforms);
+        sandbox.getSceneRender().loadScene(sandbox.uniforms);
         #else
+        // Initialize SceneRender commands before triggering reload
+        sandbox.getSceneRender().commandsInit(commands, sandbox.uniforms);
+        sandbox.getSceneRender().uniformsInit(sandbox.uniforms);
         // Reloading shaders can't be done directly on multi-thread (event thread)
         // to solve that, we trigger reloading by flagging changes on all files
         // witch signal the main GL thread to reload assets
@@ -1936,7 +1954,13 @@ void commandsInit() {
         // Commands are parse in the main GL loop in EMSCRIPTEN,
         // there is no risk to reload shaders outside main GL thread
         sandbox.resetShaders(files);
+        sandbox.getSceneRender().commandsInit(commands, sandbox.uniforms);
+        sandbox.getSceneRender().uniformsInit(sandbox.uniforms);
+        sandbox.getSceneRender().loadScene(sandbox.uniforms);
         #else
+        // Initialize SceneRender commands before triggering reload
+        sandbox.getSceneRender().commandsInit(commands, sandbox.uniforms);
+        sandbox.getSceneRender().uniformsInit(sandbox.uniforms);
         // Reloading shaders can't be done directly on multi-thread (event thread)
         // to solve that, we trigger reloading by flagging changes on all files
         // witch signal the main GL thread to reload assets
@@ -1960,7 +1984,13 @@ void commandsInit() {
         // Commands are parse in the main GL loop in EMSCRIPTEN,
         // there is no risk to reload shaders outside main GL thread
         sandbox.resetShaders(files);
+        sandbox.getSceneRender().commandsInit(commands, sandbox.uniforms);
+        sandbox.getSceneRender().uniformsInit(sandbox.uniforms);
+        sandbox.getSceneRender().loadScene(sandbox.uniforms);
         #else
+        // Initialize SceneRender commands before triggering reload
+        sandbox.getSceneRender().commandsInit(commands, sandbox.uniforms);
+        sandbox.getSceneRender().uniformsInit(sandbox.uniforms);
         // Reloading shaders can't be done directly on multi-thread (event thread)
         // to solve that, we trigger reloading by flagging changes on all files
         // witch signal the main GL thread to reload assets
@@ -1994,7 +2024,13 @@ void commandsInit() {
         // Commands are parse in the main GL loop in EMSCRIPTEN,
         // there is no risk to reload shaders outside main GL thread
         sandbox.resetShaders(files);
+        sandbox.getSceneRender().commandsInit(commands, sandbox.uniforms);
+        sandbox.getSceneRender().uniformsInit(sandbox.uniforms);
+        sandbox.getSceneRender().loadScene(sandbox.uniforms);
         #else
+        // Initialize SceneRender commands before triggering reload
+        sandbox.getSceneRender().commandsInit(commands, sandbox.uniforms);
+        sandbox.getSceneRender().uniformsInit(sandbox.uniforms);
         // Reloading shaders can't be done directly on multi-thread (event thread)
         // to solve that, we trigger reloading by flagging changes on all files
         // witch signal the main GL thread to reload assets
