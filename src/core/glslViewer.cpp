@@ -358,6 +358,10 @@ void GlslViewer::commandsInit(CommandList &_commands ) {
                     if(it != std::end(plot_metadata)) {
                         m_plot = std::get<1>(*it);
                         m_plot_shader.addDefine("PLOT_VALUE", std::get<2>(*it));
+                        
+                        // Flag change to ensure histogram is generated on next frame
+                        if (m_plot == PLOT_LUMA || m_plot == PLOT_RGB || m_plot == PLOT_RED || m_plot == PLOT_GREEN || m_plot == PLOT_BLUE)
+                            vera::flagChange();
                     }
                 }
                 m_update_buffers = true;
@@ -2894,10 +2898,10 @@ void GlslViewer::onPlot() {
         glBindFramebuffer(GL_FRAMEBUFFER, m_sceneRender.renderFbo.getId());
         int w = vera::getWindowWidth();
         int h = vera::getWindowHeight();
-        int c = 3;
+        int c = 4;  // RGBA format (required for WebGL compatibility)
         int total = w * h * c;
         unsigned char* pixels = new unsigned char[total];
-        glReadPixels(0, 0, w, h, GL_RGB, GL_UNSIGNED_BYTE, pixels);
+        glReadPixels(0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
         // Count frequencies of appearances 
@@ -2932,7 +2936,7 @@ void GlslViewer::onPlot() {
             m_plot_texture = new vera::Texture();
         m_plot_texture->load(256, 1, 4, 32, &m_plot_values[0], vera::NEAREST, vera::CLAMP);
 
-        uniforms.textures["u_histogram"] = m_plot_texture;
+        uniforms.textures["u_plotData"] = m_plot_texture;
         uniforms.flagChange();
         TRACK_END("plot::histogram")
     }

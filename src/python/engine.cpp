@@ -224,6 +224,8 @@ void Engine::showHistogram(bool _value) {
         m_plot = PLOT_RGB;
         m_plot_shader.setSource(vera::getDefaultSrc(vera::FRAG_PLOT), vera::getDefaultSrc(vera::VERT_DYNAMIC_BILLBOARD));
         m_plot_shader.addDefine("PLOT_VALUE", "color += stroke(fract(st.x * 5.0), 0.5, 0.025) * 0.1;");
+        // Flag change to ensure histogram is generated on next frame
+        vera::flagChange();
     }
     else {
         m_plot = PLOT_OFF; 
