@@ -2158,6 +2158,10 @@ void GlslViewer::renderUI() {
 
     vera::resetCamera();
 
+    if (m_showTextures || m_showPasses) {
+         vera::textSize(18.0f);
+    }
+
     // // IN PUT TEXTURES
     if (m_showTextures) {      
 
@@ -2169,6 +2173,8 @@ void GlslViewer::renderUI() {
             TRACK_BEGIN("renderUI:textures")
             float w = (float)(vera::getWindowWidth());
             float h = (float)(vera::getWindowHeight());
+            float aspectRatio = w / h;
+            h *= aspectRatio > 1.0f ? 1.0f / aspectRatio : 1.0f;
             
             vera::textAngle(0.0);
             vera::textAlign(vera::ALIGN_TOP);
@@ -2201,7 +2207,6 @@ void GlslViewer::renderUI() {
 
                 // Draw label at top-left corner
                 // Texture center is at yOffset, so top edge is at yOffset + drawHeight/2
-                vera::textSize(14.0f);
                 vera::fill(1.0f, 1.0f, 1.0f, 1.0f); // White text
                 float labelY = vera::getWindowHeight() - (yOffset + drawHeight); // Position label at top-left corner of texture    
                 vera::textHighlight(it->first, 0.0f, labelY, glm::vec4(0.0f, 0.0f, 0.0f, 0.5f));
@@ -2235,6 +2240,8 @@ void GlslViewer::renderUI() {
         if (nTotal > 0) {
             float w = (float)(vera::getWindowWidth());
             float h = (float)(vera::getWindowHeight());
+            float aspectRatio = w / h;
+            h *= aspectRatio > 1.0f ? 1.0f / aspectRatio : 1.0f;
             float scale = fmin(1.0f / (float)(nTotal), 0.25) * 0.5;
             float xStep = w * scale;
             float yStep = h * scale;
@@ -2242,7 +2249,7 @@ void GlslViewer::renderUI() {
             float yOffset = h - yStep;
 
             vera::textAngle(0.0);
-            vera::textSize(xStep * 0.2f / vera::pixelDensity());
+            // vera::textSize(xStep * 0.2f / vera::pixelDensity());
             vera::textAlign(vera::ALIGN_TOP);
             vera::textAlign(vera::ALIGN_LEFT);
 
