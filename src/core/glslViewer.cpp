@@ -2159,7 +2159,8 @@ void GlslViewer::renderUI() {
     vera::resetCamera();
 
     if (m_showTextures || m_showPasses) {
-         vera::textSize(18.0f);
+        vera::textSize(18.0f);
+        vera::textAngle(0.0);
     }
 
     // // IN PUT TEXTURES
@@ -2173,16 +2174,11 @@ void GlslViewer::renderUI() {
             TRACK_BEGIN("renderUI:textures")
             float w = (float)(vera::getWindowWidth());
             float h = (float)(vera::getWindowHeight());
-            float aspectRatio = w / h;
-            h *= aspectRatio > 1.0f ? 1.0f / aspectRatio : 1.0f;
             
-            vera::textAngle(0.0);
             vera::textAlign(vera::ALIGN_TOP);
             vera::textAlign(vera::ALIGN_LEFT);
 
             float yOffset = h;
-            // bool isFirst = true;
-            
             for (vera::TexturesMap::iterator it = uniforms.textures.begin(); it != uniforms.textures.end(); it++) {
                 // if texture names starts width '_' skip it (internal texture)
                 if (it->first[0] == '_')
@@ -2240,16 +2236,12 @@ void GlslViewer::renderUI() {
         if (nTotal > 0) {
             float w = (float)(vera::getWindowWidth());
             float h = (float)(vera::getWindowHeight());
-            float aspectRatio = w / h;
-            h *= aspectRatio > 1.0f ? 1.0f / aspectRatio : 1.0f;
             float scale = fmin(1.0f / (float)(nTotal), 0.25) * 0.5;
             float xStep = w * scale;
             float yStep = h * scale;
             float xOffset = w - xStep;
             float yOffset = h - yStep;
 
-            vera::textAngle(0.0);
-            // vera::textSize(xStep * 0.2f / vera::pixelDensity());
             vera::textAlign(vera::ALIGN_TOP);
             vera::textAlign(vera::ALIGN_LEFT);
 
