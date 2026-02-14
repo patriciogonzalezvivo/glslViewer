@@ -2162,39 +2162,54 @@ void GlslViewer::renderUI() {
     if (m_showTextures) {      
 
         int nTotal = uniforms.textures.size();
+        
         if (nTotal > 0) {
             vera::setDepthTest(false);
+
             TRACK_BEGIN("renderUI:textures")
             float w = (float)(vera::getWindowWidth());
             float h = (float)(vera::getWindowHeight());
-            float a = h/w;
-            float scale = fmin(1.0f / (float)(nTotal), 0.25) * 0.5;
-            float xStep = w * scale * a;
-            float yStep = h * scale;
-            float xOffset = xStep;
-            float yOffset = h - yStep;
             
             vera::textAngle(0.0);
             vera::textAlign(vera::ALIGN_TOP);
             vera::textAlign(vera::ALIGN_LEFT);
-            vera::textSize(xStep * 0.2f / vera::pixelDensity());
 
+            // Calculate initial yOffset based on first texture (mimicking original pattern)
+            float yOffset = h;
+            bool first = true;
+            
             for (vera::TexturesMap::iterator it = uniforms.textures.begin(); it != uniforms.textures.end(); it++) {
                 // if texture names starts width '_' skip it (internal texture)
                 if (it->first[0] == '_')
                     continue;
-                     
-                float imgAspect = ((float)it->second->getWidth()/(float)it->second->getHeight());
-                float imgW = xStep * imgAspect;
+                
+                // Get texture dimensions
+                float texWidth = (float)it->second->getWidth();
+                float texHeight = (float)it->second->getHeight();
+                float imgAspect = texWidth / texHeight;
+                
+                // Calculate drawing height: limited to 128px and actual texture height
+                float drawHeight = fmin(64.0f, texHeight);
+                float drawWidth = drawHeight * imgAspect;
+                
+                // Position (following original pattern: start at h - yStep)
+                if (first) {
+                    yOffset = h - drawHeight;
+                    first = false;
+                }
+                
+                vera::textSize(drawHeight * 0.1f / vera::pixelDensity());
+                
                 vera::TextureStreamsMap::const_iterator slit = uniforms.streams.find(it->first);
                 if ( slit != uniforms.streams.end() )
-                    vera::image((vera::TextureStream*)slit->second, xStep * 0.5 + imgW * 0.5, yOffset, imgW, yStep, true);
+                    vera::image((vera::TextureStream*)slit->second, drawWidth * 0.5, yOffset, drawWidth, drawHeight, true);
                 else 
-                    vera::image(it->second, xStep * 0.5 + imgW * 0.5, yOffset, imgW, yStep);
+                    vera::image(it->second, drawWidth * 0.5, yOffset, drawWidth, drawHeight);
 
-                vera::text(it->first, 0, vera::getWindowHeight() - yOffset - yStep);
-
-                yOffset -= yStep * 2.0;
+                vera::text(it->first, 0, vera::getWindowHeight() - yOffset - drawHeight);
+                
+                // Move down for next texture (mimicking original yOffset -= yStep * 2.0)
+                yOffset -= drawHeight * 2.0;
             }
             TRACK_END("renderUI:textures")
         }
