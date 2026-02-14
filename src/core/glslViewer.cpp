@@ -2174,9 +2174,8 @@ void GlslViewer::renderUI() {
             vera::textAlign(vera::ALIGN_TOP);
             vera::textAlign(vera::ALIGN_LEFT);
 
-            // Calculate initial yOffset based on first texture (mimicking original pattern)
             float yOffset = h;
-            bool first = true;
+            // bool isFirst = true;
             
             for (vera::TexturesMap::iterator it = uniforms.textures.begin(); it != uniforms.textures.end(); it++) {
                 // if texture names starts width '_' skip it (internal texture)
@@ -2188,28 +2187,27 @@ void GlslViewer::renderUI() {
                 float texHeight = (float)it->second->getHeight();
                 float imgAspect = texWidth / texHeight;
                 
-                // Calculate drawing height: limited to 128px and actual texture height
+                // Calculate drawing height: limited to 64px and actual texture height
                 float drawHeight = fmin(64.0f, texHeight);
                 float drawWidth = drawHeight * imgAspect;
+                yOffset -= drawHeight; // Center of first texture at top of screen
                 
-                // Position (following original pattern: start at h - yStep)
-                if (first) {
-                    yOffset = h - drawHeight;
-                    first = false;
-                }
-                
-                vera::textSize(drawHeight * 0.1f / vera::pixelDensity());
-                
+                // Draw texture
                 vera::TextureStreamsMap::const_iterator slit = uniforms.streams.find(it->first);
                 if ( slit != uniforms.streams.end() )
                     vera::image((vera::TextureStream*)slit->second, drawWidth * 0.5, yOffset, drawWidth, drawHeight, true);
                 else 
                     vera::image(it->second, drawWidth * 0.5, yOffset, drawWidth, drawHeight);
 
-                vera::text(it->first, 0, vera::getWindowHeight() - yOffset - drawHeight);
+                // Draw label at top-left corner
+                // Texture center is at yOffset, so top edge is at yOffset + drawHeight/2
+                vera::textSize(14.0f);
+                vera::fill(1.0f, 1.0f, 1.0f, 1.0f); // White text
+                float labelY = vera::getWindowHeight() - (yOffset + drawHeight); // Position label at top-left corner of texture    
+                vera::textHighlight(it->first, 0.0f, labelY, glm::vec4(0.0f, 0.0f, 0.0f, 0.5f));
                 
-                // Move down for next texture (mimicking original yOffset -= yStep * 2.0)
-                yOffset -= drawHeight * 2.0;
+                // Move down for next texture: go past bottom + spacing
+                yOffset -= drawHeight;
             }
             TRACK_END("renderUI:textures")
         }
@@ -2255,7 +2253,7 @@ void GlslViewer::renderUI() {
                 offset.x += xStep - scale.x;
 
                 vera::image(uniforms.buffers[i], offset.x, offset.y, scale.x, scale.y);
-                vera::text("u_buffer" + vera::toString(i), xOffset - scale.x, vera::getWindowHeight() - yOffset - yStep);
+                vera::textHighlight("u_buffer" + vera::toString(i), xOffset - scale.x, vera::getWindowHeight() - yOffset - yStep, glm::vec4(0.0f, 0.0f, 0.0f, 0.5f));
 
                 yOffset -= yStep * 2.0;
             }
@@ -2267,7 +2265,7 @@ void GlslViewer::renderUI() {
                 offset.x += xStep - scale.x;
 
                 vera::image(uniforms.doubleBuffers[i]->src, offset.x, offset.y, scale.x, scale.y);
-                vera::text("u_doubleBuffer" + vera::toString(i), xOffset - scale.x, vera::getWindowHeight() - yOffset - yStep);
+                vera::textHighlight("u_doubleBuffer" + vera::toString(i), xOffset - scale.x, vera::getWindowHeight() - yOffset - yStep, glm::vec4(0.0f, 0.0f, 0.0f, 0.5f));
 
                 yOffset -= yStep * 2.0;
             }
@@ -2298,7 +2296,7 @@ void GlslViewer::renderUI() {
 
                 }
 
-                vera::text("u_pyramid0" + vera::toString(i), xOffset - scale.x * 2.0, vera::getWindowHeight() - yOffset - yStep);
+                vera::textHighlight("u_pyramid0" + vera::toString(i), xOffset - scale.x * 2.0, vera::getWindowHeight() - yOffset - yStep, glm::vec4(0.0f, 0.0f, 0.0f, 0.5f));
                 yOffset -= yStep * 2.0;
 
             }
@@ -2310,7 +2308,7 @@ void GlslViewer::renderUI() {
                 offset.x += xStep - scale.x;
 
                 vera::image(uniforms.floods[i].dst, offset.x, offset.y, scale.x, scale.y);
-                vera::text("u_flood" + vera::toString(i), xOffset - scale.x, vera::getWindowHeight() - yOffset - yStep);
+                vera::textHighlight("u_flood" + vera::toString(i), xOffset - scale.x, vera::getWindowHeight() - yOffset - yStep, glm::vec4(0.0f, 0.0f, 0.0f, 0.5f)  );
 
                 yOffset -= yStep * 2.0;
             }
@@ -2320,7 +2318,7 @@ void GlslViewer::renderUI() {
                 for (vera::LightsMap::iterator it = uniforms.lights.begin(); it != uniforms.lights.end(); ++it ) {
                     if ( it->second->getShadowMap()->isAllocated() && it->second->getShadowMap()->getDepthTextureId() ) {
                         vera::imageDepth(it->second->getShadowMap(), xOffset, yOffset, xStep, yStep, it->second->getShadowMapFar(), it->second->getShadowMapNear());
-                        vera::text("u_lightShadowMap", xOffset - xStep, vera::getWindowHeight() - yOffset - yStep);
+                        vera::textHighlight("u_lightShadowMap", xOffset - xStep, vera::getWindowHeight() - yOffset - yStep, glm::vec4(0.0f, 0.0f, 0.0f, 0.5f));
                         yOffset -= yStep * 2.0;
                     }
                 }
@@ -2329,25 +2327,25 @@ void GlslViewer::renderUI() {
 
             if (uniforms.functions["u_scenePosition"].present) {
                 vera::image(&m_sceneRender.positionFbo, xOffset, yOffset, xStep, yStep);
-                vera::text("u_scenePosition", xOffset - xStep, vera::getWindowHeight() - yOffset - yStep);
+                vera::textHighlight("u_scenePosition", xOffset - xStep, vera::getWindowHeight() - yOffset - yStep, glm::vec4(0.0f, 0.0f, 0.0f, 0.5f));
                 yOffset -= yStep * 2.0;
             }
 
             if (uniforms.functions["u_sceneNormal"].present) {
                 vera::image(&m_sceneRender.normalFbo, xOffset, yOffset, xStep, yStep);
-                vera::text("u_sceneNormal", xOffset - xStep, vera::getWindowHeight() - yOffset - yStep);
+                vera::textHighlight("u_sceneNormal", xOffset - xStep, vera::getWindowHeight() - yOffset - yStep, glm::vec4(0.0f, 0.0f, 0.0f, 0.5f));
                 yOffset -= yStep * 2.0;
             }
 
             for (size_t i = 0; i < m_sceneRender.buffersFbo.size(); i++) {
                 vera::image(m_sceneRender.buffersFbo[i], xOffset, yOffset, xStep, yStep);
-                vera::text("u_sceneBuffer" + vera::toString(i), xOffset - xStep, vera::getWindowHeight() - yOffset - yStep);
+                vera::textHighlight("u_sceneBuffer" + vera::toString(i), xOffset - xStep, vera::getWindowHeight() - yOffset - yStep, glm::vec4(0.0f, 0.0f, 0.0f, 0.5f));
                 yOffset -= yStep * 2.0;
             }
 
             if (uniforms.functions["u_scene"].present) {
                 vera::image(&m_sceneRender.renderFbo, xOffset, yOffset, xStep, yStep);
-                vera::text("u_scene", xOffset - xStep, vera::getWindowHeight() - yOffset - yStep);
+                vera::textHighlight("u_scene", xOffset - xStep, vera::getWindowHeight() - yOffset - yStep, glm::vec4(0.0f, 0.0f, 0.0f, 0.5f));
                 yOffset -= yStep * 2.0;
             }
 
@@ -2355,7 +2353,7 @@ void GlslViewer::renderUI() {
                 vera::fill(0.0);
                 if (uniforms.activeCamera)
                     vera::imageDepth(&m_sceneRender.renderFbo, xOffset, yOffset, xStep, yStep, uniforms.activeCamera->getFarClip(), uniforms.activeCamera->getNearClip());
-                vera::text("u_sceneDepth", xOffset - xStep, vera::getWindowHeight() - yOffset - yStep);
+                vera::textHighlight("u_sceneDepth", xOffset - xStep, vera::getWindowHeight() - yOffset - yStep, glm::vec4(0.0f, 0.0f, 0.0f, 0.5f));
                 yOffset -= yStep * 2.0;
                 vera::fill(1.0);
             }
