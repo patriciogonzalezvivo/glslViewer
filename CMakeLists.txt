@@ -71,6 +71,7 @@ if (EMSCRIPTEN)
     file(COPY   assets/wasm/style.css DESTINATION ${CMAKE_CURRENT_BINARY_DIR} )
     file(COPY   assets/wasm/menu.css DESTINATION ${CMAKE_CURRENT_BINARY_DIR} )
     file(COPY   assets/wasm/thumbnail.png DESTINATION ${CMAKE_CURRENT_BINARY_DIR} )
+    file(COPY   assets/wasm/favicon.ico DESTINATION ${CMAKE_CURRENT_BINARY_DIR} )
     
     # Add examples folder to the .data file system
     # file(COPY   examples DESTINATION ${CMAKE_CURRENT_BINARY_DIR} )

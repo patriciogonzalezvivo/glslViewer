@@ -61,18 +61,25 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     let externalAssets = {};
     const loader = document.getElementById('loader');
+    const loaderContent = loader ? loader.querySelector('.loader-content') : null;
     let loaderCount = 0;
-    const showLoader = () => {
+    const showLoader = (text) => {
         loaderCount++;
+        if (text && loaderContent) loaderContent.innerText = text;
         if (loader && loaderCount > 0) loader.classList.add('visible');
+    };
+    const updateLoader = (text) => {
+        if (text && loaderContent) loaderContent.innerText = text;
     };
     const hideLoader = () => {
         loaderCount--;
         if (loader && loaderCount <= 0) {
             loader.classList.remove('visible');
             loaderCount = 0;
+            if (loaderContent) loaderContent.innerText = "Loading...";
         }
     };
+    window.glslViewerLoader = { show: showLoader, hide: hideLoader, update: updateLoader };
     
     // DeBounce timeout
     let updateTimeout = null;
@@ -381,6 +388,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (window.Module && window.module_loaded) {
             clearInterval(checkModule);
             console.log("Module loaded, sending initial shader.");
+            
+            // Ensure loader is hidden now that module is ready
+            hideLoader();
 
             const gistId = getQueryVariable('gist');
             if (gistId) {
@@ -578,16 +588,25 @@ document.addEventListener('DOMContentLoaded', () => {
     const downloadAsset = (url) => {
         return fetch(url)
             .then(res => {
-                if (!res.ok) throw new Error(res.statusText);
+                if (!res.ok) throw new Error(res.statusText + ' (' + res.status + ') ' + url);
                 return res.arrayBuffer();
             })
-            .then(buffer => new Uint8Array(buffer));
+            .then(buffer => new Uint8Array(buffer).slice(0)); 
+            // .slice(0) forces a copy to avoid detached buffer issues
     };
 
     const loadToWasm = (name, data) => {
-        showLoader();
-        return new Promise((resolve) => {
+        updateLoader("Loading " + name);
+        return new Promise((resolve, reject) => {
+            let attempts = 0;
             const tryWrite = () => {
+                attempts++;
+                if (attempts > 20) { // 10 seconds timeout
+                    console.error("Timeout waiting for WASM filesystem");
+                    resolve(); 
+                    return;
+                }
+
                 if (window.Module && window.Module.FS && window.module_loaded) {
                     try {
                         window.Module.FS.writeFile(name, data);
@@ -595,20 +614,15 @@ document.addEventListener('DOMContentLoaded', () => {
                         
                         const ext = name.split('.').pop().toLowerCase();
                         window.Module.ccall('loadAsset', null, ['string', 'string'], [name, ext]);
-                        // if (['ply', 'obj', 'gltf', 'glb', 'splat'].includes(ext)) {
-                            // sendCommand('sky,on');
-                            // sendCommand('cubemap,on');
-                        // }
+
                         if (['hdr'].includes(ext)) {
                             sendCommand('cubemap,on');
                         }
 
-
-                        hideLoader();
                         resolve();
                     } catch (e) {
                         console.error("FS error", e);
-                        setTimeout(tryWrite, 500);
+                        resolve(); 
                     }
                 } else {
                     setTimeout(tryWrite, 500);
@@ -624,11 +638,14 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         currentGistId = id;
-        showLoader();
+        showLoader("Loading Gist...");
         
         console.log('Loading Gist:', id);
         fetch('https://api.github.com/gists/' + id)
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) throw new Error(response.statusText);
+            return response.json();
+        })
         .then(data => {
             // Look for shader.json
             let shaderFile = null;
@@ -668,15 +685,13 @@ document.addEventListener('DOMContentLoaded', () => {
                                     p = Promise.resolve();
                                 }
                             } else {
-                                showLoader();
                                 p = downloadAsset(url)
                                 .then(data => {
-                                    hideLoader();
                                     return loadToWasm(name, data);
                                 })
                                 .catch(err => {
-                                    hideLoader();
                                     logToConsole('Error loading asset ' + name + ': ' + err.message, true);
+                                    return Promise.resolve(); // Continue despite error
                                 });
                             }
                             assetPromises.push(p);
@@ -688,7 +703,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     editor.setValue(content[activeTab]);
                     updateShader();
 
-                    Promise.all(assetPromises).then(() => {
+                    return Promise.all(assetPromises).then(() => {
                         updateShader();
                         if (json.commands && Array.isArray(json.commands)) {
                             json.commands.forEach((cmd) => {
@@ -704,15 +719,19 @@ document.addEventListener('DOMContentLoaded', () => {
                     currentGistId = null; 
                     console.error('Error parsing Gist content:', e);
                     logToConsole('Error parsing Gist JSON', true);
+                    return Promise.reject(e);
                 }
             };
 
             if (shaderFile) {
                 if (shaderFile.truncated) {
+                    updateLoader("Fetching raw Gist content...");
                     fetch(shaderFile.raw_url)
                     .then(r => r.text())
                     .then(text => {
-                        processShader(text);
+                        return processShader(text);
+                    })
+                    .then(() => {
                         hideLoader();
                     })
                     .catch(e => {
@@ -720,8 +739,13 @@ document.addEventListener('DOMContentLoaded', () => {
                         hideLoader();
                     });
                 } else {
-                    processShader(shaderFile.content);
-                    hideLoader();
+                    processShader(shaderFile.content)
+                    .then(() => {
+                        hideLoader();
+                    })
+                    .catch(e => {
+                        hideLoader();
+                    });
                 } 
             } else {
                 logToConsole('No valid shader JSON found in Gist', true);
