@@ -31,7 +31,7 @@ void main() {
 }
 `;
 
-const cmds_state = ['plot', 'textures', 'buffers', 'floor', 'sky', 'cubemap', 'axis', 'grid', 'bboxes', 'fullscreen'];
+const cmds_state = ['plot', 'textures', 'buffers', 'cubemap', 'axis', 'grid', 'bboxes', 'fullscreen'];
 const cmds_plot_modes = ['off', 'fps', 'rgb', 'luma'];
 const cmds_camera = ['camera_position', 'camera_look_at'];
 const cmds_listen = ['plane', 'pcl_plane', 'sphere', 'pcl_sphere', 'icosphere', 'cylinder'];
