@@ -190,6 +190,22 @@ void loadFile(std::string path) {
 
         commandsRun("update");
     }
+    // load CSVs
+    else if (   vera::haveExt(path,"csv") || vera::haveExt(path, "CSV")) {
+        std::string filename = vera::getFilename(path);
+        filename = filename.substr(0, filename.find_last_of("."));
+
+        // if filename starts with "u_" we will consider it a uniform sequence
+        if (filename.find("u_") == 0) {
+            if ( sandbox.uniforms.addSequence(filename, path) )
+                std::cout << "Sequence " << filename << " added from " << path << std::endl;
+        }
+        // else, if filename starts with "camera..." we will consider it a camera sequence
+        else if (filename.find("camera") == 0) {
+            if ( sandbox.uniforms.addCameras(path) )
+                std::cout << "Camera sequence added from " << path << std::endl;
+        }
+    }
 }
 
 #if !defined(__EMSCRIPTEN__)
