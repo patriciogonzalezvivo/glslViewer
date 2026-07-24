@@ -641,6 +641,7 @@ bool Uniforms::addCameras( const std::string& _filename ) {
 
         std::string line;
         size_t counter = 0;
+        std::vector<vera::Camera*> loadedCameras;
         while (std::getline(is, line)) {
             // If line not commented 
             if (line[0] == '#')
@@ -677,9 +678,14 @@ bool Uniforms::addCameras( const std::string& _filename ) {
                 continue;
             }
             
+            // Note: Fx and Fy must both be positive here to match the camera
+            // orientation `flip` below (X untouched, Y/Z negated -- a proper
+            // OpenGL-style camera). They used to be negative, compensating
+            // for an X,Z-vs-Y,Z flip bug in `flip`; changing the flip without
+            // also updating these renders mirrored (Fx) or upside down (Fy).
             glm::mat4 projection = glm::mat4(
-                -2.0f*Fx,           0.0f,           0.0f,       0.0f,
-                0.0f,              -2.0f*Fy,        0.0f,       0.0f,
+                2.0f*Fx,            0.0f,           0.0f,       0.0f,
+                0.0f,               2.0f*Fy,        0.0f,       0.0f,
                 2.0f*Ox-1.0f,       2.0f*Oy-1.0f,  -1.0f,      -1.0f,
                 0.0f,               0.0f,          -0.1f,       0.0f
             );
@@ -712,9 +718,12 @@ bool Uniforms::addCameras( const std::string& _filename ) {
             // Convert from OpenCV/COLMAP coordinate system to OpenGL
             // OpenCV: X right, Y down, Z forward (camera looks down +Z)
             // OpenGL: X right, Y up, Z backward (camera looks down -Z)
+            // X stays as-is (right is right in both); Y and Z flip. Same
+            // convention as the 180-degree-about-X flip gsplat.cpp applies to
+            // splat positions/rotations, so the two stay in the same frame.
             glm::mat4 flip = glm::mat4(
-               -1.0f,  0.0f,  0.0f, 0.0f,
-                0.0f,  1.0f,  0.0f, 0.0f,
+                1.0f,  0.0f,  0.0f, 0.0f,
+                0.0f, -1.0f,  0.0f, 0.0f,
                 0.0f,  0.0f, -1.0f, 0.0f,
                 0.0f,  0.0f,  0.0f, 1.0f
             );
@@ -734,6 +743,7 @@ bool Uniforms::addCameras( const std::string& _filename ) {
             vera::addCamera( vera::toString(counter), camera );
             // Adding to Uniforms cameras map
             cameras[ vera::toString(counter) ] = camera;
+            loadedCameras.push_back(camera);
             
             std::string path = folder_path + image_filename;
             if (image_filename != "" && vera::urlExists(path)) {
@@ -749,8 +759,26 @@ bool Uniforms::addCameras( const std::string& _filename ) {
         // here on should stay in that frame too, instead of the 180-about-X
         // flip Gsplat otherwise applies for standalone viewing (see
         // vera::Gsplat::setUseColmapFrame).
-        if (counter > 0)
+        if (counter > 0) {
             vera::Gsplat::setUseColmapFrame(true);
+
+            // A COLMAP reconstruction's world frame has an arbitrary gauge --
+            // nothing guarantees its "up" is anywhere near world +Y. Estimate
+            // the scene's actual up as the average of the loaded cameras' own
+            // up vectors, and apply it to every camera (including "default")
+            // so mouse-orbit interaction stays consistent with it instead of
+            // rolling the view the instant it's touched (orbit()/lookAt()
+            // otherwise assume world +Y is up).
+            glm::vec3 avgUp(0.0f);
+            for (size_t i = 0; i < loadedCameras.size(); i++)
+                avgUp += loadedCameras[i]->getYAxis();
+
+            if (glm::length(avgUp) > 0.0001f) {
+                avgUp = glm::normalize(avgUp);
+                for (vera::CamerasMap::iterator it = cameras.begin(); it != cameras.end(); ++it)
+                    it->second->setWorldUp(avgUp);
+            }
+        }
 
         return true;
     }

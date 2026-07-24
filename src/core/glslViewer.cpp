@@ -863,15 +863,15 @@ void GlslViewer::commandsInit(CommandList &_commands ) {
         if (values.size() == 4) {
             glm::vec3 target = uniforms.activeCamera->getTarget();
             if (uniforms.activeCamera != uniforms.cameras["default"]) {
+                uniforms.cameras["default"]->setWorldUp(uniforms.activeCamera->getWorldUp());
                 uniforms.cameras["default"]->setTransformMatrix(uniforms.activeCamera->getTransformMatrix());
                 uniforms.cameras["default"]->setProjection(uniforms.activeCamera->getProjectionMatrix());
-                
+
                 uniforms.activeCamera = uniforms.cameras["default"];
             }
             uniforms.activeCamera->setPosition( -glm::vec3(vera::toFloat(values[1]), vera::toFloat(values[2]), vera::toFloat(values[3])));
-            glm::vec3 v = uniforms.activeCamera->getPosition() - target;
-            m_camera_azimuth = glm::degrees( atan2(v.x, v.z) );
-            m_camera_elevation = glm::degrees( atan2(-v.y, sqrt(v.x * v.x + v.z * v.z)) );
+            uniforms.activeCamera->setTarget(target);
+            uniforms.activeCamera->getOrbitAngles(m_camera_azimuth, m_camera_elevation);
 
             return true;
         }
@@ -910,16 +910,14 @@ void GlslViewer::commandsInit(CommandList &_commands ) {
 
         std::vector<std::string> values = vera::split(_line,',');
         if (values.size() == 4) {
-            glm::vec3 position = uniforms.activeCamera->getPosition();
             if (uniforms.activeCamera != uniforms.cameras["default"]) {
+                uniforms.cameras["default"]->setWorldUp(uniforms.activeCamera->getWorldUp());
                 uniforms.cameras["default"]->setTransformMatrix(uniforms.activeCamera->getTransformMatrix());
                 uniforms.cameras["default"]->setProjection(uniforms.activeCamera->getProjectionMatrix());
                 uniforms.activeCamera = uniforms.cameras["default"];
             }
             uniforms.activeCamera->setTarget( glm::vec3(vera::toFloat(values[1]), vera::toFloat(values[2]), vera::toFloat(values[3])) );
-            glm::vec3 v = uniforms.activeCamera->getPosition() - uniforms.activeCamera->getTarget();
-            m_camera_azimuth = glm::degrees( atan2(v.x, v.z) );
-            m_camera_elevation = glm::degrees( atan2(-v.y, sqrt(v.x * v.x + v.z * v.z)) );
+            uniforms.activeCamera->getOrbitAngles(m_camera_azimuth, m_camera_elevation);
 
             return true;
         }
@@ -971,32 +969,31 @@ void GlslViewer::commandsInit(CommandList &_commands ) {
                     m_camera_id = values[1];
                     uniforms.activeCamera = uniforms.cameras[ values[1] ];
                     
-                    // If this camera doesn't have a properly set target yet, calculate it
-                    // Target should be at the scene origin where the model is centered
-                    glm::vec3 current_target = uniforms.activeCamera->getTarget();
-                    float target_dist = glm::length(current_target);
-                    if (target_dist < 0.001f) {
-                        // Target is at origin (default), calculate proper target
-                        glm::vec3 cam_pos = uniforms.activeCamera->getPosition();
-                        glm::vec3 cam_forward = -uniforms.activeCamera->getZAxis();
-                        
-                        // Set target at the scene origin if camera points toward it
-                        glm::vec3 scene_origin = glm::vec3(0.0f, 0.0f, 0.0f);
-                        glm::vec3 to_origin = scene_origin - cam_pos;
-                        float dist_to_origin = glm::length(to_origin);
-                        float proj = glm::dot(glm::normalize(to_origin), cam_forward);
-                        
-                        // If camera generally points toward origin, use that
-                        if (proj > 0.5f && dist_to_origin > 0.01f) {
-                            // Don't call setTarget() as it will change orientation
-                            // Just compute target for orbital controls
-                            current_target = scene_origin;
-                        } else {
-                            // Use a point in front of camera
-                            current_target = cam_pos + cam_forward * 1.0f;
-                        }
-                    }
-                    
+                    // Selecting a camera orbits around the loaded model's
+                    // bounding-box center -- NOT world origin, which for a raw
+                    // COLMAP scene is an arbitrary point unrelated to where the
+                    // reconstruction actually placed the model. Mouse/keyboard
+                    // interaction (pan, fly, etc.) can still move this target
+                    // afterwards, same as any other camera.
+                    //
+                    // The pivot itself is the model center projected onto this
+                    // camera's OWN current viewing ray, not the raw center --
+                    // setTarget() below calls lookAt(), which snaps the camera
+                    // to face the pivot exactly. A real photographed camera is
+                    // essentially never aimed precisely at the geometric bbox
+                    // centroid, so using the raw center would visibly "recenter"
+                    // (tilt/pan) the very first time you select the camera, even
+                    // before any interaction. Projecting onto the current
+                    // viewing ray picks the closest point the camera is already
+                    // looking at exactly, so this sets up the correct orbit
+                    // distance/pivot with zero reorientation.
+                    glm::vec3 modelCenter = m_sceneRender.getCenter();
+                    glm::vec3 camPos = uniforms.activeCamera->getPosition();
+                    glm::vec3 camForward = -uniforms.activeCamera->getZAxis();
+                    float viewDist = glm::dot(modelCenter - camPos, camForward);
+                    glm::vec3 current_target = (viewDist > 0.001f) ? (camPos + camForward * viewDist) : modelCenter;
+
+                    uniforms.cameras["default"]->setWorldUp(uniforms.activeCamera->getWorldUp());
                     uniforms.cameras["default"]->setTransformMatrix(uniforms.activeCamera->getTransformMatrix());
                     uniforms.cameras["default"]->setProjection(uniforms.activeCamera->getProjectionMatrix());
                     uniforms.cameras["default"]->bFlipped = uniforms.activeCamera->bFlipped;
@@ -1016,18 +1013,14 @@ void GlslViewer::commandsInit(CommandList &_commands ) {
                             camera_projection[i * 4 + j] = pm[j][i];
                     uniforms.set("u_cameraProjectionMatrix", camera_projection);
 
-                    // Calculate orbital parameters from the camera's position relative to target
-                    glm::vec3 v = uniforms.activeCamera->getPosition() - current_target;
-                    float dist = glm::length(v);
-
-                    if (dist > 0.001f) {
-                        m_camera_elevation = -glm::degrees(asinf(glm::clamp(v.y / dist, -1.0f, 1.0f)));
-                        m_camera_azimuth = glm::degrees(atan2f(v.x, v.z));
-                    }
-                    
                     // Now set the target on default camera (this won't affect activeCamera)
                     uniforms.cameras["default"]->setTarget(current_target);
-                    
+
+                    // Calculate orbital parameters (azimuth/elevation) from the default
+                    // camera's now-synced position/target/up, ready for when the user
+                    // starts orbiting.
+                    uniforms.cameras["default"]->getOrbitAngles(m_camera_azimuth, m_camera_elevation);
+
                     std::string camera_texture_name = "_camera" + values[1];
                     if (uniforms.textures.find(camera_texture_name) != uniforms.textures.end()) {
                         uniforms.textures["u_cameraTex"] = uniforms.textures[camera_texture_name];
@@ -2668,10 +2661,14 @@ void GlslViewer::onScroll(float _yoffset) {
     // zoom view3d
     if (uniforms.activeCamera) {
         if (uniforms.activeCamera != uniforms.cameras["default"]) {
+            // Note: deliberately NOT copying getTarget() here -- a freshly
+            // loaded (e.g. COLMAP) camera never has its own target set (it
+            // stays (0,0,0) forever, see addCameras()), so that would stomp
+            // the correct target `camera,<id>` already set on "default".
+            uniforms.cameras["default"]->setWorldUp(uniforms.activeCamera->getWorldUp());
             uniforms.cameras["default"]->setTransformMatrix(uniforms.activeCamera->getTransformMatrix());
             uniforms.cameras["default"]->setProjection(uniforms.activeCamera->getProjectionMatrix());
-            uniforms.cameras["default"]->setTarget(uniforms.activeCamera->getTarget());
-            
+
             uniforms.activeCamera = uniforms.cameras["default"];
         }
 
@@ -2699,6 +2696,21 @@ void GlslViewer::onMousePress(float _x, float _y, int _button) {
     if (uniforms.activeCamera == nullptr)
         return;
 
+    // Switch to "default" first, exactly like onMouseDrag/onScroll -- so the
+    // resync/angle logic below reads and (if needed) adjusts the camera
+    // that's actually meant to be interacted with. Without this, a freshly
+    // selected named camera (e.g. from a COLMAP camera.csv) has no target of
+    // its own (it's never set -- see addCameras()), so getTarget() here
+    // would read (0,0,0), and the "resync if drifted" branch below would
+    // even call setTarget() directly on that camera, permanently mutating
+    // its stored pose to face world origin instead of the model.
+    if (uniforms.activeCamera != uniforms.cameras["default"]) {
+        uniforms.cameras["default"]->setWorldUp(uniforms.activeCamera->getWorldUp());
+        uniforms.cameras["default"]->setTransformMatrix(uniforms.activeCamera->getTransformMatrix());
+        uniforms.cameras["default"]->setProjection(uniforms.activeCamera->getProjectionMatrix());
+        uniforms.activeCamera = uniforms.cameras["default"];
+    }
+
     // Recalculate orbital parameters from current camera state to prevent jumps
     glm::vec3 v = uniforms.activeCamera->getPosition() - uniforms.activeCamera->getTarget();
     float dist = glm::length(v);
@@ -2710,8 +2722,7 @@ void GlslViewer::onMousePress(float _x, float _y, int _button) {
             v = uniforms.activeCamera->getPosition() - uniforms.activeCamera->getTarget();
         }
 
-        m_camera_elevation = -glm::degrees(asinf(glm::clamp(v.y / dist, -1.0f, 1.0f)));
-        m_camera_azimuth = glm::degrees(atan2f(v.x, v.z));
+        uniforms.activeCamera->getOrbitAngles(m_camera_azimuth, m_camera_elevation);
     }
 }
 
@@ -2740,25 +2751,23 @@ void GlslViewer::onMouseDrag(float _x, float _y, int _button) {
     bool shiftPressed = vera::isShiftPressed();
     bool ctrlPressed = vera::isControlPressed();
 
-    // Get current camera state from ACTIVE camera (before switching)
-    float currentDistance = glm::length(uniforms.activeCamera->getPosition() - uniforms.activeCamera->getTarget());
-    
     if (uniforms.activeCamera != uniforms.cameras["default"]) {
+        // Note: deliberately NOT copying getTarget() here -- see onMousePress.
+        uniforms.cameras["default"]->setWorldUp(uniforms.activeCamera->getWorldUp());
         uniforms.cameras["default"]->setTransformMatrix(uniforms.activeCamera->getTransformMatrix());
         uniforms.cameras["default"]->setProjection(uniforms.activeCamera->getProjectionMatrix());
-        uniforms.cameras["default"]->setTarget(uniforms.activeCamera->getTarget());
         uniforms.cameras["default"]->bFlipped = uniforms.activeCamera->bFlipped;
-        
+
         // Recalculate orbital parameters from current state to prevent jumps
-        glm::vec3 v = uniforms.activeCamera->getPosition() - uniforms.activeCamera->getTarget();
-        float dist = glm::length(v);
-        if (dist > 0.001f) {
-            m_camera_elevation = -glm::degrees(asinf(glm::clamp(v.y / dist, -1.0f, 1.0f)));
-            m_camera_azimuth = glm::degrees(atan2f(v.x, v.z));
-        }
-        
+        uniforms.cameras["default"]->getOrbitAngles(m_camera_azimuth, m_camera_elevation);
+
         uniforms.activeCamera = uniforms.cameras["default"];
     }
+
+    // Get current camera state from the now-active camera (correct target
+    // either way: "default" was just synced above, or this was already the
+    // active camera and its target is whatever it should be).
+    float currentDistance = glm::length(uniforms.activeCamera->getPosition() - uniforms.activeCamera->getTarget());
 
     float vel_x = vera::getMouseVelX();
     float vel_y = vera::getMouseVelY();
