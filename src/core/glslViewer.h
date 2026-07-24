@@ -35,6 +35,12 @@ public:
     void                loadModel(vera::Model* _model);
     void                commandsInit(CommandList &_commands);
 
+    // Switches to a loaded named camera (e.g. one loaded from a COLMAP
+    // camera.csv) by id, syncing "default" for orbiting. Returns false if
+    // no camera with that id is loaded. Shared by the "camera" console
+    // command and the auto-select-first-camera-on-load behavior.
+    bool                selectCamera(const std::string& _id);
+
     void                setFrame(size_t _frame);
     void                setSource(ShaderType _type, const std::string& _source);
     void                resetShaders(WatchFileList &_files);

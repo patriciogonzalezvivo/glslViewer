@@ -167,6 +167,77 @@ GlslViewer::~GlslViewer() {
 
 // ------------------------------------------------------------------------- SET
 
+bool GlslViewer::selectCamera(const std::string& _id) {
+    if (uniforms.cameras.find(_id) == uniforms.cameras.end())
+        return false;
+
+    m_camera_id = _id;
+    uniforms.activeCamera = uniforms.cameras[_id];
+
+    // Selecting a camera orbits around the loaded model's
+    // bounding-box center -- NOT world origin, which for a raw
+    // COLMAP scene is an arbitrary point unrelated to where the
+    // reconstruction actually placed the model. Mouse/keyboard
+    // interaction (pan, fly, etc.) can still move this target
+    // afterwards, same as any other camera.
+    //
+    // The pivot itself is the model center projected onto this
+    // camera's OWN current viewing ray, not the raw center --
+    // setTarget() below calls lookAt(), which snaps the camera
+    // to face the pivot exactly. A real photographed camera is
+    // essentially never aimed precisely at the geometric bbox
+    // centroid, so using the raw center would visibly "recenter"
+    // (tilt/pan) the very first time you select the camera, even
+    // before any interaction. Projecting onto the current
+    // viewing ray picks the closest point the camera is already
+    // looking at exactly, so this sets up the correct orbit
+    // distance/pivot with zero reorientation.
+    glm::vec3 modelCenter = m_sceneRender.getCenter();
+    glm::vec3 camPos = uniforms.activeCamera->getPosition();
+    glm::vec3 camForward = -uniforms.activeCamera->getZAxis();
+    float viewDist = glm::dot(modelCenter - camPos, camForward);
+    glm::vec3 current_target = (viewDist > 0.001f) ? (camPos + camForward * viewDist) : modelCenter;
+
+    uniforms.cameras["default"]->setWorldUp(uniforms.activeCamera->getWorldUp());
+    uniforms.cameras["default"]->setTransformMatrix(uniforms.activeCamera->getTransformMatrix());
+    uniforms.cameras["default"]->setProjection(uniforms.activeCamera->getProjectionMatrix());
+    uniforms.cameras["default"]->bFlipped = uniforms.activeCamera->bFlipped;
+
+    // convert camera_transform to vector<float>
+    std::vector<float> camera_transform(16);
+    const glm::mat4& tm = uniforms.activeCamera->getTransformMatrix();
+    for (int i = 0; i < 4; i++)
+        for (int j = 0; j < 4; j++)
+            camera_transform[i * 4 + j] = tm[j][i];
+    uniforms.set("u_cameraTransformMatrix", camera_transform);
+
+    std::vector<float> camera_projection(16);
+    const glm::mat4& pm = uniforms.activeCamera->getProjectionMatrix();
+    for (int i = 0; i < 4; i++)
+        for (int j = 0; j < 4; j++)
+            camera_projection[i * 4 + j] = pm[j][i];
+    uniforms.set("u_cameraProjectionMatrix", camera_projection);
+
+    // Set the orbit pivot on default camera (this won't affect
+    // activeCamera) WITHOUT reorienting it -- setTarget() calls
+    // lookAt(target, worldUp), which would re-roll this specific
+    // camera to match the *averaged* worldUp instead of its own
+    // true roll. This keeps "default" an exact copy of the real
+    // camera pose until the user actually orbits.
+    uniforms.cameras["default"]->setOrbitTarget(current_target);
+
+    // Calculate orbital parameters (azimuth/elevation) from the default
+    // camera's now-synced position/target/up, ready for when the user
+    // starts orbiting.
+    uniforms.cameras["default"]->getOrbitAngles(m_camera_azimuth, m_camera_elevation);
+
+    std::string camera_texture_name = "_camera" + _id;
+    if (uniforms.textures.find(camera_texture_name) != uniforms.textures.end())
+        uniforms.textures["u_cameraTex"] = uniforms.textures[camera_texture_name];
+
+    return true;
+}
+
 void GlslViewer::commandsInit(CommandList &_commands ) {
 
     // Add Sandbox Commands
@@ -965,72 +1036,7 @@ void GlslViewer::commandsInit(CommandList &_commands ) {
                         return true;
                     }
                 }
-                else if (uniforms.cameras.find(values[1]) != uniforms.cameras.end()) {
-                    m_camera_id = values[1];
-                    uniforms.activeCamera = uniforms.cameras[ values[1] ];
-                    
-                    // Selecting a camera orbits around the loaded model's
-                    // bounding-box center -- NOT world origin, which for a raw
-                    // COLMAP scene is an arbitrary point unrelated to where the
-                    // reconstruction actually placed the model. Mouse/keyboard
-                    // interaction (pan, fly, etc.) can still move this target
-                    // afterwards, same as any other camera.
-                    //
-                    // The pivot itself is the model center projected onto this
-                    // camera's OWN current viewing ray, not the raw center --
-                    // setTarget() below calls lookAt(), which snaps the camera
-                    // to face the pivot exactly. A real photographed camera is
-                    // essentially never aimed precisely at the geometric bbox
-                    // centroid, so using the raw center would visibly "recenter"
-                    // (tilt/pan) the very first time you select the camera, even
-                    // before any interaction. Projecting onto the current
-                    // viewing ray picks the closest point the camera is already
-                    // looking at exactly, so this sets up the correct orbit
-                    // distance/pivot with zero reorientation.
-                    glm::vec3 modelCenter = m_sceneRender.getCenter();
-                    glm::vec3 camPos = uniforms.activeCamera->getPosition();
-                    glm::vec3 camForward = -uniforms.activeCamera->getZAxis();
-                    float viewDist = glm::dot(modelCenter - camPos, camForward);
-                    glm::vec3 current_target = (viewDist > 0.001f) ? (camPos + camForward * viewDist) : modelCenter;
-
-                    uniforms.cameras["default"]->setWorldUp(uniforms.activeCamera->getWorldUp());
-                    uniforms.cameras["default"]->setTransformMatrix(uniforms.activeCamera->getTransformMatrix());
-                    uniforms.cameras["default"]->setProjection(uniforms.activeCamera->getProjectionMatrix());
-                    uniforms.cameras["default"]->bFlipped = uniforms.activeCamera->bFlipped;
-
-                    // convert camera_transform to vector<float>
-                    std::vector<float> camera_transform(16);
-                    const glm::mat4& tm = uniforms.activeCamera->getTransformMatrix();
-                    for (int i = 0; i < 4; i++)
-                        for (int j = 0; j < 4; j++)
-                            camera_transform[i * 4 + j] = tm[j][i];
-                    uniforms.set("u_cameraTransformMatrix", camera_transform);
-
-                    std::vector<float> camera_projection(16);
-                    const glm::mat4& pm = uniforms.activeCamera->getProjectionMatrix();
-                    for (int i = 0; i < 4; i++)
-                        for (int j = 0; j < 4; j++)
-                            camera_projection[i * 4 + j] = pm[j][i];
-                    uniforms.set("u_cameraProjectionMatrix", camera_projection);
-
-                    // Set the orbit pivot on default camera (this won't affect
-                    // activeCamera) WITHOUT reorienting it -- setTarget() calls
-                    // lookAt(target, worldUp), which would re-roll this specific
-                    // camera to match the *averaged* worldUp instead of its own
-                    // true roll. This keeps "default" an exact copy of the real
-                    // camera pose until the user actually orbits.
-                    uniforms.cameras["default"]->setOrbitTarget(current_target);
-
-                    // Calculate orbital parameters (azimuth/elevation) from the default
-                    // camera's now-synced position/target/up, ready for when the user
-                    // starts orbiting.
-                    uniforms.cameras["default"]->getOrbitAngles(m_camera_azimuth, m_camera_elevation);
-
-                    std::string camera_texture_name = "_camera" + values[1];
-                    if (uniforms.textures.find(camera_texture_name) != uniforms.textures.end()) {
-                        uniforms.textures["u_cameraTex"] = uniforms.textures[camera_texture_name];
-                    }
-
+                else if (selectCamera(values[1])) {
                     return true;
                 }
             }
@@ -1337,6 +1343,11 @@ void GlslViewer::loadAssets(WatchFileList &_files) {
         m_canvas_shader.addDefine("MODEL_VERTEX_TEXCOORD", "v_texcoord");
         uniforms.activeCamera->orbit(m_camera_azimuth, m_camera_elevation, 2.0);
     }
+
+    // If a COLMAP scene was loaded (camera.csv), look through its first
+    // camera by default instead of the auto-fit view above. selectCamera()
+    // is a no-op (returns false) if no camera "0" was loaded.
+    selectCamera("0");
 
     // FINISH SCENE SETUP
     // -------------------------------------------------
