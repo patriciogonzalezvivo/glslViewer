@@ -1013,8 +1013,13 @@ void GlslViewer::commandsInit(CommandList &_commands ) {
                             camera_projection[i * 4 + j] = pm[j][i];
                     uniforms.set("u_cameraProjectionMatrix", camera_projection);
 
-                    // Now set the target on default camera (this won't affect activeCamera)
-                    uniforms.cameras["default"]->setTarget(current_target);
+                    // Set the orbit pivot on default camera (this won't affect
+                    // activeCamera) WITHOUT reorienting it -- setTarget() calls
+                    // lookAt(target, worldUp), which would re-roll this specific
+                    // camera to match the *averaged* worldUp instead of its own
+                    // true roll. This keeps "default" an exact copy of the real
+                    // camera pose until the user actually orbits.
+                    uniforms.cameras["default"]->setOrbitTarget(current_target);
 
                     // Calculate orbital parameters (azimuth/elevation) from the default
                     // camera's now-synced position/target/up, ready for when the user

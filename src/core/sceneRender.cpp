@@ -1058,12 +1058,16 @@ void SceneRender::renderDebug(Uniforms& _uniforms) {
         vera::labels();
     }
 
+    // Shared with the camera gizmos below, so the orbit pivot's axis marker
+    // is visually tied to the cameras that orbit around it.
+    const glm::vec4 cameraGizmoColor(1.0f, 0.8f, 0.2f, 1.0f);
+
     // Cameras (e.g. multiple poses loaded from a camera.csv file), shown
     // alongside axis/grid/bboxes since they're all spatial-reference debug aids.
     // The active camera is skipped since we're currently looking through it.
     if (showAxis || showGrid || showBBoxes) {
         vera::strokeWeight(2.0f);
-        vera::stroke(glm::vec4(1.0f, 0.8f, 0.2f, 1.0f));
+        vera::stroke(cameraGizmoColor);
         // Scale the gizmo to the scene's own bounding radius (m_area) rather
         // than a fixed size, so it stays legible whether the loaded scene is
         // unit-scale or a raw photogrammetry/COLMAP scan spanning tens of units.
@@ -1081,15 +1085,17 @@ void SceneRender::renderDebug(Uniforms& _uniforms) {
         if (m_axis_vbo == nullptr)
             m_axis_vbo = std::unique_ptr<vera::Vbo>(new vera::Vbo( vera::axisMesh(_uniforms.activeCamera->getFarClip(), m_floor_height) ));
 
+        // World origin (0,0,0)
         vera::strokeWeight(2.0f);
-        vera::stroke( glm::vec4(1.0f, 0.0f, 0.0f, 1.0f) );
+        vera::stroke( glm::vec4(1.0f) );
         vera::model( m_axis_vbo.get() );
 
-        // draw camera_target
+        // Camera orbit pivot -- same color as the camera gizmos, since this
+        // is the point they all orbit around.
         if (_uniforms.activeCamera ) {;
             vera::push();
             vera::translate( _uniforms.activeCamera->getTarget() );
-            vera::stroke( glm::vec4(1.0f) );
+            vera::stroke( cameraGizmoColor );
             vera::strokeWeight(2.0f);
             vera::model( m_axis_vbo.get() );
             vera::pop();
