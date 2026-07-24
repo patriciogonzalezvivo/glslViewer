@@ -35,7 +35,7 @@
 
 SceneRender::SceneRender(): 
     // Debug State
-    showGrid(false), showAxis(false), showBBoxes(false), showCubebox(false), 
+    showGrid(false), showAxis(false), showBBoxes(false), showCubebox(false),
     // Camera.
     m_blend(vera::BLEND_ALPHA), m_culling(vera::CULL_NONE), m_depth_test(true),
     // Light
@@ -695,6 +695,16 @@ void SceneRender::renderNormalBuffer(Uniforms& _uniforms) {
     vera::cullingMode(m_culling);
 
     for (vera::ModelsMap::iterator it = _uniforms.models.begin(); it != _uniforms.models.end(); ++it) {
+        // Gaussian splats have no scene-graph shader to plug in here (their
+        // vertex/attribute layout is fixed), so they render their own
+        // internal normal-buffer shader instead of the generic mesh path.
+        if (it->second->getGsplat() != nullptr) {
+            TRACK_BEGIN("render:sceneNormal:" + it->second->getName() )
+            it->second->getGsplat()->renderNormal( _uniforms.activeCamera, m_origin.getTransformMatrix() * it->second->getTransformMatrix() );
+            TRACK_END("render:sceneNormal:" + it->second->getName() )
+            continue;
+        }
+
         normalShader = it->second->getBufferShader("normal");
         if (normalShader != nullptr) {
             TRACK_BEGIN("render:sceneNormal:" + it->second->getName() )
@@ -1047,7 +1057,25 @@ void SceneRender::renderDebug(Uniforms& _uniforms) {
         vera::textSize(24.0f);
         vera::labels();
     }
-    
+
+    // Cameras (e.g. multiple poses loaded from a camera.csv file), shown
+    // alongside axis/grid since they're all spatial-reference debug aids.
+    // The active camera is skipped since we're currently looking through it.
+    if (showAxis || showGrid) {
+        vera::strokeWeight(2.0f);
+        vera::stroke(glm::vec4(1.0f, 0.8f, 0.2f, 1.0f));
+        // Scale the gizmo to the scene's own bounding radius (m_area) rather
+        // than a fixed size, so it stays legible whether the loaded scene is
+        // unit-scale or a raw photogrammetry/COLMAP scan spanning tens of units.
+        float gizmoSize = m_area * 0.05f;
+        for (vera::CamerasMap::iterator it = _uniforms.cameras.begin(); it != _uniforms.cameras.end(); ++it) {
+            if (it->second == _uniforms.activeCamera)
+                continue;
+
+            vera::drawCamera(it->second, gizmoSize);
+        }
+    }
+
     // Axis
     if (showAxis) {
         if (m_axis_vbo == nullptr)

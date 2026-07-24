@@ -14,6 +14,7 @@
 #include "vera/ops/draw.h"
 #include "vera/ops/string.h"
 #include "vera/xr/xr.h"
+#include "vera/types/gsplat.h"
 
 
 std::string UniformData::getType() {
@@ -742,6 +743,15 @@ bool Uniforms::addCameras( const std::string& _filename ) {
         }
 
         std::cout << "// Added " << counter << " camera frames: " << std::endl;
+
+        // COLMAP camera poses (this file) live in the raw, unflipped COLMAP
+        // frame -- same as a plain sparse-cloud .ply. Any splat loaded from
+        // here on should stay in that frame too, instead of the 180-about-X
+        // flip Gsplat otherwise applies for standalone viewing (see
+        // vera::Gsplat::setUseColmapFrame).
+        if (counter > 0)
+            vera::Gsplat::setUseColmapFrame(true);
+
         return true;
     }
 
