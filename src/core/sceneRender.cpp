@@ -1059,9 +1059,9 @@ void SceneRender::renderDebug(Uniforms& _uniforms) {
     }
 
     // Cameras (e.g. multiple poses loaded from a camera.csv file), shown
-    // alongside axis/grid since they're all spatial-reference debug aids.
+    // alongside axis/grid/bboxes since they're all spatial-reference debug aids.
     // The active camera is skipped since we're currently looking through it.
-    if (showAxis || showGrid) {
+    if (showAxis || showGrid || showBBoxes) {
         vera::strokeWeight(2.0f);
         vera::stroke(glm::vec4(1.0f, 0.8f, 0.2f, 1.0f));
         // Scale the gizmo to the scene's own bounding radius (m_area) rather
