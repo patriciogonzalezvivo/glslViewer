@@ -2135,14 +2135,26 @@ void GlslViewer::renderPost() {
 
         if (screenshotFile != "") {
             if (vera::haveExt(screenshotFile, "png")) {
+                // Intentional: premultiplied-alpha-style blend so a PNG
+                // screenshot can export with a transparent background.
                 glEnable(GL_BLEND);
                 glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
             }
+            else
+                vera::blendMode(vera::BLEND_NONE);
             m_record_fbo.bind();
         }
-        else if (isRecording())
-            m_record_fbo.bind();
-    
+        else {
+            // The postprocessing composite writes a complete final pixel,
+            // it shouldn't blend with whatever's behind it -- without this,
+            // it silently inherits whatever blend mode the 3D scene pass
+            // left active (e.g. a gaussian splat's alpha blending), which
+            // then double-applies alpha (or worse) to the entire frame.
+            vera::blendMode(vera::BLEND_NONE);
+            if (isRecording())
+                m_record_fbo.bind();
+        }
+
         m_postprocessing_shader.use();
         m_postprocessing_shader.setUniform("u_model", glm::vec3(1.0f));
         m_postprocessing_shader.setUniform("u_modelMatrix", glm::mat4(1.0f));
@@ -2171,10 +2183,18 @@ void GlslViewer::renderPost() {
                 glEnable(GL_BLEND);
                 glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
             }
+            else
+                vera::blendMode(vera::BLEND_NONE);
             m_record_fbo.bind();
         }
-        else if (isRecording())
-            m_record_fbo.bind();
+        else {
+            // Same reasoning as the postprocessing branch above: don't
+            // inherit whatever blend mode the 3D scene pass (e.g. a splat)
+            // left active for this full-screen composite.
+            vera::blendMode(vera::BLEND_NONE);
+            if (isRecording())
+                m_record_fbo.bind();
+        }
 
         vera::image(m_sceneRender.renderFbo);
     }
