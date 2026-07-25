@@ -583,13 +583,12 @@ void SceneRender::updateBuffers(Uniforms& _uniforms, int _width, int _height) {
         renderFbo.getWidth() != _width || renderFbo.getHeight() != _height )
         renderFbo.allocate(_width, _height, type);
 
-    if (_uniforms.functions["u_sceneNormal"].present && 
-        (   !normalFbo.isAllocated() || 
+    if (_uniforms.functions["u_sceneNormal"].present &&
+        (   !normalFbo.isAllocated() ||
             normalFbo.getWidth() != _width || normalFbo.getHeight() != _height ) )
         normalFbo.allocate(_width, _height, vera::GBUFFER_TEXTURE);
 
-    
-    if (_uniforms.functions["u_scenePosition"].present && 
+    if (_uniforms.functions["u_scenePosition"].present &&
         (   !positionFbo.isAllocated() || 
             positionFbo.getWidth() != _width || positionFbo.getHeight() != _height ) )
         positionFbo.allocate(_width, _height, vera::GBUFFER_TEXTURE);
