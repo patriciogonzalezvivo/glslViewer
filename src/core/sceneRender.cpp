@@ -645,6 +645,13 @@ void SceneRender::render(Uniforms& _uniforms) {
 
         it->second->render();
 
+        // Splats disable depth writes for their own (alpha-blended) color
+        // draw above, so without this they'd never appear in u_sceneDepth
+        // at all -- see Gsplat::renderDepth() for why this needs its own
+        // pass rather than just enabling depth writes on the color draw.
+        if (_uniforms.functions["u_sceneDepth"].present && it->second->getGsplat() != nullptr)
+            it->second->getGsplat()->renderDepth(_uniforms.activeCamera, it->second->getTransformMatrix());
+
         TRACK_END("render:scene:" + it->second->getName() )
     }
 
