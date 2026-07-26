@@ -64,9 +64,11 @@ GlslViewer::GlslViewer():
     #endif
 
     // Scene
-    m_view2d(1.0), m_time_offset(0.0), 
+    m_view2d(1.0), m_time_offset(0.0),
     m_camera_elevation(0.0), m_camera_azimuth(0.0), m_camera_id("default"),
-    m_error_screen(vera::SHOW_MAGENTA_SHADER), 
+    m_camera_transitioning(false), m_camera_transition_time(0.0f), m_camera_transition_duration(0.6f),
+    m_camera_transition_from_pos(0.0f), m_camera_transition_from_rot(1.0f, 0.0f, 0.0f, 0.0f), m_camera_transition_from_proj(1.0f),
+    m_error_screen(vera::SHOW_MAGENTA_SHADER),
     m_change_viewport(true), m_update_buffers(true), m_initialized(false), 
 
     // Debug
@@ -167,10 +169,30 @@ GlslViewer::~GlslViewer() {
 
 // ------------------------------------------------------------------------- SET
 
-bool GlslViewer::selectCamera(const std::string& _id) {
-    if (uniforms.cameras.find(_id) == uniforms.cameras.end())
-        return false;
+// Pushes _cam's pose into the u_cameraTransformMatrix/u_cameraProjectionMatrix
+// uniforms (used both when a selection completes instantly and on every
+// frame of an animated transition).
+void GlslViewer::applyCameraMatrixUniforms(vera::Camera* _cam) {
+    std::vector<float> camera_transform(16);
+    const glm::mat4& tm = _cam->getTransformMatrix();
+    for (int i = 0; i < 4; i++)
+        for (int j = 0; j < 4; j++)
+            camera_transform[i * 4 + j] = tm[j][i];
+    uniforms.set("u_cameraTransformMatrix", camera_transform);
 
+    std::vector<float> camera_projection(16);
+    const glm::mat4& pm = _cam->getProjectionMatrix();
+    for (int i = 0; i < 4; i++)
+        for (int j = 0; j < 4; j++)
+            camera_projection[i * 4 + j] = pm[j][i];
+    uniforms.set("u_cameraProjectionMatrix", camera_projection);
+}
+
+// The actual "arrive at camera _id" logic -- runs immediately for an
+// unanimated selection, or once an animated transition's eased time reaches
+// 1.0 (see updateCameraTransition()). Identical to the original
+// (pre-animation) selectCamera() body.
+void GlslViewer::finishCameraSelection(const std::string& _id) {
     m_camera_id = _id;
     uniforms.activeCamera = uniforms.cameras[_id];
 
@@ -203,20 +225,7 @@ bool GlslViewer::selectCamera(const std::string& _id) {
     uniforms.cameras["default"]->setProjection(uniforms.activeCamera->getProjectionMatrix());
     uniforms.cameras["default"]->bFlipped = uniforms.activeCamera->bFlipped;
 
-    // convert camera_transform to vector<float>
-    std::vector<float> camera_transform(16);
-    const glm::mat4& tm = uniforms.activeCamera->getTransformMatrix();
-    for (int i = 0; i < 4; i++)
-        for (int j = 0; j < 4; j++)
-            camera_transform[i * 4 + j] = tm[j][i];
-    uniforms.set("u_cameraTransformMatrix", camera_transform);
-
-    std::vector<float> camera_projection(16);
-    const glm::mat4& pm = uniforms.activeCamera->getProjectionMatrix();
-    for (int i = 0; i < 4; i++)
-        for (int j = 0; j < 4; j++)
-            camera_projection[i * 4 + j] = pm[j][i];
-    uniforms.set("u_cameraProjectionMatrix", camera_projection);
+    applyCameraMatrixUniforms(uniforms.activeCamera);
 
     // Set the orbit pivot on default camera (this won't affect
     // activeCamera) WITHOUT reorienting it -- setTarget() calls
@@ -234,8 +243,82 @@ bool GlslViewer::selectCamera(const std::string& _id) {
     std::string camera_texture_name = "_camera" + _id;
     if (uniforms.textures.find(camera_texture_name) != uniforms.textures.end())
         uniforms.textures["u_cameraTex"] = uniforms.textures[camera_texture_name];
+}
+
+bool GlslViewer::selectCamera(const std::string& _id, bool _animate) {
+    if (uniforms.cameras.find(_id) == uniforms.cameras.end())
+        return false;
+
+    if (!_animate || m_camera_transition_duration <= 0.0f || uniforms.activeCamera == nullptr) {
+        m_camera_transitioning = false;
+        finishCameraSelection(_id);
+        return true;
+    }
+
+    // Animate: capture wherever the camera actually is right now (a raw
+    // loaded camera, "default" mid-orbit, or "default" mid an earlier
+    // transition) as the starting pose, park activeCamera on "default" (the
+    // only camera object it's safe to keep mutating frame to frame -- the
+    // raw loaded cameras must stay pristine, see finishCameraSelection()),
+    // and let updateCameraTransition() ease it toward the target each frame.
+    vera::Camera* defaultCam = uniforms.cameras["default"];
+
+    m_camera_transition_from_pos  = uniforms.activeCamera->getPosition();
+    m_camera_transition_from_rot  = uniforms.activeCamera->getOrientationQuat();
+    m_camera_transition_from_proj = uniforms.activeCamera->getProjectionMatrix();
+
+    defaultCam->setWorldUp(uniforms.activeCamera->getWorldUp());
+    defaultCam->setPosition(m_camera_transition_from_pos);
+    defaultCam->setOrientation(m_camera_transition_from_rot);
+    defaultCam->setProjection(m_camera_transition_from_proj);
+    defaultCam->bFlipped = uniforms.activeCamera->bFlipped;
+    uniforms.activeCamera = defaultCam;
+    applyCameraMatrixUniforms(defaultCam);
+
+    m_camera_id = _id;
+    m_camera_transitioning = true;
+    m_camera_transition_time = 0.0f;
+    m_camera_transition_target_id = _id;
 
     return true;
+}
+
+// Advances the in-flight animated camera transition (if any) by one frame's
+// worth of time -- called once per frame from renderPrep(). Eases "default"'s
+// position/orientation/projection from the captured starting pose toward the
+// target camera, then hands off to finishCameraSelection() once done.
+void GlslViewer::updateCameraTransition() {
+    if (!m_camera_transitioning)
+        return;
+
+    if (uniforms.cameras.find(m_camera_transition_target_id) == uniforms.cameras.end()) {
+        m_camera_transitioning = false;
+        return;
+    }
+
+    m_camera_transition_time += vera::getDelta();
+    float t = glm::clamp(m_camera_transition_time / m_camera_transition_duration, 0.0f, 1.0f);
+    float eased = t * t * (3.0f - 2.0f * t); // smoothstep ease-in-out
+
+    vera::Camera* defaultCam = uniforms.cameras["default"];
+    vera::Camera* targetCam  = uniforms.cameras[m_camera_transition_target_id];
+
+    defaultCam->setPosition(glm::mix(m_camera_transition_from_pos, targetCam->getPosition(), eased));
+    defaultCam->setOrientation(glm::slerp(m_camera_transition_from_rot, targetCam->getOrientationQuat(), eased));
+
+    glm::mat4 toProj = targetCam->getProjectionMatrix();
+    glm::mat4 proj;
+    for (int i = 0; i < 4; i++)
+        proj[i] = glm::mix(m_camera_transition_from_proj[i], toProj[i], eased);
+    defaultCam->setProjection(proj);
+
+    applyCameraMatrixUniforms(defaultCam);
+    vera::flagChange();
+
+    if (t >= 1.0f) {
+        m_camera_transitioning = false;
+        finishCameraSelection(m_camera_transition_target_id);
+    }
 }
 
 void GlslViewer::commandsInit(CommandList &_commands ) {
@@ -1346,8 +1429,9 @@ void GlslViewer::loadAssets(WatchFileList &_files) {
 
     // If a COLMAP scene was loaded (camera.csv), look through its first
     // camera by default instead of the auto-fit view above. selectCamera()
-    // is a no-op (returns false) if no camera "0" was loaded.
-    selectCamera("0");
+    // is a no-op (returns false) if no camera "0" was loaded. Instant (not
+    // animated) -- there's no previous camera pose to transition from yet.
+    selectCamera("0", false);
 
     // FINISH SCENE SETUP
     // -------------------------------------------------
@@ -1989,6 +2073,8 @@ void GlslViewer::_renderBuffers() {
 
 void GlslViewer::renderPrep() {
     TRACK_BEGIN("render")
+
+    updateCameraTransition();
 
     // UPDATE STREAMING TEXTURES
     // -----------------------------------------------
@@ -2678,6 +2764,10 @@ void GlslViewer::onFileChange(WatchFileList &_files, int index) {
 }
 
 void GlslViewer::onScroll(float _yoffset) {
+    // Manual interaction takes over immediately from any in-flight animated
+    // camera transition (see selectCamera()), rather than fighting it.
+    m_camera_transitioning = false;
+
     // Vertical scroll button zooms u_view2d and view3d.
     /* zoomfactor 2^(1/4): 4 scroll wheel clicks to double in size. */
     constexpr float zoomfactor = 1.1892;
@@ -2732,6 +2822,10 @@ void GlslViewer::onMousePress(float _x, float _y, int _button) {
     if (uniforms.activeCamera == nullptr)
         return;
 
+    // Manual interaction takes over immediately from any in-flight animated
+    // camera transition (see selectCamera()), rather than fighting it.
+    m_camera_transitioning = false;
+
     // Switch to "default" first, exactly like onMouseDrag/onScroll -- so the
     // resync/angle logic below reads and (if needed) adjusts the camera
     // that's actually meant to be interacted with. Without this, a freshly
@@ -2766,6 +2860,10 @@ void GlslViewer::onMouseDrag(float _x, float _y, int _button) {
      // If no active camera, do nothing
     if (uniforms.activeCamera == nullptr)
         return;
+
+    // Manual interaction takes over immediately from any in-flight animated
+    // camera transition (see selectCamera()), rather than fighting it.
+    m_camera_transitioning = false;
 
     if (quilt_resolution < 0) {
         // If it's not playing on the HOLOPLAY

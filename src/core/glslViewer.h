@@ -38,8 +38,11 @@ public:
     // Switches to a loaded named camera (e.g. one loaded from a COLMAP
     // camera.csv) by id, syncing "default" for orbiting. Returns false if
     // no camera with that id is loaded. Shared by the "camera" console
-    // command and the auto-select-first-camera-on-load behavior.
-    bool                selectCamera(const std::string& _id);
+    // command and the auto-select-first-camera-on-load behavior. Animates
+    // the transition (position/orientation/projection) over
+    // m_camera_transition_duration seconds unless _animate is false (used
+    // for the very first, load-time selection, which should be instant).
+    bool                selectCamera(const std::string& _id, bool _animate = true);
 
     void                setFrame(size_t _frame);
     void                setSource(ShaderType _type, const std::string& _source);
@@ -162,7 +165,20 @@ protected:
     glm::vec3                       m_camera_target;
     float                           m_camera_azimuth;
     float                           m_camera_elevation;
-    std::string                     m_camera_id; 
+    std::string                     m_camera_id;
+
+    // Animated transition between named cameras (see selectCamera()),
+    // advanced once per frame in updateCameraTransition().
+    void                            updateCameraTransition();
+    void                            finishCameraSelection(const std::string& _id);
+    void                            applyCameraMatrixUniforms(vera::Camera* _cam);
+    bool                            m_camera_transitioning;
+    float                           m_camera_transition_time;
+    float                           m_camera_transition_duration;
+    std::string                     m_camera_transition_target_id;
+    glm::vec3                       m_camera_transition_from_pos;
+    glm::quat                       m_camera_transition_from_rot;
+    glm::mat4                       m_camera_transition_from_proj;
 
     vera::ShaderErrorResolve        m_error_screen;
     bool                            m_change_viewport;
