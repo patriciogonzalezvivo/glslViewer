@@ -2294,6 +2294,15 @@ void GlslViewer::renderPost() {
         vera::image(m_record_fbo);
     }
 
+    // The branches above deliberately leave blend mode in a non-standard
+    // state (BLEND_NONE for the postprocessing/plot composite, or a custom
+    // premultiplied-alpha func for screenshots/recording) -- restore the
+    // normal alpha blend mode so renderUI() (debug preview thumbnails,
+    // textHighlight() labels, etc.) doesn't inherit it. Without this, the
+    // label's translucent background box and antialiased glyph edges both
+    // need real alpha blending to actually be visible.
+    vera::blendMode(vera::BLEND_ALPHA);
+
     TRACK_END("render")
     
     if  (vera::getWindowStyle() != vera::EMBEDDED)
@@ -2365,6 +2374,13 @@ void GlslViewer::renderUI() {
     // RESULTING BUFFERS
     if (m_showPasses) {
         vera::setDepthTest(false);
+        // textHighlight() below captures whatever fill color is currently
+        // set as the label's text color -- don't rely on whatever was left
+        // behind by 3D scene rendering/gizmos/a previous frame (that's what
+        // made u_doubleBufferX's label invisible while u_scene/u_sceneNormal
+        // happened to look fine, only because the shadow-map block further
+        // down resets fill to white before THEY draw their labels).
+        vera::fill(1.0);
         TRACK_BEGIN("renderUI:buffers")
 
         // DEBUG BUFFERS
@@ -2500,9 +2516,13 @@ void GlslViewer::renderUI() {
                 vera::fill(0.0);
                 if (uniforms.activeCamera)
                     vera::imageDepth(&m_sceneRender.renderFbo, xOffset, yOffset, xStep, yStep, uniforms.activeCamera->getFarClip(), uniforms.activeCamera->getNearClip());
+                // Must come before textHighlight(): it captures the CURRENT
+                // fill color as the text's foreground, so leaving it black
+                // (set above for imageDepth()) rendered black text on top of
+                // its own black semi-transparent background box -- invisible.
+                vera::fill(1.0);
                 vera::textHighlight("u_sceneDepth", xOffset - xStep, vera::getWindowHeight() - yOffset - yStep, glm::vec4(0.0f, 0.0f, 0.0f, 0.5f));
                 yOffset -= yStep * 2.0;
-                vera::fill(1.0);
             }
         }
         TRACK_END("renderUI:buffers")
