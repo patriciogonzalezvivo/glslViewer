@@ -315,6 +315,15 @@ void GlslViewer::updateCameraTransition() {
     applyCameraMatrixUniforms(defaultCam);
     vera::flagChange();
 
+    if (t > 0.0f && t < 1.0f) {
+        // publis t as u_cameraPct
+        uniforms.set("u_cameraPct", eased);
+
+        std::string camera_texture_name = "_camera" + m_camera_transition_target_id;
+        if (uniforms.textures.find(camera_texture_name) != uniforms.textures.end())
+            uniforms.textures["u_cameraNextTex"] = uniforms.textures[camera_texture_name];
+    }
+
     if (t >= 1.0f) {
         m_camera_transitioning = false;
         finishCameraSelection(m_camera_transition_target_id);
