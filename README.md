@@ -6,6 +6,7 @@
 
 GlslViewer is a flexible console-base OpenGL Sandbox to display 2D/3D GLSL shaders without the need of an UI. You can definitely make your own UI or wrapper using the Python Module (include) or any other tool that communicates back/forth with glslViewer through the standard POSIX console In/Out or OSC.
 
+
 Joing [#GlslViewer channel on shader.zone discord](https://shader.zone/) to learn how to use it, share work and get help.
 
 ![](.github/images/03.gif)
