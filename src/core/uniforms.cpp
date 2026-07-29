@@ -291,6 +291,15 @@ bool Uniforms::feedTo(vera::Shader *_shader, bool _lights, bool _buffers ) {
 
     // Pass Textures Uniforms
     for (vera::TexturesMap::iterator it = textures.begin(); it != textures.end(); ++it) {
+        // Keys starting with "_" (e.g. "_camera0".."_cameraN", one raw photo per
+        // cameras.csv row, see addCameras()) are an internal cache other code
+        // copies FROM (finishCameraSelection() aliases the active one to
+        // "u_cameraTex") -- no shader ever declares a sampler by that literal
+        // name, so binding them here just burns real GL texture units for
+        // nothing, silently pushing every later (real, GLSL-declared) sampler
+        // past the driver's texture-unit ceiling as camera count grows.
+        if (it->first[0] == '_')
+            continue;
         _shader->setUniformTexture(it->first, it->second, _shader->textureIndex++ );
         _shader->setUniform(it->first+"Resolution", float(it->second->getWidth()), float(it->second->getHeight()));
     }
@@ -752,7 +761,7 @@ bool Uniforms::addCameras( const std::string& _filename ) {
             counter++;
         }
 
-        std::cout << "// Added " << counter << " camera frames: " << std::endl;
+        std::cout << "// Adding " << counter << " camera frames to u_cameraTex" << std::endl;
 
         // COLMAP camera poses (this file) live in the raw, unflipped COLMAP
         // frame -- same as a plain sparse-cloud .ply. Any splat loaded from
