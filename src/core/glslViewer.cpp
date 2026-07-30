@@ -302,6 +302,7 @@ void GlslViewer::updateCameraTransition() {
 
     vera::Camera* defaultCam = uniforms.cameras["default"];
     vera::Camera* targetCam  = uniforms.cameras[m_camera_transition_target_id];
+    uniforms.set("u_cameraTrg", targetCam->getPosition().x, targetCam->getPosition().y, targetCam->getPosition().z);
 
     defaultCam->setPosition(glm::mix(m_camera_transition_from_pos, targetCam->getPosition(), eased));
     defaultCam->setOrientation(glm::slerp(m_camera_transition_from_rot, targetCam->getOrientationQuat(), eased));
@@ -315,10 +316,8 @@ void GlslViewer::updateCameraTransition() {
     applyCameraMatrixUniforms(defaultCam);
     vera::flagChange();
 
+    uniforms.set("u_cameraPct", t);
     if (t > 0.0f && t < 1.0f) {
-        // publis t as u_cameraPct
-        uniforms.set("u_cameraPct", eased);
-
         std::string camera_texture_name = "_camera" + m_camera_transition_target_id;
         if (uniforms.textures.find(camera_texture_name) != uniforms.textures.end())
             uniforms.textures["u_cameraNextTex"] = uniforms.textures[camera_texture_name];
