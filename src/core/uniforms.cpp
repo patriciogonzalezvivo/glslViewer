@@ -758,6 +758,19 @@ bool Uniforms::addCameras( const std::string& _filename ) {
             if (image_filename != "" && vera::urlExists(path)) {
                 addTexture("_camera" + vera::toString(counter), path);
             }
+
+            // Lock this camera's displayed aspect ratio to the source
+            // image's, so resizing the window/viewport letterboxes instead
+            // of stretching the CUSTOM projection matrix built above (which
+            // already assumes that exact aspect). Prefer the actual loaded
+            // image's dimensions (ground truth); fall back to Fy/Fx, which
+            // matches the image aspect only when pixels are square (fx==fy).
+            vera::TexturesMap::iterator texIt = textures.find("_camera" + vera::toString(counter));
+            if (texIt != textures.end() && texIt->second->getHeight() > 0)
+                camera->setLockedAspect(float(texIt->second->getWidth()) / float(texIt->second->getHeight()));
+            else if (Fx > 0.0f)
+                camera->setLockedAspect(Fy / Fx);
+
             counter++;
         }
 

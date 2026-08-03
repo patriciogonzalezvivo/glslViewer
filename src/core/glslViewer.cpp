@@ -196,6 +196,14 @@ void GlslViewer::finishCameraSelection(const std::string& _id) {
     m_camera_id = _id;
     uniforms.activeCamera = uniforms.cameras[_id];
 
+    // This specific loaded camera object's crop rectangle was last computed
+    // whenever it was previously active (or at load time, if never) -- while
+    // it sat inactive the window may have been resized, which only ever
+    // refreshes "default"'s viewport (see onWindowResize/updateCameraTransition).
+    // Refresh it now so switching to this camera doesn't snap to a stale,
+    // wrong-sized crop from an earlier window size.
+    uniforms.activeCamera->setViewport(vera::getWindowWidth(), vera::getWindowHeight());
+
     // Selecting a camera orbits around the loaded model's
     // bounding-box center -- NOT world origin, which for a raw
     // COLMAP scene is an arbitrary point unrelated to where the
@@ -223,6 +231,7 @@ void GlslViewer::finishCameraSelection(const std::string& _id) {
     uniforms.cameras["default"]->setWorldUp(uniforms.activeCamera->getWorldUp());
     uniforms.cameras["default"]->setTransformMatrix(uniforms.activeCamera->getTransformMatrix());
     uniforms.cameras["default"]->setProjection(uniforms.activeCamera->getProjectionMatrix());
+    uniforms.cameras["default"]->setLockedAspect(uniforms.activeCamera->getLockedAspect());
     uniforms.cameras["default"]->bFlipped = uniforms.activeCamera->bFlipped;
 
     applyCameraMatrixUniforms(uniforms.activeCamera);
@@ -952,6 +961,7 @@ void GlslViewer::commandsInit(CommandList &_commands ) {
             if (uniforms.activeCamera != uniforms.cameras["default"]) {
                 uniforms.cameras["default"]->setTransformMatrix(uniforms.activeCamera->getTransformMatrix());
                 uniforms.cameras["default"]->setProjection(uniforms.activeCamera->getProjectionMatrix());
+                uniforms.cameras["default"]->setLockedAspect(uniforms.activeCamera->getLockedAspect());
                 
                 uniforms.activeCamera = uniforms.cameras["default"];
             }
@@ -978,6 +988,7 @@ void GlslViewer::commandsInit(CommandList &_commands ) {
             if (uniforms.activeCamera != uniforms.cameras["default"]) {
                 uniforms.cameras["default"]->setTransformMatrix(uniforms.activeCamera->getTransformMatrix());
                 uniforms.cameras["default"]->setProjection(uniforms.activeCamera->getProjectionMatrix());
+                uniforms.cameras["default"]->setLockedAspect(uniforms.activeCamera->getLockedAspect());
                 
                 uniforms.activeCamera = uniforms.cameras["default"];
             }
@@ -1028,6 +1039,7 @@ void GlslViewer::commandsInit(CommandList &_commands ) {
                 uniforms.cameras["default"]->setWorldUp(uniforms.activeCamera->getWorldUp());
                 uniforms.cameras["default"]->setTransformMatrix(uniforms.activeCamera->getTransformMatrix());
                 uniforms.cameras["default"]->setProjection(uniforms.activeCamera->getProjectionMatrix());
+                uniforms.cameras["default"]->setLockedAspect(uniforms.activeCamera->getLockedAspect());
 
                 uniforms.activeCamera = uniforms.cameras["default"];
             }
@@ -1056,6 +1068,7 @@ void GlslViewer::commandsInit(CommandList &_commands ) {
             if (uniforms.activeCamera != uniforms.cameras["default"]) {
                 uniforms.cameras["default"]->setTransformMatrix(uniforms.activeCamera->getTransformMatrix());
                 uniforms.cameras["default"]->setProjection(uniforms.activeCamera->getProjectionMatrix());
+                uniforms.cameras["default"]->setLockedAspect(uniforms.activeCamera->getLockedAspect());
                 uniforms.activeCamera = uniforms.cameras["default"];
             }
             uniforms.activeCamera->move(vera::toFloat(values[1]), vera::toFloat(values[2]), vera::toFloat(values[3]));
@@ -1076,6 +1089,7 @@ void GlslViewer::commandsInit(CommandList &_commands ) {
                 uniforms.cameras["default"]->setWorldUp(uniforms.activeCamera->getWorldUp());
                 uniforms.cameras["default"]->setTransformMatrix(uniforms.activeCamera->getTransformMatrix());
                 uniforms.cameras["default"]->setProjection(uniforms.activeCamera->getProjectionMatrix());
+                uniforms.cameras["default"]->setLockedAspect(uniforms.activeCamera->getLockedAspect());
                 uniforms.activeCamera = uniforms.cameras["default"];
             }
             uniforms.activeCamera->setTarget( glm::vec3(vera::toFloat(values[1]), vera::toFloat(values[2]), vera::toFloat(values[3])) );
@@ -2822,6 +2836,7 @@ void GlslViewer::onScroll(float _yoffset) {
             uniforms.cameras["default"]->setWorldUp(uniforms.activeCamera->getWorldUp());
             uniforms.cameras["default"]->setTransformMatrix(uniforms.activeCamera->getTransformMatrix());
             uniforms.cameras["default"]->setProjection(uniforms.activeCamera->getProjectionMatrix());
+            uniforms.cameras["default"]->setLockedAspect(uniforms.activeCamera->getLockedAspect());
 
             uniforms.activeCamera = uniforms.cameras["default"];
         }
@@ -2866,6 +2881,7 @@ void GlslViewer::onMousePress(float _x, float _y, int _button) {
         uniforms.cameras["default"]->setWorldUp(uniforms.activeCamera->getWorldUp());
         uniforms.cameras["default"]->setTransformMatrix(uniforms.activeCamera->getTransformMatrix());
         uniforms.cameras["default"]->setProjection(uniforms.activeCamera->getProjectionMatrix());
+        uniforms.cameras["default"]->setLockedAspect(uniforms.activeCamera->getLockedAspect());
         uniforms.activeCamera = uniforms.cameras["default"];
     }
 
@@ -2918,6 +2934,7 @@ void GlslViewer::onMouseDrag(float _x, float _y, int _button) {
         uniforms.cameras["default"]->setWorldUp(uniforms.activeCamera->getWorldUp());
         uniforms.cameras["default"]->setTransformMatrix(uniforms.activeCamera->getTransformMatrix());
         uniforms.cameras["default"]->setProjection(uniforms.activeCamera->getProjectionMatrix());
+        uniforms.cameras["default"]->setLockedAspect(uniforms.activeCamera->getLockedAspect());
         uniforms.cameras["default"]->bFlipped = uniforms.activeCamera->bFlipped;
 
         // Recalculate orbital parameters from current state to prevent jumps
@@ -2985,55 +3002,75 @@ void GlslViewer::onWindowResize(int _newWidth, int _newHeight) {
         if (uniforms.activeCamera != uniforms.cameras["default"]) {
                 uniforms.cameras["default"]->setTransformMatrix(uniforms.activeCamera->getTransformMatrix());
                 uniforms.cameras["default"]->setProjection(uniforms.activeCamera->getProjectionMatrix());
+                uniforms.cameras["default"]->setLockedAspect(uniforms.activeCamera->getLockedAspect());
                 
                 uniforms.activeCamera = uniforms.cameras["default"];
             }
-        uniforms.activeCamera->setViewport(_newWidth, _newHeight);
+        // GLFW's window-resize callback (which feeds _newWidth/_newHeight
+        // here) reports logical/window points, not physical framebuffer
+        // pixels -- on a Retina/HiDPI display those differ by
+        // getDisplayPixelRatio() (e.g. 2x). Camera::begin() issues
+        // glViewport() directly in physical pixels (matching the setup()
+        // call at the bottom of GlslViewer::setup(), which already uses
+        // getWindowWidth()/getWindowHeight()), so a locked-aspect camera's
+        // letterbox rect must be computed in the same physical-pixel units
+        // or it ends up half-sized and offset on HiDPI screens.
+        uniforms.activeCamera->setViewport(vera::getWindowWidth(), vera::getWindowHeight());
     }
-    
-    for (size_t i = 0; i < uniforms.buffers.size(); i++) 
+
+    // Same logical-points-vs-physical-pixels gap as the camera viewport
+    // above: _newWidth/_newHeight are window points, but every buffer/FBO
+    // below (including m_sceneRender.renderFbo, which postprocessing reads
+    // back at native size) needs to be allocated at the real framebuffer
+    // resolution, or it silently ends up allocated at half res on a 2x
+    // Retina display -- which then clips against a camera viewport rect
+    // computed for the full physical size.
+    int physWidth = vera::getWindowWidth();
+    int physHeight = vera::getWindowHeight();
+
+    for (size_t i = 0; i < uniforms.buffers.size(); i++)
         if (uniforms.buffers[i]->scale > 0.0)
-            uniforms.buffers[i]->allocate(  _newWidth * uniforms.buffers[i]->scale, 
-                                            _newHeight * uniforms.buffers[i]->scale, 
+            uniforms.buffers[i]->allocate(  physWidth * uniforms.buffers[i]->scale,
+                                            physHeight * uniforms.buffers[i]->scale,
                                             vera::COLOR_FLOAT_TEXTURE);
 
     for (size_t i = 0; i < uniforms.doubleBuffers.size(); i++) {
         if (uniforms.doubleBuffers[i]->buffer(0).scale > 0.0 || uniforms.doubleBuffers[i]->buffer(1).scale > 0.0) {
-            uniforms.doubleBuffers[i]->buffer(0).allocate(  _newWidth * uniforms.doubleBuffers[i]->buffer(0).scale, 
-                                                            _newHeight * uniforms.doubleBuffers[i]->buffer(0).scale, 
+            uniforms.doubleBuffers[i]->buffer(0).allocate(  physWidth * uniforms.doubleBuffers[i]->buffer(0).scale,
+                                                            physHeight * uniforms.doubleBuffers[i]->buffer(0).scale,
                                                             vera::COLOR_FLOAT_TEXTURE);
-            uniforms.doubleBuffers[i]->buffer(1).allocate(  _newWidth * uniforms.doubleBuffers[i]->buffer(1).scale, 
-                                                            _newHeight * uniforms.doubleBuffers[i]->buffer(1).scale, 
+            uniforms.doubleBuffers[i]->buffer(1).allocate(  physWidth * uniforms.doubleBuffers[i]->buffer(1).scale,
+                                                            physHeight * uniforms.doubleBuffers[i]->buffer(1).scale,
                                                             vera::COLOR_FLOAT_TEXTURE);
         }
     }
 
     for (size_t i = 0; i < uniforms.pyramids.size(); i++) {
         if (m_pyramid_fbos[i].scale > 0.0) {
-            m_pyramid_fbos[i].allocate( _newWidth * m_pyramid_fbos[i].scale, 
-                                        _newHeight * m_pyramid_fbos[i].scale, 
+            m_pyramid_fbos[i].allocate( physWidth * m_pyramid_fbos[i].scale,
+                                        physHeight * m_pyramid_fbos[i].scale,
                                         vera::COLOR_FLOAT_TEXTURE);
 
-            uniforms.pyramids[i].allocate(  _newWidth * m_pyramid_fbos[i].scale, 
-                                            _newHeight * m_pyramid_fbos[i].scale);
+            uniforms.pyramids[i].allocate(  physWidth * m_pyramid_fbos[i].scale,
+                                            physHeight * m_pyramid_fbos[i].scale);
         }
     }
 
     for (size_t i = 0; i < uniforms.floods.size(); i++) {
         if (uniforms.floods[i].scale > 0.0) {
-            uniforms.floods[i].allocate( _newWidth * uniforms.floods[i].scale, 
-                                         _newHeight * uniforms.floods[i].scale, 
+            uniforms.floods[i].allocate( physWidth * uniforms.floods[i].scale,
+                                         physHeight * uniforms.floods[i].scale,
                                          vera::COLOR_FLOAT_TEXTURE);
         }
     }
 
     if (quilt_resolution >= 0)
         m_sceneRender.updateBuffers(uniforms, vera::getQuiltWidth(), vera::getQuiltHeight());
-    else 
-        m_sceneRender.updateBuffers(uniforms, _newWidth, _newHeight);
+    else
+        m_sceneRender.updateBuffers(uniforms, physWidth, physHeight);
 
-    if (screenshotFile != "" || isRecording()) 
-        m_record_fbo.allocate(_newWidth, _newHeight, vera::COLOR_TEXTURE_DEPTH_BUFFER);
+    if (screenshotFile != "" || isRecording())
+        m_record_fbo.allocate(physWidth, physHeight, vera::COLOR_TEXTURE_DEPTH_BUFFER);
 
     vera::flagChange();
     m_change_viewport = true;
