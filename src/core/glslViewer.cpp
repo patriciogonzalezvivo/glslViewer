@@ -1973,8 +1973,16 @@ void GlslViewer::_renderBuffers() {
         // Update uniforms and textures
         uniforms.feedTo( &m_buffers_shaders[i], true, false);
 
+        // feedTo() above just set u_resolution to the WINDOW's size (its
+        // only definition, glslViewer.cpp:136-138), but this buffer was just
+        // bound to its own (possibly scale != 1.0) resolution -- override
+        // with the actual bound size, or gl_FragCoord/u_resolution-style
+        // normalized coordinates only reach as far as the buffer's scale
+        // fraction instead of the full 0..1 range.
+        m_buffers_shaders[i].setUniform("u_resolution", float(uniforms.buffers[i]->getWidth()), float(uniforms.buffers[i]->getHeight()));
+
         vera::billboard()->render( &m_buffers_shaders[i] );
-        
+
         uniforms.buffers[i]->unbind();
 
         TRACK_END("render:buffer" + vera::toString(i))
@@ -2005,6 +2013,10 @@ void GlslViewer::_renderBuffers() {
         // Update uniforms and textures
         uniforms.feedTo( &m_doubleBuffers_shaders[i], true, false);
 
+        // See the equivalent u_resolution override in the u_buffer loop
+        // above -- same fix, this pass's target is dst, not the window.
+        m_doubleBuffers_shaders[i].setUniform("u_resolution", float(uniforms.doubleBuffers[i]->dst->getWidth()), float(uniforms.doubleBuffers[i]->dst->getHeight()));
+
         vera::billboard()->render( &m_doubleBuffers_shaders[i] );
         
         uniforms.doubleBuffers[i]->dst->unbind();
@@ -2027,6 +2039,10 @@ void GlslViewer::_renderBuffers() {
 
         // Update uniforms and textures
         uniforms.feedTo( &m_pyramid_subshaders[i], true, true );
+
+        // See the equivalent u_resolution override in the u_buffer loop
+        // above -- same fix, this pass's target is m_pyramid_fbos[i].
+        m_pyramid_subshaders[i].setUniform("u_resolution", float(m_pyramid_fbos[i].getWidth()), float(m_pyramid_fbos[i].getHeight()));
 
         for (size_t j = 0; j < m_sceneRender.buffersFbo.size(); j++)
             if (m_sceneRender.buffersFbo[j]->isAllocated())
@@ -2069,6 +2085,10 @@ void GlslViewer::_renderBuffers() {
 
         // Update uniforms and textures
         uniforms.feedTo( &m_flood_subshaders[i], true, false );
+
+        // See the equivalent u_resolution override in the u_buffer loop
+        // above -- same fix, this pass's target is dst, not the window.
+        m_flood_subshaders[i].setUniform("u_resolution", float(uniforms.floods[i].dst->getWidth()), float(uniforms.floods[i].dst->getHeight()));
 
         vera::billboard()->render( &m_flood_subshaders[i] );
 
