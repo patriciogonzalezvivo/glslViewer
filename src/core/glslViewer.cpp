@@ -2394,11 +2394,15 @@ void GlslViewer::renderUI() {
                 yOffset -= drawHeight; // Center of first texture at top of screen
                 
                 // Draw texture
+                // vera::image() takes a center position and a *half*-size (the
+                // billboard quad spans -1..1, scaled by _width/_height), so the
+                // left edge lands at x - drawWidth; to align it with the
+                // viewport's left border (x = 0) the center must be drawWidth.
                 vera::TextureStreamsMap::const_iterator slit = uniforms.streams.find(it->first);
                 if ( slit != uniforms.streams.end() )
-                    vera::image((vera::TextureStream*)slit->second, drawWidth * 0.5, yOffset, drawWidth, drawHeight, true);
-                else 
-                    vera::image(it->second, drawWidth * 0.5, yOffset, drawWidth, drawHeight);
+                    vera::image((vera::TextureStream*)slit->second, drawWidth, yOffset, drawWidth, drawHeight, true);
+                else
+                    vera::image(it->second, drawWidth, yOffset, drawWidth, drawHeight);
 
                 // Draw label at top-left corner
                 // Texture center is at yOffset, so top edge is at yOffset + drawHeight/2
