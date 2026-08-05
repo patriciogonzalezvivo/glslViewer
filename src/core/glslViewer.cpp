@@ -2377,19 +2377,25 @@ void GlslViewer::renderUI() {
             vera::textAlign(vera::ALIGN_TOP);
             vera::textAlign(vera::ALIGN_LEFT);
 
+            // Same scale/cap rule used for the buffers/passes column on the right:
+            // shrink to fit nTotal items within the viewport height, but never
+            // grow a single item past 25% of the viewport height.
+            float scale = fmin(1.0f / (float)nTotal, 0.25) * 0.5;
+            float yStep = h * scale;
+
             float yOffset = h;
             for (vera::TexturesMap::iterator it = uniforms.textures.begin(); it != uniforms.textures.end(); it++) {
                 // if texture names starts width '_' skip it (internal texture)
                 if (it->first[0] == '_')
                     continue;
-                
+
                 // Get texture dimensions
                 float texWidth = (float)it->second->getWidth();
                 float texHeight = (float)it->second->getHeight();
                 float imgAspect = texWidth / texHeight;
-                
-                // Calculate drawing height: limited to 64px and actual texture height
-                float drawHeight = fmin(fmin(64.0f, h/(nTotal+1)), texHeight);
+
+                // Calculate drawing height: limited to the scaled/capped step and actual texture height
+                float drawHeight = fmin(yStep, texHeight);
                 float drawWidth = drawHeight * imgAspect;
                 yOffset -= drawHeight; // Center of first texture at top of screen
                 
