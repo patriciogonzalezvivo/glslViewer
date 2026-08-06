@@ -2216,7 +2216,16 @@ void fileWatcherThread() {
     struct stat st;
     while ( bKeepRunnig.load() ) {
         for (size_t i = 0; i < files.size(); i++) {
-            stat( files[i].path.c_str(), &st );
+            // IMPORTANT: check stat()'s return value. On failure (e.g. a shader
+            // #include dependency whose path can't be stat'd) `st` is left
+            // untouched, retaining the PREVIOUS file's mtime -- which then reads
+            // as a "change" on every poll, firing onFileChange()/resetShaders()
+            // twice a second. That spurious reset calls console_clear(), which
+            // wipes the command line being typed in the ncurses console. Skip
+            // files we can't stat instead of acting on stale data.
+            if ( stat( files[i].path.c_str(), &st ) != 0 )
+                continue;
+
             int date = st.st_mtime;
             if ( date != files[i].lastChange ) {
                 filesMutex.lock();
