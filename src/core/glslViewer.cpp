@@ -38,6 +38,17 @@
 
 #endif
 
+// Namespace prefix derived from a geometry file path (directory + extension
+// stripped, purified). Used to keep the models of several geometry files apart
+// in the shared scene map and to hot-reload them independently.
+static std::string geomPrefix(const std::string& _path) {
+    std::string base = vera::getFilename(_path);
+    std::string ext = vera::getExt(_path);
+    if (!ext.empty() && base.size() > ext.size() + 1)
+        base = base.substr(0, base.size() - ext.size() - 1);
+    return vera::toLower( vera::toUnderscore( vera::purifyString(base) ) );
+}
+
 // ------------------------------------------------------------------------- CONTRUCTOR
 GlslViewer::GlslViewer(): 
     screenshotFile(""), lenticular(""), quilt_resolution(-1), quilt_tile(-1), 
@@ -1277,7 +1288,7 @@ void GlslViewer::commandsInit(CommandList &_commands ) {
     "models[,clear]", "print all or clear all loaded models."));
 
     _commands.push_back(Command("generate_sdf", [&](const std::string& _line) { 
-        if (geom_index != -1) {
+        if (hasGeometry()) {
             std::vector<std::string> values = vera::split(_line,',');
             float padding = 0.01f;
             if (values.size() > 1)
@@ -1368,7 +1379,7 @@ void GlslViewer::commandsInit(CommandList &_commands ) {
     }, "max_mem_in_queue[,<bytes>]", "set the maximum amount of memory used by a queue to export images to disk"));
     #endif
 
-    if (vert_index != -1 || geom_index != -1) {
+    if (vert_index != -1 || hasGeometry()) {
         m_sceneRender.commandsInit(_commands, uniforms);
         m_sceneRender.uniformsInit(uniforms);
     }
@@ -1389,7 +1400,7 @@ void GlslViewer::loadAssets(WatchFileList &_files) {
     }
     else {
         // If there is no use the default one
-        if (geom_index == -1)
+        if (!hasGeometry())
             m_frag_source = vera::getDefaultSrc(vera::FRAG_DEFAULT);
         else {
             std::string defaultFrag = vera::getDefaultSrc(vera::FRAG_DEFAULT_SCENE);
@@ -1407,7 +1418,7 @@ void GlslViewer::loadAssets(WatchFileList &_files) {
     }
     else {
         // If there is no use the default one
-        if (geom_index == -1) {
+        if (!hasGeometry()) {
             m_vert_source = vera::getDefaultSrc(vera::VERT_DEFAULT);
         }
         else {
@@ -1433,15 +1444,22 @@ void GlslViewer::loadAssets(WatchFileList &_files) {
 
     // LOAD GEOMETRY
     // -----------------------------------------------
-    if (geom_index != -1) {
-        uniforms.load(_files[geom_index].path, verbose);
+    if (hasGeometry()) {
+        // Load every geometry file, namespacing each by its own prefix so a mix
+        // of meshes, point clouds and splats can coexist in the same scene.
+        bool anySplat = false;
+        for (size_t i = 0; i < geom_indices.size(); i++) {
+            const std::string& path = _files[ geom_indices[i] ].path;
+            uniforms.load(path, verbose, geomPrefix(path));
+            if (vera::getExt(path) == "splat" || vera::getExt(path) == "SPLAT")
+                anySplat = true;
+        }
+
         m_sceneRender.loadScene(uniforms);
         uniforms.activeCamera->setTarget(m_sceneRender.getCenter());
-        
-        float dist = m_sceneRender.getArea() * 2.0; 
-        if (vera::getExt(_files[geom_index].path) == "splat")
-            dist = m_sceneRender.getArea() * 1.5;
 
+        // Splats look better a bit closer; if any splat is present bias in.
+        float dist = m_sceneRender.getArea() * (anySplat ? 1.5 : 2.0);
         uniforms.activeCamera->orbit(m_camera_azimuth, m_camera_elevation, dist);
     }
     else {
@@ -1475,7 +1493,7 @@ void GlslViewer::loadAssets(WatchFileList &_files) {
         uniforms.activeCamera->setProjection(vera::ProjectionType::PERSPECTIVE_VIRTUAL_OFFSET);
         // uniforms.activeCamera->setClipping(0.01, 100.0);
 
-        if (geom_index != -1)
+        if (hasGeometry())
             uniforms.activeCamera->orbit(m_camera_azimuth, m_camera_elevation, m_sceneRender.getArea() * 8.5);
 
         if (lenticular.size() == 0) {
@@ -1508,7 +1526,28 @@ void GlslViewer::loadAssets(WatchFileList &_files) {
 
     if (uniforms.models.size() > 0 ) {
         float area = getSceneRender().getArea();
-        uniforms.setSunPosition( glm::vec3(0.0,area*10.0,area*10.0) );
+        const bool colmap = uniforms.isColmapFrame();
+
+        // A COLMAP scene (loaded from a camera.csv, regardless of whether the
+        // geometry is a point cloud, mesh or splat) lives in a frame whose "up"
+        // is inverted relative to OpenGL's +Y (the COLMAP->GL conversion negates
+        // Y/Z). Left unflipped, the environment map is upside down -- so mirror
+        // the sky/environment into that frame. This is independent of lighting.
+        if (colmap) {
+            uniforms.setSkyFlip(true);
+
+            // Re-flip an already-loaded environment cubemap to match (cubemaps
+            // load vertically flipped by default; reload with the opposite).
+            if (uniforms.activeCubemap && !uniforms.activeCubemap->getFilePath().empty())
+                uniforms.activeCubemap->load(uniforms.activeCubemap->getFilePath(), false);
+        }
+
+        // Only place a default sun if the scene didn't bring its own lights: a
+        // glTF with KHR_lights_punctual supplies its own (u_light, u_light1, ...)
+        // and overriding them here would fight the authored lighting.
+        if (!uniforms.haveLights())
+            uniforms.setSunPosition( colmap ? glm::vec3(0.0, -area*10.0, -area*10.0)
+                                            : glm::vec3(0.0,  area*10.0,  area*10.0) );
     }
 
     // LOAD SHADERS
@@ -2129,6 +2168,35 @@ void GlslViewer::renderPrep() {
             uniforms.loadQueue.clear();
             uniforms.loadMutex.unlock();
         }
+
+        // GEOMETRY hot-reload (deferred from the file-watcher thread so the GL
+        // work happens here on the render thread). Reload only the models of
+        // each changed file (namespaced by its prefix), then recompute scene
+        // bounds and re-apply the current shaders/defines to all models.
+        std::vector<std::string> geomReloads;
+        {
+            std::lock_guard<std::mutex> lock(m_geom_reload_mutex);
+            geomReloads.swap(m_geom_reload_queue);
+        }
+        if (!geomReloads.empty()) {
+            for (size_t i = 0; i < geomReloads.size(); i++) {
+                const std::string prefix = geomPrefix(geomReloads[i]);
+                uniforms.removeModelsByPrefix(prefix);
+                uniforms.load(geomReloads[i], verbose, prefix);
+            }
+
+            m_sceneRender.loadScene(uniforms);
+            m_sceneRender.setShaders(uniforms, m_frag_source, m_vert_source);
+            addDefine("LIGHT_SHADOWMAP", "u_lightShadowMap");
+            #if defined(PLATFORM_RPI)
+            addDefine("LIGHT_SHADOWMAP_SIZE", "512.0");
+            #else
+            addDefine("LIGHT_SHADOWMAP_SIZE", "2048.0");
+            #endif
+
+            vera::flagChange();
+            uniforms.flagChange();
+        }
     }
 
     // BUFFERS
@@ -2362,26 +2430,37 @@ void GlslViewer::renderUI() {
         vera::textAngle(0.0);
     }
 
-    // // IN PUT TEXTURES
-    if (m_showTextures) {      
+    // // INPUT TEXTURES
+    if (m_showTextures) {
 
-        int nTotal = uniforms.textures.size();
-        
-        if (nTotal > 0) {
+        // Count only the textures we'll actually draw (internal ones whose name
+        // starts with '_' are skipped). Scaling off the full map made the shown
+        // thumbnails smaller than necessary whenever hidden textures existed.
+        int nVisible = 0;
+        for (vera::TexturesMap::iterator it = uniforms.textures.begin(); it != uniforms.textures.end(); ++it)
+            if (it->first[0] != '_')
+                nVisible++;
+
+        if (nVisible > 0) {
             vera::setDepthTest(false);
 
             TRACK_BEGIN("renderUI:textures")
-            float w = (float)(vera::getWindowWidth());
             float h = (float)(vera::getWindowHeight());
-            
+
             vera::textAlign(vera::ALIGN_TOP);
             vera::textAlign(vera::ALIGN_LEFT);
 
-            // Same scale/cap rule used for the buffers/passes column on the right:
-            // shrink to fit nTotal items within the viewport height, but never
-            // grow a single item past 25% of the viewport height.
-            float scale = fmin(1.0f / (float)nTotal, 0.25) * 0.5;
-            float yStep = h * scale;
+            // Vertical space each entry gets: fit all visible entries in the
+            // viewport height, but let a few of them grow up to ~1/3 of the
+            // height instead of staying tiny (the old rule capped at 1/4 AND
+            // then halved it, so a lone texture only used an eighth of the
+            // height and labels were unreadable).
+            float itemH = fmin(h / (float)nVisible, h * 0.25f);
+            float halfH = itemH * 0.5f;
+
+            // Label size tracks the thumbnail height but stays within a
+            // readable range no matter how many textures there are.
+            float labelPx = fmin(fmax(itemH * 0.18f, 16.0f), 34.0f);
 
             float yOffset = h;
             for (vera::TexturesMap::iterator it = uniforms.textures.begin(); it != uniforms.textures.end(); it++) {
@@ -2394,11 +2473,11 @@ void GlslViewer::renderUI() {
                 float texHeight = (float)it->second->getHeight();
                 float imgAspect = texWidth / texHeight;
 
-                // Calculate drawing height: limited to the scaled/capped step and actual texture height
-                float drawHeight = fmin(yStep, texHeight);
+                // Half-size for vera::image(); the thumbnail spans itemH tall.
+                float drawHeight = halfH;
                 float drawWidth = drawHeight * imgAspect;
                 yOffset -= drawHeight; // Center of first texture at top of screen
-                
+
                 // Draw texture
                 // vera::image() takes a center position and a *half*-size (the
                 // billboard quad spans -1..1, scaled by _width/_height), so the
@@ -2413,9 +2492,10 @@ void GlslViewer::renderUI() {
                 // Draw label at top-left corner
                 // Texture center is at yOffset, so top edge is at yOffset + drawHeight/2
                 vera::fill(1.0f, 1.0f, 1.0f, 1.0f); // White text
-                float labelY = vera::getWindowHeight() - (yOffset + drawHeight); // Position label at top-left corner of texture    
+                vera::textSize(labelPx);
+                float labelY = vera::getWindowHeight() - (yOffset + drawHeight); // Position label at top-left corner of texture
                 vera::textHighlight(it->first, 0.0f, labelY, glm::vec4(0.0f, 0.0f, 0.0f, 0.5f));
-                
+
                 // Move down for next texture: go past bottom + spacing
                 yOffset -= drawHeight;
             }
@@ -2452,11 +2532,21 @@ void GlslViewer::renderUI() {
         if (nTotal > 0) {
             float w = (float)(vera::getWindowWidth());
             float h = (float)(vera::getWindowHeight());
-            float scale = fmin(1.0f / (float)(nTotal), 0.25) * 0.5;
-            float xStep = w * scale;
-            float yStep = h * scale;
+
+            // Use the SAME sizing rule as the input-textures column on the left
+            // so a thumbnail here and a thumbnail there come out the same size:
+            // fit all entries in the viewport height, capped at ~1/3 height, and
+            // work in half-sizes (xStep/yStep) since vera::image() takes a
+            // half-size and each entry advances by yStep*2 (== itemH).
+            float itemH = fmin(h / (float)nTotal, h * 0.25f);
+            float xStep = itemH * 0.5f;
+            float yStep = itemH * 0.5f;
             float xOffset = w - xStep;
             float yOffset = h - yStep;
+
+            // Match the textures column's readable, height-proportional labels.
+            float labelPx = fmin(fmax(itemH * 0.18f, 16.0f), 34.0f);
+            vera::textSize(labelPx);
 
             vera::textAlign(vera::ALIGN_TOP);
             vera::textAlign(vera::ALIGN_LEFT);
@@ -2620,7 +2710,7 @@ void GlslViewer::renderUI() {
     }
 
     #if !defined(__EMSCRIPTEN__)
-    if (frag_index == -1 && vert_index == -1 && geom_index == -1 && vera::getWindowStyle() != vera::EMBEDDED) {
+    if (frag_index == -1 && vert_index == -1 && !hasGeometry() && vera::getWindowStyle() != vera::EMBEDDED) {
         float w = (float)(vera::getWindowWidth());
         float h = (float)(vera::getWindowHeight());
         float xStep = w * 0.05;
@@ -2673,7 +2763,7 @@ void GlslViewer::renderUI() {
         vera::textSize(22.0f);
         yStep = vera::textHeight() * 1.5f;
 
-        if (geom_index != -1) {
+        if (hasGeometry()) {
             vera::text("a - " + std::string( m_sceneRender.showAxis? "hide" : "show" ) + " axis", x, y);
             y += yStep;
             vera::text("b - " + std::string( m_sceneRender.showBBoxes? "hide" : "show" ) + " bounding boxes", x, y);
@@ -2683,7 +2773,7 @@ void GlslViewer::renderUI() {
         vera::text("c - hide/show cursor", x, y);
         y += yStep;
 
-        if (geom_index != -1) {
+        if (hasGeometry()) {
             vera::text("d - " + std::string( m_sceneRender.dynamicShadows? "disable" : "enable" ) + " dynamic shadows", x, y);
             y += yStep;
             vera::text("f - hide/show floor", x, y);
@@ -2691,7 +2781,7 @@ void GlslViewer::renderUI() {
         }
         vera::text("F - " + std::string( vera::isFullscreen() ? "disable" : "enable" ) + " fullscreen", x, y);
         y += yStep;
-        if (geom_index != -1) {
+        if (hasGeometry()) {
             vera::text("g - " + std::string( m_sceneRender.showGrid? "hide" : "show" ) + " grid", x, y);
             y += yStep;
         }
@@ -2710,7 +2800,7 @@ void GlslViewer::renderUI() {
             y += yStep;
         }
 
-        if (geom_index != -1) {
+        if (hasGeometry()) {
             vera::text("s - hide/show sky", x, y);
             y += yStep;
         }
@@ -2818,9 +2908,17 @@ void GlslViewer::onFileChange(WatchFileList &_files, int index) {
     case VERT_SHADER:
         reset_shaders(m_vert_source, m_vert_dependencies);
         break;
-    case GEOMETRY:
-        // TODO
+    case GEOMETRY: {
+        // onFileChange runs on the file-watcher thread, which has NO GL context.
+        // Reloading geometry creates/destroys VBOs (and possibly material
+        // textures), which are GL calls -- doing them here crashes. So just
+        // enqueue the path; renderPrep() performs the reload on the render
+        // thread. See m_geom_reload_queue.
+        std::lock_guard<std::mutex> lock(m_geom_reload_mutex);
+        if (std::find(m_geom_reload_queue.begin(), m_geom_reload_queue.end(), filename) == m_geom_reload_queue.end())
+            m_geom_reload_queue.push_back(filename);
         break;
+    }
     case IMAGE:
         reload_uniforms(uniforms.textures, filename, _files[index]);
         break;

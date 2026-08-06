@@ -353,7 +353,10 @@ bool Uniforms::feedTo(vera::Shader *_shader, bool _lights, bool _buffers ) {
             //      - Lights should be pass as structs?? 
 
             for (vera::LightsMap::iterator it = lights.begin(); it != lights.end(); ++it) {
-                std::string name = "u_" + it->first;
+                // The primary light keeps the key "default" (e.g. a glTF's first
+                // light is transferred into it) but is still exposed as u_light,
+                // matching the single-light case; the rest are u_light1, u_light2...
+                std::string name = (it->first == "default") ? "u_light" : "u_" + it->first;
 
                 _shader->setUniform(name + "Color", it->second->color);
                 _shader->setUniform(name + "Intensity", it->second->intensity);
@@ -782,6 +785,10 @@ bool Uniforms::addCameras( const std::string& _filename ) {
         // flip Gsplat otherwise applies for standalone viewing (see
         // vera::Gsplat::setUseColmapFrame).
         if (counter > 0) {
+            // Scene-level COLMAP frame flag: applies to every geometry type in
+            // the scene (see Uniforms::isColmapFrame). The gsplat static below
+            // is just the splat renderer's view of the same fact.
+            m_colmapFrame = true;
             vera::Gsplat::setUseColmapFrame(true);
 
             // A COLMAP reconstruction's world frame has an arbitrary gauge --

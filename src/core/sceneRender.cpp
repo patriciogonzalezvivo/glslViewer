@@ -459,8 +459,16 @@ bool SceneRender::loadScene(Uniforms& _uniforms) {
     // Cubemap
     m_cubemap_shader.setSource(vera::getDefaultSrc(vera::FRAG_CUBEMAP), vera::getDefaultSrc(vera::VERT_CUBEMAP));
 
-    // Light
-    vera::addLabel("u_light", _uniforms.lights["default"], vera::LABEL_DOWN, 30.0f);
+    // Light. Use find() rather than operator[] -- a scene that brought its own
+    // lights (e.g. a glTF) may not have a "default" key, and operator[] would
+    // silently insert a null Light* that later code dereferences.
+    {
+        vera::LightsMap::iterator lit = _uniforms.lights.find("default");
+        if (lit == _uniforms.lights.end())
+            lit = _uniforms.lights.begin();
+        if (lit != _uniforms.lights.end())
+            vera::addLabel("u_light", lit->second, vera::LABEL_DOWN, 30.0f);
+    }
     m_lightUI_shader.setSource(vera::getDefaultSrc(vera::FRAG_LIGHT), vera::getDefaultSrc(vera::VERT_LIGHT));
 
     return true;
@@ -520,7 +528,11 @@ void SceneRender::setShaders(Uniforms& _uniforms, const std::string& _fragmentSh
 
         m_floor.setShader(_fragmentShader, _vertexShader);
 
-        if (m_floor_subd == -1)
+        // Don't auto-show the floor for COLMAP scenes: their world frame/scale
+        // comes from a photogrammetry reconstruction, so a synthetic ground
+        // plane at y=bbox.min just floats through the scene. (A user can still
+        // turn it on explicitly with the "floor" command.)
+        if (m_floor_subd == -1 && !_uniforms.isColmapFrame())
             m_floor_subd_target = 0;
 
         if (m_shadows) 
@@ -625,33 +637,46 @@ void SceneRender::render(Uniforms& _uniforms) {
 
     vera::cullingMode(m_culling);
 
-    for (vera::ModelsMap::iterator it = _uniforms.models.begin(); it != _uniforms.models.end(); ++it) {
-        TRACK_BEGIN("render:scene:" + it->second->getName() )
+    // Two passes so opaque geometry and splats compose correctly when mixed.
+    // Splats alpha-blend with depth writes disabled (see Gsplat::render), so
+    // they must be drawn AFTER opaque models: pass 0 draws opaque meshes (which
+    // write depth), pass 1 draws splats (which depth-test against that depth so
+    // they're occluded behind meshes and blend in front of them). Without this
+    // the map's alphabetical order can draw a splat before a mesh, letting the
+    // opaque mesh paint over it unconditionally.
+    for (int pass = 0; pass < 2; pass++) {
+        for (vera::ModelsMap::iterator it = _uniforms.models.begin(); it != _uniforms.models.end(); ++it) {
+            const bool isSplat = it->second->getGsplat() != nullptr;
+            if (isSplat != (pass == 1))
+                continue;
 
-        // bind the shader
-        it->second->getShader()->use();
+            TRACK_BEGIN("render:scene:" + it->second->getName() )
 
-        // Update Uniforms and textures variables to the shader
-        _uniforms.feedTo( it->second->getShader(), true, true );
+            // bind the shader
+            it->second->getShader()->use();
 
-        // Pass special uniforms
-        it->second->getShader()->setUniform( "u_modelViewProjectionMatrix", vera::projectionViewWorldMatrix() * it->second->getTransformMatrix() );
-        it->second->getShader()->setUniform( "u_modelMatrix", m_origin.getTransformMatrix() * it->second->getTransformMatrix() );
-        it->second->getShader()->setUniform( "u_model", m_origin.getPosition() + m_floor.getPosition() );
+            // Update Uniforms and textures variables to the shader
+            _uniforms.feedTo( it->second->getShader(), true, true );
 
-        for (size_t i = 0; i < buffersFbo.size(); i++)
-            it->second->getShader()->setUniformTexture("u_sceneBuffer" + vera::toString(i), buffersFbo[i], it->second->getShader()->textureIndex++);
+            // Pass special uniforms
+            it->second->getShader()->setUniform( "u_modelViewProjectionMatrix", vera::projectionViewWorldMatrix() * it->second->getTransformMatrix() );
+            it->second->getShader()->setUniform( "u_modelMatrix", m_origin.getTransformMatrix() * it->second->getTransformMatrix() );
+            it->second->getShader()->setUniform( "u_model", m_origin.getPosition() + m_floor.getPosition() );
 
-        it->second->render();
+            for (size_t i = 0; i < buffersFbo.size(); i++)
+                it->second->getShader()->setUniformTexture("u_sceneBuffer" + vera::toString(i), buffersFbo[i], it->second->getShader()->textureIndex++);
 
-        // Splats disable depth writes for their own (alpha-blended) color
-        // draw above, so without this they'd never appear in u_sceneDepth
-        // at all -- see Gsplat::renderDepth() for why this needs its own
-        // pass rather than just enabling depth writes on the color draw.
-        if (_uniforms.functions["u_sceneDepth"].present && it->second->getGsplat() != nullptr)
-            it->second->getGsplat()->renderDepth(_uniforms.activeCamera, it->second->getTransformMatrix());
+            it->second->render();
 
-        TRACK_END("render:scene:" + it->second->getName() )
+            // Splats disable depth writes for their own (alpha-blended) color
+            // draw above, so without this they'd never appear in u_sceneDepth
+            // at all -- see Gsplat::renderDepth() for why this needs its own
+            // pass rather than just enabling depth writes on the color draw.
+            if (_uniforms.functions["u_sceneDepth"].present && isSplat)
+                it->second->getGsplat()->renderDepth(_uniforms.activeCamera, it->second->getTransformMatrix());
+
+            TRACK_END("render:scene:" + it->second->getName() )
+        }
     }
 
     TRACK_BEGIN("render:scene:devlook")

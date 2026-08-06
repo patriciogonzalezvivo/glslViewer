@@ -110,6 +110,13 @@ public:
 
     virtual bool        addCameras( const std::string& _filename );
 
+    // True once a COLMAP camera set (camera.csv) has been loaded. The scene
+    // then lives in COLMAP's world frame (up inverted vs OpenGL's +Y), which
+    // affects ALL geometry types -- point clouds, meshes and splats alike --
+    // not just gsplats. Consumers (e.g. sun/environment placement) should key
+    // off this rather than the gsplat-specific vera::Gsplat::getUseColmapFrame.
+    bool                isColmapFrame() const { return m_colmapFrame; }
+
     virtual void        clearUniforms();
     virtual void        printAvailableUniforms(bool _non_active);
     virtual void        printDefinedUniforms(bool _csv = false);
@@ -124,6 +131,7 @@ public:
 protected:
     size_t              m_frame;
     bool                m_play;
+    bool                m_colmapFrame = false;
 };
 
 

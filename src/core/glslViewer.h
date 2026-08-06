@@ -5,6 +5,9 @@
 #include "thread_pool/thread_pool.hpp"
 #endif
 
+#include <mutex>
+#include <vector>
+
 #include "sceneRender.h"
 #include "tools/files.h"
 #include "vera/ops/string.h"
@@ -94,7 +97,9 @@ public:
     // States
     int                 frag_index;
     int                 vert_index;
-    int                 geom_index;
+    int                 geom_index;             // index (into the WatchFileList) of the first geometry file, or -1. Kept for the Python API and single-geometry commands.
+    std::vector<int>    geom_indices;           // indices of ALL loaded geometry files (may combine meshes, point clouds and splats)
+    bool                hasGeometry() const { return !geom_indices.empty(); }
     bool                verbose;
     bool                cursor;
     bool                help;
@@ -103,6 +108,12 @@ public:
 protected:
     void                _updateBuffers();
     void                _renderBuffers();
+
+    // Geometry files whose reload was requested from the file-watcher thread.
+    // GL resources (VBOs, shaders, textures) can only be touched on the render
+    // thread, so onFileChange() just enqueues here and renderPrep() drains it.
+    std::vector<std::string> m_geom_reload_queue;
+    std::mutex               m_geom_reload_mutex;
 
     // Main Shader
     std::string         m_frag_source;

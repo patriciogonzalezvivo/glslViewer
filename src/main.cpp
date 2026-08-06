@@ -136,19 +136,32 @@ void loadFile(std::string path) {
                 vera::haveExt(path,"gltf") || vera::haveExt(path,"GLTF") ||
                 vera::haveExt(path,"splat") || vera::haveExt(path,"SPLAT") ) {
 
-        if (sandbox.geom_index == -1) {
+        // If this exact file is already loaded just refresh it, otherwise add
+        // it as an additional geometry (a mix of files can coexist).
+        int existing = -1;
+        for (size_t i = 0; i < sandbox.geom_indices.size(); i++)
+            if (files[ sandbox.geom_indices[i] ].path == path) {
+                existing = sandbox.geom_indices[i];
+                break;
+            }
+
+        if (existing == -1) {
             WatchFile file;
             file.type = GEOMETRY;
             file.path = path;
             file.lastChange = 0;
-            files.push_back(file); 
-            sandbox.geom_index = files.size()-1;
+            files.push_back(file);
+            int idx = files.size()-1;
+            sandbox.geom_indices.push_back(idx);
+            if (sandbox.geom_index == -1)
+                sandbox.geom_index = idx;
         }
-        else {
-            commandsRun("models,clear");
-            files[sandbox.geom_index].path = path;
-            files[sandbox.geom_index].lastChange = 0;
-        }
+        else
+            files[existing].lastChange = 0;
+
+        // Rebuild the scene from all geometry files (loadAssets re-loads each,
+        // so clear the model map first to avoid stale/duplicate models).
+        commandsRun("models,clear");
         sandbox.loadAssets(files);
         sandbox.getSceneRender().commandsInit(commands, sandbox.uniforms);
         sandbox.getSceneRender().uniformsInit(sandbox.uniforms);
@@ -742,13 +755,15 @@ int main(int argc, char **argv) {
             sandbox.vert_index = files.size()-1;
         }
 
-        // load geometry
-        else if ( sandbox.geom_index == -1 && ( vera::haveExt(argument,"ply") || vera::haveExt(argument,"PLY") ||
-                                                vera::haveExt(argument,"obj") || vera::haveExt(argument,"OBJ") ||
-                                                vera::haveExt(argument,"stl") || vera::haveExt(argument,"STL") ||
-                                                vera::haveExt(argument,"glb") || vera::haveExt(argument,"GLB") ||
-                                                vera::haveExt(argument,"gltf") || vera::haveExt(argument,"GLTF") ||
-                                                vera::haveExt(argument,"splat") || vera::haveExt(argument,"SPLAT") ) ) {
+        // load geometry (multiple geometry files can be combined, e.g. a mesh
+        // together with a splat: they coexist in the scene, each namespaced by
+        // its own file so the shared shader can branch per geometry)
+        else if ( vera::haveExt(argument,"ply") || vera::haveExt(argument,"PLY") ||
+                  vera::haveExt(argument,"obj") || vera::haveExt(argument,"OBJ") ||
+                  vera::haveExt(argument,"stl") || vera::haveExt(argument,"STL") ||
+                  vera::haveExt(argument,"glb") || vera::haveExt(argument,"GLB") ||
+                  vera::haveExt(argument,"gltf") || vera::haveExt(argument,"GLTF") ||
+                  vera::haveExt(argument,"splat") || vera::haveExt(argument,"SPLAT") ) {
             if ( stat(argument.c_str(), &st) != 0) {
                 std::cerr << "Error watching file " << argument << std::endl;
             }
@@ -757,8 +772,11 @@ int main(int argc, char **argv) {
                 file.type = GEOMETRY;
                 file.path = argument;
                 file.lastChange = st.st_mtime;
-                files.push_back(file); 
-                sandbox.geom_index = files.size()-1;
+                files.push_back(file);
+                int idx = files.size()-1;
+                sandbox.geom_indices.push_back(idx);
+                if (sandbox.geom_index == -1)
+                    sandbox.geom_index = idx;
             }
         }
 
@@ -1231,7 +1249,7 @@ int main(int argc, char **argv) {
         bKeepRunnig.store(false);
 
     onExit();
-    
+
     // Wait for watchers to end
     fileWatcher.join();
 
@@ -2181,7 +2199,11 @@ void onExit() {
     // clear screen
     glClear( GL_COLOR_BUFFER_BIT );
 
-    // Delete the dynamic resources
+    // Delete the dynamic resources. Scene::clear() frees models, textures,
+    // cubemaps, shaders, etc. but NOT fonts -- if left to the global static
+    // destructor they'd free their atlas GL texture AFTER closeGL() has
+    // destroyed the context, which crashes. Free them here while it's alive.
+    sandbox.uniforms.clearFonts();
     sandbox.uniforms.clear();
 
     // close openGL instance
