@@ -79,6 +79,8 @@ GlslViewer::GlslViewer():
     m_camera_elevation(0.0), m_camera_azimuth(0.0), m_camera_id("default"),
     m_camera_transitioning(false), m_camera_transition_time(0.0f), m_camera_transition_duration(0.6f),
     m_camera_transition_from_pos(0.0f), m_camera_transition_from_rot(1.0f, 0.0f, 0.0f, 0.0f), m_camera_transition_from_proj(1.0f),
+    m_cam_anim(CAM_NONE), m_cam_anim_phase(0.0f), m_cam_anim_amp(0.0f), m_cam_anim_min(0.0f), m_cam_anim_max(0.0f), m_cam_anim_speed(1.0f),
+    m_cam_base_pos(0.0f), m_cam_base_target(0.0f), m_cam_base_rot(1.0f, 0.0f, 0.0f, 0.0f), m_cam_base_az(0.0f), m_cam_base_el(0.0f), m_cam_base_dist(1.0f),
     m_error_screen(vera::SHOW_MAGENTA_SHADER),
     m_change_viewport(true), m_update_buffers(true), m_initialized(false), 
 
@@ -316,7 +318,8 @@ void GlslViewer::updateCameraTransition() {
         return;
     }
 
-    m_camera_transition_time += vera::getDelta();
+    // camera,speed scales the named-camera transition too (shared multiplier).
+    m_camera_transition_time += vera::getDelta() * glm::max(m_cam_anim_speed, 0.0f);
     float t = glm::clamp(m_camera_transition_time / m_camera_transition_duration, 0.0f, 1.0f);
     float eased = t * t * (3.0f - 2.0f * t); // smoothstep ease-in-out
 
@@ -347,6 +350,140 @@ void GlslViewer::updateCameraTransition() {
         m_camera_transitioning = false;
         finishCameraSelection(m_camera_transition_target_id);
     }
+}
+
+// Begin a camera animation. Captures the current pose of the interactive
+// "default" camera as the base that every frame's offset is applied against
+// (drift-free, and it stops cleanly wherever it is when cancelled). _a/_b carry
+// the per-mode parameter(s): amplitude in degrees (arc/pan/tilt/roll) or world
+// units (truck/pedestal), or min/max distance (dolly).
+void GlslViewer::startCameraAnimation(CameraAnim _mode, float _a, float _b) {
+    if (uniforms.activeCamera == nullptr)
+        return;
+
+    // Take over from any in-flight named-camera transition and animate the
+    // interactive "default" camera (mirrors onMousePress) so a loaded COLMAP
+    // camera's pristine pose isn't mutated.
+    m_camera_transitioning = false;
+
+    vera::CamerasMap::iterator dit = uniforms.cameras.find("default");
+    if (dit != uniforms.cameras.end() && uniforms.activeCamera != dit->second) {
+        vera::Camera* def = dit->second;
+        def->setWorldUp(uniforms.activeCamera->getWorldUp());
+        def->setTransformMatrix(uniforms.activeCamera->getTransformMatrix());
+        def->setProjection(uniforms.activeCamera->getProjectionMatrix());
+        def->setLockedAspect(uniforms.activeCamera->getLockedAspect());
+        def->bFlipped = uniforms.activeCamera->bFlipped;
+        uniforms.activeCamera = def;
+    }
+
+    vera::Camera* cam = uniforms.activeCamera;
+
+    // Resync the target with the current view direction (same as onMousePress)
+    // so orbit-anchored moves don't jump.
+    glm::vec3 v = cam->getPosition() - cam->getTarget();
+    float dist = glm::length(v);
+    if (dist > 0.001f && glm::dot(glm::normalize(v), cam->getZAxis()) < 0.99f)
+        cam->setTarget(cam->getPosition() - cam->getZAxis() * dist);
+
+    // Capture the base pose.
+    m_cam_base_pos = cam->getPosition();
+    m_cam_base_target = cam->getTarget();
+    m_cam_base_rot = cam->getOrientationQuat();
+    cam->getOrbitAngles(m_cam_base_az, m_cam_base_el);
+    m_cam_base_dist = glm::length(m_cam_base_pos - m_cam_base_target);
+    if (m_cam_base_dist < 0.001f)
+        m_cam_base_dist = 1.0f;
+
+    m_cam_anim = _mode;
+    m_cam_anim_phase = 0.0f;
+    m_cam_anim_amp = _a;
+    m_cam_anim_min = _a;   // dolly: min distance
+    m_cam_anim_max = _b;   // dolly: max distance
+
+    vera::flagChange();
+}
+
+// Advance the active camera animation one frame. Everything is computed as an
+// offset from the captured base pose so the oscillation never drifts. Called
+// once per frame from renderPrep(); cancelled by any mouse gesture.
+void GlslViewer::updateCameraAnimation() {
+    if (m_cam_anim == CAM_NONE)
+        return;
+
+    if (uniforms.activeCamera == nullptr) {
+        m_cam_anim = CAM_NONE;
+        return;
+    }
+
+    vera::Camera* cam = uniforms.activeCamera;
+    m_cam_anim_phase += vera::getDelta() * glm::max(m_cam_anim_speed, 0.0f);
+
+    const float p = m_cam_anim_phase;
+    // Symmetric ±1 ping-pong (smooth ease at the extremes); negative first so
+    // arc sweeps -half before +half.
+    const float s = -sinf(p);
+
+    switch (m_cam_anim) {
+        case CAM_ORBIT: {
+            // Continuous spin around the target (~30 deg/sec at speed 1).
+            float az = m_cam_base_az + p * 30.0f;
+            cam->orbit(az, m_cam_base_el, m_cam_base_dist);
+            m_camera_azimuth = az;
+            m_camera_elevation = m_cam_base_el;
+            break;
+        }
+        case CAM_ARC: {
+            float az = m_cam_base_az + (m_cam_anim_amp * 0.5f) * s;
+            cam->orbit(az, m_cam_base_el, m_cam_base_dist);
+            m_camera_azimuth = az;
+            m_camera_elevation = m_cam_base_el;
+            break;
+        }
+        case CAM_DOLLY: {
+            float u = 0.5f - 0.5f * cosf(p);   // [0,1], starts at min
+            float d = glm::mix(m_cam_anim_min, m_cam_anim_max, u);
+            cam->orbit(m_cam_base_az, m_cam_base_el, d);
+            break;
+        }
+        case CAM_TRUCK: {
+            glm::vec3 axis = m_cam_base_rot * glm::vec3(1.0f, 0.0f, 0.0f);
+            glm::vec3 off = axis * (m_cam_anim_amp * 0.5f * s);
+            cam->setPosition(m_cam_base_pos + off);
+            cam->setTarget(m_cam_base_target + off);
+            break;
+        }
+        case CAM_PEDESTAL: {
+            glm::vec3 axis = m_cam_base_rot * glm::vec3(0.0f, 1.0f, 0.0f);
+            glm::vec3 off = axis * (m_cam_anim_amp * 0.5f * s);
+            cam->setPosition(m_cam_base_pos + off);
+            cam->setTarget(m_cam_base_target + off);
+            break;
+        }
+        case CAM_PAN: {
+            cam->setPosition(m_cam_base_pos);
+            cam->setOrientation(m_cam_base_rot);
+            cam->pan(m_cam_anim_amp * 0.5f * s);
+            break;
+        }
+        case CAM_TILT: {
+            cam->setPosition(m_cam_base_pos);
+            cam->setOrientation(m_cam_base_rot);
+            cam->tilt(m_cam_anim_amp * 0.5f * s);
+            break;
+        }
+        case CAM_ROLL: {
+            cam->setPosition(m_cam_base_pos);
+            cam->setOrientation(m_cam_base_rot);
+            cam->roll(m_cam_anim_amp * 0.5f * s);
+            break;
+        }
+        default:
+            break;
+    }
+
+    applyCameraMatrixUniforms(cam);
+    vera::flagChange();
 }
 
 void GlslViewer::commandsInit(CommandList &_commands ) {
@@ -1134,32 +1271,88 @@ void GlslViewer::commandsInit(CommandList &_commands ) {
     },
     "camera_exposure[,<aper.>,<shutter>,<sensit.>]", "get or set the camera exposure values."));
 
-    _commands.push_back(Command("camera", [&](const std::string& _line){ 
+    _commands.push_back(Command("camera", [&](const std::string& _line){
         if (_line == "camera") {
             std::cout << m_camera_id << std::endl;
             return false;
         }
-        else {
-            std::vector<std::string> values = vera::split(_line,',');
-            if (values.size() == 2) {
-                if (values[1] == "list") {
-                    uniforms.printCameras();
+
+        std::vector<std::string> values = vera::split(_line,',');
+        if (values.size() >= 2) {
+            const std::string& verb = values[1];
+
+            // --- Camera animations (play until a mouse gesture cancels them) ---
+            if (verb == "orbit") {
+                startCameraAnimation(CAM_ORBIT);
+                return true;
+            }
+            else if (verb == "arc") {
+                float deg = (values.size() > 2) ? vera::toFloat(values[2]) : 180.0f;
+                startCameraAnimation(CAM_ARC, deg);
+                return true;
+            }
+            else if (verb == "dolly") {
+                // camera,dolly[,<min>,<max>] -- default to a spread around the
+                // current distance to the target.
+                float d = 1.0f;
+                if (uniforms.activeCamera)
+                    d = glm::length(uniforms.activeCamera->getPosition() - uniforms.activeCamera->getTarget());
+                float mn = (values.size() > 2) ? vera::toFloat(values[2]) : d * 0.5f;
+                float mx = (values.size() > 3) ? vera::toFloat(values[3]) : d * 1.5f;
+                startCameraAnimation(CAM_DOLLY, mn, mx);
+                return true;
+            }
+            else if (verb == "truck") {
+                startCameraAnimation(CAM_TRUCK, (values.size() > 2) ? vera::toFloat(values[2]) : 1.0f);
+                return true;
+            }
+            else if (verb == "pedestal") {
+                startCameraAnimation(CAM_PEDESTAL, (values.size() > 2) ? vera::toFloat(values[2]) : 1.0f);
+                return true;
+            }
+            else if (verb == "pan") {
+                startCameraAnimation(CAM_PAN, (values.size() > 2) ? vera::toFloat(values[2]) : 60.0f);
+                return true;
+            }
+            else if (verb == "tilt") {
+                startCameraAnimation(CAM_TILT, (values.size() > 2) ? vera::toFloat(values[2]) : 60.0f);
+                return true;
+            }
+            else if (verb == "roll") {
+                startCameraAnimation(CAM_ROLL, (values.size() > 2) ? vera::toFloat(values[2]) : 60.0f);
+                return true;
+            }
+            else if (verb == "speed") {
+                if (values.size() > 2) {
+                    m_cam_anim_speed = vera::toFloat(values[2]);
                     return true;
                 }
-                else if (values[1] == "default") {
-                    if (uniforms.cameras.find("default") != uniforms.cameras.end()) {
-                        uniforms.activeCamera = uniforms.cameras["default"];
-                        return true;
-                    }
-                }
-                else if (selectCamera(values[1])) {
+                std::cout << m_cam_anim_speed << std::endl;
+                return true;
+            }
+            else if (verb == "stop" || verb == "off") {
+                m_cam_anim = CAM_NONE;
+                return true;
+            }
+
+            // --- Named-camera selection (existing behavior) ---
+            else if (verb == "list") {
+                uniforms.printCameras();
+                return true;
+            }
+            else if (verb == "default") {
+                if (uniforms.cameras.find("default") != uniforms.cameras.end()) {
+                    uniforms.activeCamera = uniforms.cameras["default"];
                     return true;
                 }
+            }
+            else if (values.size() == 2 && selectCamera(verb)) {
+                return true;
             }
         }
         return false;
     },
-    "camera[,<name>|default|none|list]", "get or set the active camera."));
+    "camera[,<name>|default|list|orbit|arc,<deg>|dolly,<min>,<max>|truck,<d>|pedestal,<d>|pan,<a>|tilt,<a>|roll,<a>|speed,<n>|stop]", "select the active camera or play a camera animation (until a mouse gesture)."));
 
     _commands.push_back(Command("stream", [&](const std::string& _line) { 
         std::vector<std::string> values = vera::split(_line,',');
@@ -2156,6 +2349,7 @@ void GlslViewer::renderPrep() {
     TRACK_BEGIN("render")
 
     updateCameraTransition();
+    updateCameraAnimation();
 
     // UPDATE STREAMING TEXTURES
     // -----------------------------------------------
@@ -2935,8 +3129,10 @@ void GlslViewer::onFileChange(WatchFileList &_files, int index) {
 
 void GlslViewer::onScroll(float _yoffset) {
     // Manual interaction takes over immediately from any in-flight animated
-    // camera transition (see selectCamera()), rather than fighting it.
+    // camera transition (see selectCamera()) or camera animation (camera,orbit
+    // etc.), rather than fighting it.
     m_camera_transitioning = false;
+    m_cam_anim = CAM_NONE;
 
     // Vertical scroll button zooms u_view2d and view3d.
     /* zoomfactor 2^(1/4): 4 scroll wheel clicks to double in size. */
@@ -2994,8 +3190,10 @@ void GlslViewer::onMousePress(float _x, float _y, int _button) {
         return;
 
     // Manual interaction takes over immediately from any in-flight animated
-    // camera transition (see selectCamera()), rather than fighting it.
+    // camera transition (see selectCamera()) or camera animation (camera,orbit
+    // etc.), rather than fighting it.
     m_camera_transitioning = false;
+    m_cam_anim = CAM_NONE;
 
     // Switch to "default" first, exactly like onMouseDrag/onScroll -- so the
     // resync/angle logic below reads and (if needed) adjusts the camera
@@ -3034,8 +3232,10 @@ void GlslViewer::onMouseDrag(float _x, float _y, int _button) {
         return;
 
     // Manual interaction takes over immediately from any in-flight animated
-    // camera transition (see selectCamera()), rather than fighting it.
+    // camera transition (see selectCamera()) or camera animation (camera,orbit
+    // etc.), rather than fighting it.
     m_camera_transitioning = false;
+    m_cam_anim = CAM_NONE;
 
     if (quilt_resolution < 0) {
         // If it's not playing on the HOLOPLAY

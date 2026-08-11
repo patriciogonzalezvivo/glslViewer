@@ -191,6 +191,30 @@ protected:
     glm::quat                       m_camera_transition_from_rot;
     glm::mat4                       m_camera_transition_from_proj;
 
+    // Camera animation (camera,orbit / arc / dolly / truck / pedestal / pan /
+    // tilt / roll). Plays every frame in updateCameraAnimation() until the user
+    // does a mouse gesture (see onMousePress/onMouseDrag/onScroll), which sets
+    // m_cam_anim = CAM_NONE. m_cam_anim_speed is a global multiplier shared with
+    // the named-camera transition above.
+    enum CameraAnim { CAM_NONE, CAM_ORBIT, CAM_ARC, CAM_DOLLY,
+                      CAM_TRUCK, CAM_PEDESTAL, CAM_PAN, CAM_TILT, CAM_ROLL };
+    void                            startCameraAnimation(CameraAnim _mode, float _a = 0.0f, float _b = 0.0f);
+    void                            updateCameraAnimation();
+    CameraAnim                      m_cam_anim;
+    float                           m_cam_anim_phase;       // advances by getDelta()*speed
+    float                           m_cam_anim_amp;         // ping-pong amplitude (deg or dist)
+    float                           m_cam_anim_min;         // dolly min distance
+    float                           m_cam_anim_max;         // dolly max distance
+    float                           m_cam_anim_speed;        // global animation speed multiplier
+    // Base pose captured when an animation starts (offsets are applied relative
+    // to this every frame, so the oscillation never drifts and stops cleanly).
+    glm::vec3                       m_cam_base_pos;
+    glm::vec3                       m_cam_base_target;
+    glm::quat                       m_cam_base_rot;
+    float                           m_cam_base_az;
+    float                           m_cam_base_el;
+    float                           m_cam_base_dist;
+
     vera::ShaderErrorResolve        m_error_screen;
     bool                            m_change_viewport;
     bool                            m_update_buffers;
