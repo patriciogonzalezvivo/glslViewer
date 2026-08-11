@@ -153,8 +153,15 @@ class WasmLoader extends HTMLElement {
         // Initialize Module before loading script
         window.Module = {
             preRun: [],
-            keyboardListeningElement: canvas,
-            doNotCaptureKeyboard: true,
+            // NOTE: keyboard input is scoped to the canvas/wrapper via the
+            // window.addEventListener monkey-patch above, not via Module
+            // properties -- Module.keyboardListeningElement/doNotCaptureKeyboard
+            // are an SDL-only mechanism (see emscripten's src/lib/libsdl.js);
+            // this build uses GLFW (USE_GLFW=3), whose glue code never reads
+            // them. Newer Emscripten also dropped both from the default
+            // INCOMING_MODULE_JS_API allow-list, so setting them here aborted
+            // at runtime with "Module.keyboardListeningElement was supplied
+            // but ... not included in INCOMING_MODULE_JS_API".
             // canvas: canvas,
             onRuntimeInitialized: function() {
                 console.log('WASM Runtime Initialized');

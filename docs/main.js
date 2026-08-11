@@ -3,7 +3,7 @@
 
 import './wasm-loader.js';
 import { GitHubIntegration } from './github.js';
-import { GlslViewerIntegration } from './glslviewer.js';
+import { GlslViewerIntegration } from './glslViewerIntegration.js';
 import { EditorManager } from './editor.js';
 import { UIManager, getQueryVariable } from './ui.js';
 
