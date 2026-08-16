@@ -282,8 +282,38 @@ void setVert(char* c) {
 #ifdef __EMSCRIPTEN__
 EMSCRIPTEN_KEEPALIVE
 #endif
+// Set fragment + vertex together, then compile ONCE. Calling setFrag() then
+// setVert() (or vice versa) runs resetShaders() twice, and for a 3D scene the
+// first of those adds LIGHT_SHADOWMAP (glslViewer.cpp) so the *second* compile
+// sees the custom fragment referencing v_lightCoord while the just-swapped
+// custom vertex hasn't been paired with it yet -> "FRAGMENT varying v_lightCoord
+// does not match any VERTEX varying". The native CLI never hits this because it
+// loads both sources and compiles once. This mirrors that single-compile path.
+void setShaders(char* frag, char* vert) {
+    sandbox.setSource(FRAGMENT, std::string(frag) );
+    sandbox.setSource(VERTEX, std::string(vert) );
+    sandbox.resetShaders(files);
+}
+
+#ifdef __EMSCRIPTEN__
+EMSCRIPTEN_KEEPALIVE
+#endif
 void loadAsset(char* name, char* type) {
     loadFile(std::string(name));
+}
+
+#ifdef __EMSCRIPTEN__
+EMSCRIPTEN_KEEPALIVE
+#endif
+// Load an image already written to MEMFS and bind it to a *named* sampler
+// uniform (e.g. "u_alignedTex"), mirroring the native CLI's "-<name> <file>"
+// branch (see the argument parser above). loadAsset() alone can't do this --
+// it routes images through loadFile(), which only ever names them
+// u_tex0/u_tex1/... by counter -- so a self-contained bundle whose shader
+// samples named textures needs this explicit path.
+void loadTexture(char* name, char* path) {
+    sandbox.uniforms.addTexture(std::string(name), std::string(path), vFlip);
+    commandsRun("update");
 }
 
 #ifdef __EMSCRIPTEN__
