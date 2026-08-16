@@ -2722,7 +2722,7 @@ void GlslViewer::renderUI() {
         nTotal += uniforms.functions["u_sceneNormal"].present;
         nTotal += uniforms.functions["u_scenePosition"].present;
         nTotal += m_sceneRender.getBuffersTotal();
-        
+
         if (nTotal > 0) {
             float w = (float)(vera::getWindowWidth());
             float h = (float)(vera::getWindowHeight());
@@ -2752,7 +2752,11 @@ void GlslViewer::renderUI() {
                 offset.x += xStep - scale.x;
 
                 vera::image(uniforms.buffers[i], offset.x, offset.y, scale.x, scale.y);
-                vera::textHighlight("u_buffer" + vera::toString(i), xOffset - scale.x, vera::getWindowHeight() - yOffset - yStep, glm::vec4(0.0f, 0.0f, 0.0f, 0.5f));
+                // Label's left edge must match the image's actual left edge
+                // (offset.x - scale.x), not xOffset - scale.x -- those only
+                // coincide when scale.x == xStep, i.e. a square thumbnail.
+                // Any non-square buffer drifts the label off the border.
+                vera::textHighlight("u_buffer" + vera::toString(i), offset.x - scale.x, vera::getWindowHeight() - yOffset - yStep, glm::vec4(0.0f, 0.0f, 0.0f, 0.5f));
 
                 yOffset -= yStep * 2.0;
             }
@@ -2764,7 +2768,7 @@ void GlslViewer::renderUI() {
                 offset.x += xStep - scale.x;
 
                 vera::image(uniforms.doubleBuffers[i]->src, offset.x, offset.y, scale.x, scale.y);
-                vera::textHighlight("u_doubleBuffer" + vera::toString(i), xOffset - scale.x, vera::getWindowHeight() - yOffset - yStep, glm::vec4(0.0f, 0.0f, 0.0f, 0.5f));
+                vera::textHighlight("u_doubleBuffer" + vera::toString(i), offset.x - scale.x, vera::getWindowHeight() - yOffset - yStep, glm::vec4(0.0f, 0.0f, 0.0f, 0.5f));
 
                 yOffset -= yStep * 2.0;
             }
@@ -2807,7 +2811,7 @@ void GlslViewer::renderUI() {
                 offset.x += xStep - scale.x;
 
                 vera::image(uniforms.floods[i].dst, offset.x, offset.y, scale.x, scale.y);
-                vera::textHighlight("u_flood" + vera::toString(i), xOffset - scale.x, vera::getWindowHeight() - yOffset - yStep, glm::vec4(0.0f, 0.0f, 0.0f, 0.5f)  );
+                vera::textHighlight("u_flood" + vera::toString(i), offset.x - scale.x, vera::getWindowHeight() - yOffset - yStep, glm::vec4(0.0f, 0.0f, 0.0f, 0.5f)  );
 
                 yOffset -= yStep * 2.0;
             }
@@ -2824,40 +2828,60 @@ void GlslViewer::renderUI() {
                 vera::fill(1.0);
             }
 
+            // Scene-pass FBOs (renderFbo/normalFbo/positionFbo/buffersFbo) are
+            // allocated at the viewport's own width/height (see
+            // SceneRender::allocateBuffers()), i.e. the window's aspect ratio,
+            // not necessarily square. Scale the thumbnail width by each FBO's
+            // own aspect (same pattern as the uniforms.buffers[i]/doubleBuffers/
+            // pyramids/floods loops above) instead of the old xStep==yStep,
+            // which forced every one of these to a square regardless of the
+            // window's actual shape.
             if (uniforms.functions["u_scenePosition"].present) {
-                vera::image(&m_sceneRender.positionFbo, xOffset, yOffset, xStep, yStep);
-                vera::textHighlight("u_scenePosition", xOffset - xStep, vera::getWindowHeight() - yOffset - yStep, glm::vec4(0.0f, 0.0f, 0.0f, 0.5f));
+                glm::vec2 scale(yStep * ((float)m_sceneRender.positionFbo.getWidth() / (float)m_sceneRender.positionFbo.getHeight()), yStep);
+                float x = xOffset + xStep - scale.x;
+                vera::image(&m_sceneRender.positionFbo, x, yOffset, scale.x, scale.y);
+                // Label's left edge = the image's actual left edge (x - scale.x),
+                // matching the buffers/doubleBuffers/floods loops above.
+                vera::textHighlight("u_scenePosition", x - scale.x, vera::getWindowHeight() - yOffset - yStep, glm::vec4(0.0f, 0.0f, 0.0f, 0.5f));
                 yOffset -= yStep * 2.0;
             }
 
             if (uniforms.functions["u_sceneNormal"].present) {
-                vera::image(&m_sceneRender.normalFbo, xOffset, yOffset, xStep, yStep);
-                vera::textHighlight("u_sceneNormal", xOffset - xStep, vera::getWindowHeight() - yOffset - yStep, glm::vec4(0.0f, 0.0f, 0.0f, 0.5f));
+                glm::vec2 scale(yStep * ((float)m_sceneRender.normalFbo.getWidth() / (float)m_sceneRender.normalFbo.getHeight()), yStep);
+                float x = xOffset + xStep - scale.x;
+                vera::image(&m_sceneRender.normalFbo, x, yOffset, scale.x, scale.y);
+                vera::textHighlight("u_sceneNormal", x - scale.x, vera::getWindowHeight() - yOffset - yStep, glm::vec4(0.0f, 0.0f, 0.0f, 0.5f));
                 yOffset -= yStep * 2.0;
             }
 
             for (size_t i = 0; i < m_sceneRender.buffersFbo.size(); i++) {
-                vera::image(m_sceneRender.buffersFbo[i], xOffset, yOffset, xStep, yStep);
-                vera::textHighlight("u_sceneBuffer" + vera::toString(i), xOffset - xStep, vera::getWindowHeight() - yOffset - yStep, glm::vec4(0.0f, 0.0f, 0.0f, 0.5f));
+                glm::vec2 scale(yStep * ((float)m_sceneRender.buffersFbo[i]->getWidth() / (float)m_sceneRender.buffersFbo[i]->getHeight()), yStep);
+                float x = xOffset + xStep - scale.x;
+                vera::image(m_sceneRender.buffersFbo[i], x, yOffset, scale.x, scale.y);
+                vera::textHighlight("u_sceneBuffer" + vera::toString(i), x - scale.x, vera::getWindowHeight() - yOffset - yStep, glm::vec4(0.0f, 0.0f, 0.0f, 0.5f));
                 yOffset -= yStep * 2.0;
             }
 
             if (uniforms.functions["u_scene"].present) {
-                vera::image(&m_sceneRender.renderFbo, xOffset, yOffset, xStep, yStep);
-                vera::textHighlight("u_scene", xOffset - xStep, vera::getWindowHeight() - yOffset - yStep, glm::vec4(0.0f, 0.0f, 0.0f, 0.5f));
+                glm::vec2 scale(yStep * ((float)m_sceneRender.renderFbo.getWidth() / (float)m_sceneRender.renderFbo.getHeight()), yStep);
+                float x = xOffset + xStep - scale.x;
+                vera::image(&m_sceneRender.renderFbo, x, yOffset, scale.x, scale.y);
+                vera::textHighlight("u_scene", x - scale.x, vera::getWindowHeight() - yOffset - yStep, glm::vec4(0.0f, 0.0f, 0.0f, 0.5f));
                 yOffset -= yStep * 2.0;
             }
 
             if (uniforms.functions["u_sceneDepth"].present) {
+                glm::vec2 scale(yStep * ((float)m_sceneRender.renderFbo.getWidth() / (float)m_sceneRender.renderFbo.getHeight()), yStep);
+                float x = xOffset + xStep - scale.x;
                 vera::fill(0.0);
                 if (uniforms.activeCamera)
-                    vera::imageDepth(&m_sceneRender.renderFbo, xOffset, yOffset, xStep, yStep, uniforms.activeCamera->getFarClip(), uniforms.activeCamera->getNearClip());
+                    vera::imageDepth(&m_sceneRender.renderFbo, x, yOffset, scale.x, scale.y, uniforms.activeCamera->getFarClip(), uniforms.activeCamera->getNearClip());
                 // Must come before textHighlight(): it captures the CURRENT
                 // fill color as the text's foreground, so leaving it black
                 // (set above for imageDepth()) rendered black text on top of
                 // its own black semi-transparent background box -- invisible.
                 vera::fill(1.0);
-                vera::textHighlight("u_sceneDepth", xOffset - xStep, vera::getWindowHeight() - yOffset - yStep, glm::vec4(0.0f, 0.0f, 0.0f, 0.5f));
+                vera::textHighlight("u_sceneDepth", x - scale.x, vera::getWindowHeight() - yOffset - yStep, glm::vec4(0.0f, 0.0f, 0.0f, 0.5f));
                 yOffset -= yStep * 2.0;
             }
         }
