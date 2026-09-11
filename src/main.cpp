@@ -1274,14 +1274,15 @@ int main(int argc, char **argv) {
     while (vera::isGL() && bKeepRunnig.load())
         loop();
 
-    // If is terminated by the windows manager, turn bKeepRunnig off so the fileWatcher can stop
-    if ( !vera::isGL() )
-        bKeepRunnig.store(false);
+    // Stop the fileWatcher thread and wait for it to finish BEFORE tearing down
+    // scene resources. onFileChange() (run from that thread) can add/replace
+    // entries in Scene::textures; if onExit()'s clearTextures() runs while the
+    // watcher is still mid-reload, the two threads race on the same map and
+    // corrupt it, crashing on quit.
+    bKeepRunnig.store(false);
+    fileWatcher.join();
 
     onExit();
-
-    // Wait for watchers to end
-    fileWatcher.join();
 
     // Force cinWatcher to finish (because is waiting for input)
     #ifndef PLATFORM_WINDOWS

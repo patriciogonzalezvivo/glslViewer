@@ -77,9 +77,13 @@ GlslViewer::GlslViewer():
     // Scene
     m_view2d(1.0), m_time_offset(0.0),
     m_camera_elevation(0.0), m_camera_azimuth(0.0), m_camera_id("default"),
+    m_camera_az_constrained(false), m_camera_az_min(-180.0f), m_camera_az_max(180.0f),
+    m_camera_el_constrained(false), m_camera_el_min(-89.0f), m_camera_el_max(89.0f),
+    m_camera_az_origin(0.0f), m_camera_el_origin(0.0f),
     m_camera_transitioning(false), m_camera_transition_time(0.0f), m_camera_transition_duration(0.6f),
     m_camera_transition_from_pos(0.0f), m_camera_transition_from_rot(1.0f, 0.0f, 0.0f, 0.0f), m_camera_transition_from_proj(1.0f),
     m_cam_anim(CAM_NONE), m_cam_anim_phase(0.0f), m_cam_anim_amp(0.0f), m_cam_anim_min(0.0f), m_cam_anim_max(0.0f), m_cam_anim_speed(1.0f),
+    m_cam_idle_timeout(0.0f), m_cam_idle_elapsed(0.0f), m_cam_anim_paused(CAM_NONE),
     m_cam_base_pos(0.0f), m_cam_base_target(0.0f), m_cam_base_rot(1.0f, 0.0f, 0.0f, 0.0f), m_cam_base_az(0.0f), m_cam_base_el(0.0f), m_cam_base_dist(1.0f),
     m_error_screen(vera::SHOW_MAGENTA_SHADER),
     m_change_viewport(true), m_update_buffers(true), m_initialized(false), 
@@ -262,6 +266,12 @@ void GlslViewer::finishCameraSelection(const std::string& _id) {
     // starts orbiting.
     uniforms.cameras["default"]->getOrbitAngles(m_camera_azimuth, m_camera_elevation);
 
+    // Snapshot this as the origin for "camera,constrain,..." -- interaction
+    // limits are offsets from how this camera actually faced when selected,
+    // not from world-frame azimuth/elevation zero (see m_camera_az_origin).
+    m_camera_az_origin = m_camera_azimuth;
+    m_camera_el_origin = m_camera_elevation;
+
     std::string camera_texture_name = "_camera" + _id;
     if (uniforms.textures.find(camera_texture_name) != uniforms.textures.end())
         uniforms.textures["u_cameraTex"] = uniforms.textures[camera_texture_name];
@@ -401,15 +411,57 @@ void GlslViewer::startCameraAnimation(CameraAnim _mode, float _a, float _b) {
     m_cam_anim_min = _a;   // dolly: min distance
     m_cam_anim_max = _b;   // dolly: max distance
 
+    // A fresh animation request supersedes anything camera,resume had queued.
+    m_cam_anim_paused = CAM_NONE;
+
     vera::flagChange();
+}
+
+// Called by mouse/scroll gestures to interrupt a running animation. Remembers
+// it (so camera,resume,<sec> can restart it later) and resets the idle timer.
+void GlslViewer::cancelCameraAnimation() {
+    if (m_cam_anim != CAM_NONE)
+        m_cam_anim_paused = m_cam_anim;
+    m_cam_anim = CAM_NONE;
+    m_cam_idle_elapsed = 0.0f;
+}
+
+// Applies camera,constrain,az|el,<min>,<max> (offsets in degrees from
+// m_camera_az/el_origin) to a candidate orbit angle pair. Shared by manual
+// drag (onMouseDrag) and CAM_ORBIT/CAM_ARC animation (updateCameraAnimation)
+// so both respect the same limits.
+void GlslViewer::constrainOrbitAngles(float& _az, float& _el) {
+    if (m_camera_az_constrained) {
+        // _az can accumulate without wrapping (e.g. a long-running camera,orbit
+        // animation keeps adding degrees), so normalize its offset from the
+        // origin into (-180,180] before clamping -- orbit() is periodic in
+        // azimuth, so this never changes the resulting camera pose.
+        float offset = fmodf(_az - m_camera_az_origin + 180.0f, 360.0f);
+        if (offset < 0.0f) offset += 360.0f;
+        offset -= 180.0f;
+        offset = glm::clamp(offset, m_camera_az_min, m_camera_az_max);
+        _az = m_camera_az_origin + offset;
+    }
+    if (m_camera_el_constrained)
+        _el = glm::clamp(_el, m_camera_el_origin + m_camera_el_min, m_camera_el_origin + m_camera_el_max);
 }
 
 // Advance the active camera animation one frame. Everything is computed as an
 // offset from the captured base pose so the oscillation never drifts. Called
 // once per frame from renderPrep(); cancelled by any mouse gesture.
 void GlslViewer::updateCameraAnimation() {
-    if (m_cam_anim == CAM_NONE)
+    if (m_cam_anim == CAM_NONE) {
+        // camera,resume,<sec>: count idle time towards restarting whatever
+        // animation a mouse gesture just interrupted.
+        if (m_cam_anim_paused != CAM_NONE && m_cam_idle_timeout > 0.0f) {
+            m_cam_idle_elapsed += vera::getDelta();
+            if (m_cam_idle_elapsed >= m_cam_idle_timeout) {
+                CameraAnim mode = m_cam_anim_paused;
+                startCameraAnimation(mode, m_cam_anim_amp, m_cam_anim_max);
+            }
+        }
         return;
+    }
 
     if (uniforms.activeCamera == nullptr) {
         m_cam_anim = CAM_NONE;
@@ -428,16 +480,20 @@ void GlslViewer::updateCameraAnimation() {
         case CAM_ORBIT: {
             // Continuous spin around the target (~30 deg/sec at speed 1).
             float az = m_cam_base_az + p * 30.0f;
-            cam->orbit(az, m_cam_base_el, m_cam_base_dist);
+            float el = m_cam_base_el;
+            constrainOrbitAngles(az, el);
+            cam->orbit(az, el, m_cam_base_dist);
             m_camera_azimuth = az;
-            m_camera_elevation = m_cam_base_el;
+            m_camera_elevation = el;
             break;
         }
         case CAM_ARC: {
             float az = m_cam_base_az + (m_cam_anim_amp * 0.5f) * s;
-            cam->orbit(az, m_cam_base_el, m_cam_base_dist);
+            float el = m_cam_base_el;
+            constrainOrbitAngles(az, el);
+            cam->orbit(az, el, m_cam_base_dist);
             m_camera_azimuth = az;
-            m_camera_elevation = m_cam_base_el;
+            m_camera_elevation = el;
             break;
         }
         case CAM_DOLLY: {
@@ -1331,8 +1387,78 @@ void GlslViewer::commandsInit(CommandList &_commands ) {
                 return true;
             }
             else if (verb == "stop" || verb == "off") {
+                // Explicit stop, unlike a mouse gesture, also cancels any
+                // pending camera,resume restart.
                 m_cam_anim = CAM_NONE;
+                m_cam_anim_paused = CAM_NONE;
                 return true;
+            }
+            else if (verb == "resume") {
+                if (values.size() > 2) {
+                    m_cam_idle_timeout = (values[2] == "off") ? 0.0f : vera::toFloat(values[2]);
+                    if (m_cam_idle_timeout <= 0.0f)
+                        m_cam_anim_paused = CAM_NONE;
+                    return true;
+                }
+                std::cout << m_cam_idle_timeout << std::endl;
+                return true;
+            }
+
+            // --- Interaction constraints (mouse/touch orbit only; animations
+            // started above are unaffected and can move past these limits) ---
+            else if (verb == "constrain") {
+                if (values.size() == 3 && values[2] == "off") {
+                    m_camera_az_constrained = false;
+                    m_camera_el_constrained = false;
+                    return true;
+                }
+                else if (values.size() >= 4 && (values[2] == "az" || values[2] == "el")) {
+                    bool isAz = values[2] == "az";
+                    if (values[3] == "off") {
+                        (isAz ? m_camera_az_constrained : m_camera_el_constrained) = false;
+                        return true;
+                    }
+                    else if (values.size() == 4) {
+                        // Single angle == total degrees of freedom, centered
+                        // on the origin (e.g. "40" means +/-20).
+                        float half = vera::toFloat(values[3]) * 0.5f;
+                        float mn = -half;
+                        float mx = half;
+                        if (isAz) {
+                            m_camera_az_min = mn;
+                            m_camera_az_max = mx;
+                            m_camera_az_constrained = true;
+                        }
+                        else {
+                            m_camera_el_min = mn;
+                            m_camera_el_max = mx;
+                            m_camera_el_constrained = true;
+                        }
+                        return true;
+                    }
+                    else if (values.size() >= 5) {
+                        float mn = vera::toFloat(values[3]);
+                        float mx = vera::toFloat(values[4]);
+                        if (isAz) {
+                            m_camera_az_min = mn;
+                            m_camera_az_max = mx;
+                            m_camera_az_constrained = true;
+                        }
+                        else {
+                            m_camera_el_min = mn;
+                            m_camera_el_max = mx;
+                            m_camera_el_constrained = true;
+                        }
+                        return true;
+                    }
+                }
+                else if (values.size() == 2) {
+                    std::cout << "az: " << (m_camera_az_constrained ? vera::toString(m_camera_az_min) + "," + vera::toString(m_camera_az_max) : std::string("off"))
+                               << " el: " << (m_camera_el_constrained ? vera::toString(m_camera_el_min) + "," + vera::toString(m_camera_el_max) : std::string("off"))
+                               << std::endl;
+                    return true;
+                }
+                return false;
             }
 
             // --- Named-camera selection (existing behavior) ---
@@ -1352,7 +1478,7 @@ void GlslViewer::commandsInit(CommandList &_commands ) {
         }
         return false;
     },
-    "camera[,<name>|default|list|orbit|arc,<deg>|dolly,<min>,<max>|truck,<d>|pedestal,<d>|pan,<a>|tilt,<a>|roll,<a>|speed,<n>|stop]", "select the active camera or play a camera animation (until a mouse gesture)."));
+    "camera[,<name>|default|list|orbit|arc,<deg>|dolly,<min>,<max>|truck,<d>|pedestal,<d>|pan,<a>|tilt,<a>|roll,<a>|speed,<n>|stop|resume,<sec>|off|constrain,az|el,<min>,<max>|<total>|off]", "select the active camera, play a camera animation (until a mouse gesture), or constrain,<az|el>,<min>,<max> (or constrain,<az|el>,<total>, i.e. +/-total/2) to limit orbiting -- both mouse/touch drag and orbit/arc animation -- to that many degrees from this camera's original facing (constrain,off or constrain,<az|el>,off clears). resume,<sec> auto-restarts an animation this many idle seconds after a mouse gesture interrupts it (resume,off disables)."));
 
     _commands.push_back(Command("stream", [&](const std::string& _line) { 
         std::vector<std::string> values = vera::split(_line,',');
@@ -2345,6 +2471,19 @@ void GlslViewer::_renderBuffers() {
     vera::blendMode(vera::BLEND_ALPHA);
 }
 
+namespace {
+    template<typename uniform_list_t>
+    void reload_uniforms(uniform_list_t& unforms_list, std::string filename, bool vFlip) {
+        using uniform_t = typename uniform_list_t::value_type;
+        auto uniform_iterator = std::find_if(std::begin(unforms_list), std::end(unforms_list)
+                            , [&](uniform_t uniform){return filename == uniform.second->getFilePath();});
+        if(uniform_iterator != std::end(unforms_list)) {
+            std::cout << "Reloading" << filename << std::endl;
+            uniform_iterator->second->load(filename, vFlip);
+        }
+    }
+}
+
 void GlslViewer::renderPrep() {
     TRACK_BEGIN("render")
 
@@ -2388,6 +2527,24 @@ void GlslViewer::renderPrep() {
             addDefine("LIGHT_SHADOWMAP_SIZE", "2048.0");
             #endif
 
+            vera::flagChange();
+            uniforms.flagChange();
+        }
+
+        // IMAGE/CUBEMAP hot-reload (deferred from the file-watcher thread for
+        // the same reason as GEOMETRY above: reload_uniforms() makes GL calls).
+        std::vector<TexReload> texReloads;
+        {
+            std::lock_guard<std::mutex> lock(m_tex_reload_mutex);
+            texReloads.swap(m_tex_reload_queue);
+        }
+        for (size_t i = 0; i < texReloads.size(); i++) {
+            if (texReloads[i].type == IMAGE)
+                reload_uniforms(uniforms.textures, texReloads[i].filename, texReloads[i].vFlip);
+            else if (texReloads[i].type == CUBEMAP)
+                reload_uniforms(uniforms.cubemaps, texReloads[i].filename, texReloads[i].vFlip);
+        }
+        if (!texReloads.empty()) {
             vera::flagChange();
             uniforms.flagChange();
         }
@@ -3082,18 +3239,6 @@ void GlslViewer::printDependencies(ShaderType _type) const {
 }
 
 // ------------------------------------------------------------------------- EVENTS
-namespace {
-    template<typename uniform_list_t>
-    void reload_uniforms(uniform_list_t& unforms_list, std::string filename, const WatchFile &_file) {
-        using uniform_t = typename uniform_list_t::value_type;
-        auto uniform_iterator = std::find_if(std::begin(unforms_list), std::end(unforms_list)
-                            , [&](uniform_t uniform){return filename == uniform.second->getFilePath();});
-        if(uniform_iterator != std::end(unforms_list)) {
-            std::cout << "Reloading" << filename << std::endl;
-            uniform_iterator->second->load(filename, _file.vFlip);
-        }
-    }
-}
 
 void GlslViewer::onFileChange(WatchFileList &_files, int index) {
     FileType type = _files[index].type;
@@ -3138,11 +3283,15 @@ void GlslViewer::onFileChange(WatchFileList &_files, int index) {
         break;
     }
     case IMAGE:
-        reload_uniforms(uniforms.textures, filename, _files[index]);
+    case CUBEMAP: {
+        // Defer to the render thread (see m_tex_reload_queue): reload_uniforms()
+        // calls Texture::load(), which makes GL calls. Doing that here, on the
+        // file-watcher thread (no current GL context) and racing the render
+        // thread that may be using/deleting the same Texture, corrupts memory.
+        std::lock_guard<std::mutex> lock(m_tex_reload_mutex);
+        m_tex_reload_queue.push_back({type, filename, _files[index].vFlip});
         break;
-    case CUBEMAP:
-        reload_uniforms(uniforms.cubemaps, filename, _files[index]);
-        break;
+    }
     default: //'GLSL_DEPENDENCY' and 'IMAGE_BUMPMAP' not handled in switch
         break;
     }
@@ -3156,7 +3305,7 @@ void GlslViewer::onScroll(float _yoffset) {
     // camera transition (see selectCamera()) or camera animation (camera,orbit
     // etc.), rather than fighting it.
     m_camera_transitioning = false;
-    m_cam_anim = CAM_NONE;
+    cancelCameraAnimation();
 
     // Vertical scroll button zooms u_view2d and view3d.
     /* zoomfactor 2^(1/4): 4 scroll wheel clicks to double in size. */
@@ -3217,7 +3366,7 @@ void GlslViewer::onMousePress(float _x, float _y, int _button) {
     // camera transition (see selectCamera()) or camera animation (camera,orbit
     // etc.), rather than fighting it.
     m_camera_transitioning = false;
-    m_cam_anim = CAM_NONE;
+    cancelCameraAnimation();
 
     // Switch to "default" first, exactly like onMouseDrag/onScroll -- so the
     // resync/angle logic below reads and (if needed) adjusts the camera
@@ -3259,7 +3408,7 @@ void GlslViewer::onMouseDrag(float _x, float _y, int _button) {
     // camera transition (see selectCamera()) or camera animation (camera,orbit
     // etc.), rather than fighting it.
     m_camera_transitioning = false;
-    m_cam_anim = CAM_NONE;
+    cancelCameraAnimation();
 
     if (quilt_resolution < 0) {
         // If it's not playing on the HOLOPLAY
@@ -3319,9 +3468,13 @@ void GlslViewer::onMouseDrag(float _x, float _y, int _button) {
          // Update orbital angles
         m_camera_azimuth -= vel_x * 0.5f;
         m_camera_elevation -= vel_y * 0.5f;
-        
+
         // Clamp elevation to prevent gimbal lock
         m_camera_elevation = glm::clamp(m_camera_elevation, -89.0f, 89.0f);
+
+        // Optional user-set interaction constraints (camera,constrain,...);
+        // also applied to CAM_ORBIT/CAM_ARC animation in updateCameraAnimation().
+        constrainOrbitAngles(m_camera_azimuth, m_camera_elevation);
 
         uniforms.activeCamera->orbit(m_camera_azimuth, m_camera_elevation, currentDistance);
     } 

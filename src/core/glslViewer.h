@@ -115,6 +115,14 @@ protected:
     std::vector<std::string> m_geom_reload_queue;
     std::mutex               m_geom_reload_mutex;
 
+    // Same deal for IMAGE/CUBEMAP files: reloading a texture calls Texture::load(),
+    // which makes GL calls (glGenTextures/glTexImage2D). The file-watcher thread
+    // has no current GL context, so onFileChange() enqueues here and renderPrep()
+    // performs the reload on the render thread.
+    struct TexReload { FileType type; std::string filename; bool vFlip; };
+    std::vector<TexReload>   m_tex_reload_queue;
+    std::mutex               m_tex_reload_mutex;
+
     // Main Shader
     std::string         m_frag_source;
     std::string         m_vert_source;
@@ -178,6 +186,22 @@ protected:
     float                           m_camera_elevation;
     std::string                     m_camera_id;
 
+    // Optional per-axis limits on orbiting -- both mouse/touch interaction
+    // and CAM_ORBIT/CAM_ARC animation (set via "camera,constrain,az|el,<min>,
+    // <max>"). min/max are offsets in degrees from m_camera_az/el_origin --
+    // the azimuth/elevation the camera actually had when it was selected
+    // (see finishCameraSelection()), NOT world-frame zero, since a COLMAP
+    // camera's "facing the model" angle is arbitrary in that frame.
+    bool                            m_camera_az_constrained;
+    float                           m_camera_az_min;
+    float                           m_camera_az_max;
+    bool                            m_camera_el_constrained;
+    float                           m_camera_el_min;
+    float                           m_camera_el_max;
+    float                           m_camera_az_origin;
+    float                           m_camera_el_origin;
+    void                            constrainOrbitAngles(float& _az, float& _el);
+
     // Animated transition between named cameras (see selectCamera()),
     // advanced once per frame in updateCameraTransition().
     void                            updateCameraTransition();
@@ -200,12 +224,22 @@ protected:
                       CAM_TRUCK, CAM_PEDESTAL, CAM_PAN, CAM_TILT, CAM_ROLL };
     void                            startCameraAnimation(CameraAnim _mode, float _a = 0.0f, float _b = 0.0f);
     void                            updateCameraAnimation();
+    void                            cancelCameraAnimation(); // called on mouse gestures; remembers the animation for camera,resume
     CameraAnim                      m_cam_anim;
     float                           m_cam_anim_phase;       // advances by getDelta()*speed
     float                           m_cam_anim_amp;         // ping-pong amplitude (deg or dist)
     float                           m_cam_anim_min;         // dolly min distance
     float                           m_cam_anim_max;         // dolly max distance
     float                           m_cam_anim_speed;        // global animation speed multiplier
+    // camera,resume,<sec> -- if a mouse gesture interrupts a running
+    // animation, auto-restart it (with the same params, from wherever the
+    // user left the camera) after this many idle seconds. <= 0 disables it.
+    // m_cam_anim_paused holds the interrupted mode (CAM_NONE = nothing
+    // pending); m_cam_idle_elapsed counts up while idle and resets on every
+    // mouse gesture.
+    float                           m_cam_idle_timeout;
+    float                           m_cam_idle_elapsed;
+    CameraAnim                      m_cam_anim_paused;
     // Base pose captured when an animation starts (offsets are applied relative
     // to this every frame, so the oscillation never drifts and stops cleanly).
     glm::vec3                       m_cam_base_pos;
