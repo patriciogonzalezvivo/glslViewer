@@ -104,6 +104,13 @@ protected:
 
     size_t                      m_buffers_total;
 
+    // True when the user's own fragment shader provides a SCENE_BUFFER_NORMAL /
+    // SCENE_BUFFER_POSITION branch, so those G-buffers render with their frag+
+    // vert shaders (see setShaders). For gaussian splats this also swaps out the
+    // built-in renderNormal()/renderPosition() for the user's shader.
+    bool                        m_normal_buffer_custom;
+    bool                        m_position_buffer_custom;
+
     bool                        m_commands_loaded;
     bool                        m_uniforms_loaded;
 };

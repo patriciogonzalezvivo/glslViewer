@@ -45,7 +45,9 @@ SceneRender::SceneRender():
     // Floor
     m_floor_height(0.0), m_floor_subd_target(-1), m_floor_subd(-1),
 
-    m_buffers_total(0), m_commands_loaded(false), m_uniforms_loaded(false)
+    m_buffers_total(0),
+    m_normal_buffer_custom(false), m_position_buffer_custom(false),
+    m_commands_loaded(false), m_uniforms_loaded(false)
     {
     m_origin.setPosition(glm::vec3(0.0));
 }
@@ -494,8 +496,17 @@ void SceneRender::setShaders(Uniforms& _uniforms, const std::string& _fragmentSh
 
     bool position_buffer = findId(_fragmentShader, "u_scenePosition;");
     bool normal_buffer = findId(_fragmentShader, "u_sceneNormal;");
+    // If the user's own fragment shader provides a SCENE_BUFFER_POSITION /
+    // SCENE_BUFFER_NORMAL branch (like the numbered u_sceneBufferN buffers), we
+    // render that G-buffer with their frag+vert shaders (matching define set)
+    // instead of the built-in default. Otherwise we fall back to FRAG_POSITION/
+    // FRAG_NORMAL.
+    bool position_buffer_custom = position_buffer && findId(_fragmentShader, "SCENE_BUFFER_POSITION");
+    bool normal_buffer_custom   = normal_buffer   && findId(_fragmentShader, "SCENE_BUFFER_NORMAL");
+    m_position_buffer_custom = position_buffer_custom;
+    m_normal_buffer_custom   = normal_buffer_custom;
     m_shadows = findId(_fragmentShader, "u_lightShadowMap;");
-    m_buffers_total = std::max( countSceneBuffers(_vertexShader), 
+    m_buffers_total = std::max( countSceneBuffers(_vertexShader),
                                 countSceneBuffers(_fragmentShader) );
 
     for (vera::ModelsMap::iterator it = _uniforms.models.begin(); it != _uniforms.models.end(); ++it) {
@@ -504,11 +515,25 @@ void SceneRender::setShaders(Uniforms& _uniforms, const std::string& _fragmentSh
         if (m_shadows)
             it->second->setBufferShader("shadow", vera::getDefaultSrc(vera::FRAG_ERROR), _vertexShader);
 
-        if (position_buffer)
-            it->second->setBufferShader("position", vera::getDefaultSrc(vera::FRAG_POSITION), _vertexShader);
-        
-        if (normal_buffer)
-            it->second->setBufferShader("normal", vera::getDefaultSrc(vera::FRAG_NORMAL), _vertexShader);
+        if (position_buffer) {
+            if (position_buffer_custom) {
+                it->second->setBufferShader("position", _fragmentShader, _vertexShader);
+                it->second->getBufferShader("position")->delDefine("FLOOR");
+                it->second->getBufferShader("position")->addDefine("SCENE_BUFFER_POSITION");
+            }
+            else
+                it->second->setBufferShader("position", vera::getDefaultSrc(vera::FRAG_POSITION), _vertexShader);
+        }
+
+        if (normal_buffer) {
+            if (normal_buffer_custom) {
+                it->second->setBufferShader("normal", _fragmentShader, _vertexShader);
+                it->second->getBufferShader("normal")->delDefine("FLOOR");
+                it->second->getBufferShader("normal")->addDefine("SCENE_BUFFER_NORMAL");
+            }
+            else
+                it->second->setBufferShader("normal", vera::getDefaultSrc(vera::FRAG_NORMAL), _vertexShader);
+        }
 
         for (size_t i = 0; i < m_buffers_total; i++) {
             std::string bufferName = "u_sceneBuffer" + vera::toString(i);
@@ -538,11 +563,25 @@ void SceneRender::setShaders(Uniforms& _uniforms, const std::string& _fragmentSh
         if (m_shadows) 
             m_floor.setBufferShader("shadow", vera::getDefaultSrc(vera::FRAG_ERROR), _vertexShader);
 
-        if (position_buffer)
-            m_floor.setBufferShader("position", vera::getDefaultSrc(vera::FRAG_POSITION), _vertexShader);
-        
-        if (normal_buffer)
-            m_floor.setBufferShader("normal", vera::getDefaultSrc(vera::FRAG_NORMAL), _vertexShader);
+        if (position_buffer) {
+            if (position_buffer_custom) {
+                m_floor.setBufferShader("position", _fragmentShader, _vertexShader);
+                m_floor.getBufferShader("position")->addDefine("FLOOR");
+                m_floor.getBufferShader("position")->addDefine("SCENE_BUFFER_POSITION");
+            }
+            else
+                m_floor.setBufferShader("position", vera::getDefaultSrc(vera::FRAG_POSITION), _vertexShader);
+        }
+
+        if (normal_buffer) {
+            if (normal_buffer_custom) {
+                m_floor.setBufferShader("normal", _fragmentShader, _vertexShader);
+                m_floor.getBufferShader("normal")->addDefine("FLOOR");
+                m_floor.getBufferShader("normal")->addDefine("SCENE_BUFFER_NORMAL");
+            }
+            else
+                m_floor.setBufferShader("normal", vera::getDefaultSrc(vera::FRAG_NORMAL), _vertexShader);
+        }
 
         for (size_t i = 0; i < m_buffers_total; i++) {
             std::string bufferName = "u_sceneBuffer" + vera::toString(i);
@@ -726,12 +765,25 @@ void SceneRender::renderNormalBuffer(Uniforms& _uniforms) {
     vera::cullingMode(m_culling);
 
     for (vera::ModelsMap::iterator it = _uniforms.models.begin(); it != _uniforms.models.end(); ++it) {
-        // Gaussian splats have no scene-graph shader to plug in here (their
-        // vertex/attribute layout is fixed), so they render their own
-        // internal normal-buffer shader instead of the generic mesh path.
+        // Gaussian splats have no generic mesh path. By default they render
+        // their own built-in normal-buffer shader. But when the user's shader
+        // provides a SCENE_BUFFER_NORMAL branch, render the splat with that
+        // shader instead (same borrowing path as the color pass in render()),
+        // so a custom splat vertex/fragment shader drives the normal buffer.
         if (it->second->getGsplat() != nullptr) {
             TRACK_BEGIN("render:sceneNormal:" + it->second->getName() )
-            it->second->getGsplat()->renderNormal( _uniforms.activeCamera, m_origin.getTransformMatrix() * it->second->getTransformMatrix() );
+            vera::Shader* customNormal = m_normal_buffer_custom ? it->second->getBufferShader("normal") : nullptr;
+            if (customNormal != nullptr) {
+                customNormal->use();
+                _uniforms.feedTo( customNormal, false );
+                customNormal->setUniform( "u_modelViewProjectionMatrix", vera::projectionViewWorldMatrix() * it->second->getTransformMatrix());
+                customNormal->setUniform( "u_model", m_origin.getPosition() + it->second->getPosition() );
+                customNormal->setUniform( "u_modelMatrix", m_origin.getTransformMatrix() * it->second->getTransformMatrix() );
+                it->second->getGsplat()->use( customNormal );
+                it->second->getGsplat()->render( _uniforms.activeCamera, m_origin.getTransformMatrix() * it->second->getTransformMatrix() );
+            }
+            else
+                it->second->getGsplat()->renderNormal( _uniforms.activeCamera, m_origin.getTransformMatrix() * it->second->getTransformMatrix() );
             TRACK_END("render:sceneNormal:" + it->second->getName() )
             continue;
         }
@@ -798,6 +850,25 @@ void SceneRender::renderPositionBuffer(Uniforms& _uniforms) {
     vera::cullingMode(m_culling);
 
     for (vera::ModelsMap::iterator it = _uniforms.models.begin(); it != _uniforms.models.end(); ++it) {
+        // When the user's shader provides a SCENE_BUFFER_POSITION branch, render
+        // a splat with that shader (same borrowing path as the color pass), so a
+        // custom splat vertex/fragment shader drives the position buffer.
+        if (it->second->getGsplat() != nullptr && m_position_buffer_custom) {
+            vera::Shader* customPosition = it->second->getBufferShader("position");
+            if (customPosition != nullptr) {
+                TRACK_BEGIN("render:scenePosition:" + it->second->getName() )
+                customPosition->use();
+                _uniforms.feedTo( customPosition, false );
+                customPosition->setUniform( "u_modelViewProjectionMatrix", vera::projectionViewWorldMatrix() * it->second->getTransformMatrix() );
+                customPosition->setUniform( "u_model", m_origin.getPosition() + it->second->getPosition() );
+                customPosition->setUniform( "u_modelMatrix", m_origin.getTransformMatrix() * it->second->getTransformMatrix() );
+                it->second->getGsplat()->use( customPosition );
+                it->second->getGsplat()->render( _uniforms.activeCamera, m_origin.getTransformMatrix() * it->second->getTransformMatrix() );
+                TRACK_END("render:scenePosition:" + it->second->getName() )
+            }
+            continue;
+        }
+
         positionShader = it->second->getBufferShader("position");
         if (positionShader != nullptr) {
             TRACK_BEGIN("render:scenePosition:" + it->second->getName() )
