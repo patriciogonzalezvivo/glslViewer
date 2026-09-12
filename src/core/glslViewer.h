@@ -249,6 +249,28 @@ protected:
     float                           m_cam_base_el;
     float                           m_cam_base_dist;
 
+    // camera,resume,animation,<bool> -- when true, camera,resume's idle-timeout
+    // restart (above) eases the camera back to the pose it had right before the
+    // mouse gesture that interrupted the animation, then continues the
+    // animation's phase from where it was paused instead of restarting it from
+    // the current (dragged-to) pose at phase 0.
+    bool                            m_cam_resume_restore;
+    // Pose captured in cancelCameraAnimation() at the moment a mouse gesture
+    // interrupts a running animation (only when m_cam_resume_restore is on) --
+    // i.e. the camera's pose right before that interaction began.
+    glm::vec3                       m_cam_pre_pos;
+    glm::vec3                       m_cam_pre_target;
+    glm::quat                       m_cam_pre_rot;
+    // Ease-back transition (see beginCameraResume/updateCameraResume), driven
+    // like updateCameraTransition() by m_cam_anim_speed over
+    // m_camera_transition_duration seconds.
+    void                            beginCameraResume();
+    void                            updateCameraResume();
+    bool                            m_cam_resuming;
+    float                           m_cam_resume_time;
+    glm::vec3                       m_cam_resume_from_pos;
+    glm::quat                       m_cam_resume_from_rot;
+
     vera::ShaderErrorResolve        m_error_screen;
     bool                            m_change_viewport;
     bool                            m_update_buffers;

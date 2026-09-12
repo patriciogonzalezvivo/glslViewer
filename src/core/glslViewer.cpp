@@ -85,6 +85,8 @@ GlslViewer::GlslViewer():
     m_cam_anim(CAM_NONE), m_cam_anim_phase(0.0f), m_cam_anim_amp(0.0f), m_cam_anim_min(0.0f), m_cam_anim_max(0.0f), m_cam_anim_speed(1.0f),
     m_cam_idle_timeout(0.0f), m_cam_idle_elapsed(0.0f), m_cam_anim_paused(CAM_NONE),
     m_cam_base_pos(0.0f), m_cam_base_target(0.0f), m_cam_base_rot(1.0f, 0.0f, 0.0f, 0.0f), m_cam_base_az(0.0f), m_cam_base_el(0.0f), m_cam_base_dist(1.0f),
+    m_cam_resume_restore(false), m_cam_pre_pos(0.0f), m_cam_pre_target(0.0f), m_cam_pre_rot(1.0f, 0.0f, 0.0f, 0.0f),
+    m_cam_resuming(false), m_cam_resume_time(0.0f), m_cam_resume_from_pos(0.0f), m_cam_resume_from_rot(1.0f, 0.0f, 0.0f, 0.0f),
     m_error_screen(vera::SHOW_MAGENTA_SHADER),
     m_change_viewport(true), m_update_buffers(true), m_initialized(false), 
 
@@ -420,9 +422,86 @@ void GlslViewer::startCameraAnimation(CameraAnim _mode, float _a, float _b) {
 // Called by mouse/scroll gestures to interrupt a running animation. Remembers
 // it (so camera,resume,<sec> can restart it later) and resets the idle timer.
 void GlslViewer::cancelCameraAnimation() {
-    if (m_cam_anim != CAM_NONE)
+    if (m_cam_anim != CAM_NONE) {
         m_cam_anim_paused = m_cam_anim;
+        // camera,resume,animation,true -- snapshot the pose the camera had
+        // right before this interaction, so camera,resume can ease back to it.
+        if (m_cam_resume_restore && uniforms.activeCamera != nullptr) {
+            vera::Camera* cam = uniforms.activeCamera;
+            m_cam_pre_pos = cam->getPosition();
+            m_cam_pre_target = cam->getTarget();
+            m_cam_pre_rot = cam->getOrientationQuat();
+        }
+    }
     m_cam_anim = CAM_NONE;
+    m_cam_idle_elapsed = 0.0f;
+    // A fresh gesture also interrupts any in-flight ease-back transition.
+    m_cam_resuming = false;
+}
+
+// camera,resume,animation,true path: start easing the camera from its current
+// (post-interaction) pose back to the pose captured in cancelCameraAnimation().
+void GlslViewer::beginCameraResume() {
+    if (uniforms.activeCamera == nullptr)
+        return;
+
+    vera::Camera* cam = uniforms.activeCamera;
+    m_cam_resuming = true;
+    m_cam_resume_time = 0.0f;
+    m_cam_resume_from_pos = cam->getPosition();
+    m_cam_resume_from_rot = cam->getOrientationQuat();
+}
+
+// Advances the ease-back transition started by beginCameraResume(). Mirrors
+// updateCameraTransition()'s timing/easing (m_cam_anim_speed over
+// m_camera_transition_duration seconds). Once it reaches the pre-interaction
+// pose, resumes the paused animation from wherever its phase was left --
+// unlike startCameraAnimation(), which always resets phase to 0.
+void GlslViewer::updateCameraResume() {
+    if (uniforms.activeCamera == nullptr) {
+        m_cam_resuming = false;
+        return;
+    }
+    vera::Camera* cam = uniforms.activeCamera;
+
+    m_cam_resume_time += vera::getDelta() * glm::max(m_cam_anim_speed, 0.0f);
+    float t = glm::clamp(m_cam_resume_time / m_camera_transition_duration, 0.0f, 1.0f);
+    float eased = t * t * (3.0f - 2.0f * t); // smoothstep ease-in-out
+
+    cam->setPosition(glm::mix(m_cam_resume_from_pos, m_cam_pre_pos, eased));
+    cam->setOrientation(glm::slerp(m_cam_resume_from_rot, m_cam_pre_rot, eased));
+
+    applyCameraMatrixUniforms(cam);
+    vera::flagChange();
+
+    if (t < 1.0f)
+        return;
+
+    m_cam_resuming = false;
+    // setOrbitTarget(), not setTarget(): the latter calls lookAt() and would
+    // rebuild orientation from position+target+worldUp alone, discarding any
+    // roll baked into m_cam_pre_rot (e.g. from a paused pan/tilt/roll
+    // animation) and snapping away from the pose we just eased to -- exactly
+    // the jump this is fixing.
+    cam->setOrbitTarget(m_cam_pre_target);
+
+    CameraAnim mode = m_cam_anim_paused;
+    m_cam_anim_paused = CAM_NONE;
+
+    // Re-derive the animation's base pose from the restored pose (phase is
+    // deliberately left untouched, so the animation continues rather than
+    // restarts).
+    m_cam_base_pos = m_cam_pre_pos;
+    m_cam_base_target = m_cam_pre_target;
+    m_cam_base_rot = m_cam_pre_rot;
+    cam->getOrbitAngles(m_cam_base_az, m_cam_base_el);
+    m_cam_base_dist = glm::length(m_cam_base_pos - m_cam_base_target);
+    if (m_cam_base_dist < 0.001f)
+        m_cam_base_dist = 1.0f;
+    m_camera_azimuth = m_cam_base_az;
+    m_camera_elevation = m_cam_base_el;
+
+    m_cam_anim = mode;
     m_cam_idle_elapsed = 0.0f;
 }
 
@@ -450,14 +529,25 @@ void GlslViewer::constrainOrbitAngles(float& _az, float& _el) {
 // offset from the captured base pose so the oscillation never drifts. Called
 // once per frame from renderPrep(); cancelled by any mouse gesture.
 void GlslViewer::updateCameraAnimation() {
+    // camera,resume,animation,true: ease-back transition in progress towards
+    // the pre-interaction pose (see beginCameraResume/updateCameraResume).
+    if (m_cam_resuming) {
+        updateCameraResume();
+        return;
+    }
+
     if (m_cam_anim == CAM_NONE) {
         // camera,resume,<sec>: count idle time towards restarting whatever
         // animation a mouse gesture just interrupted.
         if (m_cam_anim_paused != CAM_NONE && m_cam_idle_timeout > 0.0f) {
             m_cam_idle_elapsed += vera::getDelta();
             if (m_cam_idle_elapsed >= m_cam_idle_timeout) {
-                CameraAnim mode = m_cam_anim_paused;
-                startCameraAnimation(mode, m_cam_anim_amp, m_cam_anim_max);
+                if (m_cam_resume_restore)
+                    beginCameraResume();
+                else {
+                    CameraAnim mode = m_cam_anim_paused;
+                    startCameraAnimation(mode, m_cam_anim_amp, m_cam_anim_max);
+                }
             }
         }
         return;
@@ -1394,7 +1484,15 @@ void GlslViewer::commandsInit(CommandList &_commands ) {
                 return true;
             }
             else if (verb == "resume") {
-                if (values.size() > 2) {
+                if (values.size() >= 3 && values[2] == "animation") {
+                    if (values.size() >= 4) {
+                        m_cam_resume_restore = (values[3] == "true" || values[3] == "1" || values[3] == "on");
+                        return true;
+                    }
+                    std::cout << (m_cam_resume_restore ? "true" : "false") << std::endl;
+                    return true;
+                }
+                else if (values.size() > 2) {
                     m_cam_idle_timeout = (values[2] == "off") ? 0.0f : vera::toFloat(values[2]);
                     if (m_cam_idle_timeout <= 0.0f)
                         m_cam_anim_paused = CAM_NONE;
@@ -1478,7 +1576,7 @@ void GlslViewer::commandsInit(CommandList &_commands ) {
         }
         return false;
     },
-    "camera[,<name>|default|list|orbit|arc,<deg>|dolly,<min>,<max>|truck,<d>|pedestal,<d>|pan,<a>|tilt,<a>|roll,<a>|speed,<n>|stop|resume,<sec>|off|constrain,az|el,<min>,<max>|<total>|off]", "select the active camera, play a camera animation (until a mouse gesture), or constrain,<az|el>,<min>,<max> (or constrain,<az|el>,<total>, i.e. +/-total/2) to limit orbiting -- both mouse/touch drag and orbit/arc animation -- to that many degrees from this camera's original facing (constrain,off or constrain,<az|el>,off clears). resume,<sec> auto-restarts an animation this many idle seconds after a mouse gesture interrupts it (resume,off disables)."));
+    "camera[,<name>|default|list|orbit|arc,<deg>|dolly,<min>,<max>|truck,<d>|pedestal,<d>|pan,<a>|tilt,<a>|roll,<a>|speed,<n>|stop|resume,<sec>|off|resume,animation,<bool>|constrain,az|el,<min>,<max>|<total>|off]", "select the active camera, play a camera animation (until a mouse gesture), or constrain,<az|el>,<min>,<max> (or constrain,<az|el>,<total>, i.e. +/-total/2) to limit orbiting -- both mouse/touch drag and orbit/arc animation -- to that many degrees from this camera's original facing (constrain,off or constrain,<az|el>,off clears). resume,<sec> auto-restarts an animation this many idle seconds after a mouse gesture interrupts it (resume,off disables). resume,animation,true makes that restart ease back to the pose the camera had right before the interrupting mouse gesture and continue the animation's phase from where it paused, instead of jumping to the current pose and restarting from scratch (resume,animation,false restores the default; disabled by default)."));
 
     _commands.push_back(Command("stream", [&](const std::string& _line) { 
         std::vector<std::string> values = vera::split(_line,',');
