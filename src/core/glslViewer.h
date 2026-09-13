@@ -216,32 +216,42 @@ protected:
     glm::mat4                       m_camera_transition_from_proj;
 
     // Camera animation (camera,orbit / arc / dolly / truck / pedestal / pan /
-    // tilt / roll). Plays every frame in updateCameraAnimation() until the user
-    // does a mouse gesture (see onMousePress/onMouseDrag/onScroll), which sets
-    // m_cam_anim = CAM_NONE. m_cam_anim_speed is a global multiplier shared with
-    // the named-camera transition above.
+    // tilt / roll). Any combination can run at once ("stacked") -- e.g.
+    // camera,arc,45 then camera,dolly,1,2 arcs and dollies simultaneously.
+    // Each mode tracks its own on/off + phase + params in m_cam_anims[]; they
+    // all play every frame in updateCameraAnimation(), combined into one pose,
+    // until a mouse gesture (see onMousePress/onMouseDrag/onScroll) clears
+    // every mode's `active` flag. m_cam_anim_speed is a global rate multiplier
+    // shared with the named-camera transition above.
     enum CameraAnim { CAM_NONE, CAM_ORBIT, CAM_ARC, CAM_DOLLY,
-                      CAM_TRUCK, CAM_PEDESTAL, CAM_PAN, CAM_TILT, CAM_ROLL };
+                      CAM_TRUCK, CAM_PEDESTAL, CAM_PAN, CAM_TILT, CAM_ROLL,
+                      CAM_ANIM_COUNT };
+    struct CameraAnimState {
+        bool  active = false;
+        float phase = 0.0f;  // advances by getDelta()*speed while active
+        float amp = 0.0f;    // ping-pong amplitude (deg or world units)
+        float min = 0.0f;    // dolly min distance (amp/min are equal for non-dolly modes)
+        float max = 0.0f;    // dolly max distance
+    };
     void                            startCameraAnimation(CameraAnim _mode, float _a = 0.0f, float _b = 0.0f);
     void                            updateCameraAnimation();
-    void                            cancelCameraAnimation(); // called on mouse gestures; remembers the animation for camera,resume
-    CameraAnim                      m_cam_anim;
-    float                           m_cam_anim_phase;       // advances by getDelta()*speed
-    float                           m_cam_anim_amp;         // ping-pong amplitude (deg or dist)
-    float                           m_cam_anim_min;         // dolly min distance
-    float                           m_cam_anim_max;         // dolly max distance
+    void                            cancelCameraAnimation(); // called on mouse gestures; remembers the animation(s) for camera,resume
+    CameraAnimState                 m_cam_anims[CAM_ANIM_COUNT]; // index 0 (CAM_NONE) unused
     float                           m_cam_anim_speed;        // global animation speed multiplier
-    // camera,resume,<sec> -- if a mouse gesture interrupts a running
-    // animation, auto-restart it (with the same params, from wherever the
-    // user left the camera) after this many idle seconds. <= 0 disables it.
-    // m_cam_anim_paused holds the interrupted mode (CAM_NONE = nothing
-    // pending); m_cam_idle_elapsed counts up while idle and resets on every
-    // mouse gesture.
+    // camera,resume,<sec> -- if a mouse gesture interrupts running
+    // animation(s), auto-restart them (with the same params, from wherever
+    // the user left the camera) after this many idle seconds. <= 0 disables
+    // it. m_cam_anim_paused[mode] marks which modes were interrupted;
+    // m_cam_idle_elapsed counts up while idle and resets on every mouse
+    // gesture.
     float                           m_cam_idle_timeout;
     float                           m_cam_idle_elapsed;
-    CameraAnim                      m_cam_anim_paused;
-    // Base pose captured when an animation starts (offsets are applied relative
-    // to this every frame, so the oscillation never drifts and stops cleanly).
+    bool                            m_cam_anim_paused[CAM_ANIM_COUNT] = {};
+    // Base pose captured when the first animation of a session starts
+    // (offsets are applied relative to this every frame, so the oscillation
+    // never drifts and stops cleanly; later modes stacked on top of an
+    // already-running one reuse this same base instead of re-capturing it,
+    // so they don't cause the running one(s) to jump).
     glm::vec3                       m_cam_base_pos;
     glm::vec3                       m_cam_base_target;
     glm::quat                       m_cam_base_rot;

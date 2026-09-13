@@ -82,8 +82,8 @@ GlslViewer::GlslViewer():
     m_camera_az_origin(0.0f), m_camera_el_origin(0.0f),
     m_camera_transitioning(false), m_camera_transition_time(0.0f), m_camera_transition_duration(0.6f),
     m_camera_transition_from_pos(0.0f), m_camera_transition_from_rot(1.0f, 0.0f, 0.0f, 0.0f), m_camera_transition_from_proj(1.0f),
-    m_cam_anim(CAM_NONE), m_cam_anim_phase(0.0f), m_cam_anim_amp(0.0f), m_cam_anim_min(0.0f), m_cam_anim_max(0.0f), m_cam_anim_speed(1.0f),
-    m_cam_idle_timeout(0.0f), m_cam_idle_elapsed(0.0f), m_cam_anim_paused(CAM_NONE),
+    m_cam_anim_speed(1.0f),
+    m_cam_idle_timeout(0.0f), m_cam_idle_elapsed(0.0f),
     m_cam_base_pos(0.0f), m_cam_base_target(0.0f), m_cam_base_rot(1.0f, 0.0f, 0.0f, 0.0f), m_cam_base_az(0.0f), m_cam_base_el(0.0f), m_cam_base_dist(1.0f),
     m_cam_resume_restore(false), m_cam_pre_pos(0.0f), m_cam_pre_target(0.0f), m_cam_pre_rot(1.0f, 0.0f, 0.0f, 0.0f),
     m_cam_resuming(false), m_cam_resume_time(0.0f), m_cam_resume_from_pos(0.0f), m_cam_resume_from_rot(1.0f, 0.0f, 0.0f, 0.0f),
@@ -364,11 +364,14 @@ void GlslViewer::updateCameraTransition() {
     }
 }
 
-// Begin a camera animation. Captures the current pose of the interactive
-// "default" camera as the base that every frame's offset is applied against
-// (drift-free, and it stops cleanly wherever it is when cancelled). _a/_b carry
-// the per-mode parameter(s): amplitude in degrees (arc/pan/tilt/roll) or world
-// units (truck/pedestal), or min/max distance (dolly).
+// Begin (or stack) a camera animation. If no mode is currently active this
+// captures the current pose of the interactive "default" camera as the base
+// every mode's offset is applied against (drift-free, and it stops cleanly
+// wherever it is when cancelled); if another mode is already running, this
+// one is added on top of that same base instead of re-capturing it, so the
+// already-running mode doesn't jump. _a/_b carry the per-mode parameter(s):
+// amplitude in degrees (arc/pan/tilt/roll) or world units (truck/pedestal),
+// or min/max distance (dolly).
 void GlslViewer::startCameraAnimation(CameraAnim _mode, float _a, float _b) {
     if (uniforms.activeCamera == nullptr)
         return;
@@ -391,49 +394,64 @@ void GlslViewer::startCameraAnimation(CameraAnim _mode, float _a, float _b) {
 
     vera::Camera* cam = uniforms.activeCamera;
 
-    // Resync the target with the current view direction (same as onMousePress)
-    // so orbit-anchored moves don't jump.
-    glm::vec3 v = cam->getPosition() - cam->getTarget();
-    float dist = glm::length(v);
-    if (dist > 0.001f && glm::dot(glm::normalize(v), cam->getZAxis()) < 0.99f)
-        cam->setTarget(cam->getPosition() - cam->getZAxis() * dist);
+    bool anyActive = false;
+    for (int i = 1; i < CAM_ANIM_COUNT; i++)
+        if (m_cam_anims[i].active) anyActive = true;
 
-    // Capture the base pose.
-    m_cam_base_pos = cam->getPosition();
-    m_cam_base_target = cam->getTarget();
-    m_cam_base_rot = cam->getOrientationQuat();
-    cam->getOrbitAngles(m_cam_base_az, m_cam_base_el);
-    m_cam_base_dist = glm::length(m_cam_base_pos - m_cam_base_target);
-    if (m_cam_base_dist < 0.001f)
-        m_cam_base_dist = 1.0f;
+    if (!anyActive) {
+        // Resync the target with the current view direction (same as
+        // onMousePress) so orbit-anchored moves don't jump.
+        glm::vec3 v = cam->getPosition() - cam->getTarget();
+        float dist = glm::length(v);
+        if (dist > 0.001f && glm::dot(glm::normalize(v), cam->getZAxis()) < 0.99f)
+            cam->setTarget(cam->getPosition() - cam->getZAxis() * dist);
 
-    m_cam_anim = _mode;
-    m_cam_anim_phase = 0.0f;
-    m_cam_anim_amp = _a;
-    m_cam_anim_min = _a;   // dolly: min distance
-    m_cam_anim_max = _b;   // dolly: max distance
+        // Capture the shared base pose for this animation session.
+        m_cam_base_pos = cam->getPosition();
+        m_cam_base_target = cam->getTarget();
+        m_cam_base_rot = cam->getOrientationQuat();
+        cam->getOrbitAngles(m_cam_base_az, m_cam_base_el);
+        m_cam_base_dist = glm::length(m_cam_base_pos - m_cam_base_target);
+        if (m_cam_base_dist < 0.001f)
+            m_cam_base_dist = 1.0f;
+    }
 
-    // A fresh animation request supersedes anything camera,resume had queued.
-    m_cam_anim_paused = CAM_NONE;
+    CameraAnimState& s = m_cam_anims[_mode];
+    s.active = true;
+    s.phase = 0.0f;
+    s.amp = _a;
+    s.min = _a;   // dolly: min distance
+    s.max = _b;   // dolly: max distance
+
+    // A fresh request for this mode supersedes anything camera,resume had
+    // queued for it.
+    m_cam_anim_paused[_mode] = false;
 
     vera::flagChange();
 }
 
-// Called by mouse/scroll gestures to interrupt a running animation. Remembers
-// it (so camera,resume,<sec> can restart it later) and resets the idle timer.
+// Called by mouse/scroll gestures to interrupt any running animation(s).
+// Remembers which modes were active (so camera,resume,<sec> can restart them
+// later) and resets the idle timer.
 void GlslViewer::cancelCameraAnimation() {
-    if (m_cam_anim != CAM_NONE) {
-        m_cam_anim_paused = m_cam_anim;
-        // camera,resume,animation,true -- snapshot the pose the camera had
-        // right before this interaction, so camera,resume can ease back to it.
-        if (m_cam_resume_restore && uniforms.activeCamera != nullptr) {
-            vera::Camera* cam = uniforms.activeCamera;
-            m_cam_pre_pos = cam->getPosition();
-            m_cam_pre_target = cam->getTarget();
-            m_cam_pre_rot = cam->getOrientationQuat();
+    bool anyActive = false;
+    for (int i = 1; i < CAM_ANIM_COUNT; i++) {
+        if (m_cam_anims[i].active) {
+            m_cam_anim_paused[i] = true;
+            anyActive = true;
         }
+        m_cam_anims[i].active = false;
     }
-    m_cam_anim = CAM_NONE;
+
+    // camera,resume,animation,true -- snapshot the pose the camera had right
+    // before this interaction, so camera,resume can ease back to it.
+    if (anyActive && m_cam_resume_restore && uniforms.activeCamera != nullptr) {
+        vera::Camera* cam = uniforms.activeCamera;
+        m_cam_pre_pos = cam->getPosition();
+        m_cam_pre_target = cam->getTarget();
+        m_cam_pre_rot = cam->getOrientationQuat();
+    }
+
     m_cam_idle_elapsed = 0.0f;
     // A fresh gesture also interrupts any in-flight ease-back transition.
     m_cam_resuming = false;
@@ -485,12 +503,9 @@ void GlslViewer::updateCameraResume() {
     // the jump this is fixing.
     cam->setOrbitTarget(m_cam_pre_target);
 
-    CameraAnim mode = m_cam_anim_paused;
-    m_cam_anim_paused = CAM_NONE;
-
-    // Re-derive the animation's base pose from the restored pose (phase is
-    // deliberately left untouched, so the animation continues rather than
-    // restarts).
+    // Re-derive the animation's base pose from the restored pose (each mode's
+    // phase is deliberately left untouched, so they continue rather than
+    // restart).
     m_cam_base_pos = m_cam_pre_pos;
     m_cam_base_target = m_cam_pre_target;
     m_cam_base_rot = m_cam_pre_rot;
@@ -501,7 +516,12 @@ void GlslViewer::updateCameraResume() {
     m_camera_azimuth = m_cam_base_az;
     m_camera_elevation = m_cam_base_el;
 
-    m_cam_anim = mode;
+    for (int i = 1; i < CAM_ANIM_COUNT; i++) {
+        if (m_cam_anim_paused[i]) {
+            m_cam_anims[i].active = true;
+            m_cam_anim_paused[i] = false;
+        }
+    }
     m_cam_idle_elapsed = 0.0f;
 }
 
@@ -525,9 +545,18 @@ void GlslViewer::constrainOrbitAngles(float& _az, float& _el) {
         _el = glm::clamp(_el, m_camera_el_origin + m_camera_el_min, m_camera_el_origin + m_camera_el_max);
 }
 
-// Advance the active camera animation one frame. Everything is computed as an
-// offset from the captured base pose so the oscillation never drifts. Called
-// once per frame from renderPrep(); cancelled by any mouse gesture.
+// Advance every active camera animation one frame and combine them into a
+// single pose. Everything is computed as an offset from the captured base
+// pose so the oscillation never drifts. Modes are grouped into three channels
+// that combine independently of each other:
+//   - orbit-family (orbit/arc drive azimuth, dolly drives distance) -- summed,
+//     then applied via one cam->orbit(az,el,dist) call.
+//   - translate-family (truck/pedestal) -- world-space offsets summed and
+//     applied to position+target.
+//   - rotate-family (pan/tilt/roll) -- composed on top via Node's incremental
+//     pan()/tilt()/roll(), in that fixed order (only order-sensitive if two or
+//     more are stacked together, same caveat as Euler angles).
+// Called once per frame from renderPrep(); cancelled by any mouse gesture.
 void GlslViewer::updateCameraAnimation() {
     // camera,resume,animation,true: ease-back transition in progress towards
     // the pre-interaction pose (see beginCameraResume/updateCameraResume).
@@ -536,17 +565,32 @@ void GlslViewer::updateCameraAnimation() {
         return;
     }
 
-    if (m_cam_anim == CAM_NONE) {
+    bool anyActive = false;
+    for (int i = 1; i < CAM_ANIM_COUNT; i++)
+        if (m_cam_anims[i].active) anyActive = true;
+
+    if (!anyActive) {
         // camera,resume,<sec>: count idle time towards restarting whatever
-        // animation a mouse gesture just interrupted.
-        if (m_cam_anim_paused != CAM_NONE && m_cam_idle_timeout > 0.0f) {
+        // animation(s) a mouse gesture just interrupted.
+        bool anyPaused = false;
+        for (int i = 1; i < CAM_ANIM_COUNT; i++)
+            if (m_cam_anim_paused[i]) anyPaused = true;
+
+        if (anyPaused && m_cam_idle_timeout > 0.0f) {
             m_cam_idle_elapsed += vera::getDelta();
             if (m_cam_idle_elapsed >= m_cam_idle_timeout) {
                 if (m_cam_resume_restore)
                     beginCameraResume();
                 else {
-                    CameraAnim mode = m_cam_anim_paused;
-                    startCameraAnimation(mode, m_cam_anim_amp, m_cam_anim_max);
+                    for (int i = 1; i < CAM_ANIM_COUNT; i++) {
+                        if (m_cam_anim_paused[i]) {
+                            CameraAnim mode = (CameraAnim)i;
+                            float a = m_cam_anims[mode].amp;
+                            float b = m_cam_anims[mode].max;
+                            m_cam_anim_paused[mode] = false;
+                            startCameraAnimation(mode, a, b);
+                        }
+                    }
                 }
             }
         }
@@ -554,78 +598,88 @@ void GlslViewer::updateCameraAnimation() {
     }
 
     if (uniforms.activeCamera == nullptr) {
-        m_cam_anim = CAM_NONE;
+        for (int i = 1; i < CAM_ANIM_COUNT; i++)
+            m_cam_anims[i].active = false;
         return;
     }
 
     vera::Camera* cam = uniforms.activeCamera;
-    m_cam_anim_phase += vera::getDelta() * glm::max(m_cam_anim_speed, 0.0f);
+    float dt = vera::getDelta() * glm::max(m_cam_anim_speed, 0.0f);
+    for (int i = 1; i < CAM_ANIM_COUNT; i++)
+        if (m_cam_anims[i].active)
+            m_cam_anims[i].phase += dt;
 
-    const float p = m_cam_anim_phase;
-    // Symmetric ±1 ping-pong (smooth ease at the extremes); negative first so
-    // arc sweeps -half before +half.
-    const float s = -sinf(p);
+    // --- orbit-family channel: orbit/arc offset azimuth, dolly offsets
+    // distance; combined into one cam->orbit(az,el,dist) call. ---
+    float az = m_cam_base_az;
+    float el = m_cam_base_el;
+    float dist = m_cam_base_dist;
+    bool orbitFamilyActive = false;
 
-    switch (m_cam_anim) {
-        case CAM_ORBIT: {
-            // Continuous spin around the target (~30 deg/sec at speed 1).
-            float az = m_cam_base_az + p * 30.0f;
-            float el = m_cam_base_el;
-            constrainOrbitAngles(az, el);
-            cam->orbit(az, el, m_cam_base_dist);
-            m_camera_azimuth = az;
-            m_camera_elevation = el;
-            break;
-        }
-        case CAM_ARC: {
-            float az = m_cam_base_az + (m_cam_anim_amp * 0.5f) * s;
-            float el = m_cam_base_el;
-            constrainOrbitAngles(az, el);
-            cam->orbit(az, el, m_cam_base_dist);
-            m_camera_azimuth = az;
-            m_camera_elevation = el;
-            break;
-        }
-        case CAM_DOLLY: {
-            float u = 0.5f - 0.5f * cosf(p);   // [0,1], starts at min
-            float d = glm::mix(m_cam_anim_min, m_cam_anim_max, u);
-            cam->orbit(m_cam_base_az, m_cam_base_el, d);
-            break;
-        }
-        case CAM_TRUCK: {
-            glm::vec3 axis = m_cam_base_rot * glm::vec3(1.0f, 0.0f, 0.0f);
-            glm::vec3 off = axis * (m_cam_anim_amp * 0.5f * s);
-            cam->setPosition(m_cam_base_pos + off);
-            cam->setTarget(m_cam_base_target + off);
-            break;
-        }
-        case CAM_PEDESTAL: {
-            glm::vec3 axis = m_cam_base_rot * glm::vec3(0.0f, 1.0f, 0.0f);
-            glm::vec3 off = axis * (m_cam_anim_amp * 0.5f * s);
-            cam->setPosition(m_cam_base_pos + off);
-            cam->setTarget(m_cam_base_target + off);
-            break;
-        }
-        case CAM_PAN: {
-            cam->setPosition(m_cam_base_pos);
-            cam->setOrientation(m_cam_base_rot);
-            cam->pan(m_cam_anim_amp * 0.5f * s);
-            break;
-        }
-        case CAM_TILT: {
-            cam->setPosition(m_cam_base_pos);
-            cam->setOrientation(m_cam_base_rot);
-            cam->tilt(m_cam_anim_amp * 0.5f * s);
-            break;
-        }
-        case CAM_ROLL: {
-            cam->setPosition(m_cam_base_pos);
-            cam->setOrientation(m_cam_base_rot);
-            cam->roll(m_cam_anim_amp * 0.5f * s);
-            break;
-        }
-        default:
-            break;
+    if (m_cam_anims[CAM_ORBIT].active) {
+        // Continuous spin around the target (~30 deg/sec at speed 1).
+        az += m_cam_anims[CAM_ORBIT].phase * 30.0f;
+        orbitFamilyActive = true;
+    }
+    if (m_cam_anims[CAM_ARC].active) {
+        // Symmetric +/-1 ping-pong (smooth ease at the extremes); negative
+        // first so arc sweeps -half before +half.
+        float s = -sinf(m_cam_anims[CAM_ARC].phase);
+        az += (m_cam_anims[CAM_ARC].amp * 0.5f) * s;
+        orbitFamilyActive = true;
+    }
+    if (m_cam_anims[CAM_DOLLY].active) {
+        float u = 0.5f - 0.5f * cosf(m_cam_anims[CAM_DOLLY].phase); // [0,1], starts at min
+        dist = glm::mix(m_cam_anims[CAM_DOLLY].min, m_cam_anims[CAM_DOLLY].max, u);
+        orbitFamilyActive = true;
+    }
+    constrainOrbitAngles(az, el);
+
+    // --- translate-family channel: truck/pedestal offsets summed into one
+    // position/target shift. ---
+    glm::vec3 translateOffset(0.0f);
+    if (m_cam_anims[CAM_TRUCK].active) {
+        float s = -sinf(m_cam_anims[CAM_TRUCK].phase);
+        glm::vec3 axis = m_cam_base_rot * glm::vec3(1.0f, 0.0f, 0.0f);
+        translateOffset += axis * (m_cam_anims[CAM_TRUCK].amp * 0.5f * s);
+    }
+    if (m_cam_anims[CAM_PEDESTAL].active) {
+        float s = -sinf(m_cam_anims[CAM_PEDESTAL].phase);
+        glm::vec3 axis = m_cam_base_rot * glm::vec3(0.0f, 1.0f, 0.0f);
+        translateOffset += axis * (m_cam_anims[CAM_PEDESTAL].amp * 0.5f * s);
+    }
+    glm::vec3 targetNow = m_cam_base_target + translateOffset;
+
+    if (orbitFamilyActive) {
+        // orbit() pivots around the camera's current target -- keep it at
+        // targetNow (which may itself be moving if truck/pedestal are
+        // stacked on top) without reorienting first: orbit()'s own lookAt
+        // immediately overwrites orientation anyway (setOrbitTarget, not
+        // setTarget, so we don't reorient twice).
+        cam->setOrbitTarget(targetNow);
+        cam->orbit(az, el, dist);
+        m_camera_azimuth = az;
+        m_camera_elevation = el;
+    }
+    else {
+        cam->setPosition(m_cam_base_pos + translateOffset);
+        cam->setOrientation(m_cam_base_rot);
+        cam->setOrbitTarget(targetNow);
+    }
+
+    // --- rotate-family channel: pan/tilt/roll composed on top of whichever
+    // orientation the channels above produced. ---
+    if (m_cam_anims[CAM_PAN].active) {
+        float s = -sinf(m_cam_anims[CAM_PAN].phase);
+        cam->pan(m_cam_anims[CAM_PAN].amp * 0.5f * s);
+    }
+    if (m_cam_anims[CAM_TILT].active) {
+        float s = -sinf(m_cam_anims[CAM_TILT].phase);
+        cam->tilt(m_cam_anims[CAM_TILT].amp * 0.5f * s);
+    }
+    if (m_cam_anims[CAM_ROLL].active) {
+        float s = -sinf(m_cam_anims[CAM_ROLL].phase);
+        cam->roll(m_cam_anims[CAM_ROLL].amp * 0.5f * s);
     }
 
     applyCameraMatrixUniforms(cam);
@@ -1427,17 +1481,33 @@ void GlslViewer::commandsInit(CommandList &_commands ) {
         if (values.size() >= 2) {
             const std::string& verb = values[1];
 
-            // --- Camera animations (play until a mouse gesture cancels them) ---
+            // --- Camera animations (play until a mouse gesture cancels them).
+            // Any combination can be stacked at once, e.g. "camera,arc,45"
+            // then "camera,dolly,1,2" arcs and dollies simultaneously; give
+            // "off" as the mode's only argument to drop just that one and
+            // leave any others stacked on top of it running. ---
             if (verb == "orbit") {
+                if (values.size() == 3 && values[2] == "off") {
+                    m_cam_anims[CAM_ORBIT].active = false;
+                    return true;
+                }
                 startCameraAnimation(CAM_ORBIT);
                 return true;
             }
             else if (verb == "arc") {
+                if (values.size() == 3 && values[2] == "off") {
+                    m_cam_anims[CAM_ARC].active = false;
+                    return true;
+                }
                 float deg = (values.size() > 2) ? vera::toFloat(values[2]) : 180.0f;
                 startCameraAnimation(CAM_ARC, deg);
                 return true;
             }
             else if (verb == "dolly") {
+                if (values.size() == 3 && values[2] == "off") {
+                    m_cam_anims[CAM_DOLLY].active = false;
+                    return true;
+                }
                 // camera,dolly[,<min>,<max>] -- default to a spread around the
                 // current distance to the target.
                 float d = 1.0f;
@@ -1449,22 +1519,42 @@ void GlslViewer::commandsInit(CommandList &_commands ) {
                 return true;
             }
             else if (verb == "truck") {
+                if (values.size() == 3 && values[2] == "off") {
+                    m_cam_anims[CAM_TRUCK].active = false;
+                    return true;
+                }
                 startCameraAnimation(CAM_TRUCK, (values.size() > 2) ? vera::toFloat(values[2]) : 1.0f);
                 return true;
             }
             else if (verb == "pedestal") {
+                if (values.size() == 3 && values[2] == "off") {
+                    m_cam_anims[CAM_PEDESTAL].active = false;
+                    return true;
+                }
                 startCameraAnimation(CAM_PEDESTAL, (values.size() > 2) ? vera::toFloat(values[2]) : 1.0f);
                 return true;
             }
             else if (verb == "pan") {
+                if (values.size() == 3 && values[2] == "off") {
+                    m_cam_anims[CAM_PAN].active = false;
+                    return true;
+                }
                 startCameraAnimation(CAM_PAN, (values.size() > 2) ? vera::toFloat(values[2]) : 60.0f);
                 return true;
             }
             else if (verb == "tilt") {
+                if (values.size() == 3 && values[2] == "off") {
+                    m_cam_anims[CAM_TILT].active = false;
+                    return true;
+                }
                 startCameraAnimation(CAM_TILT, (values.size() > 2) ? vera::toFloat(values[2]) : 60.0f);
                 return true;
             }
             else if (verb == "roll") {
+                if (values.size() == 3 && values[2] == "off") {
+                    m_cam_anims[CAM_ROLL].active = false;
+                    return true;
+                }
                 startCameraAnimation(CAM_ROLL, (values.size() > 2) ? vera::toFloat(values[2]) : 60.0f);
                 return true;
             }
@@ -1478,9 +1568,11 @@ void GlslViewer::commandsInit(CommandList &_commands ) {
             }
             else if (verb == "stop" || verb == "off") {
                 // Explicit stop, unlike a mouse gesture, also cancels any
-                // pending camera,resume restart.
-                m_cam_anim = CAM_NONE;
-                m_cam_anim_paused = CAM_NONE;
+                // pending camera,resume restart. Stops every stacked mode.
+                for (int i = 1; i < CAM_ANIM_COUNT; i++) {
+                    m_cam_anims[i].active = false;
+                    m_cam_anim_paused[i] = false;
+                }
                 return true;
             }
             else if (verb == "resume") {
@@ -1494,8 +1586,10 @@ void GlslViewer::commandsInit(CommandList &_commands ) {
                 }
                 else if (values.size() > 2) {
                     m_cam_idle_timeout = (values[2] == "off") ? 0.0f : vera::toFloat(values[2]);
-                    if (m_cam_idle_timeout <= 0.0f)
-                        m_cam_anim_paused = CAM_NONE;
+                    if (m_cam_idle_timeout <= 0.0f) {
+                        for (int i = 1; i < CAM_ANIM_COUNT; i++)
+                            m_cam_anim_paused[i] = false;
+                    }
                     return true;
                 }
                 std::cout << m_cam_idle_timeout << std::endl;
@@ -1576,7 +1670,7 @@ void GlslViewer::commandsInit(CommandList &_commands ) {
         }
         return false;
     },
-    "camera[,<name>|default|list|orbit|arc,<deg>|dolly,<min>,<max>|truck,<d>|pedestal,<d>|pan,<a>|tilt,<a>|roll,<a>|speed,<n>|stop|resume,<sec>|off|resume,animation,<bool>|constrain,az|el,<min>,<max>|<total>|off]", "select the active camera, play a camera animation (until a mouse gesture), or constrain,<az|el>,<min>,<max> (or constrain,<az|el>,<total>, i.e. +/-total/2) to limit orbiting -- both mouse/touch drag and orbit/arc animation -- to that many degrees from this camera's original facing (constrain,off or constrain,<az|el>,off clears). resume,<sec> auto-restarts an animation this many idle seconds after a mouse gesture interrupts it (resume,off disables). resume,animation,true makes that restart ease back to the pose the camera had right before the interrupting mouse gesture and continue the animation's phase from where it paused, instead of jumping to the current pose and restarting from scratch (resume,animation,false restores the default; disabled by default)."));
+    "camera[,<name>|default|list|orbit|off|arc,<deg>|off|dolly,<min>,<max>|off|truck,<d>|off|pedestal,<d>|off|pan,<a>|off|tilt,<a>|off|roll,<a>|off|speed,<n>|stop|resume,<sec>|off|resume,animation,<bool>|constrain,az|el,<min>,<max>|<total>|off]", "select the active camera, or play camera animation(s) (until a mouse gesture) -- orbit/arc/dolly/truck/pedestal/pan/tilt/roll can be stacked, e.g. camera,arc,45 then camera,dolly,1,2 arc and dolly simultaneously; give a mode's own ',off' (e.g. camera,dolly,off) to drop just that one and leave the rest running, or camera,stop / camera,off to drop all of them. constrain,<az|el>,<min>,<max> (or constrain,<az|el>,<total>, i.e. +/-total/2) limits orbiting -- both mouse/touch drag and orbit/arc animation -- to that many degrees from this camera's original facing (constrain,off or constrain,<az|el>,off clears). resume,<sec> auto-restarts whatever animation(s) a mouse gesture interrupted this many idle seconds ago (resume,off disables). resume,animation,true makes that restart ease back to the pose the camera had right before the interrupting mouse gesture and continue each animation's phase from where it paused, instead of jumping to the current pose and restarting from scratch (resume,animation,false restores the default; disabled by default)."));
 
     _commands.push_back(Command("stream", [&](const std::string& _line) { 
         std::vector<std::string> values = vera::split(_line,',');
