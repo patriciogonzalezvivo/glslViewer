@@ -10,7 +10,7 @@ nox11:
 
 wasm:
 	@mkdir build_wasm
-	@cd build_wasm && cmake .. -DCMAKE_TOOLCHAIN_FILE=$EMSDK/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake && make 
+	@cd build_wasm && cmake .. -DCMAKE_TOOLCHAIN_FILE=$EMSDK/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake -DCMAKE_BUILD_TYPE=MinSizeRel && make
 	@cd ..
 
 clean:
