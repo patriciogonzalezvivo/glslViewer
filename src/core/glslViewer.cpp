@@ -64,7 +64,7 @@ GlslViewer::GlslViewer():
     // PostProcessing
     m_postprocessing(false),
     // Plot helpers
-    m_plot(PLOT_OFF),
+    m_plot(PLOT_OFF), m_plot_texture(nullptr),
 
     // Record
     #if defined(SUPPORT_MULTITHREAD_RECORDING)

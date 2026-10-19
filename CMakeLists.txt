@@ -126,7 +126,7 @@ if (EMSCRIPTEN)
     set(LFLAGS "${LFLAGS} -s NO_DYNAMIC_EXECUTION=1")
     # set(LFLAGS "${LFLAGS} -s NO_DISABLE_EXCEPTION_CATCHING")
 
-    set(LFLAGS "${LFLAGS} -s EXPORTED_FUNCTIONS='[ \"_command\", \"_setFrag\", \"_setVert\", \"_getFrag\", \"_getVert\",  \"_getDefaultSceneFrag\", \"_getDefaultSceneVert\", \"_main\", \"_malloc\", \"_loadAsset\", \"_loadTexture\", \"_setShaders\" ]' ")
+    set(LFLAGS "${LFLAGS} -s EXPORTED_FUNCTIONS='[ \"_command\", \"_setFrag\", \"_setVert\", \"_getFrag\", \"_getVert\",  \"_getDefaultSceneFrag\", \"_getDefaultSceneVert\", \"_main\", \"_malloc\", \"_loadAsset\", \"_loadTexture\", \"_setShaders\", \"_query\" ]' ")
     set(LFLAGS "${LFLAGS} -s EXPORTED_RUNTIME_METHODS='[\"ccall\",\"cwrap\",\"FS\"]' ")
 
     set_target_properties(glslViewer PROPERTIES LINK_FLAGS "${LFLAGS}")
