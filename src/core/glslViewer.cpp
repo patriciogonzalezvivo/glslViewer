@@ -1906,6 +1906,7 @@ void GlslViewer::loadAssets(WatchFileList &_files) {
 
         if ( !vera::loadGlslFrom(_files[frag_index].path, &m_frag_source, include_folders, &m_frag_dependencies) )
             return;
+        vera::addLygiaNotice(m_frag_source, m_frag_dependencies);
 
         vera::setVersionFromCode(m_frag_source);
     }
@@ -1926,6 +1927,7 @@ void GlslViewer::loadAssets(WatchFileList &_files) {
         m_vert_source = "";
         m_vert_dependencies.clear();
         vera::loadGlslFrom(_files[vert_index].path, &m_vert_source, include_folders, &m_vert_dependencies);
+        vera::addLygiaNotice(m_vert_source, m_vert_dependencies);
     }
     else {
         // If there is no use the default one
