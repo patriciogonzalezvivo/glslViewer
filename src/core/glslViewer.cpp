@@ -321,6 +321,22 @@ bool GlslViewer::selectCamera(const std::string& _id, bool _animate) {
 // worth of time -- called once per frame from renderPrep(). Eases "default"'s
 // position/orientation/projection from the captured starting pose toward the
 // target camera, then hands off to finishCameraSelection() once done.
+// Camera animation/transition clocks follow the recording clock while a clip is
+// being captured (frames are rendered at a fixed step, not in wall-clock time).
+static inline float cameraDelta() {
+    return isRecording() ? getRecordingDelta() : (float)vera::getDelta();
+}
+
+// A clip that starts at second `_sec` should show the camera as it is then, not
+// as it is at second 0: play the running camera animations forward.
+void GlslViewer::fastForwardCamera(float _sec) {
+    if (_sec <= 0.0f) return;
+    float dt = _sec * glm::max(m_cam_anim_speed, 0.0f);
+    for (int i = 1; i < CAM_ANIM_COUNT; i++)
+        if (m_cam_anims[i].active)
+            m_cam_anims[i].phase += dt;
+}
+
 void GlslViewer::updateCameraTransition() {
     if (!m_camera_transitioning)
         return;
@@ -331,7 +347,7 @@ void GlslViewer::updateCameraTransition() {
     }
 
     // camera,speed scales the named-camera transition too (shared multiplier).
-    m_camera_transition_time += vera::getDelta() * glm::max(m_cam_anim_speed, 0.0f);
+    m_camera_transition_time += cameraDelta() * glm::max(m_cam_anim_speed, 0.0f);
     float t = glm::clamp(m_camera_transition_time / m_camera_transition_duration, 0.0f, 1.0f);
     float eased = t * t * (3.0f - 2.0f * t); // smoothstep ease-in-out
 
@@ -482,7 +498,7 @@ void GlslViewer::updateCameraResume() {
     }
     vera::Camera* cam = uniforms.activeCamera;
 
-    m_cam_resume_time += vera::getDelta() * glm::max(m_cam_anim_speed, 0.0f);
+    m_cam_resume_time += cameraDelta() * glm::max(m_cam_anim_speed, 0.0f);
     float t = glm::clamp(m_cam_resume_time / m_camera_transition_duration, 0.0f, 1.0f);
     float eased = t * t * (3.0f - 2.0f * t); // smoothstep ease-in-out
 
@@ -577,7 +593,7 @@ void GlslViewer::updateCameraAnimation() {
             if (m_cam_anim_paused[i]) anyPaused = true;
 
         if (anyPaused && m_cam_idle_timeout > 0.0f) {
-            m_cam_idle_elapsed += vera::getDelta();
+            m_cam_idle_elapsed += cameraDelta();
             if (m_cam_idle_elapsed >= m_cam_idle_timeout) {
                 if (m_cam_resume_restore)
                     beginCameraResume();
@@ -604,7 +620,7 @@ void GlslViewer::updateCameraAnimation() {
     }
 
     vera::Camera* cam = uniforms.activeCamera;
-    float dt = vera::getDelta() * glm::max(m_cam_anim_speed, 0.0f);
+    float dt = cameraDelta() * glm::max(m_cam_anim_speed, 0.0f);
     for (int i = 1; i < CAM_ANIM_COUNT; i++)
         if (m_cam_anims[i].active)
             m_cam_anims[i].phase += dt;

@@ -1489,6 +1489,7 @@ void commandsInit() {
             }
 
             commandsMutex.lock();
+            sandbox.fastForwardCamera(from);
             recordingStartSecs(from, to, fps);
             commandsMutex.unlock();
 
@@ -1524,6 +1525,7 @@ void commandsInit() {
             }
 
             commandsMutex.lock();
+            sandbox.fastForwardCamera(from);
             recordingStartSecs(from, to, fps);
             commandsMutex.unlock();
 
@@ -1646,6 +1648,7 @@ void commandsInit() {
 
             if (valid) {
                 commandsMutex.lock();
+                sandbox.fastForwardCamera(from);
                 recordingPipeOpen(settings, from, to);
                 commandsMutex.unlock();
 

@@ -72,6 +72,7 @@ public:
     
     // Some events
     void                onScroll( float _yoffset );
+    void                fastForwardCamera(float _sec); // play camera animations forward (clip starting at second N)
     void                onMousePress( float _x, float _y, int _button );
     void                onMouseMove( float _x, float _y );
     void                onMouseDrag( float _x, float _y, int _button );
