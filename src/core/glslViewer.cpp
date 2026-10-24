@@ -88,7 +88,7 @@ GlslViewer::GlslViewer():
     m_cam_resume_restore(false), m_cam_pre_pos(0.0f), m_cam_pre_target(0.0f), m_cam_pre_rot(1.0f, 0.0f, 0.0f, 0.0f),
     m_cam_resuming(false), m_cam_resume_time(0.0f), m_cam_resume_from_pos(0.0f), m_cam_resume_from_rot(1.0f, 0.0f, 0.0f, 0.0f),
     m_error_screen(vera::SHOW_MAGENTA_SHADER),
-    m_change_viewport(true), m_update_buffers(true), m_initialized(false), 
+    m_change_viewport(true), m_camera_interaction(false), m_update_buffers(true), m_initialized(false), 
 
     // Debug
     m_showTextures(false), m_showPasses(false)
@@ -156,6 +156,15 @@ GlslViewer::GlslViewer():
         _shader.setUniform("u_resolution", float(vera::getWindowWidth()), float(vera::getWindowHeight()));
     },
     []() { return vera::toString((float)vera::getWindowWidth(),1) + "," + vera::toString((float)vera::getWindowHeight(),1); });
+
+    // True only on frames where the *user* moved the camera (orbit, pan, zoom, scroll);
+    // camera animations/transitions move it too (u_cameraChange) but never raise this.
+    uniforms.functions["u_cameraDrag"] = UniformFunction("bool", [this](vera::Shader& _shader) {
+        _shader.setUniform("u_cameraDrag", m_camera_interaction);
+    },
+    [this]() { 
+        return vera::toString(m_camera_interaction);
+    });
 
     uniforms.functions["u_resolutionChange"] = UniformFunction("bool", [this](vera::Shader& _shader) {
         _shader.setUniform("u_resolutionChange", m_change_viewport);
@@ -3440,6 +3449,7 @@ void GlslViewer::renderDone() {
     vera::resetChange();
     uniforms.resetChange();
     m_change_viewport = false;
+    m_camera_interaction = false;
 
     if (m_plot != PLOT_OFF)
         onPlot();
@@ -3531,6 +3541,7 @@ void GlslViewer::onScroll(float _yoffset) {
     // camera transition (see selectCamera()) or camera animation (camera,orbit
     // etc.), rather than fighting it.
     m_camera_transitioning = false;
+    m_camera_interaction = true;
     cancelCameraAnimation();
 
     // Vertical scroll button zooms u_view2d and view3d.
@@ -3634,6 +3645,7 @@ void GlslViewer::onMouseDrag(float _x, float _y, int _button) {
     // camera transition (see selectCamera()) or camera animation (camera,orbit
     // etc.), rather than fighting it.
     m_camera_transitioning = false;
+    m_camera_interaction = true;
     cancelCameraAnimation();
 
     if (quilt_resolution < 0) {

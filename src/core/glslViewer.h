@@ -284,6 +284,7 @@ protected:
 
     vera::ShaderErrorResolve        m_error_screen;
     bool                            m_change_viewport;
+    bool                            m_camera_interaction;   // user dragged/panned/zoomed the camera this frame (u_cameraDrag)
     bool                            m_update_buffers;
 
     bool                            m_initialized;

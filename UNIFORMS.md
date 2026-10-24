@@ -52,7 +52,8 @@ Runtime values can be inspected/overridden with the `uniforms`, `time`, `mouse`,
 | `u_cameraNearClip` | `float` | Near clip plane. |
 | `u_cameraFarClip` | `float` | Far clip plane. |
 | `u_cameraFov` | `float` | Field of view. |
-| `u_cameraChange` | `bool` | True on frames where the camera moved. |
+| `u_cameraChange` | `bool` | True on frames where the camera moved (user or animation). |
+| `u_cameraDrag` | `bool` | True on frames where the user moved the camera (drag/orbit, pan, zoom, scroll); never true for camera animations. |
 | `u_cameraEv100` | `float` | Exposure value at ISO 100. |
 | `u_cameraExposure` | `float` | Exposure multiplier. |
 | `u_cameraAperture` | `float` | Aperture (f-stop). |
