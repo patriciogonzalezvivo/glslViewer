@@ -16,7 +16,7 @@ struct RecordingSettings {
     size_t      trg_height      = 512;
     float       trg_fps         = 24.0f;
 
-    std::string trg_args        = "-pix_fmt yuv420p -vsync 1 -g 1";  // -crf 0 -preset ultrafast -tune zerolatency setpts='(RTCTIME - RTCSTART) / (TB * 1000000)'
+    std::string trg_args        = "-pix_fmt yuv420p -fps_mode cfr -g 1";  // -crf 0 -preset ultrafast -tune zerolatency setpts='(RTCTIME - RTCSTART) / (TB * 1000000)'
     std::string trg_path        = "output.mp4";
 };
 

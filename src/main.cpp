@@ -1631,7 +1631,7 @@ void commandsInit() {
                 settings.trg_args += "\"";
                 settings.trg_args += " -crf 10";
                 settings.trg_args += " -pix_fmt yuv420p";
-                settings.trg_args += " -vsync 1";
+                settings.trg_args += " -fps_mode cfr";
                 settings.trg_args += " -g 1";
             }
             else if (vera::haveExt(values[1], "gif") || vera::haveExt(values[1], "GIF") ) {;
