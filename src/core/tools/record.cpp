@@ -44,7 +44,7 @@ using Clock         = std::chrono::steady_clock;
 using TimePoint     = std::chrono::time_point<Clock>;
 using Seconds       = std::chrono::duration<float>;
 
-FILE*                       pipe = nullptr;
+FILE*                       ffmpeg_pipe = nullptr;
 std::atomic<bool>           pipe_isRecording;
 std::thread                 pipe_thread;
 RecordingSettings           pipe_settings;
@@ -53,7 +53,7 @@ TimePoint                   pipe_start;
 TimePoint                   pipe_lastFrame;
 LockFreeQueue               pipe_frames;
 
-bool recordingPipe() { return (pipe != nullptr && pipe_isRecording.load()); }
+bool recordingPipe() { return (ffmpeg_pipe != nullptr && pipe_isRecording.load()); }
 
 // From https://github.com/tyhenry/ofxFFmpeg
 bool recordingPipeOpen(const RecordingSettings& _settings, float _start, float _end) {
@@ -78,7 +78,7 @@ bool recordingPipeOpen(const RecordingSettings& _settings, float _start, float _
         std::cout << "That file " << pipe_settings.trg_path << " already exists.";
 
         int file_copy = 0;
-        std::string extension = vera::getExt(pipe_settings.trg_path); 
+        std::string extension = vera::getExt(pipe_settings.trg_path);
         std::string basename = pipe_settings.trg_path.substr(0,pipe_settings.trg_path.size() - extension.size() - 1 );
         while ( vera::urlExists(pipe_settings.trg_path) ) {
             pipe_settings.trg_path = basename + "_" + vera::toString(file_copy, 0, 3, '0') + '.' + extension;
@@ -105,7 +105,7 @@ bool recordingPipeOpen(const RecordingSettings& _settings, float _start, float _
         "-an",                                                  // disable audio -- todo: add audio,`
 
         #if defined(SUPPORT_NCURSES)
-        "-loglevel quiet",                                      // no log output 
+        "-loglevel quiet",                                      // no log output
         // "-stats",                                            // only stats
         #endif
 
@@ -123,17 +123,17 @@ bool recordingPipeOpen(const RecordingSettings& _settings, float _start, float _
     };
 
     for ( size_t i = 0; i < args.size(); i++)
-        if ( !args[i].empty() ) 
+        if ( !args[i].empty() )
             cmd += " " + args[i];
 
-    // std::cout << cmd << std::endl; 
+    // std::cout << cmd << std::endl;
 
-    if ( pipe != nullptr )
-        P_CLOSE( pipe );
+    if ( ffmpeg_pipe != nullptr )
+        P_CLOSE( ffmpeg_pipe );
 
-    pipe = P_OPEN( cmd.c_str() );
+    ffmpeg_pipe = P_OPEN( cmd.c_str() );
 
-    if ( !pipe ) {
+    if ( !ffmpeg_pipe ) {
         // // get error string from 'errno' code
         // char errmsg[500];
         // std::strerror_s( errmsg, 500, errno );
@@ -158,7 +158,7 @@ void processFrame() {
             float delta = Seconds( Clock::now() - lastFrameTime ).count();
 
             if ( delta >= framedur ) {
-                
+
                 if ( !pipe_isRecording.load() ) {
                     console_clear();
                     std::cout << "Don't close. Recording stopped, but still processing " << pipe_frames.size() << " frames" << std::endl;
@@ -168,7 +168,7 @@ void processFrame() {
                 if ( pipe_frames.consume( std::move( pixels ) ) && pixels ) {
                     std::unique_ptr<unsigned char[]> data = std::move( pixels );
                     const size_t dataLength = pipe_settings.src_width * pipe_settings.src_height * pipe_settings.src_channels;
-                    const size_t written = pipe ? fwrite( data.get(), sizeof( char ), dataLength, pipe ) : 0;
+                    const size_t written = ffmpeg_pipe ? fwrite( data.get(), sizeof( char ), dataLength, ffmpeg_pipe ) : 0;
 
                     if ( written <= 0 )
                         std::cout << "Unable to write the frame." << std::endl;
@@ -186,23 +186,23 @@ void processFrame() {
 
     }
     // close ffmpeg pipe once stopped recording
-    
-    
-    if ( pipe ) {
+
+
+    if ( ffmpeg_pipe ) {
         console_clear();
-        if ( P_CLOSE( pipe ) < 0 ) {
+        if ( P_CLOSE( ffmpeg_pipe ) < 0 ) {
             // // get error string from 'errno' code
             // char errmsg[500];
             // strerror_s( errmsg, 500, errno );
             // std::cerr << "Error closing FFmpeg pipe. Error: " << errmsg << std::endl;
             std::cerr << "Error closing FFmpeg pipe." << std::endl;
         }
-        else 
+        else
             std::cout << "Finish saving " << pipe_settings.trg_path << std::endl;
         console_refresh();
     }
-    
-    pipe   = nullptr;
+
+    ffmpeg_pipe   = nullptr;
     counter = 0;
 }
 
@@ -212,7 +212,7 @@ size_t recordingPipeFrame( std::unique_ptr<unsigned char[]>&& _pixels ) {
         return 0;
     }
 
-    if ( !pipe ) {
+    if ( !ffmpeg_pipe ) {
         std::cerr << "Can't add new frame - FFmpeg pipe is invalid!" << std::endl;
         return 0;
     }
@@ -238,7 +238,7 @@ size_t recordingPipeFrame( std::unique_ptr<unsigned char[]>&& _pixels ) {
     // while ( counter == 0 || framesToWrite > written ) {
     //     // copy pixel data
     //     if ( !pixPtr )
-    //         pixPtr = new ofPixels( pixels );  
+    //         pixPtr = new ofPixels( pixels );
 
     //     if ( written == framesToWrite - 1 )
     //         // only the last frame we produce owns the pixel data
@@ -261,11 +261,11 @@ void recordingPipeClose() {
     frame = false;
     sec = false;
 
-    if ( pipe_thread.joinable() ) 
+    if ( pipe_thread.joinable() )
         pipe_thread.join();
 
-    if ( pipe != nullptr )
-        P_CLOSE( pipe );
+    if ( ffmpeg_pipe != nullptr )
+        P_CLOSE( ffmpeg_pipe );
 }
 
 #else
@@ -327,16 +327,16 @@ float getRecordingPercentage() {
         return ((sec_head - sec_start) / (sec_end - sec_start));
     else if (frame)
         return ( (float)(frame_head - frame_start) / (float)(frame_end - frame_start));
-    else 
+    else
         return 1.0;
 }
 
 int getRecordingFrame() {
-    if (sec || recordingPipe() ) 
+    if (sec || recordingPipe() )
         return (int)(sec_start / fdelta) + counter;
     else
         return frame_head;
-    
+
     return 0;
 }
 
